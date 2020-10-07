@@ -1,0 +1,31 @@
+      SUBROUTINE BDALD(JW,LUN1,LUN2)
+*
+*     COPY BANKS FROM SEQUENTIAL DATA SET TO DA DATASET
+*
+#include "boscom.h"
+#include "param.h"
+      INTEGER JW(*)
+      CHARACTER*4 NAME,CHAINT
+      N1=0
+      N2=0
+      IUB=NLINK('+BUF',LUN1)
+      IF(IUB.EQ.0) GOTO 100
+      LUWSAV=JW(LUW)
+      JW(LUW)=0
+      CALL BRWND(LUN2)
+   10 CALL BREAD(JW,LUN2,'C',*10,*20)
+      IND=JW(3)
+      N1=N1+1
+      NAME=CHAINT(JW(IND-3))
+      NR  =       JW(IND-2)
+      CALL BDAWR(JW,LUN1,NAME,NR)
+      IND=MDROP(JW,NAME,NR)
+      CALL BGARB(JW)
+      GOTO 10
+   20 IF(JW(LUP).GT.0) WRITE(JW(LUP),101) N1,LUN1,LUN2
+      CALL BRWND(LUN2)
+      JW(LUW)=LUWSAV
+  100 RETURN
+  101 FORMAT(' ---- BDALD',I8,' BANKS COPIED TO DA-DATA SET',I3,
+     +   ' FROM SEQ DATA SET',I3)
+      END

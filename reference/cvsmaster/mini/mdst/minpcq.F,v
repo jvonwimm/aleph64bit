@@ -1,0 +1,178 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	mini202_9:1.1.1.1
+	mini202_8:1.1.1.1
+	mini202_7:1.1.1.1
+	mini202_6:1.1.1.1
+	mini202_5:1.1.1.1
+	mini202_4:1.1.1.1
+	mini202_2:1.1.1.1
+	mini202_1:1.1.1.1
+	mini202:1.1.1.1
+	mini201_1:1.1.1.1
+	mini104_1:1.1.1.1
+	mini103_1:1.1.1.1
+	mini102_7:1.1.1.1
+	mini102_5:1.1.1.1
+	mini102_4:1.1.1.1
+	mini102_3:1.1.1.1
+	mini102_2:1.1.1.1
+	mini102_1:1.1.1.1
+	mini102:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.08.15.11.09.41;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.08.15.11.09.42;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE MINPCQ
+C
+CKEY MDST /USER
+C-----------------------------------------------------------------------
+C! Fill PCQA bank from DNEU and DRES.
+C
+C     Author: J.Carr    14 May 1991
+c              ( modified from MINPCP of Stephen Haywood )
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+#include "dneujj.h"
+#include "dresjj.h"
+#include "minfac.h"
+C
+      LOGICAL HADRO,GAMMA,GAMEX,GARBA,LCALO
+      PARAMETER ( MXNEUT=200 )
+      DIMENSION PARLOC(MXNEUT,5)
+      DIMENSION IPEPC(MXNEUT),IPCOB(MXNEUT),ITYPE(MXNEUT)
+      LOGICAL PARGON(MXNEUT)
+C
+#include "bmacro.h"
+      HADRO(I) = ITYPE(I).GE.13.AND.ITYPE(I).LE.20
+      GAMMA(I) = ITYPE(I).LT.13.AND.ITYPE(I).NE.5
+      GAMEX(I) = ITYPE(I).EQ.5
+      GARBA(I) = ITYPE(I).EQ.21
+      LCALO(I) = ITYPE(I).EQ.22
+C
+      KDNEU = NLINK('DNEU',0)
+      IF(KDNEU.GT.0) THEN
+         NDNEU = LROWS(KDNEU)
+      ELSE
+         NDNEU = 0
+      ENDIF
+C
+      KDRES = NLINK('DRES',0)
+      IF(KDRES.GT.0) THEN
+         NDRES = LROWS(KDRES)
+      ELSE
+         NDRES = 0
+      ENDIF
+C
+      IF (NDNEU.LE.0 .AND. NDRES.LE.0) RETURN
+      MVER = MINGTV(DUM)
+C
+C++   Fill temporary PARLOC array from DNEU bank.
+C
+      J = 0
+      DO 100 I=1,NDNEU
+         IF(J.LT.MXNEUT)J = J + 1
+         IY = ITABL(KDNEU,I,JDNENA)
+         EN = FLOAT(ITABL(KDNEU,I,JDNEE0))/EFACTM
+         TH = FLOAT(ITABL(KDNEU,I,JDNETH))/AFACTM
+         PH = FLOAT(ITABL(KDNEU,I,JDNEPH))/AFACTM
+         PSUM=0.
+         PN = EN
+         CP = COS (PH)
+         SP = SIN (PH)
+         CT = COS (TH)
+         ST = SIN (TH)
+         PT = PN * ST
+         PARLOC(J,1) = PT * CP
+         PARLOC(J,2) = PT * SP
+         PARLOC(J,3) = PN * CT
+         PARLOC(J,4) = EN
+         PARLOC(J,5) = PSUM
+         ITYPE(J) = ITABL(KDNEU,I,JDNENA)
+         IF (MVER.GE.54) THEN
+            IPEPC(J) = ITABL(KDNEU,I,JDNEDE)
+            IPCOB(J) = ITABL(KDNEU,I,JDNEPC)
+         ELSE
+            IPEPC(J) = ITABL(KDNEU,I,7)
+            IPCOB(J) = 0
+         ENDIF
+         PARGON(J) = .FALSE.
+         IF(GARBA(I)) PARGON(J) = .TRUE.
+  100 CONTINUE
+      NMXNEU=J
+C
+C++   Fill temporary array from DRES.
+C
+      DO 200 I=1,NDRES
+         IF(J.LT.MXNEUT) J = J + 1
+         IY = ITABL(KDRES,I,JDRENA)
+         EN = FLOAT(ITABL(KDRES,I,JDREE0))/EFACTM
+         TH = FLOAT(ITABL(KDRES,I,JDRETH))/AFACTM
+         PH = FLOAT(ITABL(KDRES,I,JDREPH))/AFACTM
+         PSUM = FLOAT(ITABL(KDRES,I,JDREPS))/EFACTM
+         PN   = FLOAT(ITABL(KDRES,I,JDREP0))/EFACTM
+         CP = COS (PH)
+         SP = SIN (PH)
+         CT = COS (TH)
+         ST = SIN (TH)
+         PT = PN * ST
+         PARLOC(J,1) = PT * CP
+         PARLOC(J,2) = PT * SP
+         PARLOC(J,3) = PN * CT
+         PARLOC(J,4) = EN
+         PARLOC(J,5) = PSUM
+         ITYPE(J) = ITABL(KDRES,I,JDRENA)
+         IPEPC(J) = 0
+         IF (MVER.GE.54) THEN
+            IPCOB(J) = ITABL(KDRES,I,JDREPC)
+         ELSE
+            IPCOB(J) = 0
+         ENDIF
+         PARGON(J) = .FALSE.
+  200 CONTINUE
+C
+      NMXALL = J
+C
+C++   Maybe merge and cut particles
+C
+      CALL PCMECU( NMXALL,MXNEUT,PARLOC,IPEPC,IPCOB,ITYPE,PARGON)
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@1st release of mini under cvs
+@
+text
+@@

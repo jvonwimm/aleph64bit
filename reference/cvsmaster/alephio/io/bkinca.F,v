@@ -1,0 +1,97 @@
+head	1.1;
+access;
+symbols
+	alio83:1.1
+	alio82:1.1
+	alio81:1.1
+	alio80:1.1
+	alio74:1.1
+	alio73:1.1
+	alio72:1.1
+	alio71:1.1
+	alio70:1.1
+	alio68:1.1
+	alio69:1.1
+	alio67:1.1
+	alio66:1.1
+	alio65:1.1
+	alio64:1.1
+	alio63:1.1
+	alio62:1.1
+	alio61:1.1
+	alio60:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.04.23.10.00.26;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@move alph, dbas, a part of alef and a part of c to alephio
+Modified Files:
+ 	version.h
+ Added Files:
+ 	adbrow.F adbrpn.F adbrun.F adbswp.F adbver.F agetdb.F agtfil.F
+	albos.F aldawr.F aldtyp.F aleveh.F alfind.F alfmt.F algtbk.F
+ 	algtdb.F algtlu.F algtro.F algtyp.F alinst.F alk7fil.F
+ 	alk7fru.F alk7op.F alk7tru.F alredb.F alrune.F alrunh.F
+ 	alrunr.F alseed.F alstho.F alstin.F alstri.F altabl.F alvsn.F
+ 	aopdbs.F aublis.F aubos.F aubprs.F bkcari.F bkinca.F bkrhab.F
+ 	bkrhal.F bkrhaw.F bktobk.F cafiht.F chahol.F dafrds.F gtdbas.F
+ 	gtstup.F igtfmt.F jhocha.F julrec.F junial.F junidb.F
+ 	kbytrec.F loctab.F nameru.F ubpack.F uclean.F uindxs.F usbos.F
+ 	usgtdb.F utcblk.F utccop.F utcofo.F utwocl.F utwoex.F
+Removed Files:
+	noibm.F
+@
+text
+@      INTEGER FUNCTION BKINCA(CHSTR)
+C-----------------------------------------------------------------------
+C! Transforms the character representation of an integer into this integ
+CKEY BOOK  CHARACTER INTEGER / USER
+C Input argument :
+C   CHSTR = character string containing only an integer ( 9 digits max)
+C   + or - as first character is allowed ( e.g. :  '-123456'  )
+C   any other character inside the string stops the conversion
+C Return value BKINCA = integer value ( with eventually its sign )
+C                     = 0 if too large integer
+C-----------------------------------------------------------------------
+#ifndef DOC
+      CHARACTER*(*) CHSTR
+      CHARACTER*1 DIG
+C
+      DATA MAX /1286608615/
+      BKINCA=0
+      IVAL=0
+      LNC=LNBLNK(CHSTR)
+      IDIG=0
+C Loop on all digits
+      DO 1 I=LNC,1,-1
+         IDIG=IDIG+1
+         DIG=CHSTR(I:I)
+         IF (DIG.EQ.'-') GO TO 200
+         IF (ICHAR(DIG).GT.ICHAR('9')) GO TO 100
+         IF (ICHAR(DIG).LT.ICHAR('0')) GO TO 100
+         IVDI=ICHAR(DIG)-ICHAR('0')
+         IVAL=IVAL+IVDI*(10**(IDIG-1))
+         IF (IVAL.GT.MAX) GO TO 999
+ 1    CONTINUE
+C
+ 100  BKINCA=IVAL
+      GO TO 999
+C Negative integer
+ 200  BKINCA=-IVAL
+C
+ 999  RETURN
+      END
+#endif
+@

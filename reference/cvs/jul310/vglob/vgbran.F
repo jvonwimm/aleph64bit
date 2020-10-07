@@ -1,0 +1,416 @@
+      SUBROUTINE VGBRAN(ICOMP)
+C ---------------------------------------------------------------------
+C! Solve a large component of the VDet pat. rec. by  branch and bound
+CKEY VGLOB VDET TRACK
+C
+C      Paul Rensing   - 1-11-94
+C
+C The component # ICOMP is solved by the branch and bound
+C      algorithm. This routine creates a set of arrays which are used
+C      by the C routine which solves the problem. Once solved it builds
+C      the output banks.
+C
+C  INPUT:
+C      INTEGER ICOMP     - the number of the component to solve
+C
+C OUTPUT:
+C      Banks VGHC and VGXC # ICOMP are created.
+C ------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+C
+C Function parameters
+C
+      INTEGER ICOMP
+C
+C  Global includes
+C
+#include "vglbcm.h"
+C
+#include "bcs.h"
+C
+C HAC parameters
+C
+#include "vctljj.h"
+#include "vm5cjj.h"
+#include "vghcjj.h"
+#include "vgxcjj.h"
+#include "vdgcjj.h"
+C
+C  Function calls
+C
+      INTEGER NDROP,NLINK, NBANK, NAMIND, VDYEAR
+      EXTERNAL NDROP,NLINK, NBANK, NAMIND, VDYEAR
+C
+C parameters
+C
+      integer LPATTERN
+      parameter (LPATTERN = 6)
+      integer GRKSCF
+      parameter (GRKSCF = 1000)
+C
+C local variables
+C
+      integer ind
+      integer indhit(NLAYER*NVIEW)
+      integer indvm
+      integer nhits(NLAYER*NVIEW)
+      integer indtrk
+      integer indbbs, indbbc
+      integer indhc
+      integer indpat
+      integer hit, loc, h1, h2, hc, lhit
+      integer ITrk, NTrk
+      integer i, j, k
+      integer row, ipat
+      integer layer, view, grk
+      integer colOff
+      logical added, print_it
+      integer indVGXC, indVGHC
+      integer nsoln, isoln, jvgxc, jvghc
+      integer hits(NLAYER*NVIEW*NGRK), nh1, nh2
+      integer mhit, npat
+      integer year, namVDGC, indVDGC, namVTDP, indVTDP, itdp, idp
+      integer irun, ievt
+      integer iret
+C
+      Character*4 HitBnk(NLAYER*NVIEW)
+      SAVE HitBnk, namVDGC, namVTDP
+C
+#include "bmacrod.h"
+C
+      INTEGER JVIND, IL, IV
+C
+      DATA HitBnk/'VCH1','VCH2','VCH3','VCH4'/
+C
+#include "bmacro.h"
+C
+      JVIND(IL, IV) = NVIEW*(IV-1) + IL
+C
+      if (namVDGC.eq.0) then
+        namVDGC = NAMIND('VDGC')
+        namVTDP = NAMIND('VTDP')
+      endif
+C
+C Pick up the list of tracks and the lists of hits in each layer/view
+C
+      indtrk = nlink('VCTL', ICOMP)
+      NTrk = lrows(indtrk)
+C
+C See if dummy wants to know about this track
+C
+      print_it = .false.
+      if (IW(namVTDP) .GT. 0) THEN
+        call abruev(irun,ievt)
+        indVTDP = NLINK('VTDP',ievt)
+        if (indVTDP.gt.0) then
+            do idp = 1, IW(indVTDP)
+                itdp = IW(indVTDP+idp)
+                do itrk = 1, Ntrk
+                    if (itabl(indtrk,itrk,jvcttr).eq.itdp)
+     $                  print_it=.true.
+                enddo
+            enddo
+        endif
+      endif
+      if (print_it) then
+        write(IW(6),1) ICOMP
+        write(IW(6),2) (ITABL(indtrk,j,jvcttr),j=1,ntrk)
+      endif
+ 1    format(1x,'VGBRAN - Component: ',I6)
+ 2    format(1x,'VGBRAN - Tracks: ',(I4))
+C
+C Determine VDET year
+C
+      year = VDYEAR()
+      if (year .eq. 95) Then
+         indVDGC = IW(namVDGC)
+         if (indVDGC .le. 0) then
+            call RERROR('VGBRAN', -6, ' Missing VDGC bank')
+            goto 999
+         end if
+      end if
+C
+C Create solution banks now so they are in best place in BOS array.
+C
+      NSoln = 0
+      indVGHC = NBANK('VGHC', ICOMP, LMHLEN + LVGHCA*NTrk*MAXSOLN)
+      indVGXC = NBANK('VGXC', ICOMP, LMHLEN + LVGXCA*MAXSOLN)
+      IF (indVGXC .EQ. 0 .OR. indVGHC .EQ. 0) THEN
+         CALL RERROR('VGBRAN', -1, ' Out of memory')
+         GOTO 999
+      END IF
+      IW(indVGHC + LMHCOL) = LVGHCA
+      IW(indVGHC + LMHROW) = 0
+      IW(indVGXC + LMHCOL) = LVGXCA
+      IW(indVGXC + LMHROW) = 0
+C
+      mhit = 0
+      Do i = 1, NVIEW*NLAYER
+         indhit(i) = NLINK(HitBnk(i), ICOMP)
+         nhits(i) = LROWS(indhit(i))
+         mhit = MAX(nhits(i), mhit)
+      end do
+C
+C Pick up all the needed VM5C banks
+C
+      indvm = NBANK('VGXX',18,NTrk)
+      if (indvm .le. 0) then
+         call RERROR('VGBRAN', -2, ' Out of memory')
+         goto 999
+      end if
+      npat = 0
+      do itrk = 1, NTrk
+         iw(indvm+itrk) = NLINK('VM5C', ITABL(indtrk,itrk,JVCTTR))
+         npat = npat + LROWS( IW(indvm+itrk) )
+      end do
+      indpat = NBANK('VGXX', 16, NPat*LPATTERN)
+      if (indpat .le. 0) then
+         call RERROR('VGBRAN', -3, ' Out of memory')
+         goto 999
+      end if
+C
+C Find out how many times each hit can be used, based on pulse height.
+C
+      INDHC = NBANK('VGXX', 98, LMHLEN + NVIEW*NLAYER*MHit)
+      IF (INDHC .EQ. 0) THEN
+         CALL RERROR('VGBRAN', -4, ' Out of memory')
+         GOTO 999
+      END IF
+      call vzero(IW(indHC+1), IW(indHC))
+      IW(indHC + LMHCOL) = NVIEW*NLAYER
+      IW(indHC + LMHROW) = MHit
+C
+      Do Layer = 1, NLAYER
+         Do View = 1, NVIEW
+            ind = JVIND(layer, view)
+            do grk = 1, NGRK
+               colOff = (Layer-1)*NVIEW*NGRK + (grk-1)*NGRK + (View-1)
+C
+               DO Itrk = 1, NTRK
+                  DO row = 1, LROWS(IW(INDVM + Itrk))
+                     hit = ITABL(IW(INDVM + Itrk), row, JVM5HW + colOff)
+                     IF (Hit .GT. 0) THEN
+                        CALL VHITID(hit, View, Hit)
+                        CALL VFNDIL(INDHit(ind), HIT, LOC)
+                        IF (year .eq. 95) then
+                          RW(KROW(indHC,loc)+ind) = 
+     $                      RTABL(indVDGC,Hit,jvdgph)
+                        ELSE
+                          RW(KROW(indHC,loc) + ind) = MAX(
+     $                       RW(KROW(indHC,loc) + ind),
+     $                       RTABL(IW(INDVM+Itrk), row, JVM5PH+colOff))
+                        ENDIF
+                     END IF
+                  END DO
+               END DO
+            END DO
+C
+C Now know max. pulse height for all hits in this layer, view.
+C Convert to number of times this hit can be assigned.
+C
+            do lhit = 1, NHits(ind)
+               i = KROW(indHC,lhit) + ind
+               if (RW(i) .LT. PHTHRN) Then
+                  IW(i) = 1
+               else
+                  IW(i) = 2
+               end if
+            end do
+         end do
+      end do
+C
+C We now know how many times a hit may be used.
+C     Create a list of patterns: trk, hits, cost func.
+C
+      ipat = 0
+      DO Itrk = 1,NTrk
+         DO row = 1, LROWS(IW(indvm+itrk))
+            IW(indpat + ipat*LPATTERN + 1) = itrk
+            RW(indpat + ipat*LPATTERN + 6) =
+     $           RTABL(IW(indvm+itrk),row,JVM5CP)
+C
+            Do View = 1, NVIEW
+               Do Layer = 1, NLAYER
+                  ind = JVIND(layer,view)
+                  colOff = (Layer-1)*4 + (View-1)
+                  hit = ITABL(IW(indvm+itrk), row, JVM5HW+colOff)
+                  if (hit .gt. 0) then
+                     call VHitID(hit, view, hit)
+                     CALL VFNDIL(IndHit(ind), hit, H1)
+                  else
+                     h1 = 0
+                  end if
+C
+                  hit = ITABL(IW(indvm+itrk), row, JVM5HW+colOff+2)
+                  if (hit .gt. 0) then
+                     call VHitID(hit, view, hit)
+                     CALL VFNDIL(INDHit(ind), hit, H2)
+                  else
+                     h2 = 0
+                  end if
+C
+                  if ( h1  .gt. 0 .AND. h2 .gt. 0) THEN
+                     if (h1 .gt. h2) then
+                        lhit = H1*GRKSCF + H2
+                     else
+                        lhit = H2*GRKSCF + H1
+                     end if
+                  else if (h1 .gt. 0) then
+                     lhit = h1
+                  else if (h2 .gt. 0) then
+                     lhit = h2
+                  else
+                     lhit = 0
+                  end if
+                  IW(indpat + ipat*LPATTERN + ind + 1) = lhit
+C
+               end do
+            end do
+            ipat = ipat + 1
+         end do
+C
+C end of loop over tracks
+      end do
+C
+C space for solution from branch and bound. Solution is trk#->pat#
+C
+      indbbs = NBANK('VGXX', 13, MAXSOLN*NTrk)
+      indbbc = NBANK('VGXX', 12, MAXSOLN)
+      if (indbbs .le. 0 .or. indbbc .le. 0) then
+         CALL RERROR('VGBRAN', -5, ' Out of memory')
+         GOTO 999
+      END IF
+C 
+C Solve!!
+C
+      call vgbslv(NTrk, nhits, IW(indhc+LMHLEN+1), npat, IW(indpat+1),
+     $     nsoln, IW(indbbs+1), RW(indbbc+1) )
+C
+C===========================
+C Generate the final solution banks
+C
+C Unfortunately, this is harder than I would want. The result is the
+C     pattern number which maps to a set of local hit number. This can
+C     be used to fetch the global hit number from the hit lists, but
+C     that does not give bank number+hit (and it would be ambiguous
+C     anyway, at least for VDET 95). So, we need to search the VM5C bank
+C     for the row which matches this hit pattern.
+C
+      DO ISoln = 1, NSoln
+         JVGXC = KNEXT(indVGXC)
+
+         RW(JVGXC + JVGXCH) = RW(indbbc+isoln)
+         IW(JVGXC + JVGXNT) = NTrk
+         IW(indVGXC + LMHROW) = IW(indVGXC + LMHROW) + 1
+         if (print_it .and. (ISoln.eq.1)) then
+            write(iw(6),3) RW(JVGXC + JVGXCH)
+ 3          format(1X,'VGBRAN - Final logP= ',F12.5)
+         endif
+         DO Itrk = 1, NTrk
+            if (print_it .and. (isoln.eq.1))then
+                write(iw(6),4) ITABL(indtrk,itrk,jvcttr)
+ 4              format(1X,'VGBRAN - Track: ',I6)
+            endif
+C
+            ipat = IW(indbbs + itrk) - 1
+            JVGHC = KNEXT(indVGHC)
+            IW(JVGHC + JVGHSN) = ISoln
+            IW(JVGHC + JVGHTN) = ITABL(indtrk,itrk,JVCTTR)
+C
+C build the array of (global) hit numbers. Do not worry about the order
+C     of overlap hits.
+C
+            do layer = 1, NLAYER
+               do view = 1, NVIEW
+                  ind = JVIND(layer, view)
+                  h2 = 0
+                  hit = IW(indpat + ipat*LPATTERN + ind + 1)
+                  if (hit .le. 0) then
+                     h1 = 0
+                  else if (hit .le. NHits(ind)) then
+                     h1 = ITABL(indhit(ind), hit, 1)
+                  else 
+                     h1 = hit / GRKSCF
+                     h2 = hit - (h1 * GRKSCF)
+                     h1 = ITABL(indhit(ind), h1, 1)
+                     h2 = ITABL(indhit(ind), h2, 1)
+                  end if
+C
+                  colOff = (Layer-1)*4 + View
+                  hits(colOff) = h1
+                  hits(colOff+2) = h2
+              end do
+            end do
+C
+C Search VM5C bank for the appropriate row.
+C
+            nh1 = 0
+            do j = 1, 8
+               if (hits(j) .gt. 0) nh1 = nh1 + 1
+            end do
+            DO row = 1, LROWS(IW(indvm+itrk))
+               nh2 = 0
+               do j = 0, 7
+                  if (ITABL(IW(indvm+itrk),row, JVM5HW+j) .gt. 0)
+     $                 nh2 = nh2 + 1
+               end do
+               if (nh1 .ne. nh2) goto 888
+C
+               Do View = 1, NVIEW
+                  Do Layer = 1, NLAYER
+                     colOff = (Layer-1)*4 + (View-1)
+                     do j = 0, 2, 2
+                        call VHitID(ITABL(IW(indvm+itrk), row,
+     $                       JVM5HW+colOff+j), view, hit)
+                        if (hit .gt. 0 .and.
+     $                       hit .ne. hits(colOff+1) .and.
+     $                       hit .ne. hits(colOff+3))
+     $                       goto 888
+                     end do
+                  end do
+               end do
+C found the right row
+               Do j = 1, NVIEW*NLAYER*NGRK
+                  IW(JVGHC + JVGHH1 + j-1) =
+     $                 ITABL(IW(indvm+itrk), row, JVM5HW+j-1)
+                  if (print_it.and.(isoln.eq.1)) then
+                    write(iw(6),5)j,IW(JVGHC + JVGHH1 + j-1)
+                  endif
+ 5                format(1X,'VGBRAN - Hit ',I6,' is ',I10)
+               end do
+               goto 889
+C
+ 888           continue
+            end do
+C
+C error: could not find the row corresponding to this solution
+C
+            call RERROR('VGBRAN', -6,
+     $           ' Could not find solution row in VM5C')
+            goto 999
+C
+ 889        continue
+            IW(indVGHC + LMHROW) = IW(indVGHC + LMHROW) + 1
+         END DO
+      END DO
+C
+C Cleanup
+C
+ 999  CONTINUE
+C
+C Shrink the output banks to the correct size
+C
+      If (NSoln .gt. 0) then
+         indVGHC = NBANK('VGHC', icomp, LMHLEN + LVGHCA*NTrk*NSoln)
+         indVGXC = NBANK('VGXC', icomp, LMHLEN + LVGXCA*NSoln)
+      Else
+         iret = NDROP('VGHC', icomp)
+         iret =  NDROP('VGXC', icomp)
+      End If
+C
+      CALL BDROP(IW, 'VGXX')
+C      
+      return 
+      end
+#endif

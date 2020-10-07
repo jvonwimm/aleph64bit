@@ -1,0 +1,169 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	96.02.07.11.40.19;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.40.20;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@C!    Parameters for VDET geometry package
+C ----------------------------------------------------------------------
+C
+C     Labels for return codes:
+C
+      INTEGER VDERR, VDOK
+      PARAMETER (VDERR = -1)
+      PARAMETER (VDOK  = 1)
+C
+C     Labels for views:
+C
+      INTEGER VVIEWZ, VVIEWP
+      PARAMETER (VVIEWZ = 1)
+      PARAMETER (VVIEWP = 2)
+C
+C     Fixed VDET geometry parameters:
+C
+      INTEGER NVLAYR, NVMODF, NVVIEW, NPROMM, IROMAX
+      PARAMETER (NVLAYR = 2)
+      PARAMETER (NVMODF = 2)
+      PARAMETER (NVVIEW = 2)
+      PARAMETER (NPROMM = 1)
+      PARAMETER (IROMAX = 4)
+C
+C     Array dimensions:
+C
+      INTEGER NVWMMX, NVWFMX, NVFLMX, NVFMAX, NVMMAX, NVWMAX
+      INTEGER NVZRMX, NVPRMX
+      PARAMETER (NVWMMX = 3)
+      PARAMETER (NVWFMX = NVWMMX*NVMODF)
+      PARAMETER (NVFLMX = 15)
+      PARAMETER (NVFMAX = 24)
+      PARAMETER (NVMMAX = NVFMAX*NVMODF)
+      PARAMETER (NVWMAX = NVFMAX*NVWFMX)
+      PARAMETER (NVZRMX = NVFMAX*IROMAX)
+      PARAMETER (NVPRMX = NVMMAX*NPROMM)
+C
+#if defined(DOC)
+      VDERR       Error return code
+      VDOK        Normal return code
+
+      VVIEWZ      Array index for z view
+      VVIEWP      Array index for r-phi view
+
+      NVLAYR      Number of VDET layers
+      NVMODF      Number of modules per face
+      NVVIEW      Number of views
+      NPROMM      Number of readout modules per module in r-phi view
+      IROMAX      Maximum number of readout modules per face (z)
+
+      NVWMMX      Maximum number of wafers per module
+      NVWFMX      Maximum number of wafers per face
+      NVFLMX      Maximum number of faces per layer
+      NVFMAX      Maximum number of faces
+      NVMMAX      Maximum number of modules
+      NVWMAX      Maximum number of wafers
+      NVZRMX      Maximum number of readout modules, z view
+      NVPRMX      Maximum number of readout modules, r-phi view
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

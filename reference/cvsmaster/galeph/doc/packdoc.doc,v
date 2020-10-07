@@ -1,0 +1,138 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	94.12.07.14.03.03;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.03.04;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK packdoc
+#if defined(DOC)
+.chapter PACKAGES used by GALEPH
+    GALEPH makes use of the following packages :
+    GEANT3       geom. + draw. + track
+    GHEISHA      hadronic package
+    TPCSIM       TPC digitization
+
+.section WHERE TO FIND FILES
+.subsection ON CERNVM
+
+      GALEPH is maintained under IBM VM/CMS at CERN  on  the  GAL  minidisk
+  described below :
+                    address  196   userid   PUBXU
+       GALEPH library is compiled with IBM VS compiler .
+
+     Minidisks are given a nick-name stored either on CERN P-disk
+   (GIME NAMES file) or ALEPH GENERA-disk (GIMEGRP NAMES file).  A
+   general way to find GALEPH files is obtained with the command
+   ALEP_GET LIST under VM/CMS.  This exec will list all ALEPH info
+   stored in GLOBALV.
+
+
+ DISKS       Nickname    Access mode
+ -----------------------------------
+ UDISK       UDISK          U
+ CERNPAMS    CERNPAMS       *
+ GAL         GAL            F
+ GENERA      GENERA         G
+
+
+ PAM'S            |  disk
+ -----------------------------
+ GEANT            |  CERNPAMS
+ GEANG            |  CERNPAMS
+ GEANH            |  CERNPAMS
+ GEANX            |  CERNPAMS
+
+ TXTLIB'S         |  disk
+ -----------------------------
+ GEANT            |  UDISK
+ GENLIB           |    P
+ PACKLIB          |    P
+ GALEPH           |  GAL
+ TPCSIM           |  GAL
+ BOS77            |  GENERA
+ ALEPHLIB         |  GENERA
+ GRAFLIB          |    P             (HPLOT/GKS library)
+
+
+ HISTOR OLDLIB'S  |  disk
+ -----------------------------
+ BOS77            | GENERA
+ ALEPHLIB         | GENERA
+ GALEPH           | GAL
+ TPCSIM           | GAL
+
+ TEXT FILES       |  disk
+ -----------------------------
+ GXINT            | UDISK
+
+.subsection On ALWS or VXCERN
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

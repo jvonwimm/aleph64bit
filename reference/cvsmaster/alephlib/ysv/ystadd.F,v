@@ -1,0 +1,161 @@
+head	1.1;
+access;
+symbols
+	aleph316_2:1.1
+	aleph316_1:1.1
+	aleph316:1.1
+	aleph315_7:1.1
+	aleph315_6:1.1
+	aleph315_5:1.1
+	aleph315_4:1.1
+	aleph315_3:1.1
+	aleph315_2:1.1
+	aleph315_1:1.1
+	aleph315:1.1
+	aleph314_2:1.1
+	aleph314_1:1.1
+	aleph314:1.1
+	aleph313_1:1.1
+	aleph313:1.1
+	aleph312_1:1.1
+	aleph312:1.1
+	aleph311_1:1.1
+	aleph311:1.1
+	aleph310_3:1.1
+	aleph310_2:1.1
+	aleph310_1:1.1
+	aleph310:1.1
+	aleph309_1:1.1
+	aleph309:1.1
+	aleph308_3:1.1
+	aleph308_2:1.1
+	aleph308_1:1.1
+	aleph308:1.1
+	aleph307_6:1.1
+	aleph307_5:1.1
+	aleph307_4:1.1
+	aleph307_2:1.1
+	aleph307_1:1.1
+	aleph307:1.1
+	aleph306:1.1
+	aleph305_4:1.1
+	aleph305_3:1.1
+	aleph305_2:1.1
+	aleph305_1:1.1
+	aleph305:1.1
+	aleph304_5:1.1
+	aleph304_4:1.1
+	aleph304_3:1.1
+	aleph304_2:1.1
+	aleph304_1:1.1
+	aleph304:1.1
+	aleph303_3:1.1
+	aleph303_2:1.1
+	aleph303_1_mc1:1.1
+	aleph303_1:1.1
+	aleph302:1.1
+	aleph303:1.1
+	aleph302_9:1.1
+	aleph302_8:1.1
+	aleph302_7:1.1
+	aleph302_6:1.1
+	aleph302_5:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	97.04.04.07.58.52;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@aleph302 corr.file no.5 add ysv package
+@
+text
+@      SUBROUTINE YSTADD(IROW,ITK,IER)
+C------------------------------------------------------------------------------
+C!  Add a track to the work bank to be fitted
+C
+C       Author:  D.Casper 04/07/96
+C       
+C   Input:  IROW = row of work bank to load
+C           ITK  = track number (row) in VSTL
+C   Output:
+C           IER = -1 Bank missing
+C           IER = 1  Illegal row
+C           IER = 0  Normal
+C
+C   Procedure:  Load the track into the requested row of the work bank
+C------------------------------------------------------------------------------
+#ifndef DOC
+        PARAMETER (MAX_TRACKS = 128)
+#include "ysvwrk.h"
+#include "bcs.h"
+C
+        DATA NYSTL/0/
+        SAVE NYSTL
+C
+#include "bmacro.h"
+C
+        IF (NYSTL.EQ.0) THEN
+            NYSTL = NAMIND('YSTL')
+        ENDIF
+C
+C+  Check presence of work banks
+C
+        IF (INDYSTL.LE.0 .OR. INDYSTM.LE.0) THEN
+            IER = -1
+            GOTO 999
+        ENDIF
+C
+C+  Check validity of input
+C
+        IF (IROW.GT.IW(INDYSTL+LMHROW)) THEN
+            IER = 1
+            GOTO 999
+        ENDIF
+C
+C+  Check presence of track bank
+C
+        KYSTL = IW(NYSTL)
+        IF (KYSTL.LE.0) THEN
+            IER = -1
+            GOTO 999
+        ENDIF
+C
+C+  Check validity of input
+C
+        IF (ITK.GT.MIN(LROWS(KYSTL),MAX_TRACKS))THEN
+            IER = 1
+            GOTO 999
+        ENDIF
+C
+C+  Update the work banks
+C
+        IYSTL = KROW(KYSTL,ITK)
+C+  Put track number into work bank
+        IW(KROW(INDYSTL,IROW)+1) = ITK
+C+  Store mask for this track
+        IWRD = (ITK-1)/32 + 1
+        IF (IROW.EQ.1) THEN
+            CALL VZERO(IW(KROW(INDYSTM,1)+1),4)
+            IW(KROW(INDYSTM,1)+IWRD) = IBSET(0,MOD(ITK-1,32))
+        ELSE
+            CALL UCOPY(IW(KROW(INDYSTM,IROW-1)+1),
+     &          IW(KROW(INDYSTM,IROW)+1),4)
+            IW(KROW(INDYSTM,IROW)+IWRD) 
+     &          = IBSET(IW(KROW(INDYSTM,IROW)+IWRD),MOD(ITK-1,32))
+        ENDIF
+        IER = 0
+ 999    CONTINUE
+        RETURN
+        END
+#endif
+@

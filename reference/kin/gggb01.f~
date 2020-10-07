@@ -1,0 +1,449 @@
+      SUBROUTINE ASKUSI(IGCOD)                                          ASKUSI 2
+C --------------------------------------------------------------------  ASKUSI 3
+C G. Bonneaud October 1988.                                             ASKUSI 4
+C  B Bloch November 95 : fix argument number in HBOOK calls             BBL03  1
+C            write out code and date                                    BBL03  2
+C            create RLEP bank                                           BBL03  3
+C --------------------------------------------------------------------  ASKUSI 5
+      PARAMETER (LBCS=1000,LCHAR=4)                                     BCS    2
+      COMMON/BCS/ IW(LBCS)                                              BCS    3
+      REAL RW(LBCS)                                                     BCS    4
+      EQUIVALENCE (RW(1),IW(1))                                         BCS    5
+      COMMON / DTMILL / SDVRT(3),TABL(12),NEVENT(10),NEVPHO(2)          DTMILL 2
+      COMMON / INPOUT / IOUT                                            INPOUT 2
+      INTEGER ALTABL                                                    ASKUSI 9
+      EXTERNAL ALTABL                                                   ASKUSI10
+      PARAMETER ( IGCO = 1006)                                          ASKUSI11
+C                                                                       ASKUSI12
+C   Return the generator code as defined in the KINGAL library          ASKUSI13
+C                                                                       ASKUSI14
+      IGCOD = IGCO                                                      ASKUSI15
+      IOUT = IW(6)                                                      ASKUSI16
+      WRITE(IOUT,101) IGCOD                                             BBL02  1
+ 101  FORMAT(/,10X,                                                     BBL02  2
+     &       'GGGB01 - CODE NUMBER =',I4,' Last mod. November ,1995',   BBL03  4
+     & /,10X,'***********************************************',//)      BBL02  4
+C                                                                       ASKUSI17
+C   Input parameters (see description in GGGB01)                        ASKUSI18
+C                                                                       ASKUSI19
+       EB    =    46.1                                                  ASKUSI20
+       RHO   =     2.0                                                  ASKUSI21
+       I3    =     0                                                    ASKUSI22
+       IODD  = 1234567                                                  ASKUSI23
+       ICONF =     0                                                    ASKUSI24
+       X1    =     0.02                                                 ASKUSI25
+       A1MIN =    10.0                                                  ASKUSI26
+       A1MAX =   170.0                                                  ASKUSI27
+       AVETO =    2.5                                                   ASKUSI28
+C                                                                       ASKUSI29
+C  The default values can be changed by the DATA CARD GENE              ASKUSI30
+C                                                                       ASKUSI31
+       JGENE = NLINK('GENE',0)                                          ASKUSI32
+       IF(JGENE.NE.0) THEN                                              ASKUSI33
+        EB     = RW(JGENE+1)                                            ASKUSI34
+        RHO    = RW(JGENE+2)                                            ASKUSI35
+        I3     = IW(JGENE+3)                                            ASKUSI36
+        IODD   = IW(JGENE+4)                                            ASKUSI37
+        ICONF  = IW(JGENE+5)                                            ASKUSI38
+        X1     = RW(JGENE+6)                                            ASKUSI39
+        A1MIN  = RW(JGENE+7)                                            ASKUSI40
+        A1MAX  = RW(JGENE+8)                                            ASKUSI41
+        AVETO  = RW(JGENE+9)                                            ASKUSI42
+       ENDIF                                                            ASKUSI43
+       TABL(1) = EB                                                     ASKUSI44
+       TABL(2) = RHO                                                    ASKUSI45
+       TABL(3) = I3                                                     ASKUSI46
+       TABL(4) = IODD                                                   ASKUSI47
+       TABL(5) = ICONF                                                  ASKUSI48
+       TABL(6) = X1                                                     ASKUSI49
+       TABL(7) = A1MIN                                                  ASKUSI50
+       TABL(8) = A1MAX                                                  ASKUSI51
+       TABL(9) = AVETO                                                  ASKUSI52
+C                                                                       ASKUSI53
+C  Main vertex generation                                               ASKUSI54
+C                                                                       ASKUSI55
+       SDVRT(1) = 0.035                                                 ASKUSI56
+       SDVRT(2) = 0.0012                                                ASKUSI57
+       SDVRT(3) = 1.28                                                  ASKUSI58
+       JSVRT = NLINK('SVRT',0)                                          ASKUSI59
+       IF(JSVRT.NE.0) THEN                                              ASKUSI60
+        SDVRT(1) = RW(JSVRT+1)                                          ASKUSI61
+        SDVRT(2) = RW(JSVRT+2)                                          ASKUSI62
+        SDVRT(3) = RW(JSVRT+3)                                          ASKUSI63
+       ENDIF                                                            ASKUSI64
+       TABL(10) = SDVRT(1)                                              ASKUSI65
+       TABL(11) = SDVRT(2)                                              ASKUSI66
+       TABL(12) = SDVRT(3)                                              ASKUSI67
+C                                                                       ASKUSI68
+C  Fill the KPAR bank with the generator parameters                     ASKUSI69
+C                                                                       ASKUSI70
+       NCOL = 12                                                        ASKUSI71
+       NROW = 1                                                         ASKUSI72
+       JKPAR = ALTABL('KPAR',NCOL,NROW,TABL,'2I,(F)','C')               ASKUSI73
+C                                                                       ASKUSI74
+C  Initialize events counters                                           ASKUSI75
+C                                                                       ASKUSI76
+       DO 10 I = 1,10                                                   ASKUSI77
+   10  NEVENT(I) = 0                                                    ASKUSI78
+       DO 11 I = 1,2                                                    ASKUSI79
+   11  NEVPHO(I) = 0                                                    ASKUSI80
+C                                                                       ASKUSI81
+C Booking of some standard histogrammes                                 ASKUSI82
+C                                                                       ASKUSI83
+      CALL HBOOK1(10001,'WEIGHT(EXACT/APPR.) DIST. ',40,0.,RHO,0.)      BBL03  5
+      CALL HBOOK1(10002,' COS (THETA) G1 ',40,-1.,1.,0.)                BBL03  6
+      CALL HIDOPT(10002,'LOGY')                                         BBL03  7
+      CALL HBOOK1(10003,' ENERGY G1 ',40,0.,1.,0.)                      BBL03  8
+      CALL HIDOPT(10003,'LOGY')                                         BBL03  9
+      CALL HBOOK1(10004,' COS (THETA) G2 ',40,-1.,1.,0.)                BBL03 10
+      CALL HIDOPT(10004,'LOGY')                                         BBL03 11
+      CALL HBOOK1(10005,' ENERGY G2 ',40,0.,1.,0.)                      BBL03 12
+      CALL HIDOPT(10005,'LOGY')                                         BBL03 13
+      CALL HBOOK1(10006,' COS (THETA) G3 ',40,-1.,1.,0.)                BBL03 14
+      CALL HIDOPT(10006,'LOGY')                                         BBL03 15
+      CALL HBOOK1(10007,' ENERGY G3 ',40,0.,1.,0.)                      BBL03 16
+      CALL HIDOPT(10007,'LOGY')                                         BBL03 17
+      CALL HBOOK2(10008,' X->CT G1/ Y->CT G2 ',40,-1.,1.,40,-1.,1.,0.)  BBL03 18
+      CALL HBOOK2(10009,' X->EN G1/ Y->EN G2 ',40,0.,1.,40,0.,1.,0.)    BBL03 19
+      CALL HBOOK1(10010,' ACOLINEARITY G1 G2 ',40,0.,180.,0.)           BBL03 20
+      CALL HIDOPT(10010,'LOGY')                                         BBL03 21
+      CALL HBOOK1(10011,' ACOPLANARITY G1 G2 ',40,0.,180.,0.)           BBL03 22
+      CALL HIDOPT(10011,'LOGY')                                         ASKUS102
+C                                                                       ASKUS103
+C  Generator initialization                                             ASKUS104
+C                                                                       ASKUS105
+      LENTRY = 1                                                        ASKUS106
+      CALL GGGB01(LENTRY)                                               ASKUS107
+C                                                                       ASKUS108
+C  Print PART and KLIN banks                                            ASKUS109
+C                                                                       ASKUS110
+      CALL PRPART                                                       ASKUS111
+      CALL PRTABL('KPAR',0)                                             ASKUS112
+      IEBEAM = NINT(EB*1000)                                            BBL02  5
+      JRLEP = ALRLEP(IEBEAM,'   ',0,0,0)                                BBL02  6
+      CALL PRTABL('RLEP',0)                                             BBL02  7
+C                                                                       ASKUS113
+      RETURN                                                            ASKUS114
+      END                                                               ASKUS115
+      SUBROUTINE ASKUSE (IDP,IST,NTR,NVR,ECM,WEI)                       ASKUSE 2
+C --------------------------------------------------------------------  ASKUSE 3
+C G. Bonneaud October 1988.                                             ASKUSE 4
+C --------------------------------------------------------------------  ASKUSE 5
+      PARAMETER (LBCS=1000,LCHAR=4)                                     BCS    2
+      COMMON/BCS/ IW(LBCS)                                              BCS    3
+      REAL RW(LBCS)                                                     BCS    4
+      EQUIVALENCE (RW(1),IW(1))                                         BCS    5
+      COMMON / DTMILL / SDVRT(3),TABL(12),NEVENT(10),NEVPHO(2)          DTMILL 2
+      COMMON /KGCOMM/ ISTA,NTRK,IDPR,ECMS,WEIT                          KGCOMM 2
+      COMMON / QUADRI / Q1(4),Q2(4),Q3(4)                               QUADRI 2
+      DIMENSION VRTEX(4),TABK(4),ITAB(3)                                ASKUSE10
+      INTEGER ALTABL                                                    ASKUSE11
+      EXTERNAL ALTABL                                                   ASKUSE12
+C                                                                       ASKUSE13
+C  Generate primary vertex                                              ASKUSE14
+C                                                                       ASKUSE15
+      CALL RANNOR (RN1,RN2)                                             ASKUSE16
+      CALL RANNOR (RN3,DUM)                                             ASKUSE17
+      VRTEX(1) = RN1*SDVRT(1)                                           ASKUSE18
+      VRTEX(2) = RN2*SDVRT(2)                                           ASKUSE19
+      VRTEX(3) = RN3*SDVRT(3)                                           ASKUSE20
+      VRTEX(4) = 0.                                                     ASKUSE21
+C                                                                       ASKUSE22
+C  Fill 'VERT' bank                                                     ASKUSE23
+C                                                                       ASKUSE24
+      IVMAI = 1                                                         ASKUSE25
+      JVERT = KBVERT(IVMAI,VRTEX,0)                                     ASKUSE26
+      IF(JVERT.EQ.0) THEN                                               ASKUSE27
+       ISTA = 1                                                         ASKUSE28
+       NEVENT(2) = NEVENT(2) + 1                                        ASKUSE29
+       GO TO 97                                                         ASKUSE30
+      ENDIF                                                             ASKUSE31
+C                                                                       ASKUSE32
+C  Event generation                                                     ASKUSE33
+C                                                                       ASKUSE34
+      LENTRY = 2                                                        ASKUSE35
+      NEVENT(1) = NEVENT(1) + 1                                         ASKUSE36
+      CALL GGGB01(LENTRY)                                               ASKUSE37
+      NVR = 1                                                           ASKUSE38
+      IDP = IDPR                                                        ASKUSE39
+      ECM = ECMS                                                        ASKUSE40
+      WEI = WEIT                                                        ASKUSE41
+C                                                                       ASKUSE42
+C  book 'KINE' for beam electrons (-1 and -2)                           ASKUSE43
+C                                                                       ASKUSE44
+      TABK(1) = 0.                                                      ASKUSE45
+      TABK(2) = 0.                                                      ASKUSE46
+      TABK(3) = -TABL(1)                                                ASKUSE47
+      TABK(4) = 0.                                                      BBL01  1
+      JKINE = KBKINE(-1,TABK,2,0)                                       ASKUSE49
+      IF(JKINE.EQ.0) THEN                                               ASKUSE50
+       ISTA = 2                                                         ASKUSE51
+       NEVENT(3) = NEVENT(3) + 1                                        ASKUSE52
+       GO TO 97                                                         ASKUSE53
+      ENDIF                                                             ASKUSE54
+      TABK(3) = TABL(1)                                                 ASKUSE55
+      TABK(4) = 0.                                                      BBL01  2
+      JKINE = KBKINE(-2,TABK,3,0)                                       ASKUSE57
+      IF(JKINE.EQ.0) THEN                                               ASKUSE58
+       ISTA = 3                                                         ASKUSE59
+       NEVENT(4) = NEVENT(4) + 1                                        ASKUSE60
+       GO TO 97                                                         ASKUSE61
+      ENDIF                                                             ASKUSE62
+C  book 'KINE' for final state particles                                ASKUSE63
+      IBOOKT = 0                                                        ASKUSE64
+C We did not book the photon if the energy is equal to zero             ASKUSE65
+      IF(Q1(4).LT.1.E-06) THEN                                          ASKUSE66
+       NTRK = NTRK -1                                                   ASKUSE67
+       GO TO 93                                                         ASKUSE68
+      ENDIF                                                             ASKUSE69
+      IBOOKT = IBOOKT + 1                                               ASKUSE70
+      TABK(4) = 0.                                                      BBL01  3
+      DO 92 I = 1,3                                                     BBL01  4
+       TABK(I) = Q1(I)                                                  ASKUSE72
+   92 CONTINUE                                                          ASKUSE73
+      JKINE = KBKINE(IBOOKT,TABK,1,IVMAI)                               ASKUSE74
+      IF(JKINE.EQ.0) THEN                                               ASKUSE75
+       ISTA = 4                                                         ASKUSE76
+       NEVENT(5) = NEVENT(5) + 1                                        ASKUSE77
+       GO TO 99                                                         ASKUSE78
+      ENDIF                                                             ASKUSE79
+C We did not book the photon if the energy is equal to zero             ASKUSE80
+   93 IF(Q2(4).LT.1.E-06) THEN                                          ASKUSE81
+       NTRK = NTRK -1                                                   ASKUSE82
+       GO TO 95                                                         ASKUSE83
+      ENDIF                                                             ASKUSE84
+      IBOOKT = IBOOKT + 1                                               ASKUSE85
+      TABK(4) = 0.                                                      BBL01  5
+      DO 94 I = 1,3                                                     BBL01  6
+       TABK(I) = Q2(I)                                                  ASKUSE87
+   94 CONTINUE                                                          ASKUSE88
+      JKINE = KBKINE(IBOOKT,TABK,1,IVMAI)                               ASKUSE89
+      IF(JKINE.EQ.0) THEN                                               ASKUSE90
+       ISTA = 5                                                         ASKUSE91
+       NEVENT(6) = NEVENT(6) + 1                                        ASKUSE92
+       GO TO 99                                                         ASKUSE93
+      ENDIF                                                             ASKUSE94
+C We did not book the photon if the energy is equal to zero             ASKUSE95
+   95 IF(Q3(4).LT.1.E-06) THEN                                          ASKUSE96
+       NTRK = NTRK -1                                                   ASKUSE97
+       GO TO 97                                                         ASKUSE98
+      ENDIF                                                             ASKUSE99
+      IBOOKT = IBOOKT + 1                                               ASKUS100
+      TABK(4) = 0.                                                      BBL01  7
+      DO 96 I = 1,3                                                     BBL01  8
+       TABK(I) = Q3(I)                                                  ASKUS102
+   96 CONTINUE                                                          ASKUS103
+      JKINE = KBKINE(IBOOKT,TABK,1,IVMAI)                               ASKUS104
+      IF(JKINE.EQ.0) THEN                                               ASKUS105
+       ISTA = 6                                                         ASKUS106
+       NEVENT(7) = NEVENT(7) + 1                                        ASKUS107
+       GO TO 99                                                         ASKUS108
+      ENDIF                                                             ASKUS109
+C                                                                       ASKUS110
+C  Fill history with 'KHIS' bank                                        ASKUS111
+C                                                                       ASKUS112
+   97 DO 98 I = 1,NTRK                                                  ASKUS113
+   98 ITAB(I) = 0                                                       ASKUS114
+      JKHIS = ALTABL('KHIS',1,NTRK,ITAB,'I','E')                        ASKUS115
+      IF(JKHIS.EQ.0) THEN                                               ASKUS116
+       ISTA = 7                                                         ASKUS117
+       NEVENT(8) = NEVENT(8) + 1                                        ASKUS118
+      ENDIF                                                             ASKUS119
+C                                                                       ASKUS120
+   99 IF(ISTA.NE.0) NEVENT(9) = NEVENT(9) + 1                           ASKUS121
+      IF(ISTA.EQ.0) THEN                                                ASKUS122
+       NEVENT(10) = NEVENT(10) + 1                                      ASKUS123
+       IF(NTRK.EQ.2) NEVPHO(1) = NEVPHO(1) +1                           ASKUS124
+       IF(NTRK.EQ.3) NEVPHO(2) = NEVPHO(2) +1                           ASKUS125
+      ENDIF                                                             ASKUS126
+C                                                                       ASKUS127
+      NTR = NTRK                                                        ASKUS128
+      IST = ISTA                                                        ASKUS129
+      IDP = IDP + NTR                                                   ASKUS130
+C                                                                       ASKUS131
+      RETURN                                                            ASKUS132
+      END                                                               ASKUS133
+      SUBROUTINE USCJOB                                                 USCJOB 2
+C --------------------------------------------------------------------  USCJOB 3
+C G. Bonneaud October 1988.                                             USCJOB 4
+C --------------------------------------------------------------------  USCJOB 5
+      COMMON / DTMILL / SDVRT(3),TABL(12),NEVENT(10),NEVPHO(2)          DTMILL 2
+      COMMON / INPOUT / IOUT                                            INPOUT 2
+C                                                                       USCJOB 8
+      LENTRY = 3                                                        USCJOB 9
+      CALL GGGB01(LENTRY)                                               USCJOB10
+C                                                                       USCJOB11
+       WRITE(IOUT,101)                                                  USCJOB12
+  101  FORMAT(//20X,'EVENTS STATISTICS',                                USCJOB13
+     &         /20X,'*****************')                                USCJOB14
+       WRITE(IOUT,102)NEVENT(1),NEVENT(10),NEVPHO(1),NEVPHO(2),NEVENT(9)USCJOB15
+  102  FORMAT(/5X,'# OF GENERATED EVENTS                = ',I10,        USCJOB16
+     &        /5X,'# OF ACCEPTED  EVENTS                = ',I10,        USCJOB17
+     &        /5X,'# OF ACCEPTED  EVENTS WITH 2 PHOTONS = ',I10,        USCJOB18
+     &        /5X,'# OF ACCEPTED  EVENTS WITH 3 PHOTONS = ',I10,        USCJOB19
+     &        /5X,'# OF REJECTED  EVENTS                = ',I10)        USCJOB20
+       WRITE(IOUT,103)                                                  USCJOB21
+  103  FORMAT(//20X,'ERRORS STATISTICS',                                USCJOB22
+     &         /20X,'*****************')                                USCJOB23
+       WRITE(IOUT,104)NEVENT(2),NEVENT(3),NEVENT(4),NEVENT(5),NEVENT(6),USCJOB24
+     &               NEVENT(7),NEVENT(8)                                USCJOB25
+  104  FORMAT(/10X,'ISTA = 1 BOS ERROR VERT     # OF REJECT = ',I10,    USCJOB26
+     &        /10X,'ISTA = 2 BOS ERROR KINE e+  # OF REJECT = ',I10,    USCJOB27
+     &        /10X,'ISTA = 3 BOS ERROR KINE e-  # OF REJECT = ',I10,    USCJOB28
+     &        /10X,'ISTA = 4 BOS ERROR KINE gam1# OF REJECT = ',I10,    USCJOB29
+     &        /10X,'ISTA = 5 BOS ERROR KINE gam2# OF REJECT = ',I10,    USCJOB30
+     &        /10X,'ISTA = 6 BOS ERROR KINE gam3# OF REJECT = ',I10,    USCJOB31
+     &        /10X,'ISTA = 7 BOS ERROR KHIS     # OF REJECT = ',I10)    USCJOB32
+C                                                                       USCJOB33
+      CALL HPRINT(0)                                                    USCJOB34
+      CALL HDELET(0)                                                    USCJOB35
+C                                                                       USCJOB36
+      RETURN                                                            USCJOB37
+      END                                                               USCJOB38
+      SUBROUTINE GGGB01(LENTRY)                                         GGGB01 2
+C --------------------------------------------------------------------  GGGB01 3
+C G. Bonneaud October 1988.                                             GGGB01 4
+C --------------------------------------------------------------------  GGGB01 5
+C **********************************************************************GGGB01 6
+C   GAMMA GAMMA (GAMMA) GENERATOR DRIVER                                GGGB01 7
+C     (FROM BERENDS & KLEISS WITH SOME MODIFICATIONS FOR                GGGB01 8
+C                 CUTTING EVENTS )                                      GGGB01 9
+C                                                                       GGGB0110
+C                                   M.MARTINEZ    DESY-1985             GGGB0111
+C **********************************************************************GGGB0112
+      COMMON / DTMILL / SDVRT(3),TABL(12),NEVENT(10),NEVPHO(2)          DTMILL 2
+      COMMON / INPOUT / IOUT                                            INPOUT 2
+      COMMON /KGCOMM/ ISTA,NTRK,IDPR,ECMS,WEIT                          KGCOMM 2
+      COMMON / QUADRI / Q1(4),Q2(4),Q3(4)                               QUADRI 2
+      COMMON / GGDATA / EB,RHO,X1,A1MIN,A1MAX,AVETO,I3,IODD,ICONF       GGGB0117
+      COMMON / OUTVEC / QK1(4),QK2(4),QK3(4),EBE                        GGGB0118
+      COMMON / CON2 / K0,RHOO,THRSLD                                    GGGB0119
+      COMMON / TRIGAM / I33                                             GGGB0120
+      REAL*8 EB,EBE,RHO,RHOO,K0,THRSLD,X1,A1MIN,A1MAX,AVETO             GGGB0121
+      REAL*8 Z,QK1,QK2,QK3                                              GGGB0122
+C                                                                       GGGB0123
+      DATA CONV/57.2958/                                                GGGB0124
+C                                                                       GGGB0125
+C  INITIALIZATION            *********************                      GGGB0126
+C                                                                       GGGB0127
+      IF(LENTRY.EQ.1) THEN                                              GGGB0128
+C                                                                       GGGB0129
+C  Parameters initialization                                            GGGB0130
+C                                                                       GGGB0131
+       EB    = TABL(1)                                                  GGGB0132
+       RHO   = TABL(2)                                                  GGGB0133
+       I3    = TABL(3)                                                  GGGB0134
+       IODD  = TABL(4)                                                  GGGB0135
+       ICONF = TABL(5)                                                  GGGB0136
+       X1    = TABL(6)                                                  GGGB0137
+       A1MIN = TABL(7)                                                  GGGB0138
+       A1MAX = TABL(8)                                                  GGGB0139
+       AVETO = TABL(9)                                                  GGGB0140
+       WRITE(IOUT,5)                                                    GGGB0141
+  5   FORMAT(///10X,' E+ E- ---->  GAMMA  GAMMA (GAMMA) '///)           GGGB0142
+C                                                                       GGGB0143
+       EBE  = EB                                                        GGGB0144
+       RHOO = RHO                                                       GGGB0145
+       I33  = I3                                                        GGGB0146
+       CALL START(EB,IODD)                                              GGGB0147
+C                                                                       GGGB0148
+       RETURN                                                           GGGB0149
+      ENDIF                                                             GGGB0150
+C                                                                       GGGB0151
+C  EVENT GENERATION          *********************                      GGGB0152
+C                                                                       GGGB0153
+      IF(LENTRY.EQ.2) THEN                                              GGGB0154
+C                                                                       GGGB0155
+C  EVENT STATUS (0 = O.K.)                                              GGGB0156
+C                                                                       GGGB0157
+       ISTA = 0                                                         GGGB0158
+C                                                                       GGGB0159
+C  Initialize the track number (radiated photon included)               GGGB0160
+C                                                                       GGGB0161
+       NTRK = 3                                                         GGGB0162
+C                                                                       GGGB0163
+       CALL EVENT                                                       GGGB0164
+C                                                                       GGGB0165
+       DO 10 I = 1,4                                                    GGGB0166
+        Q1(I) = QK1(I)*EB                                               GGGB0167
+        Q2(I) = QK2(I)*EB                                               GGGB0168
+        Q3(I) = QK3(I)*EB                                               GGGB0169
+ 10    CONTINUE                                                         GGGB0170
+C                                                                       GGGB0171
+       CG1=0.                                                           GGGB0172
+       IF(QK1(4).EQ.0.)GO TO 20                                         GGGB0173
+       CG1=REAL(QK1(3)/QK1(4)   )                                       BBL03 23
+       CALL HFILL(10002,CG1,0.,1.)                                      BBL03 24
+       CALL HFILL(10003,REAL(QK1(4)),0.,1.)                             BBL03 25
+ 20    CG2=0.                                                           GGGB0177
+       IF(QK2(4).EQ.0.)GO TO 30                                         GGGB0178
+       CG2=REAL(QK2(3)/QK2(4))                                          BBL03 26
+       CALL HFILL(10004,CG2,0.,1.)                                      BBL03 27
+       CALL HFILL(10005,REAL(QK2(4)),0.,1.)                             BBL03 28
+ 30    CG3=0.                                                           GGGB0182
+       IF(QK3(4).EQ.0.)GO TO 40                                         GGGB0183
+       CG3=REAL(QK3(3)/QK3(4))                                          BBL03 29
+       CALL HFILL(10006,CG3,0.,1.)                                      BBL03 30
+       CALL HFILL(10007,REAL(QK3(4)),0.,1.)                             BBL03 31
+ 40    IF(QK1(4).EQ.0..OR.QK2(4).EQ.0.)GO TO 50                         GGGB0187
+       CALL HFILL(10008,CG1,CG2,1.)                                     GGGB0188
+       CALL HFILL(10009,REAL(QK1(4)),REAL(QK2(4)),1.)                   BBL03 32
+ 50    IF(QK1(4).EQ.0.OR.QK2(4).EQ.0.)GO TO 60                          GGGB0190
+       Z=2.*(1.-QK3(4))/(QK1(4)*QK2(4))-1.                              GGGB0191
+       IF(Z.LT.-1.)Z=-1.                                                GGGB0192
+       IF(Z.GT.1.)Z=1.                                                  GGGB0193
+       Z=CONV*DACOS(Z)                                                  GGGB0194
+       CALL HFILL(10010,REAL(Z),0.,1.)                                  BBL03 33
+       Z=-(QK1(1)*QK2(1)+QK1(2)*QK2(2))/                                GGGB0196
+     . DSQRT((QK1(1)**2+QK1(2)**2)*(QK2(1)**2+QK2(2)**2))               GGGB0197
+       IF(Z.LT.-1.)Z=-1.                                                GGGB0198
+       IF(Z.GT.1.)Z=1.                                                  GGGB0199
+       Z=CONV*DACOS(Z)                                                  GGGB0100
+       CALL HFILL(10011,REAL(Z),0.,1.)                                  BBL03 34
+  60   CONTINUE                                                         GGGB0102
+C                                                                       GGGB0103
+       IDPR = 100*I3 + 10*ICONF                                         GGGB0104
+       WEIT = 1.                                                        GGGB0105
+       ECMS = 2.*EB                                                     GGGB0106
+C                                                                       GGGB0107
+       RETURN                                                           GGGB0108
+      ENDIF                                                             GGGB0109
+C                                                                       GGGB0110
+C  END OF GENERATION         *********************                      GGGB0111
+C                                                                       GGGB0112
+      IF(LENTRY.EQ.3) THEN                                              GGGB0113
+C                                                                       GGGB0114
+       CALL FINISH                                                      GGGB0115
+C                                                                       GGGB0116
+      ENDIF                                                             GGGB0117
+C                                                                       GGGB0118
+      RETURN                                                            GGGB0119
+      END                                                               GGGB0120
+
+
+
+      SUBROUTINE UGTSEC
+C-----------------------------------------
+C
+C   Author   :- bloch                 28-APR-1995
+C
+C=========================================
+C
+C   Purpose   : DUMMY ROUTINE FOR SOME UNIX MACHINES
+C   Inputs    :
+C   Outputs   :
+C
+C=========================================
+C +
+C Declarations.
+C -
+      IMPLICIT NONE
+C + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+C Entry Point.
+C - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      PRINT * ,
+     &
+     &  '   UGTSEC : THIS DUMMY ROUTINE SHOULD NEVER HAVE BEEN CALLED ..
+     &  PLEASE CONTACT YOUR LOCAL KINGAL RESPONSIBLE '
+  999 RETURN
+      END

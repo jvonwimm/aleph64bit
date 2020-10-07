@@ -1,0 +1,696 @@
+#!/bin/csh
+##############################################
+#   Script to submit a alpha job on shift
+#   written by Joel Closier   (April 1993)
+##############################################
+# Modification:
+# JC 23-09-93 : Option debug mode added for the new alpharun 
+#   4.0
+# JC 22-04-94 : version adapted to work on all platform
+#   5.0
+# JC 22-06-94 : remove qiptag stuff, bug fixed for 
+#   5.1         alphacards and historian
+##############################################
+#
+set VER="5.1"
+set FILE_LOG="/aleph/log/sfalpha.log"
+
+echo "     *******************************************"
+echo "     ***********      SFALPHA    $VER  **********"
+echo "     *******************************************"
+echo ""
+
+#set echo on
+
+#  initialisation of variables
+set enfl        = n
+set jul         = n
+set qip         = n
+set debug       = n
+set his         = n
+set alpver      = 117
+set fprog       = ""
+set obj         = ""
+set cprog       = ""
+set inc         = ""
+set upd         = ""
+set corr        = ""
+set corrs       = ""
+set machine     = "shift9"
+set timel       = "100000"
+set exec        = ""
+set alp         = "$ALPHACARDS"
+set queue       = "ALEPH"
+set jobnumber   = ""
+set FILEOPT     = "$cwd/sfalpha.optb"
+set me          = `id | cut -f2 -d"(" | cut -f1 -d")"`
+set node        = `uname -n`
+
+#   chek the argument if they exist
+if ($#argv > 0) then
+   if ("$argv[1]" == "help") then 
+      goto HELP
+   else
+      set FILEOPT=$argv[1]
+   endif
+else
+   goto HELP
+endif
+
+
+
+###############################################################
+#       read parameters if the option file exists
+###############################################################
+BEGIN:
+if (-r $FILEOPT) then
+  set exec=`awk '{if ((NR == 1) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+  set fprog=`awk '{if ((NR == 2) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+  set cprog=`awk '{if ((NR == 3) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+  set enfl=`awk '{if ((NR == 5) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+  set jul=`awk '{if ((NR == 6) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+  set obj=`awk '{if ((NR == 7) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+  set inc=`awk '{if ((NR == 12) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+  set upd=`awk '{if ((NR == 13) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+  set debug=`awk '{if ((NR == 17) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+  set corr=`awk '{if ((NR == 14) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+  set corrs=`awk '{if ((NR == 15) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+  set his=`awk '{if ((NR == 10) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+  set alpver=`awk '{if ((NR == 11) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+  set alp=`awk '{if ((NR == 4) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+  set timel=`awk '{if ((NR == 8) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+  set machine=`awk '{if ((NR == 16) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+  set jobnumber=`awk '{if ((NR == 9) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+
+  if ($enfl == "y" || $enfl == "Y") set jul = "y"
+  goto VALIDE
+else
+  goto CRPARAM
+endif
+
+
+###############################################################
+#     print parameters and request validation
+###############################################################
+VALIDE:
+echo ""
+echo "you run SFALPHA with these options (stored in $FILEOPT):"
+echo ""
+echo "alpha version        = $alpver"
+echo "fortran file(s)      = $fprog"
+echo "c       file(s)      = $cprog"
+echo "Debug mode           = $debug"
+echo "obj     file         = $obj"
+echo "include file(s)      = $inc"
+echo "historian flag       = $his"
+if (("$his" == "y" ) || ("$his" == "Y")) then
+   echo "updates files        = $upd"
+   echo "standard correction  = $corr"
+   echo "own correction files = $corrs"
+endif
+echo "card    file         = $alp"
+echo "julia                = $jul"
+echo "enfl                 = $enfl"
+echo "job    name          = $exec"
+echo "time limit           = $timel"
+echo "submitted on machine = $machine"
+echo ""
+echo "------------------------ Is it correct [y] ? :"
+set rep=$<
+if ($rep == "y" || $rep == "Y" || $rep == "") then
+   goto ACTION
+endif
+
+
+###############################################################
+#   change parameters
+###############################################################
+CRPARAM:
+###  Entry for the data    ###
+#    name of the executable
+  echo "Enter the name for the executable  [CR = $exec]"
+  echo -n "(e.g. : /users/username/myexec)  : "
+  set buf=$<
+  if ($buf != "") set exec=$buf
+  echo ""
+
+  echo "Enter the number for the version of alpha [CR = $alpver]"
+  echo -n "(e.g. : 114)  : "
+  set buf=$<
+  if ($buf != "") set alpver=$buf
+  echo ""
+
+  set his=n
+  echo "Do you use historian (y/n)? [CR = $his]"
+  echo -n "(e.g. : n)  : "
+  set buf=$<
+  if ($buf != "") set his=$buf
+  echo ""
+  if ("$his" == "y" || "$his" == "Y") then
+    if ("$upd" == "") then
+       set upd=$exec.updates
+    endif
+    echo "Give your default historian correction filename ? [CR = $upd, SPACE = nothing]"
+    echo -n "(e.g. : /users/username/my_updates)  : "
+    set buf=$<
+#    if ($buf != "") then
+    set upd=$buf
+    echo ""
+    set corr="y"
+    echo "Do you want to use the standard correction too (y/n)? [CR = $corr]"
+    echo -n "(e.g. : n)  : "
+    set buf=$<
+    if ($buf != "") set corr=$buf
+    echo ""
+    set yesno=n
+    echo "Do you have other historian correction files (y/n)? [CR = $yesno]"
+    echo -n "(e.g. : n)  : "
+    set buf=$<
+    if ($buf != "") set yesno=$buf
+    echo ""
+    if (("$yesno" == "y") || ("$yesno" == "Y")) then 
+      if ("$corrs" == "") then
+        set corrs=$exec.corr
+      endif
+      set ok="n"
+      while ($ok == "n" || $ok == "N")
+        echo "Enter the name of your correction file(s) [CR = $corrs]"
+        echo -n "(e.g. : /users/username/myprog.corr) : "
+        set buf=$<
+        if ("$buf" != "") then
+           set corrs=($buf)
+        endif
+        set i=1
+        if ($#corrs == 0) then
+          set ok="y"
+        endif
+        while ($i <= $#corrs)
+          if !(-f $corrs[$i]) then
+              echo file does not exist
+              set ok="n"
+          else set ok="y"
+          endif
+          @ i++
+        end
+      end
+    endif
+  echo ""
+    
+  endif
+
+#    name for the fortran file 
+  if ("$fprog" == "") then
+    set fprog=$exec.f
+  endif
+  set ok="n"
+  while ($ok == "n" || $ok == "N")
+    echo "Enter the name of the fortran file(s) [CR = $fprog, SPACE = nothing]"
+    echo -n "(e.g. : /users/username/myprog.f) : "
+    set buf=$<
+    if ("$buf" != "") then
+       set fprog=($buf)
+    endif
+    set i=1
+    if ($#fprog == 0) then
+      set ok="y"
+    endif
+    while ($i <= $#fprog)
+      if !(-f $fprog[$i]) then
+          echo file does not exist
+          set ok="n"
+      else set ok="y"
+      endif
+      @ i++
+    end
+  end
+  echo ""
+
+#    name for the C file 
+  if ("$cprog" == "") then
+    set cprog=$exec.c
+  endif
+  set ok="n"
+  while ($ok == "n" || $ok == "N")
+    echo "Enter the name of the fortran file(s) [CR = $cprog, SPACE = nothing]"
+    echo -n "(e.g. : /users/username/myprog.c) : "
+    set buf=$<
+    if ("$buf" != "") then
+       set cprog=($buf)
+    endif
+    set i=1
+    if ($#cprog == 0) then
+      set ok="y"
+    endif
+    while ($i <= $#cprog)
+      if !(-f $cprog[$i]) then
+          echo file does not exist
+          set ok="n"
+      else set ok="y"
+      endif
+      @ i++
+    end
+  end
+  echo ""
+
+#   use of the debug mode for private file and alpha package
+  set debug=n
+  echo " Do you want to use the debug mode (y/n)? [CR = $debug]"
+  echo "(only your fortran and the alpha package will be in the debug mode)"
+  echo -n "(e.g. : n)  : "
+  set buf=$<
+  if ($buf != "") set debug=$buf
+  echo ""
+
+
+#     name for the object file
+  if ("$obj" == "") then
+    set obj=$exec.o
+  endif
+  set ok="n"
+  while ($ok == "n" || $ok == "N")
+    echo "Enter the name of the obj file(s) [CR = $obj, SPACE = nothing]"
+    echo -n "(e.g. : /users/username/my_obj.o) : "
+    set buf=$<
+    if ("$buf" != "") then
+       set obj=($buf)
+    endif
+    set i=1
+    if ($#obj == 0) then
+       set ok="y"
+    endif
+    while ($i <= $#obj)
+      if !(-f $obj[$i]) then
+         echo file does not exist
+         set ok="n"
+      else set ok="y"
+      endif
+      @ i++
+    end
+  end
+  echo ""
+
+
+#      name for the include file
+  if ("$inc" == "") then
+    set inc=$exec.inc
+  endif
+  set ok="n"
+  while ($ok == "n" || $ok == "N")
+    echo "The standard include files are used (qcde.inc, qdecl.inc, qhac.inc"
+    echo "qmacro.inc but you can add your own include file"
+    echo "Enter the name of your own include file(s) [CR = $inc, SPACE = nothing]"
+    echo -n "(e.g. : /users/username/myprog.inc) : "
+    set buf=$<
+    if ("$buf" != "") then
+       set inc=($buf)
+    endif
+    set i=1
+    if ($#inc == 0) then
+       set ok="y"
+    endif
+    while ($i <= $#inc)
+      if !(-f $inc[$i]) then
+         echo file does not exist
+         set ok="n"
+      else set ok="y"
+      endif
+      @ i++
+    end
+  end
+  echo ""
+
+#        energy flow and julia library
+  set ok="n"
+#  set enfl="n"
+  while ($ok == "n" || $ok == "N")
+    echo -n " ENFLW or QMUIDO with DST (Y or N) [CR = $enfl] : "
+    set buf=$<
+    if ("$buf" != "") then
+       set enfl=$buf
+    endif
+    if ("$enfl" == "n" || "$enfl" == "N") then
+           echo ""
+#           set jul="n"
+           while ($ok == "n" || $ok == "N")
+             echo -n " Link to JULIA (Y or N) [CR = $jul] : "
+             set buf=$<
+             if ("$buf" != "") then
+               set jul=$buf
+             endif
+             if ("$jul" == "y" || "$jul" == "Y") then
+                set ok = "y"
+             else
+               if ("$jul" == "n" || "$jul" == "N") then
+                 set ok = "y"
+               endif
+            endif
+          end
+       set ok = "y"
+    else
+     if ("$enfl" == "y" || "$enfl" == "Y") then
+       set ok = "y"
+       set jul="y"
+     endif
+    endif
+  end
+  echo ""
+
+#     name of the card file
+  if ("$ALPHACARDS" == "") then
+    set ALPHACARDS=$exec.cards
+  endif
+  if ("$alp" != "") then
+    set ALPHACARDS=$alp
+  endif
+
+  echo ""
+  set ok="n"
+  while ($ok == "n" || $ok == "N")
+    echo -n " Enter the name of the alpha cards [CR = $ALPHACARDS]: "
+    set alp=$<
+    if ("$alp" != "") then
+     if !(-f $alp) then
+       echo file does not exist
+     else 
+        set ok="y"
+        set alp="$PWD/$alp"
+     endif
+    else
+       set alp=$ALPHACARDS
+       set ok="y"
+    endif
+  end
+
+#   name of the queue on shift
+  echo ""
+  set ok="n"
+  while ($ok == "n" || $ok == "N")
+    echo -n " Enter the time limit [CR = $timel]: "
+    set buf=$<
+    if ("$buf" != "") then
+       set timel=($buf)
+    endif
+    set ok="y"
+  end
+
+#   name of the machine where you want to submit
+  echo ""
+  set ok="n"
+  while ($ok == "n" || $ok == "N")
+    echo -n " Enter the machine where you want to submit [CR = $machine]: "
+    echo -n " Your choice : shift9 saga or afal01: "
+    set buf=$<
+    if ("$buf" != "") then
+       set machine=($buf)
+    endif
+    set ok="y"
+  end
+
+goto VALIDE
+
+
+###############################################################
+#    create the job and submit it to shift
+###############################################################
+ACTION:
+#    give a number to the job
+if ("$jobnumber" == "") then
+   set jobnumber=0
+else
+   set jobnumber=`expr ${jobnumber} + 1`
+endif
+
+if (("$timel" == "xum") || ("$timel" == "C_xum")) then
+   set timel = "10000"
+else
+  if (("$timel" == "xus") || ("$timel" == "B_xus")) then
+    set timel = "1000"
+  else
+    if (("$timel" == "xul") || ("$timel" == "D_xul")) then
+      set timel = "100000"
+    else
+      if (("$timel" == "xux") || ("$timel" == "A_xux")) then
+        set timel = "100"
+      endif
+    endif
+  endif
+endif
+#   save the values in the file sfalpha.optb
+cat >$FILEOPT <<END-OF-CAT
+$exec
+$fprog
+$cprog
+$alp
+$enfl
+$jul
+$obj
+$timel
+$jobnumber
+$his
+$alpver
+$inc
+$upd
+$corr
+$corrs
+$machine
+$debug
+END-OF-CAT
+
+#    name of the directory on shift where the file will be put 
+set direc=${exec}_${jobnumber}
+
+#    create the parameter for alpharun
+set efjul=" "
+if ("$enfl" == "y" || "$enfl" == "Y") set efjul="$efjul -e"
+if ("$jul" == "y" || "$jul" == "Y") set efjul="$efjul -j"
+
+set debugging=" "
+if ("$debug" == "y" || "$debug" == "Y") set debugging="-g"
+set realalp=`echo $alp | awk -F/ '{if (i = NF) print $i}'`
+set histor=" "
+if ("$his" == "n" || "$his" == "N") set histor="-h"
+set alphar="alpharun $histor -v $alpver $efjul $debugging -C $realalp"
+
+cat >${cwd}/${exec}.job <<END-OF-JOB
+#@\$-s /bin/csh
+#@\$-eo
+#@\$-lt $timel
+#@\$-r $exec
+#@\$-mu $me
+#@\$-me
+#
+date
+#
+END-OF-JOB
+
+set j=1
+set ofprog=""
+if ("$fprog" != "") then
+    while ($j <= $#fprog)
+      set te=`echo $fprog[$j] | grep '/'`
+      if ($status == 1) then
+         set fprog[$j] = "$PWD/$fprog[$j]"
+      endif
+      set realfprog=`echo $fprog[$j] | awk -F/ '{if (i = NF) print $i}'`
+cat >>${cwd}/${exec}.job << END-OF-JOB
+sfetch ${realfprog}o -t ${node}:${fprog[$j]} -u ${me}
+sed -e "/^[ ]* INCLUDE*./s/[ ]* INC[ ]*[ \*]*[ ]*'/.INC'/g" ${realfprog}o > $realfprog
+END-OF-JOB
+      set ofprog="$ofprog -f ${realfprog}"
+      @ j++
+    end
+endif
+
+set j=1
+set ocprog=""
+if ("$cprog" != "") then
+    while ($j <= $#cprog)
+      set te=`echo $cprog[$j] | grep '/'`
+      if ($status == 1) then
+         set cprog[$j] = "$PWD/$cprog[$j]"
+      endif
+      set realcprog=`echo $cprog[$j] | awk -F/ '{if (i = NF) print $i}'`
+cat >>${cwd}/${exec}.job << END-OF-JOB
+sfetch ${realcprog} -t ${node}:${cprog[$j]} -u ${me}
+END-OF-JOB
+      set ocprog="$ocprog -c ${realcprog}"
+      @ j++
+    end
+endif
+
+set j=1
+set ooprog=""
+if ("$obj" != "") then
+    while ($j <= $#obj)
+      set te=`echo $obj[$j] | grep '/'`
+      if ($status == 1) then
+         set obj[$j] = "$PWD/$obj[$j]"
+      endif
+      set realoprog=`echo $obj[$j] | awk -F/ '{if (i = NF) print $i}'`
+cat >>${cwd}/${exec}.job << END-OF-JOB
+sfetch ${realoprog} -t ${node}:${obj[$j]} -u ${me}
+END-OF-JOB
+      set ooprog="$ooprog -o ${realoprog}"
+      @ j++
+    end
+endif
+
+set j=1
+if ("$inc" != "") then
+    while ($j <= $#inc)
+      set te=`echo $inc[$j] | grep '/'`
+      if ($status == 1) then
+         set inc[$j] = "$PWD/$inc[$j]"
+      endif
+      set realinc=`echo $inc[$j] | awk -F/ '{if (i = NF) print $i}'`
+cat >>${cwd}/${exec}.job << END-OF-JOB
+sfetch ${realinc} -t ${node}:${inc[$j]} -u ${me}
+END-OF-JOB
+      @ j++
+    end
+endif
+
+if ("$his" == "y" || "$his" == "Y") then
+  if ("$corr" == "y" || "$corr" == "Y") then
+cat >> ${cwd}/${exec}.job <<END-OF-JOB
+sfetch UPDATES.41 -t cernvm:alpha${alpver}.corr -u pubxu.205
+END-OF-JOB
+cat >>${cwd}/${exec}.histo << END-OF-HISTO
+*READ UPDATES.41
+END-OF-HISTO
+  endif
+  set j=1
+  if ("$corrs" != "") then
+      while ($j <= $#corrs)
+        set te=`echo $corrs[$j] | grep '/'`
+        if ($status == 1) then
+           set corrs[$j] = "$PWD/$corrs[$j]"
+        endif
+        set realcorrs=`echo $corrs[$j] | awk -F/ '{if (i = NF) print $i}'`
+cat >>${cwd}/${exec}.job << END-OF-JOB
+sfetch ${realcorrs} -t ${node}:${corrs[$j]} -u ${me}
+END-OF-JOB
+cat >>${cwd}/${exec}.histo << END-OF-HISTO
+*READ ${realcorrs}
+END-OF-HISTO
+        @ j++
+      end
+  endif
+
+cat >> ${cwd}/${exec}.job <<END-OF-JOB
+echo "*EX" > histor_in.txt
+histor < histor_in.txt >/dev/null
+if (\$status != 1) then 
+histor p=/aleph/phy/alpha${alpver}.hlb,b<<EOF >alpha.h
+END-OF-JOB
+if ("$upd" != "") then
+  cat $upd >> ${cwd}/${exec}.job
+else
+cat >> ${cwd}/${exec}.job <<END-OF-JOB
+*IDENT STEER
+*DF UNIX
+*EDIT QMAIN
+*ID RHWORK
+END-OF-JOB
+endif
+cat ${cwd}/${exec}.histo >> ${cwd}/${exec}.job
+rm ${cwd}/${exec}.histo
+cat >> ${cwd}/${exec}.job <<END-OF-JOB
+*EX
+EOF
+#
+mv COMPILE alpha.f
+else 
+ echo "histor does not exist on this machine"
+endif
+END-OF-JOB
+endif
+if ("$his" == "y" || "$his" == "Y") then
+  set alphar="$alphar -f alpha.f"
+endif
+
+set alphar="$alphar $ofprog $ocprog $ooprog -r $exec"
+cat >> ${cwd}/${exec}.job <<END-OF-JOB
+sfetch ${realalp} -t ${node}:${alp} -u ${me}
+ln -s /al/\$MASTER/phy/qcde.inc${alpver} QCDE.INC
+ln -s /al/\$MASTER/phy/qdecl.inc${alpver} QDECL.INC
+ln -s /al/\$MASTER/phy/qhac.inc${alpver} QHAC.INC
+ln -s /al/\$MASTER/phy/qmacro.inc${alpver} QMACRO.INC
+$alphar
+# check for user-initiated hist file transfers
+set u_dispose = \`grep HIST ${realalp} | grep -i dispose\`
+if ("\$status" == "0") goto EndJob
+# do HIST file transfer for user
+set hist_fil = \`grep HIST ${realalp} | cut -f2 -d"'"\`
+if ("\$hist_fil" == "") goto EndJob
+rcp \${hist_fil} '${node}:${cwd}/'\${hist_fil}
+EndJob:
+if !(-r core) rm -f * ; cd ; rmdir \$nqs_tmpdir
+exit
+END-OF-JOB
+
+echo " Inputs OK."
+echo "Submitting to $machine via NQS++"
+qtell -c qsub -h $machine ${cwd}/${exec}.job
+set DATE=`date`
+set DATE=`echo $DATE | awk '{print $2,$3,$4}'`
+echo "$DATE ${me} ${exec} ${machine} $VER" >> $FILE_LOG
+exit 0
+
+
+
+###############################################################
+#   Display a help for this script
+###############################################################
+HELP:
+cat >txt.txt <<END-OF-HELP
+  Welcome to SFALPHA, the command file to submit ALPHA jobs to SHIFT
+
+  This command file builds for you all the script you need to
+ run on SHIFT.  What you need to give is a list
+ of the filenames and options you want to use. This list is maintained
+ in a file, and you can give this filename when you call SFALPHA:
+
+  sfalpha  filename
+
+  This options file has the type .optb, and defaults to sfalpha.optb
+
+ The command file reads the options file if it exists ( if not, you will
+ create one from an interactive dialog),
+ and prompts you for validation. If you answer NO, then
+ it will prompt for each file and option, giving you the default value
+ between [ ]. If you answer <return>, then the default value is kept.
+ If you answer " "(space), then no file will be taken.
+  When you agree on the options, existence and consistency
+ of input files will be checked
+ with appropriate warnings if things are amiss.
+ The values will be saved in a new version
+ of the .optb file.
+
+ If your session has passed the checks,
+ a NQS command file is written for you in this directory and
+ submited to SHIFT for processing.
+ A new, uniquely-named subdirectory will be created on SHIFT
+ for each job, so a new binary is always created.
+
+  At the end of the job on SHIFT,
+  histogram and NQS job files are sent back to this directory.
+
+
+-------------------------------------------------------------
+
+END-OF-HELP
+more txt.txt
+rm txt.txt
+goto BEGIN
+
+
+
+
+
+
+
+
+
+
+

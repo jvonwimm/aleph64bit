@@ -1,0 +1,22 @@
+*DK addoc
+#if defined(DOC)
+.chapter  DISPLAY          display routines
+     This chapter describes the subroutines used by the display option
+  of the standard Batch version of GALEPH.
+     If the display flag is activated  ,the program will :
+   - initialize the display process by calling ADINIT once.
+   - produce a capture file on unit LGRAIO (default 3) containing 2 typical cut
+     views of the requested events ( call ADVIEW).
+     The initial  step will  initialize some  constants  needed by  the drawing
+   package ( scale factors , seen or unseen volumes ) by a call to GUINTI.
+     Then it will build once the standard views of the event,i.e.
+    - one X-Y cut view at Z=0.
+    - one Y-Z cut view at X=0.
+     In order to save time , those views of the geometrical set-up are built
+   once  and  stored  in  view  banks  by  subroutines ADXY  and  ADRZ. They are
+   recalled  in  each  event  when  needed.
+     The event processing step calls ADVIEW after each event in ASCEVE.
+     The display of the tracks is superimposed to the display of the set-up
+   in each of the defined cut views,toguether with a picture header and a title.
+     In the Y-Z view , R is plotted instead of Y .
+#endif

@@ -1,0 +1,259 @@
+head	1.2;
+access;
+symbols
+	alpha126_22:1.2
+	alpha126_21:1.2
+	alpha126_20:1.2
+	alpha126_19:1.2
+	alpha126_18:1.2
+	alpha126_17:1.2
+	alpha126_16:1.2
+	alpha126_15:1.2
+	alpha126_14:1.2
+	alpha126_13:1.2
+	alpha126_12:1.2
+	alpha126_11:1.2
+	alpha126_10:1.2
+	alpha126_09:1.2
+	alpha126_08:1.2
+	alpha126_07:1.2
+	alpha126_06:1.2
+	alpha126_05:1.2
+	alpha126_04:1.2
+	alpha126_03:1.2
+	alpha126_02:1.2
+	alpha126_1:1.2
+	alpha125_17:1.2
+	alpha125_16:1.2
+	alpha125_15:1.2
+	alpha125_14:1.2
+	alpha125_13:1.2
+	alpha125_12:1.2
+	alpha125_11:1.2
+	alpha125_10:1.2
+	alpha125_09:1.2
+	alpha125_08:1.2
+	alpha125_07:1.2
+	alpha125_06:1.2
+	alpha125_05:1.2
+	alpha125_04:1.2
+	alpha125_03:1.2
+	alpha125_02:1.2
+	alpha125_01:1.2
+	alpha124_19:1.2
+	alpha125:1.2
+	alpha124_18:1.2
+	alpha124_17:1.2
+	alpha124_16:1.2
+	alpha124_15:1.2
+	alpha124_14:1.2
+	alpha124_13:1.2
+	alpha124_12:1.2
+	alpha124_11:1.2
+	alpha124_10:1.2
+	alpha124_09:1.2
+	alpha124_08:1.2
+	alpha124_07:1.2
+	alpha124_7:1.2
+	alpha124_06:1.2
+	alpha124_05:1.2
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1
+	alpha124:1.1
+	alpha123_12:1.1
+	alpha123_11:1.1
+	alpha123_10:1.1
+	alpha123_9:1.1
+	alpha123_8:1.1
+	alpha123_7:1.1
+	alpha123_6:1.1
+	alpha123_5:1.1
+	alpha123_4:1.1
+	alpha123_3:1.1
+	alpha123_2:1.1
+	alpha123:1.1
+	alpha122_48:1.1
+	alpha122_47:1.1
+	alpha122_46:1.1
+	alpha122_45:1.1
+	alpha122_44:1.1
+	alpha122_43:1.1
+	alpha122_42:1.1
+	alpha122_41:1.1
+	alpha122_40:1.1
+	alpha122_39:1.1
+	alpha122_38:1.1
+	alpha122_37:1.1
+	alpha122_36:1.1
+	alpha122_35:1.1
+	alpha122_34:1.1
+	alpha122_33:1.1
+	alpha122_32:1.1
+	alpha122_31:1.1
+	alpha122_30:1.1
+	alpha122_29:1.1
+	alpha122_28:1.1
+	alpha122_27:1.1
+	alpha122_26:1.1
+	alpha122_25:1.1
+	alpha122_24:1.1
+	alpha122_23:1.1
+	alpha122_22:1.1
+	alpha122_21:1.1
+	alpha122_20:1.1
+	alpha122_19:1.1
+	alpha122_18:1.1
+	alpha122_17:1.1
+	alpha122_16:1.1
+	alpha122_15:1.1
+	alpha122_14:1.1
+	alpha122_13:1.1
+	alpha122_12:1.1
+	alpha122_11:1.1
+	alpha122_10:1.1
+	alpha122_9:1.1
+	alpha122_8:1.1
+	alpha122_6:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	99.04.19.14.04.30;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.06.27.15.14.51;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE BTAG_FIT(FILE)
+CKEY   QIPBTAG / USER
+C-----------------------------------------------------------------------
+C! Fit the negative dmin/sig spectrum to determine the track resolution,
+C  pack the parameters into the appropriate banks, and write them out.
+C  May be called by the user at the end of his job
+C  Author  Dave Brown  29-1-93
+C
+C     Input;  FILE   File name of the card file to be created.  If
+C                    this is blank or equal to "NONE", the card file
+C                    will appear on unit 32
+C-----------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+#include "bcs.h"
+#include "btpar.h"
+      INTEGER IND,IPAR
+      INTEGER ILOW,IHIGH
+      INTEGER ITYPE
+      CHARACTER*(*) FILE
+      REAL ERR(NFIT),CHI
+      INTEGER NOENT
+      INTEGER NBANK
+      REAL FITPAR(NFIT,MAXTYPE)
+#include "bmacrod.h"
+C
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+C  Check that calibration was requested.
+      IF (.NOT.CALIB) GOTO 999
+C
+C  Copy the existing parameters as initial values
+C
+      DO ITYPE=1,MAXTYPE
+        DO IPAR=1,NFIT
+          FITPAR(IPAR,ITYPE) = FITP(IPAR,ITYPE)
+        END DO
+      END DO
+C
+C     Limit the fit range, so as to model the tail better
+C
+      WRITE (IW(6),*)'BTAG_FIT: Calibration fit results'
+      DO ITYPE=1,NTYPE
+        CALL FIT_DMIN(ITYPE,NVIEW(ITYPE),FITPAR(1,ITYPE),ERR,CHI,NOENT)
+        IF (NOENT.GT.0) WRITE (IW(6),10) ITYPE,NOENT,CHI
+   10   FORMAT(' For tracks of type ',I2,' histogram has ',I7,
+     &         ' entries and chisq/ndf of fit = ',f12.5)
+      END DO
+C
+C  Save the values in a card file
+C
+      IND = NBANK('FITP',1,LMHLEN + MAXTYPE*NFIT)
+      IF(IND .LE. 0 )THEN
+        WRITE (IW(6),*)'BTAG_FIT: Not enough space to create FITP bank'
+        RETURN
+      END IF
+      IW(IND+1) = NFIT
+      IW(IND+2) = MAXTYPE
+      DO ITYPE=1,MAXTYPE
+        DO IPAR=1,NFIT
+          RW(KROW(IND,ITYPE)+IPAR) = FITPAR(IPAR,ITYPE)
+        END DO
+      END DO
+      CALL BKFMT('FITP','2I,(5F)')
+C
+C  Write out the bank as a cards
+C
+      IF(FILE(1:4) .NE. 'NONE' .AND. FILE(1:4) .NE. 'none')THEN
+        WRITE (IW(6),*)' Saving BTAG calibration on file ',FILE
+        OPEN(UNIT=32,STATUS='UNKNOWN',FORM='FORMATTED',FILE=FILE)
+      ELSE
+        WRITE (IW(6),*)' Saving BTAG calibration on unit 32'
+      END IF
+      CALL BUNIT(32,'TEXT',72)
+      CALL BLIST(IW,'E=','FITP')
+      CALL BWRITE(IW,32,'E')
+      CALL BWRITE(IW,32,'0')
+      CLOSE(32)
+
+  999 CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@remove underscore in file names
+@
+text
+@d3 1
+a3 1
+C ------------------------------------------------------------------------------
+d12 1
+a12 1
+C ------------------------------------------------------------------------------
+d22 1
+d28 4
+a31 1
+C ------------------------------------------------------------------------------
+d34 1
+a34 1
+      DO ITYPE=1,NTYPE
+d44 4
+a47 2
+        CALL FIT_DMIN(ITYPE,NVIEW(ITYPE),FITPAR(1,ITYPE),ERR,CHI)
+        WRITE (IW(6),*)'chisq/dof = ',CHI,' For tracks OF type ',ITYPE
+d52 1
+a52 1
+      IND = NBANK('FITP',1,2+NTYPE*NFIT)
+d58 2
+a59 2
+      IW(IND+2) = NTYPE
+      DO ITYPE=1,NTYPE
+d79 2
+@

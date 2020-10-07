@@ -1,0 +1,139 @@
+head	1.1;
+access;
+symbols
+	jul313_3:1.1
+	jul313_2:1.1
+	jul313_1:1.1
+	jul313:1.1
+	jul312_1:1.1
+	jul312:1.1
+	jul311:1.1
+	jul310_1:1.1
+	jul310:1.1
+	jul309_1:1.1
+	jul309:1.1
+	jul308_6:1.1
+	jul308_5:1.1
+	jul308_4:1.1
+	jul308_3:1.1
+	jul308_2:1.1
+	jul308_1:1.1
+	jul308:1.1
+	jul307_4:1.1
+	jul307_3:1.1
+	jul307_2:1.1
+	jul307_1:1.1
+	jul307:1.1
+	jul306_3:1.1
+	jul306_2:1.1
+	jul306_1:1.1
+	jul306:1.1
+	jul305_4:1.1
+	jul305_3:1.1
+	jul305_2:1.1
+	jul305_1:1.1
+	jul305:1.1
+	jul304_3:1.1
+	jul304_2:1.1
+	jul304_1:1.1
+	jul304:1.1
+	jul303_7:1.1
+	jul303_6:1.1
+	jul303_5:1.1
+	jul303_4:1.1
+	jul303_3:1.1
+	jul303_2_mc1:1.1
+	jul303_2:1.1
+	jul303_1_mc1:1.1
+	jul303_1:1.1
+	jul303_v:1.1
+	jul303:1.1
+	jul302_6:1.1
+	jul302_5:1.1
+	jul302_4:1.1
+	jul302_3:1.1
+	jul302_2:1.1
+	jul302_1:1.1
+	jul302:1.1
+	jul285_1:1.1
+	jul285:1.1
+	jul284_1:1.1
+	jul284:1.1
+	jul283_1:1.1
+	jul283:1.1
+	jul282_1:1.1
+	jul282:1.1
+	jul281_3:1.1
+	jul281_2:1.1
+	jul281_1:1.1
+	jul281:1.1
+	jul280_1:1.1
+	jul280:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.05.06.15.50.02;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@re-installed jul280 from the historian source because some routines were missing.
+@
+text
+@      SUBROUTINE TCQGS3 (IPADA, RPULS, QCO, IERY)
+C--------------------------------------------------------------------
+C!  Compute coordinate charge assuming Gaussian; Based on TCOGS3
+C!
+C!  Author:    T. Pun      12-06-86
+C!  Modified:  R. Johnson   8-04-88
+C!             D. Casper    5-04-95 Create TCQGS3 from TCOGS3
+C!
+C!  INPUT :
+C!    I4/  IPADA      : indice of 1st pad of the three, in [1 .. NPADS].
+C!    R4/  RPULS(ip): p heights for this cluster (in [1 ... 255] !).
+C!
+C!  OUTPUT :
+C!    R4/  QCO     : area under Gaussian = coordinate charge
+C!    I4/  IERY     : error flag = 121: negative logarithm.
+C!
+C!  Called by TCOALG
+C!
+C?
+C!===================================================================
+#ifndef DOC
+C
+      DIMENSION RPULS(*)
+C
+      IERY = 0
+      RPHI = 0.0
+      PRFS2 = 0.0
+C
+      PUL1 = RPULS(IPADA)
+      PUL2 = RPULS(IPADA+1)
+      PUL3 = RPULS(IPADA+2)
+C
+      R4L1 = ALOG(PUL2) - ALOG(PUL1)
+      R4L  = R4L1 + ALOG(PUL2) - ALOG(PUL3)
+C
+      IF (R4L .LT. 0.0) THEN
+         IERY = 121
+         RETURN
+      ENDIF
+C
+      R4L = 1.0 / R4L
+      PRFS2 = R4L
+      RPHI = FLOAT(IPADA) + 0.5 + R4L*R4L1
+      QNORM = PUL1 * EXP((FLOAT(IPADA) - RPHI)**2/(2.*PRFS2))
+      QCO = QNORM * SQRT(2.*3.14159 * PRFS2)
+      RETURN
+      END
+#endif
+@

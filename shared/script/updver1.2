@@ -1,0 +1,327 @@
+#! /bin/csh
+#============================================================================
+#                             updver
+#                                                       F.Ranjard
+#============================================================================
+# procedure to update an existing ALEPH library on various UNIX machines
+#
+#============================================================================
+# All ALEPH CERNVM disks on file -> ${alib_dir}/alibdisk
+#
+# the /aleph/ directory of an ALEPH library is found in ${alib_dir}/pub/progl
+# the last version number installed is taken from ${prog_dir}/alib.log
+# if it exists.
+#
+# All parameters for f77 on file without debug -> ${prog_dir}/f77_options
+# All parameters for f77 on file with debug -> ${prog_dir}/f77_dbx_options
+# Call "f77_compile -> to run f77 foreach routine
+#
+# source files are stored on ${prog_dir/src${prog_name}${cycle}
+# special fortran files are stored on ${prog_dir}
+# object files and library files are stored on ${lib_dir}
+# usually ${prog_dir} and {lib_dir} are identical
+# ----------------------------------------------
+#
+# -> run FTP on CERNVM.CERN.CH
+#            get ${file_name}.${file_type}
+#============================================================================
+# P1 -> prog_name eg: alephlib
+# P2 -> cycle     eg: 154
+# P3 -> file_name eg: alenew
+# P4 -> file_type eg: ufor
+#============================================================================
+# updver1.0
+# 23/11/93 - 1st version
+# updver1.1
+# 940922 - use $ALEPH instead of /aleph
+# updver1.2
+# 951128 - use $ALEPH_ROOT instead of /al
+#============================================================================
+#
+set exec_name = "updver1.2"
+set nar = $#argv
+if (nar != 0) then
+  if ($argv[${nar}] == "-v") then
+     set echo on
+     set argv[${nar}] = ""
+  endif
+endif
+#
+#*******>
+set UNAME = `uname`
+#if (${UNAME} == "ULTRIX") then
+   df ${ALEPH}
+   echo "Please check free kbytes! "
+   echo -n " OK? [<CR>=y]-> "
+   set answer = $<
+   set answer = `echo ${answer} | awk '{print substr($0,1,1)}'`
+   if ($answer == "") set answer = "y"
+   if ($answer != "y") goto exec_end
+#endif
+#*******<
+unset noclobber
+set alib_dir = "${ALEPH}/alib"
+set lib_dir = `pwd`
+set cycle_new = ""
+set cycle_old = ""
+set mnemonic = ""
+set file_type = ""
+set prog_aleph = "OK"
+set file_name_c = "alc"
+set file_type_c = "c"
+set flag = "OK"
+ 
+#===> first parameter
+if ($1 == "") then
+  echo -n "Enter Aleph program name [eg:alephlib <CR>=exit]-> "
+   set prog_name = $<
+   if (${prog_name} == "") goto exec_end
+else
+   set prog_name = $1
+endif
+#
+# =============================================================================
+#                  set idir, prog_dir and lib_dir and cycle number
+#
+set idir = `egrep ^" ${prog_name} " ${alib_dir}/pub/progl | awk '{print $2}'`
+set mnemonic = `egrep ^" ${prog_name} " ${alib_dir}/pub/progl | awk '{print $4}'`
+#
+set prog_dir = "${ALEPH_ROOT}/${OS}/${idir}"
+#
+if (${idir} == "") then
+   echo "*** WARNING not official ALEPH program"
+   set prog_aleph = "NO"
+   set mnemonic = "${prog_name}"
+else
+   if (${lib_dir} != "${ALEPH_ROOT}/${OS}/${idir}") then
+      echo  "WARNING you are not in the official directory pwd= ${lib_dir}"
+      echo -n "do you want to go to the official directory [yes or no <CR>=no]-> "
+      if ($< == "yes")  set lib_dir = "${ALEPH_ROOT}/${OS}/${idir}"
+   endif
+   echo " lib_dir = ${lib_dir} "
+   if (-e ${prog_dir}/alib.log) then
+      set cycle_old = `egrep ^" ${prog_name} " ${prog_dir}/alib.log | awk '{print $3}'`
+      set dmy_old = `egrep ^" ${prog_name} " ${prog_dir}/alib.log | awk '{print $4}'`
+      set tim_old = `egrep ^" ${prog_name} " ${prog_dir}/alib.log | awk '{print $5}'`
+   endif
+endif
+# ===============================================================================
+ 
+#===> second parameter : cycle number
+if ($2 == "") then
+   if (${cycle_old} == "") then
+      set string_cr = "<CR>=exit"
+   else
+      set string_cr = "<CR>=${cycle_old}"
+   endif
+   echo -n "Enter version number[${string_cr}]-> "
+   set cycle = $<
+   if (${cycle} == "") then
+      if (${cycle_old} == "") then
+         goto exec_end
+      else
+         set cycle = ${cycle_old}
+
+      endif
+   endif
+else
+   set cycle = $2
+endif
+set lib_name = "${mnemonic}${cycle}" 
+if (${prog_name} == "alephio") set lib_name = ${prog_name}
+# ============================================================================
+
+#===> third parameter : name of the file containing updated routines
+set file_new = "${mnemonic}new"
+if ( ${mnemonic} == "aleph" ) set file_new = "alenew"
+if ($3 == "") then
+   echo -n "Enter new file name [<CR>=${file_new}]-> "
+   set file_name = $<
+   if (${file_name} == "") set file_name = ${file_new}
+else
+   set file_name = $3
+endif
+ 
+# =====================================================================
+#
+#===> 4th parameter : file type of file with updated routines
+set file_def = `egrep ^" ${prog_name} " ${prog_dir}/f77_options | awk '{print $2}'`
+if ($4 == "") then
+   echo -n "Enter file type [<CR>=${file_def}]-> "
+   set file_type = $<
+   if (${file_type} == "") set file_type = ${file_def}
+else
+   set file_type = $4
+endif
+#
+# =====================================================================
+#                set src_dir
+# source reside on the MASTER machine
+# if it is a machine dependant program (alephio or bos77) then
+#    if it is on SERVICE=CSF or SAGA or AFAL then
+#     source files reside on ${prog_dir}
+# endif
+
+set src_dir = "${ALEPH_ROOT}/${MASTER}/${idir}/src${lib_name}"
+if (${prog_name} == "alephio" || ${prog_name} == "bos77") then
+   if (${SERVICE} == "CSF" || ${SERVICE} == "SAGA" || ${SERVICE} == "AFAL") then
+      set src_dir = "${prog_dir}/src${lib_name}"
+   endif
+endif
+set obj_dir = "${src_dir}/${OS}"
+echo `date` "=== START ${exec_name} ${OS} ${prog_name} ${cycle} ===" >> ${prog_dir}/spy
+
+# ======================= check existence of src_dir =======================
+# if src_dir does not exists then EXIT
+ 
+if !(-d ${src_dir}) then
+   echo "${src_dir} does not exist, cannot be updated: EXIT" >> ${prog_dir}/spy
+   set flag = "ERROR"
+   goto spy
+endif
+# ===================================================================
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> begin
+begin:
+ 
+cd ${src_dir}
+set temp_dir = "${OS}temp"
+if (-d ${temp_dir}) rm -r ${temp_dir}
+mkdir ${temp_dir}
+cd ${temp_dir} 
+# ================================================================
+#                    ftp on CERNVM
+set disk_ibm_name = "pub"
+set transfert_type = "ascii"
+set disk_ibm = `egrep "${disk_ibm_name} " ${alib_dir}/alibdisk | awk '{print $2 "." $3}'`
+ 
+set mv_tmp = "NO"
+set transfert_type = "ascii"
+ 
+if (-e ftp_tmp) rm ftp_tmp
+echo -n "Enter ibm user [<CR>=${USER}]-> "
+set ibm_user = $<
+if (${ibm_user} == "") then
+   set ibm_user = ${USER}
+endif
+echo "${ibm_user}" > ftp_tmp
+echo "cd ${disk_ibm}" >> ftp_tmp
+echo "${transfert_type}" >> ftp_tmp
+echo "get ${file_name}.${file_type} ${file_name}.f" >> ftp_tmp
+echo "quit" >> ftp_tmp
+#********
+ 
+ftp cernvm < ftp_tmp
+ 
+if !(-e ${file_name}.f) then
+   echo " ${src_dir}/${temp_dir}/${file_name}.f is unknown" >> ${prog_dir}/spy
+   echo "==> check existence of ${file_name}.${file_type} on ${disk_ibm}" >> ${prog_dir}/spy
+   set flag = "ERROR"
+   goto spy
+endif
+# ================= end of ftp on CERNVM ===================================
+ 
+ 
+# ================ begin of fnice, fsplit, put in lower case ======================
+#*******> fnice : reformat .f files
+
+echo `date`" -> fnice" >> ${exec_name}.log
+fnice ${file_name}.f 
+ 
+#*******> fplit : splits the fortran into subroutines and functions
+echo `date`" -> fsplit" >> ${exec_name}.log
+fsplit ${file_name}.f > split.log
+mv ${file_name}.f ${file_name}.${file_type}
+rm split.log
+
+#********** put in lower case
+if ( ${UNAME} != 'ULTRIX' ) then
+   set files = `ls *.f`
+   foreach file ( $files[*] )
+     set tmp = `echo ${file} | tr '[A-Z]' '[a-z]'`
+     mv -f ${file} ${tmp}
+   end
+endif
+# =================== end of fnice fsplit ==================================
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> begin_compile
+begin_compile:
+ 
+set file_para = "${prog_dir}/f77_options"
+set all_para = `egrep ^" ${prog_name} " ${file_para} | awk '{print substr($0,15)}'`
+ 
+# ====================== compile and update the library========================
+compile:
+
+#*******> f77_compile with debug
+echo `date`" -> Call f77_compile with dbx" >> ${exec_name}.log
+f77 ${all_para} *.f >> f77_dbx.log | & tee -a f77_dbx.log
+grep -n 'Error' f77_dbx.log > f77_dbx_Error.log
+if !(-z f77_dbx_Error.log) then
+   echo `date` "compilation error in debug mode" >> ${prog_dir}/spy
+   set flag = "ERROR" 
+   goto spy
+endif
+ 
+#*******> ar with debug
+#                        ar = archive
+#  parameters used :      r = replace
+#                         s = sort
+#                         l = place temporary files in the local directory
+echo `date`" -> ar rsl ${lib_dir}/lib${lib_name}_dbx.a *.o" >> ${exec_name}.log
+ar rsl ${lib_dir}/lib${lib_name}_dbx.a *.o | & tee ar_dbx.log
+echo "Now -> grep -n 'Error' ar_dbx.log > ar_dbx_Error.log"
+grep -n 'Error' ar_dbx.log > ar_dbx_Error.log
+ if !(-z ar_dbx_Error.log) then
+    set flag = "ERROR"
+    echo `date` "ar error in debug mode " >> ${prog_dir}/spy"
+    goto spy
+ endif
+ 
+#*******> f77_compile without debug
+echo `date`" -> Call f77_compile without dbx" >> ${exec_name}.log
+f77 ${all_para} *.f >> f77.log | & tee -a f77.log
+grep -n 'Error' f77.log > f77_Error.log
+if !(-z f77_Error.log) then
+   echo `date` "compilation error in no debug mode" >> ${prog_dir}/spy
+   set flag = "ERROR" 
+   goto spy
+endif
+ 
+#*******> ar without dbx
+echo "Now  -> ar rsl ${lib_dir}/lib${lib_name}.a *.o"
+echo `date`" -> ar rsl ${lib_dir}/lib${lib_name}.a *.o" >> ${exec_name}.log
+ar rsl ${lib_dir}/lib${lib_name}.a *.o | & tee ar.log
+echo "Now -> grep -n 'Error' ar.log > ar_Error.log"
+grep -n 'Error' ar.log > ar_Error.log
+ if !(-z ar_Error.log) then
+    set flag = "ERROR"
+    echo `date` "ar error in no debug mode " >> ${prog_dir}/spy"
+    goto spy
+ endif
+ 
+#********> mv *.f to src_dir, rm temp_dir
+echo `date`" -> mv *.f ${src_dir}/*.f" >> updver.log
+set files = `ls *.f`
+foreach file ( $files[*] )
+  mv -f ${file} ${src_dir}/${file}
+end
+echo `date`" -> rm -r ${temp_dir}" >> ${exec_name}.log
+rm -r ${temp_dir}
+# ========================= end of compilation and library ======================
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> spy
+spy:
+
+cd ${prog_dir}
+set dmyh = `date '+%d-%h-19%y %T'`
+echo "${exec_name} ${user} ${dmyh} ${prog_name} ${cycle} ${src_dir} ${flag}" >> ${prog_dir}/spy
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> exec_end
+exec_end:
+ exit
+ 

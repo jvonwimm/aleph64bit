@@ -1,0 +1,30 @@
+# DO NOT DELETE
+
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/pilot.h
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/itapes.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/qcdpar.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/dylim.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/frgpar.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/hcon.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/hcon2.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/jetlim.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/jetpar.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/nodcay.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/primar.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/qlmass.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/q1q2.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/seed.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/sspar.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/tcpar.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/types.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/wcon.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/wcon2.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/force.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/mbgen.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/isloop.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/limevl.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/xmssm.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/eepar.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/mglims.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/sugxin.inc
+archive//home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/code/reset.o archive/reset.d: /home/wimmer/aleph64bit/cern/2005/src/mclibs/isajet/isajet/ssmode.inc

@@ -1,0 +1,44 @@
+*   RUN #                   RUN'S TITLE
+RUN  101  'UNIBAB GENERATOR - UBAB02 DARMSTADT-CERN-SIEGEN COLL.'
+*     FIRST EVENT   LAST EVENT TO BE GENERATED
+TRIG       1           40000
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG
+DEBU  6/           1         5
+* requested time left at the end of job (in sec)
+TIME 10
+*    to save event file (EPIO format)
+*FILO 'UBAB01 EPIO A '
+*FILO 'SCWEEK:UBAB01.EPIO'
+*    to save histograms
+*HSTO 'SCWEEK:UBAB01.HIS'
+*       sigma-x      sigma-y     sigma-z  (vertex smearing in cm)
+SVRT     0.011       0.0005       0.70
+*       Xpos    Ypos     Zpos   (mean vertex position in cm)
+XVRT    -0.075  0.065   -0.253
+* GPAR: Generation parameter for UNIBAB
+* AMZ    = Z mass in GeV
+* AMH    = Higgs mass in GeV
+* AMT    = Top mass in GeV
+* ECMS   = Center of mass energy in GeV
+* CTSMN  = minimum cos(theta-star) of generated events
+* CTSMX  = maximum cos(theta-star) of generated events
+* EFERM  = minimum energy of outgoing electrons in GeV
+* ACOLMX = maximum acollinearity of outgoing electrons in degrees
+* ITCH   = switch for t channel: 0 = off, 1 = on
+* IWEAK  = switch for weak corrections: 0 = off, 1 = on
+* IBOXES = switch for box diagrams: 0 = off, 1 = on; meaningless if IWEAK = 0
+* IBST   = switch for photon generation: 0 = off; 1 = initial only;
+*          2 = final only; 3 = initial + final
+* ITFRE  = The GSUM bank summarizing the generated cross section will be
+*          written with every ITFRE event
+*       AMZ     AMH     AMT     ECMS    CTSMN   CTSMX   EFERM   ACOLMX
+GPAR    91.187  250.0   150.0   91.200  -0.91   +0.91   1.0     30.0
+*       ITCH    IWEAK   IBOXES  IBST    ITFRE
+        1       1       1       3       1000
+*  use RANMAR generator for random numbers
+*                   (see KINLIB DOC for informations)
+*  INSEED : first seed (range assigned per institute)
+*  LOSEED : second seed (incremented locally for new runs)
+*      INSEED          LOSEED (1-30000)
+RMAR      89               1
+ENDQ

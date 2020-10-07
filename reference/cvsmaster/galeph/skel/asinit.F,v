@@ -1,0 +1,406 @@
+head	1.4;
+access;
+symbols
+	gal309_3:1.4
+	gal309_2:1.4
+	gal309_1:1.4
+	gal309:1.4
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.4
+date	99.12.06.10.00.51;	author flr;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	99.12.03.14.10.56;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.06.30.07.13.24;	author flr;	state Exp;
+branches
+	1.2.2.1;
+next	1.1;
+
+1.1
+date	94.12.07.14.01.44;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.45;	author flr;	state Exp;
+branches;
+next	;
+
+1.2.2.1
+date	99.12.02.12.25.42;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@gal309 - STOP if ALEPHLIB.LT.314. in asinit
+@
+text
+@*DK asinit
+      SUBROUTINE ASINIT
+C ----------------------------------------------------------------------
+C. - F.RANJARD - 850215
+C! Initialize general constants
+C
+C - modified by : F.Ranjard - 911002
+C                 add SICAL in detector list as # 9
+C                 suppress TS from component list
+C                 move COIL from #9 to #13 in component list
+C                 add references to SICAL
+C - Called from   ASIJOB                         from this .HLB
+C - Calls         NAMIND, BKFMT                  from BOS77.lib
+C.
+C -------------------------------------------------------------------
+#ifndef DOC
+#include "version.h"
+#include "jobcom.h"
+#include "iocom.h"
+#include "alfgeo.h"
+#include "jqcom.h"
+#include "kincom.h"
+      COMMON /SLATE/ ISL(40)
+      EXTERNAL NAMIND
+      CHARACTER TITL*40
+      CHARACTER*2 TGEO(LBGE)
+      DATA TGEO /'VD','IT','TP','EC','LC','SA','HC','MU','SI'
+     1          ,'BP','QU','PM','CO','EB','HB','MB','MM','MC'/
+      DATA TITL /' GALEPH : THE ALEPH SIMULATION PROGRAM  '/
+C ----------------------------------------------------------------------
+C
+C                   /JOBERR/
+      CALL ALTELL ('ASINIT: ',0,'INIT')
+C
+C -           /IOCOM/
+      LGETIO = 1
+      LSAVIO = 2
+      LGRAIO = 3
+      LRDBIO = 4
+      LINPIO = IW(5)
+      LOUTIO = IW(6)
+      DO 1 I=1,LFIL
+      TFILIO(I) = ' '
+      TFORIO(I) = ' '
+ 1    CONTINUE
+C
+C -           /JOBCOM/
+      TITLJO=TITL
+      VERSJO = GALVER
+      IEV1JO = 1
+      IEV2JO = 100000
+      IEV3JO = 0
+      IDB1JO = 0
+      IDB2JO = 0
+      IDS1JO = 0
+      IDS2JO = 0
+      MHISJO = 0
+      CALL VZERO (FHISJO,LHIS)
+      CALL VZERO (IRNDJO,LPRO*LRND)
+      CALL VZERO (NRNDJO,LRND)
+      CALL VZERO (IPRIJO,LPRI)
+      MSETJO = 0
+      CALL VZERO (IDETJO,LDET)
+      MSAVJO = 0
+      MGETJO = 0
+      MPROJO =0
+      DO 2 I=1,LPRO
+         IPROJO(I) =0
+ 2    CONTINUE
+      IPACJO = 0
+      FGALJO = .TRUE.
+      FXXXJO = .FALSE.
+      FWRDJO = .FALSE.
+      FXTKJO = .TRUE.
+      FXSHJO = .TRUE.
+      CUTFJO = 0.1
+      TVERJO = 0.
+      NEVTJO=0
+      NZBOJO = 0
+C                      bin size for total # of tracks / event
+      MBINJO(1) = 150
+C                      bin size for long life tracks / event
+      MBINJO(2) = 10
+C                      bin size for max. stack size / event
+      MBINJO(3) = 5
+      CALL VZERO (NSTAJO,LST1*LST2)
+C
+C - Tracking momentum cut for gammas/elec/charged had/neut.had/muon
+      TCUTJO(1) = 0.005
+      TCUTJO(2) = 0.005
+      TCUTJO(3) = 0.01
+      TCUTJO(4) = 0.01
+      TCUTJO(5) = 0.01
+C
+C - 2 letter-codes of various components
+C - Initialize Bremstrahlung package
+      IBREJO = 1
+C
+      DO 3 I=1,LBGE
+ 3    TGEOJO(I) = TGEO(I)
+C
+C - geometry level
+      DO 4 I=1,LGEO
+ 4    LVELJO(I) = 1
+C      set ECAL geometry level to 2 by default  (3 stacks)
+      LVELJO(4) = 2
+C
+C - run condition detector flags: flags are set to the 'STANDARD' value
+      CALL VZERO (ICVDJO,LCVD)
+      CALL VZERO (ICITJO,LCIT)
+C
+C  Set run conditions flags to standard values
+C  (these values can be overwritten via the run card RUNC 'TPC' ...)
+C  for the time being (april 86) only level 1 simulation for pads and
+C  trigger pads is avalaible (ICTPJO(2) = ICTPJO(3) = 1)
+C  track element banks 'TPTE' and 'TPHE' are not kept (ICTPJO(4)=0)
+C  Fill the TPCO bank by default (ICTPJO(6)=1), this bank will be
+C  drop by TPCSIM
+C
+      CALL VZERO (ICTPJO,LCTP)
+      ICTPJO(2) = 1
+      ICTPJO(3) = 1
+      ICTPJO(6) = 1
+C
+      CALL VZERO (ICECJO,LCEC)
+C -   geantino parametrization by default (ICECJO(5)=2)
+C     elec parametrization can be turn on with ICECJO(5)=1
+      ICECJO(5) = 2
+      CALL VZERO (ICLCJO,LCLC)
+      CALL VZERO (ICSAJO,LCSA)
+      CALL VZERO (ICHCJO,LCHC)
+      ICHCJO(2) = 1
+      ICHCJO(6) = 1
+      CALL VZERO (ICMUJO,LCMU)
+      CALL VZERO (ICSIJO,LCSI)
+C
+C -                   /KINCOM/
+      IPROKI = 0
+      IDEVKI=0
+      ECMSKI=0.
+      NOTRKI = 100
+      NIVXKI = 9999
+      WEITKI = 1.
+C
+C - Kinematic parameters
+C                        kinematyc type
+      TKINJO = 'LUND'
+C                        vertex sigma x,y,z
+      NKINJO = 0
+      BKINJO(1) = 0.
+      BKINJO(2) = 0.
+      BKINJO(3) = 0.
+C                         beam energy in center of mass
+      BKINJO(4) = 0.
+C
+C -             /ALFGEO/
+      ALRMAX=650.
+      ALZMAX=600.
+      ALFIEL = 15.
+      ALECMS = 90.
+C
+C - set run number to 1
+      IRUNJO = 1
+      TRUNJO = ' '
+C - set time required to finish the job to 0.
+C - date and time
+      CALL DATIME (JDAT,JTIMJO)
+      JDATJO = ISL(1)*10000 + MOD(JDAT,10000)      
+C - set the date of the chosen survey file to the 1st January
+C   of the current year.
+      IDATJO = (JDATJO/10000 * 100 + 1) * 100 + 1
+C
+C - Get name-index
+C
+      NARUNH = NAMIND ('RUNH')
+      NAPART = NAMIND ('PART')
+      NAVERT = NAMIND ('VERT')
+      NAKINE = NAMIND ('KINE')
+      NAKRUN = NAMIND ('KRUN')
+      NAKEVH = NAMIND ('KEVH')
+      NAEVEH = NAMIND ('EVEH')
+      NAIMPA = NAMIND ('IMPA')
+      NARUNR = NAMIND ('RUNR')
+      NAASEV = NAMIND ('ASEV')
+      NARUNE = NAMIND ('RUNE')
+      NAKLIN = NAMIND ('KLIN')
+      NAKVOL = NAMIND ('KVOL')
+      NAVOLU = NAMIND ('VOLU')
+C
+C - set bank formats
+C
+      CALL BKFMT ('ASEV','(I)')
+      CALL BKFMT ('VERT','3I,4F,(I)')
+      CALL BKFMT ('KINE','3I,4F,(I)')
+      CALL BKFMT ('IMPA','2I,(A,7F)')
+      CALL BKFMT ('KVOL','2I,(A)')
+      CALL BKFMT ('VOLU','2I,(A)')
+C
+C - write the title
+C
+      WRITE(LOUTIO,801) TITLJO,VERSJO,CORVER,JDATJO,JTIMJO
+ 801  FORMAT(1H1,//10X,A40,3X,'VERSION ',F7.2,2X,'CORRECTIONS ',
+     &       F7.2,3X,'DATE',I10,2X,'TIME',I5/)
+      CALL ALVERS (AVERJO)
+      IF (AVERJO .LT. 314.0) THEN
+        WRITE(LOUTIO,*) ' +++ASINIT+++ ALEPHLIB ',AVERJO, 
+     &                  ' is not Y2K compliant'
+        CALL ALTELL ('ASINIT: ALEPHLIB is not Y2K compliant',0,
+     &               ' - STOP')
+      ENDIF 
+C
+      END
+#endif
+
+
+@
+
+
+1.3
+log
+@gal309 - Y2K compliant
+@
+text
+@d205 6
+d212 1
+a212 1
+       END
+@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ cahtra.h gmacro.h lccomc.h lcnamc.h ljjpar.h siconst.h
+ sigeco.h version.h
+ itmsk1.F itmsk2.F itnois.F itres.F itxtlk.F
+ lcadc.F lcamp.F lcasig.F lcbhab.F lcbkpr.F lcdigi.F lcfral.F
+ lchit.F lcirun.F lcnami.F lcnois.F lcpad.F lcroc.F lcsamp.F
+ lcsatu.F lcshow.F lcstrt.F lctrak.F lctrdi.F lctrht.F lcwire.F
+ lcwsum.F lcwtri.F
+ muasig.F mubook.F muirun.F muunoi.F muwsum.F
+ trignews.h
+ siasig.F sitrak.F siwsum.F
+ asasig.F asbook.F ascjob.F ascrun.F asctra.F asevst.F asfxxx.F
+ asieve.F asigea.F asijob.F asimod.F asinit.F asipac.F asirun.F
+ askine.F asksin.F asktrk.F aspeve.F asprun.F asread.F asredc.F
+ asreve.F asrkin.F asrtyp.F asrust.F astdeb.F astgea.F astrac.F
+ astrig.F aswkin.F aswrtp.F aswsum.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+ xtrcom.h
+ ecalnews.h geomnews.h lcalnews.h news.h skelnews.h vdetnews.h
+@
+text
+@d23 1
+d167 2
+a168 1
+      CALL DATIME (JDATJO,JTIMJO)
+d171 1
+a171 1
+      IDATJO = JDATJO/10000 * 100 + 1
+d203 1
+a203 1
+     &       F7.2,3X,'DATE',I8,2X,'TIME',I5/)
+d208 2
+@
+
+
+1.2.2.1
+log
+@gal308_2 Y2K fix in skel/ geom/ hcal/
+@
+text
+@a22 1
+      COMMON /SLATE/ ISL(40)
+d166 1
+a166 2
+      CALL DATIME (JDAT,JTIMJO)
+      JDATJO = ISL(1)*10000 + MOD(JDAT,10000)      
+d169 1
+a169 1
+      IDATJO = (JDATJO/10000 * 100 + 1) * 100 + 1
+d201 1
+a201 1
+     &       F7.2,3X,'DATE',I10,2X,'TIME',I5/)
+a205 2
+
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d14 2
+a15 1
+C ---------------------------------------------------------------------
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

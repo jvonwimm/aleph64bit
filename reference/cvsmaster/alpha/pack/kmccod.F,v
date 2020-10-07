@@ -1,0 +1,297 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	alpha126_22:1.1.1.1
+	alpha126_21:1.1.1.1
+	alpha126_20:1.1.1.1
+	alpha126_19:1.1.1.1
+	alpha126_18:1.1.1.1
+	alpha126_17:1.1.1.1
+	alpha126_16:1.1.1.1
+	alpha126_15:1.1.1.1
+	alpha126_14:1.1.1.1
+	alpha126_13:1.1.1.1
+	alpha126_12:1.1.1.1
+	alpha126_11:1.1.1.1
+	alpha126_10:1.1.1.1
+	alpha126_09:1.1.1.1
+	alpha126_08:1.1.1.1
+	alpha126_07:1.1.1.1
+	alpha126_06:1.1.1.1
+	alpha126_05:1.1.1.1
+	alpha126_04:1.1.1.1
+	alpha126_03:1.1.1.1
+	alpha126_02:1.1.1.1
+	alpha126_1:1.1.1.1
+	alpha125_17:1.1.1.1
+	alpha125_16:1.1.1.1
+	alpha125_15:1.1.1.1
+	alpha125_14:1.1.1.1
+	alpha125_13:1.1.1.1
+	alpha125_12:1.1.1.1
+	alpha125_11:1.1.1.1
+	alpha125_10:1.1.1.1
+	alpha125_09:1.1.1.1
+	alpha125_08:1.1.1.1
+	alpha125_07:1.1.1.1
+	alpha125_06:1.1.1.1
+	alpha125_05:1.1.1.1
+	alpha125_04:1.1.1.1
+	alpha125_03:1.1.1.1
+	alpha125_02:1.1.1.1
+	alpha125_01:1.1.1.1
+	alpha124_19:1.1.1.1
+	alpha125:1.1.1.1
+	alpha124_18:1.1.1.1
+	alpha124_17:1.1.1.1
+	alpha124_16:1.1.1.1
+	alpha124_15:1.1.1.1
+	alpha124_14:1.1.1.1
+	alpha124_13:1.1.1.1
+	alpha124_12:1.1.1.1
+	alpha124_11:1.1.1.1
+	alpha124_10:1.1.1.1
+	alpha124_09:1.1.1.1
+	alpha124_08:1.1.1.1
+	alpha124_07:1.1.1.1
+	alpha124_7:1.1.1.1
+	alpha124_06:1.1.1.1
+	alpha124_05:1.1.1.1
+	alpha124_04:1.1.1.1
+	alpha124_03:1.1.1.1
+	alpha124_02:1.1.1.1
+	alpha124_01:1.1.1.1
+	alpha124:1.1.1.1
+	alpha123_12:1.1.1.1
+	alpha123_11:1.1.1.1
+	alpha123_10:1.1.1.1
+	alpha123_9:1.1.1.1
+	alpha123_8:1.1.1.1
+	alpha123_7:1.1.1.1
+	alpha123_6:1.1.1.1
+	alpha123_5:1.1.1.1
+	alpha123_4:1.1.1.1
+	alpha123_3:1.1.1.1
+	alpha123_2:1.1.1.1
+	alpha123:1.1.1.1
+	alpha122_48:1.1.1.1
+	alpha122_47:1.1.1.1
+	alpha122_46:1.1.1.1
+	alpha122_45:1.1.1.1
+	alpha122_44:1.1.1.1
+	alpha122_43:1.1.1.1
+	alpha122_42:1.1.1.1
+	alpha122_41:1.1.1.1
+	alpha122_40:1.1.1.1
+	alpha122_39:1.1.1.1
+	alpha122_38:1.1.1.1
+	alpha122_37:1.1.1.1
+	alpha122_36:1.1.1.1
+	alpha122_35:1.1.1.1
+	alpha122_34:1.1.1.1
+	alpha122_33:1.1.1.1
+	alpha122_32:1.1.1.1
+	alpha122_31:1.1.1.1
+	alpha122_30:1.1.1.1
+	alpha122_29:1.1.1.1
+	alpha122_28:1.1.1.1
+	alpha122_27:1.1.1.1
+	alpha122_26:1.1.1.1
+	alpha122_25:1.1.1.1
+	alpha122_24:1.1.1.1
+	alpha122_23:1.1.1.1
+	alpha122_22:1.1.1.1
+	alpha122_21:1.1.1.1
+	alpha122_20:1.1.1.1
+	alpha122_19:1.1.1.1
+	alpha122_18:1.1.1.1
+	alpha122_17:1.1.1.1
+	alpha122_16:1.1.1.1
+	alpha122_15:1.1.1.1
+	alpha122_14:1.1.1.1
+	alpha122_13:1.1.1.1
+	alpha122_12:1.1.1.1
+	alpha122_11:1.1.1.1
+	alpha122_10:1.1.1.1
+	alpha122_9:1.1.1.1
+	alpha122_8:1.1.1.1
+	alpha122_6:1.1.1.1
+	alpha122_5:1.1.1.1
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.03.14.12.41.22;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.41.23;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      FUNCTION KMCCOD (IEXT)
+CKEY PART /INTERNAL
+C----------------------------------------------------------------------
+C! get internal particle code for external code IEXT.
+C! Called from QFIMCD
+C!                                                  H.Albrecht 03.11.88
+C----------------------------------------------------------------------
+#ifndef DOC
+      SAVE IERR
+#include "qcdesh.h"
+#include "partjj.h"
+      CHARACTER CNAM * 12, CHAINT * 4
+      DATA IERR /0/
+C
+C       Particle code must be positive
+C
+      IF (IEXT .LE. 0)  GO TO 20
+C
+C         Look into translation table
+C
+      IF (IEXT .LE. IW(KOQTRA))  THEN
+        KMCCOD = IW(KOQTRA+IEXT)
+        IF (KMCCOD .GT. 0)  GO TO 90
+      ENDIF
+C
+C         Does external particle table exist ?
+C
+      LAPART = IW(NAPART)
+      NPART = 0
+      IF (LAPART .NE. 0)  NPART = IW(LAPART+2)
+C
+C         Particle not on MC table
+C
+      IF (IEXT .GT. NPART)  THEN
+C          PTRA card given <--> KMCCOD < 0
+        IF (KMCCOD .LT. 0)  THEN
+          KMCCOD = - KMCCOD
+          GO TO 30
+        ENDIF
+C         standard particle ?
+        IF (IEXT .GT. KNQPST)  GO TO 20
+        KMCCOD = IEXT
+        GO TO 30
+      ENDIF
+C
+C       row address in PART bank
+C
+      LREXT = LAPART + IEXT * IW(LAPART+1) - IW(LAPART+1) + LMHLEN
+C
+C       IANT > 0 : set particle - anti-particle relation
+C
+      IANT = 0
+C
+C          PTRA card given <--> KMCCOD < 0
+C
+      IF (KMCCOD .LT. 0)  THEN
+        KMCCOD = - KMCCOD
+        GO TO 10
+      ENDIF
+C
+C       get particle name from MC table
+C
+      CNAM(1:4)  = CHAINT (IW(LREXT+JPARNA))
+      CNAM(5:8)  = CHAINT (IW(LREXT+JPARNA+1))
+      CNAM(9:12) = CHAINT (IW(LREXT+JPARNA+2))
+C
+C       lnew = 0 : new particle
+C
+      KMCCOD = KPARTX (CNAM,LNEW)
+      IF (LNEW .NE. 0)  GO TO 10
+C
+C       Get particle - anti-particle relation from MC table
+C
+      IANT = IW(LREXT+JQPAAN)
+      IF (IANT .LE. 0 .OR. IANT .GT. NPART)  IANT = IEXT
+      IF (IANT .EQ. IEXT)  THEN
+C         default is part=anti-part <--> IANT = 0
+        IANT = 0
+      ELSE
+        LRANT = LAPART + IANT * IW(LAPART+1) - IW(LAPART+1) + LMHLEN
+        CNAM(1:4)  = CHAINT (IW(LRANT+JPARNA))
+        CNAM(5:8)  = CHAINT (IW(LRANT+JPARNA+1))
+        CNAM(9:12) = CHAINT (IW(LRANT+JPARNA+2))
+        IANT = KPARTX (CNAM,LNEW)
+        IF (LNEW .NE. 0)  IANT = 0
+      ENDIF
+C
+C       Set particle - anti-particle relation for new particles
+C
+   10 LRINT = KOQPAR + KMCCOD * KCQPAR
+      IF (IANT .NE. 0)  THEN
+        IW(LRINT+JQPAAN) = IANT
+        IW(KOQPAR+IANT*KCQPAR+JQPAAN) = KMCCOD
+      ENDIF
+C
+C       standard particle ?
+C
+      IF (KMCCOD .LE. KNQPST)  GO TO 30
+C
+C       particle already defined by data cards ?
+C
+      IF (IAND (IW(KOQPBT+KMCCOD), KBIT(2)) .NE. 0)  GO TO 30
+C
+C       Store particle attributes for non-standard particles
+C
+      IW(LRINT+JQPAGN) = IW(LREXT+JQPAGN)
+      IW(LRINT+JQPACO) = IW(LREXT+JQPACO)
+      RW(LRINT+JQPAMA) = RW(LREXT+JQPAMA)
+      RW(LRINT+JQPACH) = RW(LREXT+JQPACH)
+      RW(LRINT+JQPALT) = RW(LREXT+JQPALT)
+      RW(LRINT+JQPAWI) = RW(LREXT+JQPAWI)
+      IW(KOQPBT+KMCCOD) = IOR (IW(KOQPBT+KMCCOD), KBIT(3))
+      GO TO 30
+C
+C       Unknown particle name
+C
+   20 WRITE (CNAM,1001) IEXT
+      KMCCOD = KPCOMP (CNAM)
+C
+C       Unallowed particle code
+C
+      IF (IEXT .GT. 0 .AND. IEXT .LE. MAX (5000, NPART))  GO TO 30
+      IERR = IERR + 1
+      IF (IERR .GT. 10)  GO TO 90
+      CALL QWMESS
+     &  ('_KMCCOD_ MC particle code out of range.')
+      CALL QWMESE
+     &  ('         Time consumption will increase considerably.')
+      GO TO 90
+C
+C       Fill translation table
+C
+   30 IF (IEXT .GE. IW(KOQTRA))
+     +  CALL QSBANK ('QTRA', MAX (NPART, IEXT+200))
+      IW (KOQTRA+IEXT) = KMCCOD
+C
+ 1001 FORMAT ('?',I11)
+   90 END
+#endif
+@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

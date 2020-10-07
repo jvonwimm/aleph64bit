@@ -1,0 +1,44 @@
+KCAR 0 / $TEXT
+POFF
+DBVSCARD
+*     RUN #             RUN'S TITLE
+RUN   NUMRUN  'KEYWORD PRODUCTION' 
+*     FIRST EVENT    LAST EVENT    TO BE GENERATED
+TRIG     1            NUMEVT
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG
+DEBU  6     /      1          5
+* requested time left at the end of job (in sec)
+TIME 120
+*    to save event file (EPIO format)
+* FILO ' test.epio | EPIO '
+*FILO ' KINDATA | EPIO | CART OUTK7.FSEQ.SL ' 
+FILOCARD
+*  use RANMAR generator for random numbers
+*  INSEED : first seed (range assigned per institute)
+*  LOSEED : second seed (incremented locally for new runs)
+*      INSEED          LOSEED (1-30000)
+RMAR     RMAR1           RMAR2
+*       x        y        z    vertex smearing x y z for year at CMSENE GeV
+SVRTCARD
+* ECMS     Center of mass energy
+* IFLAVOR =  FLAVOR CODE 10=all neutrinos
+*                        12= ve only
+*                        14= vm only
+*                        16= vt only
+* IQED   1= QED, 0= TREE LEVEL
+* IPT    1= ISR WITH P_T; 0= COLLINEAR ISR
+*     ECMS    nfl  Npho  IQED  IPT   1/alpha(mz) Nstep(integ)   
+GNNG  CMSENE  10   NPHO     1     1     128.87    100000
+* input masses and widthes
+*     M_W   width_w  M_Z    width_Z M_Higgs width_H  M_top
+GMSP 80.35  2.094    91.1887 2.497   150.     1.      175.
+* photon acceptance cuts
+*       THMIN(deg)     EGMIN EGMAX
+GGAM     10.           2.   150.
+* anomalous coupligs TGC
+*       xg     yg
+*GAGC    0.     0.
+* anomalous coupligs QGC
+*       lambda   a0w   acw    a0z   acz
+*GQGC    80.35     0.    0.     0.    0.
+END$

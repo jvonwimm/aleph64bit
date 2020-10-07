@@ -1,0 +1,168 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.08.22.09.01.58;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.01.43;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.44;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@gal305 corr no. 3 in asgpar and aswkin to store particle with geant# > 52 and .ne. 100
+@
+text
+@*DK asgpar
+      SUBROUTINE ASGPAR
+C ----------------------------------------------------------------------
+C. - F.Ranjard - 850828
+C! Fill 'PTYP' Geant3 bank with 'PART' BOS bank
+C. - Define branching ratios and decay modes for standard GEANT particle
+C.   (copy of GPART from GEANT pam)
+C. - called by    ASIGEA                                from this .HLB
+C. - calls        GSDK                                  from GEANT pam
+C ----------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "jqcom.h"
+#include "iocom.h"
+#include "kincom.h"
+#include "jobcom.h"
+      CHARACTER*13 NAME
+      CHARACTER*4 CHAINT
+#include "gcbank.h"
+#include "gcphys.h"
+#include "gcnum.h"
+      DATA IFI /0/
+#include "bmacro.h"
+C.
+C ----------------------------------------------------------------------
+      IF (NAPART.EQ.0) THEN
+         CALL ALTELL ('ASGPAR : NO PARTicle data bank ',0,'STOP')
+      ENDIF
+C
+C - 'PART' : # of words/particle, # of particles and then
+C            GEANT# (I), name(3words), tracking type (I), mass, charge,
+C            time of life
+      KPART = IW(NAPART)
+      LP1   = IW(KPART+1)
+      LP2   = IW(KPART+2)
+      LGEAN = 0
+      DO 1 I=1,LP2
+         KP = KROW(KPART,I)
+         IF (IFI.GT.0 .AND. IW(KP+5).EQ.NOTRKI) GOTO 1
+         LGEAN = LGEAN+1
+         IF (LGEAN.GT.NGPART) GOTO 2
+         IF (IW(KP+5).EQ.NOTRKI) IFI=1
+         NAME(1:4) = CHAINT(IW(KP+2))
+         NAME(5:8) = CHAINT(IW(KP+3))
+         NAME(9:13)= CHAINT(IW(KP+4))//'$'
+         CALL GSPART (IW(KP+1),NAME,IW(KP+5),RW(KP+6),RW(KP+7)
+     &               ,RW(KP+8),0,0)
+ 1    CONTINUE
+ 2    CONTINUE
+C
+C - Define decay modes
+C
+      IF (IGDCAY.GT.0 .AND. IPROJO(2).GT.0) THEN
+         KGDEC=NLINK('GDEC',0)
+         IF (KGDEC.LE.0) CALL ALTELL ('AGSPAR: NO GDEC bank ',0,'STOP')
+         LP1=IW(KGDEC+1)
+         LP2=IW(KGDEC+2)
+         KP=KGDEC+LMHLEN
+         DO 10 I=1,LP2
+            CALL GSDK(IW(KP+1),RW(KP+2),IW(KP+8))
+            KP=KP+LP1
+  10     CONTINUE
+      ENDIF
+C - Debug
+      IF(IPRIJO(20).EQ.1) THEN
+         CALL GPPART(0)
+         IF (IPRIJO(19).EQ.1)  CALL PRGDEC
+      ENDIF
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d23 1
+d36 3
+a38 3
+      KP    = KPART + LMHLEN
+      LROW = MIN (LP2,NGPART)
+      DO 1 I=1,LROW
+d40 2
+d48 2
+a49 1
+ 1       KP = KP + LP1
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

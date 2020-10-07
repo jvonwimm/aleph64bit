@@ -1,0 +1,27 @@
+#!/bin/csh
+###############################################################################
+#                          sycheck_rsh
+# 19/06/96                                                         F.Blin
+###############################################################################
+
+ if (${HOST} == "shift9") exit
+# echo "${HOST} /aleph/script/sycheck_rsh" >> /aleph/log/check_sycheck_rsh
+ if (${HOST} == "afal10") then
+    if (-e ${home}/error_saga01.rsh) rm -f ${home}/error_saga01.rsh
+    if (-e ${home}/error_shift9.rsh) rm -f ${home}/error_shift9.rsh
+    if (-e ${home}/error_shift50.rsh) rm -f ${home}/error_shift50.rsh
+    if (-e ${home}/error_csf.rsh) rm -f ${home}/error_csf.rsh
+    qtell -c qstat -b -h saga01 > ${home}/error_saga01.rsh
+    qtell -c qstat -b -h shift9 > ${home}/error_shift9.rsh
+    qtell -c qstat -b -h shift50 > ${home}/error_shift50.rsh
+    qtell -c qstat -b -h csf > ${home}/error_csf.rsh
+ endif
+ 
+ if (-e ${home}/df_${HOST}) rm -f ${home}/df_${HOST}
+ df -k /usr > ${home}/df_${HOST}
+
+ RUN_PS:
+ if (-e ${home}/ps_${HOST}} ) rm -f ${home}/ps_${HOST}
+ ps axw > ${home}/ps_${HOST} 
+
+ exit

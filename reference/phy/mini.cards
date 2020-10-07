@@ -1,0 +1,37 @@
+TIME 15
+DEBU 0
+NEVT 100
+FILI 'mydst.epio | EPIO'
+FILO 'mymini.epio | EPIO'
+MINI                  ! mandatory   
+COMP 'INTE' 'NOFM'    ! mandatory
+EFLJ                  ! ENFLW and Jets
+QFND
+QLID
+C-- * #tracks e_frac #tpc  d0   z0   cos(theta_max)
+LSHD    5     0.10    4  2.0  10.0    0.95
+C--
+C--   User card for track selection electron candidates
+C-- *  #tpc  d0   z0   cos(the_max)  p   p_t
+LSET    5  2.0  10.0    0.95       2.0  0.0 
+C--
+C--   User card electron identification cuts
+C-- *  rt_min rt_max rl_min rl_max #wires ri_min ri_max
+LSEC   -3.0   999.0  -3.0   3.0      0    -999.  999.  
+C--
+C--   User card rejection of photon convertions and dalitz decays
+C-- * XY_max Z_max  M_max   W_conv(1=write,0=reject)
+LSCV   1.0    1.0   0.020   1
+C--
+C--   User card for track selection muon candidates
+C-- * #TPC  d0   z0   cos(the_max)  p   p_t
+LSMT    5  2.0  10.0    0.95       3.0  0.0
+C--
+C--   User card muon identification cuts
+C-- *  QMUIDO return flags accepted 
+LSMC   13  14
+C-- 
+C-- * #objects/jet  Max P(lepton)/E(jet) #jets   Jet Ycut  Jrej
+C--                                                       1=keep,0=cut
+LSJT      5                 0.9            2     0.004       1
+ENDQ

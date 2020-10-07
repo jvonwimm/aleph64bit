@@ -1,0 +1,64 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  uphy1-0:1.1.1.1 flr:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.08.16.13.38.15;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.08.16.13.38.16;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE HADINT(itk,start,xlen)
+C--------------------------------------------------------------
+C  Hadronic interactions
+C  input:  itk = MC track
+C  output: start = # of interaction length where shower started
+C          xlen  = # depth of shower in int. length
+C--------------------------------------------------------------
+#include "ftrig.h"
+#include "qcde.h"
+C
+#include "qmacro.h"
+C
+      xnucl = -ALOG(RNDM(xnucl))           ! 1st inter. at XNUCL Int. length
+      if ( xnucl .gt. LambdaECAL ) then    !  do no interact in ECAL
+        start = xnucl - LambdaECAL
+        remain = 1.
+      else
+        start = 0.
+        remain = (1.-xnucl/LambdaECAL)     ! fraction left in ECAL
+      endif
+      call rannor(gauss1,gauss2)
+      xlen = 0.2*alog(max(qe(itk)*remain,1.))+0.7 ! position of maximum
+     &     + max(0.055*qe(itk)+.3*gauss1,0.)      ! phenomenological ....
+
+      return
+      end
+@
+
+
+1.1.1.1
+log
+@2nd try to import uphy
+@
+text
+@@

@@ -1,0 +1,40 @@
+*CD DGMUDA
+C_CG
+C_CG  8-May-89 C.Grab   Removed the implicit Real(M), that was used for
+C_CG                    the MUON-system variables. All these var.names, 
+C_CG                    starting with M were renamed to var. with U....
+C_CG
+C_CG
+C_CG      IMPLICIT REAL(M)
+      COMMON /DMD1/ UBAWB(24)
+      COMMON /DMD2/ UMAZW(38),UMAWZ(38),UMARM(38),UMAUM(2)
+      COMMON /DMD3/ UECXW(16),UECYW(16),UECXC(16),UECYC(16),UECZE(16)
+      DIMENSION ECXW1(4),ECYW1(4),ECXC1(4),ECYC1(4),ECZE1(4)
+      DIMENSION ECXW2(4),ECYW2(4),ECXC2(4),ECYC2(4),ECZE2(4)
+      DIMENSION ECXW3(4),ECYW3(4),ECXC3(4),ECYC3(4),ECZE3(4)
+      DIMENSION ECXW4(4),ECYW4(4),ECXC4(4),ECYC4(4),ECZE4(4)
+      EQUIVALENCE (UECXW(1),ECXW1(1)),(UECXW(5),ECXW2(1)),
+     &            (UECXW(9),ECXW3(1)),(UECXW(13),ECXW4(1))
+      EQUIVALENCE (UECYW(1),ECYW1(1)),(UECYW(5),ECYW2(1)),
+     &            (UECYW(9),ECYW3(1)),(UECYW(13),ECYW4(1))
+      EQUIVALENCE (UECXC(1),ECXC1(1)),(UECXC(5),ECXC2(1)),
+     &            (UECXC(9),ECXC3(1)),(UECXC(13),ECXC4(1))
+      EQUIVALENCE (UECYC(1),ECYC1(1)),(UECYC(5),ECYC2(1)),
+     &            (UECYC(9),ECYC3(1)),(UECYC(13),ECYC4(1))
+      EQUIVALENCE (UECZE(1),ECZE1(1)),(UECZE(5),ECZE2(1)),
+     &            (UECZE(9),ECZE3(1)),(UECZE(13),ECZE4(1))
+      CHARACTER*1  FECXY(16)
+      COMMON /RONFE1/FECXY
+      COMMON /RONFE2/UBFUL,UBRIN,UBROU,UBRTK,UMATK,UECTK
+      COMMON /DMD4/ BRTF(10,24)
+      COMMON /DMD5/ STTF(18,4)
+      COMMON /DMD6/ SBTF(10,12)
+      COMMON /DMD7/ UATF(10,19)
+      COMMON /DMD8/ UBTF(10,19)
+      COMMON /DMD9/ ECTF(96,16)
+      DIMENSION ECTF1(96,2),ECTF2(96,2),ECTF3(96,2),ECTF4(96,2),
+     &          ECTF5(96,2),ECTF6(96,2),ECTF7(96,2),ECTF8(96,2)
+      EQUIVALENCE (ECTF(1,1) ,ECTF1(1,1)),(ECTF(1,3) ,ECTF2(1,1)),
+     &            (ECTF(1,5) ,ECTF3(1,1)),(ECTF(1,7) ,ECTF4(1,1)),
+     &            (ECTF(1,9) ,ECTF5(1,1)),(ECTF(1,11),ECTF6(1,1)),
+     &            (ECTF(1,13),ECTF7(1,1)),(ECTF(1,15),ECTF8(1,1))

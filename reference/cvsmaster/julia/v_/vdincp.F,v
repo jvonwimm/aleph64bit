@@ -1,0 +1,148 @@
+head	1.2;
+access;
+symbols
+	jul313_3:1.2
+	jul313_2:1.2
+	jul313_1:1.2
+	jul313:1.2
+	jul312_1:1.2
+	jul312:1.2
+	jul311:1.2
+	jul310_1:1.2
+	jul310:1.2
+	jul309_1:1.2
+	jul309:1.2
+	jul308_6:1.2
+	jul308_5:1.2
+	jul308_4:1.2
+	jul308_3:1.2
+	jul308_2:1.2
+	jul308_1:1.2
+	jul308:1.2
+	jul307_4:1.2
+	jul307_3:1.2
+	jul307_2:1.2
+	jul307_1:1.2
+	jul307:1.2
+	jul306_3:1.2
+	jul306_2:1.2
+	jul306_1:1.2
+	jul306:1.2
+	jul305_4:1.2
+	jul305_3:1.2
+	jul305_2:1.2
+	jul305_1:1.2
+	jul305:1.2
+	jul304_3:1.2
+	jul304_2:1.2
+	jul304_1:1.2
+	jul304:1.2
+	jul303_7:1.2
+	jul303_6:1.2
+	jul303_5:1.2
+	jul303_4:1.2
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.06.03.12.05.30;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.06.03.10.28.53;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@fix missing carriage returns at end of file
+@
+text
+@      SUBROUTINE VDINCP(WID,PHIN,XYZ,XDIFF)
+C ----------------------------------------------------------------------
+C!  find the difference vector XDIFF of the points of intersection
+C!  of a line drawn from the origin through XYZ with a slab of width WID
+C!  placed parallel to the z axis with the normal making an azimuthal angle
+C!  PHIN.  Like a wafer for instance.
+C!  Basically, given the hit position and the wafer geometry, this routine
+C!  gives the difference vector between the intersections.
+CKEY V_DECK VDET
+C -  Author         Manoj Thulasidas  9-May-1996
+C  inputs:       WID   - the wafer width / slab thickness
+C                PHIN  - phi of the normal / azimuthal orientation
+C                XYZ   - a point on the line array(3), real
+C  output:       XDIFF - the difference vector, array(3), real
+C ----------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+C  arguments
+      REAL WID, PHIN, XYZ(3), XDIFF(3)
+C  functions
+      REAL VMOD
+      EXTERNAL VMOD
+C  locals
+      REAL DELX, PHI, PHITOT, CTHETA, STHETA, DELXP
+      REAL PI
+      PARAMETER (PI = 3.1415926)
+C=======================================================================
+C-- get the azimuthal and polar angles of the point
+      PHI = ATAN2(XYZ(2),XYZ(1))
+      CTHETA = XYZ(3)/VMOD(XYZ,3)
+      STHETA = SQRT(1.0-CTHETA*CTHETA)
+C-- get the (azimuthal) angle between the face and the line from the
+C-- origin through XYZ
+      PHITOT = PI/2.0-PHIN+PHI
+C-- length of the segment inside the wafer, in xy projection
+      DELXP = WID/SIN(PHITOT)
+C-- the total length in 3d
+      DELX = DELXP/STHETA
+C-- project it to different directions
+      XDIFF(2) = DELXP*SIN(PHI)
+      XDIFF(3) = DELX*CTHETA
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Mods for julia 281 release. See news for details
+@
+text
+@d44 1
+a44 1
+#endif@

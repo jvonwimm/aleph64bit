@@ -1,0 +1,258 @@
+head	1.3;
+access;
+symbols
+	qnnwwtag_1:1.1.1.1
+	OSF1:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.3
+date	97.02.10.10.25.34;	author guichene;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.01.13.16.09.13;	author guichene;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.12.19.14.30.49;	author jousset;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.12.19.14.30.49;	author jousset;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@update
+@
+text
+@C------------------------------------------------------------------------------C
+      SUBROUTINE QNNWTAG(IPRESEL,IPLOT,IENERGY,OUTNN,IERNNT)
+C------------------------------------------------------------------------------C
+C
+C     QQQ   N   N N   N W     W TTTTT  A    GGG
+C    Q   Q  NN  N NN  N W     W   T   A A  G                Version 1.2
+C    Q  QQ  N N N N N N W  W  W   T  A   A G  GG
+C     QQQQ  N  NN N  NN W W W W   T  AAAAA G   G         03th February 1997
+C         Q N   N N   N WW   WW   T  A   A  GGG
+C    -------------------------------------------
+C
+C
+C    Last Modified:    02/03/97 
+C
+C
+C           In case of problems, please contact :   guichene@@frcpn11.in2p3.fr
+C
+C
+C    The WW group of Clermont-Ferrand : 
+C    ----------------------------------
+C    (IN2P3 - CNRS - Blaise Pascal University - France) 
+C                   Z.  Ajaltouni                      P.   Henrard
+C                   G.  Chazelle                       J.   Jousset
+C                   A.  Falvard                        F.   Podlyski
+C                   C.  Guicheney                      J.M. Rossignol
+C
+C
+C
+C This package allows to tag WW events with an artificial neural network (NN) 
+C in the e+e- --> W+W- --> 4quarks final state at Lep2. The discrimination is 
+C done on the NN output variable. 
+C The architecture of the subroutine is :
+C             ---> preselection of each event with cuts on some variables
+C             ---> computation of the variables used as inputs of the NN
+C             ---> computation of the NN output
+C For more details with preselection and learning of the NN, read the abstract
+C concerning the version of QNNWTAG in use.
+C
+C
+C Description of parameters of the QNNWTAG routine :
+C ==================================================
+C
+C                   Call QNNWTAG(IPRESEL,IPLOT,IENERGY,OUTNN,IERNNT)
+C
+C
+C Inputs :
+C ========
+C
+C          * IPRESEL : = 1 The preselection @@ "IENERGY" Gev value is triggered
+C            -------   = 0 NOT preselection
+C                          !!! W A R N I N G !!!  : the learning of the NN is
+C                                                   done WITH the preselection       
+C                                                        ----
+C
+C          * IPLOT : Flag to print (= 1) or not (= 0) some histogramms
+C            -----  
+C                    ID = 1001 --> 1000+x : distribution of the x NN inputs.
+C                       The x value is provided with the version of QNNWTAG 
+C                       For example : @@ 161Gev (version 1.0) : x = 17 
+C
+C                    ID = 701 : output of th NN 
+C
+C
+C          * IENERGY : Containing the value of the running energy analysis.
+C            -------  
+C                      For the values : at the present time, the NN 
+C                      learning @@ 161 Gev and @@ 172 GeV are available. 
+C
+C
+C
+C Outputs :
+C =========
+C
+C          * OUTNN : Neural network output [-1., 1.]
+C            -----   OUTNN = 9999. means that the output has not been 
+C                    computed for the event. Check the corresponding
+C                    IERNNT value. 
+C
+C          * IERNNT : Error flag
+C            ------   = 0 : OK
+C                     = 1 : parameters (IPRESEL, IPLOT) are not available
+C                     = 2 : preselection cuts not satisfied
+C                     = 3 : error in computing the preselection variables  
+C                     = 4 : error in computing the NN inputs
+C                     = 5 : error in computing the NN output
+C                     = 6 : learning for the IENERGY desired is not available
+C
+C
+C
+C------------------------------------------------------------------------------C
+C
+C
+C
+C  Revision history: 
+C   ======>    Version 1.0 - 18th December 1996    <======
+C
+C                    * Initial version used @@ IENERGY = 161 Gev
+C                      This package can be used with IENERGY = 172 Gev too.
+C                      When running @@ 172 Gev, keep in mind that the NN
+C                      learning is optimized for 161 Gev.
+C                                    
+C                    * The NN is optimized for 161 Gev and its 
+C                      architecture is (17,15,1) : 
+C                        17 = inputs (corresponding variables are described
+C                                     below)
+C                        15 = hidden neurons
+C                         1 = output
+C                    * The preselection uses 5 cuts :
+C                           1)  EM < 50 Gev   : Missing Energy
+C                           2)  95 > OEF > 45 : Number of Energy Flow objects 
+C                           3)  NJET = 4      : events forced in 4 jets 
+C                           4)  SPH > 0.2     : Sphericity
+C                           5)  THR < 0.95    : Thrust
+C 
+C 
+C
+C   More informations about the NN inputs :
+C   ---------------------------------------
+C      The 17 variables used for the NN learning are :
+C            1) Fox Wolfram Moment : H2
+C            2) Fox Wolfram Moment : H3
+C            3) Fox Wolfram Moment : H4
+C            4) Missing mass : XM
+C            5) Transverse Momentum of all charged tracks : PTCH
+C            6) Transverse Momentum of Jet2 : XT2
+C            7) Invariant mass for a dijet combination (Jet3 <-> Jet4) : XA34
+C            8) Invariant mass for a dijet combination (Jet2 <-> Jet4) : XA24 
+C            9) Invariant mass for a dijet combination (Jet1 <-> Jet4) : XA14
+C           10) Number of objects for jet3 : OBJ3
+C           11) Number of objects for jet3 : OBJ4
+C           12) Energy of Jet1 : EJ1
+C           13) Asymmetry between Jet1 and Jet4 : ASY1
+C           14) Asymmetry between Jet3 and Jet4 : ASY6
+C           15) Angle between Jet1 and Jet2 : ANG1
+C           16) Angle between Jet1 and Jet3 : ANG2
+C           17) Angle between Jet2 and Jet3 : ANG4 
+C
+C
+C
+C   ======>    Version 1.1 - 30th January 1997    <=====
+C
+C                    * Version used @@ IENERGY = 161 GeV and 172 GeV
+C                      The NN learning used are optimized for each energy.
+C                          -----------
+C                      The preselection, the NN architecture (17,15,2)  
+C                      and the NN inputs are the same. 
+C                                    
+C
+C
+C   ======>    Version 1.2 - 03th February 1997    <=====
+C
+C                    * Version used @@ IENERGY = 161 GeV and 172 GeV
+C                      The NN learning and the preselection used are 
+C                                              ------------
+C                      optimized for each energy.
+C                      The NN architecture (15,17,2) and the 17 NN inputs
+C                      are the same.
+C
+C                    * The preselection @@ 172 GeV uses 6 cuts :
+C                           1)  EM < 40 Gev
+C                           2)  OEF > 45
+C                           3)  NJ005 >= 4
+C                           4)  NJET = 4
+C                           5)  IFTJT >= 2
+C                           6)  RELMAX < 0.9 
+C
+C
+C------------------------------------------------------------------------------C
+C
+@
+
+
+1.2
+log
+@update
+@
+text
+@d2 2
+d6 1
+a6 1
+C    Q   Q  NN  N NN  N W     W   T   A A  G                Version 1.0
+d8 1
+a8 1
+C     QQQQ  N  NN N  NN W W W W   T  AAAAA G   G         18th December 1996
+d13 1
+a13 1
+C    Last Modified:    18/12/96 
+d66 2
+a67 3
+C                      For the values : at the present time, only the NN 
+C                      learning @@ 161 Gev is available but this package
+C                      can be used with IENERGY = 172 Gev too.  
+d94 2
+a95 1
+C  Revision history: Version 1.0 - 18th December 1996
+d137 30
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d82 3
+a84 3
+C                     = 3 : incomputing the preselection variables  
+C                     = 4 : incomputing the NN inputs
+C                     = 5 : incomputing the NN output
+@
+
+
+1.1.1.1
+log
+@import 
+@
+text
+@@

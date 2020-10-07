@@ -1,0 +1,46 @@
+From BLOCH@alws.cern.ch Fri Feb 13 15:22:18 2004
+Date: Fri, 13 Feb 2004 15:17:46 +0100
+From: BLOCH@alws.cern.ch
+To: BLOCH@alws.cern.ch
+
+KCAR 0 / $TEXT                                                                  
+POFF                                                                            
+*   RUN #               RUN'S TITLE                                             
+RUN  101            'BAB10 GENERATION'                                          
+*     FIRST EVENT   LAST EVENT TO BE GENERATED                                  
+TRIG       1           1000                                                     
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG                                 
+DEBU    6   /      1            10                                              
+* requested time left at the end of job (in sec)                                
+TIME 10                                                                         
+*    to save event file (EPIO format)                                           
+*FILO 'SCWEEK:BHAB02.EPIO | EPIO '                                              
+*    to save histograms                                                         
+*HSTO 'SCWEEK:BHAB02.HIST | NATIVE '                                            
+*       sigma-x   sigma-y  sigma-z  (cm)                                        
+SVRT     0.018    0.0010    1.00                                                
+* EBEAM  : Beam energy (GeV);                                                   
+* Z0MASS : Z0 mass (GeV);                                                       
+* TPMASS : Top quark mass (GeV);                                                
+*   WARNING: the Z0 width is computed with the needed accuracy only if          
+*            XMZ/2.D0 < XMT < 150 GeV (this restriction will disappear in       
+*            forthcoming versions of the program);                              
+* HIMASS : Higgs boson mass (GeV);                                              
+* THMIN  : Minimum electron angle (degrees);                                    
+* THMAX  : Maximum electron angle (degrees);                                    
+* XKMAX  : Maximum photon energy (in units of EBEAM);                           
+* POLP   : Longitudinal degree of polarization for e+;                          
+* POLM   : Longitudinal degree of polarization for e-;                          
+* AS     : Alpha strong;                                                        
+* INEW   : 0 ---> original version of the program;                              
+*        : 1 ---> version with R. Miquel'S modifications;                       
+GENE                                                                            
+* EBEAM Z0MASS TPMASS HIMASS THMIN THMAX XKMAX  POLP  POLM  AS   INEW           
+  45.6    91.18 100.   100.   10.   170.   1.0  0.5   0.5  0.12    1            
+*  use of RANMAR generator for random numbers:                                  
+*                   (see KINLIB DOC for informations)                           
+*  INSEED : first seed (range assigned per institute);                          
+*  LOSEED : second seed (incremented locally for new runs);                     
+*      INSEED          LOSEED (1-30000)                                         
+RMAR    89                 1                                                    
+ENDQ                                                                            

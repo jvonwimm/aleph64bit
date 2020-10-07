@@ -1,0 +1,92 @@
+head	1.1;
+access;
+symbols
+	alio83:1.1
+	alio82:1.1
+	alio81:1.1
+	alio80:1.1
+	alio74:1.1
+	alio73:1.1
+	alio72:1.1
+	alio71:1.1
+	alio70:1.1
+	alio68:1.1
+	alio69:1.1
+	alio67:1.1
+	alio66:1.1
+	alio65:1.1
+	alio64:1.1
+	alio63:1.1
+	alio62:1.1
+	alio61:1.1
+	alio60:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.04.23.09.59.07;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@move alph, dbas, a part of alef and a part of c to alephio
+Modified Files:
+ 	version.h
+ Added Files:
+ 	adbrow.F adbrpn.F adbrun.F adbswp.F adbver.F agetdb.F agtfil.F
+	albos.F aldawr.F aldtyp.F aleveh.F alfind.F alfmt.F algtbk.F
+ 	algtdb.F algtlu.F algtro.F algtyp.F alinst.F alk7fil.F
+ 	alk7fru.F alk7op.F alk7tru.F alredb.F alrune.F alrunh.F
+ 	alrunr.F alseed.F alstho.F alstin.F alstri.F altabl.F alvsn.F
+ 	aopdbs.F aublis.F aubos.F aubprs.F bkcari.F bkinca.F bkrhab.F
+ 	bkrhal.F bkrhaw.F bktobk.F cafiht.F chahol.F dafrds.F gtdbas.F
+ 	gtstup.F igtfmt.F jhocha.F julrec.F junial.F junidb.F
+ 	kbytrec.F loctab.F nameru.F ubpack.F uclean.F uindxs.F usbos.F
+ 	usgtdb.F utcblk.F utccop.F utcofo.F utwocl.F utwoex.F
+Removed Files:
+	noibm.F
+@
+text
+@      SUBROUTINE ALBOS (NAME,NR,LE,KNDX,IGARB)
+C ----------------------------------------------------
+C - F.Ranjard - 870427
+C! Book/enlarge a bank with name='NAME', number=NR, length=LE
+C - Return bank index=KNDX
+C - IGARB is set to 1 if a garbage collection occured
+C - If not enough space to book/enlarge the bank call ALTELL
+C - Calls    NBANK, BGARB                   from BOS77.hlb
+C ---------------------------------------------
+#ifndef DOC
+       CHARACTER NAME*4
+       EXTERNAL NBANK, ALTELL
+#include "bcs.h"
+C ----------------------------------------------------------
+C
+      IGARB = 0
+      KNDX = NBANK (NAME,NR,LE)
+      IF (KNDX.EQ.0) THEN
+C     not enough space
+         IGARB = 1
+C        allow garbage collection
+         CALL BGARB(IW)
+C
+         KNDX = NBANK (NAME,NR,LE)
+         IF (KNDX.EQ.0) THEN
+C        not enough space after garbage collection
+            IGARB = 2
+C           set end of event flag to true and increment error code
+            CALL ALTELL ('ALBOS: not enough space ',1,'NEXT')
+         ENDIF
+      ENDIF
+C
+      RETURN
+      END
+#endif
+@

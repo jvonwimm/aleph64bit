@@ -1,0 +1,178 @@
+*DK datdoc
+#if defined(DOC)
+.chapter STEERING DATA CARDS
+   - Read data cards in BOS free format
+
+.section keyword definition
+
+  --> DATE             IDATJO
+      IDATJO           yymmdd   = date of the required survey file
+
+  --> DEBUG  LOUTIO /  IDB1JO    IDB2JO
+      LOUTIO           if given and .GT.0 unit# on which to print
+      IDB1JO           1st event to be debugged
+      IDB2JO           last event to be debugged
+      IDB3JO           frequency to record last random number
+
+  --> DISPLAY LGRAIO / IDS1JO    IDS2JO
+      LGRAIO           = 0 suppress all references to display routines
+                         mandatory on IBM/VM if you don't want graphic .
+                       > 0 unit# on which to display
+      IDS1JO           1st event to be displayed
+      IDS2JO           last event to be displayed
+
+  --> FDBA        'fname ftype * | DAF | GIME tid addr '
+                   full name of the data base to read in.
+
+  --> FGEO        'fname ftype * | CARDs | GIME tid addr '
+                   full name of the .GEO file ( EXTRACARDS file) to be
+                   read in.
+
+  --> FIDUCIAL     ALRMAX   ALZMAX    ALFIEL    ALECMS
+                   mandatory
+      ALRMAX       max. radius of ALEPH   (in cm.)
+      ALZMAX       max. z                 (in cm.)
+      ALFIEL       magnetic field         (in gauss)
+      ALECMS       beam energy in the center of mass   (in gev)
+
+  --> FILI         'fname ftype fmode | alephtype | GIME tid addr '
+                    input file name of the file to be read in.
+
+  --> FILO         'fname ftype A | alephtype'
+                    output file name of the file to be written out.
+
+  --> FXXX         'trflag'  'shflag'  'CUTF'  pmom
+      'trflag'     = 'DRTK'  if tracks have to be dropped (def)
+                   = 'KPTK'  if tracks have to be kept
+      'shflag'     = 'DRSH'  if showers have to be dropped (def)
+                   = 'KPSH'  if showers have to kept
+      pmom         momentum cut (tracks with momentum < pmom will
+                   be dropped. must be preceeded by 'CUTF'.
+                   the 'KINE' and 'VERT' banks will be replaced
+                   by 'FKIN', 'FVER' and 'FPOI' banks.
+
+  --> GEOMETRY         'component(n)'   LVELJO(n)  ...
+                        gives for each component of the apparatus the
+                        geometry level required in the range [0,2].
+                        if a component is not given , its geometry level
+                        is assumed to be = 1.
+                        a component must start with its 2 letter-code:
+                        VD, IT, TP, EC, LC, SA, HC, MU, BP, CO, QU, PM, TS
+
+  --> HISTOGRAM        n1    n2    n3    .....
+            or         'nam1'   'nam2'  'nam3'  ....
+       FHISJO(n)        if n.le.LHIS then FHISJO(n) = .TRUE.
+                        FHISJO can be used to trigger groups of hist.
+                     name= VDET, ITC , TPC , ECAL, LCAL, SATR, HCAL, MUON
+                        n=   1 ,  2  ,  3  ,  4  ,  5  ,  6  ,  7  ,  8
+                           TRIG, RDST
+                            11 ,  12
+                        hist. booked by flag FHISJO(n) could be in the
+                        range : n*100 to n*100+99
+
+  --> IMPACT            'name1'  'name2' .... 'namei' ...
+                        VDET, ITC, TPCI, ECAL, LCAL, SATR, HCAL, MUON
+                        track parameters will be stored at the entrance
+                        of the detector volume 'namei' for all primaries
+                        TPCO
+                        track parameters will be stored at the exit
+                        point of the TPC gas volume for charged particles
+
+  --> KINEMATICS       'TKINJO'  p1  p2 ......
+      TKINJO            kinematic type : 'PART' , 'USER
+      BKINJO (1-lkinp)  kinematic parameters
+                1       sigma x-vertex   (in cm.)
+                2        ---  y-vertex   (in cm.)
+                3        ---  z-vertex   (in cm.)
+                4       particle type             (PART)
+                5 - 6   momentum range            (PART)
+                7 - 8   cosine(theta) range       (PART)
+                4 - 8   free                      (USER)
+
+  --> PRINT             n1    n2   .....
+                or      'nam1'  'nam2' ...
+      IPRIJO (1-lpri)   if n.le.LPRI then IPRIJO(n)=1
+                    name = VDET, ITC, TPC, ECAL, LCAL, SICA, HCAL, MUON
+                       n =   1 ,  2 ,  3 ,  4  ,  5  ,  6  ,  7  ,  8
+         TRIG   11      Trigger process printout
+         OUTP   14      print the list of output BOS banks
+         INPU   15      print the list of input BOS banks
+         KINE   16      print 'KINE' and 'IMPA' BOS banks
+         TREL   17      print each track element delivered by GEANT3
+         DRAW   18      draw each track element (GUSTEP very slow)
+         GEOM   19      print Geant3 geometry banks and ALEPH decay bank
+         PART   20      print particle data bank
+
+  --> PROCESS          'TPROJO(n)' .....
+      TPROJO (1-lkey)   process names
+                        if TPROJO(n) .eq. TKEYS(j) then IPROJO(j)=1
+                        TKEYS contains following process:
+                        KINE, TRAC, HIT, DIGI, TRIG, RDST
+
+  --> RNDM   process# /  IRNDJO(1,process#) IRNDJO(2,pro) IRNDJO(3,pro)
+      process#          [1,6] for the following processes:
+                        KINE, TRAC, HITS, DIGI, TRIG, RDST
+                        IRNDJO are integers  which will
+                        be used as roots for the random generator of
+                        the 1st processed event.
+                        there is 1 to 3 roots per process depending on
+                        the random number generator used:
+                            RNDM    1 root
+                            RANECU  2 roots
+                            RANMAR  3 roots
+                        to initialize RANMAR with the 2 lab seeds:
+                            RNDM  n / lab1   lab2   -1
+
+  --> RUN              IRUNJO   TRUNJO
+      IRUNJO           run number
+      TRUNJO           run title   ( 60 char. at most)
+
+  --> RUNC             'xxdetname'    ICxxJO(n)  ......
+      xxdetname         detector name starting by its 2-letter code
+      ICxxJO (1-LCxx)   run condition flags for this detector
+
+  --> SETS             'TSETJO(n)' ..........
+      TSETJO (1-lset)  list of sets to be considered for analog
+                       signals and digitization.
+                       any setname must start with the 2 letter-code
+                       of the detector it belongs to:
+                         VD, IT, TP, EC, LC, SI, HC, MU
+                       in case an outer detector (EC, LC, SI, HC, MU)
+                       is not selected the detector is physically
+                       dropped.
+                       MU should not be selected without HC.
+                       HC should not be selected without EC.
+                       if EC is not selected the shower parametrization
+                       will not be turned on and as a consequence the
+                       computer time per event will be longer.
+
+  --> STATISTICS       MBINJO(n) ....
+      MBINJO           bin size of pseudo histograms
+              1        # of tracks per event   (def.=150)
+              2        # of 'primaries' per event (def.=10)
+              3        maximum size of the stack per event (def.=15)
+
+  --> TIME             TIMLJO
+      TIMLJO           necessary time to execute last event and end
+                       the job
+
+  --> TCUT             TCUTJO(n)  .....
+      TCUTJO (1-ltcut) kinetic energy cuts used during tracking
+                       should be used by specialists only
+                1      gamma kinetic energy cut      (def=.005)
+                2      electron kinetic energy cut       (.005)
+                3      hadron kinetic energy cut          (.01)
+                4      neutral hadron kinetic energy cut  (.01)
+                5      muon kinetic energy cut            (.01)
+
+  --> TPCSIM           require TPC digitization
+
+  --> NEVT             IEV1JO   -IEV2JO
+      IEV1JO           1st event# to be processed
+      IEV2JO           last event# to be processed
+
+  --> ENDQ             last data card : must be there
+
+
+
+#endif

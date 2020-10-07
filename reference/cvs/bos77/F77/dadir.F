@@ -1,0 +1,110 @@
+      SUBROUTINE DADIR(IACT)
+
+*     DIRECTORY ACTIONS IACT = 1 2 3   FIND DELETE ADD
+#include "dacom.h"
+      COMMON/BCS/IW(1000)
+      CHARACTER*4 NAME,CHAINT
+
+      NDTR=0
+      NRD =0
+      NAME=CHAINT(NADA)
+
+*     HASH INDEX FOR DIRECT ACCESS
+
+      NHDA=MOD(IABS(NADA),IW(IUB+15))
+      IF(NRDA.GE.0) THEN
+         NHDA=NHDA+NRDA/100
+      ELSE
+         NHDA=NHDA-(-NRDA-1)/100
+         IF(NHDA.LT.0) NHDA=NHDA+(IW(IUB+15)*(1-NHDA/IW(IUB+15)))
+      END IF
+      NHDA=MOD(NHDA,IW(IUB+15))
+
+C     NHDA=MOD(IABS(NAMIND(NAME))+NRDA/100,IW(IUB+15))
+      IREC=IW(IUB+12)-NHDA
+*     SEARCH FOR DIRECTORY ENTRY
+
+   10 CALL DAFRD(IREC,0)
+      NTOT=IW(IDR)
+C     DO 20 I=8,NTOT,5
+C     IF(NADA.EQ.IW(IDR+I-3).AND.NRDA.EQ.IW(IDR+I-2)) GOTO 30
+C  20 CONTINUE
+      IF(NTOT/5.EQ.0) THEN
+         I=-1
+      ELSE
+         I=INLIS2(NADA,NRDA,IW(IDR+5),5,NTOT/5)
+      END IF
+      IF(I.GT.0) GOTO 30
+      IF(IW(IDR+3).NE.0) THEN
+         IREC=IW(IDR+3)
+         GOTO 10
+      END IF
+
+*     NO DIRECTORY ENTRY FOUND, ADD FOR IACT=3
+
+      IF(IACT.NE.3) GOTO 100
+      IF(NTOT+5.GE.NWRDA) THEN
+*        CONTINUATION NECESSARY, WRITE PREVIOUS RECORD
+         NRR=IW(IUB+14)-1
+         IW(IUB+14)=NRR
+         IW(IDR+3)=NRR
+*        set modify-flag
+         IDRR=-IABS(IDRR)
+         CALL DAFWR(IREC,0)
+*        PREPARE NEW RECORD
+         DO 22 M=1,NWRDA
+   22    IW(IDR+M)=0
+         NTOT=4
+         IW(IDR+1)=INTCHA('+DIR')
+         IW(IDR+2)=NHDA
+         IW(IDR+3)=0
+         IW(IDR+4)=0
+         IDRR=LUNDA+100*NRR
+         IDRR=-IDRR
+         IW(IDR+5)=NADA
+         IW(IDR+6)=NRDA
+         IW(IDR+7)=NDTC
+         IW(IDR+8)=NDDA
+         IW(IDR+9)=NDD
+         IW(IDR+4)=IW(IDR+4)+5
+         IW(IDR       )=NTOT+5
+      ELSE
+
+*     ADD NEW ENTRY
+         IDRR=-IABS(IDRR)
+         I=-I
+         II=5*I-1
+         CALL UCOPY2(IW(IDR+II+1),IW(IDR+II+6),NTOT-II)
+         IW(IDR+II+1)=NADA
+         IW(IDR+II+2)=NRDA
+         IW(IDR+II+3)=NDTC
+         IW(IDR+II+4)=NDDA
+         IW(IDR+II+5)=NDD
+         IW(IDR+4)=IW(IDR+4)+5
+         IW(IDR       )=NTOT+5
+      END IF
+      GOTO 100
+
+*     DIRECTORY ENTRY FOUND
+
+   30 I=5*I+3
+      NDTR=IW(IDR+I-1)
+      NDDR=IW(IDR+I  )
+      NRD =IW(IDR+I+1)
+
+      IF(IACT.EQ.1) GOTO 100
+      IDRR=-IABS(IDRR)
+      IF(IACT.EQ.2) THEN
+*        DELETE
+         CALL UCOPY2(IW(IDR+I+2),IW(IDR+I-3),NTOT-I-1)
+         IW(IDR)=IW(IDR)-5
+         IW(IDR+4)=IW(IDR+4)-5
+      ELSE
+*        REPLACE
+         IW(IDR+I-1)=NDTC
+         IW(IDR+I  )=NDDA
+         IW(IDR+I+1)=NDD
+      END IF
+
+  100 RETURN
+      END

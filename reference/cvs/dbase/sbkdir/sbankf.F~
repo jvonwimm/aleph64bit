@@ -1,0 +1,799 @@
+      SUBROUTINE SBKDEC(XBOOK,XCONT,XREFE,XCOMM,XUNDO,XOUTP,CHOUT,
+     +  CHARG)
+C----------------------------------------------------------------------
+C! Decode the UNIX command line options
+C!
+C!    Author:     H. Meinhard       11-Jan-1993
+C!
+C----------------------------------------------------------------------
+C*CA SBKCOM
+C! Decoded command line parameters
+      LOGICAL XBOOKG,XCONTT,XREFER,XCOMMT,XUNDOC,XOUTPT
+      CHARACTER*80 CHOUTP,CHARGV
+      COMMON /SBKCOM/XBOOKG,XCONTT,XREFER,XCOMMT,XUNDOC,XOUTPT
+      COMMON /SBKCOC/CHOUTP,CHARGV
+C*CC SBKCOM
+C*CA SBKLOC
+C! Location of data files for SBANK
+      CHARACTER ALDOCC*80
+      INTEGER   ILDOCC
+      COMMON /SBKLOC/ALDOCC
+      COMMON /SBKLOI/ILDOCC
+C*CC SBKLOC
+      CHARACTER CHOUT*80,CHARG*80
+      LOGICAL   XBOOK,XCONT,XREFE,XCOMM,XUNDO,XOUTP
+C----------------------------------------------------------------------
+C command line options, decoded in C main program
+      XBOOKG = XBOOK
+      XCONTT = XCONT
+      XREFER = XREFE
+      XCOMMT = XCOMM
+      XUNDOC = XUNDO
+      XOUTPT = XOUTP
+      CHOUTP = CHOUT
+      CALL CLTOU(CHARG)
+      CHARGV = CHARG
+C location of data files
+      CALL GETENV('ALDOC',ALDOCC)
+      IF (ALDOCC .EQ. ' ') THEN
+        CALL GETENV('ALEPH',ALDOCC)
+        ILDOCC = LNBLNK(ALDOCC)
+        ALDOCC(ILDOCC+1:) = '/doc'
+      END IF
+      ILDOCC = LNBLNK(ALDOCC)
+      END
+C*EI
+C*DK PRSBANK
+C*DF UNIX
+      SUBROUTINE PRSBANK
+C -----------------------------------------------------------
+C! get bank documentation
+C - J.Knobloch,9-4-87
+C - modified by J.Knobloch    16-9-87
+C               F.Ranjard     01-10-91
+C                             make an historian library
+C                             increase the number of banks to 1000
+C                             increase the number of entries to 100
+C       **********************************************************
+C
+C              interactive documentation system for BOS-banks
+C              used in the ALEPH-offline software
+C     Files read:   DOC:SBANK.LBF  on unit 14 in CONTENT
+C                   DOC:ALL.ASSIGN on unit 13 in LINADD
+C                   assignment statements and BOS routine
+C                   in GALEPH,JULIA and ALEPHLIB
+C     If no '/output=...' given ,then output to VT100-compatible termina
+C        otherwise output to file specified
+C -----------------------------------------------------------------
+C*IF .NOT.DOC
+C*CA VERSION
+C! date and version number
+      PARAMETER (IVERS=13, IDATE=950404)
+C*CC VERSION
+C*CA SBKPAR
+C - NBNK = number of ALEPH banks
+C   do not forget to update NAMAX in BCS
+      PARAMETER (LINP=13,LINP2=14,LOUT=6,NBNK=1500,NENTR=120 )
+C*CC SBKPAR
+C*CA PAGING
+      COMMON/PAGING/LINES
+C*CC PAGING
+C*CA FILDAT
+      COMMON/FILDAT/IADARR(0:NBNK),NUMBKD(NBNK),NUMREF(NBNK)
+      COMMON/FILCAR/BKDLIN(NBNK,NENTR),REFLIN(NBNK,NENTR),COMLIN(NBNK)
+     &             ,NAMARR(NBNK),INPLIN
+      CHARACTER*4  NAMARR
+      CHARACTER*25 REFLIN
+      CHARACTER*40 BKDLIN
+      CHARACTER*80 COMLIN
+      CHARACTER*80 INPLIN
+C*CC FILDAT
+C*CA SBKCOM
+C! Decoded command line parameters
+      LOGICAL XBOOKG,XCONTT,XREFER,XCOMMT,XUNDOC,XOUTPT
+      CHARACTER*80 CHOUTP,CHARGV
+      COMMON /SBKCOM/XBOOKG,XCONTT,XREFER,XCOMMT,XUNDOC,XOUTPT
+      COMMON /SBKCOC/CHOUTP,CHARGV
+C*CC SBKCOM
+C
+      CHARACTER*4 STRING
+      CHARACTER*40 FILNAM
+C ---------------------------------------------------------------
+C
+      CALL LINADD
+      LINES=0
+      CALL PAGE
+C
+C     check presence of 'output' qualifier
+      IF(XOUTPT)THEN
+        OPEN(LOUT,FILE=CHOUTP,STATUS='NEW')
+      ENDIF
+C
+      WRITE (LOUT,*) ' SBANK version ',IVERS
+      CALL PAGE
+C
+C     P1 should be a bank name , wild cards at end of name are possible
+      STRING=CHARGV(1:4)
+      IF(STRING.EQ.'    ')STRING='*   '
+      MODE=INDEX(STRING,'*')
+C
+C     if no bank name is given - print list of all banks
+      IF(CHARGV(1:4).EQ.'    ')THEN
+        CALL NAMESL(STRING,MODE)
+        GOTO 88
+      ENDIF
+C
+C     mode=0 means no wildcard in bankname
+      IF(MODE.EQ.0)THEN
+C      print content description of bank -- is default
+        IF(XCONTT)CALL CONTENT(STRING,MODE)
+C     otherwise just print the comment
+        IF(.NOT.XCONTT)CALL COMMNT(STRING,MODE)
+C     print where banks are booked
+        IF(XBOOKG)CALL GTBOOK(STRING)
+C     print where banks are referenced
+        IF(XREFER)CALL GTREFER(STRING)
+      ELSE
+        IF(.NOT.XCOMMT.AND..NOT.XCONTT)CALL NAMESL(STRING,MODE)
+        IF(XCONTT.OR.XCOMMT)CALL COMMNT(STRING,MODE)
+        IF(XCONTT.AND..NOT.XCOMMT)CALL CONTENT(STRING,MODE)
+      ENDIF
+C
+   88 IF(XUNDOC)CALL UNDOC(STRING,MODE)
+C
+   99 CONTINUE
+      CLOSE (LOUT)
+      END
+C*DK PAGE
+C*DF UNIX
+      SUBROUTINE PAGE
+C ----------------------------------------------------------------
+C     count number of lines printed per page
+C at end of screen print 'press return to continue' and wait for input
+C     dont' do if writing onto file
+C ----------------------------------------------------------------
+C*IF .NOT.DOC
+C*CA SBKPAR
+C - NBNK = number of ALEPH banks
+C   do not forget to update NAMAX in BCS
+      PARAMETER (LINP=13,LINP2=14,LOUT=6,NBNK=1500,NENTR=120 )
+C*CC SBKPAR
+C*CA PAGING
+      COMMON/PAGING/LINES
+C*CC PAGING
+C*CA SBKCOM
+C! Decoded command line parameters
+      LOGICAL XBOOKG,XCONTT,XREFER,XCOMMT,XUNDOC,XOUTPT
+      CHARACTER*80 CHOUTP,CHARGV
+      COMMON /SBKCOM/XBOOKG,XCONTT,XREFER,XCOMMT,XUNDOC,XOUTPT
+      COMMON /SBKCOC/CHOUTP,CHARGV
+C*CC SBKCOM
+      INTEGER*2 FLAGS,DEVICE,LINEWIDTH,LINESPP
+      CHARACTER TEXT*34,DUMMY*80,CLEAR*80,HOME*80,S_IN*80,S_OUT*80
+      LOGICAL FIRST
+      DATA FIRST /.TRUE./
+      DATA TEXT/'***  press RETURN to continue  ***'/
+C ------------------------------------------------------------
+      LINES=LINES+1
+C*IF VAX
+C*EI
+C*IF UNIX
+      IF (FIRST) THEN
+        CALL UNIXLINES(LINESPP,CLEAR,HOME,S_IN,S_OUT)
+        LIMIT = LINESPP - 2
+        FIRST = .FALSE.
+      END IF
+      IF (LINES .GT. LIMIT .AND. .NOT. XOUTPT) THEN
+        WRITE (6,'(1X,3A,$)') S_IN(:LNBLNK(S_IN)),
+     +    TEXT,S_OUT(:LNBLNK(S_OUT))
+        READ (5,'(A)') DUMMY
+        WRITE (6,'(1X,A,$)') CLEAR(:LNBLNK(CLEAR))
+        LINES = 0
+      END IF
+C*EI
+      END
+C*DK UNDOC
+C*DF UNIX
+      SUBROUTINE UNDOC(STRING,MODE)
+C ----------------------------------------------------------
+C
+C     find and print banks that are used in the programs
+C      but which are undocumented
+C ----------------------------------------------------------
+C*IF .NOT.DOC
+C*CA PAGING
+      COMMON/PAGING/LINES
+C*CC PAGING
+C*CA SBKPAR
+C - NBNK = number of ALEPH banks
+C   do not forget to update NAMAX in BCS
+      PARAMETER (LINP=13,LINP2=14,LOUT=6,NBNK=1500,NENTR=120 )
+C*CC SBKPAR
+C*CA FILDAT
+      COMMON/FILDAT/IADARR(0:NBNK),NUMBKD(NBNK),NUMREF(NBNK)
+      COMMON/FILCAR/BKDLIN(NBNK,NENTR),REFLIN(NBNK,NENTR),COMLIN(NBNK)
+     &             ,NAMARR(NBNK),INPLIN
+      CHARACTER*4  NAMARR
+      CHARACTER*25 REFLIN
+      CHARACTER*40 BKDLIN
+      CHARACTER*80 COMLIN
+      CHARACTER*80 INPLIN
+C*CC FILDAT
+C*IF UNIX
+C*CA SBKLOC
+C! Location of data files for SBANK
+      CHARACTER ALDOCC*80
+      INTEGER   ILDOCC
+      COMMON /SBKLOC/ALDOCC
+      COMMON /SBKLOI/ILDOCC
+C*CC SBKLOC
+C*EI
+      CHARACTER*4 BANK,BBANK,DBANK(NBNK),RBANK(NBNK),STRING
+C -----------------------------------------------------------
+      WRITE(LOUT,2)
+    2 FORMAT(' ......................................................')
+      CALL PAGE
+      WRITE(LOUT,3)STRING
+    3 FORMAT(' Banks not documented:',A)
+      CALL PAGE
+      WRITE(LOUT,4)
+    4 FORMAT(' =========================')
+      CALL PAGE
+C
+C       first collect all the names of documented banks
+C
+C*IF VAX
+C*EI
+C*IF UNIX
+      OPEN (UNIT=LINP,FILE=ALDOCC(:ILDOCC)//'/sbank.lbf',STATUS='OLD')
+C*EI
+   10 READ(LINP,'(A)',END=17)INPLIN
+      IF(INPLIN(2:2).EQ.'|')THEN
+      BANK=INPLIN(4:7)
+      NDBANK=NDBANK+1
+      DBANK(NDBANK)=BANK
+      ENDIF
+      GOTO 10
+   17 CONTINUE
+C
+C         now we look for used banks
+C
+      NRBANK=0
+C*IF VAX
+C*EI
+C*IF UNIX
+      OPEN (UNIT=LINP2,FILE=ALDOCC(:ILDOCC)//'/all.assign',STATUS='OLD')
+C*EI
+  300 READ(LINP2,'(A)',END=500)INPLIN
+      IF(INDEX(INPLIN,'CALLA').EQ.0.AND.
+     +       INDEX(INPLIN,'NBANK(').EQ.0.AND.
+     +       INDEX(INPLIN,'MBANK(').EQ.0 )GOTO 300
+      I=INDEX(INPLIN,'''')
+      IF(I.EQ.0)GOTO 300
+      J=INDEX(INPLIN(I+5:I+5),'''')
+      IF(J.EQ.0)GOTO 300
+      BBANK=INPLIN(I+1:I+4)
+      IF(MODE.EQ.1)GOTO 302
+      IEST=MODE-1
+      IF(MODE.EQ.0)IEST=4
+      IF(BBANK(1:IEST).NE.STRING(1:IEST))GOTO 300
+  302 CONTINUE
+C
+C         do not do the same bank twice
+C
+      DO 305 J=1,NRBANK
+        IF(RBANK(J).EQ.BBANK)GOTO 300
+  305 CONTINUE
+      NRBANK=NRBANK+1
+      RBANK(NRBANK)=BBANK
+C
+C          check if bank is documented
+C
+      DO 310 J=1,NDBANK
+        IF(DBANK(J).EQ.BBANK) GOTO 300
+  310 CONTINUE
+C
+C        it is not documented
+C
+      WRITE(LOUT,311)BBANK,INPLIN(1:25)
+  311 FORMAT(' Bank ',A,' Booked in ',A,'  is not documented!!!')
+      CALL PAGE
+      GOTO 300
+  500 CONTINUE
+      CLOSE(LINP)
+      CLOSE(LINP2)
+      END
+C*EI
+C*DK LINADD
+C*DF UNIX
+      SUBROUTINE LINADD
+C ----------------------------------------------------------------
+C! read DOC:SBANK.ADR file
+C ----------------------------------------------------------------
+C*IF .NOT.DOC
+C*CA SBKPAR
+C - NBNK = number of ALEPH banks
+C   do not forget to update NAMAX in BCS
+      PARAMETER (LINP=13,LINP2=14,LOUT=6,NBNK=1500,NENTR=120 )
+C*CC SBKPAR
+C*CA FILDAT
+      COMMON/FILDAT/IADARR(0:NBNK),NUMBKD(NBNK),NUMREF(NBNK)
+      COMMON/FILCAR/BKDLIN(NBNK,NENTR),REFLIN(NBNK,NENTR),COMLIN(NBNK)
+     &             ,NAMARR(NBNK),INPLIN
+      CHARACTER*4  NAMARR
+      CHARACTER*25 REFLIN
+      CHARACTER*40 BKDLIN
+      CHARACTER*80 COMLIN
+      CHARACTER*80 INPLIN
+C*CC FILDAT
+C*IF UNIX
+C*CA SBKLOC
+C! Location of data files for SBANK
+      CHARACTER ALDOCC*80
+      INTEGER   ILDOCC
+      COMMON /SBKLOC/ALDOCC
+      COMMON /SBKLOI/ILDOCC
+C*CC SBKLOC
+C*EI
+      CHARACTER*4 BANK
+C ----------------------------------------------------------------
+C*IF VAX
+C*EI
+C*IF UNIX
+      OPEN (UNIT=LINP,FILE=ALDOCC(:ILDOCC)//'/sbank.adr',STATUS='OLD')
+C*EI
+      READ (UNIT=LINP,FMT='(I5)') IARCNT
+      IF (IARCNT.GT.NBNK) THEN
+         WRITE (LOUT,'(2A,I)') ' LINADD too many banks increase '
+     &                       , 'NBNK in SBKPAR to ',IARCNT
+         IARCNT = NBNK
+      ENDIF
+      IADARR(0)=IARCNT
+      DO 10 I=1,IARCNT
+C
+C     read one bank name
+        READ (UNIT=LINP,FMT='(3I5,2A)') IADARR(I),NUMBKD(I),NUMREF(I),
+     :                                  NAMARR(I),COMLIN(I)
+C
+C        if too many entries limit to NENTR entries
+C        then skip the extra entries
+        IF (NUMBKD(I).GT.NENTR) THEN
+           WRITE (LOUT,'(2A,I)')' LINADD too many entries increase '
+     &                         ,' NENTR in SBKPAR to ',NUMBKD(I)
+           NMAX = NUMBKD(I)
+           NUMBKD(I) = NENTR
+        ELSE
+           NMAX = 0
+        ENDIF
+        DO 20 J=1,NUMBKD(I)
+   20   READ (UNIT=LINP,FMT='(A)') BKDLIN(I,J)
+        IF (NMAX.GT.0) THEN
+           DO 21 J=1,NMAX-NENTR
+   21      READ (UNIT=LINP,FMT='(A)') INPLIN
+        ENDIF
+C
+C        if too many references limit to NENTR references
+C        then skip the extra references
+        IF (NUMREF(I).GT.NENTR) THEN
+           WRITE (LOUT,'(2A,I)')' LINADD too many references increase '
+     &                         ,' NENTR in SBKPAR to ',NUMREF(I)
+           NMAX = NUMREF(I)
+           NUMREF(I) = NENTR
+        ELSE
+           NMAX = 0
+        ENDIF
+        DO 30 J=1,NUMREF(I)
+   30   READ (UNIT=LINP,FMT='(A)') REFLIN(I,J)
+        IF (NMAX.GT.0) THEN
+           DO 31 J=1,NMAX-NENTR
+   31      READ (UNIT=LINP,FMT='(A)') INPLIN
+        ENDIF
+C
+   10 CONTINUE
+      CLOSE (LINP)
+      RETURN
+      END
+C*EI
+C*DK CONTENT
+C*DF UNIX
+      SUBROUTINE CONTENT(STRING,MODE)
+C ------------------------------------------------------------------
+C     go through file DOC:SBANK.LBF and find bank requested by string
+C     if no wildcard used just print it
+C     otherwise print also where booked and referenced
+C ------------------------------------------------------------------
+C*IF .NOT.DOC
+C*CA SBKPAR
+C - NBNK = number of ALEPH banks
+C   do not forget to update NAMAX in BCS
+      PARAMETER (LINP=13,LINP2=14,LOUT=6,NBNK=1500,NENTR=120 )
+C*CC SBKPAR
+C*CA PAGING
+      COMMON/PAGING/LINES
+C*CC PAGING
+C*CA FILDAT
+      COMMON/FILDAT/IADARR(0:NBNK),NUMBKD(NBNK),NUMREF(NBNK)
+      COMMON/FILCAR/BKDLIN(NBNK,NENTR),REFLIN(NBNK,NENTR),COMLIN(NBNK)
+     &             ,NAMARR(NBNK),INPLIN
+      CHARACTER*4  NAMARR
+      CHARACTER*25 REFLIN
+      CHARACTER*40 BKDLIN
+      CHARACTER*80 COMLIN
+      CHARACTER*80 INPLIN
+C*CC FILDAT
+C*CA SBKCOM
+C! Decoded command line parameters
+      LOGICAL XBOOKG,XCONTT,XREFER,XCOMMT,XUNDOC,XOUTPT
+      CHARACTER*80 CHOUTP,CHARGV
+      COMMON /SBKCOM/XBOOKG,XCONTT,XREFER,XCOMMT,XUNDOC,XOUTPT
+      COMMON /SBKCOC/CHOUTP,CHARGV
+C*CC SBKCOM
+C*IF UNIX
+C*CA SBKLOC
+C! Location of data files for SBANK
+      CHARACTER ALDOCC*80
+      INTEGER   ILDOCC
+      COMMON /SBKLOC/ALDOCC
+      COMMON /SBKLOI/ILDOCC
+C*CC SBKLOC
+C*EI
+      CHARACTER*4 BANK,STRING
+      CHARACTER*80 INLINEM1,INLINEM2
+C --------------------------------------------------------------------
+C*IF VAX
+C*EI
+C*IF UNIX
+      OPEN (UNIT=LINP,FILE=ALDOCC(:ILDOCC)//'/sbank.lbf',STATUS='OLD')
+C*EI
+      I=0
+      IADD=-1
+    5 I=I+1
+      BANK=NAMARR(I)
+      IF (LGT(STRING,NAMARR(I)).AND.I.LT.IADARR(0)) GOTO 5
+      IEST=MODE-1
+      IF(MODE.EQ.0)IEST=4
+      BANK=NAMARR(I)
+      IF(MODE.EQ.1)GOTO 21
+      IF(BANK(1:IEST).NE.STRING(1:IEST))GOTO 17
+   21 DO 10 J=1,IADARR(I)-3
+   10 READ (LINP,*)
+      READ (LINP,'(A)') INLINEM2
+      READ (LINP,'(A)') INLINEM1
+      READ (LINP,'(A)') INPLIN
+      IF(XBOOKG.OR.XREFER)THEN
+        WRITE(LOUT,2)
+    2   FORMAT(
+     &    ' ......................................................')
+        CALL PAGE
+      ENDIF
+C     bank is found - print two lines before and current line
+      WRITE(LOUT,'(A)')INLINEM2
+      CALL PAGE
+      WRITE(LOUT,'(A)')INLINEM1
+      CALL PAGE
+      WRITE(LOUT,'(A)')INPLIN
+      CALL PAGE
+C     go on until end of this bank doc. is found
+   15 READ(LINP,'(A)',END=17)INPLIN
+      IF(INPLIN(2:14).EQ.'ADAMO Toolset')GOTO 17
+      IF(INPLIN(3:8).EQ.'======'.AND.MODE.EQ.0)GOTO 17
+      IF(INPLIN(3:8).EQ.'======')THEN
+        IF(XBOOKG)CALL GTBOOK(BANK)
+        IF(XREFER)CALL GTREFER(BANK)
+        GOTO 5
+      ENDIF
+C     get rid of blanks at end of line
+      LEN=LENOCC(INPLIN)
+      IF(LEN.LT.2)GOTO 15
+      WRITE(LOUT,'(A)')INPLIN(1:LEN)
+      CALL PAGE
+      GOTO 15
+   17 CONTINUE
+      CLOSE (LINP)
+      END
+C*EI
+C*DK GTBOOK
+C*DF UNIX
+      SUBROUTINE GTBOOK(STRING)
+C ----------------------------------------------------------------
+C ----------------------------------------------------------------
+C*IF .NOT.DOC
+C*CA PAGING
+      COMMON/PAGING/LINES
+C*CC PAGING
+C*CA SBKPAR
+C - NBNK = number of ALEPH banks
+C   do not forget to update NAMAX in BCS
+      PARAMETER (LINP=13,LINP2=14,LOUT=6,NBNK=1500,NENTR=120 )
+C*CC SBKPAR
+C*CA FILDAT
+      COMMON/FILDAT/IADARR(0:NBNK),NUMBKD(NBNK),NUMREF(NBNK)
+      COMMON/FILCAR/BKDLIN(NBNK,NENTR),REFLIN(NBNK,NENTR),COMLIN(NBNK)
+     &             ,NAMARR(NBNK),INPLIN
+      CHARACTER*4  NAMARR
+      CHARACTER*25 REFLIN
+      CHARACTER*40 BKDLIN
+      CHARACTER*80 COMLIN
+      CHARACTER*80 INPLIN
+C*CC FILDAT
+      CHARACTER*4 BANK,STRING
+C ---------------------------------------------------------------------
+      NB=0
+      I=0
+   10 I=I+1
+      IF (I.LT.IADARR(0).AND.NAMARR(I).NE.STRING) GOTO 10
+      IF (NAMARR(I).NE.STRING.OR.NUMBKD(I).LT.1) GOTO 99
+      WRITE(LOUT,210)STRING
+      CALL PAGE
+      WRITE(LOUT,211)
+      CALL PAGE
+      WRITE(LOUT,212)
+      CALL PAGE
+  210 FORMAT(' Bank ',A,' is booked in:')
+  211 FORMAT(' ========================')
+  212 FORMAT(' Program   Deck    Card     Banknumber')
+      DO 220 NB=1,NUMBKD(I)
+        WRITE(LOUT,214) BKDLIN(I,NB)
+  214   FORMAT(' ',A)
+  220 CALL PAGE
+      NB=NUMBKD(I)
+   99 IF(NB.EQ.0)THEN
+        WRITE(LOUT,215)
+        CALL PAGE
+  215   FORMAT(' bank is never booked!')
+      ENDIF
+      CLOSE (LINP2)
+      END
+C*EI
+C*DK COMMNT
+C*DF UNIX
+      SUBROUTINE COMMNT(STRING,MODE)
+C ---------------------------------------------------------------
+C
+C     Print one line comment per bank from LBF-file
+C
+C ---------------------------------------------------------------
+C*IF .NOT.DOC
+C*CA SBKPAR
+C - NBNK = number of ALEPH banks
+C   do not forget to update NAMAX in BCS
+      PARAMETER (LINP=13,LINP2=14,LOUT=6,NBNK=1500,NENTR=120 )
+C*CC SBKPAR
+C*CA PAGING
+      COMMON/PAGING/LINES
+C*CC PAGING
+C*CA FILDAT
+      COMMON/FILDAT/IADARR(0:NBNK),NUMBKD(NBNK),NUMREF(NBNK)
+      COMMON/FILCAR/BKDLIN(NBNK,NENTR),REFLIN(NBNK,NENTR),COMLIN(NBNK)
+     &             ,NAMARR(NBNK),INPLIN
+      CHARACTER*4  NAMARR
+      CHARACTER*25 REFLIN
+      CHARACTER*40 BKDLIN
+      CHARACTER*80 COMLIN
+      CHARACTER*80 INPLIN
+C*CC FILDAT
+C*CA SBKCOM
+C! Decoded command line parameters
+      LOGICAL XBOOKG,XCONTT,XREFER,XCOMMT,XUNDOC,XOUTPT
+      CHARACTER*80 CHOUTP,CHARGV
+      COMMON /SBKCOM/XBOOKG,XCONTT,XREFER,XCOMMT,XUNDOC,XOUTPT
+      COMMON /SBKCOC/CHOUTP,CHARGV
+C*CC SBKCOM
+      CHARACTER*4 BANK,STRING,BANKS(NBNK),OLDBNK
+      CHARACTER*80 BCOM,BCOMS(NBNK),SPACES
+C -----------------------------------------------------------------
+      I=0
+      NB1=0
+    1 I=I+1
+      IF (LGT(STRING,NAMARR(I)).AND.I.LT.IADARR(0)) GOTO 1
+      IF (LGT(STRING,NAMARR(I))) GOTO 50
+      I=I-1
+      IEST=MODE-1
+      IF(MODE.EQ.0)IEST=4
+   20 I=I+1
+      BANK=NAMARR(I)
+      IF(MODE.EQ.1)GOTO 21
+      IF(BANK(1:IEST).NE.STRING(1:IEST))GOTO 50
+   21 NB1=NB1+1
+      BCOMS(NB1)=COMLIN(I)
+      IF (I.LT.IADARR(0)) GOTO 20
+   50 CONTINUE
+      IF(NB1.EQ.0)GOTO 29
+      NB2=0
+C       this is in case a bank is defined twice
+      OLDBNK='????'
+      DO 28 K=1,NB1
+        BANK=BCOMS(K)(1:4)
+        MDUP=0
+        IF(OLDBNK.EQ.BANK)MDUP=99
+        OLDBNK=BANK
+        IF(XBOOKG.OR.XREFER)THEN
+          WRITE(LOUT,2)BANK,BANK
+    2     FORMAT(' ',A,2('==================================='),A)
+          CALL PAGE
+        ENDIF
+        IF(.NOT.XCONTT)THEN
+          WRITE(LOUT,101)BCOMS(K)
+  101     FORMAT(' ',A)
+          CALL PAGE
+        ENDIF
+        IF(MODE.NE.0)THEN
+          IF(XCONTT)CALL CONTENT(BANK,MDUP)
+          IF(XBOOKG)CALL GTBOOK(BANK)
+          IF(XREFER)CALL GTREFER(BANK)
+        ENDIF
+   28 CONTINUE
+   29 CONTINUE
+      END
+C*EI
+C*DK NAMESL
+C*DF UNIX
+      SUBROUTINE NAMESL(STRING,MODE)
+C -----------------------------------------------------------------
+C
+C     produce list of bank names from LBF-file
+C
+C -----------------------------------------------------------------
+C*IF .NOT.DOC
+C*CA SBKPAR
+C - NBNK = number of ALEPH banks
+C   do not forget to update NAMAX in BCS
+      PARAMETER (LINP=13,LINP2=14,LOUT=6,NBNK=1500,NENTR=120 )
+C*CC SBKPAR
+C*CA PAGING
+      COMMON/PAGING/LINES
+C*CC PAGING
+C*CA FILDAT
+      COMMON/FILDAT/IADARR(0:NBNK),NUMBKD(NBNK),NUMREF(NBNK)
+      COMMON/FILCAR/BKDLIN(NBNK,NENTR),REFLIN(NBNK,NENTR),COMLIN(NBNK)
+     &             ,NAMARR(NBNK),INPLIN
+      CHARACTER*4  NAMARR
+      CHARACTER*25 REFLIN
+      CHARACTER*40 BKDLIN
+      CHARACTER*80 COMLIN
+      CHARACTER*80 INPLIN
+C*CC FILDAT
+C*CA SBKCOM
+C! Decoded command line parameters
+      LOGICAL XBOOKG,XCONTT,XREFER,XCOMMT,XUNDOC,XOUTPT
+      CHARACTER*80 CHOUTP,CHARGV
+      COMMON /SBKCOM/XBOOKG,XCONTT,XREFER,XCOMMT,XUNDOC,XOUTPT
+      COMMON /SBKCOC/CHOUTP,CHARGV
+C*CC SBKCOM
+      CHARACTER*4 BANK,STRING,BANKS(NBNK),OLDBNK
+      CHARACTER*80 BCOM,BCOMS(NBNK),SPACES
+C --------------------------------------------------------------------
+      NB1=0
+      MODE=INDEX(STRING,'*')
+      M1=MODE-1
+      WRITE(LOUT,3)
+    3 FORMAT(' BOS banks included in the ALEPH documentation scheme:')
+      CALL PAGE
+      WRITE(LOUT,4)
+    4 FORMAT(' -----------------------------------------------------')
+      CALL PAGE
+      I=0
+   20 I=I+1
+      IF (I.GT.IADARR(0)) GOTO 50
+      BANK=NAMARR(I)
+      IF(MODE.EQ.1)GOTO 25
+      IF(STRING(1:M1).NE.BANK(1:M1))GOTO 20
+   25 CONTINUE
+      NB1=NB1+1
+      BANKS(NB1)=BANK
+      GOTO 20
+   50 CONTINUE
+      IF(NB1.EQ.0) GOTO 99
+      L1=1
+      JBPL=14
+   51 L2=L1+JBPL-1
+      IF(L2.GT.NB1)L2=NB1
+      WRITE(LOUT,120)(BANKS(L),L=L1,L2)
+      CALL PAGE
+      L1=L1+JBPL
+      IF(L1.LE.NB1)GOTO 51
+      IF(XUNDOC)THEN
+C     look for banks defined more than once
+        NDUP=0
+        DO 60 L=2,NB1
+          IF(BANKS(L).EQ.BANKS(L-1))THEN
+            IF(NDUP.EQ.0)THEN
+              WRITE(LOUT,120)'BANKS DEFINED MORE THAN ONCE:'
+              NDUP=1
+              CALL PAGE
+            ENDIF
+            WRITE(LOUT,120)BANKS(L)
+            CALL PAGE
+          ENDIF
+   60   CONTINUE
+        IF(NDUP.EQ.0)THEN
+          WRITE(LOUT,120)'ALL BANKS UNIQUELY DEFINED'
+          CALL PAGE
+        ENDIF
+C
+C     look for banks identical in first 3 letters
+        NDUP=0
+        NDUP1=0
+        DO 63 L=2,NB1
+          IF(BANKS(L)(1:3).EQ.BANKS(L-1)(1:3))THEN
+            IF(NDUP.EQ.0)THEN
+              WRITE(LOUT,120)'BANKS identical in first 3 letters:'
+              NDUP=1
+              CALL PAGE
+            ENDIF
+            IF(NDUP1.EQ.0)NDUP1=L-1
+          ELSE
+            IF(NDUP1.NE.0)THEN
+              WRITE(LOUT,120)(BANKS(L3),L3=NDUP1,L-1)
+              CALL PAGE
+              NDUP1=0
+            ENDIF
+          ENDIF
+C
+   63   CONTINUE
+        IF(NDUP.EQ.0)THEN
+          WRITE(LOUT,120)'ALL BANKS different in first 3 letters'
+          CALL PAGE
+        ENDIF
+      ENDIF
+C
+   99 CONTINUE
+  120 FORMAT(14(' ',A))
+      END
+C*EI
+C*DK GTREFER
+C*DF UNIX
+      SUBROUTINE GTREFER(STRING)
+C ----------------------------------------------------------------
+C
+C     produce list of bank references
+C
+C ---------------------------------------------------------------
+C*IF .NOT.DOC
+C*CA SBKPAR
+C - NBNK = number of ALEPH banks
+C   do not forget to update NAMAX in BCS
+      PARAMETER (LINP=13,LINP2=14,LOUT=6,NBNK=1500,NENTR=120 )
+C*CC SBKPAR
+C*CA PAGING
+      COMMON/PAGING/LINES
+C*CC PAGING
+C*CA FILDAT
+      COMMON/FILDAT/IADARR(0:NBNK),NUMBKD(NBNK),NUMREF(NBNK)
+      COMMON/FILCAR/BKDLIN(NBNK,NENTR),REFLIN(NBNK,NENTR),COMLIN(NBNK)
+     &             ,NAMARR(NBNK),INPLIN
+      CHARACTER*4  NAMARR
+      CHARACTER*25 REFLIN
+      CHARACTER*40 BKDLIN
+      CHARACTER*80 COMLIN
+      CHARACTER*80 INPLIN
+C*CC FILDAT
+      CHARACTER*4 STRING
+C -----------------------------------------------------------------
+      NB=0
+      I=0
+   10 I=I+1
+      IF (I.LT.IADARR(0).AND.NAMARR(I).NE.STRING) GOTO 10
+      IF (NAMARR(I).NE.STRING.OR.NUMREF(I).LT.1) GOTO 99
+      WRITE(LOUT,210)STRING
+      CALL PAGE
+      WRITE(LOUT,211)
+      CALL PAGE
+      WRITE(LOUT,212)
+      CALL PAGE
+  210 FORMAT(' Bank ',A,' is referenced in:')
+  211 FORMAT(' ========================')
+  212 FORMAT(' Program   Deck    Card  ')
+      DO 220 NB=1,NUMREF(I)
+        WRITE(LOUT,214) REFLIN(I,NB)
+  214   FORMAT(' ',A)
+  220 CALL PAGE
+      NB=NUMREF(I)
+   99 IF(NB.EQ.0)THEN
+        WRITE(LOUT,215)
+        CALL PAGE
+  215   FORMAT(' bank is never referenced!')
+      ENDIF
+      CLOSE (LINP2)
+      END
+C*EI

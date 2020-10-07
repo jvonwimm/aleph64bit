@@ -1,0 +1,36 @@
+#!/bin/csh -f
+#
+# U. Schafer, 13 Apr 1994
+# Checks for availability of all ALEPH UNIX hosts as specified in al_hosts,
+# writes them to table  host_table 
+# % replaces any single character, numeric only !
+#==========================================================================
+# F. Blin 04/04/95 suppress dxal%% in al_hosts
+# R.Hagelb.26/1/96 added  shift50  and removed  csf%%  in al_hosts
+# set al_hosts='saga0% shift9 afal%% dxal%% csf csf%%'
+ set al_hosts='shift9 shift50 saga0% afal%% csf'
+ set host_table=$ALEPH/log/aleph_hosts
+ set tries=3
+# it's difficult to process a "[" !!!!
+ set al_hosts=\^`echo "$al_hosts" | sed 's/%/%0-9]/g;s/ /$|^/g'`\$
+ alias exe 'echo $al_hosts | tr \% \\\['
+ set al_hosts="`exe`"
+ set al_hosts=`echo ls cern.ch | nslookup | awk '{print $1}' | egrep         "$al_hosts" |sort || exit $status`
+ if ( $status ) then
+   echo error
+   exit 7 
+ else
+   set host_alive=""
+   foreach al_host ($al_hosts)
+     set perc=`ping -c $tries $al_host |tr "," "\12" |grep loss|tr " " "\12"              |grep %`
+# only if all packages (100%) lost  machine is taken out! 
+     if ("$perc" == "100%") set al_host="#$al_host" 
+#    remove (comment out) machines which are responding to ping but not  UNIX 
+##   afal02 and afal16 nomore removed, because nomore with VMS or windowsNT
+##if ("$al_host" == "afal02" | "$al_host" == "afal16") set al_host="#$al_host"
+     set host_alive=`echo $host_alive $al_host`
+   end
+   echo "$host_alive" | tr " " "\12" >! $host_table 
+   exit 0
+ endif
+ exit 0

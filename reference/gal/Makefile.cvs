@@ -1,0 +1,48 @@
+VER     = 304
+DIR    := $(ALROOT)/gal$(VER)
+DBX     =
+NAME   := gal$(VER)$(DBX)
+FfILES   =
+FPPFILES = asktrk.F aglcal.F
+FDPDVER  = galeph.F asinit.F asrust.F aswsum.F 
+
+FFLAGS  = $(FCOPT) -g -I$(DIR)/inc 
+
+ifeq ($(OS),HPUX9)
+ FC      = fort77
+ LDFLAGS = $(UNDEF)
+else
+ FC      = f77
+ LDFLAGS = $(UNDEF),-m 
+endif
+
+#OBJDIR  = $(DIR)/$(OS) 
+OBJDIR  = $(HOME)/$(OS)
+
+vpath %.f /u3/xu/flr/galeph
+#vpath version.h $(DIR)/inc
+vpath %.F $(DIR)/gal $(DIR)/skel $(DIR)/geom
+vpath %.o $(OBJDIR)
+
+CERNLIB = `cernlib  geant321/new graflib/X11 mathlib packlib shift`
+LIBS    = \
+		/aleph/gal/libgal304$(DBX).a \
+		/aleph/gal/libtpc300$(DBX).a \
+		/aleph/gen/libalephio213$(DBX).a \
+		/aleph/lib/libbos77$(DBX).a \
+		$(CERNLIB)
+# Rules...
+F_FILES := $(FDPDVER) $(FPPFILES) $(FfILES)
+O_FILES := $(FDPDVER:%.F=%.o) $(FPPFILES:%.F=%.o) $(FfILES:%f=%.o)
+OBJFILES := $(addprefix $(OBJDIR)/,$(notdir $(O_FILES)))
+
+$(OBJDIR)/%.o : %.f
+	$(FC) $(FFLAGS) $< -o $@
+
+$(OBJDIR)/%.o : %.F
+	$(FC) $(FFLAGS)  $< -o $@
+
+$(OBJDIR)/$(NAME): $(OBJFILES) 
+	$(FC) -o $@  $(OBJFILES) $(GUSER) $(LIBS) $(LDFLAGS) > $(NAME).map
+
+

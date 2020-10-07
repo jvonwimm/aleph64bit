@@ -1,0 +1,311 @@
+head	1.3;
+access;
+symbols
+	jul313_3:1.3
+	jul313_2:1.3
+	jul313_1:1.3
+	jul313:1.3
+	jul312_1:1.3
+	jul312:1.3
+	jul311:1.3
+	jul310_1:1.3
+	jul310:1.3
+	jul309_1:1.3
+	jul309:1.3
+	jul308_6:1.3
+	jul308_5:1.3
+	jul308_4:1.3
+	jul308_3:1.3
+	jul308_2:1.3
+	jul308_1:1.3
+	jul308:1.3
+	jul307_4:1.3
+	jul307_3:1.3
+	jul307_2:1.3
+	jul307_1:1.3
+	jul307:1.3
+	jul306_3:1.3
+	jul306_2:1.3
+	jul306_1:1.3
+	jul306:1.3
+	jul305_4:1.3
+	jul305_3:1.3
+	jul305_2:1.3
+	jul305_1:1.3
+	jul305:1.3
+	jul304_3:1.3
+	jul304_2:1.3
+	jul304_1:1.3
+	jul304:1.3
+	jul303_7:1.3
+	jul303_6:1.3
+	jul303_5:1.3
+	jul303_4:1.3
+	jul303_3:1.3
+	jul303_2_mc1:1.3
+	jul303_2:1.3
+	jul303_1_mc1:1.3
+	jul303_1:1.3
+	jul303_v:1.3
+	jul303:1.3
+	jul302_6:1.3
+	jul302_5:1.3
+	jul302_4:1.3
+	jul302_3:1.3
+	jul302_2:1.3
+	jul302_1:1.3
+	jul302:1.3
+	jul285_1:1.3
+	jul285:1.3
+	jul284_1:1.3
+	jul284:1.3
+	jul283_1:1.3
+	jul283:1.3
+	jul282_1:1.3
+	jul282:1.3
+	jul281_3:1.3
+	jul281_2:1.3
+	jul281_1:1.3
+	jul281:1.3
+	jul280_1:1.2
+	jul280:1.2
+	jul279:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	96.06.03.10.26.21;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.03.12.15.24.51;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.18.51;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.18.52;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@Mods for julia 281 release. See news for details
+@
+text
+@      SUBROUTINE LCBOOK
+C----------------------------------------------------------------------
+C!   Book Lcal histograms
+C!
+C!   Author   : P. H. Hansen  880315
+C!   Modified : P. H. Hansen  890102
+C!   Modified : P. H. Hansen  960501
+C!   Description :
+C!   ===========
+C!=====================================================================
+#ifndef DOC
+#include "rparac.h"
+#include "rflags.h"
+#include "bcs.h"
+#include "bmacro.h"
+C----------------------------------------------------------------------
+C
+      LHID = JULLC * 1000
+C
+C Histogram events with Lcal clusters for general monitoring
+      CALL HBOOK1(LHID + 1,'LCAL- Pad energy$',100,0.,200.,0.)
+      CALL HBOOK1(LHID + 2,'LCAL- Cluster energies$',100,0.,200.,0.)
+      CALL HBOOK1(LHID + 3,'LCAL- Wire energy$',100,0.,200.,0.)
+      CALL HBOOK1(LHID + 4,'LCAL- Storey1/Etot$',50,0.,1.,0.)
+      CALL HBOOK1(LHID + 5,'LCAL- Storey3/Etot$',50,0.,1.,0.)
+      CALL HBOOK1(LHID + 6,
+     &           'LCAL- Phi singles A Side$',90,0.,360.,0.)
+      CALL HBOOK1(LHID + 7,
+     &           'LCAL- Phi singles B Side$',90,0.,360.,0.)
+      CALL HBOOK1(LHID + 8,'LCAL- Energy singles$',50,0.,100.,0.)
+      CALL HBOOK1(LHID + 9,
+     &            'LCAL- Theta singles (mrad)$',50,35.,135.,0.)
+C
+C Histogram Bhabha selected events
+      CALL HBOOK1(LHID + 11,'LCAL-e+e-  Pad energy m1$',
+     *  100,0.,100.,0.)
+      CALL HBOOK1(LHID + 12,'LCAL-e+e- Pad energy m2$',
+     *  100,0.,100.,0.)
+      CALL HBOOK1(LHID + 13,'LCAL-e+e- Pad energy m3$',
+     *  100,0.,100.,0.)
+      CALL HBOOK1(LHID + 14,'LCAL-e+e- Pad energy m4$',
+     *  100,0.,100.,0.)
+      CALL HBOOK1(LHID + 15,'LCAL-e+e- Energy pr 0.5 rl m1$',
+     *   47,1.25,24.75,0.)
+      CALL HBOOK1(LHID + 16,'LCAL-e+e- Energy pr 0.5 rl m2$',
+     *   47,1.25,24.75,0.)
+      CALL HBOOK1(LHID + 17,'LCAL-e+e- Energy pr 0.5 rl m3$',
+     *   47,1.25,24.75,0.)
+      CALL HBOOK1(LHID + 18,'LCAL-e+e- Energy pr 0.5 rl m4$',
+     *   47,1.25,24.75,0.)
+      CALL HBOOK1(LHID + 31,'LCAL average X$',50,-5.,5.,0.)
+      CALL HBOOK1(LHID + 32,'LCAL average Y$',50,-5.,5.,0.)
+      LH = LHID + 40
+      CALL HBOOK1(LH+1,'LCAL-Bhabha E1$'
+     *  ,100,0.,100.,0.)
+      CALL HBOOK1(LH+2,'LCAL-Bhabha E2$'
+     *  ,100,0.,100.,0.)
+      CALL HBOOK1(LH+3,'LCAL-Bhabha Dphi$',
+     *   90,0.,180.,0.)
+      CALL HBOOK2(LH+4,'LCAL-Bhabha Y vs X$'
+     *   ,25,0.,25.,25,0.,25.,0.)
+  999 CONTINUE
+      END
+#endif
+@
+
+
+1.2
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+ 	gambnk.F gapeco.F gasteer.F
+ 	hcalib.F hcalrd.F hcatow.F hcbhis.F hcfclu.F hchist.F hclcra.F
+ 	hcltst.F hclufi.F hcos.F hcsimm.F hdgdeb.F hdgfil.F hdgpot.F
+ 	hdgsum.F hdprec.F hdspre.F hflnoi.F hinijo.F hiniru.F hmener.F
+ 	hmfind.F hmroad.F hnoise.F hnoisy.F hpatco.F hphnoi.F hplink.F
+ 	hprana.F hpranp.F hprdig.F hpreda.F hprpot.F hprsum.F hprunc.F
+ 	hrcomp.F hrcpat.F hrdcal.F hroad.F hslink.F hslowc.F hspare.F
+ 	hsptre.F hstofi.F htrack.F htubfi.F htwcr.F
+ 	iasign.F iattma.F ibnkin.F icaswt.F icftoi.F iclimb.F icrcco.F
+ 	ideadw.F idigpr.F ienang.F ifind1.F ifind2.F ifitp.F iftrak.F
+ 	igetti.F igettp.F igicha.F iheler.F iinijo.F iiniru.F iintrk.F
+ 	imatch.F inigap.F insect.F intrak.F ipakdi.F ipdsti.F iphcor.F
+ 	ipreda.F iprsum.F ipstat.F irefin.F ireopd.F isave.F ishuff.F
+ 	ishufl.F islowc.F isrch.F itbook.F itccut.F itcopr.F itcrec.F
+ 	itcrep.F itctpc.F itctrk.F itcxng.F iterr.F itextn.F ithist.F
+ 	itidy1.F itidy2.F itlnk1.F itlnk2.F itpcan.F itrak.F itrecf.F
+ 	itreci.F itree.F itrkci.F itrkeq.F itrkzr.F itrmca.F
+@
+text
+@d7 1
+d21 23
+a43 16
+       CALL HBOOK1(LHID + 1,'LCAL- Pad energy$',60,0.,120.,0.)
+       CALL HBOOK1(LHID + 2,'LCAL- Cluster energies$',60,0.,60.,0.)
+       CALL HBOOK1(LHID + 3,'LCAL- Wire energy$',60,0.,120.,0.)
+       CALL HBOOK1(LHID + 4,'LCAL- Storey1/Etot$',50,0.,1.,0.)
+       CALL HBOOK1(LHID + 5,'LCAL- Storey3/Etot$',50,0.,1.,0.)
+C
+C Histogram strongly selected e+e- for calibration
+       CALL HBOOK1(LHID + 11,'LCAL-e+e-  Pad energy m1$',
+     *   60,0.,60.,0.)
+       CALL HBOOK1(LHID + 12,'LCAL-e+e- Pad energy m2$',
+     *   60,0.,60.,0.)
+       CALL HBOOK1(LHID + 13,'LCAL-e+e- Pad energy m3$',
+     *   60,0.,60.,0.)
+       CALL HBOOK1(LHID + 14,'LCAL-e+e- Pad energy m4$',
+     *   60,0.,60.,0.)
+       CALL HBOOK1(LHID + 15,'LCAL-e+e- Energy pr 0.5 rl m1$',
+d45 1
+a45 1
+       CALL HBOOK1(LHID + 16,'LCAL-e+e- Energy pr 0.5 rl m2$',
+d47 1
+a47 1
+       CALL HBOOK1(LHID + 17,'LCAL-e+e- Energy pr 0.5 rl m3$',
+d49 1
+a49 1
+       CALL HBOOK1(LHID + 18,'LCAL-e+e- Energy pr 0.5 rl m4$',
+d51 11
+a61 23
+C
+C Histogram cluster-track matching
+       CALL HBOOK1(LHID + 19,'LCAL-e+e- X(track)-X(clus)$',
+     *   40,-2.,2.,0.)
+       CALL HBOOK1(LHID + 20,'LCAL-e+e- Y(track)-Y(clus)$',
+     *   40,-2.,2.,0.)
+C
+C Average X and Y
+       CALL HBOOK1(LHID + 31,'LCAL average X$',50,-5.,5.,0.)
+       CALL HBOOK1(LHID + 32,'LCAL average Y$',50,-5.,5.,0.)
+C
+C Histogram Bhabha selections for luminosity checks
+       DO 100 I=4,6
+         LH = LHID + 40 + (I-1)*10
+         CALL HBOOK1(LH+1,'LCAL-Bhabha selection- E1$'
+     *    ,60,0.,60.,0.)
+         CALL HBOOK1(LH+2,'LCAL-Bhabha selection- E2$'
+     *    ,60,0.,60.,0.)
+         CALL HBOOK1(LH+3,'LCAL-Bhabha selection- Dphi$',
+     *     90,0.,180.,0.)
+         CALL HBOOK2(LH+4,'LCAL-Bhabha selection- Y vs X$'
+     *     ,25,0.,25.,25,0.,25.,0.)
+  100  CONTINUE
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK lcbook
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

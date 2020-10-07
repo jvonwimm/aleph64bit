@@ -1,0 +1,52 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  v300:1.1.1.1 flr:1.1.1;
+locks    ; strict;
+comment  @ * @;
+
+
+1.1
+date     94.12.07.14.16.26;  author aljul;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     94.12.07.14.16.27;  author aljul;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*CD albitw
+C! set number of bits in a machine word
+      INTEGER NBITW, NBYTW, LCHAR
+#if defined(BIT64)
+      PARAMETER (NBITW = 64)
+#else
+      PARAMETER (NBITW = 32)
+#endif
+      PARAMETER (NBYTW = NBITW/8, LCHAR = NBYTW)
+#if defined(DOC)
+      NBITW   = NUMBER OF BITS IN A MACHINE WORD
+      NBYTW   = NUMBER OF BYTES IN A MACHINE WORD
+      LCHAR   = NUMBER OF CHARACTERS IN A MACHINE WORD
+#endif
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

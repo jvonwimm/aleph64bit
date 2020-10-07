@@ -1,0 +1,70 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	alio83:1.1.1.1
+	alio82:1.1.1.1
+	alio81:1.1.1.1
+	alio80:1.1.1.1
+	alio74:1.1.1.1
+	alio73:1.1.1.1
+	alio72:1.1.1.1
+	alio71:1.1.1.1
+	alio70:1.1.1.1
+	alio68:1.1.1.1
+	alio69:1.1.1.1
+	alio67:1.1.1.1
+	alio66:1.1.1.1
+	alio65:1.1.1.1
+	alio64:1.1.1.1
+	alio63:1.1.1.1
+	alio62:1.1.1.1
+	alio61:1.1.1.1
+	alio60:1.1.1.1
+	c212:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	96.04.23.09.53.52;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.04.23.09.53.53;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@/*
+C! on Unix put an underscore at end of C routines 
+ */
+
+#if defined(VAX)
+#  define FORT_CALL(name) name
+#else
+/* for UNIX, append an underscore */
+#  define FORT_CALL(name) name ## _
+#endif
+@
+
+
+1.1.1.1
+log
+@import alephio/c
+@
+text
+@@

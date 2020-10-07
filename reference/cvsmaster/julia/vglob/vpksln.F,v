@@ -1,0 +1,152 @@
+head	1.1;
+access;
+symbols
+	jul313_3:1.1
+	jul313_2:1.1
+	jul313_1:1.1
+	jul313:1.1
+	jul312_1:1.1
+	jul312:1.1
+	jul311:1.1
+	jul310_1:1.1
+	jul310:1.1
+	jul309_1:1.1
+	jul309:1.1
+	jul308_6:1.1
+	jul308_5:1.1
+	jul308_4:1.1
+	jul308_3:1.1
+	jul308_2:1.1
+	jul308_1:1.1
+	jul308:1.1
+	jul307_4:1.1
+	jul307_3:1.1
+	jul307_2:1.1
+	jul307_1:1.1
+	jul307:1.1
+	jul306_3:1.1
+	jul306_2:1.1
+	jul306_1:1.1
+	jul306:1.1
+	jul305_4:1.1
+	jul305_3:1.1
+	jul305_2:1.1
+	jul305_1:1.1
+	jul305:1.1
+	jul304_3:1.1
+	jul304_2:1.1
+	jul304_1:1.1
+	jul304:1.1
+	jul303_7:1.1
+	jul303_6:1.1
+	jul303_5:1.1
+	jul303_4:1.1
+	jul303_3:1.1
+	jul303_2_mc1:1.1
+	jul303_2:1.1
+	jul303_1_mc1:1.1
+	jul303_1:1.1
+	jul303:1.1
+	jul303_v:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	97.05.15.15.45.58;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Add vglob
+@
+text
+@      SUBROUTINE VPkSln( comp, bestsoln )
+C-------------------------------------------------------------
+C! Pick the VDet Pat. Rec. soln from the list of possibilities
+CKEY VGLOB VDET TRACK
+C
+C  Author      : Paul Rensing  17-5-95
+C
+C This routines takes the list of ambiguous solutions provide by VGSOLV
+C     and tries to pick the best using various heuristics.
+C
+C  INPUTS:
+C     integer comp  - the number of the component
+C
+C  OUTPUTS:
+C     integer soln  - the number of the solution to use
+C
+C-------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+C
+C IO variables
+C
+      integer comp, bestsoln
+C
+#include "bcs.h"
+C
+#include "vghcjj.h"
+#include "vgxcjj.h"
+C
+      integer NLINK
+      external NLINK
+C
+      integer indVGHC, indVGXC
+      integer row, col
+      integer soln
+      integer n, maxn
+      integer ntrk
+      integer trk1, trk2
+      real z0_1, z0_2
+C
+#include "bmacrod.h"
+#include "bmacro.h"
+C
+      bestsoln = 1
+C
+      indVGXC = NLINK('VGXC', comp)
+      if (indVGXC .le. 0) then
+         CALL RERROR('VPKSLN', -1, ' Missing VGXC bank')
+         return
+      end if
+C
+      if (LROWS(indVGXC) .le. 1) return
+      ntrk = ITABL(indVGXC, 1, JVGXNT)
+C
+      indVGHC = NLINK('VGHC', comp)
+      if (indVGHC .le. 0) then
+         CALL RERROR('VPKSLN', -2, ' Missing VGHC bank')
+         return
+      end if
+C
+C Select the maximum number of 3D hits
+C
+      maxn = -1
+      do soln = 1, LROWS(indVGXC)
+         n = 0
+         do row = ntrk*(soln-1)+1, ntrk*soln
+            do col = JVGHH1, JVGHH4+1, 2
+               if (ITABL(indVGHC, row, col) .gt. 0 .and.
+     $              ITABL(indVGHC, row, col+1) .gt. 0) then
+                  n = n + 1
+               end if
+            end do
+         end do
+         if (n .gt. maxn) then
+            maxn = n
+            bestsoln = soln
+         end if
+      end do
+C
+      return
+      end
+#endif
+@

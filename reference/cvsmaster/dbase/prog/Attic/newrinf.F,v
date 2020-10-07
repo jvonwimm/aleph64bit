@@ -1,0 +1,202 @@
+head	1.2;
+access;
+symbols
+	dbase01:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.02.13.10.50.23;	author flr;	state dead;
+branches;
+next	1.1;
+
+1.1
+date	97.02.12.10.06.04;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.02.12.10.06.04;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release dbase02
+@
+text
+@      PROGRAM NEWRINF
+C----------------------------------------------------------------------
+C! update ADBSCONS.DAF
+C!
+C!   Author   :-    F.RANJARD                   12-APRIL-1990
+C!
+C!   data cards:
+C!
+C!        ******* read RINF and build LFIL,RDET,RLUM **********
+C!        ******* open/write new DAF and EPIO version***********
+C!        * open/write data base file
+C!        FDBA  'MY.DAF | DAF'
+C!        * open/read data base file
+C!        FDBA  'DBASE:ADBSCONS.DAF'
+C!        * number of block on NEWADBS
+C!        OUTB  370
+C!        ENDQ
+C!
+C!   Libraries required: ALEPHLIB, BOS77, CERNLIB
+C!
+C!   Description
+C!   ===========
+C!  read a file containing RINF tables
+C!  build from them new tables LFIL,RDET,RLUM
+C!  drop RINF
+C!  write LFIL,RDET,RLUM
+C?
+C!======================================================================
+#ifndef DOC
+      CHARACTER*40 TFIL,FTYP,FDEV,TOUT,TFULL
+      CHARACTER*4 CHAINT,OUT,TOU,TAB,COL,NAME,PASSW
+      CHARACTER*120 MSG,MSGE,MSGB
+      REAL BXYZ(3),ERXYZ(3)
+      INTEGER BKLFIL,BKRLUM
+#include "lbos.h"
+#include "rinfjj.h"
+      DATA PASSW/'ADAM'/
+#include "bmacro.h"
+C
+C ------------------------------------------------------------------
+C
+C - Initialize BOS
+       CALL BNAMES (NAMAX)
+       CALL BOS (IW,LBOS)
+       IW(5) = 7
+       IW(7) = 100000
+C
+C - Read data card file
+       CALL BREADC
+       LUOUT = 0
+C
+C - open current data base ADBSCONS.DAF
+C   in read mode if FOUT is defined (LUOUT>0)
+C   in write mode if FOUT is not defined (LUOUT=0)
+C
+      TFULL = '    '
+      LUFUL = NUNIDB(15)
+      LUFUL = JUNIDB(0)
+      IRECL = JULREC('DAF','DISK')
+      IF (LUOUT.GT.0) THEN
+C      open/read
+         CALL AOPDBS (TFULL,IER)
+         IF (IER.NE.0) THEN
+           CALL AWERRC(IW(6),'NEWRINF',TFULL,IER)
+         ENDIF
+      ELSE
+C      open/write
+         CALL ACDARG ('FDBA','DAF','*',TFULL,FTYP,FDEV,IER)
+         IF (IER.NE.0) THEN
+           CALL AWERRC(IW(6),'NEWRINF',TFULL,IER)
+         ENDIF
+         IRECL=JULREC(FTYP,FDEV)
+         LUN = LUFUL
+         TFIL = TFULL
+#include "owodf.h"
+C
+         IW(1)=2
+         CALL BDABF(LUFUL,IRECL,'    ',PASSW)
+         IBF = NLINK ('+BUF',LUFUL)
+         IF (IBF.EQ.0) THEN
+           WRITE(IW(6),*) ' Programming error: bank +BUF does not exist'
+           GOTO 98
+         ENDIF
+         CALL BDAPR(LUFUL,'    ')
+         LUOUT = LUFUL
+      ENDIF
+C
+C - Read RINF banks from the first run
+C
+       LAST  = 1
+       LFILL = -999
+ 50    NRINF = NDANR (LUFUL,'RINF','GE',LAST)
+       IF (IW(2).NE.0) GOTO 100
+       JRINF = MDARD (IW,LUFUL,'RINF',NRINF)
+       IF (JRINF.NE.0) THEN
+          IF (ITABL(JRINF,1,JRINLF).NE.LFILL) THEN
+             NRUNF = ITABL(JRINF,1,JRINFR)
+          ENDIF
+          LFILL = ITABL(JRINF,1,JRINLF)
+          NRUNL = ITABL(JRINF,1,JRINLR)
+          ELEP  = RTABL(JRINF,1,JRINLN)
+          BXYZ(1)= RTABL(JRINF,1,JRINBX)
+          BXYZ(2)= RTABL(JRINF,1,JRINBY)
+          BXYZ(3)= RTABL(JRINF,1,JRINBZ)
+          ERXYZ(1)= RTABL(JRINF,1,JRINEX)
+          ERXYZ(2)= RTABL(JRINF,1,JRINEY)
+          ERXYZ(3)= RTABL(JRINF,1,JRINEZ)
+          JLFIL = BKLFIL(LFILL,NRUNF,NRUNL,ELEP,BXYZ,ERXYZ)
+          IF (JLFIL.EQ.0) THEN
+             WRITE(IW(6),*) ' LFILL... ',LFILL,NRUNF,NRUNL
+          ELSE
+             JLFIL = IABS(JLFIL)
+             WRITE (IW(6),*)' LFILL = ',(IW(JLFIL+K),K=0,2)
+          ENDIF
+          NRUN = NRINF
+          IRUNQ = ITABL(JRINF,1,JRINRQ)
+          NUMZ  = ITABL(JRINF,1,JRINNZ)
+          NUMB  = ITABL(JRINF,1,JRINNB)
+          BLUM  = RTABL(JRINF,1,JRINLU)
+          JRLUM = BKRLUM(NRUN,IRUNQ,NUMZ,NUMB,BLUM)
+          IF (JRLUM.EQ.0) THEN
+             WRITE(IW(6),*) ' RLUM... ',NRUNF
+          ELSE
+             JRLUM= IABS(JRLUM)
+             WRITE(IW(6),*)' RLUM = ',(IW(JRLUM+K),K=0,2)
+          ENDIF
+          CALL BDADR (LUFUL,'RINF',NRINF)
+          JRINF = NDROP ('RINF',NRINF)
+          LAST = NRINF+1
+          GOTO 50
+       ENDIF
+C
+ 100   CONTINUE
+       CALL AUBPRS ('LFILRLUM')
+       CALL ALDAWR (IW,LUOUT,'LFILRLUM')
+C
+ 997   CONTINUE
+       IF (LUOUT.GT.0) CALL BDAPR(LUOUT,'    ')
+
+       CALL BOSIO
+       CALL BOSTA
+       CALL ACLOSE (0,IER)
+       STOP
+C
+C - error in opening file
+C
+ 98   CONTINUE
+      STOP
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@@
+
+
+1.1.1.1
+log
+@1st release of dbase library
+@
+text
+@@

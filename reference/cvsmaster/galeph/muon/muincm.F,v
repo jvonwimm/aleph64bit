@@ -1,0 +1,179 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.08.22.14.10.59;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.42;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.43;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@add #ifndef where it was missing and remove dummy routines
+@
+text
+@*DK muincm
+      SUBROUTINE MUINCM(NSLOT,IPLANE,NSTRPF,NAST,NBUS,NSTRPB,IFLAG)
+C-----------------------------------------------------------
+C!  Transforms m.angle slot and strip nb. to astros and bus nb.
+C
+C  Author :   A. Antonelli, F. Bossi 1 July 89
+C.  -Called by MUDGTZ                  from this .HLB
+C.  -Calls none
+C.
+C-----------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "munamc.h"
+#include "mug1pr.h"
+#include "mjjpar.h"
+C
+      SAVE
+        PARAMETER(NROW1=25)
+C
+#include "bmacro.h"
+#include "muiwna.h"
+C
+C            Read astros type and astros number
+        ISLOT = NSLOT - 200
+        NTPAS= ITABL(JMMSG,ISLOT,JMMSTA)
+        NAST = ITABL(JMMSG,ISLOT,JMMSNA)
+        NOSL = ITABL(JMMSG,ISLOT,JMMSOS)
+        IDZFL = ITABL(JMMSG,ISLOT,JMMSDZ)
+        INAS = 2*(NTPAS - 1)
+        IBTP = ITABL(JMMBG,NROW1,JMMBL1+INAS)
+        IPOIN = 2*(IBTP - 1)
+C                Bus type  1= X1 =1  Nb. in MUHT
+C                          2= Y1 =2
+C                          3= X2 =4
+C                          4= Y2 =3
+C                          5= X3 =1
+C                          6= Y3 =2
+C                          7= X4 =4
+C                          8= Y4 =3
+C.......
+        NBUSTY= IPLANE+4
+        IF(ISLOT.LE.10) NBUSTY = IPLANE
+        IF(ISLOT.GE.20.AND.ISLOT.LE.29) NBUSTY = IPLANE
+        IF(IPLANE.EQ.3) NBUSTY = NBUSTY + 1
+        IF(IPLANE.EQ.4) NBUSTY = NBUSTY - 1
+C
+        IREM=MOD(NBUSTY,2)
+        IF(IREM.EQ.0) THEN
+C
+                NMAXY = ITABL(JMMSG,ISLOT,JMMSNY)
+                IF(ISLOT.GE.2.AND.ISLOT.LE.6)
+     +             NSTRPF = - (NSTRPF - NMAXY) - 1
+                IF(ISLOT.GE.12.AND.ISLOT.LE.16)
+     +             NSTRPF = - (NSTRPF - NMAXY) - 1
+                IF(ISLOT.GE.21.AND.ISLOT.LE.25)
+     +             NSTRPF = - (NSTRPF - NMAXY) - 1
+                IF(ISLOT.GE.31.AND.ISLOT.LE.35)
+     +             NSTRPF = - (NSTRPF - NMAXY) - 1
+         ELSE
+                 JT = ITABL(JMMSG,ISLOT,JMMSK2)
+                 NMAXX = ITABL(JMMTG,JT,JMMTNX)
+                 IF(ISLOT.LE.19) THEN
+                   IF(IDZFL.EQ.-1) NSTRPF = - (NSTRPF - NMAXX) - 1
+                 ELSE
+                   IF(IDZFL.EQ.1) NSTRPF = - (NSTRPF - NMAXX) - 1
+                 ENDIF
+           ENDIF
+C
+        KK = 0
+        NBUS = 0
+        NSTRPB = 0
+        IFLAG = 0
+        DO 1 J=1,NROW1-1
+        IFIND = ITABL(JMMBG,J,JMMBB1+IPOIN)
+        IFSL = ITABL(JMMBG,J,JMMBO1+IPOIN)
+        IF(IFIND.NE.NBUSTY.OR.(IFSL+NOSL).NE.ISLOT) GO TO 1
+        KK=KK+1
+        IF(KK.EQ.1)NSTPF1=NSTRPF+ITABL(JMMBG,J,JMMBL1+INAS)
+        LFIN= ITABL(JMMBG,J,JMMBU1+INAS)
+        IF(NSTPF1.GT.LFIN) GO TO 1
+        LIN = ITABL(JMMBG,J,JMMBL1+INAS)
+        NBUS = J - 1
+        NSTRPB = NSTPF1 - LIN
+        IF(KK.EQ.1) NSTRPB=NSTPF1
+        IFLAG = 1
+        GO TO 3
+ 1      CONTINUE
+ 3      CONTINUE
+        RETURN
+        END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d11 1
+d91 1
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

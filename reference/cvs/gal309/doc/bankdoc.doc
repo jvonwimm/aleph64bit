@@ -1,0 +1,142 @@
+*DK bankdoc
+#if defined(DOC)
+.chapter BOS bank contents
+.section INTRODUCTION
+     The main idea in building the BOS bank organisation has been to
+   associate a bank to each flow coming from or going to a store
+   (Mc.event.store or Data.Base).
+     Looking at DFD 4.1 - Simulate ALEPH - the following processes are
+   described :
+
+     4.1.1 - Generate interactions - produces "primary event truth"
+   which consists of 3 banks :event header ASEV, vertices VERT and
+   tracks KINE.
+
+     4.1.2 - Simulate data tacking conditions - modifies the "primary
+   event truth" to produce the "primary event" which has exactly the
+   same structure and consists of the same banks ASEV, VERT and KINE.
+
+     4.1.3 - Track through apparatus - using some "tracking constants"
+   and "tracking conditions" produces the "tracking results" and a
+   "track element".
+     "tracking constants" consist of the following banks :
+           -particle data type
+           -data base geometry banks for every detectors
+     "tracking conditions" consist of steering data cards .
+     "tracking results" consist of the same banks ASEV, VERT and KINE
+     extended during tracking.
+     "track element" consist of 2 common blocks TRKCOM and GCKING
+
+     4.1.4 - Create signals - using some "analog conditions" and
+   "analog constants" produces some "signals" from the "track
+   element".
+     "analog conditions" consist of:
+           -calibrations                        : xxCA
+           -run cond. and parameters (digit.)   : xxPA
+     "analog constants" consist of:
+           -read-out geometry                   : xxRD
+     "signals" consist of banks for every detectors of the type : xy HT
+
+     4.1.5 - Apply saturation and store analog signals - using the
+   banks filled at tracking time by the process "create analog
+   signals", apply saturation effects if necessary and filled the
+   "event store".
+
+     4.1.6 - Create digitisings - using the banks previously defined
+   xxCA, xxPA and "signals" xy HT creates digitisings keeping if
+   necessary the cross-correlations between kinematics, signals and
+   digitisings in banks such as :
+           -raw data             : xxDI
+           -MC digit             : xxDT and xxTD
+
+.section BANK STRUCTURE
+     The banks should be of type "tabular" with a miniheader
+   describing the # of words/row and the # of rows.  In case of a
+   "tabular" type bank the following relation exists between the
+   length of the bank and the content of the miniheader:
+        bank length = # of words/row * # of rows + 2
+     If this relation is not verified , it means that the bank is not
+   of type "tabular".
+     If the bank is NOT of type "tabular" , it is strongly RECOMMENDED
+   that the first word of the bank is the header length of the bank.
+
+     A set of intrinsic functions are kept in *CD BMACRO to get the #
+   of words/row, the # of filled rows, the # of free words, the index
+   to the next free row, the Lth element of the NRth row ( integer or
+   real) in a bank of "tabular" type known by its index, the index to
+   the NRth row:
+     LCOLS(ID), LROWS(ID), LFRWRD(ID), KNEXT(ID), ITABL(ID,NR,L),
+     RTABL(ID,NR,L), KROW(ID,NR), LFRROW(ID)
+
+.section BEGIN OF RUN
+   The following banks will be written onto tape before the 1st event
+      - the ALEPH run header bank  'RUNH', NR=0
+      - the particle bank          'PART', NR=0
+      - the GALEPH run header banks'Axxx', NR=0
+      - the KINE run header bank   'KRUN', NR=0
+   and all data base banks used by GALEPH and which have been modified
+   by data cards.
+
+.subsection  GEOMETRY, READOUT, RUN CONDITIONS
+   all necessary parameters are taken from the data base.
+
+.section EVENT
+   The following banks will be written onto tape for each event.
+      - the ALEPH event header bank    'EVEH', NR=event# + run# * 65536
+      - the event generator status     'KEVH', NR=0
+      - the kinematics banks           'VERT', NR=vertex#
+                                       'KINE', NR=track#
+                                       'KVOL', NR=0
+                                  or   'FKIN', 'FVER', 'FPOI' NR=0
+      - the hit banks                  'xxHT', NR=0
+      - the digit banks                'xxDI', NR=0
+      - the relation hit/track
+        or
+      - the relation digit/track       'xxDT'
+      - the GALEPH event header bank   'ASEV', NR=0
+
+.subsection DETECTOR BANKS
+     Next banks are booked, filled and added to the 'E' list by
+   detector people.  In the bank name 'xy' stands for:
+     - x is the 1st letter of the detector.
+     - y is either the 2nd letter of the detector or a hit/digit type
+   such as:  'P' for 'pad' or 'W' for 'wire'.
+    i.e.  TPC could have TPHT (hit on pad), TTHT (hit on trigger pad),
+          TWHT (hit on wire).
+
+.subsub HIT
+     name = xx HT , NR = 0 , ND = lhdr(=2) +lw*lhit
+
+     By convention a HIT is all the information you need to make the
+   digitisation without redoing the Geant3 tracking.
+     HIT bank is filled during tracking (that means 1 track at a
+   time).  The input to the HIT module is a track element.
+
+    1            lw               # of words/hit                      I
+    2            lhit             # of hits                           I
+    lhdr+1                                                            I
+         ---     ---              -- to be defined by det. people
+         lw                       last word of 1st hit
+     ----
+         lw*lhit                  last word of last hit
+
+.subsub DIGIT
+     Raw Data information , the format is given by the read out.  if
+   it is possible follow the ALEPH convention :  miniheader of 2 words
+   as follow :
+    name = xxDI , NR = 0 , ND = lhdr +lw*ldig
+
+    1         lw          # of words/digit
+    2         ldig        # of digits
+    lhdr+1 - lw*ldig               -- to be defined by det. people    I
+
+.subsub MC DIGIT-TRACK
+   Each bank starts with the standard miniheader of 2 words.
+   The 1st address is 0.
+
+     name = xxDT , NR = [1,4] , ND variable , FORMAT is Integer
+
+     give the correlations between digits and tracks (between signals
+   and tracks in calorimeters)
+
+#endif

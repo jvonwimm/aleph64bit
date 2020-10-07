@@ -1,0 +1,178 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.56.50;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.37;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.38;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE PVERT(X,N,NN)
+C
+C
+C     SUBROUTINE PVERT
+C
+C     USAGE
+C        CALL PVERT(X,N,NN)
+C        IABS(NN)    =NUMBER OF DIGITS (3 TO 6)
+C        NN NEGATIVE = PRINT NO INDEXLINE BELOW ARRAY
+C
+C     PVERT PRINTS THE ARRAY X OF DIMENSION N (MAX 120) IN IABS(NN)
+C     LINES.
+C
+C
+      COMMON/CCONVT/PX(10)
+      REAL X(*)
+      CHARACTER*1 CH(10)
+      CHARACTER*128 PX
+      DATA CH/'0','1','2','3','4','5','6','7','8','9'/
+C     ...
+      CALL GLUNP(LUNP)
+      IF(LUNP.EQ.0) GOTO 100
+      JM=0
+      DO 10 I=1,10
+   10 PX(I)=' '
+      IF(N.LE.0) GOTO 100
+      M=MIN(120,N)
+C
+      JL=0
+      XM=0.0
+      DO 20 J=1,M
+      IF(ABS(X(J)).GT.XM) THEN
+         XM=ABS(X(J))
+         MX=J
+      END IF
+      IF(X(J)) 16,20,18
+   16 PX(1)(8+J:8+J)='-'
+   18 JL=J
+   20 CONTINUE
+      IF(XM.EQ.0.0.OR.JL.LE.0) GOTO 100
+      KN=MIN(6,MAX(2,IABS(NN)))
+      KE=ALOG10(XM*1.0001)
+      IF(XM.LT.1.0) KE=KE-1
+   22 FAC=10.0**(KN-1-KE)
+      IJ=FAC*XM+0.5
+      IF(IJ.GE.10**KN) THEN
+         KE=KE+1
+         GOTO 22
+      END IF
+      IA=2+KN
+C
+      DO 40 J=1,JL
+      IJ=FAC*ABS(X(J))+0.5
+      IM=0
+      IF(IJ.NE.0) THEN
+         DO 30 I=1,KN
+         IF(IJ.EQ.0) GOTO 40
+         IN=MOD(IJ,10)
+         IJ=IJ/10
+         IF(IN.NE.0.AND.IM.EQ.0) IM=IA-I+1
+   30    PX(IA-I)(8+J:8+J)=CH(IN+1)
+      END IF
+   40 JM=MAX(IM,JM)
+      KL=KE
+   50 IF(KE.GE.KN) THEN
+         KE=KE-3
+         GOTO 50
+      END IF
+   55 IF(KE.LT.0) THEN
+         KE=KE+3
+         GOTO 55
+      END IF
+   60 IN=KE+2
+      IZ=KL-KE
+      PX(IN)(8:8)='.'
+      PX(IN)(3:3)='E'
+      IF(IZ.LT.0) THEN
+         PX(IN)(4:4)='-'
+         IZ=-IZ
+      END IF
+   70 I1=IZ/10
+      I2=MOD(IZ,10)
+      PX(IN)(5:5)=CH(I1+1)
+      PX(IN)(6:6)=CH(I2+1)
+      JM=MIN(2+KN,JM)
+      JM=MAX(IN+1,JM)
+C
+      DO 80 J=1,JL
+      IF(X(J).NE.0.0.AND.PX(JM-1)(8+J:8+J).EQ.' ') PX(JM-1)(8+J:8+J)='0'
+   80 CONTINUE
+      DO 85 I=JM,8
+   85 PX(I)=' '
+      LJ=((JL+9)/10)*10
+      DO 90 J=1,LJ
+      PX(JM)(8+J:8+J)='-'
+      IF(MOD(J,2).NE.1) THEN
+         I=MOD(J,10)+1
+         PX(JM+1)(8+J:8+J)=CH(I)
+         IF(I.EQ.1) THEN
+            I=MOD(J/10,10)+1
+            PX(JM)(8+J:8+J)=CH(I)
+         END IF
+      END IF
+   90 CONTINUE
+      PX(JM)(8+J:8+J)='*'
+      JM=JM+1
+      IF(NN.LT.0) JM=JM-2
+      DO 95 J=1,JM
+   95 WRITE(LUNP,101)  PX(J)
+C
+  100 RETURN
+  101 FORMAT(3X,A128)
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK pvert
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

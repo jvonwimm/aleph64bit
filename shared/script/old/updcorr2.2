@@ -1,0 +1,149 @@
+#! /bin/csh
+#============================================================================
+#                             UPDCORR
+# 16/10/92                                                      F.Blin
+#============================================================================
+# procedure to create a new ALEPH correction file on UNIX
+#============================================================================
+# all Aleph libraries on file -> ${alib_dir}/pub/progl
+# all Aleph CERNVM disks on file -> ${alib_dir}/alibdisk
+# Call ${alib_dir}/alftp -> run FTP on CERNVM to search one file on PUBXU
+# Call by ${alib_dir}/newver
+#============================================================================
+# P1 -> prog_name                          eg: julia
+# P2 -> call by (ftp already done)         eg: newver
+#============================================================================
+# updcorr2.0                                                    FLR
+# 11/07/93 - add lib_dir :*.o files are stored on lib_dir       
+#            lib_dir is set to `pwd`
+# 14/07/93 - get cycle number and last date from ${corr_dir}/alib.log
+# 15/07/93 - on CSF and DXAL//OSF1 compile the existing correction
+#            file on SHIFT or ULTRIX
+# updcorr2.2                                                    FLR
+# 31/08/93 - use the environment variable MASTER to retrieve the corr. file
+#============================================================================
+#set echo on
+if ($2 == "") set exec_name = "updcorr"
+if ($2 != "") set exec_name = $2
+set UNAME = `uname`
+set alib_dir = "/aleph/alib"
+set corr_dir = `pwd`
+set lib_dir  = `pwd`
+set mnemonic = ""
+set all_para_dbx = ""
+set flag = "OK"
+#
+#*******>
+if ($1 == "") then
+  echo -n "Enter Aleph program name [eg:julia <CR>=exit]-> "
+   set prog_name = $<
+   if (${prog_name} == "") goto end
+else
+   set prog_name = $1
+endif
+ 
+if (${prog_name} == "julia" || ${prog_name} == "galeph" || ${prog_name} == "alpha" ) goto begin
+echo " Only alpha, galeph or julia ."
+goto end
+
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> begin
+begin:
+#*******
+set idir = `egrep ^" ${prog_name} " ${alib_dir}/pub/progl | awk '{print $2}'`
+if (${idir} == "") then
+   echo " WARNING ***> see file ${alib_dir}/pub/ progl"
+   goto end
+endif
+set mnemonic = `echo ${prog_name} | awk '{print substr($0,1,1) "cor"}'`
+if (${prog_name} == "alpha") then
+   set mnemonic = `echo ${prog_name} | awk '{print substr($0,1,2) "cor"}'`
+endif
+ 
+#*******
+set corr_dir = "/aleph/${idir}"
+set file_para = "/aleph/${idir}/f77_dbx_options"
+if !(-e ${file_para}) then
+   echo " WARNING ***> file ${file_para} is unknown"
+   goto end
+endif
+ 
+set cycle = `egrep ^" ${prog_name} " ${corr_dir}/alib.log | awk '{print $3}'`
+set dmy_old = `egrep ^" ${prog_name} " ${corr_dir}/alib.log | awk '{print $4}'`
+ 
+set file_name = ${mnemonic}${cycle}
+#*******
+ 
+#*******
+# if not on MASTER machine take the correction file from the MASTER machine
+
+if (${OS} != ${MASTER}) then
+  set corr_dir = "/al/${MASTER}/${idir}"
+  goto compile
+endif 
+
+#*******
+
+cd ${corr_dir}
+
+#*******> ftp on CERNVM -> run alftp
+if (${exec_name} == "updcorr") then
+   set file_type = `egrep ^" ${prog_name} " ${alib_dir}/pub/progl | awk '{print $5}'`
+   set disk_ibm_name = "pub"
+   set transfert_type = "ascii"
+   set disk_ibm = `egrep "${disk_ibm_name} " ${alib_dir}/alibdisk | awk '{print $2 "." $3}'`
+   echo "Now run FTP -> alftp ${file_name} ${file_type} ${disk_ibm} ${transfert_type}"
+   alftp ${file_name} ${file_type} ${disk_ibm} ${transfert_type}
+ 
+   if !(-e ${corr_dir}/${file_name}.${file_type}) then
+      echo " WARNING ***> file ${corr_dir}/${file_name}.${file_type} is unknown"
+      set flag = "problem with FTP"
+      goto exec_end
+   endif
+ 
+   mv -f ${corr_dir}/${file_name}.${file_type} ${file_name}.f
+endif
+#*******< ftp on CERNVM
+ 
+ 
+#*******> fnice
+#
+# mv ugly input to ${file_name}.fugly and create a nice ${file_name}.f
+   if (-e ${file_name}.f) then
+      echo "Now -> fnice for ${file_name}.f"
+      fnice ${file_name}.f && rm ${file_name}.fugly
+   else
+      echo " WARNING ***> fnice"
+      set flag = "fnice problems"
+      goto exec_end
+   endif
+ 
+#*******
+
+#*******> compile ${corr_dir}/${file_name}.f on to ${lib_dir}
+compile:
+
+cd ${lib_dir}
+
+set all_para_dbx = `egrep ^" ${prog_name} " ${file_para} | awk '{print substr($0,15)}'`
+
+echo "Now -> f77 ${all_para_dbx} ${corr_dir}/${file_name}.f"
+f77 ${all_para_dbx} ${corr_dir}/${file_name}.f | & tee ${file_name}.log
+
+set file_error = "${file_name}_Error"
+echo "Now -> grep -n 'Error' ${file_name}.log > ${file_error}.log"
+grep -n 'Error' ${file_name}.log > ${file_error}.log
+if !(-z ${file_error}.log) then
+    set flag = "COMPILATION PROBLEMS"
+    echo " WARNING ***> compilation problems"
+    echo "see file -> ${file_error}.log"
+endif
+#
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> exec_end
+exec_end:
+#*******> spy
+set dmyh = `date '+%d-%h-19%y %T'`
+echo "${exec_name} ${user} ${dmyh} ${prog_name} ${file_name} ${all_para_dbx} ${flag}" >> /aleph/${idir}/spy
+
+end:
+exit

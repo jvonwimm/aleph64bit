@@ -1,0 +1,82 @@
+      SUBROUTINE QUPHOT(ITK,VPH,IER)
+C-----------------------------------------------------------------------
+C! Photon-like particle in Ecal
+C  Input  ITK : ALPHA track number
+C  Output VPH : particle 4-momentum
+C         IER : error flag ( 0 if ok )
+C
+C  G.Ganis  21 Mar 1991
+C
+C  Modifications : P. Janot 12 Mar 1994 -- Implement the possibility
+C                  of NO endcaps. Reduce the depth of the ECAL as
+C                  a function of the polar angle.
+C                  
+C                  M. Kado 7 May 1998 -- Calibration correction
+C-----------------------------------------------------------------------
+#include "qcde.h"
+#include "qhac.h"
+#include "resolu.h"
+#include "fkclstr.h"
+#include "calib.h"
+      REAL VPH(4)
+#include "qmacro.h"
+      DATA IFI /0/
+      DATA EPS /.0000001/
+C
+      IER= 0
+      POL= ACOS(QCT(ITK))*180./QQPI
+      IF( POL .GT. 90. ) POL= 180. - POL
+      AZI= QPH(ITK)*180./QQPI
+      IF( AZI .GT. 180. ) AZI= AZI - 360.
+C
+      EGAM= QE(ITK)
+      IF(EGAM.LT.EPS) THEN
+        ier = 1
+        GOTO 999
+      ENDIF
+C -- Gaussian fluctuation
+      CALL RANNOR(ALEA,DUMDUM)
+C -- Resolution depends on POL and AZI
+C      RESOL=1.05+FLUCHE*FLUFAC(POL,AZI)*ALEA/SQRT(EGAM)
+C     .        +FLUCON*DUMDUM/EGAM
+      RESOL=(1.*calibpf+calibp/EGAM)+FLUCHE
+     .     *FLUFAC(POL,AZI)*ALEA/SQRT(EGAM)
+     .     +FLUCON*DUMDUM/EGAM
+      reduc = 1.
+C -- Edges of the endcap and the lumi:
+      IF ( pol .GT. ecaacc .AND. pol .LT. ecaacc+.5 ) THEN
+        reduc = 2.*(pol-ecaacc)
+      ELSEIF ( pol .GT. polcor(3)-.5 .AND. pol .LT. polcor(3) ) THEN
+        reduc = 2.*(polcor(3)-pol)
+      ELSEIF ( pol .GT. polcor(4) .AND. pol .LT. polcor(4)+.5 ) THEN
+        reduc = 2.*(pol-polcor(4))
+      ENDIF
+C -- No Endcaps !
+      IF ( inoen .GT. 0 ) THEN
+        polrad = ACOS(QCT(itk))
+        poltan = ABS(TAN(polrad))
+        IF     ( poltan .GE. rdime(11)/zdime(11) ) THEN
+          reduc = 1./SIN(polrad)
+        ELSEIF ( poltan .GE. rdime( 8)/zdime( 8) ) THEN
+          reduc = (zdime(8)*poltan - rdime(8))/SIN(polrad)
+     .          / (rdime(11) - rdime(8))
+        ELSE
+          IF ( pol .GE. polcor(3) ) reduc = 0.
+          IF ( pol .LE. ecaacc    ) reduc = 0.
+        ENDIF
+      ENDIF
+      IF ( reduc .GT. 1.0 ) reduc = 1.0
+C -- Too few energy
+      facmul = resol*reduc
+      IF( EGAM*facmul .LT. ECACUT ) THEN
+       IER= 1
+       GOTO 999
+      END IF
+C -- Fill VPH
+      VPH(1)= QX(ITK)*EGAM/QP(ITK)*facmuL
+      VPH(2)= QY(ITK)*EGAM/QP(ITK)*facmuL
+      VPH(3)= QZ(ITK)*EGAM/QP(ITK)*facmuL
+      VPH(4)= QE(ITK)             *facmuL
+C
+ 999  RETURN
+      END

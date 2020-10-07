@@ -1,0 +1,136 @@
+#!/bin/csh
+#-----------------------------------------------------------------------
+# Script : make_generator
+# Devel. : J. Closier
+# Date   : 20 April 1995
+# Goals  : Create the library for the generator
+# Usage  : make_generator name_of_the_generator
+# Modify : dec 1998 special for grace library
+#-----------------------------------------------------------------------
+#  IF YOU HAVE ARGUMENTS KEEP THE NEXT LINE with the right parameters
+if ($#argv != 1) then
+   goto usage
+endif
+set echo on
+
+set reference=$ALEPH_ROOT/$MASTER/kin
+set generator=$1
+set prog_name=kingal
+set prog_dir=$ALEPH/kin
+
+if (${OS} == "HPUX9") then
+   set FC=fort77
+else
+   set FC=f77
+endif
+
+
+
+cd ${prog_dir}
+mkdir src_${generator}
+cd src_${generator}
+##set files1 = `ls $ALEPH_ROOT/$MASTER/kin/grace200/*.f`
+##foreach file1 ( $files1[*] )
+
+  set files1 = `ls $ALEPH_ROOT/$MASTER/kin/grace200/grini/*.f`  
+  fsplit $files1
+#********** put in lower case
+  if (${OS} != "OSF1") then
+    set files = `ls *.f`
+    foreach file ( $files[*] )
+      set tmp = `echo ${file} | tr '[A-Z]' '[a-z]'`
+      mv -f ${file} ${tmp}
+    end
+  endif
+  cp  $ALEPH_ROOT/$MASTER/kin/grace200/grini/inc/incl* .
+#
+# Compile the generator
+#
+  set file_para = "${prog_dir}/f77_options"
+  set all_para = `egrep " ${prog_name} " ${file_para} | awk '{print substr($0,16)}'`
+  ${FC} ${all_para} *.f | & tee -a ../log/${generator}.log
+  \rm -rf incl*.o
+  ar rsl ../libgrinit_w.a *.o
+  \rm -rf *.o *.f
+##end
+
+cd ${prog_dir}
+
+\rm -rf src_${generator}
+
+cd ${prog_dir}
+mkdir src_${generator}
+cd src_${generator}
+##set files1 = `ls $ALEPH_ROOT/$MASTER/kin/grace200/*.f`
+##foreach file1 ( $files1[*] )
+
+#  set files1 = `ls $ALEPH_ROOT/$MASTER/kin/grace200/gramp/*.f`  
+   cp $ALEPH_ROOT/$MASTER/kin/grace200/gramp/*.f .
+#  fsplit $files1
+#********** put in lower case
+  if (${OS} != "OSF1") then
+    set files = `ls *.f`
+    foreach file ( $files[*] )
+      set tmp = `echo ${file} | tr '[A-Z]' '[a-z]'`
+      mv -f ${file} ${tmp}
+    end
+  endif
+  cp  $ALEPH_ROOT/$MASTER/kin/grace200/gramp/inc/incl* .
+#
+# Compile the generator
+#
+  set file_para = "${prog_dir}/f77_options"
+  set all_para = `egrep " ${prog_name} " ${file_para} | awk '{print substr($0,16)}'`
+
+  ${FC} ${all_para} am_*.f | & tee -a ../log/${generator}.log
+  ${FC} ${all_para} amp*.f | & tee -a ../log/${generator}.log
+  ${FC} ${all_para} f*.f | & tee -a ../log/${generator}.log
+  ${FC} ${all_para} k*.f | & tee -a ../log/${generator}.log
+  ${FC} ${all_para} p*.f | & tee -a ../log/${generator}.log
+  ar rsl ../libgramp4f_w.a *.o
+  \rm -rf *.o *.f
+#end
+
+cd ${prog_dir}
+
+\rm -rf src_${generator}
+
+
+cd ${prog_dir}
+mkdir src_${generator}
+cd src_${generator}
+##set files1 = `ls $ALEPH_ROOT/$MASTER/kin/grace200/*.f`
+##foreach file1 ( $files1[*] )
+
+  set files1 = `ls $ALEPH_ROOT/$MASTER/kin/grace200/grcha/*.f`  
+  fsplit $files1
+#********** put in lower case
+  if (${OS} != "OSF1") then
+    set files = `ls *.f`
+    foreach file ( $files[*] )
+      set tmp = `echo ${file} | tr '[A-Z]' '[a-z]'`
+      mv -f ${file} ${tmp}
+    end
+  endif
+#
+# Compile the generator
+#
+  set file_para = "${prog_dir}/f77_options"
+  set all_para = `egrep " ${prog_name} " ${file_para} | awk '{print substr($0,16)}'`
+  ${FC} ${all_para} *.f | & tee -a ../log/${generator}.log
+  ar rsl ../libgrchanel_w.a *.o
+  \rm -rf *.o *.f
+#end
+
+cd ${prog_dir}
+
+\rm -rf src_${generator}
+#end bbl
+exit 0
+
+#  usage for the command
+usage:
+echo " Usage : $0 generator_name"
+exit 0
+
+

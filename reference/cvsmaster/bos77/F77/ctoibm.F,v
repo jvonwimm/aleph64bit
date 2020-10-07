@@ -1,0 +1,160 @@
+head	1.3;
+access;
+symbols
+	bos3489-1:1.3.0.2
+	bos3589:1.3
+	bos3489:1.3
+	bos3389:1.3
+	bos3289:1.3
+	bos3189:1.3
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	96.05.03.14.54.57;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.03.11.12.51.39;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.43;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.44;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@replace ${VENDOR} by ALEPH_${VENDOR}
+Modified Files:
+  F77/ 	blo32w.F cfribm.F ctoibm.F epblin.F epdacr.F epdefu.F ephead.F
+ 	epinit.F epopen.F
+@
+text
+@#if defined(UNIX) && defined(ALEPH_DEC)
+      SUBROUTINE CTOIBM(IARRAY,NW,MODE)
+C -----------------------------------------------------------
+CLatB. private version
+C -----------------------------------------------------------
+C      +++++++ STANDARD FORTRAN VERSION +++++++
+C              The numbers must be right adj., zero filled.
+C              MODE = 1 : convert 16-bit integers
+C                   = 2 : convert 32-bit integers (Dummy)
+C                   = 3 : convert 32-bit floating
+      DIMENSION IARRAY(*)
+CLatB
+      integer*2 sw0(2), sw1(2)
+      integer lw0, lw1
+      equivalence (sw0,lw0)
+      equivalence (sw1,lw1)
+C
+      IF(NW.LE.0)   GO TO 999
+      IF(MODE.EQ.1) THEN
+C
+C                 16-bit integers
+C
+        DO 110,I=1,NW
+          IARRAY(I) = IAND(IARRAY(I),65535)
+ 110    CONTINUE
+      ELSE IF(MODE.EQ.2) THEN
+C
+C                 32-bit integers (word swap)
+C
+         do 120 i=1, nw
+             lw0 = iarray(i)
+             sw1(2) = sw0(1)
+             sw1(1) = sw0(2)
+             iarray(i) = lw1
+ 120     continue
+      ELSE IF(MODE.EQ.3) THEN
+C
+C                Convert the first NW words of IARRAY from IEEE
+C                single-precision (32-bit) floating point representation
+C                to IBM 32-bit floating point representation
+        DO 10,I=1,NW
+C
+C             Check for exact 0
+          IF(IARRAY(I).EQ.0) GO TO 10
+C
+C             Get exponent
+          IEXPO = ISHFT(ISHFT(IARRAY(I),1),-24)
+C
+C                IEEE EXP + IEEE BIAS + IBM BIAS
+C         IEXPO = IEXPO   -    128   +   260
+          IEXPO = IEXPO + 134
+          IEX16 = IEXPO/4
+          ILEFT = 4 - MOD(IEXPO,4)
+          IF(ILEFT.EQ.4) THEN
+             ILEFT = 0
+             IEX16 = IEX16 - 1
+          END IF
+          IDUMMY = IAND(IARRAY(I),2**23-1)
+          IDUMMY = IBSET(IDUMMY,23)
+          IDUMMY = IDUMMY + 2**(ILEFT-1)
+          IDUMMY = ISHFT(IDUMMY,-ILEFT)
+          IDUMMY = IOR(IDUMMY,ISHFT(IEX16,24))
+          IF(BTEST(IARRAY(I),31)) IDUMMY = IBSET(IDUMMY,31)
+          IARRAY(I) = IDUMMY
+  10    CONTINUE
+         do 130 i=1, nw
+             lw0 = iarray(i)
+             sw1(2) = sw0(1)
+             sw1(1) = sw0(2)
+             iarray(i) = lw1
+ 130     continue
+      END IF
+C
+ 999  continue
+      END
+#endif
+@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@d1 1
+a1 1
+#if defined(UNIX) && defined(DEC)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK ctoibm
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

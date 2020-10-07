@@ -1,0 +1,17 @@
+      FUNCTION XPEQOR(ITK,CPAR)
+C----------------------------------------------------------------------
+C! Test if particle ITK is of type CPAR or its antiparticle.
+C     J. Boucrot  10-Nov-1993           adapted from I.Tomalin   1/2/93
+C----------------------------------------------------------------------
+#ifndef DOC
+#include "parna.h"
+      LOGICAL XPEQOR
+      CHARACTER*(*) CPAR
+#include "qcdesh.h"
+      KTPCOD(KI)=IW(KOQVEC+KI*KCQVEC+JQVEPA)
+C----------------------------------------------------------------------
+      ICODE = KTPCOD(ITK)
+      IANTI = KCANTI(ICODE,1)
+      XPEQOR = FLISPA(ICODE).EQ.CPAR.OR.FLISPA(IANTI).EQ.CPAR
+      END
+#endif

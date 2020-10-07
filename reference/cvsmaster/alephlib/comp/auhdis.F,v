@@ -1,0 +1,152 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.2
+	aleph304_5:1.2
+	aleph304_4:1.2
+	aleph304_3:1.2
+	aleph304_2:1.2
+	aleph304_1:1.2
+	aleph304:1.2
+	aleph303_3:1.2
+	aleph303_2:1.2
+	aleph303_1_mc1:1.2
+	aleph303_1:1.2
+	aleph303:1.2
+	aleph302_9:1.2
+	aleph302_8:1.2
+	aleph302_7:1.2
+	aleph302_6:1.2
+	aleph302_5:1.2
+	aleph302_4:1.2
+	aleph302_3:1.2
+	aleph302_2:1.2
+	aleph302_1:1.2
+	aleph302:1.2
+	aleph216:1.2
+	aleph215_3:1.2
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.09.04.14.10.49;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.40.46;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.40.47;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@add missing C! for dOC
+@
+text
+@      SUBROUTINE AUHDIS(FIELD,SLONG,VI,VO)
+C--------------------------------------------------------------------
+C J. Hilgart 10/12/86
+C This routine calculates the
+C! Dist. between 2 points along a singly charged particle's helical trajectory
+C
+C      Input:  FIELD   in kG
+C              VI(7)    xi, yi, zi, dc1, dc2, dc3,ptot
+C              VO(3)    x0, y0
+C      Output: SLONG, in cm
+C ----------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "alcons.h"
+C
+      DIMENSION VI(7),VO(2)
+C
+      XYLEN = VDIST(VI,VO,2)
+            SZ = MAX(SQRT(1. - VI(6)**2),1.E-5)
+      PT = VI(7)*SZ
+      RHO = PT/(ABS(FIELD)*CLGHT*1.E-5)
+      SLONG = 2.*RHO*ASIN(MIN(XYLEN/2./RHO,1.))/SZ
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 2
+a5 3
+C This routine gives the distance along a singly charged
+C particle's helical trajectory between
+C two specified points.
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

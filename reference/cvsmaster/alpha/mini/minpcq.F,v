@@ -1,0 +1,204 @@
+head	1.1;
+access;
+symbols
+	alpha126_22:1.1
+	alpha122_22:1.1
+	alpha126_21:1.1
+	alpha126_20:1.1
+	alpha126_19:1.1
+	alpha126_18:1.1
+	alpha126_17:1.1
+	alpha126_16:1.1
+	alpha126_15:1.1
+	alpha126_14:1.1
+	alpha126_13:1.1
+	alpha126_12:1.1
+	alpha126_11:1.1
+	alpha126_10:1.1
+	alpha126_09:1.1
+	alpha126_08:1.1
+	alpha126_07:1.1
+	alpha126_06:1.1
+	alpha126_05:1.1
+	alpha126_04:1.1
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	99.03.22.14.07.14;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE MINPCQ
+C
+CKEY MDST /USER
+C-----------------------------------------------------------------------
+C! Fill PCQA bank from DNEU and DRES.
+C
+C     Author: J.Carr    14 May 1991
+c              ( modified from MINPCP of Stephen Haywood )
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+#include "dneujj.h"
+#include "dresjj.h"
+#include "minfac.h"
+C
+      LOGICAL HADRO,GAMMA,GAMEX,GARBA,LCALO
+      PARAMETER ( MXNEUT=200 )
+      DIMENSION PARLOC(MXNEUT,5)
+      DIMENSION IPEPC(MXNEUT),IPCOB(MXNEUT),ITYPE(MXNEUT)
+      LOGICAL PARGON(MXNEUT)
+C
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+      HADRO(I) = ITYPE(I).GE.13.AND.ITYPE(I).LE.20
+      GAMMA(I) = ITYPE(I).LT.13.AND.ITYPE(I).NE.5
+      GAMEX(I) = ITYPE(I).EQ.5
+      GARBA(I) = ITYPE(I).EQ.21
+      LCALO(I) = ITYPE(I).EQ.22
+C
+      KDNEU = NLINK('DNEU',0)
+      IF(KDNEU.GT.0) THEN
+         NDNEU = LROWS(KDNEU)
+      ELSE
+         NDNEU = 0
+      ENDIF
+C
+      KDRES = NLINK('DRES',0)
+      IF(KDRES.GT.0) THEN
+         NDRES = LROWS(KDRES)
+      ELSE
+         NDRES = 0
+      ENDIF
+C
+      IF (NDNEU.LE.0 .AND. NDRES.LE.0) RETURN
+      MVER = MINGTV(DUM)
+C
+C++   Fill temporary PARLOC array from DNEU bank.
+C
+      J = 0
+      DO 100 I=1,NDNEU
+         IF(J.LT.MXNEUT)J = J + 1
+         IY = ITABL(KDNEU,I,JDNENA)
+         EN = FLOAT(ITABL(KDNEU,I,JDNEE0))/EFACTM
+         TH = FLOAT(ITABL(KDNEU,I,JDNETH))/AFACTM
+         PH = FLOAT(ITABL(KDNEU,I,JDNEPH))/AFACTM
+         PSUM=0.
+         PN = EN
+         CP = COS (PH)
+         SP = SIN (PH)
+         CT = COS (TH)
+         ST = SIN (TH)
+         PT = PN * ST
+         PARLOC(J,1) = PT * CP
+         PARLOC(J,2) = PT * SP
+         PARLOC(J,3) = PN * CT
+         PARLOC(J,4) = EN
+         PARLOC(J,5) = PSUM
+         ITYPE(J) = ITABL(KDNEU,I,JDNENA)
+         IF (MVER.GE.54) THEN
+            IPEPC(J) = ITABL(KDNEU,I,JDNEDE)
+            IPCOB(J) = ITABL(KDNEU,I,JDNEPC)
+         ELSE
+            IPEPC(J) = ITABL(KDNEU,I,7)
+            IPCOB(J) = 0
+         ENDIF
+         PARGON(J) = .FALSE.
+         IF(GARBA(I)) PARGON(J) = .TRUE.
+  100 CONTINUE
+      NMXNEU=J
+C
+C++   Fill temporary array from DRES.
+C
+      DO 200 I=1,NDRES
+         IF(J.LT.MXNEUT) J = J + 1
+         IY = ITABL(KDRES,I,JDRENA)
+         EN = FLOAT(ITABL(KDRES,I,JDREE0))/EFACTM
+         TH = FLOAT(ITABL(KDRES,I,JDRETH))/AFACTM
+         PH = FLOAT(ITABL(KDRES,I,JDREPH))/AFACTM
+         PSUM = FLOAT(ITABL(KDRES,I,JDREPS))/EFACTM
+         PN   = FLOAT(ITABL(KDRES,I,JDREP0))/EFACTM
+         CP = COS (PH)
+         SP = SIN (PH)
+         CT = COS (TH)
+         ST = SIN (TH)
+         PT = PN * ST
+         PARLOC(J,1) = PT * CP
+         PARLOC(J,2) = PT * SP
+         PARLOC(J,3) = PN * CT
+         PARLOC(J,4) = EN
+         PARLOC(J,5) = PSUM
+         ITYPE(J) = ITABL(KDRES,I,JDRENA)
+         IPEPC(J) = 0
+         IF (MVER.GE.54) THEN
+            IPCOB(J) = ITABL(KDRES,I,JDREPC)
+         ELSE
+            IPCOB(J) = 0
+         ENDIF
+         PARGON(J) = .FALSE.
+  200 CONTINUE
+C
+      NMXALL = J
+C
+C++   Maybe merge and cut particles
+C
+      CALL PCMECU( NMXALL,MXNEUT,PARLOC,IPEPC,IPCOB,ITYPE,PARGON)
+C
+      RETURN
+      END
+#endif
+@

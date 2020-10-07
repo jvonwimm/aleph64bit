@@ -1,0 +1,169 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	94.12.07.14.03.04;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.03.05;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK rundoc
+#if defined(DOC)
+.chapter HOW TO RUN A JOB
+
+     To run the program , the first thing to do is to create an object
+   file .OBJ or a library file .OLB .  To do so you must define the
+   version of the program you want by means of Historian flags :
+    INTER             interactive version
+    DOC               documentation (in this case the code is suppressed)
+
+.section   Make an object file
+  On the VAX to get GALEPH.OBJ using GHEISHA hadronic package :
+   -----------------------------------------------------------
+    @@ HISTOR P=GALEPH.HLB,C=GALEPH.FOR,F,1
+    *EX
+    @@ FOR/DEB/NOOPT GALEPH
+
+
+ On CERNVM to get GALEPH TXTLIB
+ ------------------------------
+   HISTOR P="GALEPH OLDLIB F" C="GALEPH FORTRAN A"
+   HCR(P,C,F,B)
+   *EX
+
+.section   Build a set of STEERING data cards
+
+ DATE  93                                ! '93 geometry
+ DEBUG   1   5   1                       ! debug events 1 - 5
+ DISPLAY 0 /                             ! no display, mandatory on IBM
+ PROCESS   'TRAC' 'HITS' 'DIGI' 'TRIG'   ! must be there *
+ FILO  'MYGAL.EPIO                       ! save in EPIO format
+ FILI  'MYKINE.EPIO'                     ! read generated events
+ SETS  'ITC' 'VDET' 'TPC ' 'ECAL' 'HCAL' 'MUON' 'LCAL' 'SICA' ! analog signals
+ TIME        50                          ! time left to end job
+ NEVT        1   -500                    ! must be there  *
+ ENDQ                                    ! must be there  *
+
+
+.section   Run a job with user application cradle
+
+                       on VAX :
+
+     The command file GAL:GALRUN.COM is intended to prepare several
+  kinds of GALEPH jobs in interactive or batch mode.
+  To invoke GALRUN :  @@ GAL:GALRUN
+  then follow the instructions, there is an HELP command for beginners.
+
+                    or on CERNVM :
+
+     Exec GALRUN on GAL minidisk, is intended to prepare several kinds
+  of GALEPH jobs in interactive (DEBUG available ) or batch mode. User
+  has  to enter his choices through panels (see HELP GALRUN or GALRUN ?.
+  To invoke GALRUN just issue the GALRUN command.
+  A more detailed description can be obtained by GALRUN HELPCMS.
+
+ PANELS
+ ------
+     4 panels are available allowing the user to enter parameters .
+   The first one is always displayed when invoking GALRUN.  It is used
+   to select or create a set of defaults .  The existing user defaults
+   sets names are displayed on this panel.  It is possible to select
+   an existing default set without going through the other panels :
+   the parameters used are those stored by a previous pass.  To remove
+   a default set just overwrite some character(s) on the name(s).
+
+     Panel 3 is used for input/output files specifications:
+           historian input, data cards, printout file
+
+
+ EXAMPLE OF JOB CREATED BY GALRUN
+-----------------------------------
+   /*   GALEFF EXEC    */
+   trace c
+   'GIME PUBXU 197 G (QUIET'
+   'GIME PUBXU 196 F (QUIET'
+   'GIME PUBXU 210 * (QUIET'
+   'GIME CERNSYS 19A U (QUIET'
+
+   'FI 07 DISK GALEPH CARDS  A2'
+   'FI 06 DISK GALEPH OUTPUT  '
+
+   'EXEC CERNLIB GALxxx ALEPHLIB BOS77 GEANT GENLIB '
+
+   'LOAD GCORxxx (RESET GALEPH NOAUTO LIBE NOCLEAR DUP MAP REP INV'
+   if rc > 4 then exit
+
+   'SETSTOR EF'
+   'START'
+
+   if rc = 0 then do
+     'ERASE GALxxx MAP '
+   end
+
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

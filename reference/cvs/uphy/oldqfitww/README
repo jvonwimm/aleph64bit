@@ -1,0 +1,271 @@
+                         WW fitting package:  QFITWW
+
+In semi-leptonic (hadronic) decays of WW pairs, 1-C and 2-C (4-C and 5-C) 
+fits are available.  The 1-C (4-C) fit imposes four momentum conservation 
+while the 2-C (5-C) fit allows the user to define the degree to which the 
+equal mass constraint is imposed.  The user provides QFITWW the four 
+final state ALPHA track numbers (along with the correct jet assignment 
+to the W's) and the desired event type (4jet or 2jlv).  QFITWW then 
+returns the respective fitted track numbers along with the two fitted W track 
+numbers (and possibly a track number for ISR, if desired).  MIGRAD from MINUIT 
+is used to perform the chi-square minimization.  The complete set of the 
+parameters associated with the chi-square function may be found in the 
+appendix.  Any combination of these parameters may be declared as variable or 
+fixed for the fit.  More complete documentation may be found in ALEPH
+note ALEPH 96-129/PHYSIC 96-118.
+
++----------------------------------------------------------------------+
+| CALL QFITWW( EVTYP, IOPT, MASTOL, ITKS, IFTKS, ERMAT, CHISQ, ISTAT ) |
++----------------------------------------------------------------------+
+
+Input Arguments:
+
+	CHARACTER*4 EVTYP:
+		EVTYP is used to specify the decay channel for the W pair.
+		Semi-leptonic channel:	'2jln' or '2jlv'
+		Hadronic channel:	'4jet'
+		
+		Default:  Semi-leptonic channel.
+		
+	INTEGER IOPT:
+		IOPT is an option bit that is used to specify which parameters
+		to vary in the fit.  See the appendix for a listing of the 
+		order of the parameters and some examples.   
+		
+		Default:  fit jet and lepton energies for a 2jlv WW event or,
+			  fit al jets' energies and angles for a 4jet event
+		
+	REAL MASTOL:
+		MASTOL is the degree (in GeV) to which the WW pair is 
+		constrained to have equal masses. If MASTOL=1000.0, then the 
+		equal mass constraint term is removed from the chisquare sum
+		and QFITWW becomes a 4-C (1-C) fit for the hadronic 
+		(semileptonic) channel.  Otherwise, QFITWW is a 5-C (2-C) fit
+		for the hadronic (semileptonic) channel.
+		
+		Default:  the WW pair is constrained to be equal to within 3
+		GeV.
+
+	INTEGER ITKS(4):
+		ITKS is a list of ALPHA track numbers corresponding to the
+		decay products of the W pair.  Semi-leptonic channel:  ITKS(1)
+		and ITKS(2) should be assigned the ALPHA jet track numbers
+		resulting from the hadronic W.  ITKS(3) should be assigned
+		the ALPHA track number for the lepton resulting from the
+		leptonic W.  Hadronic channel:  ITKS(1) and ITKS(2) should be
+		assigned the ALPHA jet track numbers resulting from the first
+		hadronic W.  ITKS(3) and ITKS(4) should be assigned the ALPHA
+		jet track numbers resulting from the second hadronic W.
+		
+		Default:  no default.
+
+Output Arguments:
+
+	INTEGER IFTKS(7):
+		IFTKS is a list of ALPHA track numbers resulting from the
+		chi-square fit.  The first four positions, IFTKS(1)...IFTKS(4),
+		contain the track numbers for the "fitted" decay products of
+		the W pair (in the same order as given in the ITKS array). 
+		IFTKS(5) and IFTKS(6) contain the track numbers for W1 and W2
+		respectively.  If ISR was varied in the fit, then IFTKS(7) 
+		contains the track number for the ISR photon.  
+		
+		NOTE:  If IFTKS already contains _valid_ ALPHA track numbers, 
+		then these track numbers are overwritten.  If the user wishes 
+		to have _new_ ALPHA track numbers returned by the fitter, then
+		IFTKS needs to be initialized to contains all zeros.
+		
+	REAL COV(13,13):
+		A 13x13 covariance matrix resulting from the fit as returned by
+		MINUIT's MIGRAD minimization routine.  The components of the
+		matrix correspond to the order of the parameters as given in
+		Appendix A.
+		
+	REAL CHISQ:
+		This is the chi-square of the fit as determined by MIGRAD. 
+					
+	INTEGER ISTAT:
+		ISTAT indicates the status of the fit.
+			-2	Illegal input argument
+			-1	Fit failed due to unphysical solution
+			0	Covariance matrix not calculated at all
+			1	Diagonal approximation to the covariance matrix
+				only, not accurate
+			2	Full covariance matrix, but forced 
+				positive-definite
+			3	Full accurate covariance matrix (normal
+				convergence)		
+
+Appendix A:
+	Parameter listing and order:
+	
+		'2jlv'				'4jet'
+		------				------
+		(1)  Jet 1 Energy		(1)  Jet 1 Energy
+		(2)  Jet 2 Energy		(2)  Jet 2 Energy
+		(3)  Lepton Energy		(3)  Jet 3 Energy
+		(4)  ISR Pz			(4)  Jet 4 Energy
+		(5)  Jet 1 theta		(5)  ISR Pz
+		(6)  Jet 2 theta		(6)  Jet 1 theta
+		(7)  Lepton theta		(7)  Jet 2 theta
+		(8)  Jet 1 phi			(8)  Jet 3 theta
+		(9)  Jet 2 phi			(9)  Jet 4 theta
+		(10) Lepton phi			(10) Jet 1 phi
+		(11) dummy			(11) Jet 2 phi
+		(12) dummy			(12) Jet 3 phi
+		(13) dummy			(13) Jet 4 phi
+		
+
+Appendix C:
+	It is possible that only a certain combination of variable parameters 
+	are desired for the fit.  The IOPT argument provides such an option.  
+	Specifically, there is a one to one correspondence between each digit 
+	in the binary representation of IOPT and each parameter.  The ordering 
+	is such that the least signficant digit (in the binary representation 
+	of IOPT) corresponds to parameter number 1, the next least significant 
+	digit corresponds to parameter number 2 and so forth.  A digit equal 
+	to 1 represents a variable parameter, while a 0 represents a fixed 
+	parameter.  
+	
+	IOPT option bit examples:
+
+		1.	Only fit jet energies in a 2jlv event:		
+			11 (base 2) =  3 (base 10) --> IOPT = 3
+			||
+			|+--> Jet 1 energy 
+			+---> Jet 2 energy
+			
+		2.	Only fit jet and lepton enegies in a 2jlv event:
+			111 (base 2) =  7 (base 10) --> IOPT = 7
+			|||
+			||+--> Jet 1 energy 
+			|+---> Jet 2 energy
+			+----> Lepton energy
+			
+		3.	Only fit jet energies in a 4jet event:
+			1111 (base 2) = 15 (base 10) --> IOPT = 15
+			||||
+			|||+--> Jet 1 energy
+			||+---> Jet 2 energy
+			|+----> Jet 3 energy
+			+-----> Jet 4 energy
+			
+		4.	Fit jet energies and angles in a 4jet event:
+			1111111101111 (base 2) = 8175 (base 10) --> IOPT = 8175
+			|||||||||||||
+			||||||||||||+--> Jet 1 energy
+			|||||||||||+---> Jet 2 energy
+			||||||||||+----> Jet 3 energy
+			|||||||||+-----> Jet 4 energy
+			||||||||+------> ISR Pz
+			|||||||+-------> Jet 1 theta
+			||||||+--------> Jet 2 theta
+			|||||+---------> Jet 3 theta
+			||||+----------> Jet 4 theta
+			|||+-----------> Jet 1 phi
+			||+------------> Jet 2 phi
+			|+-------------> Jet 3 phi
+			+--------------> Jet 4 phi
+Appendix B:
+	ITKS array:
+		'2jlv'				'4jet'
+		------				------
+		(1)  Jet 1 track num. \_ Whad	(1)  Jet 1 track num. \_ W1
+		(2)  Jet 2 track num. /		(2)  Jet 2 track num. /
+		(3)  Lepton track num.\_ Wlep	(3)  Jet 3 track num. \_ W2
+		(4)  dummy	      /		(4)  Jet 4 track num. /
+		
+Appendix C:
+	IFTKS array:
+		'2jlv'				'4jet'
+		------				------
+		(1) fit. J1 track num.		(1) fit. J1 track num. \_ W1
+		(2) fit. J2 track num.		(2) fit. J2 track num. /
+		(3) fit. Lepton track num.	(3) fit. J3 track num. \_ W2
+		(4) fit. Neutrino track num.	(4) fit. J4 track num. /
+		(5) fit. hadronic W track num.	(5) fit. W1 track num.
+		(6) fit. leptonic W track num.	(6) fit. W2 track num.
+		(7) fit. ISR photon track num.	(7) fit. ISR photon track num.
+	
+Appendix D:
+	Examples:		
+		
+	0.  Default:  2-C fit for the semileptonic channel varying only jet and
+	    lepton energies and with a mass tolerance of 3 GeV:
+		    
+		    .
+		    .
+		    .		
+		ITKS(1) = J1    ! reconstructed jet 1 track number
+		ITKS(2) = J2    ! reconstructed jet 2 track number
+		ITKS(3) = ILEPT ! reconstructed lepton track number
+						
+		CALL QFITWW( '2jlv',IOPT,MASTOL,ITKS,IFTKS,COV,CHISQ,ISTAT )
+		
+		IF( ISTAT.EQ.3 ) THEN     ! test for normal convergence
+		   J1F    = IFTKS(1)      ! fitted jet 1 track number
+		   J2F    = IFTKS(2)      ! fitted jet 2 track number
+		   ILEPTF = IFTKS(3)      ! fitted lepton track number
+		   INEUTF = IFTKS(4)      ! fitted neutrino track number
+		   IWHAD  = IFTKS(5)      ! fitted hadronic W track number
+		   IWLEP  = IFTKS(6)      ! fitted leptonic W track number
+		ENDIF		
+		    .
+		    .
+		    .
+	
+	1.  1-C Fit for the semileptonic channel varying only jet energies:
+		    
+		    .
+		    .
+		    .		
+		ITKS(1) = J1    ! reconstructed jet 1 track number
+		ITKS(2) = J2    ! reconstructed jet 2 track number
+		ITKS(3) = ILEPT ! reconstructed lepton track number
+			
+		IOPT = 3        ! fit only jet energies
+		MASTOL = 1000.0 ! remove the equal mass constraint
+			
+		CALL QFITWW( '2jlv',IOPT,MASTOL,ITKS,IFTKS,COV,CHISQ,ISTAT )
+		
+		IF( ISTAT.EQ.3 ) THEN     ! test for normal convergence
+		   J1F    = IFTKS(1)      ! fitted jet 1 track number
+		   J2F    = IFTKS(2)      ! fitted jet 2 track number
+		   ILEPTF = IFTKS(3)      ! fitted lepton track number
+		   INEUTF = IFTKS(4)      ! fitted neutrino track number
+		   IWHAD  = IFTKS(5)      ! fitted hadronic W track number
+		   IWLEP  = IFTKS(6)      ! fitted leptonic W track number
+		ENDIF		
+		    .
+		    .
+		    .
+	
+	2.  5-C fit for the hadronic channel varying jet energies and all jet
+	    angles (i.e. fit all parameters except ISR).
+	    
+	    	    .
+	    	    .
+	    	    .	    	    
+		ITKS(1) = J1    ! recon. jet 1 track num. \_ W1
+		ITKS(2) = J2    ! recon. jet 2 track num. /
+		ITKS(3) = J3    ! recon. jet 3 track num. \_ W2
+		ITKS(4) = J4    ! recon. jet 4 track num. /
+			
+		IOPT = 8175     ! fit jet energies and angles
+		MASTOL = 3.0    ! require that the fitted W pair have equal
+	       +		  masses within 3 GeV
+			
+		CALL QFITWW( '4jet',IOPT,MASTOL,ITKS,IFTKS,COV,CHISQ,ISTAT )
+		
+		IF( ISTAT.EQ.3 ) THEN	! test for normal convergence
+		   J1F = IFTKS(1)  	! fitted jet 1 track number \_ W1
+		   J2F = IFTKS(2)  	! fitted jet 2 track number /
+		   J3F = IFTKS(3)  	! fitted jet 3 track number \_ W2
+		   J4F = IFTKS(4)  	! fitted jet 4 track number /
+		   IW1 = IFTKS(5)  	! fitted W1 track number
+		   IW2 = IFTKS(6)  	! fitted W2 track number
+		ENDIF		
+		    .
+		    .
+		    .
+		    

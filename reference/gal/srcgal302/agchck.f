@@ -1,0 +1,616 @@
+      SUBROUTINE AGCHCK
+C-------------------------------------------------------------------
+C  B. Bloch-Devaux   _  850619
+C         modified 7 septembre 87 for DATA BASE usage
+C         modified November 15 , 1990 for geometry setup usage
+C!   Check validity of geometry data and selected detectors
+C!  and set up array IGEOJO in common JOBCOM according to selected
+C!      detectors
+C!     Fills FMGEOM common with boundaries of field regions
+C
+C - modified by : F.Ranjard - 911002
+C                 change COIL component # to 13 instead of 9
+C - modified by : B.Bloch-Devaux - 911015
+C                 handle SATR or SCAL depending on setup number
+C - modified by : B.Bloch-Devaux - 920110
+C                 handle more beam pipes.....
+C
+C    Called by AGEOME                  from this .HLB
+C-------------------------------------------------------------------
+      INTEGER LMHLEN, LMHCOL, LMHROW
+      PARAMETER (LMHLEN=2, LMHCOL=1, LMHROW=2)
+C
+      COMMON /BCS/   IW(1000)
+      INTEGER IW
+      REAL RW(1000)
+      EQUIVALENCE (RW(1),IW(1))
+C
+      COMMON/ALFGEO/ALRMAX,ALZMAX,ALFIEL,ALECMS
+C
+      PARAMETER (LFIL=6)
+      COMMON /IOCOM/   LGETIO,LSAVIO,LGRAIO,LRDBIO,LINPIO,LOUTIO
+      DIMENSION LUNIIO(LFIL)
+      EQUIVALENCE (LUNIIO(1),LGETIO)
+      COMMON /IOKAR/   TFILIO(LFIL),TFORIO(LFIL)
+      CHARACTER TFILIO*60, TFORIO*4
+C
+      PARAMETER (LOFFMC = 1000)
+      PARAMETER (LHIS=20, LPRI=20, LTIM=6, LPRO=6, LRND=3)
+      PARAMETER (LBIN=20, LST1=LBIN+3, LST2=3)
+      PARAMETER (LSET=15, LTCUT=5, LKINP=20)
+      PARAMETER (LDET=9,  LGEO=LDET+4, LBGE=LGEO+5)
+      PARAMETER (LCVD=10, LCIT=10, LCTP=10, LCEC=15, LCHC=10, LCMU=10)
+      PARAMETER (LCLC=10, LCSA=10, LCSI=10)
+      COMMON /JOBCOM/   JDATJO,JTIMJO,VERSJO
+     &                 ,NEVTJO,NRNDJO(LRND),FDEBJO,FDISJO
+     &                 ,FBEGJO(LDET),TIMEJO(LTIM),NSTAJO(LST1,LST2)
+     &                 ,IDB1JO,IDB2JO,IDB3JO,IDS1JO,IDS2JO
+     &                 ,MBINJO(LST2),MHISJO,FHISJO(LHIS)
+     &                 ,IRNDJO(LRND,LPRO)
+     &                 ,IPRIJO(LPRI),MSETJO,IRUNJO,IEXPJO,AVERJO
+     3                 ,MPROJO,IPROJO(LPRO),MGETJO,MSAVJO,TIMLJO,IDATJO
+     5                 ,TCUTJO(LTCUT),IBREJO,NKINJO,BKINJO(LKINP),IPACJO
+     6                 ,IDETJO(LDET),IGEOJO(LGEO),LVELJO(LGEO)
+     7                 ,ICVDJO(LCVD),ICITJO(LCIT),ICTPJO(LCTP)
+     8                 ,ICECJO(LCEC),ICHCJO(LCHC),ICLCJO(LCLC)
+     9                 ,ICSAJO(LCSA),ICMUJO(LCMU),ICSIJO(LCSI)
+     &                 ,FGALJO,FPARJO,FXXXJO,FWRDJO,FXTKJO,FXSHJO,CUTFJO
+     &                 ,IDAFJO,IDCHJO,TVERJO
+      LOGICAL FDEBJO,FDISJO,FHISJO,FBEGJO,FGALJO,FPARJO,FXXXJO,FWRDJO
+     &       ,FXTKJO,FXSHJO
+      COMMON /JOBKAR/   TITLJO,TSETJO(LSET),TPROJO(LPRO)
+     1                 ,TKINJO,TGEOJO(LBGE),TRUNJO
+      CHARACTER TRUNJO*60
+      CHARACTER*4 TKINJO,TPROJO,TSETJO,TITLJO*40
+      CHARACTER*2 TGEOJO
+C
+      PARAMETER (LERR=20)
+      COMMON /JOBERR/   ITELJO,KERRJO,NERRJO(LERR)
+      COMMON /JOBCAR/   TACTJO
+      CHARACTER*6 TACTJO
+C
+      REAL PI, TWOPI, PIBY2, PIBY3, PIBY4, PIBY6, PIBY8, PIBY12
+      REAL RADEG, DEGRA
+      REAL CLGHT, ALDEDX
+      INTEGER NBITW, NBYTW, LCHAR
+      PARAMETER (PI=3.141592653589)
+      PARAMETER (RADEG=180./PI, DEGRA=PI/180.)
+      PARAMETER (TWOPI = 2.*PI , PIBY2 = PI/2., PIBY4 = PI/4.)
+      PARAMETER (PIBY6 = PI/6. , PIBY8 = PI/8.)
+      PARAMETER (PIBY12= PI/12., PIBY3 = PI/3.)
+      PARAMETER (CLGHT = 29.9792458, ALDEDX = 0.000307)
+      PARAMETER (NBITW = 32 , NBYTW = NBITW/8 , LCHAR = 4)
+C
+      PARAMETER ( NLIMR = 9 , NLIMZ = 6)
+      COMMON / AGECOM / AGLIMR(NLIMR),AGLIMZ(NLIMZ),IAGFLD,IAGFLI,IAGFLO
+      PARAMETER(JVVOVO=1,JVVOSH=2,JVVOVT=3,JVVONP=4,JVVOPA=5,LVVOLA=9)
+      PARAMETER (LNRG=11)
+      COMMON / FMGEOM / FMZMIN(LNRG),FMZMAX(LNRG),FMRMIN(LNRG)
+     1                  ,FMRMAX(LNRG)
+      COMMON /LCNAMC/ NALTHT, NALTDI, NALWHT, NALWDI, NALTTR, NALWTR,
+     *                NALWHI, NALSHI, NALCWS, NALCAL, NALLAY, NALMTY,
+     *                NALALI, NALSCO, NALSLO, NALWRG, NALCEL, NALCSH,
+     *                NALDRE, NALCCA, NALCPG, NALSHO
+      PARAMETER(JLALID=1,JLALVR=2,JLALDX=4,JLALDR=7,JLALDM=10,
+     +          JLALDT=13,JLALDP=14,JLALLS=15,LLALIA=15)
+      PARAMETER(JLCEID=1,JLCEVR=2,JLCEAM=4,JLCETH=5,JLCESN=8,JLCETN=11,
+     +          JLCEWN=14,JLCECN=17,JLCEGV=18,JLCETR=19,LLCELA=19)
+      PARAMETER(JLSHID=1,JLSHVR=2,JLSHP1=4,JLSHP2=5,JLSHP3=6,JLSHP4=7,
+     +          JLSHP5=8,JLSHP6=9,JLSHP7=10,JLSHP8=11,JLSHD1=12,
+     +          JLSHD2=13,JLSHD3=14,JLSHD4=15,JLSHD5=16,JLSHEC=17,
+     +          JLSHEM=18,JLSHET=19,JLSHSC=20,JLSHSS=21,
+     +          JLSHZ1=22,JLSHZ2=23,JLSHR1=24,JLSHR2=25,LLCSHA=25)
+      PARAMETER(JLCAID=1,JLCAVR=2,JLCACN=4,JLCANS=5,JLCAZD=6,JLCARI=7,
+     +          JLCARO=8,JLCAZL=9,JLCATI=10,JLCATO=11,JLCAGI=12,
+     +          JLCAGO=13,JLCAGB=14,JLCASD=15,JLCASL=16,JLCASP=17,
+     +          JLCASR=18,JLCASM=19,JLCASX=20,JLCABI=21,JLCABS=22,
+     +          JLCABX=23,JLCAB1=24,JLCAH1=25,JLCAM1=26,JLCAB2=27,
+     +          JLCAH2=28,JLCAM2=29,LLCALA=29)
+      PARAMETER(JLDRID=1,JLDRVR=2,JLDRDT=4,JLDRD2=5,JLDRDS=6,JLDRXL=7,
+     +          JLDRXH=11,JLDRYS=15,JLDRY0=19,JLDRDY=20,JLDRY5=21,
+     +          JLDRDW=22,LLDREA=22)
+      PARAMETER(JLLAID=1,JLLAVR=2,JLLALP=4,JLLAPS=5,JLLAPO=6,JLLALM=7)
+      PARAMETER( LLLAYA=7 )
+      PARAMETER(JLMTID=1,JLMTVR=2,JLMTMT=4,JLMTNS=5,JLMTNL=6,JLMTNP=9,
+     +          JLMTNW=10,JLMTN2=11,JLMTNR=12,JLMTNT=13,JLMTFL=14,
+     +          JLMTFR=15,JLMTBL=16,JLMTBR=17,JLMTST=18,JLMTRA=21,
+     +          JLMTDT=24,JLMTCC=25,JLMTBA=26,JLMTBS=27,JLMTRD=28,
+     +          JLMTXD=29,JLMTYD=30,LLMTYA=30)
+      PARAMETER(JLRWID=1,JLRWVR=2,JLRWLR=4,JLRWLC=5,JLRWNC=6,JLRWLA=7,
+     +          JLRWLM=23,LLRWGA=23)
+      PARAMETER(JLSCID=1,JLSCVR=2,JLSCCN=4,JLSCNS=5,JLSCRP=6,JLSCRR=9,
+     +          JLSCSG=12,JLSCLC=13,LLSCOA=13)
+      PARAMETER(JLSLID=1,JLSLVR=2,JLSLSN=4,JLSLXS=5,JLSLRS=8,JLSLXM=11,
+     +          JLSLTM=14,JLSLPM=15,JLSLLM=16,JLSLLS=17,LLSLOA=17)
+      PARAMETER(JLWRID=1,JLWRVR=2,JLWRLW=4,JLWRTW=5,JLWRD2=6,JLWRXL=7,
+     +          JLWRYL=8,JLWRYH=9,JLWRLM=10,LLWRGA=10)
+      PARAMETER(JLCCID=1,JLCCVR=2,JLCCDI=4,LLCCAA=19)
+      PARAMETER(JLCPID=1,JLCPVR=2,JLCPLP=4,JLCPPS=5,JLCPPO=6,LLCPGA=6)
+      PARAMETER (LTPDRO=21,LTTROW=19,LTSROW=12,LTWIRE=200,LTSTYP=3,
+     +           LTSLOT=12,LTCORN=6,LTSECT=LTSLOT*LTSTYP,LTTPAD=4,
+     +           LMXPDR=150,LTTSRW=11)
+      COMMON /TPGEOM/RTPCMN,RTPCMX,ZTPCMX,DRTPMN,DRTPMX,DZTPMX,
+     &               TPFRDZ,TPFRDW,TPAVDZ,TPFOF1,TPFOF2,TPFOF3,
+     &               TPPROW(LTPDRO),TPTROW(LTTROW),NTSECT,NTPROW,
+     &               NTPCRN(LTSTYP),TPCORN(2,LTCORN,LTSTYP),
+     &               TPPHI0(LTSECT),TPCPH0(LTSECT),TPSPH0(LTSECT),
+     &               ITPTYP(LTSECT),ITPSEC(LTSECT),IENDTP(LTSECT)
+C
+      PARAMETER (LPHC=3,LSHC=3,LPECA=1,LPECB=3,LPBAR=2)
+      PARAMETER (LHCNL=23,LHCSP=2,LHCTR=62,LHCRE=3)
+      PARAMETER (LHCNO = 3)
+      PARAMETER (LPHCT = 4)
+      PARAMETER (LPHCBM = 24,LPHCES = 6)
+      COMMON/HCGEGA/ HCSMTH,HCIRTH,HCLSLA,HCTUTH, NHCINL,NHCOUL,NHCTRE,
+     +HCPHOF,NHCTU1(LHCNL), HCLARA(LHCNL),HCLAWI(LHCNL),IHCREG(LHCTR),
+     +HCZMIN(LPHC),HCZMAX(LPHC),HCRMIN(LPHC), HCRMAX(LPHC),HCTIRF(LPHC),
+     +NHCPLA(LPHC), HCWINO(LPHC),HCLTNO(LPHC)
+      PARAMETER (NHTIN = 40 , INCHT = 10 , NAVTD = 4)
+      COMMON/MUNAMC/ NAMUHT,NAMUDI,NAMUDT,NAMUTD,NAMUDG
+     +             , NAMUOG,NAMBAG,NAMBSG,NAMBTG,NAMBBG
+     +             , NAMECG,NAMEBG,NAMETG,NAMESG
+     +             , NAMMAG,NAMMBG,NAMMTG,NAMMSG
+     &             , JDMUST,JDMTHT
+C
+      PARAMETER(JMUOID=1,JMUOVR=2,JMUONS=4,JMUOWI=5,JMUOHE=6,JMUOTU=7,
+     +          JMUOAC=8,JMUOSP=9,JMUODI=10,JMUODE=11,JMUOXS=12,
+     +          JMUOYS=13,JMUOSE=14,JMUOET=15,JMUOEX=16,JMUOEY=17,
+     +          JMUOX1=18,JMUOX2=19,JMUOX3=20,JMUOX4=21,JMUOY1=22,
+     +          JMUOY2=23,JMUOY3=24,JMUOY4=25,LMUOGA=25)
+      PARAMETER(JMBAID=1,JMBAVR=2,JMBASU=4,JMBANB=5,JMBATH=6,JMBALE=7,
+     +          JMBAR1=8,JMBAR2=9,JMBAPD=10,JMBAY1=11,JMBAY2=12,
+     +          LMBAGA=12)
+      PARAMETER(JMBSID=1,JMBSVR=2,JMBSNO=4,JMBSVO=5,JMBSZC=6,JMBSRC=7,
+     +          JMBSDE=8,JMBST1=9,JMBST2=10,JMBSTA=11,JMBSNA=12,
+     +          JMBSK1=13,JMBSK2=14,LMBSGA=14)
+      PARAMETER(JMBTID=1,JMBTVR=2,JMBTNA=4,JMBTZB=5,JMBTRB=6,JMBTY1=7,
+     +          JMBTY2=8,JMBTNX=9,JMBTZT=10,JMBTRT=11,JMBTW1=12,
+     +          LMBTGA=12)
+      PARAMETER(JMBBID=1,JMBBVR=2,JMBBB1=4,JMBBL1=5,JMBBU1=6,JMBBB2=7,
+     +          JMBBL2=8,JMBBU2=9,JMBBB3=10,JMBBL3=11,JMBBU3=12,
+     +          JMBBB4=13,JMBBL4=14,JMBBU4=15,JMBBP3=16,JMBBP4=17,
+     +          LMBBGA=17)
+      PARAMETER(JMECID=1,JMECVR=2,JMECSU=4,JMECNS=5,JMECZI=6,JMECZE=7,
+     +          JMECPD=8,JMECTH=9,JMECDZ=10,JMECXO=11,LMECGA=11)
+      PARAMETER(JMEBID=1,JMEBVR=2,JMEBB1=4,JMEBL1=5,JMEBU1=6,JMEBB2=7,
+     +          JMEBL2=8,JMEBU2=9,JMEBB3=10,JMEBL3=11,JMEBU3=12,
+     +          JMEBB4=13,JMEBL4=14,JMEBU4=15,LMEBGA=15)
+      PARAMETER(JMETID=1,JMETVR=2,JMETNA=4,JMETXB=5,JMETYB=6,JMETX1=7,
+     +          JMETX2=8,JMETYS=9,JMETPI=10,JMETNX=11,JMETNY=12,
+     +          JMETNP=13,JMETN2=14,JMETN1=15,JMETLE=16,LMETGA=40)
+      PARAMETER(JMESID=1,JMESVR=2,JMESNO=4,JMESXC=5,JMESYC=6,JMESZC=7,
+     +          JMESTA=8,JMESNA=9,JMESK1=10,JMESK2=11,LMESGA=11)
+      PARAMETER(JMMAID=1,JMMAVR=2,JMMASU=4,JMMANS=5,JMMAZ0=6,JMMAPD=7,
+     +          JMMATH=8,JMMAPI=9,JMMADS=10,JMMAZ1=11,JMMATB=12,
+     +          LMMAGA=12)
+      PARAMETER(JMMBID=1,JMMBVR=2,JMMBNO=4,JMMBB1=5,JMMBO1=6,JMMBB2=7,
+     +          JMMBO2=8,JMMBB3=9,JMMBO3=10,JMMBB4=11,JMMBO4=12,
+     +          JMMBB5=13,JMMBO5=14,JMMBL1=15,JMMBU1=16,JMMBL2=17,
+     +          JMMBU2=18,JMMBL3=19,JMMBU3=20,JMMBL4=21,JMMBU4=22,
+     +          JMMBL5=23,JMMBU5=24,JMMBL6=25,JMMBU6=26,JMMBL7=27,
+     +          JMMBU7=28,JMMBL8=29,JMMBU8=30,JMMBL9=31,JMMBU9=32,
+     +          JMMBL0=33,JMMBU0=34,LMMBGA=34)
+      PARAMETER(JMMTID=1,JMMTVR=2,JMMTNA=4,JMMTZB=5,JMMTRB=6,JMMTZT=7,
+     +          JMMTRT=8,JMMTNX=9,LMMTGA=9)
+      PARAMETER(JMMSID=1,JMMSVR=2,JMMSNO=4,JMMSL1=5,JMMSL2=6,JMMSR1=7,
+     +          JMMSR2=8,JMMSTL=9,JMMSRL=10,JMMSNY=11,JMMSX1=12,
+     +          JMMSX2=13,JMMSDZ=14,JMMSZC=15,JMMSRC=16,JMMSDE=17,
+     +          JMMSNA=18,JMMSTA=19,JMMSOS=20,JMMSVO=21,JMMSK1=22,
+     +          JMMSK2=23,LMMSGA=23)
+      EXTERNAL NAMIND
+      DIMENSION PLAN(4,8),CORN(3,12)
+      CHARACTER*16 VOLN
+      DIMENSION VOLN(2)
+C
+      INTEGER ALGTDB, GTSTUP
+      DATA VOLN       /'B external      ','E external      '/
+C - # of words/row in bank with index ID
+      LCOLS(ID) = IW(ID+1)
+C - # of rows in bank with index ID
+      LROWS(ID) = IW(ID+2)
+C - index of next row in the bank with index ID
+      KNEXT(ID) = ID + LMHLEN + IW(ID+1)*IW(ID+2)
+C - index of row # NRBOS in the bank with index ID
+      KROW(ID,NRBOS) = ID + LMHLEN + IW(ID+1)*(NRBOS-1)
+C - # of free words in the bank with index ID
+      LFRWRD(ID) = ID + IW(ID) - KNEXT(ID)
+C - # of free rows in the bank with index ID
+      LFRROW(ID) = LFRWRD(ID) / LCOLS(ID)
+C - Lth integer element of the NRBOSth row of the bank with index ID
+      ITABL(ID,NRBOS,L) = IW(ID+LMHLEN+(NRBOS-1)*IW(ID+1)+L)
+C - Lth real element of the NRBOSth row of the bank with index ID
+      RTABL(ID,NRBOS,L) = RW(ID+LMHLEN+(NRBOS-1)*IW(ID+1)+L)
+C
+C ----------------------------------------------------------------------
+C
+C - Get banks for passive components
+C
+      IRET = ALGTDB (LRDBIO,'COG1QUG1PMG1',IRUNJO)
+      IF (IRET .EQ. 0) THEN
+         CALL ALTELL ('AGCHCK: missing bank ',0,'STOP')
+      ENDIF
+C
+      DO 1 I=1,LGEO
+ 1      IGEOJO(I)=0
+      DO 2 I=1,NLIMZ
+ 2      AGLIMZ(I)=0.
+      DO 3 I=1,NLIMR
+ 3      AGLIMR(I)=0.
+C
+C   Check if FIDU card  read in
+C
+      IF (ALRMAX.LE.0. .OR. ALZMAX.LE.0.) THEN
+         CALL ALTELL ('AGCHCK: wrong or missing FIDU card...STOP....'
+     1   ,0,'STOP')
+      ENDIF
+C
+C  Check Beam Pipe definition
+C
+      IBPST = GTSTUP ('BP',1)
+      IRET = ALGTDB (LRDBIO,'BPG1',IBPST)
+      KBP  = IW(NAMIND('BPG1'))
+      IF (KBP.EQ.0) THEN
+         CALL ALTELL ('AGCHCK: BPG1 bank is missing ',0,'STOP')
+      ENDIF
+      LBRO = MIN(14,LROWS (KBP))
+      IF (IBPST.GE.3) LBRO = MIN(9,LROWS(KBP))
+C
+C   Check against fiducial volume
+C
+      ZMAX=0.
+      RMAX=0.
+      DO 5 I=1,LBRO
+        RMAX=MAX(RMAX,RTABL(KBP,I,8))
+        RMAX=MAX(RMAX,RTABL(KBP,I,9))
+        ZMAX=MAX(ZMAX,RTABL(KBP,I,10))
+   5  CONTINUE
+      AGLIMR(1)=RMAX
+      ZMAX=MIN(ZMAX,ALZMAX)
+      AGLIMZ(2)=ZMAX
+      AGLIMZ(5)=ZMAX
+      IF (RMAX.GT.ALRMAX) THEN
+         CALL ALTELL ('AGCHCK: inconsistent BPIP and FIDU radius ',0,
+     &                'STOP')
+      ENDIF
+      AGLIMR(2)=RMAX
+      AGLIMR(3)=RMAX
+      IF ( IBPST.GE.2) THEN
+C     BPIP 91, 92, .....
+         ZMAX=0.
+         RMAX=0.
+         DO 6 I=LBRO+1,LROWS(KBP)
+           RMAX=MAX(RMAX,RTABL(KBP,I,8))
+           RMAX=MAX(RMAX,RTABL(KBP,I,9))
+           ZMAX=MAX(ZMAX,RTABL(KBP,I,10))
+6        CONTINUE
+         AGLIMR(9)=RMAX
+         ZMAX=MIN(ZMAX,ALZMAX)
+         AGLIMZ(2)=ZMAX
+         IF (RMAX.GT.ALRMAX) THEN
+            CALL ALTELL ('AGCHCK: inconsistent BPIP and FIDU radius ',0,
+     &                   'STOP')
+         ENDIF
+      ENDIF
+      IGEOJO(10) = IBPST
+C
+C     If detector geometry defined ,then
+C    Check detector against fiducial volume
+C
+C    Vertex detector
+C
+      IVSTP = GTSTUP ('VD',1)
+      IRET = ALGTDB (LRDBIO,'VVOL',IVSTP)
+      JVVOL = IW(NAMIND('VVOL'))
+      IF (JVVOL.EQ.0) THEN
+         CALL ALTELL ('AGCHCK : VVOL bank is missing ',0,'STOP')
+      ELSE
+         NAME = INTCHA('VDET')
+         DO 10 IROW = 1,LROWS(JVVOL)
+            IF (NAME .EQ. ITABL(JVVOL,IROW,JVVOVO)) GOTO 12
+ 10      CONTINUE
+         CALL ALTELL ('AGCHCK: VDET volume missing from VVOL',0,
+     &                   'STOP')
+ 12      VDRALO = RTABL (JVVOL,IROW,JVVOPA)
+         VDRAHI = RTABL (JVVOL,IROW,JVVOPA+1)
+         VDZSIZ = RTABL (JVVOL,IROW,JVVOPA+2)
+      ENDIF
+C
+      IF (VDRALO.LT.AGLIMR(1)) THEN
+         CALL ALTELL ('AGCHCK: VDET hits beam pipe',0,'STOP')
+      ENDIF
+      IF (VDRAHI.GT.ALRMAX .OR. VDZSIZ.GT.ALZMAX) THEN
+         CALL ALTELL ('AGCHCK: VDET dim. out-of-range',7,'RETURN')
+         GOTO 11
+      ENDIF
+      AGLIMR(2) = AMAX1(AGLIMR(2),VDRAHI)
+      AGLIMZ(1) = AMAX1(AGLIMZ(1),VDZSIZ)
+      IGEOJO(1) = IVSTP
+      AGLIMR(3)=AGLIMR(2)
+      AGLIMR(5)=AGLIMR(3)
+  11  CONTINUE
+C
+C   ITC detector
+C
+      IISTP = GTSTUP ('IT',1)
+      KIT  = IW(NAMIND('IGEO'))
+      DO 20 I=1,LROWS(KIT)
+         IF (RTABL(KIT,I,8).LE.0.) GO TO 21
+         IF (RTABL(KIT,I,9).GT.ALRMAX) GO TO 21
+         IF (RTABL(KIT,I,11).GT.ALZMAX) GO TO 21
+         AGLIMR(3)=MAX(RTABL(KIT,I,9),AGLIMR(3))
+         AGLIMZ(1)=MAX(RTABL(KIT,I,11),AGLIMZ(1))
+  20  CONTINUE
+      IGEOJO(2)=IISTP
+      AGLIMR(5)=AGLIMR(3)
+      AGLIMZ(6)=RTABL(KIT,4,11)
+  21  CONTINUE
+C
+C   TPC detector
+C
+      IF (RTPCMN-DRTPMN.LE.0.) GO TO 31
+      IF (RTPCMN-DRTPMN.GT.ALRMAX) GO TO 31
+      IF (RTPCMX+DRTPMX.GT.ALRMAX) GO TO 31
+      IF (ZTPCMX+DZTPMX.GT.ALZMAX) GO TO 31
+      AGLIMR(3)=MAX (RTPCMN-DRTPMN,AGLIMR(3))
+      AGLIMZ(1)=MAX (ZTPCMX+DZTPMX,AGLIMZ(1))
+      AGLIMR(5)=MAX (RTPCMX+DRTPMX,AGLIMR(3))
+      IGEOJO(3)=1
+  31  CONTINUE
+C
+C ECAL detector
+C
+C          End cap
+         CALL EVOLPL(VOLN(2),1,0,LEP,PLAN)
+         CALL EVOLCR(VOLN(2),LEP,PLAN,LEC,CORN)
+         IF (CORN(3,2).LE.0.) GO TO 41
+         IF (CORN(3,2).GT.ALZMAX ) GO TO 41
+         IF (CORN(3,1).GT.ALZMAX ) GO TO 41
+         AGLIMZ(2)=MAX (AGLIMZ(2),CORN(3,1) )
+         IF (ABS(CORN(2,1)).GT.ALRMAX ) GO TO 41
+         IF (ABS(CORN(2,5)).GT.ALRMAX ) GO TO 41
+         IF (ABS(CORN(2,9)).GT.ALRMAX ) GO TO 41
+C           Barrel
+         CALL EVOLPL(VOLN(1),2,0,LEP,PLAN)
+         CALL EVOLCR(VOLN(1),LEP,PLAN,LEC,CORN)
+         AGLIMZ(1)=MAX (AGLIMZ(1),ABS(CORN(3,1)))
+         AGLIMR(6)=MAX (AGLIMR(5),ABS(CORN(2,5)))
+         AGLIMR(5)=MAX (AGLIMR(5),ABS(CORN(2,1)))
+         IGEOJO(4)=1
+  41  CONTINUE
+C
+C  LCAL detector
+C
+C   Get geometry bank pointers
+C
+      ILSTP = GTSTUP ('LC',1)
+      KLCAL = IW(NALCAL)
+      KLMTY = IW(NALMTY)
+      KLSCO = IW(NALSCO)
+C
+      NSUBC = ITABL(KLCAL,1,JLCANS)
+      DO 50 I=1,NSUBC
+         ABSZ = ABS(RTABL(KLSCO,I,JLSCRP+2))
+         IF (ABSZ.LE.0.) GO TO 51
+         IF (ABSZ.GT.ALZMAX ) GO TO 51
+         CENZ = ABSZ+RTABL(KLCAL,1,JLCAZL)
+         IF (CENZ.GT.ALZMAX ) GO TO 51
+         AGLIMZ(2)=MAX (AGLIMZ(2),CENZ)
+  50  CONTINUE
+      IF (RTABL(KLCAL,1,JLCARI).GT.ALRMAX ) GO TO 51
+      IF (RTABL(KLCAL,1,JLCARO).GT.ALRMAX ) GO TO 51
+      AGLIMR(6)=MAX(AGLIMR(6),RTABL(KLCAL,1,JLCARI))
+      AGLIMR(6)=MAX(AGLIMR(6),RTABL(KLCAL,1,JLCARO))
+      IGEOJO(5)=ILSTP
+  51  CONTINUE
+C
+C  SATR detector
+C
+      ISSTP = GTSTUP ('PM',1)
+      IF ( ISSTP.NE.0) GO TO 61
+      KLA=IW(NAMIND('LALI'))
+      KLS=IW(NAMIND('LSLO'))
+      KSA=IW(NAMIND('SATR'))
+      IF (KSA.GT.0 .AND. KLA.GT.0 .AND. KLS.GT.0) THEN
+         KSB=KSA+LMHLEN
+         DO 60 I=1,4
+            Z = RTABL(KLS,I,7)+RTABL(KLA,I,6)
+            IF (ABS(Z).GT.ALZMAX ) GO TO 61
+            AGLIMZ(2)=MAX(AGLIMZ(2),ABS(Z))
+  60     CONTINUE
+         IF (RW(KSB+9).GT.ALRMAX ) GO TO 61
+         IF (RW(KSB+10).GT.ALRMAX ) GO TO 61
+            AGLIMR(6)=MAX(AGLIMR(6),RW(KSB+10))
+         IGEOJO(6)=ISSTP+1
+      ENDIF
+  61  CONTINUE
+      IF ( ISSTP.GT.0) IGEOJO(6)=ISSTP+1
+C
+C  SCAL detector
+C
+      ISITP = GTSTUP ('SI',1)
+      IF ( ISITP.LE.0) GO TO 62
+      IGEOJO(9)=ISITP
+  62  CONTINUE
+C
+C    HCAL   detector
+C
+      DO 70 I=2,3
+         IF (HCRMIN(I).LE.0.) GO TO 71
+         IF (HCRMIN(I).GT.ALRMAX ) GO TO 71
+         IF (HCRMAX(I).GT.ALRMAX ) GO TO 71
+         IF (HCZMIN(I).GT.ALZMAX ) GO TO 71
+         IF (HCZMAX(I).GT.ALZMAX ) GO TO 71
+         AGLIMR(4)=MAX (AGLIMR(4),HCRMIN(I))
+         AGLIMZ(4)=MAX(AGLIMZ(2),HCZMAX(I))
+  70  CONTINUE
+         AGLIMZ(2)=MAX (AGLIMZ(2),HCZMIN(2))
+         AGLIMR(6)=MAX (AGLIMR(6),HCRMAX(2))
+C
+      IF (HCRMIN(1).LE.0.) GO TO 71
+      IF (HCRMIN(1).GT.ALRMAX) GO TO 71
+      IF (HCRMAX(1).GT.ALRMAX) GO TO 71
+      IF (HCZMAX(1) .GT.ALZMAX) GO TO 71
+      AGLIMR(7)=MAX (HCRMIN(1),AGLIMR(7))
+      AGLIMZ(3)=MAX (HCZMAX(1),AGLIMZ(3))
+      AGLIMR(8)=MAX (HCRMAX(1)/COS(PI/12.),AGLIMR(7))
+      IGEOJO(7)=1
+  71  CONTINUE
+C
+C          MUON detector
+C
+C!     INDICES OF MUON-BANKS FOR USE WITHIN ROUTINES
+      JMBAG = IW(NAMBAG)
+      JMUOG = IW(NAMUOG)
+      JMBBG = IW(NAMBBG)
+      JMBSG = IW(NAMBSG)
+      JMBTG = IW(NAMBTG)
+C
+      JMECG = IW(NAMECG)
+      JMEBG = IW(NAMEBG)
+      JMETG = IW(NAMETG)
+      JMESG = IW(NAMESG)
+C
+      JMMAG = IW(NAMMAG)
+      JMMBG = IW(NAMMBG)
+      JMMTG = IW(NAMMTG)
+      JMMSG = IW(NAMMSG)
+C
+C
+C       Check barrel modules
+C
+      IF( RTABL(JMBAG,1,JMBALE)*0.5 .GT. ALZMAX )GOTO 89
+      RITNG = RTABL(JMBAG,1,JMBAR1)-0.5*RTABL(JMBAG,1,JMBATH)
+      ROTNG = RTABL(JMBAG,1,JMBAR2)-0.5*RTABL(JMBAG,1,JMBATH)
+      IF(RITNG .GT. ALRMAX )GOTO 89
+      IF(ROTNG .GT. ALRMAX )GOTO 89
+C
+C       Check middle angle modules
+C
+      RMIN=ALRMAX
+      ZOUT = RTABL(JMMSG,13,JMMSZC) + 0.5*RTABL(JMMTG,6,JMMTZB)
+      IF( ZOUT .GT. ALZMAX )GOTO 89
+      NSLOT = ITABL(JMMAG,1,JMMANS)
+      DO 81 I=1,NSLOT
+         IF( RTABL(JMMSG,I,JMMSRC) .GT. ALRMAX )GOTO 89
+         RMIN=MIN(RMIN,RTABL(JMMSG,I,JMMSRC))
+   81 CONTINUE
+      AGLIMR(8)=MAX(RMIN,AGLIMR(8))
+C
+C       Check endcap modules
+C
+      THCK = RTABL(JMECG,1,JMECTH)
+      ZOUT = RTABL(JMESG,5,JMESZC) - RTABL(JMECG,1,JMECZE) + THCK
+      IF( ZOUT .GT. ALZMAX )GOTO 89
+      ZIN = RTABL(JMESG,1,JMESZC) - RTABL(JMECG,1,JMECZI)
+      AGLIMZ(4)=MAX(AGLIMZ(4),ZIN)
+C
+      IGEOJO(8) = 1
+   89 CONTINUE
+C
+C COIL detector
+C
+      KCO  = IW(NAMIND('COG1'))
+      IF (RTABL(KCO,1,8).GT.ALRMAX) GO TO 91
+      IF (RTABL(KCO,1,8)+RTABL(KCO,1,9).GT.ALRMAX) GO TO 91
+      IF (RTABL(KCO,1,10)+RTABL(KCO,1,11).GT.ALZMAX) GO TO 91
+      AGLIMR(6)=MAX(RTABL(KCO,1,8),AGLIMR(6))
+      AGLIMR(7)=MAX(RTABL(KCO,1,8)+RTABL(KCO,1,9),AGLIMR(7))
+      AGLIMZ(3)=MAX(RTABL(KCO,1,10)+RTABL(KCO,1,11),AGLIMZ(3))
+      IGEOJO(13)=1
+  91  CONTINUE
+C
+C QUUA detector
+C
+      KQU  = IW(NAMIND('QUG1'))
+      LQRO = LROWS (KQU)
+      DO 101 L=1,LQRO
+        IF(RTABL(KQU,L,8).LE.0. ) GO TO 111
+        IF (RTABL(KQU,L,9).GT.ALRMAX) GO TO 111
+        IF (RTABL(KQU,L,10).GT.ALZMAX) GO TO 111
+        AGLIMR(4)=MAX(AGLIMR(4),RTABL(KQU,L,9))
+ 101  CONTINUE
+      IGEOJO(11)=1
+ 111  CONTINUE
+C
+C Set up passive material ( can be cancelled by a GEOM 'PMAT' 0 card)
+C
+      IGEOJO(12) = 1
+C   Check now if detector was not suppressed by GEOM 0  card
+      DO 200 I=1,LGEO
+      IF ( I.EQ.6) GO TO 200
+      IF (LVELJO(I).EQ.0) IGEOJO(I)=0
+ 200  CONTINUE
+C
+C   Load PMG1 bank if necesary
+C
+      KPM = IW(NAMIND('PMG1'))
+      IF ( KPM.EQ.0) IGEOJO(12)=0
+C
+C   fill /FMGEOM/ common to be used in connection with mag field
+C
+      FMRMIN(1)=0.
+      FMRMAX(1)=ABS(CORN(2,1))
+      FMZMIN(1)=0.
+      FMZMAX(1)=ZTPCMX+DZTPMX
+      FMRMIN(2)=RTABL(KCO,2,8)
+      FMRMAX(2)=HCRMIN(1)
+      FMZMIN(2)=0.
+      FMZMAX(2)=HCZMIN(2)
+      FMRMIN(3)=HCRMAX(2)
+      FMRMAX(3)=HCRMIN(1)
+      FMZMIN(3)=HCZMIN(2)
+      FMZMAX(3)=HCZMAX(1)
+      FMRMIN(4)=HCRMIN(1)
+      FMRMAX(4)=FMRMIN(4)+86.9
+      FMZMIN(4)=0.
+      FMZMAX(4)=HCZMAX(1)
+      FMRMIN(5)=FMRMAX(4)
+      FMRMAX(5)=HCRMAX(1)
+      FMZMIN(5)=0.
+      FMZMAX(5)=HCZMAX(1)
+      FMRMIN(6)=HCRMIN(2)
+      FMRMAX(6)=FMRMIN(3)
+      FMZMIN(6)=HCZMIN(2)
+      FMZMAX(6)=HCZMAX(1)
+      FMRMIN(7)=HCRMIN(3)
+      FMRMAX(7)=HCRMAX(3)
+      FMZMIN(7)=FMZMAX(6)
+      FMZMAX(7)=FMZMIN(7)+55.4
+      FMRMIN(8)=HCRMIN(3)
+      FMRMAX(8)=FMRMAX(7)
+      FMZMIN(8)=FMZMAX(7)
+      FMZMAX(8)=HCZMAX(3)
+      FMRMIN(9)=0.
+      FMRMAX(9)=HCRMIN(2)
+      FMZMIN(9)=HCZMIN(2)
+      FMZMAX(9)=HCZMAX(3)
+      FMRMIN(10)=FMRMAX(1)
+      FMRMAX(10)=FMRMIN(2)
+      FMZMIN(10)=0.
+      FMZMAX(10)=FMZMAX(1)
+      FMRMIN(11)=0.
+      FMRMAX(11)=FMRMAX(10)
+      FMZMIN(11)=FMZMAX(1)
+      FMZMAX(11)=HCZMIN(2)
+C - debug
+      IF(IPRIJO(19).EQ.1) THEN
+         WRITE (LOUTIO,805) ALRMAX,ALZMAX,IGEOJO,AGLIMR,AGLIMZ,
+     &   (I,I=1,LNRG),(FMRMIN(I),I=1,LNRG),(FMRMAX(I),I=1,LNRG),
+     &   (FMZMIN(I),I=1,LNRG), (FMZMAX(I),I=1,LNRG)
+      ENDIF
+C - end
+ 805  FORMAT(/1X,'+++ AGCHCK +++                ++++++++++++++++++',
+     & ' GEOMETRY SET UP ++++++++++++++++++++++++++++++++',/,1X,'Accordi
+     &ng to the fiducial volume defined (R,Z) CM',9X,2F10.4,/,1X,' and
+     &the geometry found, the following detectors will be set up with ',
+     &  'the given setup code ( 0 = OFF)'/
+     &  '    VD   IT   TP   EC   LC   SA   HC   MU   SI   BP   QU  ' ,
+     &  'PM   CO'/ 1X,13I5//
+     &  ' artificial boundaries may be set up as (R(9) , Z(5) )'/
+     &  ' R(1:9) ',3X,9F8.3/' Z(1:6) ',3X,6F8.3 //
+     &  ' Limits for Field Regions will be set up as :' /
+     &  ' Region # ',11I10/' Rmin     ',11F10.2/' Rmax     ',11F10.2/
+     &  ' Zmin     ',11F10.2/' Zmax     ',11F10.2/
+     &  ' +++++++++++++++++++++++++++++++++++++++++++++++++++++++++',
+     &  ' ++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+      END

@@ -1,0 +1,152 @@
+      SUBROUTINE SIBKCL(irun,kcl,iflag)
+C----------------------------------------------------------------------
+C!  - Checks for quality flag of cluster
+C!
+C!
+C!    Author:     B. Bloch-Devaux   June 1998
+C!                modified April 99 to extend to more backgrounds types
+C!                modified March 2K to apply "scraping cut" only when
+C!                tungsten mask is in ( from 96 onwards)
+C!                code ported to Alephlib rather than Alpha
+C!
+C!    Input:      - irun = run number
+C!                - kcl = cluster number in SCLS
+C!                _ banks 'SCLS' from Sical clusters
+C!                  from data base: 'SNOI' to setup background cuts
+C!    Output:
+C!                - iflag quality flag 0 = OK,1= oscillating,2= beam loss
+C!                                     3=backwards,4=scraping,5=offmom
+C?
+C!======================================================================
+#ifndef DOC
+      SAVE
+#include "alcons.h"
+#include "bcs.h"
+#include "sclsjj.h"
+#include "snoijj.h"
+      DIMENSION SILCUT(3)
+      DIMENSION SIBCUT(3),SIKCUT(3),SISCUT(3),SIOCUT(3)
+      DIMENSION efrac(12),npad(2)
+      REAL XYZ(3),DXYZ(3)
+      integer ALGTDB
+      LOGICAL FMASK
+      PARAMETER( IRUN96 = 41000)
+C==================================================================
+      DATA IRUNO/0/
+      DATA SILCUT/.999,5.,16./
+      DATA SIBCUT/ 1.7,400.,0./, SIKCUT/.25,.25,0./
+      DATA SISCUT/ 0.033,0.033,0./, SIOCUT/0. ,0. ,0./
+#include "bmacro.h"
+C----------------------------------------------------------------------
+      IF ( IRUN.NE.IRUNO) THEN
+         LBASE = JUNIDB(idum)
+         IND = ALGTDB(LBASE,'SNOI',IRUN)
+         NASCLS = namind('SCLS')
+         NASNOI = namind('SNOI')
+
+         KSNOI = IW(NASNOI)
+         nrows = LROWS(KSNOI)
+         IF ( KSNOI.GT.0) THEN
+            DO ICUT = 1,3
+            SILCUT(ICUT) = RTABL(KSNOI,1,JSNOEF+ICUT-1)
+            IF (NROWS.GT.1)SIBCUT(ICUT) = RTABL(KSNOI,2,JSNOEF+ICUT-1)
+            IF (NROWS.GT.2)SIKCUT(ICUT) = RTABL(KSNOI,3,JSNOEF+ICUT-1)
+            IF (NROWS.GT.3)SISCUT(ICUT) = RTABL(KSNOI,4,JSNOEF+ICUT-1)
+            IF (NROWS.GT.4)SIOCUT(ICUT) = RTABL(KSNOI,5,JSNOEF+ICUT-1)
+            enddo
+         ENDIF
+         FMASK = IRUN .ge. IRUN96
+         icut3 = int(SILCUT(3))
+         call getlep(IRUN,IFOUN,IFILL,NV,ELEPB,XYZ,DXYZ)
+         ebeam = 0.5* ELEPB
+         IF(ind.le.0.and.iruno.le.0) THEN
+            WRITE (IW(6),1000) irun,(SILCUT(LI),LI=1,3), ebeam,
+     $      (SIBCUT(LI),LI=1,3),
+     $      (SIKCUT(LI),LI=1,3),(SISCUT(LI),LI=1,3),(SIOCUT(LI),LI=1,3)
+         ENDIF
+         IRUNO= IRUN
+      ENDIF
+      iflag = 0
+C loop on clusters found to identify possible amplex oscillations
+      JSCLS = IW(NASCLS)
+      IF (JSCLS .LE. 0) GO TO 999
+      NCLU = LROWS(JSCLS)
+      IF ( NCLU.LE.0) GO TO 999
+      ICL = KCL
+      EN = RTABL(JSCLS,ICL,JSCLEC)
+      DR = RTABL(JSCLS,ICL,JSCLWR)
+      ZC = RTABL(JSCLS,ICL,JSCLZC)
+      TE = RTABL(JSCLS,ICL,JSCLCT)
+      if ( zc.lt.0.) TE = pi - TE
+      CALL SIFSUM(ICL,EFRAC,NPAD)
+      efr =0.
+      ipn = 0
+      do ii= 1,12
+         efrac(ii) = efrac(ii)/en
+         if ( efrac(ii).ge.efr) then
+            efr = efrac(ii)
+            ipn = ii
+         endif
+      enddo
+C   oscillation : energy fraction in one plane > min ,Radial variance >min,
+C   N>1 phi sector (all R's)
+      if((efrac(ipn).ge.SILCUT(1)).and.(dr.ge.SILCUT(2))
+     &    .and.(mod(npad(1),icut3).eq.0)) THEN
+               iflag = 1
+C   Beam loss : energy > frac * beam energy, npad > min
+      else if((en.gt.SIBCUT(1)*EBEAM).and.
+     &            (npad(1).GE.SIBCUT(2))) then
+               iflag = 2
+C   Backwards : fraction in first 3 planes < max1,
+C               fraction in last 3 planes > min1
+      else if((efrac(1)+efrac(2)+efrac(3).lt.SIKCUT(1)).and.
+     &          (efrac(10)+efrac(11)+efrac(12).gt.SIKCUT(2))) then
+               iflag = 3
+C   Scraping particles : Theta smaller than TminA (B)
+      else if ((FMASK).and.
+     &          (((TE.LT.SISCUT(1)).and.(zc.gt.0.)).OR.
+     &          ((TE.LT.SISCUT(2)).and.(zc.lt.0.)))) then
+               iflag = 4
+      else
+C   Off momentum : not yet implemented
+      endif
+C
+C----------------------------------------------------------------------
+      GO TO 999
+ 998  continue
+C
+  999 CONTINUE
+      RETURN
+ 1000 FORMAT (
+     $' ++++++++++++++++++++++++++++++++++++++++++++++++++++++++',/,
+     $' +   SICAL CUTS FOR IDENTIFICATION in RUN ',I6,  '        +',/,
+     $' ++++++++++++++++++++++++++++++++++++++++++++++++++++++++',/,
+     $' +   SICAL CUTS FOR Amplex oscillation identification   +',/,
+     $' +  Min energy fraction in one z plane  : ',F6.3,'        +',/,
+     $' +  Minimum Radial variance             : ',F6.3,'        +',/,
+     $' +  Typical number of pads              : ',F6.1,'        +',/,
+     $' ++++++++++++++++++++++++++++++++++++++++++++++++++++++++',/,
+     $' +   SICAL CUTS FOR Beam loss identification            +',/,
+     $' +  Beam energy for this run            : ',F6.2,'        +',/,
+     $' +  Min cluster energy /Beam energy     : ',F6.3,'        +',/,
+     $' +  Minimum number of pads              : ',F6.1,'        +',/,
+     $' +  not used                            : ',F6.2,'        +',/,
+     $' ++++++++++++++++++++++++++++++++++++++++++++++++++++++++',/,
+     $' +   SICAL CUTS FOR Backwards identification            +',/,
+     $' +  Max energy fraction in first 3 planes  : ',F6.3,'     +',/,
+     $' +  Min energy fraction in last 3 planes   : ',F6.3,'     +',/,
+     $' +  not used                               : ',F6.2,'     +',/,
+     $' ++++++++++++++++++++++++++++++++++++++++++++++++++++++++',/,
+     $' +   SICAL CUTS FOR Mask Scraping identification        +',/,
+     $' +  applied only if Mask in In , i.e. from 1996 onwards +',/,
+     $' +  Max polar angle on side A           : ',F6.4,'        +',/,
+     $' +  Max polar angle on side B           : ',F6.4,'        +',/,
+     $' +  not used                            : ',F6.4,'        +',/,
+     $' ++++++++++++++++++++++++++++++++++++++++++++++++++++++++',/,
+     $' +   SICAL CUTS FOR Off momemntum identification        +',/,
+     $' +  not yet used                           : ',F6.2,'     +',/,
+     $' +  not yet used                           : ',F6.2,'     +',/,
+     $' +  not yet used                           : ',F6.2,'     +',/,
+     $' ++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+      END
+#endif

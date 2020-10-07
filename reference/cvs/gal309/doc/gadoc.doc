@@ -1,0 +1,98 @@
+*DK gadoc
+#if defined(DOC)
+.chapter INTRODUCTION
+
+  - The version is maintained on VAX8600 and on IBM/MVS under HISTORIAN
+
+  - To extract the documentation it is enough to run an Historian job
+    to get a full compile file with the flag DOC on.
+    on the VAX the procedure is as follow:
+      $ HISTOR P=galeph.HLB,C=galeph.doc,F,D
+        get the usual blabla from HISTORIAN , then type :
+      *DEFINE,DOC
+       ctrl Z
+    The file galeph.doc will contain the header of each subroutines.
+    To select a part of the documentation do the following:
+       $ HISTOR P=galeph.HLB,C=galeph.DOC,Q,D,K
+       *DF DOC
+       *E FILDOC.CONTACT  get general doc., steering doc, geom. doc
+                          and list of contact people.
+        ctrl Z
+      In this example you will suppress the description of individual
+      subroutines.
+
+  - Following rules have been applied to the writing:
+
+     1. - The HLB is organized in SETS. All routines in a SET start
+          with 2-letter code :
+          following groups are defined:
+            - group ASxxxx      (Aleph Simulation)
+          contains all steering routines, I/O routines. All subroutine
+          names start with AS .
+            - group AGxxxx       (Aleph Geometry using Geant3)
+          contains all geometry routines: deck names are made of AGzz,
+          zz stands for the 2 letter-code of a detector.
+            - group Cxxxxx       (CAlorimetry routines)
+            - group Exxxxx       (ECal routines)
+            - group Gxxxxx       (replacement of Geant routines,
+                                  and GUser routines)
+            - group Hxxxxx       (HCal routines)
+            - group Ixxxxx       (ITC  routines)
+            - group Lxxxxx       (LCal routines)
+            - group Mxxxxx       (MUon chamber routines)
+            - group Sxxxxx       (SiCAL routines)
+            - group Txxxxx       (TPC routines)
+            - group Vxxxxx       (VDet routines)
+            - group Xxxxxx       (Xlti level Trigger routines)
+
+     2. - The first comdeck is VERSION which contains the version #
+          and the date of the current version. The next comdeck is NEWS
+          which contains last news and modifications.
+
+     3. - A set starts with a *CD setNEWS and ends with a *CD setEND.
+          the *CD setNEWS contains a description of the set and a
+          description of the modifications made for a new version.
+
+     3. - Documentation is done as follow:
+           - variables in COMMON are described in the COMDECK itself
+             behind an Historian card *IF DOC
+           - There is a *SET DOC which contains *DECK xxDOC with the
+             documentation for this set behind a card *IF DOC
+           - each subroutine starts with a header of the type:
+             SUBROUTINE ASCEVE
+        ---------------------------------------------------------------
+         - F.RANJARD - 850328
+         ! Close the event:
+           do analysis
+           save event on tape
+         - called by    ASPRUN                      from this .HLB
+         - calls        ASANAL, AUCGSI, ASWEVE      from this .HLB
+                        RDMOUT                      from KERNLIB
+        *IF .NOT.DOC
+             then the code follows the card *IF .NOT.DOC
+
+     4. - all GEANT3 variables in a COMMON have a 'G' as 1st letter
+          when they are real and in 2nd letter when integer.
+          So do not use 'G' in 1st or 2nd position of a variable to
+          avoid ambiguities.
+
+     5. - All GEANT3 subroutines start with 'G' so DO NOT start GALEPH
+          subroutine with 'G'.
+
+     6. - All GEANT3 common blocks start with a 'G' so DO NOT start
+          GALEPH common blocks with a 'G'.
+
+     7. - All variables in COMMON have 6 letters of which 2 are the
+          2 first letters of the COMMON block name.
+
+     8. - Logical flags start with 'F'.
+          Counters or flags set by data cards start with 'I'.
+          Counters depending of the event start with 'N'.
+          Character lists or flags start with 'T'.
+          Maximum number of elements set in a list start with 'M'.
+          Integer variables or flags set at the beginning of the
+          job and not reset by data cards start with 'J'.
+          Absolute pointers into banks start with 'K'.
+          Offset inside banks start with 'L'.
+          Parameters used to define array dimensions start with 'L'.
+#endif

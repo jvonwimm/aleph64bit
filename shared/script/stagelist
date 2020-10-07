@@ -1,0 +1,95 @@
+#!/bin/csh
+#============================================================================
+#                             stagelist
+# 21/03/95                                                             F.Blin
+#============================================================================
+# 29/01/97 added sequence number
+# 11/04/97 changed /aleph/book by ALBOOK
+# 28/04/98 adapted new format bkmbytes
+#============================================================================
+#set echo on
+if ($#argv > 3 | $1 == "-h" | $1 == "-help") goto USAGE
+#
+if (-e $HOME/tmp_bkmbytes) rm -f $HOME/tmp_bkmbytes
+set LOGFILE = $ALEPH/log/stagelist.log
+set bkmbytes = $ALBOOK/bkmbytes.cerntaps
+set bkmbytes_search = $bkmbytes
+#
+   if ($#argv == 0) then
+      echo "To get help type stagelist -h"
+      goto BEGIN
+   endif
+   set bkmbytes_search = $HOME/tmp_bkmbytes
+   if ($#argv == 3) then
+       grep -i $1 $bkmbytes | grep -i $2 | grep -i $3  > ${bkmbytes_search}
+   endif
+   if ($#argv == 2) then
+       grep -i $1 $bkmbytes | grep -i $2 > ${bkmbytes_search}
+   endif
+   if ($#argv == 1) then
+       grep -i $1 $bkmbytes  > ${bkmbytes_search}
+   endif
+   if (-z ${bkmbytes_search}) then
+      echo " Sorry bad strings ..."
+      goto END
+   endif
+#
+BEGIN:
+stageqry -p alephdata | awk '{print " "$1,$2,$8,substr($9,1,index($9,"/")-1)  }'  > $HOME/stagelist_input 
+
+cat $bkmbytes_search | awk '\
+  { if (substr($0,13,1) == "_") print substr($0,6,7),substr($0,14,3),substr($0,20)\
+    if (substr($0,13,1) != "_") print substr($0,6,7),"1",substr($0,20) \
+   }' > $HOME/tmp2
+
+#cat $HOME/tmp2 $HOME/stagelist_input | sort -k 1n -k 2n > $HOME/tmp_stagelist_sort
+cat $HOME/tmp2 $HOME/stagelist_input | sort > $HOME/tmp_stagelist_sort
+\rm -f $HOME/tmp2 $HOME/stagelist_input
+awk '\
+    BEGIN { i = 0 ; j = 0 ; ij = 0 }\
+       { \
+         if (NF > 4) \
+         { i++ ; \
+           tape[i] = $1 ; \
+           seq[i] = $2 ; \
+           str_end = substr($0,11,40) ; \
+           if (tape[j] == tape[i] && seq[j] == seq[i]) ij++\
+           if (tape[j] == tape[i] && seq[j] == seq[i]) \
+              print tape[i]"_"seq[i],"-->"str_end, n_usage[j], size[j] \
+           if (tape[j] == tape[i] && seq[j] == seq[i]) str_end = "" ; }\
+         else \
+         { j++ ; \
+           tape[j] = $1 ; \
+           seq[j] = $2 ; \
+           n_usage[j] = $3 ; \
+           size[j] = $4 ; \
+           if (tape[i] == tape[j] && seq[i] == seq[j]) ij++\
+           if (tape[i] == tape[j] && seq[i] == seq[j] && str_end != "") \
+            print tape[i]"_"seq[i],"-->"str_end, n_usage[j], size[j] \
+           if (tape[j] == tape[i] && seq[j] == seq[i]) str_end = "" ; }\
+       } \
+     END { \
+           if (ij > 0) \
+            print " Tape        Format Data Prod/Gen Year sc/size Part. Usage Size" \
+      }' $HOME/tmp_stagelist_sort 
+#
+###echo `date` ${USER} $1 $2 $3  >> ${LOGFILE}
+END:
+if (-e $HOME/tmp_stagelist_sort) \rm -f $HOME/tmp_stagelist_sort 
+if (-e $HOME/tmp_bkmbytes) \rm -f $HOME/tmp_bkmbytes
+exit 0
+#
+USAGE:
+echo "Script to display staged cartridges with the corresponding"
+echo "SCANBOOK information."
+echo "Syntax: stagelist [string [string [string] ] ]"
+echo " --> not more then 3 strings"
+echo "Only staged tapes where the strings are found will be displayed."
+echo "An <and> of the 3 strings is performed for the search, i.e. all"
+echo "3 strings have to be found"
+echo "e.g.         "
+echo "     stagelist MINI da 1994"
+echo "     stagelist AB2001"
+echo "     stagelist"
+echo "     [In this last example all staged tapes are displayed]"
+exit 0

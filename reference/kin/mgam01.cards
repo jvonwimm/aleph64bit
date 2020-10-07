@@ -1,0 +1,27 @@
+KCAR 0 / $TEXT                                                                  
+POFF                                                                            
+*   RUN #              RUN'S TITLE                                              
+RUN  101         'E. Milotti generator - MGAM01'                                
+*     FIRST EVENT   LAST EVENT TO BE GENERATED                                  
+TRIG       1           1000                                                     
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG                                 
+DEBU    6   /      1            10                                              
+*    UNIT # / FORMAT                                                            
+*FILO 'SCWEEK:MGAM01.EPIO | EPIO '                                              
+* EBEAM : the energy of each beam (GeV);                                        
+* EMIN  : the threshold energy for photon detection (GeV);                      
+* IMOD  : production mode parameter                                             
+*                                  = 2  only 2-photons events,                  
+*                                  = 3  only 3-photons events,                  
+*                                  = 0  both 2- and 3-photons events;           
+*      EBEAM    EMIN    IMOD                                                    
+GENE    46.1     0.2     0                                                      
+*  use RANMAR generator for random numbers                                      
+*                   (see KINLIB DOC for informations)                           
+*  INSEED : first seed (range assigned per institute)                           
+*  LOSEED : second seed (incremented locally for new runs)                      
+*      INSEED          LOSEED (1-30000)                                         
+RMAR      89               1                                                    
+*       sigma-x   sigma-y  sigma-z  (cm)                                        
+SVRT     0.018    0.0010    1.00                                                
+ENDQ                                                                            

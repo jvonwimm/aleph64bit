@@ -1,0 +1,41 @@
+#!/bin/csh 
+# U.Schafer 23-Jun-1994
+# script to log usage of a command /usr/local/bin/`'command`' in log file
+# /aleph/log/`'command`'.log . 
+# make a link ln -s  /aleph/script/allog  /aleph/script/`'command`' 
+# to activate logging utility !
+ set retcode=-101
+ set line2=""
+ set start_date=`date "+%Y-%m-%d %H:%M:%S"`
+ set start_time="`date '+( ( ( %w * 24 + %H ) * 60 + %M ) * 60 + %S )'`" 
+# find generic command name, execute it on /usr/local/bin
+ set cmd=`basename $0` 
+ onintr end
+# need some alias to deal with nasty $ and [] characters
+# isolate command by ' '
+ alias cmd0 'echo "$*"'
+ set cmd1="`cmd0| sed s/\ /\'\ \'/g`"
+ alias cmd2 "/usr/local/bin/$cmd '$cmd1'"
+ if (-e /usr/local/bin/$cmd) then
+   cmd2
+   set retcode=$status
+ else
+   echo command not found: $cmd
+   set retcode=-1
+ endif
+end:
+# write date, time and user information to log file
+ onintr -
+ set end_time="`date '+( ( ( %w * 24 + %H ) * 60 + %M ) * 60 + %S )'`" 
+ @ diff = $end_time - $start_time
+ if ( $diff < 0 )  @ diff = $diff + 7 * 24 * 3600
+ @ hr = $diff / 3600
+ @ mn = $diff / 60 - $hr * 60
+ @ sc = $diff - ( ( $hr * 60 ) + $mn ) * 60
+#if ( $retcode != 0 ) set line2="> $*"
+#  for the time being write full command to log-file
+ set line2="> $*"
+ umask 0
+ echo $start_date ${hr}:${mn}:${sc} $USER \
+   rc=\($retcode\) `uname -n` "$line2" >>! $ALEPH/log/$cmd.log
+ exit $retcode

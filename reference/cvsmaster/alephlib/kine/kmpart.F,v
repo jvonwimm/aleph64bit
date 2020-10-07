@@ -1,0 +1,187 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.42.31;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.42.32;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      INTEGER FUNCTION KMPART (IPART,WIDTH,IANTI)
+C -----------------------------------------------------------
+C - F.Ranjard - 890203
+C
+C! Complete the PART bank with the width and the antiparticle#
+CKEY KINE KINGAL PART FORMAT  /  USER  INTERNAL
+C  first Get the necessary name-indices and check that the # of
+C  columns of the PART bank is .ge. 10
+C  then  IF the particle exists THEN
+C           fill word(9) and word(10) of the given particle
+C        ELSE
+C           RETURN
+C        END IF
+C  then  Return the particle row # or 0
+C
+C - structure : INTEGER FUNCTION subprogram
+C               User Entry Name: KBPART
+C               External References: NAMIND(BOS77)
+C               Comdeck References: BCS, BMACRO, PARTJJ
+C
+C - usage : IRETU  = KMPART (IPART,WIDTH,IANTI)
+C - input : IPART  = Aleph particle# (row# in PART bank).
+C           WIDTH  = Mass width (or 0.)
+C           IANTI  = row# of the antiparticle
+C - output: KMPART = Aleph particle#
+C                    0 means no PART bank
+C                   -1       PART bank has not enough columns
+C                   -2       Aleph particle does not exist
+C                   -3       antiparticle does not exist
+#ifndef DOC
+      SAVE
+#include "bcs.h"
+#include "kipara.h"
+#include "partjj.h"
+      EXTERNAL NAMIND
+      DATA NAPAR /0/
+#include "bmacro.h"
+C ---------------------------------------------------------
+      KMPART = 0
+C
+C - The 1st time get PART bank and check the # of columns
+C
+      IF (NAPAR .EQ.0 ) THEN
+         NAPAR = NAMIND ('PART')
+         JPART = IW(NAPAR)
+         IF (JPART.EQ.0) THEN
+            KMPART = 0
+            GOTO 999
+         ELSEIF (LCOLS(JPART).LT.JPARAN) THEN
+            KMPART = -1
+            GOTO 999
+         ENDIF
+      ENDIF
+C
+C - Get PART bank, return if does not exist or if part# or antipart#
+C   does not exist
+      JPART = IW(NAPAR)
+      IF (JPART.EQ.0) GOTO 999
+      NPART = IW(JPART+LMHROW)
+      IF (IPART .GT. NPART) THEN
+         KMPART = -2
+         GOTO 999
+      ELSEIF (IANTI .GT. NPART) THEN
+         KMPART = -3
+         GOTO 999
+      ENDIF
+C
+C - Normal entry
+      KPART = KROW(JPART,IPART)
+      RW(KPART+JPARMW) = WIDTH
+      IW(KPART+JPARAN) = IANTI
+C
+      KMPART = IPART
+C
+ 999  CONTINUE
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

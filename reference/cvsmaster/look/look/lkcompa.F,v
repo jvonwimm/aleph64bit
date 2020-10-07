@@ -1,0 +1,94 @@
+head	1.2;
+access;
+symbols
+	look25:1.2
+	look24:1.2
+	look23:1.2
+	look22:1.2
+	look21:1.2
+	look20:1.2
+	v15:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.04.18.09.05.29;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.09.15.50.22;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.09.15.50.23;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@change VAX to DEC.AND..NOT.UNIX ==> version 20
+
+ Modified Files:
+ 	lkevt.h lkfil.h lklast.h lkunpk.h version.h
+ Removed Files:
+	lookend.h
+@
+text
+@      SUBROUTINE LKCOMPA(STR,PAR,COUT)
+C --------------------------------------------------------
+C --------------------------------------------------------
+#ifndef DOC
+      CHARACTER STR*80,PAR*(*),PAR10*10,PARE10*10,COUT*80
+      LOGICAL LKEQUAL
+      EXTERNAL LKEQUAL
+C --------------------------------------------------------
+      PAR10=PAR
+      COUT=' '
+      IP=0
+ 10   IB=INDEX(STR(IP+1:80),'/')
+      IP=IP+IB
+      IF (IB.NE.0.AND.IP.LT.80.AND.STR(IP+1:IP+1).NE.' ') THEN
+          IF (LKEQUAL(STR(IP+1:IP+10),PAR10)) THEN
+              LEN=LKLWRD(STR(IP+1:IP+10))
+              L2=INDEX(STR(IP+1:IP+10),'=')
+              IF (L2.NE.0.AND.L2.LT.LEN) THEN
+                  ISS=LKLWRD(STR(IP+L2+1:80))
+                  COUT=STR(IP+L2+1:IP+L2+ISS)
+                  IF (COUT(1:1).EQ.'"') COUT=COUT(2:ISS-1)
+              ENDIF
+          ELSE
+              GOTO 10
+          ENDIF
+      ENDIF
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK lkcompa
+@
+
+
+1.1.1.1
+log
+@import look 15
+@
+text
+@@

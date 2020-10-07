@@ -1,0 +1,227 @@
+#! /bin/csh
+#============================================================================
+#                             ALINSTAL
+#                                                       F.Blin
+#============================================================================
+# To reset links with new version
+# All ALEPH libraries on file -> ${alib_dir}/pub/progl
+#============================================================================
+# P1 -> prog_name eg: alephlib
+# P2 -> cycle eg: 140
+#============================================================================
+# 01/03/93 add remove src$prog_name before new ln src$file_name (FBL)
+# 22/06/93 add all remove before a new link (FBL)
+# alinstal2.0
+# 17/08/93 add remove the oldest version if required (FLR)
+#          latest cycle number is kept on ${prog_dir}/alib.log
+# alinstal2.1
+# 30/08/93 on no MASTER machine create a link to standard include files (FLR)
+# alinstal2.2
+# 14/09/93 write on prog_dir/spy and not on prog_dir/alib.log  (FLR)
+# alinstal3.0
+# 16/09/93 add link jmuid.f, julia or galeph, and all dbx file (FBL)
+# alinstal3.1
+# 14/10/93 set echo on when last argument is "-v"  (FLR)
+# alinstal3.2
+# 22/09/94 - use $ALEPH instead of /aleph  (FLR)          
+# alinstal3.3
+# 24/10/94 - remove some confusins between ref_dir and prog_dir  (FLR)
+#            install new versions on all platforms sharing the same file system
+# alinstal3.4
+# 16/02/95 - remove correction file references  (FLR)
+#            add link to main program
+# alinstal3.5
+# 27/02/95 - Replace reference to /al by ../.. (JC)
+# alinstal3.6
+# 29/01/96 - remove a bug in file_type_inc (FLR)
+#            use the OP_SYS environment variable
+#            if not set , set op_sys = ( OSF1 IRIX5 HPUX9 )
+# alinstal4.0
+# 16/04/96 - adapt to cvs new environment
+#============================================================================
+# set echo on if last argument is "-v"
+#============================================================================
+set exec_name = "alinstal4.0"
+set nar = $#argv
+if (nar != 0) then
+  if ($argv[${nar}] == "-v") then
+     echo "${exec_name}"
+     set echo on
+     set argv[${nar}] = ""
+  endif
+endif
+#*******>
+
+if ($?OP_SYS == 1) then
+   set op_sys = ${OP_SYS}
+else
+# at CERN the following operating systems are sharing the same file system
+   set op_sys = ( OSF1 IRIX5 HPUX9 )
+endif
+
+#*******>
+unset noclobber
+set UNAME = `uname`
+set alib_dir = "/aleph/script/alib.dir"
+set prog_dir = `pwd`
+set cycle = ""
+set mnemonic = ""
+#===> first parameter
+if ($1 == "") then
+  echo -n "Enter Aleph program name [eg:alephlib <CR>=exit]-> "
+   set prog_name = $<
+   if (${prog_name} == "") goto exec_end
+else
+   set prog_name = $1
+endif
+ 
+set idir = `egrep ^" ${prog_name} " ${alib_dir} | awk '{print $2}'`
+set mnemonic = `egrep ^" ${prog_name} " ${alib_dir} | awk '{print $3}'`
+set src_name = `egrep ^" ${prog_name} " ${alib_dir} | awk '{print $4}'`
+if (${idir} == "") then
+   echo "*** WARNING not official ALEPH program"
+   goto exec_end
+else
+   set prog_dir = "${ALEPH}/${idir}"
+   set cycle = `egrep ^" ${prog_name} " ${prog_dir}/alib.log | awk '{print $3}'`
+endif
+ 
+#===> second parameter
+if ($2 == "") then
+   echo -n "Enter new cycle [<CR>=${cycle}]-> "
+   set cycle_ask = $<
+   if (${cycle_ask} == "") set cycle_ask = ${cycle}
+else
+   set cycle_ask = $2
+endif
+ 
+#*******> links
+
+set file_name = ${mnemonic}${cycle_ask}
+
+if (${src_name} == "") set src_name = ${file_name}
+if (${mnemonic} == "bos" || ${mnemonic} == "look" || ${mnemonic} == "tpc") then
+   set src_name = "${src_name}/F77"
+endif
+
+foreach sys ( $op_sys[*] )
+
+# 
+  cd ${ALEPH_ROOT}/${sys}/${idir}
+#
+  if (${prog_name} == "alephlib") set file_name = ${mnemonic}io${cycle_ask}
+#
+  if (-e lib${file_name}.a) then
+    rm lib${prog_name}.a
+    echo "Now -> ln -fs lib${file_name}.a lib${prog_name}.a"
+    ln -fs lib${file_name}.a lib${prog_name}.a
+  endif
+  if (-e lib${file_name}_dbx.a) then
+    rm lib${prog_name}_dbx.a
+    echo "Now -> ln -fs lib${file_name}_dbx.a lib${prog_name}_dbx.a"
+    ln -fs lib${file_name}_dbx.a lib${prog_name}_dbx.a
+  endif
+#
+  if (-e ${ALROOT}/${src_name}/news/news.h) then
+    rm ${prog_name}.news
+    echo "Now -> ln -fs ${ALROOT}/${src_name}/news/news.h ${prog_name}.news"
+    ln -fs ../../reference/cvs/${file_name}/news/news.h ${prog_name}.news
+  endif
+  if (-d ${ALROOT}/${file_name}) then
+     rm src${prog_name}
+     echo "Now -> ln -fs ${ALROOT}/${src_name} src${prog_name}"
+     ln -fs ../../reference/cvs/${src_name} src${prog_name}
+  endif
+  if (-e ${file_name}) then
+    rm ${prog_name}
+    echo "Now -> ln -fs ${file_name} ${prog_name}"
+    ln -fs ${file_name} ${prog_name}
+  endif
+  if (-e ${file_name}_dbx) then
+    rm ${prog_name}_dbx
+    echo "Now -> ln -fs ${file_name}_dbx ${prog_name}_dbx"
+    ln -fs ${file_name}_dbx ${prog_name}_dbx
+  endif
+ 
+# ===================
+
+  set ini = " "
+
+#>> MINI
+  if (${prog_name} == "mini") then
+     goto spy
+  endif
+
+#>> LOOK
+  if (${prog_name} == "look") then
+     set ini = "l"
+  endif
+
+#>> GALEPH
+  if (${prog_name} == "galeph") then
+     set ini = "g"
+  endif
+
+#>> JULIA
+  if (${prog_name} == "julia") then
+     set ini = "j"
+  endif
+
+#>> ALPHA
+  if (${prog_name} == "alpha") then
+   set ini = "q"
+   set inc_dir = "../../${MASTER}/${idir}"
+   set file_type_inc = "inc${cycle_ask}"
+   if (-e ${inc_dir}/qcde.${file_type_inc}) then
+      rm qcde.inc
+      echo "Now -> ln -fs ${inc_dir}/qcde.${file_type_inc} qcde.inc"
+      ln -fs ${inc_dir}/qcde.${file_type_inc} qcde.inc
+      ln -fs ${inc_dir}/qcde.${file_type_inc} qcde.${file_type_inc}
+   endif
+   if (-e ${inc_dir}/qdecl.${file_type_inc}) then
+      rm qdecl.inc
+      echo "Now -> ln -fs ${inc_dir}/qdecl.${file_type_inc} qdecl.inc"
+      ln -fs ${inc_dir}/qdecl.${file_type_inc} qdecl.inc
+      ln -fs ${inc_dir}/qdecl.${file_type_inc} qdecl.${file_type_inc}
+   endif
+   if (-e ${inc_dir}/qhac.${file_type_inc}) then
+      rm qhac.inc
+      echo "Now -> ln -fs ${inc_dir}/qhac.${file_type_inc} qhac.inc"
+      ln -fs ${inc_dir}/qhac.${file_type_inc} qhac.inc
+      ln -fs ${inc_dir}/qhac.${file_type_inc} qhac.${file_type_inc}
+   endif
+   if (-e ${inc_dir}/qmacro.${file_type_inc}) then
+      rm qmacro.inc
+      echo "Now -> ln -fs ${inc_dir}/qmacro.${file_type_inc} qmacro.inc"
+      ln -fs ${inc_dir}/qmacro.${file_type_inc} qmacro.inc
+      ln -fs ${inc_dir}/qmacro.${file_type_inc} qmacro.${file_type_inc}
+   endif
+  endif
+#>> ALL
+  if (-e ${ini}main${cycle_ask}.o) then
+   rm ${ini}main.o
+   echo "Now -> ln -fs ${ini}main${cycle_ask}.o ${ini}main.o"
+   ln -fs ${ini}main${cycle_ask}.o ${ini}main.o
+  endif
+  if (-e ${mnemonic}new) then
+   mv ${mnemonic}new ${file_name}.0
+   rm ${prog_name}
+   echo " Now -> ln -fs ${file_name}.0 ${prog_name}"
+   ln -fs ${file_name}.0 ${prog_name}
+  endif
+#*******> spy
+spy:
+  set dmyh = `date '+%d-%h-19%y %T'`
+  echo "${exec_name} ${UNAME} ${user} ${dmyh} ${prog_name} ${file_name}" >> spy
+#
+
+end
+
+#******> remove old version if required
+alremove ${prog_name}
+
+#*******> exec_end
+exec_end:
+ exit
+ 
+ 

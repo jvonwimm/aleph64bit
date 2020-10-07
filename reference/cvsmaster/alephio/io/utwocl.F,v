@@ -1,0 +1,105 @@
+head	1.1;
+access;
+symbols
+	alio83:1.1
+	alio82:1.1
+	alio81:1.1
+	alio80:1.1
+	alio74:1.1
+	alio73:1.1
+	alio72:1.1
+	alio71:1.1
+	alio70:1.1
+	alio68:1.1
+	alio69:1.1
+	alio67:1.1
+	alio66:1.1
+	alio65:1.1
+	alio64:1.1
+	alio63:1.1
+	alio62:1.1
+	alio61:1.1
+	alio60:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.04.23.10.01.19;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@move alph, dbas, a part of alef and a part of c to alephio
+Modified Files:
+ 	version.h
+ Added Files:
+ 	adbrow.F adbrpn.F adbrun.F adbswp.F adbver.F agetdb.F agtfil.F
+	albos.F aldawr.F aldtyp.F aleveh.F alfind.F alfmt.F algtbk.F
+ 	algtdb.F algtlu.F algtro.F algtyp.F alinst.F alk7fil.F
+ 	alk7fru.F alk7op.F alk7tru.F alredb.F alrune.F alrunh.F
+ 	alrunr.F alseed.F alstho.F alstin.F alstri.F altabl.F alvsn.F
+ 	aopdbs.F aublis.F aubos.F aubprs.F bkcari.F bkinca.F bkrhab.F
+ 	bkrhal.F bkrhaw.F bktobk.F cafiht.F chahol.F dafrds.F gtdbas.F
+ 	gtstup.F igtfmt.F jhocha.F julrec.F junial.F junidb.F
+ 	kbytrec.F loctab.F nameru.F ubpack.F uclean.F uindxs.F usbos.F
+ 	usgtdb.F utcblk.F utccop.F utcofo.F utwocl.F utwoex.F
+Removed Files:
+	noibm.F
+@
+text
+@      SUBROUTINE UTWOCL(NAMI,NUM,ICL1,ICL2,NAMO,IGARB,IER)
+C ----------------------------------------------------------------------
+C - J.F. Grivaz 15-03-1989
+C! Extract and clean up two columns from a Tabular Bank
+C - Designed for relation bank, and works correctly only if
+C -    all columns are normally filled with positive integers
+C - Duplicate rows and rows with at least one null attribute
+C -    are removed from the output bank
+C - Input :
+C -   NAMI  = Name of the bank from which the extraction is to be done
+C -   NUM = Number of the bank from which the extraction is to be done
+C -   ICL1  = First column to extract (will be column 1 in output bank)
+C -   ICL2 = Second column to extract (will be column 2 in output bank)
+C -   NAMO = Name of the output bank to be created (its number = NUM)
+C - Output
+C -   IGARB = 1 if Garbage Collection occured
+C -           2 if not enough space after Garbage Collection
+C -   IER = 1 if Unsuccessful
+C - Calls UTWOEX, UCLEAN, UBPACK                          from this .HLB
+C  ----------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+      CHARACTER*4 NAMI,NAMO
+#include "bmacro.h"
+C ----------------------------------------------------------------------
+C
+      CALL UTWOEX(NAMI,NUM,ICL1,ICL2,NAMO,IGARB,IER)
+      IF(IGARB.EQ.2.OR.IER.NE.0) GO TO 100
+C
+      CALL UCLEAN(NAMO,NUM,IER)
+      IF(IER.NE.0) GO TO 100
+C
+      KTAG = 1
+      LTAG = 0
+      JTAG = 0
+      CALL UBPACK(NAMO,NUM,KTAG,LTAG,JTAG,IER)
+      IF(IER.NE.0) GO TO 100
+C
+      KTAG = 2
+      LTAG = 0
+      JTAG = 0
+      CALL UBPACK(NAMO,NUM,KTAG,LTAG,JTAG,IER)
+      IF(IER.NE.0) GO TO 100
+C
+  100 CONTINUE
+      RETURN
+      END
+#endif
+@

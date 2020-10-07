@@ -1,0 +1,100 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	94.12.07.14.03.08;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.03.09;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK trdoc
+#if defined(DOC)
+.chapter LEVEL 2
+.section  INTRODUCTION
+
+  The input to the level 2 trigger is the TPC hit bank TTHT. This is fir
+transformed to give the level 2 hit bank X2HF containing the TPC trigger
+pad information which is passed through the level 2 simulation. The resu
+output are the banks X2MS containing the level 2 mask,and X2TF containing
+the angular bins in which a track has been found. The banks X2HF,X2MS and
+X2TF are then output to level 3.
+
+.section  GENERAL DESCRIPTION
+
+  The simulation passes the data with the optional addition of added noi
+through the look-up tables created for loading into the level 2 processor
+memories. Each input data point is placed into one of a number of angular
+cells each of which covers part of the TPC volume and points towards the
+interaction region. Data are passed to a second stage of processing from
+cells with sufficient entries to correspond to a track. The second stage
+performs a test on the internal consistency of the data to improve the
+efficiency of the system at rejecting noise and background tracks. Cells
+containing tracks are then used to set bits in the level 2 trigger mask.
+
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

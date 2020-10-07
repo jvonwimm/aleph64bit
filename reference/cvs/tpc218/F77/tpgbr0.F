@@ -1,0 +1,145 @@
+*DK tpgbr0
+      SUBROUTINE TPGBR0(ITYPE,MISECT,NBRTE)
+C-----------------------------------------------------------------------
+C!  Routine to get a track element and to break it at the boundary of
+C!  a sector (ZERO MAGNETIC FIELD CASE)
+C
+C  Called from:  TPBRTK
+C
+C  Inputs:  PASSED
+C                      --ITYPE, the type of this sector
+C                      --MISECT, the sector number within the endplate
+C            /TPGEOM/  --Phi position of sector
+C            /TRAKEL/  --secondary track parameters for the track
+C                        element to be broken
+C            /SCTBND/  --x-limits, slopes, and intercepts of the
+C                        line segments forming the boundaries of
+C                        the extended sectors
+C
+C  Outputs: PASSED     --NBRTE, the number of subelements ("broken
+C                        track elements") of the full track element
+C                        which lie within the boundary of the extended
+C                        sector corresponding to sector ISECT
+C           /TRAKEL/   --Common blocks containing primary and secondary
+C                        parameters for track element ISEG and each of
+C                        its subelements, for use in dE/dX routine
+C  M. Mermikides 21/9/87
+C-----------------------------------------------------------------------
+#include "trakel.h"
+#include "sctbnd.h"
+#include "alcons.h"
+#include "tpgpar.h"
+#include "tpgeom.h"
+C
+      LOGICAL LIN
+      DIMENSION XINT(10),YINT(10),ZINT(10),SINT(10),INDS(10)
+C
+C  First rotate track to sector ref. frame
+C
+      PHIROT = TPPHI0(MISECT)
+      PHIROT = PIBY2 - PHIROT
+      CALL ROT(X,PHIROT,X)
+      CALL ROT(VECT,PHIROT,VECT)
+C
+C  Find the points of intersection of the track in the x-y projection
+C  with the line segments forming the sector.
+C
+      NBRK = 1
+      XINT(NBRK) = X(1)
+      YINT(NBRK) = X(2)
+      ZINT(NBRK) = X(3)
+      SINT(NBRK) = 0.
+C Equation of track:    Y = AA*X + BB ;
+      AA = VECT(2)/VECT(1)
+      BB = X(2) - X(1)*AA
+      XEND = X(1) + SEGLEN*VECT(1)
+      YEND = X(2) + SEGLEN*VECT(2)
+      ZEND = X(3) + SEGLEN*VECT(3)
+      DXY2 = (XEND-X(1))**2 + (YEND-X(2))**2
+C
+      DO 1 I = 1, NLINES(ITYPE)
+C
+C Sector boundary line: Y = SLOPES(i,ITYPE)*X + YCEPTS(i,ITYPE)
+C
+         XX = -(BB - YCEPTS(I,ITYPE))/(AA-SLOPES(I,ITYPE))
+C Skip of intersection is outside sector boundary
+         IF (XX.LT.XLWLIM(I,ITYPE).OR.XX.GT.XUPLIM(I,ITYPE)) GO TO 1
+         YY = AA*XX + BB
+C
+C  Keep those intersections which actually lie between the endpoints
+C  of the track.
+C
+         DIST2 = (XX-X(1))**2 + (YY-X(2))**2
+         IF (DIST2.GT.DXY2) GO TO 1
+         DIST2 = (XX-XEND)**2 + (YY-YEND)**2
+         IF (DIST2.GT.DXY2) GO TO 1
+         NBRK = NBRK + 1
+         XINT(NBRK) = XX
+         YINT(NBRK) = YY
+         IF (ABS( VECT(2) ) .GT.0.0001) THEN
+            SINT(NBRK) = (YY - X(2))/VECT(2)
+         ELSE
+            SINT(NBRK) = (XX - X(1))/VECT(1)
+         ENDIF
+         ZINT(NBRK) = X(3) + SINT(NBRK)*VECT(3)
+C
+ 1    CONTINUE
+      NBRK = NBRK + 1
+      XINT(NBRK) = XEND
+      YINT(NBRK) = YEND
+      ZINT(NBRK) = ZEND
+      SINT(NBRK) = SEGLEN
+C
+C  Order breakpoints in increasing S (measured from track start point).
+C
+      CALL SORTZV(SINT,INDS,NBRK,1,NWAY,0)
+C
+C  See whether the first point of the track segment lies in the sector
+C
+      CALL TPFIDS(X,ITYPE,LIN)
+C
+C  Determine the number of broken track elements
+C
+      IF ( MOD(NBRK,2) .EQ. 1 ) THEN
+C
+         NBRTE = ( NBRK - 1 )/2
+C
+      ELSE
+C
+         IF ( LIN ) THEN
+            NBRTE = ( NBRK / 2 )
+         ELSE
+            NBRTE = ( NBRK / 2 ) - 1
+         ENDIF
+C
+      ENDIF
+C
+C  Determine the initial and final points of each broken track element
+C
+      IF ( LIN ) THEN
+C
+         DO 4 J = 1, NBRTE
+            XB(1,J) = XINT( INDS(2*J-1) )
+            XB(2,J) = YINT( INDS(2*J-1) )
+            XB(3,J) = ZINT( INDS(2*J-1) )
+            SEGLNB(J) = SINT( INDS(2*J) ) - SINT( INDS(2*J-1) )
+4       CONTINUE
+C
+      ELSE
+C
+         DO 5 J = 1, NBRTE
+            XB(1,J) = XINT( INDS(2*J) )
+            XB(2,J) = YINT( INDS(2*J) )
+            XB(3,J) = ZINT( INDS(2*J) )
+            SEGLNB(J) = SINT( INDS(2*J+1) ) - SINT( INDS(2*J) )
+ 5       CONTINUE
+C
+      ENDIF
+      DO 10 J=1,NBRTE
+         VECTB(1,J) = VECT(1)
+         VECTB(2,J) = VECT(2)
+         VECTB(3,J) = VECT(3)
+   10 CONTINUE
+C
+      RETURN
+      END

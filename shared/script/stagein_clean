@@ -1,0 +1,101 @@
+#!/usr/local/bin/tcsh -f
+#=============================================================================
+#                             stagein_clean
+# 03/03/95                                                        F.Blin
+#=============================================================================
+#  if rc.ne.0 retry  /usr/local/bin/stageclr for each file individualy
+#  add one-line log entry                  19970620
+#=============================================================================
+#set echo on
+set DT = "/tmp/s_clean"
+set tmp_DT = "/tmp/s_clean_tmp"
+set new_DT = "/tmp/s_clean_sort"
+set clean_DT = "/tmp/s_clean_input"
+set FILELOG = "/afs/cern.ch/aleph/shared/log/stagein_clean.log"
+set DATE_LOG_START=`date "+%Y %m %d %H:%M:%S"`
+if (-e ${DT}) rm -f ${DT}
+if (-e ${DT}_head) rm -f ${DT}_head
+if (-e ${tmp_DT}) rm -f ${tmp_DT}
+if (-e ${new_DT}) rm -f ${new_DT}
+if (-e ${clean_DT}) rm -f ${clean_DT}
+set year_months = ('01' '02' '03' '04' '05' '06' '07' '08' '09' '10' '11' '12')
+set day_months = ('31' '28' '31' '30' '31' '30' '31' '31' '30' '31' '30' '31')
+#
+set today = `date '+%Y %m %d %H %M'`
+set today_y = `echo ${today} | awk '{print $1}'`
+set today_m = `echo ${today} | awk '{print $2}'`
+set today_d = `echo ${today} | awk '{print $3}'`
+set today_H = `echo ${today} | awk '{print $4}'`
+set today_M = `echo ${today} | awk '{print $5}'`
+@ today_mm = ((((${today_d} - 1) * 24) + ${today_H}) * 60) + ${today_M}
+# =====> search m_previous and last_d_previous
+set flag = ${today_m}
+@ n = 1
+while (${n} <= 12)
+      if (${year_months[$n]} == ${today_m}) then
+         if (${n} > 1) @ n_previous = ${n} - 1
+         if (${n} < 2) @ n_previous = 12
+         if (${n} < 2) @ today_y = ${today_y} - 1
+         set m_previous = ${year_months[${n_previous}]}
+         set last_d_previous = ${day_months[${n_previous}]}
+         goto BEGIN
+      endif
+      @ n++
+end
+
+# =====> stageqry for alephdata on file ${DT}
+BEGIN:
+#/usr/local/bin/stageqry -a -p alephdata -S  > ${DT}
+/usr/local/bin/stageqry -a -p $1 -S  > ${DT}
+grep "${today_y}/${m_previous}/" ${DT} > /tmp/month_previous
+if !(-z /tmp/month_previous) then
+  @ today_mm = ${today_mm} + ((${last_d_previous} * 24) * 60)
+  set flag = ${m_previous}
+endif
+rm /tmp/month_previous
+head -1000 ${DT} > ${DT}_head 
+# =====> arrange file ${DT} and put on file ${tmp_DT} 
+ awk '\
+      BEGIN { \
+            today_mm = '$today_mm'; \
+            today_m = '$today_m'; \
+            last_d_previous = '$last_d_previous'; \
+            m_previous = '$m_previous'; \
+            flag = '$flag'} \
+      { mm[NR] = 0; \
+        line[NR] = $0; \
+        usage[NR] = $4; \
+        m[NR] = substr($1,6,2); \
+        d[NR] = substr($1,9,2); \
+        H[NR] = substr($2,1,2); \
+        M[NR] = substr($2,4,2); \
+        if (int(m[NR]) == today_m && flag == m_previous) mm[NR] = mm[NR] + ((last_d_previous * 24) * 60)\
+        if (d[NR] != 1) mm[NR] = mm[NR] + (((d[NR] - 1) * 24) * 60) \
+        mm[NR] = (H[NR] * 60) + M[NR] + mm[NR] \
+        delta_t[NR] = (today_mm - mm[NR]) / 60 \
+        new_usage[NR] = exp(log(delta_t[NR]) - 0.3 * log(usage[NR])) \
+        print line[NR], delta_t[NR], new_usage[NR]}' ${DT}_head > ${tmp_DT}
+
+# =====> sort file ${tmp_DT} > ${new_DT}
+ sort -r -n +7 < ${tmp_DT} > ${new_DT}
+ rm -f ${tmp_DT}
+# =====> clean ${new_DT} (clean on file /usr/spool/stage/log)
+#cat ${new_DT} | cut -f 5 -d " " > ${clean_DT}
+ awk '{print $5}' ${new_DT} > ${clean_DT}
+# /usr/local/bin/stageclr -c -i -p alephdata < ${clean_DT}
+
+ /usr/local/bin/stageclr -c -i -p $1 < ${clean_DT}
+ set ERR=${status}
+ if ($ERR != 0) then
+    foreach file ( `cat ${clean_DT}` )
+       /usr/local/bin/stageclr -c -P ${file}
+    end
+ endif
+#
+EXIT:
+  set DATE_LOG=`date "+%H:%M:%S"`
+  set nfiles =  `wc -l ${clean_DT} | awk '{print $1}'`  
+ echo "$DATE_LOG_START -> $DATE_LOG staged files $nfiles rc=($ERR)">> $FILELOG
+ rm -f ${DT}
+ rm -f ${DT}_head
+exit 0

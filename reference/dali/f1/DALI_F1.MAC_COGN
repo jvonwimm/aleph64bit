@@ -1,0 +1,74 @@
+F18=-         ! SHOW POINTS ON 6 windows
+   GG:WC:GG:DC:A6:SW:FS=0:DO:A0:SC:FS=1:DO:-
+   GG:BT:FR=6:TO=15:NU=16:-
+   W1:CA=1:CR=OF:SP:W2:CR=8:SP:-
+   W3:CA=0:CR=OF:SP:W4:CR=1:SP:-
+   W5:CA=8:CR=OF:SP:W6:CR=1:SP:
+F14=-
+   GG:BT:-
+   W1:CA=1:CR=OF:SP:W2:CR=8:SP:-
+   W3:CA=0:CR=OF:SP:W4:CR=1:SP:-
+   W5:CA=8:CR=OF:SP:W6:CR=1:SP:
+F19=-         ! set up basic colors = W Y C G M R B K
+   GT:WC:-
+   A8:SW:FS=1:DO:-
+   A9:SY:FS=1:DO:-
+   B0:SC:FS=1:DO:-
+   B1:SG:FS=1:DO:-
+   B2:SM:FS=1:DO:-
+   B3:SR:FS=1:DO:-
+   B4:SB:FS=1:DO:-
+   B5:SW:FS=0:DO:GB:
+F20=-         ! LINES ON 8 B.G. COLORS GG:SW:RD:'8' FIRST   und F19
+   GT:BT:FR=8:TO=15:W1:CA=8:SL:W2:1+:SL:W3:++:WU:++:-
+   W4:++:W5:++:W6:++:WD:++:
+F17=-         ! THE BLUE BROBLEM  GG:SW:RD:'8' FIRST und F19
+   GT:BT:P2=40:P1=4:-
+   CO=9:FR=9:TO=8:-
+   W1:CA=15:SG:-
+   W2:CA=14:SG:-
+   W3:CA=13:SG:-
+   WU:CA=12:SG:-
+   CO=11:FR=11:TO=10:-
+   W4:CA=15:SG:-
+   W5:CA=14:SG:-
+   W6:CA=13:SG:-
+   WD:CA=12:SG:
+PF1=-  ! 6 windows F19 FIRST : 6 COLORS ON K with white grid
+   GT:BT:P1=4:P2=40:CA=1:TO=8:-
+   W1:CO=9:FR=9:SG:-
+   W2:CO=10:FR=10:SG:-
+   W3:CO=11:FR=11:SG:-
+   W4:CO=12:FR=12:SG:-
+   W5:CO=13:FR=13:SG:-
+   W6:CO=14:FR=14:SG:
+PF2=- ! puzzle plot: vary P1 from 1 - 16
+   GG:BT:WS:P2=2:SZ=2:DH=0:SH=1:P1=0:SI:P1=14:SI 
+KP9=- ! MM = Moving Square D,S,Z,... left button=angle
+   GG:BT:WS:SZ=2:NU=555:P2=40:
+PF4=- ! 15 grey squares grey->red : GG:WC:B5:SR:FS=1:DO:GB
+   GG:BT:WS:B0:  ! BV,BM   NU=5 also good
+KP7=- ! artificial cube A1,AC P1=1,2
+   GG:BT:A1:
+KP3=- ! Show tracks  ; also S6
+   GG:BT:WL:CO=8:SZ=2:SH=2:FR=3:S0:DT:
+KP9=- ! overlayed colored lines      SEE HELP  also H1=2
+   GG:BT:WS:S0:CO=0:SH=8:FR=1:P1=4:H1=3:ST:
+KP4=- ! SHOW NOISE
+   GG:BT:N0:
+KP5=- ! LO=1/X Y/X;
+   GG:BT:LO: 
+KP6=- ! perspective picture
+   GG:BT:-
+   WL:P1=1:P2=1:PR-
+   WM:P1=1:P2=3:PR-
+   WR:P1=1:P2=9:PR
+KP1=- ! Color discrepency : green left / red right = yellow
+   GG:BT:E1:H1=10:H2=9:DH=12:ER:
+KP2=- ! ROTATIN CUBE
+   GG:BT:CO=8:CA=0:W1:P1=1.0001:1-:DO:
+KP8=- ! HISTOGRAMM PICTURE ON ZOOMED HISTOGRAMS SE,SH SMALL ON W5,W6
+   GG:CD:DA:BT=1:BC:OF:HC:LH=8:CN=6:-
+   GG:PM:SR=4:G1:FD:G5:FD:GT:PM:SR=3:G3:FD:-
+   GG:CD:HC:LH=2:-
+   GG:PM:SR=1:G2:FD:GG:PM:SR=0:G4:FD:G6:FD: 

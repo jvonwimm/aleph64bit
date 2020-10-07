@@ -1,0 +1,106 @@
+head	1.1;
+access;
+symbols
+	aleph316_2:1.1
+	aleph316_1:1.1
+	aleph316:1.1
+	aleph315_7:1.1
+	aleph315_6:1.1
+	aleph315_5:1.1
+	aleph315_4:1.1
+	aleph315_3:1.1
+	aleph315_2:1.1
+	aleph315_1:1.1
+	aleph315:1.1
+	aleph314_2:1.1
+	aleph314_1:1.1
+	aleph314:1.1
+	aleph313_1:1.1
+	aleph313:1.1
+	aleph312_1:1.1
+	aleph312:1.1
+	aleph311_1:1.1
+	aleph311:1.1
+	aleph310_3:1.1
+	aleph310_2:1.1
+	aleph310_1:1.1
+	aleph310:1.1
+	aleph309_1:1.1
+	aleph309:1.1
+	aleph308_3:1.1
+	aleph308_2:1.1
+	aleph308_1:1.1
+	aleph308:1.1
+	aleph307_6:1.1
+	aleph307_5:1.1
+	aleph307_4:1.1
+	aleph307_2:1.1
+	aleph307_1:1.1
+	aleph307:1.1
+	aleph306:1.1
+	aleph305_4:1.1
+	aleph305_3:1.1
+	aleph305_2:1.1
+	aleph305_1:1.1
+	aleph305:1.1
+	aleph304_5:1.1
+	aleph304_4:1.1
+	aleph304_3:1.1
+	aleph304_2:1.1
+	aleph304_1:1.1
+	aleph304:1.1
+	aleph303_3:1.1
+	aleph303_2:1.1
+	aleph303_1_mc1:1.1
+	aleph303_1:1.1
+	aleph303:1.1
+	aleph302_9:1.1
+	aleph302_8:1.1
+	aleph302_7:1.1
+	aleph302_6:1.1
+	aleph302_5:1.1
+	aleph302_4:1.1
+	aleph302_3:1.1
+	aleph302_2:1.1
+	aleph302_1:1.1
+	aleph302:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	97.03.06.16.00.36;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@3rd test version of aleph302
+@
+text
+@      SUBROUTINE ULOAD(DBL_TRK, C_NEW, TRK_OUT, COV_OUT)
+C!  Convert state vector and covariance matrix to REAL*4
+#ifndef DOC
+      DOUBLE PRECISION DBL_TRK(*), C_NEW(*)
+      REAL TRK_OUT(*), COV_OUT(*)
+
+      TRK_OUT(1) = SNGL(DBL_TRK(1))
+      TRK_OUT(2) = SNGL(DBL_TRK(2))
+      TRK_OUT(3) = SNGL(DBL_TRK(3))
+      TRK_OUT(4) = SNGL(DBL_TRK(4))
+      TRK_OUT(5) = SNGL(DBL_TRK(5))
+
+      DO I = 1, 21
+        COV_OUT(I) = SNGL(C_NEW(I))
+      ENDDO
+
+      RETURN
+      END
+
+#endif
+@

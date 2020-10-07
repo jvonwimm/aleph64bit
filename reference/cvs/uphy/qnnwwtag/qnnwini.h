@@ -1,0 +1,3 @@
+      LOGICAL IFLAG1,IFLAG2
+      DATA IFLAG1 / .FALSE. /
+      DATA IFLAG2 / .FALSE. /

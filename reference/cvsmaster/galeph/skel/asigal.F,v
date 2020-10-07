@@ -1,0 +1,119 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.1
+	gal306_2:1.1
+	gal306_1:1.1
+	gal306:1.1
+	gal305_3:1.1
+	gal305_2:1.1
+	gal305_1:1.1
+	gal305:1.1
+	gal304_11:1.1
+	gal304_10:1.1
+	gal304_9:1.1
+	gal304_8:1.1
+	gal304_7:1.1
+	gal304_6:1.1
+	gal304_5:1.1
+	gal304_4:1.1
+	gal304_3:1.1
+	gal304_2:1.1
+	gal304_1:1.1
+	gal304:1.1
+	gal303_3:1.1
+	gal303_2:1.1
+	gal303_1:1.1
+	v-303:1.1
+	gal302_2:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	98.07.03.14.47.38;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.06.30.08.55.17;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@gal307 look at galeph/news/news.h
+@
+text
+@*DK asigal
+      SUBROUTINE ASIGAL
+C ---------------------------------------------------------------------
+C! GALEPH initialization routine
+C - F.Ranjard - 950425
+C -------------------------------------------------------------------
+#ifndef DOC
+      PARAMETER(LIW=1000000, LNAMES=500)
+      COMMON /BCS/   IW(LIW)
+      CHARACTER*80 FNAME
+C ------------------------------------------------------------------
+C
+C - Initialize ALEPH memory manager
+C
+      CALL BNAMES (LNAMES)
+      CALL BOS (IW,LIW)
+      IW(5) = 7
+      IW(8) = 100000
+C
+C - initialize RANECU
+C
+      DUMMY = RECUST()
+C
+C - job initialization : initialize variables and then
+C   read STEERING data cards to set necessary flags to run the job
+C   according to flags defined previously get the
+C   right constants from tape or data base or data cards.
+C - Interface to GEANT3 : fill GEANT3 common blocks
+C - Build the geometry in the GEANT3 framework
+C - Initialize various packages which could be used during the run
+C   such as :GD3, LUND, GHEISHA, ect....
+C
+      FNAME = ' '
+      CALL GETENVF ('GALEPHCARDS',FNAME)
+      IF (FNAME.NE.' ') CALL AOPEN (IW(5),FNAME,'CARD','DISK',IER)
+      CALL ASIJOB
+C
+      END
+#endif
+@
+
+
+1.1
+log
+@release galeph 302
+ Added Files:
+ euppar.F
+ agsatr.F agsatt.F agvdet.F agvf92.F agvf95.F
+ sanamc.h satrco.h
+ satrnews.h
+ asigal.F
+@
+text
+@d22 1
+a22 1
+      CALL RECUST
+@

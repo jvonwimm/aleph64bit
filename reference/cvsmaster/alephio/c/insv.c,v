@@ -1,0 +1,99 @@
+head	1.2;
+access;
+symbols
+	alio83:1.2
+	alio82:1.2
+	alio81:1.2
+	alio80:1.2
+	alio74:1.2
+	alio73:1.2
+	alio72:1.2
+	alio71:1.2
+	alio70:1.2
+	alio68:1.2
+	alio69:1.2
+	alio67:1.2
+	alio66:1.2
+	alio65:1.2
+	alio64:1.2
+	alio63:1.2
+	alio62:1.2
+	alio61:1.2
+	alio60:1.2
+	c212:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	96.05.03.14.42.05;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.04.23.09.53.52;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.04.23.09.53.53;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@replace flag ${VENDOR} with ALEPH_${VENDOR}
+Modified Files:
+ 	ainqui.F algtenv.F aopen.F aopenw.F aoperd.F aoptap.F astage.F
+ 	awrtap.F
+ 	cmpbu3.c cmpbu4.c cmpbu5.c dmpbl3.c dmpbl4.c dmpbl5.c dmpcop.c
+ 	extzv.c insv.c
+@
+text
+@#if defined(ALEPH_C)
+
+insv(src,pos,size,base)
+
+int src;
+int pos;
+int size;
+int *base;
+
+{
+
+   if (size == 0) return;
+
+   *base = (~(((1 << size) - 1) << pos) & *base) |
+                          ((((1 << size) - 1) & src) << pos);
+
+   return;
+
+}
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+a1 1
+#if defined(C)
+@
+
+
+1.1.1.1
+log
+@import alephio/c
+@
+text
+@@

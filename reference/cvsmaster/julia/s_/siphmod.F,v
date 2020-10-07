@@ -1,0 +1,75 @@
+head	1.1;
+access;
+symbols
+	jul313_3:1.1
+	jul313_2:1.1
+	jul313_1:1.1
+	jul313:1.1
+	jul312_1:1.1
+	jul312:1.1
+	jul311:1.1
+	jul310_1:1.1
+	jul310:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	99.10.27.12.27.30;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@For julia 310
+@
+text
+@      REAL FUNCTION SIPHMOD(MODU,IPH)
+C------------------------------------------------------------
+C!  - Return SICAL final 'ad hoc' Phi correction , including a possible
+C!    bunch dependance 
+C!
+C!    Author B.Bloch 10/99 
+C!    Input:  
+C!            MODU  Module ( 1 or 2)
+C!            IPH  Phi bin number ( 1 to 32)
+C!    Output: correction to be applied 
+C!    BANKS:  SCPH or SCBP 
+C
+C-----------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "sibun.h"
+      SAVE
+C
+      DATA IFIR/0/
+C--------------------------------------------------------------------
+#include "bmacro.h"
+C -------------------------------------------------------------------
+      IF (IFIR.EQ.0) THEN
+        IFIR = 1
+        NASCBP = NAMIND ('SCBP')
+        NASCPH = NAMIND ('SCPH')
+      ENDIF
+      phico = 1.
+C  use SCBP or SCPH dpending on which one was loaded by SIINIRU
+      KSCPH = IW(NASCBP)
+      If (KSCPH.LE.0) KSCPH = IW(NASCPH) 
+      IF (KSCPH.LE.0) GO TO 98
+C IF BUNCH IS ONE OR UNKNOWN, setup as 1
+      IFAM = 1
+      if (IBUNE.EQ.2) IFAM = IBUNE
+      KPOI = KROW(KSCPH,2*(ifam-1)+modu)
+      phico = rw(kpoi+iph)
+C
+   98 CONTINUE
+      SIPHMOD = phico
+  999 RETURN
+      END
+#endif
+@

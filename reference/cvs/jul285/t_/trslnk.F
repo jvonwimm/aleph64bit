@@ -1,0 +1,351 @@
+      SUBROUTINE TRSLNK(IR3,IR2,IR1,IPTR3,NLK,IER)
+C
+C ---------------------------------------------------------------------
+C! Search for link across 3  padrows
+C!
+C!  Author:   M. Mermikides   6-10-86
+C!  Modified: R. Johnson     19-01-88
+C!
+C!  Input:
+C!      - IR3       /I      TPC row number
+C!      - IPTR3     /I      Hit in this row at which to begin.  This
+C!                          points into the workbank INDBIN
+C!      - IR2       /I      Middle row number
+C!      - IR1       /I      Inner row number
+C!  Output:
+C!      - NLK       /I      No of valid links found
+C!      - IER       /I      Error code =0 for good return
+C!                          Set to 1 if BOS runs out of space
+C!
+C!  Called by TRKFND
+C!
+C!  Description:
+C!  -----------
+C!  Condition for accepting a link are:
+C!        1. Phi difference between hits on successive padrows < DPNEXT
+C!        2. z difference between hits on successive padrows   < DZNEXT
+C!        3. Radius of curvature of link  > RHOMIN
+C!        4. Consistency in z (|pred.z -msd z|) < TDZTOL
+C!        5. Closest approach to origin in r-phi, D0 < TD0TOL
+C!        6. Z at D0  < TZ0TOL
+C!  Rows, hit ref and link parameters are entered in workbanks INDLNK
+C!---------------------------------------------------------------------
+#ifndef DOC
+C
+#include "rparac.h"
+#include "alcons.h"
+#include "tparac.h"
+#include "tpgpar.h"
+#include "tclujj.h"
+#include "tlrljj.h"
+#include "tpuljj.h"
+#include "tpcojj.h"
+#include "tcrljj.h"
+#include "bcs.h"
+#include "rlunit.h"
+#include "tpwork.h"
+#include "trfdct.h"
+#include "tcbins.h"
+C
+      LOGICAL FIRST
+      DATA FIRST/.TRUE./
+      DATA  NXLNK/100/
+C
+C----------------------------------------------------------------------
+C
+#include "bmacro.h"
+#include "tsfunc.h"
+C
+      KCRXY(M1,M2)  = KROW(INDCXY,IW(KROW(KTCRL,M1)+JTCROC)+M2)
+C
+C----------------------------------------------------------------------
+C
+      IF (FIRST) THEN
+        FIRST=.FALSE.
+        NTPCO=NAMIND('TPCO')
+        NTCRL=NAMIND('TCRL')
+      ENDIF
+C
+      IER=0
+      KTPCO = IW(NTPCO)
+      KTCRL = IW(NTCRL)
+      NLK = 0
+      IC3= ITABL(INDBIN,IPTR3,JNDBCO)
+      I3= IC3 - ITABL(KTCRL,IR3,JTCROC)
+      PHI3  = RTABL(KTPCO,IC3,JTPCPH)
+      X3 = RTABL(INDCXY,IC3,1)
+      Y3 = RTABL(INDCXY,IC3,2)
+      Z3 = RTABL(KTPCO,IC3,JTPCZV)
+C
+C  Hits on middle padrow.  First find the correct phi bins.
+C
+      IBST2= IXWRAP(INT(TCOFFS+PHI3/TC2DEL)) + 1
+      DO 20 II=IBST2,IBST2+4*NMXWRP,2
+         IBIN2= IXWRAP(II)
+C
+C  Loop over unused hits in this bin, using the
+C  linked list in bank INDBIN.
+C
+         IPTR2=IBNPTR(IBIN2,IR2)
+  212    IF (IPTR2.EQ.0) GO TO 213
+            IC2= ITABL(INDBIN,IPTR2,JNDBCO)
+            PHI2 = RTABL(KTPCO,IC2,JTPCPH)
+            DFI32 = TRPHDI(PHI3,PHI2)
+C
+C Test on max phi and z diff.
+C
+            IF (ABS(DFI32).GT.DPNEXT) THEN
+              IPTR2=ITABL(INDBIN,IPTR2,JNDBFW)
+              GO TO 212
+            ENDIF
+            Z2 = RTABL(KTPCO,IC2,JTPCZV)
+            IF (ABS(Z2-Z3).GT.DZNEXT) THEN
+              IPTR2=ITABL(INDBIN,IPTR2,JNDBFW)
+              GO TO 212
+            ENDIF
+            SGZ2 = RTABL(KTPCO,IC2,JTPCSZ)
+            X2= RTABL(INDCXY,IC2,1)
+            Y2= RTABL(INDCXY,IC2,2)
+            I2= IC2 - ITABL(KTCRL,IR2,JTCROC)
+C
+C Hits on inner layer.  First find the correct bin.
+C
+            IBST1= IXWRAP(INT(TCOFFS+PHI2/TC2DEL)) + 1
+            DO 10 JJ=IBST1,IBST1+4*NMXWRP,2
+               IBIN1= IXWRAP(JJ)
+C
+C  Loop over unused hits in this bin, using the
+C  linked list in bank INDBIN.
+C
+               IPTR1=IBNPTR(IBIN1,IR1)
+  112          IF (IPTR1.EQ.0) GO TO 113
+                  IC1= ITABL(INDBIN,IPTR1,JNDBCO)
+                  PHI1 = RTABL(KTPCO,IC1,JTPCPH)
+                  DFI21 = TRPHDI(PHI2,PHI1)
+                  IF (ABS(DFI21).GT.DPNEXT) THEN
+                    IPTR1=ITABL(INDBIN,IPTR1,JNDBFW)
+                    GO TO 112
+                  ENDIF
+                  Z1 = RTABL(KTPCO,IC1,JTPCZV)
+                  IF (ABS(Z2-Z1).GT.DZNEXT) THEN
+                    IPTR1=ITABL(INDBIN,IPTR1,JNDBFW)
+                    GO TO 112
+                  ENDIF
+C
+                  X1 = RTABL(INDCXY,IC1,1)
+                  Y1 = RTABL(INDCXY,IC1,2)
+                  A1 = X2-X1
+                  B1 = Y2-Y1
+                  C1 = 0.5*(X1*X1-X2*X2+Y1*Y1-Y2*Y2)
+                  A2 = X3-X2
+                  B2 = Y3-Y2
+                  C2 = 0.5*(X2*X2-X3*X3+Y2*Y2-Y3*Y3)
+                  DET = A1*B2-A2*B1
+C
+C Centre of track orbit; protect against 3 perfectly aligned points
+C
+                  IF (DET.EQ.0.) THEN
+                    IPTR1=ITABL(INDBIN,IPTR1,JNDBFW)
+                    GO TO 112
+                  ENDIF
+                  XC = (B1*C2-B2*C1)/DET
+                  YC =-(A1*C2-A2*C1)/DET
+                  RHOSQ = (X1-XC)**2 + (Y1-YC)**2
+C
+C  Check on radius of curvature
+C
+                  IF (RHOSQ.LT.RHOMIN**2) THEN
+                    IPTR1=ITABL(INDBIN,IPTR1,JNDBFW)
+                    GO TO 112
+                  ENDIF
+                  RHO = SQRT(RHOSQ)
+                  CH12 = SQRT(A1*A1+B1*B1)
+                  ARG = CH12/(2.*RHO)
+                  IF (ARG.GE.1.0) THEN
+                    IPTR1=ITABL(INDBIN,IPTR1,JNDBFW)
+                    GO TO 112
+                  ENDIF
+C
+C  If chord length is less than 15 cm and radius > 20 cm approximate
+C  path length. The error is less than 1 mm under these conditions.
+C
+                  IF (CH12.LT.15. .AND. RHO. GT.20.) THEN
+                     S12 = CH12*(1. + ARG*ARG/8.)
+                  ELSE
+                     S12 = 2.*RHO*ASIN(ARG)
+                  ENDIF
+C
+                  CH13 = SQRT((X1-X3)**2+(Y1-Y3)**2)
+                  ARG = CH13/(2.*RHO)
+                  IF (ARG.GE.1.0) THEN
+                    IPTR1=ITABL(INDBIN,IPTR1,JNDBFW)
+                    GO TO 112
+                  ENDIF
+                  IF (CH13.LT.15. .AND. RHO. GT.20.) THEN
+                     S13 = CH13*(1. + ARG*ARG/8.)
+                  ELSE
+                     S13 = 2.*RHO*ASIN(ARG)
+                  ENDIF
+C
+C Get tangent of dip angle and predict z of middle point
+C
+                  TANL = (Z3-Z1)/S13
+                  Z2PR = Z1 + S12*TANL
+C
+C Apply test on difference of Z2 from predicted Z
+C
+                  ZDIFF = Z2PR - Z2
+                  CHI2Z = ZDIFF*ZDIFF/SGZ2
+                  IF (CHI2Z.GT.TDZTOL) THEN
+                    IPTR1=ITABL(INDBIN,IPTR1,JNDBFW)
+                    GO TO 112
+                  ENDIF
+C
+                  RC = SQRT(XC*XC + YC*YC)
+                  X01 = XC*(1. + RHO/RC)
+                  X02 = XC*(1. - RHO/RC)
+C
+C Protect against circle centre on Y-axis
+C
+                  IF (ABS(XC).LT.0.00001) THEN
+                     Y01 = YC*(1. + RHO/RC)
+                     Y02 = YC*(1. - RHO/RC)
+                  ELSE
+                     Y01 = YC*X01/XC
+                     Y02 = YC*X02/XC
+                  ENDIF
+C
+C   Find closest point to origin (D0)
+C   D0 is positive if track encloses origin, otherwise negative
+C
+                  D1SQ = X01*X01 + Y01*Y01
+                  D2SQ = X02*X02 + Y02*Y02
+                  IF (D1SQ.LT.D2SQ) THEN
+                     D0=SQRT(D1SQ)
+                     X0 = X01
+                     Y0 = Y01
+                  ELSE
+                     D0=SQRT(D2SQ)
+                     X0 = X02
+                     Y0 = Y02
+                  ENDIF
+C
+C  Cut on D0 and Z0
+C
+                  IF (D0.GT.TD0TOL) THEN
+                    IPTR1=ITABL(INDBIN,IPTR1,JNDBFW)
+                    GO TO 112
+                  ENDIF
+                  IF (RC.GT.RHO)   D0 = -D0
+                  CH10 = SQRT((X1-X0)**2 + (Y1-Y0)**2)
+                  PSI0 = 2.*ASIN(CH10/(2.*RHO))
+                  Z0 = Z1 - RHO*PSI0*TANL
+                  IF (ABS(Z0).GT.TZ0TOL) THEN
+                    IPTR1=ITABL(INDBIN,IPTR1,JNDBFW)
+                    GO TO 112
+                  ENDIF
+C
+C  Find charge (assuming track direction is away from origin)
+C  Get rotation angle to bring centre of track circle on x-axis
+C
+                  PHIC = ATAN2(YC,XC)
+                  CP = COS(PHIC)
+                  SP = SIN(PHIC)
+C
+C  All 3 points must be on the same semicircle
+C
+                  Y1R= Y1*CP - X1*SP
+                  Y2R= Y2*CP - X2*SP
+                  Y3R= Y3*CP - X3*SP
+                  IF (Y2R.GE.0.) THEN
+                     IF (Y1R.LT.0. .OR. Y3R.LT.0.) THEN
+                        IPTR1=ITABL(INDBIN,IPTR1,JNDBFW)
+                        GO TO 112
+                     ENDIF
+                     Q = 1.
+                  ELSE
+                     IF (Y1R.GT.0. .OR. Y3R.GT.0.) THEN
+                        IPTR1=ITABL(INDBIN,IPTR1,JNDBFW)
+                        GO TO 112
+                     ENDIF
+                     Q = -1.
+                  ENDIF
+                  PHI0 = PHIC + Q*PIBY2
+                  IF (PHI0.LT.0.) PHI0 = PHI0 + TWOPI
+C
+C  Now we have a link which passes the tests.
+C  Store the new link.  Note that we no longer try to resolve any
+C  ambiguities here resulting from more than one link sharing a
+C  single hit.  These will be resolved only after trying to extrapolate
+C  the links further.
+C
+                  NLK = NLK + 1
+                  NDONE = IW(INDLNK+1)*IW(INDLNK+2) + 2
+                  IF (NDONE + IW(INDLNK+1).GT.IW(INDLNK)) THEN
+                     NDATA = IW(INDLNK) +  NXLNK
+                     CALL WBANK(IW,INDLNK,NDATA,*800)
+                  ENDIF
+                  KLNK = INDLNK + NDONE
+                  IW(KLNK + 1) = IR3
+                  IW(KLNK + 2) = IR2
+                  IW(KLNK + 3) = IR1
+                  IW(KLNK + 4) = IPTR3
+                  IW(KLNK + 5) = IPTR2
+                  IW(KLNK + 6) = IPTR1
+                  RW(KLNK + 7) = Q*RHO
+                  RW(KLNK + 8) = TANL
+                  RW(KLNK + 9) = PHI0
+                  RW(KLNK +10) = D0
+                  RW(KLNK +11) = Z0
+                  RW(KLNK +12) = S13
+                  RW(KLNK +13) = CHI2Z
+C
+C   Compute sagitta errors for the three points. We take account
+C   of the uncertainty in the radial position which is significant
+C   for tracks at oblique incidence (large beta). The factor 0.1875
+C   corresponds to (half pad length)**2/12.
+C
+                  BETA = ATAN2(-(X3-XC), Y3-YC )
+                  IF (BETA.LT.0.) BETA=BETA+TWOPI
+                  BETA = TRPHDI(PHI3,BETA)
+                  COSB = COS(BETA)
+                  SINB = SIN(BETA)
+                  DW2 = RTABL(KTPCO,IC3,JTPCSR)
+                  RW(KLNK +14) = DW2*COSB*COSB + 0.1875*SINB*SINB
+                  BETA = ATAN2(-(X2-XC), Y2-YC )
+                  IF (BETA.LT.0.) BETA=BETA+TWOPI
+                  BETA = TRPHDI(PHI2,BETA)
+                  COSB = COS(BETA)
+                  SINB = SIN(BETA)
+                  DW2 = RTABL(KTPCO,IC2,JTPCSR)
+                  RW(KLNK +15) = DW2*COSB*COSB + 0.1875*SINB*SINB
+                  BETA = ATAN2(-(X1-XC), Y1-YC )
+                  IF (BETA.LT.0.) BETA=BETA+TWOPI
+                  BETA = TRPHDI(PHI1,BETA)
+                  COSB = COS(BETA)
+                  SINB = SIN(BETA)
+                  DW2 = RTABL(KTPCO,IC1,JTPCSR)
+                  RW(KLNK +16) = DW2*COSB*COSB + 0.1875*SINB*SINB
+                  IW(INDLNK + 2) = IW(INDLNK + 2) + 1
+C
+C  Get pointer to the next coordinate in the list for this bin
+C
+                  IPTR1=ITABL(INDBIN,IPTR1,JNDBFW)
+                  GO TO 112
+  113          CONTINUE
+   10       CONTINUE
+C
+C  Get pointer to the next coordinate in the list for this bin
+C
+            IPTR2=ITABL(INDBIN,IPTR2,JNDBFW)
+            GO TO 212
+  213    CONTINUE
+   20 CONTINUE
+      GO TO 999
+C
+  800 CONTINUE
+      CALL RERROR('TRSLNK',1,'Error extending link work bank')
+      IER=1
+  999 RETURN
+      END
+#endif

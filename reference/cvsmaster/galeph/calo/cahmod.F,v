@@ -1,0 +1,262 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.02.09.16.20.56;	author algal;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.01.58;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.59;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@update for official HCVL hac parameters
+@
+text
+@*DK cahmod
+      SUBROUTINE CAHMOD ( IPAR,IHPLN)
+C
+C   M.N Minard 880508
+C   1 st : lift working bank HCVL
+C          initialisation start volume in HCAL
+C          HCVL allows to store volume parameter for geantino tracking
+C   ELSE
+C          Calculate absorption and radiation length in non sensistive
+C          volume
+C          Fill common CAHTRA at the end of volume
+C - Output arguments:
+C              IPAR = 1 if bank HCVL and common /CAHTRA/ are filled
+C              IHPLN= plane # where the shower starts
+C-  Called  in HCSHOW
+C-  Calls HCSETP
+C
+C   Modify by M.N. Minard    29/1/93
+C ------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "bcs.h"
+#include "capajj.h"
+#include "capano.h"
+#include "gcmate.h"
+#include "hcloc.h"
+#include "hccong.h"
+#include "hcgega.h"
+#include "trkcom.h"
+#include "cahtra.h"
+#include "hcvljj.h"
+      LOGICAL FPSEN , FCSEN
+C -------------------------------------------------------------
+C--   INITIALISATION
+C
+      IPAR = 0
+C     current volume sensitive flag
+      FCSEN = ITRKEL(7).GT.0
+      JHCVL = NLINK ('HCVL',ITRKEL(1))
+C
+C - IF 1st entry THEN
+C      create bank 'HCVL',NR=track#
+C      fill it with absoption and radiation lengths
+C      set the sensitive volume flag to 0 (volume not sensitive)
+C
+      IF (JHCVL .EQ. 0) THEN
+C
+         CALL ALBOS('HCVL',ITRKEL(1),LHCVLA+LMHLEN,JHCVL,IGARB)
+         IW ( JHCVL+LMHCOL ) = LHCVLA
+         IW ( JHCVL+LMHROW ) = 1
+         CALL BLIST (IW,'T+','HCVL')
+         KHCVL = JHCVL + LMHLEN
+C
+         DO 10 IL = 1, LETRK
+            RW(KHCVL+JHCVTE+IL-1) = TRKELE (IL)
+  10     CONTINUE
+         RW ( KHCVL+JHCVRV ) = TRKELE (11)/GRADL
+         RW ( KHCVL+JHCVAV ) = TRKELE (11)/GABSL
+         RW ( KHCVL+JHCVTL ) = TRKELE (11)
+         RW ( KHCVL+JHCVTA ) = TINOL0 - TRKELE (11)/GABSL
+         RW ( KHCVL+JHCVTR ) = TINOX0 - TRKELE (11)/GRADL
+         IW ( KHCVL+JHCVUH ) = 0
+C
+      ELSE
+C
+C - ELSE (bank HCVL,NR=ITRKEL(1) exists)
+C      IF current volume is not sensitive THEN
+C         IF previous volume was sensitive THEN
+C            reset 'HCVL' and set sensitive flag to 0
+C         ELSE previous volume was not sensitive
+C            update 'HCVL' , sensitive flag = 1
+C         ENDIF
+C      ELSE current volume is sensitive
+C         IF previous volume was not sensitive THEN
+C            find out where the interaction occured
+C            update 'HCVL', set sensitive flag to 1
+C            fill common /CAHPAR/
+C            set IPAR to 1
+C
+         KHCVL = JHCVL+LMHLEN
+C        previous volume sensitive flaf
+         FPSEN = IW ( KHCVL + JHCVUH ) .GT. 0
+         IF (.NOT.FCSEN) THEN
+            IF (FPSEN) THEN
+               RW ( KHCVL+JHCVRV ) = TRKELE (11)/GRADL
+               RW ( KHCVL+JHCVAV ) = TRKELE (11)/GABSL
+               RW ( KHCVL+JHCVTL ) = TRKELE (11)
+               RW ( KHCVL+JHCVTA ) = TINOL0 - TRKELE (11)/GABSL
+               RW ( KHCVL+JHCVTR ) = TINOX0 - TRKELE (11)/GRADL
+               IW ( KHCVL+JHCVUH ) = 0
+            ELSE
+               RW ( KHCVL+JHCVRV ) = RW ( KHCVL+JHCVRV )
+     +                                   + TRKELE (11)/GRADL
+               RW ( KHCVL+JHCVAV ) = RW ( KHCVL+JHCVAV )
+     +                                 + TRKELE (11)/GABSL
+               RW ( KHCVL+JHCVTL ) = RW( KHCVL+JHCVTL )
+     +                                   + TRKELE (11)
+            ENDIF
+         ELSE
+            IF (.NOT.FPSEN) THEN
+               CALL HCSETP
+               SLENG = HCPAZ0 + HCTIRF(IHCPOR)+HCTINS + 0.1
+               IHPLN = ITRKEL(6)
+               IW ( KHCVL+JHCVUH ) = 1
+               RW ( KHCVL+JHCVRV ) = RW ( KHCVL+JHCVRV )
+     +                                   + TRKELE (11)/GRADL
+               RW ( KHCVL+JHCVAV ) = RW ( KHCVL+JHCVAV )
+     +                                   + TRKELE (11)/GABSL
+               RW ( KHCVL+JHCVTL ) = RW( KHCVL+JHCVTL )
+     +                                   + TRKELE (11)
+C
+               DO 20 IL = 1,LETRK
+                  HCTRKM ( IL,1 ) = RW (KHCVL+JHCVTE+IL-1)
+                  IF(IL.LE.LNTRK)HCTRKM ( IL,2 ) = TRKNXT (IL)
+  20           CONTINUE
+               HTIN01 = RW (KHCVL + JHCVTA)
+               HTIX01 = RW (KHCVL + JHCVTR)
+               HSHGRA = RW (KHCVL+JHCVTL)/RW(KHCVL+JHCVRV)
+               HSHGAB = RW (KHCVL+JHCVTL)/RW(KHCVL+JHCVAV)
+               IPAR = 1
+            ENDIF
+         ENDIF
+       ENDIF
+       RETURN
+       END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d55 1
+a55 1
+            RW(KHCVL+JHCVTK+IL) = TRKELE (IL)
+d57 6
+a62 6
+         RW ( KHCVL+JHCVGR ) = TRKELE (11)/GRADL
+         RW ( KHCVL+JHCVGL ) = TRKELE (11)/GABSL
+         RW ( KHCVL+JHCVXL ) = TRKELE (11)
+         RW ( KHCVL+JHCVN0 ) = TINOL0 - TRKELE (11)/GABSL
+         RW ( KHCVL+JHCVX0 ) = TINOX0 - TRKELE (11)/GRADL
+         IW ( KHCVL+JHCVIP ) = 0
+d82 1
+a82 1
+         FPSEN = IW ( KHCVL + JHCVIP ) .GT. 0
+d85 6
+a90 6
+               RW ( KHCVL+JHCVGR ) = TRKELE (11)/GRADL
+               RW ( KHCVL+JHCVGL ) = TRKELE (11)/GABSL
+               RW ( KHCVL+JHCVXL ) = TRKELE (11)
+               RW ( KHCVL+JHCVN0 ) = TINOL0 - TRKELE (11)/GABSL
+               RW ( KHCVL+JHCVX0 ) = TINOX0 - TRKELE (11)/GRADL
+               IW ( KHCVL + JHCVIP )  = 0
+d92 1
+a92 1
+               RW ( KHCVL+JHCVGR ) = RW ( KHCVL+JHCVGR )
+d94 1
+a94 1
+               RW ( KHCVL+JHCVGL ) = RW ( KHCVL+JHCVGL )
+d96 1
+a96 1
+               RW ( KHCVL+JHCVXL ) = RW( KHCVL+JHCVXL )
+d104 2
+a105 2
+               IW ( KHCVL+JHCVIP ) = 1
+               RW ( KHCVL+JHCVGR ) = RW ( KHCVL+JHCVGR )
+d107 1
+a107 1
+               RW ( KHCVL+JHCVGL ) = RW ( KHCVL+JHCVGL )
+d109 1
+a109 1
+               RW ( KHCVL+JHCVXL ) = RW( KHCVL+JHCVXL )
+d113 1
+a113 1
+                  HCTRKM ( IL,1 ) = RW (KHCVL+JHCVTK+IL)
+d116 4
+a119 4
+               HTIN01 = RW ( KHCVL + JHCVN0)
+               HTIX01 = RW( KHCVL + JHCVX0 )
+               HSHGRA = RW (KHCVL+JHCVXL)/RW(KHCVL+JHCVGR)
+               HSHGAB = RW (KHCVL+JHCVXL)/RW(KHCVL+JHCVGL)
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

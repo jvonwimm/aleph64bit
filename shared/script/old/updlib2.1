@@ -1,0 +1,190 @@
+#! /bin/csh
+#============================================================================
+#                             updlib
+#                                                       F.Ranjard
+#============================================================================
+# update an existing library on three platforms
+#============================================================================
+# update the $ALROOT/source directory
+# go to the source directory
+# get the list of new routines
+# compile them and update the library
+#============================================================================
+# P1 -> src_dir   i.e.: $ALROOT/gal304 
+# P2 -> idir      i.e.: gal
+# P3 -> lib_name  i.e.: libgal304
+# P4 -> listAllF  i.e.: ../skel/asinit.F ../skel/asrust.F ../ecal/echit.F
+# last  -v        for debug purpose
+#============================================================================
+# 960710 - updlib1.0
+# 960904 - updlib1.1
+# when mini source comile it with -I/aleph/src/alpha/inc
+# 970306 - updlib1.2
+# remove upd*.log files before compilation
+# 970410 - updlib2.0
+# copy new libraries onto clone
+# 970613 - updlib2.1
+# distinguish between *.F and *.c files
+#===========================================================================
+#include "~/flr/bin/verbflr.h"
+#
+set exec_name = "updlib2.1"
+set verbflr = ""
+set nar = $#argv
+if (${nar} != 0) then
+  if ($argv[${nar}] == "-v") then
+     echo "${exec_name}"
+     set verbflr = "-v" 
+     set echo on
+     set argv[${nar}] = ""
+     @ nar = ${nar} - 1
+  endif
+endif
+#
+if ( $?ENVIRONMENT ) then
+ if ( "$ENVIRONMENT" == "INTERACTIVE" && $1 == "-h") then
+   echo ""
+   echo "usage:"
+   echo " updlib <src_dir> <aleph_sub_dir> <lib_name> <list of *.F>"
+   echo ""
+   echo "some examples:"
+   echo " updlib $ALROOT/jul281 jul libjul281 ../a_/aamain.F ../r_/rinjob.F"
+   echo " goes to $ALROOT/jul281/$OS"
+   echo " from there compiles ../a_/aamain.F and ../r_/rinjob.F"
+   echo " updates /aleph/jul/libjul281.a and _dbx.a "
+   echo ""
+   echo " updlib $ALROOT/alephio gen libalephio214 ../io/iovers.F ../ard/aoptap.F"
+   echo " goes to $ALROOT/alephio/$OS"
+   echo " from there compiles ../io/iovers.F and ../ard/aoptap.F"
+   echo " updates /aleph/gen/libalephio214.a and _dbx.a"
+   echo ""
+   
+   exit(1)
+ endif
+endif
+#
+unset noclobber
+set flag = "OK"
+ 
+# =====================================================================
+#
+echo -n "Enter src-dir ->"
+set src_dir  = $<
+echo -n "Enter idir ->"
+set idir     = $<
+echo -n "Enter lib_name ->"
+set lib_name = $<
+echo -n "enter list of *.F files ->"
+set listF = $<
+echo -n "enter list of *.c files ->"
+set listC = $<
+
+# =====================================================================
+#          compile and update the library on various unix platforms
+# =====================================================================
+#
+upd_lib:
+echo `date` "=== START ${exec_name} ${OS} ${lib_name} =======" >> ${src_dir}/spy
+
+# =============== set prog_dir, obj_dir and lib_dir which depend on $OS =============
+
+set prog_dir = "${ALEPH}/${idir}"
+set obj_dir  = "${src_dir}/${OS}"
+set lib_dir  = "${prog_dir}"
+# ======================== create obj_dir if does not exist =============
+
+if (-d ${obj_dir}) then
+   rm ${obj_dir}/*.o
+else
+   mkdir ${obj_dir}
+endif
+
+cd ${obj_dir}
+#
+# ======================= compile w/o debug =============================
+set opt      = ""
+set debug    = ""
+#
+compile:
+
+set prog_name = `basename ${src_dir}` 
+set p_name = `echo ${prog_name} | tr -d '[0-9]'`
+
+rm updcomp${opt}.log
+set FC_OPT = "${FC} ${FCOPT} -I../inc ${opt}"
+if (${p_name} == "mini") set FC_OPT = "${FC_OPT} -I${ALEPH}/src/alpha/inc"
+${FC_OPT} ${listF} | & tee -a updcomp${opt}.log
+if ($status == 1) then
+   set flag = " FC ${debug} NOT OK "
+   goto spy
+endif
+
+rm updcc${opt}.log
+set CC_OPT = "cc ${CCOPT} -I../inc ${opt}"
+${CC_OPT} ${listC} | & tee -a updcc${opt}.log
+if ($status == 1) then
+   set flag = " cc ${debug} NOT OK "
+   goto spy
+endif
+
+rm updar${opt}.log
+ar rls ${lib_dir}/${lib_name}${debug}.a *.o | & tee -a updar${opt}.log
+
+grep -n 'Error' updar${opt}.log > updar${opt}.Error
+if !(-z updar${opt}.Error) then
+    set flag =  "FATAL ***> update archive problems"
+    goto spy
+endif
+
+rm *.o
+
+if (${debug} == "") then
+  set opt = "-g"
+  set debug = "_dbx"
+  goto compile
+endif
+#
+# 
+# ========================= get main program ====================# 
+
+set mnemonic = `echo ${lib_name} | tr -d '[0-9]'`
+
+if (${mnemonic} == "libgal") then
+   set main = "galeph"
+   set ini = "g"
+else if (${mnemonic} == "libjul") then
+   set main = "aamain"
+   set ini = "j"
+else if (${mnemonic} == "libalpha") then
+   set main = "qmain"
+   set ini = "q"
+else if (${mnemonic} == "liblook") then
+   set main = "lkmain"
+   set ini = "l"
+else
+   set main = ""
+endif
+if (${main} != "") then
+   cd ${lib_dir}
+   ar x ${lib_name}.a ${main}.o
+   if (${main} != "qmain") then
+      set cycle = `echo ${lib_name} | tr -d '[a-z]'`
+      mv ${main}.o ${ini}main${cycle}.o
+   endif
+endif
+
+# =================== copy new files onto clone ====================
+
+if (${SERVICE} == "AFAL" || ${SERVICE} == "SHIFTALEPH") copy2clone ${lib_dir}
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> spy
+spy:
+#*******> spy
+echo `date` " END of ${exec_name} ${OS} ${user} ${lib_name} ${flag}" >> ${src_dir}/spy
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> exec_end
+exec_end:
+ exit
+
+

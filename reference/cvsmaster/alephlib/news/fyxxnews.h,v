@@ -1,0 +1,259 @@
+head	1.7;
+access;
+symbols
+	aleph316_2:1.7
+	aleph316_1:1.7
+	aleph316:1.7
+	aleph315_7:1.7
+	aleph315_6:1.7
+	aleph315_5:1.7
+	aleph315_4:1.7
+	aleph315_3:1.7
+	aleph315_2:1.7
+	aleph315_1:1.7
+	aleph315:1.7
+	aleph314_2:1.7
+	aleph314_1:1.7
+	aleph314:1.7
+	aleph313_1:1.7
+	aleph313:1.7
+	aleph312_1:1.7
+	aleph312:1.7
+	aleph311_1:1.7
+	aleph311:1.7
+	aleph310_3:1.7
+	aleph310_2:1.7
+	aleph310_1:1.7
+	aleph310:1.7
+	aleph309_1:1.7
+	aleph309:1.7
+	aleph308_3:1.7
+	aleph308_2:1.7
+	aleph308_1:1.7
+	aleph308:1.7
+	aleph307_6:1.7
+	aleph307_5:1.6
+	aleph307_4:1.5
+	aleph307_2:1.5
+	aleph307_1:1.5
+	aleph307:1.5
+	aleph306:1.5
+	aleph305_4:1.5
+	aleph305_3:1.5
+	aleph305_2:1.5
+	aleph305_1:1.5
+	aleph305:1.5
+	aleph304_5:1.5
+	aleph304_4:1.5
+	aleph304_3:1.5
+	aleph304_2:1.5
+	aleph304_1:1.5
+	aleph304:1.5
+	aleph303_3:1.5
+	aleph303_2:1.5
+	aleph303_1_mc1:1.5
+	aleph303_1:1.5
+	aleph303:1.5
+	aleph302_9:1.4
+	aleph302_8:1.4
+	aleph302_7:1.4
+	aleph302_6:1.4
+	aleph302_5:1.4
+	aleph302_4:1.4
+	aleph302_3:1.4
+	aleph302_2:1.4
+	aleph302_1:1.4
+	aleph302:1.4
+	aleph216:1.4
+	aleph215_3:1.4
+	aleph215_2:1.4
+	aleph215:1.3
+	aleph214:1.2
+	aleph213:1.2
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.7
+date	98.04.01.10.34.53;	author cattanem;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	98.03.13.08.33.30;	author cattanem;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	97.05.21.16.30.14;	author cattanem;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.09.03.13.05.53;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.07.22.12.21.36;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.05.24.16.11.39;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.40.26;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.40.27;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.7
+log
+@Mods for Alephlib 307.6
+@
+text
+@CKEY FYXX MCARLO KINE
+C! FYXX package : build FYxx banks (kinematics)
+ The FYXX package translates and filters MONTE CARLO tracks from one
+ set of banks (KINE,VERT,KHIS,KPOL,KVOL) to another set
+ (FKIN,FVER,FPOI,FPOL)  which is more convenient for analysis. A few
+ utility routines are also included.
+ When the package is used to
+ translate KINE etc. to FKIN etc. certain types of 'uninteresting'
+ tracks may be dropped: those tracks which originate
+ in the ITC electronics or TPC endplate, tracks which originate in
+ the calorimiters, and tracks whose momenta are below a certain
+ threshold. Certain tracks will be kept regardless of these cuts,
+ namely tracks which came from the event generator.
+
+ The FYXX package must be initialized with a call to FYIRUN :
+      CALL FYIRUN(0.,TKDRO,SHDRO,CUTRA)
+ INPUTS:
+       TKDRO       = IF true THEN drop history of interactions
+                     in ITC electronics and TPC endplate
+       SHDRO       = IF true THEN drop history of interactions
+                     in calorimeters
+       CUTRA       = IF not 0. THEN drop track with momentum
+                     below CUTRA
+
+  and for each event there must be a call to FYKINE :
+      CALL FYKINE(DROP,GARB,IBFUL)
+ - input arguments :
+        DROP     = character flag
+                   if = 'DROP' then drop KINE,VERT,KHIS,KVOL,KPOL banks
+        GARB     = character flag
+                   if = 'GARB' then make a garbage collection
+ - output argument :
+        IBFUL    = -1 means not enough space in BOS array
+
+ ! 980313 corr.file no.5 to ALEPHLIB 30.7
+    FYKILL : Don't kill vertices in TPC passive material at large angles
+             (membrane et al., resistor chain, laser mirrors and prisms)
+                                                                (S.Wasserbaech)
+ 
+ ! 980401 corr.file no.6 to ALEPHLIB 30.7
+    FYFKIN : Fill FSHO monte carlo bank from KSHO bank (B.Bloch)
+    FYIRUN : Add FSHO bank to E list                   (B.Bloch)
+    FYKINE : Drop also KSHO bank                       (B.Bloch)
+    FYTOKI : Handle also KSHO/FSHO banks               (B.Bloch)
+
+ ! ALEPHLIB 30.3
+    FYRELA.H : Increase MAXMCX to 2000 (from 1000) to cope with PHOT02
+               events with too many KINE banks                   (W.Manner)
+
+ ! 960823 corr.file no.1 to ALEPHLIB 21.5
+    FYTREE - reset the number of kept tracks if some tracks were kept
+             without the vertex origin.
+    FYFKIN - print FKIN/FVER when FYDEB flag is defined.
+
+ ! ALEPHLIB 21.5
+   FYIRUN : Fix a string concatenation (M.Cattaneo 22-July-96)
+
+ ! ALEPHLIB 21.3
+   FYRELA.H : Remove # as first character of DOC line, breaks CPP
+
+ ! ALEPHLIB 20.5
+   FYINEV : remove reference to ELISAD variable which was not set.
+
+ ! ALEPHLIB 15.6
+   FYKILL : Correction for very rare cases giving a faulty FKIN bank
+            (J.Boucrot)
+
+@
+
+
+1.6
+log
+@Mod to fykill
+@
+text
+@d40 6
+@
+
+
+1.5
+log
+@Increase MAXMCX in fyrela.h
+@
+text
+@d35 5
+@
+
+
+1.4
+log
+@add missing #ifdef DOCs
+@
+text
+@d35 4
+@
+
+
+1.3
+log
+@Fix string in fyirun
+@
+text
+@d35 5
+@
+
+
+1.2
+log
+@Remove # from first character of DOC comment
+@
+text
+@d35 3
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d35 3
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

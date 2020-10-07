@@ -1,0 +1,194 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.30.07.13.48;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.01.47;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.48;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ cahtra.h gmacro.h lccomc.h lcnamc.h ljjpar.h siconst.h
+ sigeco.h version.h
+ itmsk1.F itmsk2.F itnois.F itres.F itxtlk.F
+ lcadc.F lcamp.F lcasig.F lcbhab.F lcbkpr.F lcdigi.F lcfral.F
+ lchit.F lcirun.F lcnami.F lcnois.F lcpad.F lcroc.F lcsamp.F
+ lcsatu.F lcshow.F lcstrt.F lctrak.F lctrdi.F lctrht.F lcwire.F
+ lcwsum.F lcwtri.F
+ muasig.F mubook.F muirun.F muunoi.F muwsum.F
+ trignews.h
+ siasig.F sitrak.F siwsum.F
+ asasig.F asbook.F ascjob.F ascrun.F asctra.F asevst.F asfxxx.F
+ asieve.F asigea.F asijob.F asimod.F asinit.F asipac.F asirun.F
+ askine.F asksin.F asktrk.F aspeve.F asprun.F asread.F asredc.F
+ asreve.F asrkin.F asrtyp.F asrust.F astdeb.F astgea.F astrac.F
+ astrig.F aswkin.F aswrtp.F aswsum.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+ xtrcom.h
+ ecalnews.h geomnews.h lcalnews.h news.h skelnews.h vdetnews.h
+@
+text
+@*DK astdeb
+      SUBROUTINE ASTDEB
+C ---------------------------------------------------------
+C - F.Ranjard - 870813
+C! debug after a tracking step
+C  this routine is called by GUSTEP after every step when
+C  FGALJO is true to perform various tasks such as:
+C  - IMPAct banks if required
+C  - large debug printout if required
+C  - specific output to retreive energy deposited in ALEPH
+C - called by GUSTEP                         from this .HLB
+C - calls     ASTIMP                         from this .HLB
+C             GPCXYZ, GSXYZ, GDCXYZ          from GEANT3 lib
+C ---------------------------------------------
+#ifndef DOC
+      SAVE
+#include "agcons.h"
+#include "iocom.h"
+#include "jobcom.h"
+#include "jqcom.h"
+#include "trkcom.h"
+#include "gcking.h"
+      LOGICAL FTPC,FLAST
+#include "gmacro.h"
+C
+C ----------------------- GALEPH IMPA banks
+      IF (NAGIMP.GT.0) THEN
+C
+C - IF it is a primary track THEN
+C      IF it is the entrance point in a detector but TPC gas OR
+C         it is the exit point of a charged part. from the TPC gas THEN
+C         store the track parameters in bank IMPA, NR=IGTRA
+         FTPC  = IGSVOL.GT.0 .AND. IGSVOL.EQ.IDETJO(3)
+         FLAST = IGNWVO.EQ.2
+         IF (IGSTAK .EQ. 0) THEN
+            IF ( (FIRST .AND. .NOT.FTPC) .OR.
+     &           (FLAST .AND. FCHRG .AND. FTPC) ) THEN
+               CALL ASTIMP
+            ENDIF
+         ENDIF
+C
+      ENDIF
+C ----------------------- end GALEPH IMPA
+C
+C - debug
+      IF(FDEBJO.AND.IPRIJO(17).EQ.1) THEN
+       CALL GPCXYZ
+       IF(NGKINE.GT.0) THEN
+        WRITE(LOUTIO,801)NGLEVE,(CHAHOL(NGAMES(I)),NGUMBR(I),I=1,NGLEVE)
+        WRITE(LOUTIO,802) CHAHOL(KGCASE),NGKINE,
+     &                   ((GKIN(J,I),J=1,5),I=1,NGKINE)
+       ENDIF
+      ENDIF
+ 801  FORMAT(/1X,'+++ASTDEB+++ ',I2,10(2X,A4,I3))
+ 802  FORMAT(14X,A4,3X,I3,:,5F10.4,:/(24X,5F10.4))
+C
+C - If display of the event is required then
+C - Save 1st and last point of the track + points when leaving a volume
+C - or points every 20cm about
+      IF(FDISJO) THEN
+         IF(GSLENG.EQ.0. .OR. IGSTOP.NE.0 .OR. IGNWVO.EQ.2
+     &      .OR. MOD(GSLENG,20.).EQ.0.) CALL GSXYZ
+      ENDIF
+C
+#if defined(DRAW)
+C - Online display of the track trajectory if required
+      IF(FDISJO.AND.IPRIJO(18).EQ.1) THEN
+         CALL GDCXYZ
+      ENDIF
+#endif
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d14 1
+a14 1
+C -----------------------------------------------------------
+d16 1
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

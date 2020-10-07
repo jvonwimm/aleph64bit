@@ -1,0 +1,59 @@
+KCAR 0 / $TEXT
+POFF
+***********************************************************************
+*
+*  use RANMAR generator for random numbers
+*  INSEED : first seed (range assigned per institute)
+*  LOSEED : second seed (incremented locally for new runs)
+*      INSEED          LOSEED (1-30000)
+RMAR    613             22673
+*
+*   RUN #                   RUN'S TITLE
+RUN  118            'WW/ZZ PRODUCTION - LEPWW'
+*     FIRST EVENT   LAST EVENT TO BE GENERATED
+TRIG       1         10000
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG
+DEBU    6   /      0          10
+* event output file
+***FILO 'SCRW:LEPWW.EPIO'
+* histogram output file
+*HSTO 'SCRA:LEPWW_176.HIS'
+*
+* beam spot:      sigma-x   sigma-y  sigma-z  (cm)
+SVRT               0.0142   0.0005   0.70
+***********************************************************************
+*
+* GENE card
+*
+* XMZ    mass of the Z
+* XMW    mass of the W
+* XMT    mass of the top quark
+* ALFA   1 / alpha_QED (at s=0)
+* ALFAS  alpha_STRONG  (at s=XMW**2)
+* GF     fermi constants
+* SIN2T  sin-squared-theta-Weinberg (at the Z peak)
+* ECM    center-of-mass energy
+* IRFLAG generate initial-state radiation (1) or not (0)
+* CSFLAG correct for the Coulomb Singularity (1) or not (0)
+* BWFLAG Breit-Wigner w/ mass-dependent (1) or constant (0) width
+* ASFLAG apply alpha_S correction for widths (1) or not (0)
+* HIFLAG book and fill diagnostic histograms (1) or not (0)
+* FRFLAG generate final-state radiation (1) or not (0)  (PHOTOS)
+* IZFLAG include contributions from ZZ diagrams (1) or not (0)
+* ILFLAG evoke LUND showers, fragmentation, and decay (1) or not(0)
+* UWFLAG Use total W and Z widths from the User (1) or the SM (0)
+* WWUSER User value for W width (ignored if UWFLAG=0)
+* ZWUSER User value for Z width (ignored if UWFLAG=0)
+*
+*      XMZ    XMW   XMT     ALFA    ALFAS    GF       SIN2T
+GENE 91.190 80.250 175.0 137.035989 0.123 1.16639E-5 0.2317
+*
+* ECM IRFLAG CSFLAG BWFLAG ASFLAG HIFLAG FRFLAG IZFLAG ILFLAG
+176.0   1      1      1      1      1      1      1      1
+*
+* UWFLAG WWUSER ZWUSER
+    0    2.088  2.507
+***********************************************************************
+*
+END$
+ENDQ

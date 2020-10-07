@@ -1,0 +1,106 @@
+      SUBROUTINE WRITES
+
+*     ******************************************************************
+*     *                                                                *
+*     *   EXAMPLE,               TEST ROUTINE                          *
+*     *      GENERATE BANKS FOR NN EVENTS AND WRITE TO DATA SET 1      *
+*     *      (USES RANDOM GENERATOR RNDM FROM CERNLIB)                 *
+*     *                                                                *
+*     *   CREATE BANK (HEAD,0) WITH INFORMATION ON RUN AND EVENT       *
+*     *   NUMBER ETC                                                   *
+*     *                                                                *
+*     *   CREATE BANK (RAWD,0) WITH RANDOM FLOATING POINT NUMBERS      *
+*     *                                                                *
+*     *   CREATE BANKS (CHEN,J) , EACH WITH SOME CHANNEL NUMBERS       *
+*     *   AND ENERGY                                                   *
+*     *                                                                *
+*     ******************************************************************
+
+      COMMON/BCS/IW(1000)
+      REAL RW(1000)
+      EQUIVALENCE (IW(1),RW(1))
+      DO 40 IEV=1,100
+
+*     CREATE AND FILL BANK (HEAD,0)
+
+*     I   FMT   BANK(HEAD,0)
+*     ----------------------
+*     1    I    EXPERIMENT NUMBER
+*     2    I    RUN NUMBER
+*     3    I    EVENT NUMBER
+*     4    I    DATA TYPE 0=DATA >0=MONTE CARLO
+*     5    I    FURTHER DATA IDENTIFIER
+*     6    I    ...
+*     7    I    ...
+*     8    I    ...
+*     9    I    DATE YYMMDD
+*     10   I    TIME   HHMM
+
+      IHEAD=NBANK('HEAD',0,10)
+      IF(IHEAD.EQ.0) GOTO 40
+      IW(IHEAD+2)=4711
+      IW(IHEAD+3)= IEV
+      IW(IHEAD+4)=   1
+      CALL DATIME(IW(IHEAD+9),IW(IHEAD+10))
+
+*     CREATE AND FILL BANK (RAWD,0)
+
+*     I   FMT   BANK(RAWD,0)
+*     ----------------------
+*     1    F    ENERGY
+*     ...  F    ) REPEATED
+*     ND   F    ) REPEATED
+
+      ND=10.0+10.0*RNDM(DUMMY)
+      IRAWD=NBANK('RAWD',0,ND)
+      IF(IRAWD.EQ.0) GOTO 100
+      DO 10 I=1,ND
+   10 RW(IRAWD+I)=RNDM(I)
+
+*     CREATE AND FILL BANKS (CHEN,J)
+
+*     I   FMT   BANK(CHEN,J)
+*     ----------------------
+*     1    I    CHANNEL NUMBER
+*     2    F    ENERGY
+*     3    I    ) REPEATED (CHANNEL NUMBER)
+*     4    F    ) REPEATED (ENERGY)
+*     ...
+*     ND
+
+      NR=0
+      NL=5.0+5.0*RNDM(DUMMY)
+      DO 20 L=1,NL
+      NR=NR+1+RNDM(L)*2
+      ICHEN=NBANK('CHEN',NR,6)
+      IF(ICHEN.EQ.0) GOTO 100
+      ICHAN=256*RNDM(LDUMMY)
+      IW(ICHEN+1)=ICHAN
+      RW(ICHEN+2)=RNDM(L)
+      IW(ICHEN+3)=ICHAN+1
+      RW(ICHEN+4)=RNDM(L+1)+RNDM(L-1)
+      IW(ICHEN+5)=ICHAN+2
+      RW(ICHEN+6)=RNDM(L+2)
+   20 CONTINUE
+
+*     BANK FORMATS
+
+      CALL BKFMT('HEAD','10I')
+      CALL BKFMT('RAWD','F')
+      CALL BKFMT('CHEN','(I,F)')
+
+*     DEFINE EVENT-LIST
+
+      CALL BLIST(IW,'E=','HEADRAWDCHEN')
+
+      CALL BWRITE(IW,1,'E')
+      CALL BDROP(IW,'E')
+      CALL BGARB(IW)
+   40 CONTINUE
+
+*     WRITE BUFFER, REWIND AND PRINT STATUS
+
+      CALL BRWND(1)
+      CALL BOSTA
+  100 RETURN
+      END

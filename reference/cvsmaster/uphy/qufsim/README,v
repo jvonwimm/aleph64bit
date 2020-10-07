@@ -1,0 +1,407 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  uphy1-0:1.1.1.1 flr:1.1.1;
+locks    ; strict;
+comment  @# @;
+
+
+1.1
+date     96.08.16.13.38.13;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.08.16.13.38.14;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@                                                                                
+          QQQQQQ  UU    UU FFFFFF  SSSSSSS IIIIIIII MM     MM                   
+         QQQQQQQQ UU    UU FFFFFF SSSSSSSS    II    MMM   MMM                   
+         QQ    QQ UU    UU FF     SS          II    MMMM MMMM                   
+         QQ    QQ UU    UU FFFFFF SSSSSSS     II    MM MMM MM                   
+         QQ QQ QQ UU    UU FFFFFF  SSSSSSS    II    MM  M  MM                   
+         QQ   QQQ UU    UU FF           SS    II    MM     MM                   
+         QQQQQQQQ UUUUUUUU FF     SSSSSSSS    II    MM     MM                   
+          QQQQQQ   UUUUUU  FF     SSSSSSS  IIIIIIII MM     MM                   
+                                                                                
+                                                                                
+                      11       00000   666666                                   
+                     111      0000000 6666666                                   
+                    1111      00   00 66                                        
+                      11      00   00 666666                                    
+                      11      00   00 6666666                                   
+                      11      00   00 66   66                                   
+                    111111 ## 0000000 6666666                                   
+                    111111 ##  00000   66666                                    
+                                                                                
+                                                                                
+Description:                                                                    
+-----------                                                                     
+                                                                                
+QUFSIM is a fast simulation program for the ALEPH detector, more                
+precisely for the energy flow reconstruction in the ALEPH detector.             
+Since the energy flow reconstruction makes use of all subdetectors,             
+this implies a simulation of almost everything, from KINGAL events.             
+                                                                                
+Here is a summary of what is done:                                              
+---------------------------------                                               
+                                                                                
+ 1) Quasi-stable particles (Lambda, K0s, Ksi, ... and even charged              
+    pions and kaons) are decayed according to their lifetime and                
+    their branching ratios (with JETSET 7.4)                                    
+                                                                                
+ 2) Photons are converted in e+e- pairs according to the detector               
+    material (BP, VDET, ITC, TPC)                                               
+                                                                                
+ 3) Charged particles are followed in the VDET, ITC, TPC. Number                
+    of hits (including effects of cracks between sectors), d0, z0               
+    and momentum resolution are simulated. Possibility of loosing               
+    charged particle due to nuclear interaction is implemented.                 
+    Good tracks are stored (nhits, z0 and d0 criteria)                          
+                                                                                
+ 4) V0s are reconstructed and stored as in ENFLW                                
+                                                                                
+ 5) Electrons and muons are identified from a simulation of RT,RL,              
+    and of the number of planes fired in the HCAL, aqccording to                
+    the actual ALEPH geometry.                                                  
+                                                                                
+ 6) Photons are stored if they are more than 2cm apart from any                 
+    track extrapolation (as in GAMPEX/ENFLW). ECAL energy resolu-               
+    tion is simulated. Electrons not reconstructed in the TPC                   
+    are stored as photons (if in the ECAL acceptance).                          
+                                                                                
+ 7) Charged and neutral hadrons, photons/electrons that do not                  
+    hit the ECAL (hole LCAL/ECAL) are extrapolated to the HCAL.                 
+    Link between TPC and calorimeters is performed (with some                   
+    inefficiency for low momentum charged particles). Clustering                
+    is simulated according to the angular resolution of ECAL and                
+    HCAL. HCAL energy resolution is simulated, together with                    
+    possible energy losses (coil, cables, ...). Neutral hadrons                 
+    are determined as in ENFLW, if there is a sufficient excess                 
+    of calorimeter energy in a CALobject.                                       
+                                                                                
+ 8) Main triggers (Single Muon, Single Charged EM, Total Energy)                
+    are simulated.                                                              
+                                                                                
+ 9) Section EF, EJ are filled. Section FSIM (equivalent to                      
+    section 'NFLW') is filled also (see below). Both sections                   
+    are equivalent and are linked to each other.                                
+                                                                                
++-------------------------------------------------------------+                 
+|      H O W    T O    R U N    T H E    P R O G R A M ?      |                 
++-------------------------------------------------------------+                 
+                                                                                
+The program is interfaced with ALPHA, and must be called                        
+in QUEVNT:                                                                      
+                                                                                
++--------------+                                                                
+|  In  QUEVNT  |                                                                
++--------------+                                                                
+   a. Include PARCUT alpha common deck  (only if you want to use                
+                                         section 'FSIM')                        
+                                                                                
+   b. CALL qufsim(iok)                                                          
+      IF ( iok .NE. 0 ) RETURN                                                  
+                                                                                
+           o iok = 0  : OK                                                      
+           o iok = 1  : Missing banks                                           
+           o iok = 2  : Preselection failed (from card FSIM, see below)         
+           o iok = 3  : Trigger failed                                          
+                        (You can also keep iok=3 if you don't want              
+                         to cut on the trigger)                                 
+                                                                                
++------------------+                                                            
+|  In  The  Cards  |                                                            
++------------------+                                                            
+                                                                                
+No cards are mandatory, but you can use the following ones to supersede         
+the default values:                                                             
+                                                                                
+*                                                                               
+* QUFSIM  data cards                                                            
+*                                                                               
+* Use the following card ONLY if GALEPH has been already run                    
+* (skip particle decays, photon conversions, nuclear interactions)              
+*GALE                                                                           
+*                                                                               
+* Magnetic field (KGauss)                                                       
+FIEL 15.000                                                                     
+*                                                                               
+* Pre-selection                                                                 
+* # tracks Min  Max   E_Ch min  max   N_hit  d0   z0   Debug level              
+FSIM        0   200     1000.   200.    4    2.0 10.0      1                    
+*                                                                               
+* Acceptance (in degrees)                                                       
+* ======================                                                        
+*        Ecal    Hcal    TPC (irrelevant in ALEPH, = small angle mask)          
+ACCE     3.0     8.5     0.00                                                   
+*                                                                               
+* Cracks                                                                        
+* ======                                                                        
+* 1) Angular definition (in degrees)                                            
+* Overlap Endcap/Barrel  Hole Lumi/Endcap  Crack size in ECAL  LCAL             
+CRAK       37.    45.         9.5   12.0                 0.5   3.0              
+* 2) Resolution degradation (multiplicative factor)                             
+*        Overlap   Hole   Lumi   Cracks ECAL  Crack LCAL                        
+           3.0     3.0    2.0        3.0         3.0                            
+*                                                                               
+* Energy/momentum Resolution                                                    
+* ==========================                                                    
+*  1) Photons (ECAL)                                                            
+*        Fluche    Flucon     Eblind      Ecacut                                
+RESO      0.25      0.02       0.00       0.200    ! ALEPH                      
+*RESO      0.00      0.00       0.00       0.000   ! perfect detector           
+*  2) Neutral hadrons (ECAL + HCAL)                                             
+*        Flucha    Hblind     Flucut      Hcacut                                
+          0.90      0.30       1.00       0.350    ! ALEPH                      
+*         0.00      0.00       0.00       0.000    ! perfect detector           
+*  3) Charged particles (VDET+ITC+HCAL)                                         
+*        Flutpc    Tpccut                                                       
+         0.0006    0.000                           ! ALEPH                      
+*        0.0000    0.000                           ! perfect detector           
+*                                                                               
+*   With the following definitions:                                             
+*                                                                               
+*   Delta(E)/E  = FLUCHE/SQRT(E) + Flucon,  for the photons                     
+*   Delta(E)/E  = FLUCHA/SQRT(E),           for the neutral hadrons             
+*   Delat(1/pT) = FLUTPC,                   for the charged                     
+*                                                                               
+*   ECACUT, HCACUT, TPCCUT = energy (GeV) below which a particle is             
+*   not counted in the energy flow (and/or not detected), for the               
+*   photons, neutral hadrons, and charged particles resp.                       
+*                                                                               
+*   A neutral hadron is declared to be found when, in a given                   
+*   calobject of calorimetric energy E, and total momentum p,                   
+*                                                                               
+*          (E - p)  >  FLUCUT * SQRT(p), E, p in GeV, GeV/c.                    
+*                                                                               
+*                                                                               
+*   The fraction of energy lost by charged or neutral hadrons                   
+*   is given by HBLIND.                                                         
+*                                                                               
+*   EBLIND is of no use in the code (yet)                                       
+*                                                                               
+* Angular cut for clusterization (in degrees)                                   
+*       Photons     Hadrons                                                     
+CLUS      3.0         9.0                            ! ALEPH                    
+*CLUS      0.1         0.1                           ! perfect detector         
+                                                                                
+Other cards may be used to change thhe geometry of the internal                 
+layers of ALEPH , and their radiation lengths, but are for expert               
+only.                                                                           
+                                                                                
++---------------------+                                                         
+|  For the execution  |                                                         
++---------------------+                                                         
+                                                                                
+Link with ALPHA122, JETSET74, and LUDATA74                                      
+                                                                                
+                                                                                
+                                                                                
++-----------------------------------------------------------+                   
+|       G E T    T H E    I N F O R M A T I O N   . . .     |                   
++-----------------------------------------------------------+                   
+                                                                                
++---------------+                                                               
+| Energy flow : |                                                               
++---------------+                                                               
+                                                                                
+Either section 'EF' (kfeft --> kleft, see the ALPHA manual)                         
+                                                                                
+Or     section 'FSIM' (kfrefw --> klsefw), with                                 
+         o kfrtot(1) --> klstot(1) : good tracks                                
+         o kfrtot(2) --> klstot(2) : V0 tracks                                  
+         o kfrtot(3) --> klstot(3) : photons                                    
+         o kfrtot(4) --> klstot(4) : neutral hadrons                            
+         o kfrtot(5) --> klstot(5) : LCAL/SiCAL clusters                        
+Note: kfrtot(1) = kfrefw et klstot(1) = klsefw                                  
+Note: What works with section EF (e.g. KEFOTY(itk), etc) works                  
+      also for the section FSIM. In particular, KTN(itk) returns                
+      the index in the bank PSFR (see below) to get more information            
+      on the charged particles.                                                 
+                                                                                
++-------------+                                                                 
+| Lepton Id : |                                                                 
++-------------+                                                                 
+                                                                                
+Electrons:                                                                      
+----------                                                                      
+                                                                                
+   ***  CALL idelec(ich,idip,idif,rti,rli,idt)                                  
+     Input                                                                      
+           o ich : track FSIM (kfrtot(1) --> klstot(2))                         
+                      or EF   (KEFOTY(ich)<4)                                   
+     Output                                                                     
+           o idip = 0 if electron, 1 otherwise, -1 if no ECAL cluster           
+           o idif = quality flag (crack etc see EIDT)                           
+           o rti  = transverse estimator RT                                     
+           o rli  = longitudinal estimator RL                                   
+                                                                                
+                                                                                
+Muons:                                                                          
+------                                                                          
+                                                                                
+   ***  CALL idmuon(ich,iexp,ifir,i10,i03,imu,idf,ehci,idt,                     
+     .              xmult,rapp,ang,ishad,sudnt,imcf)                            
+     Input                                                                      
+           o ich : trace EFLW (kfrtot(1) --> klstot(2))                         
+     Output                                                                     
+           o nexp: number of expected planes in the HCAL                        
+           o nfir: number of fired    planes in the HCAL                        
+           o n10 : number of fired    planes in the last 10                     
+           o n03 : number of fired    planes in the last 3                      
+           o nmu : number of fired    muon chamber layers                       
+           o idf : official ALEPH muon flag (QMUIDO)                            
+           o ehc : energy of he PHCO associated to ich                          
+           o lidt: local identification flag                                    
+           o xmult --> imcf : irrelevant here                                   
+                                                                                
+                                                                                
+Charged particles:                                                              
+------------------                                                              
+                                                                                
+The information on the charged particles is stored in bank PSFR:                
+                                                                                
+o itk = ALPHA index ---> KTN(itk) = PSFR row.                                   
+                                                                                
+o DDL of PSFR                                                                   
+                                                                                
+                                              Subschema: QUFSIM                 
+ +------+                                                                       
+ | PSFR |  Reconstructed charged tracks                                         
+ +------+  in QUFSIM                                                            
+                                                                                
+ ..............................................................                 
+     1          I    Number of words per track (=16)                            
+     2          I    Number of tracks                                           
+ ..............................................................                 
+     1   IR  F    IR               [*,*]                                        
+                     inverse radius (cm-1)                                      
+     2   TL  F    TL               [*,*]                                        
+                     tan (dip angle)                                            
+     3   P0  F    P0               [0.0,6.28]                                   
+                     phi0 at the origin (rad)                                   
+     4   D0  F    D0               [*,*]                                        
+                     d0 at the origin (cm)                                      
+     5   Z0  F    Z0               [*,*]                                        
+                     z0 at the origin (cm)                                      
+     6   N0  I    N0               [0,*]                                        
+                     number of TPC hits (cm)                                    
+     7   QX  F    QX               [*,*]                                        
+                     Px at the origin (GeV/c)                                   
+     8   QY  F    QY               [*,*]                                        
+                     Py at the origin (GeV/c)                                   
+     9   QZ  F    QZ               [*,*]                                        
+                     Pz at the origin (GeV/c)                                   
+     10  XV  F    XV               [*,*]                                        
+                     x of the creation vertex (cm)                              
+     11  YV  F    YV               [*,*]                                        
+                     y of the creation vertex (cm)                              
+     12  ZV  F    ZV               [*,*]                                        
+                     z of the creation vertex (cm)                              
+     13  PX  F    PX               [*,*]                                        
+                     Px at the creation vertex (GeV/c)                          
+     14  PY  F    PY               [*,*]                                        
+                     Py at the creation vertex (GeV/c)                          
+     15  PZ  F    PZ               [*,*]                                        
+                     Pz at the creation vertex (GeV/c)                          
+     16  AL  I    AL               [0,*]                                        
+                     ALPHA index                                                
+ ..............................................................                 
+                                                                                
+o Information can be accessed with the following implicit functions:            
+                                                                                
+*CD PSFRJJ                                                                      
+      PARAMETER(JPSFIR=1,JPSFTL=2,JPSFP0=3,JPSFD0=4,JPSFZ0=5,JPSFN0=6,          
+     +          JPSFQX=7,JPSFQY=8,JPSFQZ=9,JPSFXV=10,JPSFYV=11,                 
+     +          JPSFZV=12,JPSFPX=13,JPSFPY=14,JPSFPZ=15,JPSFAL=16,              
+     +          LPSFRA=16)                                                      
+      COMMON / psfrin / ipsfr, npsfr                                            
+C                                                                               
+*CD PSFRFU                                                                      
+      QPSFIR(i) = RW(ipsfr + lmhlen + (i-1)*lpsfra + jpsfir)                    
+      QPSFTL(i) = RW(ipsfr + lmhlen + (i-1)*lpsfra + jpsftl)                    
+      QPSFP0(i) = RW(ipsfr + lmhlen + (i-1)*lpsfra + jpsfp0)                    
+      QPSFD0(i) = RW(ipsfr + lmhlen + (i-1)*lpsfra + jpsfd0)                    
+      QPSFZ0(i) = RW(ipsfr + lmhlen + (i-1)*lpsfra + jpsfz0)                    
+      KPSFN0(i) = IW(ipsfr + lmhlen + (i-1)*lpsfra + jpsfn0)                    
+      QPSFQX(i) = RW(ipsfr + lmhlen + (i-1)*lpsfra + jpsfqx)                    
+      QPSFQY(i) = RW(ipsfr + lmhlen + (i-1)*lpsfra + jpsfqy)                    
+      QPSFQZ(i) = RW(ipsfr + lmhlen + (i-1)*lpsfra + jpsfqz)                    
+      QPSFXV(i) = RW(ipsfr + lmhlen + (i-1)*lpsfra + jpsfxv)                    
+      QPSFYV(i) = RW(ipsfr + lmhlen + (i-1)*lpsfra + jpsfyv)                    
+      QPSFZV(i) = RW(ipsfr + lmhlen + (i-1)*lpsfra + jpsfzv)                    
+      QPSFPX(i) = RW(ipsfr + lmhlen + (i-1)*lpsfra + jpsfpx)                    
+      QPSFPY(i) = RW(ipsfr + lmhlen + (i-1)*lpsfra + jpsfpy)                    
+      QPSFPZ(i) = RW(ipsfr + lmhlen + (i-1)*lpsfra + jpsfpz)                    
+      KPSFAL(i) = IW(ipsfr + lmhlen + (i-1)*lpsfra + jpsfal)                    
+                                                                                
++------------+                                                                  
+| Minijets:  |                                                                  
++------------+                                                                  
+                                                                                
+Jets are computed from the 'EF' (or 'FSIM') section and are put in              
+bank EJET and section EJ. They are done with JADE, and a value of               
+Y-cut of 0.003. They can be used afterwards to form jets with a                 
+larger ycut with:                                                               
+                                                                                
+      CALL qjoptr('EJ',' ')                                                     
+      CALL qjmmcl(... usual arguments ...)                                      
+                                                                                
+QJxxxx functions can be used with the relevant QJOPTR call, i.e.:               
+                                                                                
+      CALL qjoptr('EJ',' ')  (as above)                                         
+(if you want to use the minijets only)                                          
+                                                                                
+Or:                                                                             
+                                                                                
+      CALL qjoptr('EF',' ')                                                     
+      CALL qjoptr('NO','FSIM')                                                  
+                                                                                
+(these two are equivalent, and make use of all energy-flow particles)           
+
++-----------------------------+
+|  Listing of a given event:  |  
++-----------------------------+
+
+A listing a all energy flow particles can be obtained by 
+
+      CALL fsimlist(kreco)
+
+
++-------------------------------------------------------+
+|  Equivalence with ENFLW output from full simulation:  |
++-------------------------------------------------------+
+
+The sections EF can be accessed in an equivalent way from ENFLW
+(card EFLW on fully simulated events) and QUFSIM (card FSIM on 
+KINGAL events). The section FSIM is equivalent to the section 
+NFLW on fully simulated events, that is built with 
+
+      CALL enflw(iok)
+
+from the bank EFOL (EF section). Provided this call is performed,
+the particles of section NFLW are accessed with the same indices 	
+as FSIM, i.e. kfrtot, klstot as described above.
+ @
+
+
+1.1.1.1
+log
+@2nd try to import uphy
+@
+text
+@@

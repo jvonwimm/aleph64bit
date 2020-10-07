@@ -1,0 +1,149 @@
+head	1.1;
+access;
+symbols
+	alpha126_22:1.1
+	alpha122_22:1.1
+	alpha126_21:1.1
+	alpha126_20:1.1
+	alpha126_19:1.1
+	alpha126_18:1.1
+	alpha126_17:1.1
+	alpha126_16:1.1
+	alpha126_15:1.1
+	alpha126_14:1.1
+	alpha126_13:1.1
+	alpha126_12:1.1
+	alpha126_11:1.1
+	alpha126_10:1.1
+	alpha126_09:1.1
+	alpha126_08:1.1
+	alpha126_07:1.1
+	alpha126_06:1.1
+	alpha126_05:1.1
+	alpha126_04:1.1
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	99.03.22.14.07.23;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE MINTBP
+C
+CKEY MDST /INTERNAL
+C-----------------------------------------------------------------------
+C! Fill vertex bank DTBP for Mini-DST.
+C
+C     Author: Stephen Haywood      04-Apr-90
+C
+C     Input  : XTRB(or XTEB) bank
+C     Output : DTBP bank
+C
+C     Called by MINDST
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+#include "xtrbjj.h"
+#include "xtebjj.h"
+#include "dtbpjj.h"
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+C
+C++   Pick up trigger banks.
+C
+      KXTRB = NLINK('XTRB',0)
+      KXTEB = NLINK('XTEB',0)
+      IF(KXTRB.LE.0 .AND. KXTEB.LE.0) RETURN
+C
+C++   Create the DTBP bank.
+C
+      LEN = LMHLEN + LDTBPA
+      CALL AUBOS('DTBP',0,LEN, KDTBP,IGARB)
+      IF(IGARB.GE.2) THEN
+         WRITE(IW(6),'('' MINTBP: Cannot create DTBP bank'')')
+         RETURN
+      ELSE IF(IGARB.NE.0) THEN
+         KXTRB = NLINK('XTRB',0)
+         KXTEB = NLINK('XTEB',0)
+      ENDIF
+      IW(KDTBP+LMHCOL) = LDTBPA
+      IW(KDTBP+LMHROW) = 1
+C
+C++   Copy words from trigger banks.
+C
+      IF(KXTRB.GT.0) THEN
+         ITRG1 = ITABL(KXTRB,1,JXTRRP+0)
+         ITRG2 = ITABL(KXTRB,1,JXTRRP+1)
+         ITRG3 = ITABL(KXTRB,1,JXTRRP+2)
+      ELSE
+         ITRG1 = ITABL(KXTEB,1,JXTET1)
+         ITRG2 = ITABL(KXTEB,1,JXTET2)
+         ITRG3 = ITABL(KXTEB,1,JXTEL2)
+      ENDIF
+C
+      IW(KROW(KDTBP,1)+JDTBT1) = ITRG1
+      IW(KROW(KDTBP,1)+JDTBT2) = ITRG2
+      IW(KROW(KDTBP,1)+JDTBL2) = ITRG3
+C
+C++   Add the bank to the Mini list.
+C
+      CALL MINLIS('DTBP')
+C
+      RETURN
+      END
+#endif
+@

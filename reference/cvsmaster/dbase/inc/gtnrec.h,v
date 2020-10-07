@@ -1,0 +1,63 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	dbase22:1.1.1.1
+	dbase21:1.1.1.1
+	dbase20:1.1.1.1
+	dbase19:1.1.1.1
+	dbase18:1.1.1.1
+	dbase17:1.1.1.1
+	dbase04:1.1.1.1
+	dbase03:1.1.1.1
+	dbase02:1.1.1.1
+	dbase01:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	97.02.12.10.05.58;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.02.12.10.05.58;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@C! decode DAFB or OUTB data card to get NBREC, NBDIR and NREC
+      JDAFB = NLINK ('DAFB',0)
+      IF (JDAFB.EQ.0) THEN
+         JDAFB = NLINK ('OUTB',0)
+         IF (JDAFB.EQ.0) THEN
+            WRITE(IW(6),*) SUBR, ' : no DAFB/OUTB card - STOP'
+            STOP
+         ENDIF
+      ENDIF
+      NBREC = IW(JDAFB+1)
+      NBDIR = 0
+      IF (IW(JDAFB).GT.1) NBDIR = IW(JDAFB+2)
+      NREC = NBREC + NBDIR*10000
+@
+
+
+1.1.1.1
+log
+@1st release of dbase library
+@
+text
+@@

@@ -1,0 +1,593 @@
+*DK itdoc
+#if defined(DOC)
+.chapter ITC
+.section  Hit generation in the ITC.
+
+     ITHIT is called from GUSTEP to generate hit data in the ITC.  The
+   necessary input consists of a track element and the description of
+   the ITC readout geometry, provided by /TRKCOM/ and /ITWIRC/.
+
+     For each tracking step the hit information is accumulated in a
+   named bank IHIT which is added to the 'E' list.
+     The contents of the IHIT bank may be printed in a readable form
+   by ITPRHT (from the ALEPHLIB).
+
+     At the start of tracking for each event a routine ITNOIS is called
+   to enable random noise hits to be generated according to the expected
+   distribution.  Noise hits can be distinguished from genuine hits as
+   the Id of the associated track is set to zero.  The noise
+   distribution is not yet implemented in the present version. Hits from
+   stack tracks are identified by storing minus the parent track number
+   as the track identifier in IHIT.
+
+     The hit information is computed by calculating the intersection of
+   the track elements with imaginary cylinders at the inner and outer
+   radii of the 8 sense wire layers.  This is done using a cubic spline
+   representation of the track elements. As the tracking steps in the
+   ITC can be larger than the spacing of the sense wire layers a single
+   track element can have intersections with several different layers.
+   All the intersections found for each track element are sorted by
+   increasing path length so that the order of the stored hits follows
+   the path of the track.  For each hit wire the closest distance of
+   approach of the track and the angle within the drift cell are stored,
+   together with the Z coordinate, dip angle and time of flight.
+
+.section  Digitisation in the ITC.
+
+     The creation of digitisings in the ITC is handled by subroutine
+   ITDIGI.  First an index of the hits is produced by wire number.
+   For each wire in turn ITDRFT is called with the list of all the
+   hits recorded for that wire.  In general there may be several hits
+   to consider for a single sense wire due to close tracks passing
+   through the same cell.
+
+     The stored drift distance is smeared by a resolution determined by
+   the IRRF database bank before calculating the drift time.  Hits that
+   end up outside the cell limits are discarded.  This accounts for some
+   of the ITC inefficiency.
+
+     For each recorded hit the drift time is computed by lookup in a
+   linear interpolation table.  This table is derived from the
+   parameterization of drift distance from time obtained from the IDRP
+   database bank.
+
+     The drift times are added to the time of flight and stored in a
+   temporary wire pulse bank, ITWP.  Next induced pulses are
+   propagated along the wires in both directions to the front end
+   electronics.  At present signals are assumed to travel along the
+   wires at the speed of light without attenuation or reflections but
+   the possibility is retained to implement a more realistic
+   simulation with pulse shapes and size of signal being considered in
+   some future version.
+
+     At this stage further physical effects can be introduced such as
+   cross-talk between channels and the effects of the amplification
+   stage on the signals.  These would be handled by subroutines ITXTLK
+   and ITAMP which presently exist as dummy versions.
+
+     Finally, ITDAQ simulates the data acquisition producing the raw
+   data bank for the ITC and producing the required trigger bits.
+   Correlation banks are also produced so that the digitisings can be
+   related to the GEANT tracks.  The contents of the IDIG bank and the
+   correlations to the tracks may be printed in a readable form by
+   ITPRDI (from the ALEPHLIB).
+
+.section description of subroutines
+
+  IAPROX
+
+     Compute the closest distance of a track element to the sense wire.
+
+ .......................................................................
+
+  IRUCHK
+
+     Correct approximate intersection point of track element at given
+   radius from quadratic formula using the gradient of the cubic formula
+   at the predicted point.
+
+ .......................................................................
+
+  ISBEND
+
+    Compute the apparent measured Z coordinate, ZM, for a hit at a given
+  Z position along the  wire. This is done by  linear interpolation in a
+  lookup  table  generated from  the   parametrization of  "true Z" as a
+  function of "measured Z". The coefficients of the parameterization are
+  obtained from the IZNL bank.
+
+ ........................................................................
+
+  ISBGIN
+
+     Generate lookup table for use in ISBEND.  This is an initialisation
+   entry point of ISBEND.
+
+ ........................................................................
+
+  ISPLIN
+
+    Calculate cubic spline coefficients of track element and return
+   coordinates of requested point on track element.
+
+ .......................................................................
+
+  ISPLIO
+
+    Entry point of ISPLIN for subsequent calls for the same track
+   element avoiding recalculation of spline coefficients.
+
+ .......................................................................
+
+  ITALIG
+
+   Transform coordinates of track elements from ALEPH system to local
+   system of misaligned ITC.
+
+ ........................................................................
+
+  ITAMP
+
+     This routine is intended to simulate the effects of the ITC
+   front-end electronics on the signals arriving at the ends of the
+   sense wires.  It is a dummy as readout effects are not implemented.
+   This will only be done if thought necessary on the basis of
+   experience with the real chamber.
+
+ ........................................................................
+
+  ITASIG
+
+     Termination of the HITS stage for the ITC.
+   If no hit has been generated during the current event ITNOIS is
+   called to generate noise hits. The IHIT bank may be printed by a
+   call to ITPRHIT depending on the values of the print flags.
+
+ ........................................................................
+
+  ITBINT
+
+     Calculate the ITC theta bin number corresponding to a coincidence
+   time for the R-Phi-Z trigger.  The bin number returned is in the
+   range 1 to 256.  If the time is outside the range of binning zero
+   is returned.  The bins correspond to equal time slices starting a
+   specified time after the beam crossing.
+
+ ........................................................................
+
+  ITDAQ
+
+ Simulate the ITC readout and trigger.
+ -------------------------------------
+
+ 1. Access the end of wire signals from the bank ITFN.
+ 2. Create work banks:
+    JDITNW - Flag which wires have received hits.
+    JDITAB - Store result of time-expansion.
+    JDITDC - Store digitised drift time result.
+    JDIZSC - Store digitised time-difference result.
+
+ 3. For each hit sense wire in turn
+ 3.1  Find the times of the first signals to arrive at each end.
+ 3.2  Calculate the digitised values in subr. ITSDIG and store results
+      in the work banks.
+
+ 4. Create bank IDIG for raw data format.
+    Fill it using JDITDC, JDIZSC.
+ 5. Simulate the ITC trigger (subr. ITRPP) using JDITNW, JDITAB.
+ 6. Create and fill trigger banks ITTR, IXRP.
+ 7. Create and fill digits to hits correlation bank, IDHR, from JDITAB.
+ 8. Put output banks on 'E' list and drop work banks.
+
+ ........................................................................
+
+  ITDCNS
+
+ Initialisation routine for drift constants and resolution.
+ ----------------------------------------------------------
+
+ 1. Set values for hardware efficiency from IEFF bank.
+ 2. Set parameters for drift-time relation and resolution from IDRP and
+    IRRF database banks.
+ 3. Setup lookup table for drift-time relation (ITDTGO).
+
+ .......................................................................
+
+  ITDIGI
+
+ Create Digitisings for the ITC
+ ------------------------------
+
+ 1. Drop banks IDIG, IDHR, ITTR, IXRP if existing.
+ 2. Sort the hits in IHIT by wire number.
+ 3. For each hit wire
+     4.1 Find the list of hits for the wire.
+     4.2 Calculate the drift time for each hit in the list (ITDRFT).
+ 4. Propagate signals to front-end electronics  (subr. ITTOFE).
+ 5. Generate cross-talk on adjacent channels (subr. ITXTLK).
+ 6. Amplify final front-end signals (subr. ITAMP).
+ 7. Simulate the readout chain. Create digitisings and trigger (ITDAQ).
+ 8. If print flag set print out ITC digitisings  (subr. ITPRDI).
+ 9. Add hits and digits to the run summary counts.
+
+ ........................................................................
+
+  ITDRFT
+
+ Calculate the drift times for all hits in a single ITC cell.
+ ------------------------------------------------------------
+
+ 1. On first entry per event create work bank for wire pulses, otherwise
+    expand the work bank as necessary.
+ 2. Find layer number of hit wire and set parameters of cell size.
+ 3. For each hit on the wire
+     3.1 Skip this hit randomly rejected by wire inefficiency function.
+     3.2 Smear drift distance by resolution function (ITRES).
+     3.3 Compute drift_time (ITDTIM).
+     3.4 Calculate pulse_time as time_of_flight + drift_time.
+     3.5 Store Hit.ID, Wire_ID, pulse_time in work bank.
+
+ .......................................................................
+
+  ITDTGO
+
+   Initialise lookup table of drift time from drift distance using
+  parameterization of drift distance from drift time from IDRP database
+  bank.
+
+ .......................................................................
+
+  ITDTIM
+
+   Entry point of ITDTGO to return drift time corresponding to given
+  drift distance by linear interpolation in lookup table.
+
+ .......................................................................
+
+  ITHIT
+
+ Generate the hits in the ITC.
+ -----------------------------
+
+ 1. If first entry for current event then
+     1.1 Drop IHIT if existing.
+     1.2 Create IHIT bank for hits.
+     1.3 Create noise hits, track number = 0.  (subr. ITNOIS).
+ 2. RETURN if track element is entering or leaving ITC (no finite step
+    inside sensitive volume).
+ 3. RETURN if track is neutral.
+ 4. Transform coordinates in TRKELE, TRKNXT according to misalignment
+     of ITC wrt. ALEPH system  (ITALIG).
+ 5. Compute spline coefficients for track element (ISPLIN) and obtain
+    coordinates at mid point of track element.  Calculate coefficients
+    of quadratic approximation to variation of distance, R, from beam
+    axis along track element.
+ 6. For each wire layer DO
+     6.1 Solve quadratic formula for intersections of track element with
+         inner and outer radial boudaries.
+     6.2 Check accuracy of predicted intersection point using full cubic
+         spline formula and correct found intersection point using the
+         local slope of the spline if the quadratic approximation is
+         outside tolerance.
+ 7. Sort all found intersections in order of increasing distance along
+    track element.
+ 8. For all adjacent pairs of intersections on the same wire layer DO
+     8.1 Determine the portion of the track element that lies within
+         the inner and outer radial boundaries.
+     8.2 Compute the sag of this section by comparison of the midpoint
+         using the spline formula (ISPLIO) with the average of the start
+         and end points of the section.
+     8.3 If the sag exceeds tolerance for consideration of the section
+         as a straight line keep dividing the section in half until it
+         is within tolerance. Each subdivided fraction of the segment
+         may then be approximated as a straight line.
+     8.4 For each subdivision of the segment DO
+          8.4.1 Calculate the range of sense wires close to this piece.
+          8.4.2 For each wire possibly "hit" by this section DO
+              8.4.2.1 Calculate the closest point of approach to wire.
+              8.4.2.2 Correct local wire position allowing for wire sag
+                      and recompute the closest distance to the track.
+              8.4.2.3 Calculate the angle within the cell of the track.
+              8.4.2.4 Check "hit" position lies within cell boundaries.
+              8.4.2.5 Interpolate time of flight at "hit" point.
+              8.4.2.6 Fill hit data into IHIT bank, expanding if needed.
+                      Stack tracks are flagged by setting the track
+                      number negative in the IHIT bank.
+              8.4.2.7 Check if last hit was on same wire and caused by
+                      adjacent piece of subdivided track element. Keep
+                      only the one closest to the sense wire.
+
+ ........................................................................
+
+  ITIRUN
+
+ Initialise ITC routines.
+ ------------------------
+
+ 1. Abort job if ITC run conditions are illegal.
+ 2. Store bank name indices in /ITNAMC/.
+ 3. Declare bank formats.
+ 4. Get geometry banks from the database (GTSTUP, ALGTDB).
+ 5. Initialise readout geometry (subr. ITWINI).
+ 6. Initialise drift time constants (subr. ITDCNS).
+ 7. Initialise trigger parameters (subr. ITRGPA).
+ 8. Initialise alignment constants (ITROTI).
+ 9. Optionally print readout geometry (ITPGEO).
+ 10. Initialise run summary counters.
+
+ ........................................................................
+
+  ITMSK1
+
+ ITC trigger logic routine. Map 48 ITC trigger segments onto 18 bits
+ (12 bits for phi segmentation of calorimeter barrels, 6 bits for
+ endcaps). See ALEPH 86-87, "ITC Trigger Implementation in GALEPH".
+ N.B. This note contains an obsolete description of the trigger.
+
+ ........................................................................
+
+  ITMSK2
+
+ ITC trigger logic routine. Set final 72 trigger bits according to
+ which theta sectors are enabled.  See ALEPH 86-87.
+
+ ........................................................................
+
+  ITNOIS
+
+ Generate noise hits in the ITC. Not yet implemented as likely noise
+ is not yet known.
+
+ ........................................................................
+
+  ITPGEO
+
+    Print ITC readout geometry, chamber alignment and readout
+  electronics parameters if ICITJO(2).NE.0.
+
+ ........................................................................
+
+  ITPHIM
+
+ Evaluate the 288 ITC trigger masks for the RPP and SPP.
+ -------------------------------------------------------
+ Each individual mask consists of a set of wires, one or two per layer,
+ in a radial pattern.  A particular mask is satisfied when a sufficient
+ number of different layers have hit wires belonging to the mask.
+ The result of each mask is encoded as an eight bit value representing
+ which of the eight ITC layers have received hits for the mask.
+ The pattern of wires forming the masks repeats in sectors 48 times
+ around the chamber in phi.  See ALEPH-TRIGGR 85-4 "The ITC R-Phi
+ processor". (Obsolete note).
+
+ 1. Set all RPP and SPP masks results to zero.
+ 2. For each sector
+     2.1 For each mask in the current sector
+          2.1.1 For each layer
+                 2.1.1.1 If any wires in the mask are hit then
+                          2.1.1.1.1 Set the layer bit for this mask.
+                          2.1.1.1.2 Store the expanded time-difference
+                                    values for the hit wire(s).
+          2.1.2 Evaluate the time coincidence result and store the
+                theta bin number for this mask, 0 if unsuccessful.
+                (subr. ITZCOI).
+
+ ........................................................................
+
+  ITRES
+
+  Smear ITC drift distance.
+  -------------------------
+  1. Use parameterization coefficients from IRRF database bank to
+     calculate the smearing on drift distance at the given distance
+     from the sense wire.
+  2. Multiply the distance smearing by a unit gaussian and add it to
+     the true drift distance.
+
+ ........................................................................
+
+  ITRGPA
+
+   Set trigger conditions from IXCR database bank.
+
+ ........................................................................
+
+  ITROTI
+
+   Initialise ITC alignment constants.
+   Compute a transformation matrix for track elements to a slightly
+   imperfectly aligned ITC.  The Euler angles and displacement of
+   the origin are obtained from the database.
+
+ ........................................................................
+
+  ITRPP
+
+ Simulate ITC R-Phi and R-Phi-Z trigger processors.
+ --------------------------------------------------
+
+N.B. The R-Phi-Z trigger is not useable at present.
+
+ 1. Select random start time for clock for Z-processor.
+ 2. Fill wire hit array and expanded time-difference array from work
+    bank data, one element per ITC wire plus "wrap-around" entries
+    at phi=0 and phi=2pi to simplify mask testing algorithm.
+    Wires marked as "Bad" in the IXBW bank are always set "on" for
+    evaluating the trigger masks.
+ 3. If debug print selected print wire hit array.
+ 4. Test all masks for RPP and SPP (subr. ITPHIM).
+ 5. Combine RPP masks in groups of 6 to form 48 phi sectors.
+ 6. Reduce the number of masks from 288 to 192 by ORing the result of
+    some pairs of the original masks.  Fill data for the IXRP bank from
+    the resulting 192 masks.
+ 7. Map ITC phi sectors to final 72 bits for RPP (ITMSK1, ITMSK2).
+ 8. If debug print selected print RPP results.
+ 9. If debug print selected print SPP mask results from ITPHIM.
+ 10. For each calorimeter theta sector
+    10.1 Group valid SPP masks within theta bin into 48 phi sectors.
+    10.2 Set theta bit in control word for mapping to calorimeter
+         correlation bits.
+    10.3 Set trigger bits for SPP for this theta bin (ITMSK1, ITMSK2).
+ 11. If debug print selected print final SPP results.
+
+ ........................................................................
+
+  ITSDIG
+
+ Calculate digitised values of the ITC data for one wire.
+ --------------------------------------------------------
+
+ 1. Drift_time_TDC = (Offset - Time_at_readout_end)/Bin_width .
+ 2. Perform time-difference expansion (subr. ITTEXP).
+ 3. Store Z scalar value and time-difference value in work banks.
+
+ ........................................................................
+
+  ITTEXP
+
+ Perform time expansion calculation for one wire.
+ ------------------------------------------------
+
+ 1. ZT0 = least_count * Zero_bin
+ 2. Pulse_time = ZT0 - (time_A + TERR + - time_B) *
+                 layer_expansion_factor
+ 3. Z_scalar = Pulse_time / least_count
+ 4. Set digitisation to zero if outside allowed range.
+
+ ........................................................................
+
+  ITTOFE
+
+ Propagate induced wire signals to the front-end electronics.
+ ------------------------------------------------------------
+
+ 1. Create work banks to store end of wire signals.
+ 2. Get IHIT, ITWP banks.
+ 3. For each wire signal in ITWP
+     3.1 Get Hit.ID, wire.ID, Pulse_time
+     3.2 Get Z coordinate of hit from IHIT bank
+     3.3 Smear the true Z according to the resolution from IZRS.
+     3.4 Calculate time difference at wire ends (ISBEND).
+     3.5 Calculate signal time at each end.
+     3.6 Store results in work banks, expanding if necessary.
+ 4. Copy work banks to ITFN, ITFP banks. Drop work banks.
+
+ ........................................................................
+
+  ITWINI
+
+ Initialise readout geometry and time expansion constants.
+ ---------------------------------------------------------
+
+ 1. Get data from database.
+ 2. Calculate phi offset of each layer and phi range of each cell in
+    radians.
+ 3. Calculate expansion factors, delay times, pulse lengths for each
+    layer according to ratio of radii and values for layer 8.
+ 4. Initialise "S-bend" parametrization (ISBGIN).
+
+ ........................................................................
+
+  ITWSUM
+
+  Print run summary.
+
+ ........................................................................
+
+  ITXTLK
+
+ Generate cross-talk at the ITC electronics.
+ -------------------------------------------
+
+ This is not yet implemented. Needs knowledge of chamber behaviour.
+
+ ........................................................................
+
+  ITZCOI
+
+ Perform SPP trigger coincidence for one mask.
+ ---------------------------------------------
+
+ 1. If hit layers are insufficient for SPP then RETURN (theta bin=0).
+ 2. For each time-difference pulse
+     calculate the leading and trailing edges using the pulse length.
+ 3. Sort the pulse edges by increasing time.
+ 4. Calculate the number of clock pulses required to scan the whole
+    range of pulses and the time of the first clock pulse.
+ 5. Until complete time range scanned or a valid trigger found do
+     5.1 Advance by one clock tick.
+     5.2 Adjust set of fired layers according to the rising and falling
+         pulse edges passed during clock tick.
+     5.3 Test for valid layer combination for a trigger. Store time
+         if found.
+ 6. If valid trigger found then compute ITC theta bin (subr. ITBINT).
+
+ ........................................................................
+.section  Hits flowchart.
+
+  ITHIT  ---> ITNOIS  Generate random noise hits (dummy).
+              ITALIG  Transform track elements.
+              ISPLIN  Compute spline coefficients for track element.
+              IRUCHK  Correct approximate intersection points.
+              AUARCM  Compute phi displacement from wire.
+  ITASIG ---> ITNOIS  Generate random noise hits (dummy).
+              ITPRHT  Printout IHIT bank.
+
+.section  Digitisation flowchart.
+
+  ITDIGI ---> ITDRFT  Compute drift times in a single cell.
+                     ---> ITRES   Smear hit by resolution function.
+                     ---> ITDTIM  Interpolate drift time.
+              ITTOFE  Propagate signals to front-end electronics.
+              ITXTLK  Generate cross-talk at electronics (dummy).
+              ITAMP   Simulate amplification of signals (dummy).
+              ITDAQ   Simulate readout and trigger.
+                     ---> ITSDIG  Convert drift time to digitisation.
+                                 ---> ITTEXP  Perform time-expansion
+                                              calculation for Z value.
+                          ITRPP   Simulate trigger processors.
+                                 ---> ITPHIM  Evaluate basic masks.
+                                             ---> ITZCOI  Perform SPP
+                                                          coincidence.
+                                                          ---> ITBINT
+                                      ITMSK1  Map trigger sectors.
+                                      ITMSK2  Map trigger sectors.
+              ITPRDI  Printout results of digitisation.
+
+.section  Run conditions.
+
+   ICITJO(1) = 0  Not used in current version. (Obsolete option).
+
+         (2) = 0  Trigger debug level (no printout).
+               1  Debug level suitable to look at an event in detail.
+               2  Extremely detailed trigger debug for checking the
+                  time-coincidence logic of the SPP.
+
+         (3) = 0  Not used in current version. (Obsolete option).
+                  Previously specified trigger processor option.
+                  This is now obtained from the database.
+
+         (4) = 0  ITC alignment debug level (no printout).
+               1  Print track elements before and after transformation,
+                  very detailed.
+
+.section Trigger data card.
+
+    The ITPA card  is no longer used. The correct  trigger configuration
+  is now obtained from the IXCR database bank.
+
+.section Additional HISTORIAN flags.
+
+   The following additional HISTORIAN flags are used in the ITC code.
+
+   *IF HEX  - This is for machines (other than VAX or IBM) which
+                  need to use the hexadecimal data statements in
+                  the trigger routines.  This flag is provided because
+                  hex is not ANSI standard so that alternative integer
+                  data is provided in case machines don't accept hex.
+                  However, some patterns of integer data are "illegal"
+                  on some machines, e.g. sign bit only set.
+
+  Since these flags only occur in an "OR" combination it is not
+  necessary to use them if you already select VAX or IBM.
+#endif

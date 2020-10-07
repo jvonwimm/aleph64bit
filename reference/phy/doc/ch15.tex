@@ -1,0 +1,185 @@
+\chapter{\label{sec-PT} Particle Table}
+\par
+\section{\label{sec-PTD}Description}
+\par
+The particle table contains the following particle attributes:
+nominal mass, charge, life time, width, and particle $-$ antipart.
+relation.
+\par
+In every ALPHA job, an internal particle table is built which combines
+data from the following sources:
+\begin{itemize}
+\item Data cards described below.
+\item The ``standard'' ALEPH particle table stored on the data base.
+This table contains all standard model particles (three generations)
+which can be produced at LEP energies, plus some exotic particles.
+\item The ``MC'' particle table stored in the run record of MC event
+files.
+This table contains the standard table, and if necessary, extra
+particles specific to the MC generator.
+\end{itemize}
+If particle attribute values from different sources do not agree,
+they
+are taken from data cards with highest and from the MC table with
+lowest priority. The standard printout produced at job termination
+indicates where the values come from.
+\par
+New particles can be defined with the PNEW card (see below), or
+by using their names in ALPHA
+subroutine calls. If particles are created in subroutine calls,
+a warning message is printed.
+\par
+\section{\label{sec-PTN}Particle name, particle code}
+\par
+Particles can be specified either by their name (example:
+`GAMMA ') or by their integer particle code.
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{General rule:}
+Only the particle name is relevant.
+The integer
+code may change from
+one job to another; if you wish to use the integer code,
+it must be initialized in each job
+by calling the function (see \ref{sec-ADT}):{\it
+integer = KPART ('part$-$name')}.
+\end{indentlist}
+\section{\label{sec-PTH}How to spell particle names}
+\par
+On data cards, every particle name (1 ... 12 characters) has to be
+terminated by exactly one blank space.
+\par
+{\bf Example}
+\begin{verbatim}
+        PMOD 'PI+ PI- ' 0.14     ! is correct !
+        PMOD 'PI+ PI-' 0.14      ! SERIOUS MISTAKE !
+\end{verbatim}
+\par
+In the Fortran program, this extra blank space can be omitted or typed.
+\par
+Lower case characters are translated into upper case characters.
+It would be wise, nevertheless, to use UPPER case characters only.
+ 
+\section{\label{sec-PTDC}Data cards for particle table}
+\par
+\subsection{\label{sec-PTPMOD}PMOD: Modify particle attributes}
+\par
+\begin{description}\item[\bf{Format}]
+{\it PMOD `part$-$name antipart$-$name ' mass charge life$-$time width}
+\end{description}
+\begin{indentlist}{ 3.75cm}{ 4.00cm}
+\indentitem{Parameters:}
+\indentitem{'part$-$name antipart$-$name'}see \ref{sec-DCPMOD}.
+The attributes of a particle and its antiparticle are
+modified at the same time. If a particle is its own anti$-$
+particle, the same name has to be given twice.
+\indentitem{mass charge life$-$time width:}
+Real numbers (with decimal point).
+The charge of the antiparticle is set to $-$charge. If less than
+four numbers are given, the remaining particle attributes
+are not changed.
+\end{indentlist}
+\par
+{\bf Example:}
+\begin{verbatim}
+        PMOD 'GAMMA GAMMA ' 0.001
+\end{verbatim}
+\par sets the photon mass to 1 MeV; the other particle
+attributes (charge, lifetime, width) are not changed.
+\par
+{\bf Mistake:}
+\begin{verbatim}
+        PMOD 'PI+ PI0 ' .14
+\end{verbatim}
+\par because pi+ and pi0 are NOT antiparticles of each other.
+Once a particle$-$antiparticle relation is established (for
+example on the standard table), it can never be changed.
+\par If the particle names given on this card are not yet established
+in the
+table then
+\begin{itemize}
+\item new table entries are created;
+\item a warning is issued;
+\item the program execution continues.
+\end{itemize}
+\subsection{\label{sec-PTPNEW}PNEW: New particles}
+\par
+\begin{description}\item[\bf{Format
+}]
+{\it PNEW `part$-$name antipart$-$name ' mass charge life$-$time width}
+\end{description}
+PNEW has the same function as the PMOD card
+(\ref{sec-PTPMOD}) and has the same parameters, except
+\begin{itemize}
+\item PNEW causes a warning if the particles are already known;
+\item PMOD causes a warning if the particles are unknown;
+\end{itemize}
+program execution continues in either case.
+\par
+\subsection{\label{sec-PTPTRA}PTRA: Modify particle names in the
+MC particle table}
+\par
+The PTRA card assigns an arbitrary particle name to a
+specific MC integer code.
+It has to be used, for example, if different MC
+data sets with contradictory particle tables are read in one job.
+\par
+The standard procedure to denote the nature of MC generated particles:
+\begin{itemize}
+\item Start with the integer code given for each generated particle.
+\item Get the corresponding particle name from the MC particle table.
+\item This name is relevant inside the ALPHA program.
+\end{itemize}
+\begin{description}\item[\bf{Format
+}]{\it PTRA `part$-$name antipart$-$name' iMCcode iMCanticode}
+\end{description}
+\begin{indentlist}{ 3.75cm}{ 4.00cm}
+\indentitem{Parameters:}
+\indentitem{'part$-$name antipart$-$name'}see \ref{sec-PTPMOD}.
+the names for the particle and its antiparticle
+which have to be used inside the ALPHA program.
+\indentitem{iMCcode:}
+integer particle code used in the MC generator
+(WITHOUT decimal point and NOT included inside the apostrophes.)
+\indentitem{iMCanticode:}
+integer particle code used by the MC
+generator for the corresponding antiparticle.
+\end{indentlist}
+The routine QCPTRA is equivalent to the PTRA card and can be called
+from QUNEWR whenever a new MC particle table is read in.
+\section{\label{sec-PTAC}Access to particle properties}
+\par
+Inside an ALPHA job, particle properties can be obtained by
+specifying the particle
+either by name (symbols starting with the characters ``QP'' or ``KP'')
+or by
+the integer code (``QC'' or ``KC''). The particle code has to be set
+by calling the function
+{\bf ICODE = KPART ('part$-$name')} at least once per job.
+For more details, see \ref{sec-ADT}.
+\begin{indentlist}{ 5.75cm}{ 6.00cm}
+\indentitem{KPART ('part$-$name')}Integer particle code for `part$-$name'
+\indentitem{CQPART (intg$-$code)}Particle name (12 characters; trailing
+characters
+filled with blank spaces)
+\indentitem{KPANTI ('part$-$name', IANTI)}
+ 
+If IANTI = 0: integer code for `part$-$name'
+If IANTI unequal to  0: integer code for the
+antiparticle of `part$-$name'
+\indentitem{KCANTI (intg$-$code, IANTI)}...
+\indentitem{QPMASS ('part$-$name')}nominal mass
+ 
+\indentitem{QCMASS (intg$-$code)}...
+\indentitem{QPCHAR ('part$-$name')}charge
+\indentitem{QCCHAR (intg$-$code)}...
+\indentitem{QPLIFE ('part$-$name')}life time
+\indentitem{QCLIFE (intg$-$code)}...
+\indentitem{QPWIDT ('part$-$name')}width
+\indentitem{QCWIDT (intg$-$code)}...
+\end{indentlist}
+\par
+To check the particle names of ALPHA ``tracks'', see sections
+\ref{sec-TVATPN} and \ref{sec-TVAFP}.
+\par
+{\bf Warning :} All above functions which have a particle name as input argument are case$-$insensitive .
+ 

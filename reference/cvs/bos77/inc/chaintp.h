@@ -1,0 +1,27 @@
+#if defined(IBM) || defined(GOULD)
+      CHARACTER*4 INTG
+      CHAINT=INTG
+#else
+#if defined(ALEPH_DEC) || defined(APOLLO) || defined(ALEPH_LINUX)
+      CHARACTER*4 CHAIN
+      CALL UHTOC(INTG,4,CHAIN,4)
+      CHAINT=CHAIN
+#else
+#if defined(CRAY)
+      CHARACTER*4 CHAIN
+      CHAIN(1:1)=CHAR(AND(SHIFTR(INTG,24),255))
+      CHAIN(2:2)=CHAR(AND(SHIFTR(INTG,16),255))
+      CHAIN(3:3)=CHAR(AND(SHIFTR(INTG, 8),255))
+      CHAIN(4:4)=CHAR(AND(      INTG     ,255))
+      CHAINT=CHAIN
+#else
+*     MACHINE INDEPENDENT VERSION
+      CHARACTER*4 CHAIN
+      CHAIN(1:1)=CHAR(IAND(ISHFT(INTG,-24),255))
+      CHAIN(2:2)=CHAR(IAND(ISHFT(INTG,-16),255))
+      CHAIN(3:3)=CHAR(IAND(ISHFT(INTG,- 8),255))
+      CHAIN(4:4)=CHAR(IAND(      INTG     ,255))
+      CHAINT=CHAIN
+#endif
+#endif
+#endif

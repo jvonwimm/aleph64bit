@@ -1,0 +1,84 @@
+*DK itrsb
+      SUBROUTINE ITRSB(NHIT,IMSK,ISPBT)
+C.
+C...ITRSB  1.00  890707                                  J.Ratcliffe
+C.
+C!  Evaluate ITC special trigger bits.
+C.
+C.  Calling arguments:
+C.  NHIT  - Array of hit flag for each wire (=1 if hit).       (INPUT)
+C.  IMSK  - Array of 192 R-Phi masks (=1 if positive).         (INPUT)
+C.  ISPBT - 1 word containing the 24 'special' trigger bits.  (OUTPUT)
+C.
+C-----------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "bcs.h"
+#include "jobcom.h"
+#include "itspec.h"
+      PARAMETER (LHB=0, LBV=8, LBB=16, LTR=17, LMS=18, LTC=19, LTCO=23)
+      INTEGER ISPBT
+      INTEGER NHIT(8,0:145),IMSK(0:192),IMSK2(96),NW(8)
+      LOGICAL BTEST
+      DATA NW/4*96, 4*144/
+#include "bmacro.h"
+C
+      ISPBT = 0
+C
+C--  Set Mulitiplexer Select bit
+C--
+      IF (ICITJO(3).EQ.0) ISPBT = IBSET(ISPBT,LMS)
+C
+C--  Set Back to Back bit
+C--
+      K = 0
+      CALL VZERO(IMSK2,96)
+      DO 10 I = 1,191,2
+        K = K + 1
+        IF (IMSK(I)+IMSK(I+1).GT.0) IMSK2(K) = 1
+   10 CONTINUE
+C
+      DO 20 I = 1,96
+        IF (IMSK2(I).EQ.1) THEN
+          DO 25 J = -ITB2BS,+ITB2BS
+            ISEC = MOD((48+I+J),96)
+            IF (ISEC.EQ.0) ISEC = 96
+            IF (IMSK2(ISEC).EQ.1) THEN
+              ISPBT = IBSET(ISPBT,LBB)
+              GOTO 26
+            ENDIF
+   25     CONTINUE
+        ENDIF
+   20 CONTINUE
+   26 CONTINUE
+C
+C--  Set Track bit and 5 Track Count bits
+C--
+      NMSK = 0
+      DO 30 I = 1,192
+        IF (IMSK(I).EQ.1) THEN
+          IF (ITTCLU.OR.IMSK(I-1).EQ.0) NMSK = NMSK + 1
+        ENDIF
+   30 CONTINUE
+C
+      IF (NMSK.GT.ITRTHR) ISPBT = IBSET(ISPBT,LTR)
+      IBT = IBITS(NMSK,0,4)
+      CALL MVBITS(IBT,0,4,ISPBT,LTC)
+      IBT = IBITS(NMSK,4,4)
+      IF (IBT.GT.0) ISPBT = IBSET(ISPBT,LTCO)
+C
+C--  Set 8 Hit bits and 8 Background Veto bits
+C--
+      DO 50 I = 1,8
+        NH = 0
+        DO 55 J = 1,NW(I)
+          IF (NHIT(I,J).EQ.1) THEN
+            IF (ITHCLU.OR.NHIT(I,J-1).EQ.0) NH = NH + 1
+          ENDIF
+   55   CONTINUE
+        IF (NH.GT.ITHTHR(I)) ISPBT = IBSET(ISPBT,I-1+LHB)
+        IF (NH.GT.ITBTHR(I)) ISPBT = IBSET(ISPBT,I-1+LBV)
+   50 CONTINUE
+C
+      END
+#endif

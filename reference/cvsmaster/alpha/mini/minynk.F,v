@@ -1,0 +1,152 @@
+head	1.1;
+access;
+symbols
+	alpha126_22:1.1
+	alpha122_22:1.1
+	alpha126_21:1.1
+	alpha126_20:1.1
+	alpha126_19:1.1
+	alpha126_18:1.1
+	alpha126_17:1.1
+	alpha126_16:1.1
+	alpha126_15:1.1
+	alpha126_14:1.1
+	alpha126_13:1.1
+	alpha126_12:1.1
+	alpha126_11:1.1
+	alpha126_10:1.1
+	alpha126_09:1.1
+	alpha126_08:1.1
+	alpha126_07:1.1
+	alpha126_06:1.1
+	alpha126_05:1.1
+	alpha126_04:1.1
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	99.03.22.14.07.28;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE MINYNK
+C
+CKEY MDST /INTERNAL
+C-----------------------------------------------------------------------
+C! Fill kink bank YKNK for ALPHA.
+C
+C     Author: Agnieszka Jacholkowska    30-Apr-97
+C
+C     Input  : DKNK bank
+C     Output : YKNK bank
+C
+C     Called by MINFIL
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+#include "minfac.h"
+#include "yknkjj.h"
+#include "dknkjj.h"
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+C
+C++   Pick up DKNK bank.
+C
+      KDKNK = NLINK('DKNK',0)
+      IF(KDKNK.EQ.0) KDKNK = NLINK('DKNK',0)
+      IF(KDKNK.LE.0) RETURN
+      NDKNK = LROWS(KDKNK)
+      IF(NDKNK.LE.0) RETURN
+C
+C++   Create YKNK bank.
+C
+      NYKNK = NDKNK
+      LEN = LMHLEN + LYKNKA * NYKNK
+      CALL AUBOS('YKNK',0,LEN, KYKNK,IGARB)
+      IF(IGARB.GE.2) THEN
+         WRITE(IW(6),'('' MINYNK: Cannot create YKNK bank'')')
+         RETURN
+      ELSE IF(IGARB.NE.0) THEN
+         KDKNK = NLINK('DKNK',0)
+      ENDIF
+      IW(KYKNK+LMHCOL) = LYKNKA
+      IW(KYKNK+LMHROW) = NYKNK
+C
+C++   Loop over DKNK.
+C
+      DO 100 I=1,NDKNK
+         IW(KROW(KYKNK,I)+JYKNIT) = ITABL(KDKNK,I,JDKNIT)
+         IW(KROW(KYKNK,I)+JYKNOT) = ITABL(KDKNK,I,JDKNOT)
+         RW(KROW(KYKNK,I)+JYKNVX) = FLOAT(ITABL(KDKNK,I,JDKNVX))/AFACTM
+         RW(KROW(KYKNK,I)+JYKNVX+1) = FLOAT(ITABL(KDKNK,I,JDKNVX+1))
+     &   /AFACTM
+         RW(KROW(KYKNK,I)+JYKNVX+2) = FLOAT(ITABL(KDKNK,I,JDKNVX+2))
+     &   /AFACTM
+         RW(KROW(KYKNK,I)+JYKNPK) = FLOAT(ITABL(KDKNK,I,JDKNPK))/AFACTM
+         RW(KROW(KYKNK,I)+JYKNPT) = FLOAT(ITABL(KDKNK,I,JDKNPT))/AFACTM
+         RW(KROW(KYKNK,I)+JYKNPL) = FLOAT(ITABL(KDKNK,I,JDKNPL))/AFACTM
+         RW(KROW(KYKNK,I)+JYKNC2) = FLOAT(ITABL(KDKNK,I,JDKNC2))/AFACTM
+         IW(KROW(KYKNK,I)+JYKNBH) = ITABL(KDKNK,I,JDKNBH)
+  100 CONTINUE
+C
+C++   Add the bank to the Mini list.
+C
+      CALL MINLIS('YKNK')
+C
+      RETURN
+      END
+#endif
+@

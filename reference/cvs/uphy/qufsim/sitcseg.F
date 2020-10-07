@@ -1,0 +1,44 @@
+      subroutine setITCseg(itk)
+C-----------------------------------------------------------------------
+C
+C fill trigger segment for ITC  for track itk
+C simple version, track is not extrapolated to ITC.
+C
+C-----------------------------------------------------------------------
+#include "qcde.h"
+#include "parcut.h"
+#include "ftrig.h"
+      logical first
+
+      save first
+
+      data first /.TRUE./
+#include "qmacro.h"
+
+      if ( first ) then
+        first = .FALSE.
+        LimITCseg(1,1) = 0.
+        LimITCseg(2,1) = 8.75
+        do i = 2 , 48
+          LimITCseg(1,i) = LimITCseg(2,i-1)-1.25
+          LimITCseg(2,i) = LimITCseg(1,i) + 8.75
+        enddo
+      endif
+
+C
+C first find out if any of the 48 R-phi ITC segments is fired
+C there are 48 overlapping segments 8.75 degrees wide, the first on start
+C at phi=0 and the second at phi=7.5 degrees
+C
+      phi = qph(itk)*QQRADP
+      do i = 1 , int(phi/7.5)+1
+        if ( phi.ge.LimITCseg(1,i) .and. phi.le.LimITCseg(2,i))
+     &     ITCseg(i)=1
+      enddo
+      if ( phi.gt.LimITCseg(1,48) .and. phi.lt.1.25 ) ITCseg(48)=1
+
+ 1000 format(1x,10f7.2)
+ 1001 format(1x,10i2)
+
+      return
+      end

@@ -1,0 +1,133 @@
+*DK itdigi
+      SUBROUTINE ITDIGI
+C.
+C...ITDIGI  1.07  890417  14:53                        R.Beuselinck.
+C.
+C!  Create the digitisings for the ITC.
+C.
+C.  Simulate the drift time distribution of the cells and find the
+C.  drift times corresponding to the accumulated hits.
+C.  Propagate the induced signals to the electronics and generate the
+C.  digitisings.
+C.
+C.  Called by: ASDIGI                                   from this .HLB
+C.      Calls: WBANK, WDROP, BKFRW, BLIST               from BOS77
+C.             ITTOFE, ITXTLK,ITDAQ                     from this .HLB
+C.             SORTZV, LOCATI                           from CERNLIB
+C.
+C.  Work banks used:
+C.  JDITWP  - dropped at end.
+C.
+C-----------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "jobcom.h"
+#include "iocom.h"
+#include "jqcom.h"
+#include "itnamc.h"
+#include "itsumc.h"
+C
+      INTEGER INDEX(1000)
+#include "wrkspc.h"
+      EQUIVALENCE (WSPACE(1),INDEX(1))
+      EXTERNAL LOCATI, LOCATF
+      INTEGER IBINT(11),IBINH(11),IBIND(11)
+      REAL BINDH(11)
+      DATA IBINT/0,10,20,30,40,50,60,70,80,90,9999/
+      DATA IBINH/0,50,100,150,200,250,300,400,600,800,9999/
+      DATA IBIND/0,50,100,150,200,250,300,400,600,800,9999/
+      DATA BINDH/0.,.2,.4,.6,.7,.75,.8,.85,.9,.95,1./
+#include "bmacro.h"
+C
+C -----------------------------------------------------------
+C
+C--  Drop output banks if they exist.
+C--
+      CALL BDROP(IW,'IDIGIDHRITTRIXRP')
+      JDITWP = 0
+      JDITFN = 0
+      JDITFP = 0
+C
+CD    WRITE(LOUTIO,1000)
+C
+      JIHIT = IW(NAIHIT)
+      IF (JIHIT.EQ.0) GOTO 999
+      LW    = LCOLS(JIHIT)
+      LHIT  = LROWS(JIHIT)
+      IF (LHIT.EQ.0) GOTO 999
+C
+C--  Sort all the hits in order of wire number. (3rd column).
+C--
+      DO 50 I=1,LHIT
+        INDEX(I) = 3+(I-1)*LW
+   50 CONTINUE
+      KIHIT = JIHIT + LMHLEN
+      CALL SORTZV(IW(KIHIT+1),INDEX,LHIT,-1,0,1)
+CD    WRITE(LOUTIO,1001) (IW(KIHIT+INDEX(I)),I=1,LHIT)
+C
+C--  Loop over each hit wire and calculate the drift time.
+C--
+      I1 = 1
+   80 IF (I1.LE.LHIT) THEN
+        I2 = I1
+        I3 = I1
+        NW1 = IW(KIHIT+INDEX(I1))
+   90   IF (I2.LE.LHIT) THEN
+          IF (NW1.EQ.IW(KIHIT+INDEX(I2))) THEN
+            I3 = I2
+            I2 = I2 + 1
+            GO TO 90
+          ENDIF
+        ENDIF
+        CALL ITDRFT(INDEX,I1,I3)
+        I1 = I3 + 1
+        GO TO 80
+      ENDIF
+C
+C--  ITWP bank. Reduce the size of the bank first.
+C--
+      ND = LMHLEN + LCOLS(JDITWP)*LROWS(JDITWP)
+      CALL WBANK(IW,JDITWP,ND,*999)
+C
+C--  Propagate signals to ITC preamps at the ends of the chamber.
+C--
+      CALL ITTOFE
+C
+C--  Generate cross-talk on adjacent channels
+C--
+      CALL ITXTLK
+C
+C--  Simulate the readout chain. Create digitisings and trigger signals.
+C--
+      CALL ITDAQ
+C
+C--  Print out of digitising bank.
+C--
+      IF (FDEBJO .AND. IPRIJO(2).EQ.1) CALL ITPRDI
+C
+C--  Complete summary statistics for current event.
+C--
+      NEVDIT = NEVDIT + 1
+      NHCUIT = LROWS (JIHIT)
+      DIGHIT = FLOAT(NDCUIT)/FLOAT(NHCUIT)
+      IF (NTCUIT .GT. 0) THEN
+         IBIN = ABS(LOCATI(IBINT,11,NTCUIT))
+         NTSMIT(IBIN) = NTSMIT(IBIN) + 1
+      ENDIF
+      IBIN = ABS(LOCATI(IBINH,11,NHCUIT))
+      NHSMIT(IBIN) = NHSMIT(IBIN) + 1
+      IBIN = ABS(LOCATI(IBIND,11,NDCUIT))
+      NDSMIT(IBIN) = NDSMIT(IBIN) + 1
+      IBIN = MIN(ABS(LOCATF(BINDH,11,DIGHIT)),10)
+      NDHSIT(IBIN) = NDHSIT(IBIN) + 1
+C
+  999 CONTINUE
+      CALL WDROP(IW,JDITWP)
+      CALL WDROP(IW,JDITFN)
+      CALL WDROP(IW,JDITFP)
+C
+ 1000 FORMAT(/' ++++ITDIGI++++  ITC digitisation called.')
+ 1001 FORMAT(/' Ordered wire numbers from IHIT bank.',
+     +  /(1X,30I4))
+      END
+#endif

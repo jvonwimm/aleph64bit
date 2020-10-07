@@ -1,0 +1,516 @@
+      SUBROUTINE QLINIT
+CKEY QSELEP/INIT
+C-------------------------------------------------------------------------------
+C! Initialization of QSELEP package
+C  Author ( for original LEPTAG )    Mark Parsons  01-Jun-1992
+C  Adapted from LEPTAG to QSELEP       I. Ten Have 27-Jul-1994
+C  Called from QMNEWR
+C  This routine is called for the first event only.  It initialises
+C  variables and counters for run statistics and error counts.
+C  It reads in user supplied bos cards defining the lepton cuts to
+C  be applied.
+C  Create selection condition bank PLSC to be put on run header
+C-------------------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+#include "qdecl.h"
+#include "qcde.h"
+C--
+      INTEGER IDLSHD, IDLSET, IDLSEC, IDLSMT, IDLSMC, IDLSCV, IDLSJT
+C--
+C--
+C-- Cut variable prototypes
+C--
+      COMMON/HADSEL/MINGDT,MINVIS,MINHIT,D0CUT,Z0CUT,MCOSTH
+      INTEGER MINGDT,MINHIT
+      REAL MINVIS,D0CUT,Z0CUT,MCOSTH
+C--
+      COMMON/EPTSEL/TPCEP,D0MXEP,Z0MXEP,CSTHEP,PEPMIN,PTEPMN
+      INTEGER TPCEP
+      REAL D0MXEP,Z0MXEP,CSTHEP,PEPMIN,PTEPMN
+C--
+      COMMON/EPSEL/R2CUT,R3CUT,MINWIR,R5CUT
+      INTEGER MINWIR
+      REAL R2CUT(2),R3CUT(2),R5CUT(2)
+C--
+      COMMON/MUTSEL/TPCMU,D0MXMU,Z0MXMU,CSTHMU,PMUMIN,PTMUMN
+      INTEGER TPCMU
+      REAL D0MXMU,Z0MXMU,CSTHMU,PMUMIN,PTMUMN
+C--
+      COMMON/MUSEL/NQMUID,QMACC
+      INTEGER NQMUID,QMACC(20)
+C--
+      COMMON/CONDAL/DXYCUT,DZCUT,MXINV,RWCONV
+      REAL DXYCUT,DZCUT,MXINV
+      INTEGER RWCONV
+C--
+      COMMON/JETSEL/NTRJET,MINJET,ENTRJT,SYCUT,RWPTS
+      REAL ENTRJT
+      INTEGER NTRJET,MINJET,RWPTS
+C--
+      COMMON /LTPRIV/ LASTRN,NLPTEV,LTFRST,YEARID,LTFWCD
+      INTEGER LASTRN,NLPTEV,YEARID,LTFWCD
+      LOGICAL LTFRST
+C--
+      COMMON /LPTPUB/ LEPCNT
+      INTEGER NCNT
+      PARAMETER(NCNT = 25)
+      INTEGER LEPCNT(NCNT)
+C
+C-
+#include "plscjj.h"
+      INTEGER IFIR , NLENG, NAPLSC , KPLSC,ILINK,IGARB,JPLSC
+      REAL SYCUT
+
+C
+      DATA IFIR / -1 /
+C--
+      INTEGER IQM,ICONT,SLOUT
+      INTEGER NAMIND,NLINK
+#include "qmacro.h"
+C-------------------------------------------------------------------------------
+C-    Only called at 1st event
+C
+      SLOUT = KUPRNT
+      IF (IW(NAMIND('QLID')).EQ.0) GO TO 990
+      CALL QLIUPD
+      NAPLSC = NAMIND('PLSC')
+C     IF ( IW(NAPLSC).EQ.0) IFIR =-1
+      IF (IFIR.LT.0) THEN
+      IFIR = 0
+C
+      LASTRN = 0                ! Set the last run number to zero.
+      NLPTEV = 0                ! Number of leptons found in the last run.
+      LTFRST = .TRUE.           ! Is this the first call to QSELEP ? Flag.
+      YEARID = 0                ! The date the data or MC represents
+      CALL VZERO(LEPCNT,NCNT)   ! Initialise the counter array
+C--
+C--   Welcome and summary of user cards files
+C--
+      WRITE(SLOUT,1000)
+      WRITE(SLOUT,1001)
+      WRITE(SLOUT,1002)
+      WRITE(SLOUT,1003)
+ 1000 FORMAT(1X,'+--------------------------------------------+')
+ 1001 FORMAT(1X,'| Welcome to QSELEP Version 1.0              |')
+ 1002 FORMAT(1X,'| -----------------------------              |')
+ 1003 FORMAT(1X,'|                                            |')
+C-------------------------------------------------------------------------------
+C--   Read in the user supplied Bos cards
+C--
+C--
+C--   Possible user card to adjust the hadronic event selection
+C--
+C--   *    #tracks E_frac #TPC  d0   z0   cos(theta_max)
+C--   LSHD    5     0.10    4  2.0  10.0    0.95
+C--
+      IDLSHD = NAMIND('LSHD')   ! Does the LSHD card exist?
+      IF (IDLSHD.GT.0) ICONT = IW(IDLSHD)
+      IF (ICONT.GT.0) THEN   ! Read in user supplied cuts
+        MINGDT = IW(ICONT+1)   ! Minimum number of good charged tracks
+        MINVIS = RW(ICONT+2)   ! Minimum visible energy / QELEP
+        MINHIT = IW(ICONT+3)   ! Minimum number of TPC hits
+        D0CUT  = RW(ICONT+4)   ! Maximum value of D0 (cm)
+        Z0CUT  = RW(ICONT+5)   ! Maximum value of Z0 (cm)
+        MCOSTH = RW(ICONT+6)   ! Maximum cos theta
+        WRITE(SLOUT,1004)
+        WRITE(SLOUT,1006)
+        WRITE(SLOUT,1007) MINGDT
+        WRITE(SLOUT,1008) MINVIS
+        WRITE(SLOUT,1009) MINHIT
+        WRITE(SLOUT,1010) D0CUT
+        WRITE(SLOUT,1011) Z0CUT
+        WRITE(SLOUT,1012) MCOSTH
+      ELSE                   ! take defaults
+        MINGDT = 5             ! Minimum number of good charged tracks
+        MINVIS = 0.10          ! Minimum visible energy / QELEP
+        MINHIT = 4             ! Minimum number of TPC hits
+        D0CUT  = 2.0           ! Maximum value of D0 (cm)
+        Z0CUT  = 10.0          ! Maximum value of Z0 (cm)
+        MCOSTH = 0.95          ! Maximum cos theta
+        WRITE(SLOUT,1005)
+        WRITE(SLOUT,1006)
+        WRITE(SLOUT,1007) MINGDT
+        WRITE(SLOUT,1008) MINVIS
+        WRITE(SLOUT,1009) MINHIT
+        WRITE(SLOUT,1010) D0CUT
+        WRITE(SLOUT,1011) Z0CUT
+        WRITE(SLOUT,1012) MCOSTH
+      ENDIF
+ 1004 FORMAT(1X,'| User supplied hadronic event selection     |')
+ 1005 FORMAT(1X,'| Default hadronic event selection used      |')
+ 1006 FORMAT(1X,'| --------------------------------------     |')
+ 1007 FORMAT(1X,'| Number of good charged tracks      : ',I4,'  |')
+ 1008 FORMAT(1X,'| Fraction of visible charged energy : ',F5.2,1X,'|')
+ 1009 FORMAT(1X,'| Minimum number of TPC hits on track: ',I4,2X,'|')
+ 1010 FORMAT(1X,'| Maximum d0 of the track            : ',F5.2,1X,'|')
+ 1011 FORMAT(1X,'| Maximum z0 of the track            : ',F5.2,1X,'|')
+ 1012 FORMAT(1X,'| Maximum cos(theta_track)           : ',F5.2,1X,'|')
+C--
+C--   User card for track selection electron candidates
+C--
+C--   *     #TPC  d0   z0   cos(the_max)  p   p_t
+C--   LSET    5  2.0  10.0    0.95       3.0  0.
+C--
+      IDLSET = NAMIND('LSET')   ! Does the LSET card exist?
+      IF (IDLSET.GT.0) ICONT = IW(IDLSET)
+      IF (ICONT.GT.0) THEN   ! Read in user supplied cuts
+        TPCEP  = IW(ICONT+1)   ! Minimum number of TPC hits (e and p)
+        D0MXEP = RW(ICONT+2)   ! D0 cut (e and p)
+        Z0MXEP = RW(ICONT+3)   ! Z0 cut (e and p)
+        CSTHEP = RW(ICONT+4)   ! Maximum cos theta (e and p)
+        PEPMIN = RW(ICONT+5)   ! Minimum electron/positron momentum
+        PTEPMN = RW(ICONT+6)   ! Minimum electron/positron pt
+        WRITE(SLOUT,1003)
+        WRITE(SLOUT,1013)
+        WRITE(SLOUT,1015)
+        WRITE(SLOUT,1016) TPCEP
+        WRITE(SLOUT,1017) D0MXEP
+        WRITE(SLOUT,1018) Z0MXEP
+        WRITE(SLOUT,1019) CSTHEP
+        WRITE(SLOUT,1020) PEPMIN
+        WRITE(SLOUT,1021) PTEPMN
+      ELSE                   ! take defaults
+        TPCEP  = 5             ! Minimum number of TPC hits (e and p)
+        D0MXEP = 0.5           ! D0 cut (e and p)
+        Z0MXEP = 10.0          ! Z0 cut (e and p)
+        CSTHEP = 0.95          ! Maximum cos theta (e and p)
+        PEPMIN = 3.0           ! Minimum electron/positron momentum
+        PTEPMN = 0.0           ! Minimum electron/positron pt
+        WRITE(SLOUT,1003)
+        WRITE(SLOUT,1014)
+        WRITE(SLOUT,1015)
+        WRITE(SLOUT,1016) TPCEP
+        WRITE(SLOUT,1017) D0MXEP
+        WRITE(SLOUT,1018) Z0MXEP
+        WRITE(SLOUT,1019) CSTHEP
+        WRITE(SLOUT,1020) PEPMIN
+        WRITE(SLOUT,1021) PTEPMN
+      ENDIF
+ 1013 FORMAT(1X,'| User supplied electron track selection     |')
+ 1014 FORMAT(1X,'| Default electron track selection used      |')
+ 1015 FORMAT(1X,'| -------------------------------------      |')
+ 1016 FORMAT(1X,'| Minimum number of TPC hits on track: ',I4,2X,'|')
+ 1017 FORMAT(1X,'| Maximum d0 of the track            : ',F5.2,1X,'|')
+ 1018 FORMAT(1X,'| Maximum z0 of the track            : ',F5.2,1X,'|')
+ 1019 FORMAT(1X,'| Maximum cos(theta_track)           : ',F5.2,1X,'|')
+ 1020 FORMAT(1X,'| Minimum electron momentum          : ',F5.2,1X,'|')
+ 1021 FORMAT(1X,'| Minimum electron pt                : ',F5.2,1X,'|')
+C--
+C--
+C--   User card electron identification cuts
+C--
+C--   *     rt_min rt_max rl_min rl_max #wires ri_min ri_max
+C--   LSEC   -1.6   999.0  -1.8   3.0     50    -2.5   1000.
+C--
+      IDLSEC = NAMIND('LSEC')   ! Does the LSEC card exist?
+      IF (IDLSEC.GT.0) ICONT = IW(IDLSEC)
+      IF (ICONT.GT.0) THEN   ! Read in user supplied cuts
+        R2CUT(1) = RW(ICONT+1) ! Transverse shower profile, lower cut
+        R2CUT(2) = RW(ICONT+2) ! Transverse shower profile, upper cut
+        R3CUT(1) = RW(ICONT+3) ! Longitudinal shower profile, lower cut
+        R3CUT(2) = RW(ICONT+4) ! Longitudinal shower profile, upper cut
+        MINWIR   = IW(ICONT+5) ! Minimum number of wires for dE/dx
+        R5CUT(1) = RW(ICONT+6) ! dE/dx,  lower cut
+        R5CUT(2) = RW(ICONT+7) ! dE/dx,  upper cut
+        WRITE(SLOUT,1003)
+        WRITE(SLOUT,1022)
+        WRITE(SLOUT,1024)
+        WRITE(SLOUT,1025) R2CUT(1),R2CUT(2)
+        WRITE(SLOUT,1026) R3CUT(1),R3CUT(2)
+        WRITE(SLOUT,1027) MINWIR
+        WRITE(SLOUT,1028) R5CUT(1),R5CUT(2)
+      ELSE                   ! take defaults
+        R2CUT(1) = -1.6        ! Transverse shower profile, lower cut
+        R2CUT(2) = 999.0       ! Transverse shower profile, upper cut
+        R3CUT(1) = -1.8        ! Longitudinal shower profile, lower cut
+        R3CUT(2) = 3.0         ! Longitudinal shower profile, upper cut
+        MINWIR   = 50          ! Minimum number of wires for dE/dx
+        R5CUT(1) = -2.5        ! dE/dx,  lower cut
+        R5CUT(2) = 1000.       ! dE/dx,  upper cut
+        WRITE(SLOUT,1003)
+        WRITE(SLOUT,1023)
+        WRITE(SLOUT,1024)
+        WRITE(SLOUT,1025) R2CUT(1),R2CUT(2)
+        WRITE(SLOUT,1026) R3CUT(1),R3CUT(2)
+        WRITE(SLOUT,1027) MINWIR
+        WRITE(SLOUT,1028) R5CUT(1),R5CUT(2)
+      ENDIF
+ 1022 FORMAT(1X,'| User supplied electron selection           |')
+ 1023 FORMAT(1X,'| Default electron selection used            |')
+ 1024 FORMAT(1X,'| --------------------------------           |')
+ 1025 FORMAT(1X,'| R_T range allowed             : '
+     &     ,F5.2,',',F5.0,'|')
+ 1026 FORMAT(1X,'| R_L range allowed             : '
+     &      ,F5.2,',',F5.2,'|')
+ 1027 FORMAT(1X,'| Minimum number of wires dE/dx : ',I4,7X,'|')
+ 1028 FORMAT(1X,'| R_I range allowed             : '
+     &    ,F5.0,',',F5.0,'|')
+C--
+C--   User card rejection of photon convertions and dalitz decays
+C--
+C--   *     XY_max Z_max  M_max   W_conv
+C--   LSCV   1.0    1.0   0.020   0
+C--
+      IDLSCV = NAMIND('LSCV')   ! Does the LSCV card exist?
+      IF (IDLSCV.GT.0) ICONT = IW(IDLSCV)
+      IF (ICONT.GT.0) THEN   ! Read in user supplied cuts
+        DXYCUT = RW(ICONT+1) ! Maximum distance in the XY plane
+        DZCUT  = RW(ICONT+2) ! Maximum distance in the Z direction
+        MXINV  = RW(ICONT+3) ! Maximum invariant mass (MeV)
+        RWCONV = IW(ICONT+4) ! ASK SELECTION OF CONVERSION OR NOT
+        WRITE(SLOUT,1003)
+        WRITE(SLOUT,1029)
+        WRITE(SLOUT,1031)
+        WRITE(SLOUT,1032) DXYCUT
+        WRITE(SLOUT,1033) DZCUT
+        WRITE(SLOUT,1034) MXINV
+        WRITE(SLOUT,1056) RWCONV
+      ELSE                   ! take defaults
+        DXYCUT = 1.0         ! Maximum distance in the XY plane
+        DZCUT  = 1.0         ! Maximum distance in the Z direction
+        MXINV  = 0.020       ! Maximum invariant mass (MeV)
+        RWCONV = 0           ! Reject conversion
+        WRITE(SLOUT,1003)
+        WRITE(SLOUT,1030)
+        WRITE(SLOUT,1031)
+        WRITE(SLOUT,1032) DXYCUT
+        WRITE(SLOUT,1033) DZCUT
+        WRITE(SLOUT,1034) MXINV
+        WRITE(SLOUT,1056) RWCONV
+      ENDIF
+ 1029 FORMAT(1X,'| User supplied conv.,Dalitz pair rejection  |')
+ 1030 FORMAT(1X,'| Default conv.,Dalitz pair rejection used   |')
+ 1031 FORMAT(1X,'| -----------------------------------------  |')
+ 1032 FORMAT(1X,'| Maximum distance in the XY plane    :',F5.2,1X,'|')
+ 1033 FORMAT(1X,'| Maximum distance in the Z direction :',F5.2,1X,'|')
+ 1034 FORMAT(1X,'| Maximum invariant mass (MeV)        :',F5.2,1X,'|')
+ 1056 FORMAT(1X,'| Remove conversion (0) accepted (1)  :',I4,2X,'|')
+C--
+C--
+C--   User card for track selection muon candidates
+C--
+C--   *     #TPC  d0   z0   cos(the_max)  p   p_t
+C--   LSMT    5  2.0  10.0    0.95       3.0  0.0
+C--
+      IDLSMT = NAMIND('LSMT')   ! Does the LSMT card exist?
+      IF (IDLSMT.GT.0) ICONT = IW(IDLSMT)
+      IF (ICONT.GT.0) THEN   ! Read in user supplied cuts
+        TPCMU  = IW(ICONT+1)   ! Minimum number of TPC hits
+        D0MXMU = RW(ICONT+2)   ! D0 cut
+        Z0MXMU = RW(ICONT+3)   ! Z0 cut
+        CSTHMU = RW(ICONT+4)   ! Maximum cos theta
+        PMUMIN = RW(ICONT+5)   ! Minimum muon momentum
+        PTMUMN = RW(ICONT+6)   ! Minimum muon pt
+        WRITE(SLOUT,1003)
+        WRITE(SLOUT,1035)
+        WRITE(SLOUT,1037)
+        WRITE(SLOUT,1038) TPCMU
+        WRITE(SLOUT,1039) D0MXMU
+        WRITE(SLOUT,1040) Z0MXMU
+        WRITE(SLOUT,1041) CSTHMU
+        WRITE(SLOUT,1042) PMUMIN
+        WRITE(SLOUT,1043) PTMUMN
+      ELSE                   ! take defaults
+        TPCMU  = 5             ! Minimum number of TPC hits
+        D0MXMU = 0.5           ! D0 cut
+        Z0MXMU = 10.0          ! Z0 cut
+        CSTHMU = 0.95          ! Maximum cos theta
+        PMUMIN = 3.0           ! Minimum muon momentum
+        PTMUMN = 0.0           ! Minimum muon pt
+        WRITE(SLOUT,1003)
+        WRITE(SLOUT,1036)
+        WRITE(SLOUT,1037)
+        WRITE(SLOUT,1038) TPCMU
+        WRITE(SLOUT,1039) D0MXMU
+        WRITE(SLOUT,1040) Z0MXMU
+        WRITE(SLOUT,1041) CSTHMU
+        WRITE(SLOUT,1042) PMUMIN
+        WRITE(SLOUT,1043) PTMUMN
+      ENDIF
+ 1035 FORMAT(1X,'| User supplied muon track selection         |')
+ 1036 FORMAT(1X,'| Default muon track selection used          |')
+ 1037 FORMAT(1X,'| ----------------------------------         |')
+ 1038 FORMAT(1X,'| Minimum number of TPC hits on track: ',I4,2X,'|')
+ 1039 FORMAT(1X,'| Maximum d0 of the track            : ',F5.2,1X,'|')
+ 1040 FORMAT(1X,'| Maximum z0 of the track            : ',F5.2,1X,'|')
+ 1041 FORMAT(1X,'| Maximum cos(theta_track)           : ',F5.2,1X,'|')
+ 1042 FORMAT(1X,'| Minimum muon momentum              : ',F5.2,1X,'|')
+ 1043 FORMAT(1X,'| Minimum muon pt                    : ',F5.2,1X,'|')
+C--
+      CALL VZERO(QMACC,20)
+C--
+C--   User card muon identification cuts
+C--
+C--   *      QMUIDO return flags accepted
+C--   LSMC   13  14
+C--
+      IDLSMC = NAMIND('LSMC')   ! Does the LSMC card exist?
+      IF (IDLSMC.GT.0) ICONT = IW(IDLSMC)
+      IF (ICONT.GT.0) THEN   ! Read in user supplied cuts
+        NQMUID   = IW(NLINK('LSMC',0)) ! # QMUIDO values accpeted
+        WRITE(SLOUT,1003)
+        WRITE(SLOUT,1044)
+        WRITE(SLOUT,1046)
+        WRITE(SLOUT,1047) NQMUID
+        DO IQM = 1, NQMUID
+          QMACC(IQM) = IW(ICONT+IQM)   ! Accepted QMUIDO return flags
+          WRITE(SLOUT,1048) QMACC(IQM)
+        ENDDO
+      ELSE                   ! take defaults
+        NQMUID   = 2           ! # QMUIDO values accpeted
+        QMACC(1) = 13          ! Accepted QMUIDO return flags
+        QMACC(2) = 14          ! Accepted QMUIDO return flags
+        WRITE(SLOUT,1003)
+        WRITE(SLOUT,1045)
+        WRITE(SLOUT,1046)
+        WRITE(SLOUT,1047) NQMUID
+        WRITE(SLOUT,1048) QMACC(1)
+        WRITE(SLOUT,1048) QMACC(2)
+      ENDIF
+ 1044 FORMAT(1X,'| User supplied QMUIDO IDF flags             |')
+ 1045 FORMAT(1X,'| Default QMUIDO IDF flags used              |')
+ 1046 FORMAT(1X,'| -----------------------------              |')
+ 1047 FORMAT(1X,'| Number of accepted IDF values:       ',I4,2X,'|')
+ 1048 FORMAT(1X,'| IDF value accpeted           :       ',I4,2X,'|')
+C--
+C--   User card jet cuts
+C--
+C--   *   #objects/jet   P(lepton)/E(jet)  #jets   Jet Ycut  keep
+C--   LSJT      3          0.9              2     0.004       0
+C--
+      IDLSJT = NAMIND('LSJT')   ! Does the LSJT card exist?
+      IF (IDLSJT.GT.0) ICONT = IW(IDLSJT)
+      IF (ICONT.GT.0) THEN   ! Read in user supplied cuts
+        NTRJET = IW(ICONT+1) ! Minimum number of objects in jet
+        ENTRJT = RW(ICONT+2) ! Maximum ratio of P(lepton) / E(jet)
+        MINJET = IW(ICONT+3) ! Minimum number of jets
+        SYCUT = RW(ICONT+4)
+        RWPTS = IW(ICONT+5)
+        WRITE(SLOUT,1003)
+        WRITE(SLOUT,1049)
+        WRITE(SLOUT,1051)
+        WRITE(SLOUT,1052) NTRJET
+        WRITE(SLOUT,1053) ENTRJT
+        WRITE(SLOUT,1054) MINJET
+        WRITE(SLOUT,1055) SYCUT
+        WRITE(SLOUT,1057) RWPTS
+        WRITE(SLOUT,1000)
+      ELSE                   ! take defaults
+        NTRJET = 3           ! Minimum number of objects in jet
+        ENTRJT = 0.9         ! Maximum ratio of P(lepton) / E(jet)
+        MINJET = 2           ! Minimum number of jets
+        SYCUT = 0.0043       ! Ycut of jets
+        RWPTS = 0            ! Select only lepton satisfying all cuts
+        WRITE(SLOUT,1003)
+        WRITE(SLOUT,1050)
+        WRITE(SLOUT,1051)
+        WRITE(SLOUT,1052) NTRJET
+        WRITE(SLOUT,1053) ENTRJT
+        WRITE(SLOUT,1054) MINJET
+        WRITE(SLOUT,1055) SYCUT
+        WRITE(SLOUT,1057) RWPTS
+        WRITE(SLOUT,1000)
+      ENDIF
+ 1049 FORMAT(1X,'| User supplied jet criteria                 |')
+ 1050 FORMAT(1X,'| Default jet criteria used                  |')
+ 1051 FORMAT(1X,'| --------------------------                 |')
+ 1052 FORMAT(1X,'| Minimum number of objects in jet   : ',I4,2X,'|')
+ 1053 FORMAT(1X,'| Maximum ratio of P(lepton) / E(jet): ',F5.2,1X,'|')
+ 1054 FORMAT(1X,'| Minimum number of jets             : ',I4,2X,'|')
+ 1055 FORMAT(1X,'| Ycut used for jets                 : ',F6.3,'|')
+ 1057 FORMAT(1X,'| Keep only Pt selected lepton (0)   : ',I4,2X,'|')
+C-------------------------------------------------------------------------------
+C-    Build header bank for lepton selection PLSC
+C
+      CALL BKFMT('PLSC','2I,(I,F,I,3F,I,9F,I,5F,2I,5F,I,2F,I,F,I,F,I)')
+      NAPLSC = NAMIND('PLSC')
+      KPLSC = IW(NAPLSC)
+C
+C-    If former selection add  PLSC  bank
+      ILINK = 0
+ 800  IF ( KPLSC.NE.0) THEN
+        KPLSC = IW(KPLSC-1)
+        ILINK = ILINK +1
+        GO TO 800
+      ENDIF
+      NLENG = LPLSCA + LMHLEN
+      CALL AUBOS('PLSC',ILINK,NLENG,KPLSC,IGARB)
+      IF ( IGARB.EQ.2 ) GO TO 801
+      IW(KPLSC+LMHCOL) = LPLSCA
+      IW(KPLSC+LMHROW) = 1
+C
+C-    Fill track selection
+C
+      JPLSC = KPLSC +LMHLEN
+      IW( JPLSC +JPLSDT) = MINGDT
+      RW( JPLSC + JPLSIS ) = MINVIS
+      IW( JPLSC + JPLSIT ) = MINHIT
+      RW( JPLSC + JPLSD0 ) = D0CUT
+      RW( JPLSC + JPLSZ0 ) = Z0CUT
+      RW( JPLSC + JPLSCO ) = MCOSTH
+C
+C     Electron track parameter cuts
+C
+      IW( JPLSC + JPLSNE ) = TPCEP
+      RW( JPLSC + JPLSDE ) = D0MXEP
+      RW( JPLSC + JPLSZE ) = Z0MXEP
+      RW( JPLSC + JPLSCE ) = CSTHEP
+      RW( JPLSC + JPLSPE ) = PEPMIN
+      RW( JPLSC + JPLSTE ) = PTEPMN
+C
+C-    Electron - id selection
+C
+      RW( JPLSC + JPLS2N ) = R2CUT(1)
+      RW( JPLSC + JPLS2X ) = R2CUT(2)
+      RW( JPLSC + JPLS3N ) = R3CUT(1)
+      RW( JPLSC + JPLS3X ) = R3CUT(2)
+      IW( JPLSC + JPLSIM ) = MINWIR
+      RW( JPLSC + JPLS5N ) = R5CUT(1)
+      RW( JPLSC + JPLS5X ) = R5CUT(2)
+C
+C-    Conversion selection
+C
+      RW( JPLSC + JPLSXY ) = DXYCUT
+      RW( JPLSC + JPLSZC ) = DZCUT
+      RW( JPLSC + JPLSMI ) = MXINV
+      IW( JPLSC + JPLSSF ) = RWCONV
+C
+C     Muon  track parameter cuts
+C
+      IW( JPLSC + JPLSNM ) = TPCMU
+      RW( JPLSC + JPLSDM ) = D0MXMU
+      RW( JPLSC + JPLSZM ) = Z0MXMU
+      RW( JPLSC + JPLSCM ) = CSTHMU
+      RW( JPLSC + JPLSPM ) = PMUMIN
+      RW( JPLSC + JPLSTM ) = PTMUMN
+C
+C-    Selection criteria for muon
+C
+      IW( JPLSC + JPLSQM ) = NQMUID
+      RW( JPLSC + JPLSQ1 ) = QMACC(1)
+      RW( JPLSC + JPLSQ2 ) = QMACC(2)
+C
+C-    Jet selection criteria
+C
+      IW( JPLSC + JPLSNJ ) = NTRJET
+      RW( JPLSC + JPLSEJ ) = ENTRJT
+      IW( JPLSC + JPLSJN ) = MINJET
+      RW( JPLSC + JPLSYJ ) = SYCUT
+      IW( JPLSC + JPLSKJ ) = RWPTS
+      CALL BLIST(IW,'C+','PLSC')
+      CALL BLIST(IW,'R+','PLSC')
+      CONTINUE
+ 801  IF(IGARB.EQ.2) THEN
+        WRITE (SLOUT,1060)
+      ELSE
+        WRITE (SLOUT,1061) ILINK+1
+        IF (ILINK.GT.0) CALL QLCOMP
+      ENDIF
+ 1061 FORMAT(1X,'| Bank PLSC added as a selection # ', I3)
+ 1060 FORMAT(1X,'| Bank PLSC for cut summary not added  ******|')
+      ENDIF
+ 990  CONTINUE
+      RETURN
+      END
+#endif

@@ -1,0 +1,361 @@
+head	1.1;
+access;
+symbols
+	alpha126_22:1.1
+	alpha122_22:1.1
+	alpha126_21:1.1
+	alpha126_20:1.1
+	alpha126_19:1.1
+	alpha126_18:1.1
+	alpha126_17:1.1
+	alpha126_16:1.1
+	alpha126_15:1.1
+	alpha126_14:1.1
+	alpha126_13:1.1
+	alpha126_12:1.1
+	alpha126_11:1.1
+	alpha126_10:1.1
+	alpha126_09:1.1
+	alpha126_08:1.1
+	alpha126_07:1.1
+	alpha126_06:1.1
+	alpha126_05:1.1
+	alpha126_04:1.1
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	99.08.25.09.42.07;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE QSMEAR(FIRST,QIPVER,SMBIN,RTBIN,
+     >     NTRACK,NJET,FRF2TRK,PROBEVT,PROBHEMI,PROBJET,PROBTRK)
+CKEY QIPBTAG / USER
+C-------------------------------------------------------------------
+C! Smear results of QIPBTAG to correct impact parameter resolution
+C! in Monte Carlo. User-callable.
+C! Also delete extra tracks.
+C! (N.B. The QIPBTAG are reset to the unsmeared/undeleted ones
+C!  at the beginning, so the results don't depend on whether
+C!  SMEAR has been called already in the same event).
+C!
+C!   Author: Dave Brown, 24-3-92
+C!   Modified: L. Moneta, I.Tomalin 27/4/95.
+C!   Modified: A. Bazarko 1/1/96.
+C!   Modified: I. Tomalin 29/2/96 Smearing randomly signed.
+C!   Modified: I. Tomalin 24/5/96 Allow for binning in theta and p. 
+C!   Modified: I. Tomalin  9/1/96 Allow correction to be 100% 
+C!                                correlated between tracks in hemi.
+C!   Modified: P-F Giraud 17/8/99 Reads the parameters form the database
+C!
+C!   Input:
+C!        LOGICAL FIRST   = Is this the first call to QSMEAR since
+C!                          calling QIPBTAG (or QIPBTAG2) ?
+C!         CHAR*1 QIPVER  = '1' if being used after call to QIPBTAG.
+C!                        = '2' if being used after call to QIPBTAG2.
+C!         CHAR*1 SMBIN   = '0' no smearing correction at all.
+C!                        = 'N' no binning in theta/p for smearing.
+C!                        = 'T' binning in theta for smearing.
+C!                        = 'P' binning in p for smearing.
+C!                        = 'B' binning in both theta/p for smearing.
+C!         CHAR*1 RTBIN   = '0' no track deletion at all.
+C!                        = 'N' no binning in theta/p for deletion.
+C!                        = 'T' binning in theta for deletion.
+C!                        = 'P' binning in p for deletion.
+C!                        = 'B' binning in both theta/p for deletion.
+C!           Plus same arguments of call to QIPBTAG.
+C!   Output: Same arguments overwritten with smeared values
+C!           The -ve tag quantities in /BTAGRAW/ are also smeared.
+C-------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+C Calling arguments.
+      LOGICAL FIRST
+      CHARACTER*1 QIPVER,SMBIN,RTBIN
+C
+C Arguments used in call to QIPBTAG.
+#include "maxtrk.h"
+#include "pubraw.h"
+C
+C Include file for smearing
+#include "qsmear.h"
+C
+C Should correction be 100% correlated between tracks ?
+      LOGICAL CORTRK
+      PARAMETER (CORTRK=.FALSE.)
+C
+C Common from QIPBTAG.
+#include "btagraw.h"
+#include "btpar.h"
+C
+C QIPBTAG track probability function coefficients
+C
+      REAL            FIT2(NFIT,MAXTYPE)
+      COMMON/FITPAR2/FIT2
+C
+C Local variables
+      LOGICAL INIT,ERMES1,ERMES2,ERMES3
+      DATA INIT,ERMES1,ERMES2,ERMES3/4*.TRUE./
+      DATA NASIM/0/
+      LOGICAL FIREVT
+      DATA FIREVT/.TRUE./
+C
+C Local arrays.
+      DIMENSION KSMIR(MAXTYPE),KRTRK(MAXTYPE),PROB(4,MAXTRK),
+     &          EVEPROB(4,2)
+      LOGICAL   USETRK(MAXTRK)
+      DATA LNEVT/0/
+      DIMENSION QSMPAR(4, MAXTYPE), QDEPAR(MAXTYPE)
+      DIMENSION QSMPAR2(4, NTTSB*NCPHIS), QDEPAR2(NTTSB*NCPHIS)
+C Used to backup QIPBTAG track information.
+      INTEGER NTRACK_B
+      INTEGER FRF2TRK_B(MAXTRK)
+      INTEGER TFLAG_B(MAXTRK)
+      INTEGER JHEMI_B(MAXTRK),JJET_B(MAXTRK)
+      REAL    TPAR_B(5,MAXTRK),TERR_B(4,4,MAXTRK)
+      REAL    DMIN_B(MAXTRK),S_DMIN_B(MAXTRK)
+      REAL    PHIP_B(MAXTRK)
+      REAL    JDIST_B(MAXTRK),LDIST_B(MAXTRK)
+      REAL    S_LDIST_B(MAXTRK),PERP_B(3,MAXTRK)
+C
+#include "qcde.h"
+C
+C Decode QIPBTAG tracking types.
+#include "btaginl.h"
+C
+#include "qmacro.h"
+C-------------------------------------------------------------------
+C Only do smearing for Monte Carlo.
+      IF (.NOT.XMCEV) GOTO 999
+C
+C Check input options.
+      IF (SMBIN.NE.'0'.AND.SMBIN.NE.'N'.AND.SMBIN.NE.'T'.AND.
+     +    SMBIN.NE.'P'.AND.SMBIN.NE.'B'.OR.
+     +    RTBIN.NE.'0'.AND.RTBIN.NE.'N'.AND.RTBIN.NE.'T'.AND.
+     +    RTBIN.NE.'P'.AND.RTBIN.NE.'B') 
+     +THEN
+        WRITE(6,1) SMBIN,RTBIN
+    1   FORMAT(' QSMEAR FATAL ERROR: Unknown SMBIN/RTBIN option:',
+     +         2A2)
+        CALL QMTERM('Quit from QSMEAR')
+      END IF
+C
+C
+      DO 7 ITRK = 1,MAX(NTRACK,NTRACK_B) 
+        USETRK(ITRK) = .TRUE.
+    7 CONTINUE
+C
+      IF (FIRST) THEN
+C First call to QSMEAR this event. Save QIPBTAG information and
+C generate random numbers needed for smearing/deletion.
+        LNEVT = KNEVT
+        CALL SMCOPY(USETRK,
+     +       NTRACK  ,JJET  ,JHEMI  ,FRF2TRK  ,TFLAG  ,DMIN  ,S_DMIN  ,
+     +       PHIP  ,JDIST  ,LDIST  ,S_LDIST  ,TPAR  ,TERR  ,PERP  ,
+     +       NTRACK_B,JJET_B,JHEMI_B,FRF2TRK_B,TFLAG_B,DMIN_B,S_DMIN_B,
+     +       PHIP_B,JDIST_B,LDIST_B,S_LDIST_B,TPAR_B,TERR_B,PERP_B)
+C
+        ISEED = 450000*KRUN + KEVT
+        NTOTIN = 4*MAXTRK*INT(KEVT/450000)
+        NTO2IN = 0
+        CALL RMARIN(ISEED,NTOTIN,NTO2IN)
+        CALL RANMAR(PROB,4*NTRACK)
+        CALL RANMAR(EVEPROB,8)
+C
+        IF (CORTRK) THEN
+C 100% correlate corrections to tracks in each hemisphere.
+          DO ITRK = 1,NTRACK
+            IEH = JHEMI(ITRK)
+            PROB(1,ITRK) = EVEPROB(1,IEH)
+            PROB(2,ITRK) = EVEPROB(2,IEH)
+            PROB(3,ITRK) = EVEPROB(3,IEH)
+            PROB(4,ITRK) = EVEPROB(4,IEH)
+          END DO
+        END IF
+C
+      ELSE
+C QSMEAR has already been called for this event. 
+        IF (KNEVT.NE.LNEVT) THEN
+          WRITE(6,8) 
+    8     FORMAT(' QSMEAR FATAL ERROR: FIRST set incorrectly ')
+          CALL QMTERM('Quit from QSMEAR')
+        END IF
+C Reset all QIPBTAG information to unsmeared/undeleted state.
+        CALL SMCOPY(USETRK,
+     +    NTRACK_B,JJET_B,JHEMI_B,FRF2TRK_B,TFLAG_B,DMIN_B,S_DMIN_B,
+     +    PHIP_B,JDIST_B,LDIST_B,S_LDIST_B,TPAR_B,TERR_B,PERP_B,
+     +    NTRACK  ,JJET  ,JHEMI  ,FRF2TRK  ,TFLAG  ,DMIN  ,S_DMIN  ,
+     +    PHIP  ,JDIST  ,LDIST  ,S_LDIST  ,TPAR  ,TERR  ,PERP  )
+      END IF
+
+C If this is the first event, then read smearing/deletion  parameters
+C from database/cardfile
+      IF (.NOT.FIRST) FIREVT=.TRUE.
+      IF (FIREVT) THEN
+        IF (FIRST) FIREVT=.FALSE.
+C Link to card file containing smearing parameters.
+C Loop over track types using binned cards only for first two.
+        IF (SMBIN.NE.'0') THEN
+          CALL GTIPBK(4, QSMPAR, 'QNSM', ' ', 1)
+          IF (SMBIN.NE.'N') 
+     +         CALL GTIPBK(4, QSMPAR2, 'Q'//SMBIN//'SM', ' ', 1)
+        ENDIF
+C Link to card file containing track deletion parameters.
+C Loop over track types using binned cards only for first two.
+        IF (RTBIN.NE.'0') THEN
+          CALL GTIPBK(1, QDEPAR, 'QNDE', ' ', 1)
+          IF (RTBIN.NE.'N') 
+     +         CALL GTIPBK(1, QDEPAR2, 'Q'//RTBIN//'DE', ' ', 1)
+        ENDIF
+      ENDIF
+C
+C Smear/kill the tracks used by QIPBTAG.
+C
+      DO 35 ITRK =1,NTRACK
+        ITYPE = TTYPE(TFLAG(ITRK))
+        IVIEW = TVIEW(TFLAG(ITRK))
+C Get p/theta bin in case the track type is less than or equal NTTSB
+        IF (ITYPE.LE.NTTSB) THEN
+C Which |cos(theta)| bin is this track in ?
+          COSTH = TPAR(2,ITRK)/SQRT(1.0 + TPAR(2,ITRK)**2)
+          ITBIN = NCHIS
+          DO IBIN = (NCHIS-1), 1, -1
+            IF (ABS(COSTH).LT.TBIN(IBIN)) ITBIN=IBIN
+          ENDDO
+C Which momentum bin is this track in ?
+          IF (FRF2TRK(ITRK).LT.10000) THEN
+            PMOM = QP(KFCHT - 1 + FRF2TRK(ITRK))
+          ELSE
+            PMOM = TPAR(1,ITRK)
+          END IF
+          IPBIN = NPHIS
+          DO IBIN = NPHIS-1, 1, -1
+            IF (PMOM.LT.PBIN(IBIN)) IPBIN=IBIN
+          ENDDO
+C Which theta/p bin is this track in ?
+          ITPBIN = NCHIS*(IPBIN - 1) + ITBIN
+        ENDIF
+C Choose row in smearing bank according to track type
+        IF (ITYPE.GT.NTTSB.OR.SMBIN.EQ.'N') THEN
+          ISBIN=ITYPE
+        ELSE IF (SMBIN.EQ.'T') THEN
+          ISBIN = NCHIS*(ITYPE - 1) + ITBIN
+        ELSE IF (SMBIN.EQ.'P') THEN
+          ISBIN = NPHIS*(ITYPE - 1) + IPBIN
+        ELSE IF (SMBIN.EQ.'B') THEN
+          ISBIN = NCPHIS*(ITYPE - 1) + ITPBIN
+        END IF
+C Choose row in deletion bank according to track type
+        IF (ITYPE.GT.NTTSB.OR.RTBIN.EQ.'N') THEN 
+          IRBIN = ITYPE
+        ELSE IF (RTBIN.EQ.'T') THEN
+          IRBIN = NCHIS*(ITYPE - 1) + ITBIN
+        ELSE IF (RTBIN.EQ.'P') THEN
+          IRBIN = NPHIS*(ITYPE - 1) + IPBIN
+        ELSE IF (RTBIN.EQ.'B') THEN
+          IRBIN = NCPHIS*(ITYPE - 1) + ITPBIN
+        END IF
+C
+C Smear track impact parameters.
+        IF (SMBIN.NE.'0') THEN
+          IF (ITYPE.GT.NTTSB.OR.SMBIN.EQ.'N') THEN
+            CALL MYSMEAR(QSMPAR,PROB(1,ITRK),ISBIN,IVIEW,DMIN(ITRK),
+     +           S_DMIN(ITRK))
+          ELSE
+            CALL MYSMEAR(QSMPAR2,PROB(1,ITRK),ISBIN,IVIEW,DMIN(ITRK),
+     +           S_DMIN(ITRK))
+          ENDIF
+        ENDIF
+C
+C Require track to still pass impact parameter cut.
+        IF (ABS(DMIN(ITRK)).GT.MXDMIN(ITYPE)) USETRK(ITRK) = .FALSE.
+C Delete tracks randomly.
+        IF (RTBIN.NE.'0') THEN
+          IF (ITYPE.GT.NTTSB.OR.RTBIN.EQ.'N') THEN
+            IF (PROB(4,ITRK).LT.QDEPAR(IRBIN))
+     +           USETRK(ITRK) = .FALSE.
+          ELSE
+            IF (PROB(4,ITRK).LT.QDEPAR2(IRBIN))
+     +           USETRK(ITRK) = .FALSE.
+          ENDIF
+        END IF
+   35 CONTINUE
+C
+C Remove deleted tracks from arrays containing track information.
+      CALL SMCOPY(USETRK,
+     +  NTRACK  ,JJET  ,JHEMI  ,FRF2TRK  ,TFLAG  ,DMIN  ,S_DMIN  ,
+     +  PHIP  ,JDIST  ,LDIST  ,S_LDIST  ,TPAR  ,TERR  ,PERP  ,
+     +  NTRACK  ,JJET  ,JHEMI  ,FRF2TRK  ,TFLAG  ,DMIN  ,S_DMIN  ,
+     +  PHIP  ,JDIST  ,LDIST  ,S_LDIST  ,TPAR  ,TERR  ,PERP  )
+C
+      IF (NTRACK.GT.0) THEN
+C Recalculate the QIPBTAG tagging probabilities.
+C
+        IF (QIPVER.EQ.'2') THEN
+          CALL BTAGTR(FIT2,NTRACK,DMIN,S_DMIN,TFLAG,PROBTRK)
+        ELSE
+          CALL BTAGTR(FITP,NTRACK,DMIN,S_DMIN,TFLAG,PROBTRK)
+        END IF
+        CALL BTAGEV(NTRACK,NJET,JJET,JHEMI,PROBTRK,NEGPROB,
+     +              PROBJET,PROBHEMI,PROBEVT)
+C
+C Recalculate the corresponding negative probabilities.
+C
+        DO 40 ITRK=1,NTRACK
+          NPROBTRK(ITRK) = -PROBTRK(ITRK)
+   40   CONTINUE
+        CALL BTAGEV(NTRACK,NJET,JJET,JHEMI,NPROBTRK,NEGPROB,
+     +              NPROBJET,NPROBHEMI,NPROBEVT)
+C
+      ELSE
+C
+        PROBHEMI(1) = 1.1
+        PROBHEMI(2) = 1.1
+        NPROBHEMI(1) = 1.1
+        NPROBHEMI(2) = 1.1
+      END IF
+C
+  999 CONTINUE
+      END
+#endif
+@

@@ -1,0 +1,36 @@
+*   RUN #                   RUN'S TITLE                                         
+RUN  101  'BHLUMI GENERATOR - BHLU02 JADACH/RICHTER-WAS/WARD/WAS'
+*     FIRST EVENT   LAST EVENT TO BE GENERATED                                  
+TRIG       1           2000                                                     
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG                                 
+DEBU  6/           1         3                                                  
+* requested time left at the end of job (in sec)                                
+TIME 10                                                                         
+*  use RANMAR generator for random numbers
+RMAR      89            1
+*    to save event file (EPIO format)                                           
+*FILO 'SCWEEK:BHLU02.EPIO | EPIO '
+*    to save histograms                                                         
+*HSTO 'SCWEEK:BHLU02.HIST | NATIVE '
+*       sigma-x      sigma-y     sigma-z  (cm)                                  
+SVRT     0.0124       0.0005       0.72                                          
+*       Xpos    Ypos     Zpos  offsets                                                 
+XVRT    -0.075  0.065   -0.253                                                  
+*  angles(rad) alphax   alphay
+AVRT         -0.184E-03  0.022E-03
+* CMSENE : Center of mass energy ( in GeV);                                     
+* THMIN  : Minimum generation angle (in degrees)                                
+* THMAX  : Maximum generation angle (in degrees)                                
+* EPSCM  : Separation between soft and hard photons (in units of beam           
+* THMAX  : Maximum generation angle (in degrees)                                
+*          energy) - recommanded value 0.0001;                                  
+* KEYRAD : 1 see BHLUMI manual                                                  
+* KEYOPT : 3001    see BHLUMI manual                                            
+* WTMAX  : Maximum generation weight
+* ISICA  : 1= on ( SICAL selection ) / 0=off ( LCAL selection)
+*       CMSENE   THMIN     THMAX    EPSCM   KEYRAD  KEYOPT  WTMAX  ISICA
+GBHL     92.0    1.700     10.31    0.0001    1     3001    2.8      1  
+*    more precise definition of SICAL geometry ( only used if ISICA=1)
+*       R0A     R0B      CORMIN  CORMAX   Z0MIN    Z0MAX   E1cut    E2cut
+GBGO   60.9680  60.9604  -0.004 -0.024   2526.33  2526.18  .44     .60  
+ENDQ

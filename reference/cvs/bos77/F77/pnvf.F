@@ -1,0 +1,111 @@
+      SUBROUTINE PNVF(FLT,STR,JS)
+
+*     Convert floating point number FLT into string STR with JS
+*     non-blank characters. JS = 1 ... 12
+*     Examples:
+*     CALL PNVF( -1.200,STR,JS)   -> STR='-1.2' ; JS = 4
+*     CALL PNVF(1.0/3.0,STR,JS)   -> STR='0.333333' ; JS = 8
+*     CALL PNVF(-123.00,STR,JS)   -> STR='-123.' ; JS = 5
+*     STR will contain up to 6 digits (trailing zeros are suppressed).
+*     STR will contain one decimal point.
+*     Range of floating point numbers is 10E-36 ... 10E+36 (due to
+*     limitations on certain machines.
+
+      CHARACTER*12 STR,DIG(0:9)*1
+      INTEGER ND(12),KD(6)
+#include "doublfex.h"
+      DATA DIG/'0','1','2','3','4','5','6','7','8','9'/
+      DATA KD/100000,10000,1000,100,10,1/,IJ0/0/
+*     ...
+      IF(IJ0.EQ.0) THEN
+         IJ0=ICHAR('0')
+         IJ9=ICHAR('9')
+      END IF
+      JS=0
+      X=FLT
+      IF(X.NE.0.0) THEN
+         IF(ABS(X).LT.1.0E-36) X=SIGN(1.0E-36,FLT)
+         IF(ABS(X).GT.1.0E+36) X=SIGN(1.0E+36,FLT)
+      ELSE
+         GOTO 22
+      END IF
+      N=IFIX(ALOG10(ABS(X))+100.0)-100
+   20 IF(N.LE.5.AND.N+3.GE.0) THEN
+         K=DBLE(ABS(X))*FEX(N)+0.5D0
+      ELSE
+         K=DBLE(ABS(X))*10.0D0**(5-N)+0.5D0
+      END IF
+      IF(K.GT.999999) THEN
+         N=N+1
+         GOTO 20
+      END IF
+
+   22 IF(X.EQ.0.0) THEN
+         JSD=2
+      ELSE IF(N.GT.5) THEN
+         NFL=(N/3)*3
+         JSD=9
+         IF(NFL.GE.10) JSD=JSD+1
+         M=MOD(N,3)+1
+      ELSE IF(N+3.GE.0) THEN
+         NFL=0
+         JSD=7
+         IF(N.LT.0) JSD=JSD-N
+         M=MAX0(0,N+1)
+      ELSE
+         NFL=-((2-N)/3)*3
+         JSD=10
+         IF(NFL+10.GE.0) JSD=11
+         M=3-MOD(2-N,3)
+      END IF
+      IF(X.LT.0.0) JSD=JSD+1
+
+   23 STR=' '
+
+      IF(X.EQ.0.0) THEN
+         JS=JS+1
+         STR(JS:JS+1)='0.'
+         JS=JS+1
+         GOTO 36
+      ELSE IF(X.LT.0) THEN
+         JS=JS+1
+         STR(JS:JS)='-'
+      END IF
+
+      IF(N+1.LE.0.AND.N+3.GE.0) THEN
+         JS=JS+1
+         STR(JS:JS-N+1)='0.00'
+         JS=JS-N
+      END IF
+      DO 24 I=1,6
+      J=K/KD(I)
+      K=K-KD(I)*J
+      JS=JS+1
+      STR(JS:JS)=DIG(J)
+      IF(I.EQ.M) THEN
+         JS=JS+1
+         STR(JS:JS)='.'
+      END IF
+      IF(I.GE.M.AND.K.EQ.0) GOTO 26
+   24 CONTINUE
+
+   26 IF(NFL.EQ.0) GOTO 36
+      JS=JS+1
+      STR(JS:JS)='E'
+
+      K=IABS(NFL)
+      DO 30 I=1,12
+      ND(I)=MOD(K,10)
+      K    =K/10
+      IF(K.EQ.0) GOTO 32
+   30 CONTINUE
+      I=12
+   32 IF(NFL.LT.0) THEN
+         JS=JS+1
+         STR(JS:JS)='-'
+      END IF
+      DO 34 J=I,1,-1
+      JS=JS+1
+   34 STR(JS:JS)=DIG(ND(J))
+   36 RETURN
+      END

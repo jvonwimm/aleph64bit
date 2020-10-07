@@ -1,0 +1,233 @@
+head	1.4;
+access;
+symbols
+	bos3489-1:1.3.0.2
+	bos3589:1.4
+	bos3489:1.3
+	bos3389:1.3
+	bos3289:1.3
+	bos3189:1.3
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.4
+date	97.01.29.15.49.12;	author flr;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.05.03.14.55.08;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.03.11.12.53.01;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.43;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.44;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@release bos3589: new epio routines
+@
+text
+@      SUBROUTINE EPOPEN(MODE,IERR)
+C ----------------------------------------------------------------
+C standard fortran version on DEC
+C -----------------------------------------------------------------
+*
+*         STANDARD FORTRAN FILE OPEN
+*
+*  INPUT:
+*
+*  MODE     =1 FOR WRITE, =2 FOR READ
+*
+      COMMON/EPCOMM/NMUNIT,NWUNIT,NCONT,ISTART,LASTUT,LREF,LIST(350)
+      EQUIVALENCE (NOUTUT,LIST(8))
+      COMMON/EPVAXN/EPVXUN(10)
+      CHARACTER*255 EPVXUN
+      CHARACTER*255 FLNAM
+      PARAMETER (LFLNAM=255)
+      LOGICAL OPEND
+*
+      LUN        = LIST(ISTART+10)
+*
+#if defined(ALEPH_DEC) || defined(ALEPH_SGI)
+*     record length in machine words
+      LREC       = LIST(ISTART+1)/2
+#else
+*     record length in bytes
+      LREC       = LIST(ISTART+1)*2
+#endif
+*
+*           FIRST OF ALL WE CHECK IF THE UNIT HAS BEEN OPEN BY
+*                     A FORTRAN OPEN STATEMENT
+*
+      IF (LIST(ISTART+33).LT.2) THEN
+        INQUIRE(UNIT=LUN,NAME=FLNAM,OPENED=OPEND,IOSTAT=IOS)
+        IF(IOS.NE.0)GOTO 9901
+        IF(OPEND) THEN
+*           THE UNIT IS ALREADY OPEN. WE JUST REGISTER THE NAME
+           EPVXUN(LREF)    = FLNAM
+           GOTO 77777
+        ENDIF
+      END IF
+*
+*            USE USER SPECIFIED NAME, OR DEFAULT NAME 'for0nn',
+*
+        IF (EPVXUN(LREF)(1:1).EQ.' ')  THEN
+          WRITE(FLNAM,'(''for0'',2I1)')LUN/10,MOD(LUN,10)
+          EPVXUN(LREF)=FLNAM
+        ELSE
+          FLNAM = EPVXUN(LREF)
+        END IF
+        NSLNG = LNBLNK (EPVXUN(LREF))
+*
+      IF(MODE.EQ.2)  THEN
+*
+*                HERE WE OPEN FOR READING
+*
+        IF(LIST(ISTART+33).EQ.1)THEN
+         OPEN(LUN,FILE=EPVXUN(LREF)(1:NSLNG),STATUS='OLD',
+     1       ACCESS='DIRECT',RECL=LREC,
+     1       READONLY,
+     1       FORM='UNFORMATTED',IOSTAT=IOS)
+        ELSE IF(LIST(ISTART+33).EQ.0) THEN
+         OPEN(LUN,FILE=EPVXUN(LREF)(1:NSLNG),STATUS='OLD',
+     1       READONLY,
+     1       FORM='UNFORMATTED',IOSTAT=IOS)
+        ELSE IF(LIST(ISTART+33).EQ.2)THEN
+         call cfopen(LIST(ISTART+25),0,LREC,'r',
+     1       0,EPVXUN(LREF)(1:NSLNG),IOS)
+        ENDIF
+        IF(IOS.NE.0)GOTO 9901
+      ELSE
+*
+*                HERE WE OPEN FOR WRITING
+        IF(LIST(ISTART+33).EQ.1)THEN
+         OPEN(LUN,FILE=EPVXUN(LREF)(1:NSLNG),STATUS='UNKNOWN',
+     1       ACCESS='DIRECT',RECL=LREC,
+     1       FORM='UNFORMATTED',IOSTAT=IOS)
+        ELSEIF (LIST(ISTART+33).EQ.0) THEN
+         OPEN(LUN,FILE=EPVXUN(LREF)(1:NSLNG),STATUS='NEW',
+     1       FORM='UNFORMATTED',IOSTAT=IOS)
+        ELSE IF(LIST(ISTART+33).EQ.2)THEN
+         call cfopen(LIST(ISTART+25),0,LREC,'w+',
+     1       0,EPVXUN(LREF)(1:NSLNG),IOS)
+        ENDIF
+        IF(IOS.NE.0)GOTO 9901
+      ENDIF
+C
+      GOTO 77777
+C       ERROR TRYING TO OPEN
+ 9901 CONTINUE
+        IERR=24+MODE
+        CALL EPERRH(LUN,IERR)
+77777 RETURN
+      END
+@
+
+
+1.3
+log
+@replace ${VENDOR} by ALEPH_${VENDOR}
+Modified Files:
+  F77/ 	blo32w.F cfribm.F ctoibm.F epblin.F epdacr.F epdefu.F ephead.F
+ 	epinit.F epopen.F
+@
+text
+@a0 1
+#if defined(ALEPH_DEC) &&  ! defined(UNIX)
+d21 6
+d28 1
+d33 2
+a34 1
+      INQUIRE(UNIT=LUN,NAME=FLNAM,OPENED=OPEND,IOSTAT=IOS)
+d36 1
+a36 2
+      IF(OPEND) THEN
+*
+d38 3
+a40 3
+*
+        EPVXUN(LREF)    = FLNAM
+        GOTO 77777
+d59 1
+a59 1
+     1       ACCESS='DIRECT',RECL=LIST(ISTART+1)/2,
+d62 1
+a62 1
+        ELSE
+d66 3
+d76 1
+a76 1
+     1       ACCESS='DIRECT',RECL=LIST(ISTART+1)/2,
+d78 1
+a78 2
+        ELSE
+*
+d81 3
+a87 3
+C      NOW STORE THE STREAM-ID
+C
+C?    LIST(ISTART+25) = 1
+d91 1
+a91 3
+        WRITE(NOUTUT,*) ' EPIO/EPOPEN cannot open ',EPVXUN(LREF)
+        WRITE(NOUTUT,*) ' LUN= ',LUN, ' MODE= ',MODE, ' IOSTAT= ',IOS
+        IERR=1
+a94 1
+#endif
+@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@d1 1
+a1 1
+#if defined(DEC) &&  ! defined(UNIX)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK epopen
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

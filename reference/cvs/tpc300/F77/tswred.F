@@ -1,0 +1,134 @@
+*DK tswred
+      SUBROUTINE TSWRED(ISECT)
+C--------------------------------------------------------------------
+C! Reduction of TPC wire data
+C  Author: M.Mermikides  4-Oct-1987
+C  INPUT:
+C       ISECT    I/  TPC sector number
+C
+C  Description:
+C  ===========
+C
+C       The purpose of this routine is to reduce the wire data
+C  to start time and integrated charge for each pulse.
+C  The information is packed in each hitlist word (in situo) as follows:
+C      Bit:  31           24|23          14|13|12            0
+C            -------------------------------------------------
+C            | Wire number  | Total charge | 1|  Time est.    |
+C            -------------------------------------------------
+C  Bit 13 = 1 indicates that the wire data are reduced.
+C  The total charge of each pulse is obtained by summing the
+C  pulse heights and the time estimator is computed from the pulse shape
+C  using the digitizations in TWDI.
+C  The summed pulse heights are scaled by a factor WPSCAL found from
+C  studies of pulse area distributions from simulated events, and
+C  the time is multiplied by 16 to make use of the 13-bit resolution.
+C  Pulses of inconsistent length or of complex structure are flagged
+C  by setting the time estimator to saturation value (8191). Pulses
+C  with more than two saturated samples are given charge = 1023
+C
+C  Modifications:
+C    1. D. Cowen 24-06-88 -- Pulses of inconsistent length or of
+C                            complex structure are dropped.  Time
+C                            is multiplied by 16 instead of 8.
+C    2. R. Johnson 20-10-88 -- Simplified code.  No longer any
+C                              check on number of peaks.
+C    3. D. Cowen (M. Mermikides) 14-Mar-89 -- Bug fix: Before, did
+C                              not restore the wire number when packing
+C                              information back into hitlist word.
+C
+C
+C--------------------------------------------------------------------
+#include "bcs.h"
+#include "tpcond.h"
+#include "tpcbos.h"
+C
+      DATA MTHRSH/2/
+C
+      KTWIR = NLINK(DIGNAM(1),ISECT)
+      KTWDI = NLINK(DIGNAM(2),ISECT)
+      IF (KTWIR.EQ.0.OR.KTWDI.EQ.0) GO TO 999
+      NHIT = IW(KTWIR)
+      IF (NHIT.LE.0) GO TO 999
+C
+      JSAMP = 0
+      IBADPL = 0
+C
+      DO 50 I = 1,NHIT
+         ID    = IW (KTWIR + I)
+         IWIRE = IBITS(ID, 24, 8)
+         IT0  = IBITS(ID,  0, 9)
+         NSAMP = IBITS(ID, 16, 8)
+C
+         LENP=0
+         NSAT = 0
+         IPSUM = 0.
+         IWSUM = 0.
+         DO 20 J = 1,NSAMP
+            JSAMP = JSAMP + 1
+            JJ = (JSAMP-1)/4 + 1
+            JA= 8*(4*JJ-JSAMP)
+            IPH = IBITS(IW(KTWDI + JJ), JA, 8)
+C
+            IF (IPH.GT.MTHRSH) THEN
+               LENP=LENP+1
+               IPSUM=IPSUM+IPH
+               IWSUM=IWSUM + J*IPH
+            ENDIF
+            IF (IPH.GE.255) NSAT=NSAT+1
+   20    CONTINUE
+C
+C Pulse of inconsistent length, or with more than one peak
+C
+         IF (LENP.LT.MINLEN .OR. LENP.GT.NWSMAX) THEN
+            IBADPL = IBADPL + 1
+            GO TO 50
+         ENDIF
+C
+C Time 0 -> 511.  Multiply by 16 to exploit 13-bit resolution
+C
+         PSUM=FLOAT(IPSUM)
+         TIME=FLOAT(IT0-1)+FLOAT(IWSUM)/PSUM
+         ITIME = NINT(16.0*TIME)
+C
+C Encode charge.  Pulses with saturated samples are forced to be
+C completely saturated
+C
+         IF (NSAT.GE.2) THEN
+            ICHAR=1023
+         ELSE
+C
+C Scale factor is for default time slice of 100 nsec.  We scale the
+C area by an additional factor which is the ratio of the actual
+C bucket size used to the nominal.
+C
+            PAREA = PSUM*(WPSCAL*TPDGBN/100.)
+            ICHAR = INT(PAREA)
+            ICHAR = MIN(ICHAR,1023)
+         ENDIF
+C
+C++  Pack information back into hitlist word if pulse is good.
+C
+         CALL MVBITS(IWIRE, 0, 8 ,IW(KTWIR+I-IBADPL),  24)
+         CALL MVBITS(ICHAR, 0,10 ,IW(KTWIR+I-IBADPL),  14)
+         CALL MVBITS(ITIME, 0,13 ,IW(KTWIR+I-IBADPL),   0)
+         IW(KTWIR+I-IBADPL) = IBSET(IW(KTWIR+I-IBADPL),13)
+C
+   50 CONTINUE
+C
+C++  Reduce the size of this sector's TWIR bank by subtracting off
+C++  the space which would have been used by bad pulses.
+C
+      IF (IBADPL .GT. 0) THEN
+         LENGTH = NHIT - IBADPL
+         CALL AUBOS('TWIR',ISECT,LENGTH,INDEX,KGARB)
+         IF(KGARB .EQ. 2) GOTO 990
+      ENDIF
+C
+      GO TO 999
+C
+  990 WRITE (5,101)
+  101 FORMAT (//,'+++TSWRED+++ AUBOS could not find space!',//)
+C
+  999 RETURN
+      END

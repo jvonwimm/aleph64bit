@@ -1,0 +1,63 @@
+head	1.1;
+access;
+symbols
+	alio83:1.1
+	alio82:1.1
+	alio81:1.1
+	alio80:1.1
+	alio74:1.1
+	alio73:1.1
+	alio72:1.1
+	alio71:1.1
+	alio70:1.1
+	alio68:1.1
+	alio69:1.1
+	alio67:1.1
+	alio66:1.1
+	alio65:1.1
+	alio64:1.1
+	alio63:1.1
+	alio62:1.1
+	alio61:1.1
+	alio60:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	96.04.30.09.53.49;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@move some packages from alephlib to alephio
+Added Files:
+ 	abrcom.h adbrlist.h alk7com.h gtadbr.h
+@
+text
+@C! get ADBR bank from data base
+      IF (NADBR.EQ.0) THEN
+         NADBR = NAMIND('ADBR')
+         LDBAS = JUNIDB(0)
+         JADBR = MDARD (IW,LDBAS,'ADBR',0)
+         IF (JADBR.EQ.0) GOTO 998
+      ENDIF
+C
+C - next entry
+      JADBR = IW(NADBR)
+      IF (JADBR .EQ. 0) GOTO 998
+      LADBR = LROWS(JADBR)
+      IDET = INDEX (DLIST,DET)
+      IF (IDET.EQ.0) THEN
+         JDETJJ = 0
+      ELSE
+         JDETJJ = JADBFR+IDET/2+1
+      ENDIF
+C
+@

@@ -1,0 +1,11 @@
+# files cernlib-2005-all-new.tgz, cernlib.2005.corr.2019.01.21.tgz
+# and cernlib.2005.install.2019.01.21.tgz
+# taken from https://www-zeuthen.desy.de/linear_collider/cernlib/new/cernlib_2005.html
+#
+# my fixes ontop of that are in myfixes.install.tar.gz and myfixes.corr.tar.gz
+/bin/rm -rf patchy
+tar xzvf cernlib-2005-all-new.tgz
+/bin/cp -fp cernlib.2005.corr.2019.01.21.tgz cernlib.2005.corr.tgz
+tar xzvf cernlib.2005.install.2019.01.21.tgz
+tar xzvf myfixes.install.tar.gz
+./Install_cernlib_and_lapack

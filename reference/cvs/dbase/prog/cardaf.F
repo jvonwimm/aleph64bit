@@ -1,0 +1,338 @@
+      PROGRAM CARDAF
+C
+C----------------------------------------------------------------------
+C! update ADBSCONS.DAF with data card banks
+C
+C - F.RANJARD
+C    Add new Banks or Replace existing Banks on BOS-DAFs files
+C                   from BOS data cards
+C                          created    03/05/89
+C                          Revised    05/10/89
+C                                     07/05/90
+C                                     27/01/93
+C   data cards:
+C
+C        ******* update ADBSCONS with new data cards ********
+C        ******* write new table onto it **********************
+C        ******* write new BOS format file ********************
+C        * open/write data base file
+C        FDBA  'MY.DAF | DAF'
+C        * open/write NEW ADBSCONS.DAF
+C        FOUT  'NEWADBS.DAF | DAF'
+C        * number of blocks [and directory blocks] on NEWADBS
+C        DAFB  370   7
+C        * OUTB is an alias of DAFB
+C        * print out filename
+C        FPRI  'MY.OUT | CARD | DISK LREC 132'
+C        * add data card banks or DROP cards
+C        ENDQ
+C
+C   Libraries required: ALEPHLIB, BOS77, CERNLIB
+C
+C   Description
+C   ===========
+C read a data card file with new data base banks
+C check consistency
+C open/write copy of current data base
+C copy data card banks onto data base
+C if data base not large enough to contain everything then
+C    create a new data base
+C    copy all banks from old to new data base
+C    add new banks from data cards
+C
+C ---------------------------------------------------------------
+#ifndef DOC
+C
+#include "lbos.h"
+C
+      PARAMETER (LJW=400000)
+      COMMON /FCS/   JW(LJW)
+      REAL XW(1000)
+      EQUIVALENCE (XW(1),JW(1))
+C
+#include "albitw.h"
+      CHARACTER*8   SUBR
+      CHARACTER*4   NAME,PASSW,NAMB
+      CHARACTER*4   CHAINT, NLIST
+      CHARACTER     LINE*132
+      CHARACTER*80  TFIL,FTYP,FDEV,TOUT
+      CHARACTER*120 MSG,MSGE,MSGB
+      LOGICAL FCHECK
+      DATA PASSW/'ADAM'/
+#include "bmacro.h"
+C -----------------------------------------------------------------
+      SUBR = ' CARDAF '
+      CALL BNAMES(NAMAX)
+      CALL BOS(IW,LBOS)
+      CALL BOS(JW,LJW)
+C
+C***     PRINTOUT ON FILE   *****
+C
+      IW(5) = 7
+      IW(7) = 10000
+      IW(8) = 10000
+      JW(8) = IW(8)
+      JW(7) = IW(7)
+      JW(6) = 9
+      LCARD = IW(5)
+      LTERM  = 6
+      WRITE(LTERM,'(//A/)') ' ------ CARDAF PROCESS  ------ '
+      CALL BOSTA
+C
+C - read file names
+C
+      CALL GETENVF ('CARDAFCARDS',TFIL)
+      IF (TFIL .NE. ' ') CALL AOPEN (LCARD,TFIL,'CARD','DISK',IER)
+      CALL BREADC
+C
+C - open printout file if required
+C
+      LUPRI = 9
+      CALL ACDARG ('FPRI','CARD','*',TFIL,FTYP,FDEV,IER)
+      IF (IER.NE.0) THEN
+         CALL AWERRC(LTERM,'CARDAF',TFIL,IER)
+         TFIL = 'MY.OUT'
+         FTYP = 'CARD'
+         FDEV = 'DISK LREC 132'
+      ENDIF
+      CALL AOPENW (LUPRI,TFIL,FTYP,FDEV,IER)
+      IF (IER.NE.0) THEN
+         CALL AWERRC(LTERM,'CARDAF',TFIL,IER)
+      ENDIF
+      IW(6) = LUPRI
+C
+C *****       OPEN DAF FILE IN WRITE MODE       *****
+C
+      LDAF=JUNIDB(0)
+C
+      CALL ACDARG ('FDBA','DAF','*',TFIL,FTYP,FDEV,IER)
+      IF (IER.NE.0) THEN
+         CALL AWERRC(IW(6),'CARDAF',TFIL,IER)
+         CALL EXIT
+      ENDIF
+      LUN = LDAF
+      WRITE (LTERM,*) ' open the DAF in WRITE mode'
+      IRECL = JULREC ('DAF','DISK')
+#include "owodf.h"
+C
+      IW(1)=2
+      CALL BDABF(LDAF,IRECL,'    ',PASSW)
+      IBF = NLINK ('+BUF',LDAF)
+      IF (IBF.EQ.0) THEN
+         WRITE(IW(6),*) ' Programming error: bank +BUF does not exist'
+         GOTO 999
+      ENDIF
+      CALL BDAPR(LDAF,'    ')
+      CALL BOSIO
+C
+C***  READ BANKS FROM DATA-CARDS FILE AND WRITE THEM ON DAF ***
+C     IF A BANK EXISTS ON DAF FILE WITH THE SAME NR IT WILL BE
+C            REPLACED
+C
+C
+      WRITE (LTERM,*) ' loop over data card banks: wait...'
+      LTOT = 0
+      JNOTA = 0
+  300 CONTINUE
+      IND=MREADC(IW)
+      IF(IND.NE.0) THEN
+         NAME=CHAINT(IW(IND-3))
+         NR=IW(IND-2)
+C
+C***  DO NOT check if the bank is declared NOT tabular
+C
+         IF (NAME.EQ.'NOTA') THEN
+            JNOTA = IND
+            GOTO 300
+         ENDIF
+C
+C***  DROP banks if required
+C
+         IF (NAME.EQ.'DROP') THEN
+            DO 301 I=1,IW(IND),2
+               NAMB = CHAINT(IW(IND+I))
+               NRB  = IW(IND+I+1)
+               WRITE(IW(6),*) ' bank to be dropped ', NAMB,NRB
+               CALL BDADR (LDAF,NAMB,NRB)
+ 301        CONTINUE
+            IDRP = NDROP (NAME,IW(IND-2))
+            GOTO 300
+         ENDIF
+C
+C***  CHECK CONSISTANCIES
+         FCHECK = .TRUE.
+         IF (JNOTA.GT.0) THEN
+            DO I=1,IW(JNOTA)
+               IF (NAME.EQ.CHAINT(IW(JNOTA+I))) THEN
+                  FCHECK = .FALSE.
+                  GOTO 302
+               ENDIF
+            ENDDO
+         ENDIF
+ 302      CONTINUE
+         IF(FCHECK .AND. IW(IND).NE.LCOLS(IND)*LROWS(IND)+LMHLEN) THEN
+            WRITE(LTERM,'(/A,A4,2X,I8/A/A)') ' For Bank ',NAME,NR,
+     +      ' *** The number of words read on Data cards does not ',
+     +      ' agree with the Nb. of columns and Nb. of rows given ***'
+            WRITE(LTERM,'(A,A4,I8,A/)') ' Bank ',NAME,NR,' not written'
+         ELSE
+            JFRE = IW(IBF+14)-IW(IBF+13)-1
+            NBLO = IW(IND)/IRECL + 2
+            WRITE (IW(6),*) 'NAME NR IW(IND) NBLO JFRE  ',
+     &                       NAME,NR,IW(IND),NBLO,JFRE
+            IF (NBLO.LE.JFRE .AND. LTOT.EQ.0) THEN
+               CALL BDAWR(IW,LDAF,NAME,NR)
+               IND = NDROP(NAME,NR)
+            ELSE
+               LTOT = LTOT + IW(IND)
+               CALL BLIST (IW,'R+',NAME)
+            ENDIF
+         ENDIF
+         GOTO 300
+      ENDIF
+      CALL BDAPR(LDAF,'    ')
+      CALL BOSIO
+C
+C - end of data cards: check that everything was written on DAF
+C
+      IF (LTOT .EQ. 0) THEN
+         WRITE (LTERM,*) ' the DAF was large enough to receive all'
+     &                  ,' new banks - DAF is complete'
+         GOTO 800
+      ELSE
+         WRITE (LTERM,*) ' the DAF was too small : create NEWADBS '
+      ENDIF
+C
+C - The DAF was too small , create a new one
+C - check length of the data base
+C
+      JREC = IW(IBF+11)
+      JBLOC= IW(IBF+12)
+      JSYS = 3
+      JDIR = IW(IBF+12)-IW(IBF+14)+1
+      JDAT = IW(IBF+13)-3
+      NWBLO= LTOT/JREC +1
+      NBLOC= JBLOC + NWBLO
+C
+C - open new OUT.DAF in write mode
+C
+C     OUTfile name
+      LUOUT = 22
+      CALL ACDARG ('FOUT','DAF','*',TOUT,FTYP,FDEV,IER)
+      IF(IER.GT.0) THEN
+         CALL AWERRC (IW(6),'CARDAF',TOUT,IER)
+      ENDIF
+      IF (IER.NE.0) TOUT = 'NEWADBS.DAF'
+      LE = LNBLNK(TOUT)
+C
+      WRITE (LTERM,*) ' the current data base is not large enough ',
+     &            ' a new one called ',TOUT(1:LE),' will be created',
+     &            ' in your area on unit ',LUOUT
+      WRITE (LTERM,*)' current data base has ',JBLOC,
+     &               ' records of which ', JFRE,
+     &               ' are free and ',NWBLO,' are required'
+C
+C     Get number of blocks for OUT file : NBREC, NBDIR, NREC
+#include "gtnrec.h"
+      WRITE (LTERM,*) TOUT(1:LE),' is created with ',
+     &                NBREC,' records of which ',
+     &                NBDIR,' are directory records'
+      IF (NBLOC.GT.NBREC) THEN
+         WRITE (LTERM,*) NBLOC, ' records are required but only ',
+     &   NBREC, ' records are allowed. We try any way'
+      ENDIF
+C
+C Create OUT DAF on unit LUOUT=22
+C
+      IF (LUOUT .NE. 0) THEN
+         LUN  = LUOUT
+         TFIL = TOUT
+         IRECL=JULREC('DAF','DISK')
+#include "erase.h"
+#include "owdaf.h"
+      ENDIF
+C
+C
+      WRITE (LTERM,*) ' copy existing DAF to ',TFIL(1:LE),' : wait...'
+      NWRDS = 0
+      NBKW = 0
+  200 CONTINUE
+      JNAME = MDARS (JW,LDAF)
+      IF (JW(2) .NE. 0) GOTO 210
+C
+      IF (JNAME .EQ. 0) THEN
+         WRITE (IW(6),*) ' not enough space for the bank, skip it '
+         GOTO 200
+      ENDIF
+      NAME = CHAINT (JW(JNAME-3))
+      NR = JW(JNAME-2)
+C
+C Look if the same bank exists on data card
+         IND = MLINK(IW,NAME,NR)
+         IF (IND.NE.0) THEN
+C        copy the bank from data cards to NEWDAF
+            CALL BDAWR (IW,LUOUT,NAME,NR)
+            WRITE(IW(6),*) ' read from d.c. and written onto NEWDAF'
+     &                      ,NAME,NR,(IW(IND+MM),MM=0,2)
+            NWRDS = NWRDS + IW(IND)
+            IND = NDROP (NAME,NR)
+         ELSE
+C        copy the bank from DAF to NEWDAF
+            IND = JNAME
+            CALL BDAWR (JW,LUOUT,NAME,NR)
+            WRITE (IW(6),*) ' read from DAF and written onto NEWDAF ',
+     &                 NAME,NR,(JW(JNAME+MM),MM=0,2)
+            NWRDS = NWRDS + JW(IND)
+         ENDIF
+         NBKW = NBKW + 1
+C
+      IDRP = MDROP (JW,NAME,NR)
+      IF ((JW(16)-JW(15)).LT.5000)  CALL BGARB(JW)
+      GOTO 200
+C
+C  End of data set reached
+C
+ 210  CONTINUE
+      WRITE(IW(6),*) ' end of OLD DAF ',NWRDS,NBKW
+C
+C  look if there are some banks left on data cards
+C  add new banks from data cards
+      WRITE (LTERM,*) ' add new banks from data cards to NEWADBS'
+      I = 0
+   11 I = I + 1
+      NAME = NLIST (IW,I,'R')
+      IF (NAME .NE. ' ') THEN
+         IND = NAMIND(NAME)+1
+   12    IND = IW(IND-1)
+         IF (IND .EQ.0) THEN
+            GOTO 11
+         ELSE
+            NR = IW(IND-2)
+            CALL BDAWR (IW,LUOUT,NAME,NR)
+            NBKW = NBKW + 1
+            WRITE(IW(6),*) ' add from d.c. onto NEWDAF ',
+     &                      NAME,NR,(IW(IND+MM),MM=0,2)
+            NWRDS = NWRDS + IW(IND)
+            GOTO 12
+         ENDIF
+      ENDIF
+      WRITE (IW(6),*) ' total NEWDAF ', NWRDS,NBKW
+      CALL BDAPR(LUOUT,'    ')
+C
+ 800  CONTINUE
+      WRITE(IW(6),'(//A)')
+     +          ' ------ DATABASE STATUS AFTER CARDAF ------ '
+      CALL BOSIO
+C
+  999 STOP
+C
+C - Error opening old DAF
+ 98   WRITE (IW(6),*) ' error opening ',TFIL(1:lnblnk(tfil)), 
+     &                ' IST= ',IST
+      GOTO 999
+C - Error opening new DAF
+ 90   WRITE (IW(6),*) ' error opening NEWADBS DAF - IOP = ', IOP
+      GOTO 999
+C
+      END
+#endif

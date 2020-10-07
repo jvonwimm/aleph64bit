@@ -1,0 +1,665 @@
+#       1 RUN    53091   53097 PERF WRONG LEP ENERGY
+  Symptom:LEP energy was set up as 97 GEV per beam
+  Cause:  energy taken from last MD RUN after the power cut
+  Effect: No offline luminosity, bad RLEP bank
+  Effect: will be fixed offline , online fixed also
+  Effect: Fixed in the reprocessing of May 2000
+
+#       2 RUN    53219   53219 DUCK MIXED_ENERGY    
+  Symptom:This run, taken before stable beam, has events at 202 and at 203 GeV
+  Cause:  Run change not performed as it was before stable beam
+  Effect: Unknown energy... And as it is 5 nb-1, we duck it.
+
+#       3 RUN    53119   53119 PERF WRONG_LEP_ENERGY
+  Symptom:LEP energy was absurdly high, 909801 GeV !
+  Cause:  But in LEP database software...
+  Effect: No bhabha, no lumi. Will be OK after the reprocessing in May
+  Effect: Fixed in the reprocessing of May 2000
+
+#       4 RUN    53583   53583 PERF TWO_ENERGIES    
+  Symptom:This run contains 102.5 and 103.3 Gev/beam events
+  Cause:  LEP failed to send the mini-ramp events
+  Effect: Some care with energy and luminosity...
+
+#       5 RUN    53736   53736 DUCK HV OFF          
+  Symptom:No Luminosity with HV ON
+  Cause:  Run started before HV ON ???
+  Effect: No usable data
+
+#       6 RUN    53789   53789 PERF WRONG LEP ENERGY
+  Symptom:Lep energy was setup as 44.2 GeV per beam
+  Cause:  Run started before stable beam ??
+  Effect: LCAL Bhabha's flagged as "sparks"
+  Symptom:No Luminosity from Lcal
+  Effect: none when reprocessed with the correct LEP energy
+  Effect: Fixed in the reprocessing of May 2000
+
+#       7 RUN    54625   54625 PERF TWO_ENERGIES    
+  Symptom:Run continued for 30 seconds after the mini-ramp
+  Cause:  DAQ error, preventing the run to be changed
+  Effect: Few events at end of run are at 103.4, not 102.7 GeV
+
+#       8 RUN    55005   55005 MAYB MISSED_MINIRAMP 
+  Symptom:LEP energy changed, but no mini-ramp signal.
+  Effect: The last 13 minutes of the run are at 104.1 GeV. Events not tagged 
+          during mini-ramp
+
+#       9 RUN    53971   53971 DUCK LOST IN MINIRAMP
+  Symptom:No Luminosity
+  Cause:  Beam lost during miniramp
+  Effect: No data for physics
+
+#      10 RUN    54474   54474 DUCK HV TRIP MINIRAMP
+  Symptom:No Luminosity with HV ON
+  Cause:  Beam lost, HV Trip during Miniramp
+  Effect: No usable data with HV ON
+
+#      11 RUN    55745   55746 PERF NO STABLE BEAMS 
+  Symptom:Runs don't show up in statistics
+  Cause:  Stable beams never declared
+  Effect: none
+
+#      12 RUN    56246   56246 MAYB AUTOCAL         
+  Symptom:Energy incorrect, luminosity possibly incorrect
+  Cause:  AUTOCAL problem at end of run
+  Effect: Energy nees correction, luminosity needs checking
+
+#      13 RUN    56465   56467 DUCK ECAL            
+  Symptom:ECAL endcap B modules 4 and 5 HV off
+  Cause:  High humidity in cavern
+  Effect: Do not use for physcics
+
+#      14 RUN    56637   56637 DUCK EMPTY_RUN       
+  Symptom:No luminosity.
+  Cause:  Very short run, between a 2 hours auto run change and a mini ramp
+  Effect: No data...
+
+#      15 RUN    55770   55770 DUCK EMPTY_RUN       
+  Symptom:No luminosity
+  Cause:  TPC OFF, see TPC problem 11
+  Effect: No data...
+
+#      16 RUN    54739   54739 DUCK EMPTY_RUN       
+  Symptom:No data, as ECAL was OFF
+  Cause:  Fusiblage in progress, run changed when OK
+  Effect: No data...
+
+#      17 RUN    57412   57412 DUCK NO_LUMI         
+  Symptom:No lumi
+  Cause:  Very short mini-ramp step.
+  Effect: Not usable, no data
+
+#      18 RUN    58139   58139 DUCK NO_LUMI         
+  Symptom:no lumi
+  Effect: not useable, no data
+
+#       1 VDET   53662   53662 PERF NOVDHITSHALFRUN 
+  Symptom:The vdet was not read out for the first half of this run
+  Effect: Affected data not useable for physics, second half of run can be 
+          recovered after reprocessing with XLUMOK updated
+  Symptom:The event range where VDET was not read out is 1-9569 inclusive
+  Effect: Fixed in XLUMOK in May 2000 reprocessing
+
+#       2 VDET   53789   53789 PERF LOWEFFICIENCY   
+  Symptom:Efficiency below warning threshold for 26 modules.
+  Cause:  Correlated in time with BCAL FastBus problem affecting the first part 
+          of the run.
+  Effect: Serious. Being investigated. Part of the run may be recovered by a 
+          correct XLUMOK definition.
+  Cause:  vdet data is fine, the problem comes from the wrong elep of 44 Gev
+  Effect: This run will be OK after reprocessing
+  Effect: The VDET data is ok now
+
+#       3 VDET   56880   56882 DUCK NO READOUT      
+  Symptom:no readout
+  Effect: no vdet hist
+
+#       4 VDET   56891   56907 DUCK NO READOUT      
+  Symptom:NO READOUT
+  Cause:  FAULTY CABLE IN TSR STROBE HARDWARE
+  Effect: no vdet hits
+
+#       5 VDET   56883   56883 DUCK MODULE FAILURE  
+  Symptom:Module AI01 not readout (both rphi and z)
+  Effect: no hits in this module
+
+#       6 VDET   56849   56876 PERF BAD PEDESTALS   
+  Symptom:Huge noise spike at the beginning of the fill
+  Cause:  VDET readout when off since TSR strobe was missed
+  Effect: No noticable effect seen offline these data are good for physics
+
+#       7 VDET   53555   53555 PERF AO14_Z_NOISY    
+  Symptom:Z side of ao14 is noisy for events in range 4500-6500
+  Effect: The rest of the data are fine and will be usable after eon of year 
+          reporcessing
+  Effect: Fixed in the end of year reprocessing
+
+#       8 VDET   55297   55297 MAYB AO14_Z_OFF      
+  Symptom:no hit on z side of a014
+  Effect: data good enough for physics, inner module still working
+
+#       9 VDET   56388   56390 MAYB AO14_Z_OFF      
+  Symptom:no hits on z side of ao14
+  Effect: good enough for physics, inner module still working
+
+#      10 VDET   56572   56572 PERF AO14_Z_NOISY    
+  Symptom:z side of ao14 noisy for events 0-500 and 2750-3900, otherwise ok
+  Effect: Other data will be useable for physics after end of year reprocessing
+  Effect: Fixed in the end of year reprocessing
+
+#      11 VDET   56742   56742 PERF AO14_Z_NOISY+OFF
+  Symptom:ao14 z side noisy for events 0-1200, otherwise it is off
+  Effect: data will be ok for physics after end of year reprocessing
+  Effect: Fixed in the end of year reprocessing
+
+#      12 VDET   56744   56744 MAYB AO14_Z_OFF      
+  Symptom:no hits from ao14 z side
+  Effect: data are ok for physics, inner module still working
+
+#      13 VDET   56919   56919 DUCK NO READOUT      
+  Symptom:No readout
+  Effect: no VDET data!
+
+#      14 VDET   57224   57228 DUCK NO VDET HITS    
+  Symptom:No VDET hits : Alarm sent th the shift crew.
+  Cause:  The NAF Module is nor responding, one of Its low voltage is too low.
+  Effect: No VDET for the physics !
+
+#      15 VDET   57231   57234 DUCK NO VDET HITS    
+  Symptom:No VDET HITS
+  Cause:  NAF module stuck
+  Effect: NO VDET for physics
+
+#      16 VDET   57389   57390 DUCK NAFPOWERSUPPLY  
+  Symptom:No hits in the VDET
+  Cause:  Faulty power supply for +6V in the NAF crate
+  Effect: Runs are ducked
+
+#      17 VDET   57538   57538 PERF AO14Z_INEFFICIEN
+  Symptom:AO14 Z side had low efficiency and was noisy during run 57538
+  Cause:  flaky connection?
+  Effect: very small
+  Effect: only events 2700-3100 and 4200-4600 need to be removed others can be 
+          used after reprocessing
+  Effect: Fixed in the end of year reprocessing
+
+#      18 VDET   58000   58000 MAYB AO14_Z_OFF+NOISY
+  Symptom:A014 z side is inefficient and a little noisy, however unusually the 
+          laser spot is efficient!
+  Effect: Still usuable, so run range may need to be rejected for noise....to 
+          be studied...
+  Effect: The noise level is ok so the data can be used as is, AO14 Z data is 
+          not present
+
+#      19 VDET   58082   58082 PERF AO14_Z_OFF      
+  Symptom:AO14, z side failed previous calibration, no laser spot for first 20 
+          minutes of run, 80 0.000000e+00fficiency
+  Cause:  flaky connection??
+  Effect: small efficiency loss
+  Effect: events in the ranges 0-100 and 3300-3550 are very noisy for this 
+          module and should be excluded, other dat can be used
+  Effect: fixed in the end of year reprocessing
+
+#      20 VDET   58457   58466 MAYB AO14_NO_Z       
+  Symptom:no hits on z side of a014
+  Effect: Useable for physics, module is not very noisy
+
+#       1 ITC    54500   54500 MAYB HV_BIT_LIES     
+  Symptom:High Voltage is on the chamber for most of the run but the bit is OFF.
+  Cause:  Request to ramp while not OFF after Partial Trip.
+  Effect: Most of the data can probably be recovered.
+  Symptom:The data between events 1100 and 6750 can probably be recovered.
+  Cause:  The HT was really on all the layers although the HV bit was off.
+  Effect: The data should be perfect although there is a chance of low 
+          efficiency events due to discharges in the chamber.
+
+#       2 ITC    54995   54995 PERF HV OFF          
+  Symptom:No ITC hits, though HV bit was ON
+  Cause:  CAEN error
+  Effect: Data are not good for physics
+  Effect: More data available after the end of year reprocessing
+
+#       3 ITC    55453   55453 DUCK FANTRAYFAIL     
+  Symptom:Fan tray failed on drift-time TDCs CAMAC crate 2.
+  Cause:  Old age!
+  Effect: No drift hits from 500f the chamber and loss of power to Z trigger 
+          electronics.
+
+#       4 ITC    56935   56935 PERF HV_OFF          
+  Symptom:No ITC hits, although the HV bit is on, for the last 5 minutes of the 
+          run.
+  Cause:  Caen crate error.
+  Effect: No ITC tracking, no triggers.
+  Effect: The data from the rest of the run can probably be saved.
+  Effect: The data from the rest of the run can probably be saved.
+  Effect: Problem started at event 9145.
+  Effect: Fixed in the end of year reprocessing
+
+#       5 ITC    57254   57259 MAYB BZ_BOARD        
+  Symptom:Trigger inefficiency for a phi sector of 1/12 of the total.
+  Cause:  BZ board failed and seems to have messed up the entire crate.
+  Effect: Trigger inefficiency for certain angles.
+
+#       1 TPC    53091   53099 MAYB MISSING_WIRES   
+  Symptom:32 wires are missing from sector 22
+  Cause:  The wires have been disconnected as they would not hold voltage.
+  Effect: will affect tracking
+  Cause:  Problem was infact that the current limit was too low in the CAEN. 
+          The wires were ok
+
+#       2 TPC    53250   53496 PERF GBX_TIMING      
+  Symptom:Shift of about 10 ns in GBX timing at the begining of the fill when 
+          currents are high
+  Cause:  Bad synchronization in T0 module. The beam pick-up signal needs to be 
+          attenuated.
+  Effect: Wrong Z coordinate measurement in events affected
+  Effect: This was corrected in the reprocessing of May 2000
+
+#       3 TPC    53573   53593 PERF GATE_SUPPLY_25  
+  Symptom:Large pulse on wires when gate opens
+  Cause:  Faulty +100V module in gating power supply was giving +113V
+  Effect: May affect dE/dx measurements with short drift times because of 
+          undershoot from large pulse
+  Cause:  Cause was oscillating +100 V supply.
+  Effect: Due to pedestal subtraction, no affect on tracking or dE/dx.
+
+#       4 TPC    53596   53597 PERF BAD_WIREPED_25  
+  Symptom:Wire pedestals are too high for all wires and all T0
+  Cause:  Pedestals were not recalibrated after gating intervention
+  Effect: May affect dE/dx in this sector
+  Effect: No affect seen offline on dE/dx.  Data not affected.
+
+#       5 TPC    53695   53733 PERF GATE CIRC 25    
+  Symptom:Wire Hits were very bad for entire sector. Pad hits seems OK.
+  Cause:  Badly tuned gating circuit with large ringing was placed into sector. 
+          This was replaced with a tuned circuit.
+  Effect: Definetly affects dE/dx.  Hopefully does not affect tracking but will 
+          be checked in detail
+  Cause:  It is now believed to be the Power supply causing the problem with 
+          the +33 V supply jumping to +20 V after some time.
+  Effect: Due to pedestal subtraction, no affect was seen offline in tracking 
+          or dE/dx.  Data seems OK.
+
+#       6 TPC    53749   53761 PERF SECT 25 GATING  
+  Symptom:Previous Problem on Sector 25 returned. See previous CIA entry.
+  Cause:  It is now believed to be the Gating Power Supply +33 V supply which 
+          fails after about 10 hours.
+  Effect: Same as previous CIA entry.
+  Effect: Due to pedestal subtraction, no affect on tracking or dE/dx.  Data 
+          seems OK.
+
+#       7 TPC    53453   53453 PERF BADDEDX         
+  Symptom:The dedx is wrong for the whole of this run
+  Cause:  The HV is not fully on at the start of the run, the recorded (RAW) 
+          dedx is OK
+  Effect: This run can not be used for dedx at the moment, can be recovered by 
+          a fix in ALEPHLIB
+  Effect: Fixed in Alephlib for end of year reprocessing
+
+#       8 TPC    53789   53789 PERF BADDEDX         
+  Symptom:the offline dedx is not useable for this run
+  Effect: run should not be used for dedx until this porblem is understood and 
+          fixed
+  Effect: Fixed in Alephlib for the ned of year reprocessing
+
+#       9 TPC    55102   55103 PERF T0_SHIFT        
+  Symptom:Shift in the first pick-up GBX
+  Cause:  LEP running in 2x2 bunch mode
+  Effect: T0 shifted: to be corrected offline (no effects after correction)
+  Effect: already fixed in reprocessing
+
+#      10 TPC    55487   55514 PERF T0_SHIFT        
+  Symptom:Shift in the first pick-up GBX
+  Cause:  LEP running in 2x2 bunch mode
+  Effect: T0 shifted: to be corrected offline (no effects after correction)
+  Effect: Already fixed in reprocessing
+
+#      11 TPC    55765   55773 PERF SECT35TPD11 OUT 
+  Symptom:TPD 11 of sector 35 was out of the readout because it was failing and 
+          replaced, also a fan tray at the same time.
+  Cause:  TPDs and fan trays fail from time to time, but both at the same time 
+          is wierd!
+  Effect: These runs are MAYBed, but these 64 pads are in row 8 of an outer 
+          sector, so probably negligible effect on physics.
+  Symptom:After these runs, the new TPD was recalibrated and put back into the 
+          readout.
+
+#      12 TPC    55776   55818 PERF SECT35TPD11     
+  Symptom:TPD11 replaced but had large number of bad hits. However all other 
+          monitoring histograms were o.k.
+  Cause:  New TPD possibly also bad.
+  Effect: Probably none.
+  Symptom:TPD11 was again replaced, and the calibration of the new TPD was o.k.
+
+#      13 TPC    56287   57024 PERF FC_SHORT_AE     
+  Symptom:Increase of the field cage current in outer side A branch after a 
+          beam lost (0.5%)
+  Cause:  Short circuit between two strips
+  Effect: r-phi distortions
+  Effect: These data are now fixed by reprocessing
+
+#      14 TPC    57288   57294 PERF GATING_SECT_22  
+  Symptom:The Gating Check Failed with Pedestal equal 0.  Tiny Opening pulse 
+          and very large closing pulse.  No pedestal.
+  Cause:  Bad Gating Circuit
+  Effect: Online dE/dx looks fine.  This needs to be verified offline. 
+          Initially looks as though data is unaffected.
+  Effect: After checking offline, no affect seen on tracking or dE/dx.  Data is 
+          not affected.
+
+#      15 TPC    57443   57447 PERF BAD TPD 3 SEC29 
+  Symptom:Lots of noisy hits in padrows 2 and 3 of Sector 29.
+  Cause:  Bad TPD.
+  Effect: Since Pads only in an outer sector, the data is fine.
+
+#      16 TPC    57808   57848 PERF T0 SHIFT        
+  Symptom:The pickup GBX has shifted abruptly by 10 nsec affecting z coordinate 
+          measurement.
+  Effect: Partly compensated by drift velocity calculation.  Maximal affect for 
+          45 degree tracks corresponding roughly to 100 urad
+  Effect: No effect as the measurement is only a cross-check!
+
+#      17 TPC    58224   58225 MAYB BAD GATING 19   
+  Symptom:Low charge per pulse on pads and wires for Sector 19
+  Cause:  The gating circuit was opening and closing immediately.
+  Effect: Drift Electrons passed through the closed gate.  Dedx and tracking 
+          affected.
+  Cause:  Believed to be due to bad gating trigger.  Trigger fanout was changed 
+          and problem has not re-occurred.
+
+#      18 TPC    57954   57954 PERF BADDEDX         
+  Symptom:the offline dedx is not useable for this run
+  Effect: can't be used for now, can be fixed with a change to alephlib
+  Effect: Fixed in the alephlib for the end of year reprocessing
+
+#       1 ECAL   54148   54151 MAYB NO_LV_BARREL    
+  Symptom:Low voltage switched OFF by expert, inadvertently
+  Cause:  Control problem by the expert.
+  Effect: No pad information in the barrel. On following runs, very bad 
+          pedestals up to (including) 54151
+  Symptom:Changed form DUCK to MAYB, as it can be used for alignment
+
+#       2 ECAL   54148   54151 MAYB LV OFF          
+  Symptom:bad pad energies
+  Cause:  LV barrel turned off
+  Effect: Bad electrons, photons, EF and lumi
+  Symptom:same prob as Ecal_1
+
+#       3 ECAL   54741   54744 DUCK HIGH VOLTAGE    
+  Symptom:Module 10 End Cap A HV off for runs 54739-54745. In particular for 
+          runs 54741-54745 the HV is off but the HV bit is ON
+  Cause:  HV box tripping, maybe due to sparks
+  Effect: Loss of module 10 not always picked up by testing the HV bit
+  Symptom:HV on Module 10 Endcap A in unknown state, HV bit could be ON
+
+#       4 ECAL   54861   54864 DUCK HV MODULE 10    
+  Symptom:Bad plane 14 module 10. Part of the runs with module 10 on hospital 
+          supply
+  Cause:  ?
+  Effect: Voltage not absolutely identical on module 10. Pad gain not corrected 
+          for disconnected plane 14.
+  Symptom:Run 54861 to 54863 have no HV on module 10, even if HV bit may be on 
+          for 10-30 seconds.
+  Effect: Run 54864 has stable volt, plane 14 removed, pad gain not corrected.
+
+#       5 ECAL   54924   54927 DUCK BARREL BIN 4 OFF
+  Symptom:HV and/or HV bit off module 16 for the entire run
+  Cause:  hv trip and/or detector relay off
+  Effect: no data from module 16
+  Cause:  Probably because the HV was turned on from the pit instead of ZBD
+
+#       6 ECAL   58378   58384 DUCK NO ECAL WIRES   
+  Symptom:no wires on barrel
+  Cause:  faulty power supply after power cut
+  Effect: bad trigger thresholds, bad pedestals on wires, do not use for physics
+
+#       1 HCAL   53115   53124 PERF DIG_OFF         
+  Symptom:NO HITS ON MUON CHAMBER MIDDLE ANGLE 12 SIDE A
+  Cause:  ASTROS FAULT
+  Effect: NONE
+
+#       2 HCAL   53431   53432 MAYB TRIG_EFF        
+  Symptom:Low trigger rate in barrel module number 18
+  Cause:  Low Voltage power supply failure
+  Effect: 1/24 of barrel has low single muon efficiency
+  Symptom:The affected module is the number 20 and not the number 18
+
+#       3 HCAL   53440   53444 MAYB BAD_ADC         
+  Symptom:High noise in modules 5 and 6 of the barrel
+  Cause:  Problems with a cable in ADC Barrel B number 8
+  Effect: Wrong energy flow in barrel modules 5,6
+
+#       4 HCAL   53503   53503 MAYB TRIG_EFF        
+  Symptom:LOW TRIGGER RATE IN BARREL MODULE 20
+  Cause:  LOW VOLTAGE POWER SUPPLY FAILURE
+  Effect: 1/24 OF BARREL HAS LOW SINGLE MUON TRIGGER EFFICIENCY
+
+#       5 HCAL   54656   54656 PERF NOISE           
+  Symptom:number of strips in cosmics and randoms shifted by ~100 -> noise!  Ok 
+          again in next run.
+  Cause:  same as before a noisy digital chain
+  Effect: no one
+
+#       6 HCAL   54656   54656 PERF NOISE           
+  Symptom:noisy strips only in run 54656, ok afterwards
+  Cause:  noisy digital chain
+  Cause:  noisy digital chain
+  Effect: no one
+  Effect: no one
+
+#       7 HCAL   53072   53172 MAYB HV_OVC          
+  Symptom:Low efficiency in the first 4 planes of barrel module number 7
+  Cause:  HV barrel crate 2 CH 14 was often in OVC
+  Effect: Wrong energy flow in Module number 7 of the barrel
+  Symptom:The problem was cured just before the high energy data taking
+
+#       8 HCAL   56350   56381 PERF HV_OVC          
+  Symptom:hard OVC on barrel module 18 planes 16-19
+  Cause:  short on one streamer tube
+  Effect: negligible on muon identification
+
+#       9 HCAL   56688   56969 PERF HV_OVC          
+  Symptom:HV hard OVC on crate 1 channel 39
+  Cause:  short in one streamer tubes on the corresponding group
+  Effect: negligeble (4 planes off in the middle of module 5 of barrel)
+  Symptom:Cured using external power supply
+
+#      10 HCAL   56773   56815 MAYB DIG_OFF         
+  Symptom:Missing digital information on some planes of modules 7,8 of the 
+          barrel (phi angle 90-120 degrees)
+  Cause:  DAQ error on astros 131 SB 7
+  Effect: Low muon ID efficiency in the phi region 90-120 degrees (only HCAL, 
+          muon chambers OK)
+  Symptom:The first 7 planes and the last 4 planes are missing.
+  Effect: The energy flow is  also affected because the digital information is 
+          used for noise suppression
+
+#      11 HCAL   57254   57302 PERF HV_10           
+  Symptom:hv off (ovc) for 4 layers (16-19) 1/2module in barrel num. 3
+  Effect: reduced efficiency for mu id with HCAL in mudule 3
+
+#      12 HCAL   56758   57888 MAYB TWR_ROW         
+  Symptom:Low sigma pedestals for 14 towers of ADC 8 in barrel side B (phi: 
+          37-40, theta: 32-44)
+  Cause:  Partially disconnected cable
+  Effect: 14 dead towers in the region between 139 and 150 degrees in phi 
+          (module 10) and 90 and 120 degrees (approximately) in th
+
+#      13 HCAL   58025   58025 DUCK TOW_NOISE       
+  Symptom:ENERGY SPLASH ON MODULE 9 (PARTIALLY IN 10) SIDE B OF THE BARREL (2 
+          GEV PER TOWER)
+  Cause:  ADC #6 BROKEN ON BARREL2 FASTBUS CRATE
+  Effect: OFFSET OF 200 GEV ON HCAL TOTAL ENERGY
+  Symptom:We decided to duck this run since the level of the noise was very 
+          high and not recoverable off-line
+
+#      14 HCAL   58032   58230 MAYB TOW_NOISE       
+  Symptom:ENERGY SPLASH ON MODULE 9 (PARTIALLY 10) SIDE B OF THE BARREL (200 
+          MEV PER TOWER) TIME TO TIME
+  Cause:  PEDESTALS INSTABILITY ON ADC #6 BARREL2 FASTBUS CRATE
+  Effect: OFFSET OF 20 GEV AT MAXIMUM ON HCAL TOTAL ENERGY
+  Cause:  Problem cured changing the ADC
+
+#       1 SCAL   53094   53094 DUCK OUT OF PARTITION
+  Symptom:sical is out of partition
+  Cause:  check if all planes have HV on
+  Effect: no sical data to be used ....
+
+#       2 SCAL   53274   53274 DUCK OUT OF PARTITION
+  Symptom:sical is out of partition
+  Cause:  one HV slot with bad reading
+  Effect: no sical data
+  Symptom:fake probleme so sical was quickly restored
+  Cause:  bad contact in the readout of the board
+
+#       3 SCAL   57991   57991 DUCK OUT OF PARTITION
+  Symptom:Fastbus pb at start of run 57991, all run with sical out of partition
+  Effect: No SICAL
+
+#       1 LCAL   53072   53072 MAYB WIRE ENERGY     
+  Symptom:The wire energy for LCAL mod 3 (AL) is ~ half of what it should be.
+  Cause:  Badly located connector to HV distribution box.
+  Effect: LCAL luminosity will be low for this run.
+
+#       2 LCAL   54148   54151 DUCK LV_OFF          
+  Symptom:Low voltage off
+  Cause:  Turned off inadvertently
+  Effect: no lumi
+
+#       1 LVL1   56612   99999 CHNG NEW_TRIG        
+  Symptom:Removal of SNG_C_E2, threshold for SNG_N_EL barrel raised from 1 to 3 
+          Gev
+
+#       2 LVL1   57611   57614 MAYB MISSING TRIGS   
+  Symptom:Approx. 30 missing triggers for DBL_C_E2.
+  Cause:  Not known.
+  Effect: This does not affect "normal" physics (eg. class 16, etc), but may 
+          affect some SUSY searches.
+
+#       3 LVL1   57611   57614 PERF MISSING TRIGS   
+  Symptom:Approx. 30 Missing Triggers for DBL_C_E2
+  Cause:  Not known
+  Effect: DBL_C_E2 will not affect "normal" physics analses; this run quality 
+          is, thus, upgraded to perfect.
+  Effect: no effect on physics not triggering on exclusive DBL_C_E2.  Uprade 
+          run quality to perfect.
+
+#       4 LVL1   58238   58247 PERF MISSING TRIGGER 
+  Symptom:from run 58238 to run 58247, missing trigger or dbl_c_e2.
+  Cause:  Bad connection for a module.
+  Effect:  No effect on standard analysis (see previous CIA entrie)
+  Symptom:Only one module of ECAL might be   slightly inefficient for dbl_ce2
+  Cause:  same
+  Effect: no effect on standard analysis, minir in gamma-gamma
+
+#       1 LVL2   57908   57917 DUCK DISCIRM FAULT   
+  Symptom:Many warnings about bad efficiencies in the level 2 processors.
+  Cause:  The tables of discriminator thresholds were not correctly loaded 
+          after the power cut.
+  Effect: Potentially random output of level 2 for these runs.
+
+#       1 TR     53091   53099 LINK MISSINGWIRES    
+  Symptom:Due to TPC  problem    1
+
+#       2 TR     55102   55103 FINE TO_OFF_FOR_2X2  
+  Symptom:Due to TPC  problem    9
+
+#       3 TR     54995   54995 LINK ITC HV OFF      
+  Symptom:Due to ITC  problem    2
+
+#       4 TR     55453   55453 LINK HALF_HITS_MISSIN
+  Symptom:Due to ITC  problem    3
+
+#       5 TR     56880   56882 LINK NOHITS          
+  Symptom:Due to VDET problem    3
+
+#       6 TR     56891   56907 LINK NOHITS          
+  Symptom:Due to VDET problem    4
+
+#       7 TR     56883   56883 LINK AI01_DEAD       
+  Symptom:Due to VDET problem    5
+
+#       8 TR     53555   53555 FINE AO14_NOISY      
+  Symptom:Due to VDET problem    7
+
+#       9 TR     56572   56572 FINE AO14_NOISY      
+  Symptom:Due to VDET problem   10
+
+#      10 TR     56742   56742 FINE AO14_NOISY      
+  Symptom:Due to VDET problem   11
+
+#      11 TR     56919   56919 LINK NOVDETDATA      
+  Symptom:Due to VDET problem   13
+
+#      12 TR     57224   57228 LINK NOVDETDATA      
+  Symptom:Due to VDET problem   14
+
+#      13 TR     57231   57234 LINK NOVDETDATA      
+  Symptom:Due to VDET problem   15
+
+#      14 TR     57389   57390 LINK NOVDETDATA      
+  Symptom:Due to VDET problem   16
+
+#      15 TR     57538   57538 FINE AO14_Z_NOISY    
+  Symptom:Due to VDET problem   17
+
+#      16 TR     56935   56935 FINE ITC_HV_OFF_ATEND
+  Symptom:Due to ITC  problem    4
+
+#      17 TR     57254   57259 LINK BAD_RPHI_TRIGGER
+  Symptom:Due to ITC  problem    5
+
+#      18 TR     58082   58082 FINE AO14_Z_NOISY    
+  Symptom:Due to VDET problem   19
+
+#      19 TR     58224   58225 LINK BAD_GATING_19   
+  Symptom:Due to TPC  problem   17
+
+#       1 DX     53091   53099 LINK MISSINGWIRES    
+  Symptom:Due to TPC  problem    1
+
+#       2 DX     53453   53453 FINE NODEDXCALIB     
+  Symptom:Due to TPC  problem    7
+
+#       3 DX     53789   53789 FINE BADDEDX         
+  Symptom:Due to TPC  problem    8
+
+#       4 DX     57954   57954 FINE BADDEDX         
+  Symptom:Due to TPC  problem   18
+
+#       1 MI     56773   56815 LINK DIG_OFF         
+  Symptom:Due to HCAL problem   10
+
+#       1 LX     54148   54151 LINK LV_OFF          
+  Symptom:Due to LCAL problem    2
+
+#       2 LX     56246   56246 LINK WRONG_ELEP      
+  Symptom:Due to RUN  problem   12
+
+#       1 FV     53094   53094 LINK OUT OF PARTITION
+  Symptom:Due to SCAL problem    1
+
+#       2 FV     53274   53274 LINK OUT OF PARTITION
+  Symptom:Due to SCAL problem    2
+
+#       3 FV     54148   54151 LINK LV_OFF          
+  Symptom:Due to LCAL problem    2
+
+#       4 FV     57991   57991 LINK OUT OF PARTITION
+  Symptom:Due to SCAL problem    3
+
+#       1 EF     53440   53444 LINK NOISYHCALMODULES
+  Symptom:Due to HCAL problem    3
+
+#       2 EF     54148   54151 LINK NO ECAL PAD     
+  Symptom:Due to ECAL problem    1
+
+#       3 EF     56773   56815 LINK HCAL_MOD_DIG_OFF
+  Symptom:Due to HCAL problem   10
+
+#       4 EF     57991   57991 LINK NO_SICAL_DATA   
+  Symptom:Due to SCAL problem    3
+
+#       5 EF     58025   58025 LINK VERYNOISYTOWERS 
+  Symptom:Due to HCAL problem   13
+

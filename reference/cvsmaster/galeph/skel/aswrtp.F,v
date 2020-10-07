@@ -1,0 +1,192 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.30.07.13.58;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.01.48;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.49;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ cahtra.h gmacro.h lccomc.h lcnamc.h ljjpar.h siconst.h
+ sigeco.h version.h
+ itmsk1.F itmsk2.F itnois.F itres.F itxtlk.F
+ lcadc.F lcamp.F lcasig.F lcbhab.F lcbkpr.F lcdigi.F lcfral.F
+ lchit.F lcirun.F lcnami.F lcnois.F lcpad.F lcroc.F lcsamp.F
+ lcsatu.F lcshow.F lcstrt.F lctrak.F lctrdi.F lctrht.F lcwire.F
+ lcwsum.F lcwtri.F
+ muasig.F mubook.F muirun.F muunoi.F muwsum.F
+ trignews.h
+ siasig.F sitrak.F siwsum.F
+ asasig.F asbook.F ascjob.F ascrun.F asctra.F asevst.F asfxxx.F
+ asieve.F asigea.F asijob.F asimod.F asinit.F asipac.F asirun.F
+ askine.F asksin.F asktrk.F aspeve.F asprun.F asread.F asredc.F
+ asreve.F asrkin.F asrtyp.F asrust.F astdeb.F astgea.F astrac.F
+ astrig.F aswkin.F aswrtp.F aswsum.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+ xtrcom.h
+ ecalnews.h geomnews.h lcalnews.h news.h skelnews.h vdetnews.h
+@
+text
+@*DK aswrtp
+      SUBROUTINE ASWRTP (LIST)
+C ----------------------------------------------------------------------
+C - F.Ranjard - 850903
+C! Write output file
+C - Input   : LIST   / A  = 'C' or 'E'  list
+C - Called by    ASCEVE                                  from this .HLB
+C
+C ----------------------------------------------------------
+#ifndef DOC
+      SAVE
+      CHARACTER*1 LIST
+#include "jqcom.h"
+#include "iocom.h"
+#include "jobcom.h"
+      INTEGER ALRUNR, ALFIND
+      CHARACTER*4 NLISTF, NAME
+C ----------------------------------------------------------------------
+C
+      IF (LIST.EQ.'E') THEN
+C - Event record
+         NAME = 'EVEH'
+C
+      ELSE
+C
+C - parameters/ calibration/ Geant3 geometry ....
+         NAME = 'RUNR'
+C
+C - build the RUNR bank if it does not exist
+         IF (IW(NARUNR) .EQ. 0) THEN
+            JRUNR = ALRUNR (IEXPJO,IRUNJO)
+            IF (JRUNR .EQ. 0)
+     &      CALL ALTELL ('ASWRTP: not enough space for RUNR ',1,'STOP')
+         ENDIF
+      ENDIF
+C
+C   check that the bank RUNR is 1st in the C-list , or
+C   EVEH on E-list. If not put it first.
+C
+      IF (NLISTF(IW,1,LIST) .NE. NAME) THEN
+         CALL BDROP (IW,'T')
+         CALL BLIST (IW,'T=',LIST)
+         CALL BLIST (IW,LIST//'=',NAME)
+         CALL BLIST (IW,LIST//'+','T')
+         CALL BLIST (IW,'T=','0')
+      ENDIF
+C
+C - suppress empty banks from the list
+C
+      I=0
+ 10   I=I+1
+      NAME = NLISTF (IW,I,LIST)
+      IF (NAME .NE. '    ') THEN
+         JNAME = IW(NAMIND(NAME))
+         IF (JNAME.EQ.0) CALL BLIST (IW,LIST//'-',NAME)
+         GOTO 10
+      ENDIF
+C
+C - write the record
+C
+      IF (MGETJO.EQ.0) THEN
+C     no input tape so cannot use ABRSEL package
+         CALL BWRITE (IW,LSAVIO,LIST)
+      ELSE
+         CALL ABWSEL (LIST)
+      ENDIF
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d8 2
+a9 1
+C ----------------------------------------------------------------------
+d11 1
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

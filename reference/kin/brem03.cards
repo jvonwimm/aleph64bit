@@ -1,0 +1,62 @@
+From BLOCH@alws.cern.ch Fri Feb 13 15:12:57 2004
+Date: Fri, 13 Feb 2004 15:11:31 +0100
+From: BLOCH@alws.cern.ch
+To: BLOCH@alws.cern.ch
+
+KCAR 0 / $TEXT                                                                  
+POFF                                                                            
+RUN  103    ' BREM5 WITH MU+ MU- FINAL STATE - BREM03'                          
+TRIG 1  500                                                                     
+DEBUG 6/ 1 5                                                                    
+* VERTEX POSITION     SIGX      SIGY      SIGZ  CM                              
+SVRT                 .018      .0010     1.00                                   
+*SAVE 2 /                                                                       
+* BREM5 CONTROL CARDS                                                           
+*  FTYPE   : fermion type  1=electron , 2 = muon  ,  3 = tau                    
+*                         11=u quark  ,12 = d quark,13 = s quark                
+*                         14=c quark  ,15 = b quark,16 = t quark                
+*   No quark flavor mixture in the same pass is provided yet.                   
+*  EBEAM   : Beam energy (Gev)                                                  
+*  ZMASS   : Z0 mass ( Gev)                                                     
+*  HMASS   : Higgs mass ( Gev)                                                  
+*  TMASS   : Top mass ( Gev)                                                    
+*  FRAD    : Final state radiation flag  1. = on , 0. = off                     
+*  XKMAX   : maximum hard photon energy/Ebeam                                   
+*  XKMIN   : minimum hard photon energy/Ebeam                                   
+*  TETAM   : minimum polar angle (degree) for fermion                           
+*  TETAX   : maximum polar angle (degree) for fermion                           
+*  EMINF   : minimum fermion energy ( Gev)                                      
+*  EMINFB  : minimum anti-fermion energy (Gev)                                  
+*  ACOL    : maximum angle between fermions (degree)                            
+*  EPOL    : Beam polarization                                                  
+*  RANDOM  : seed for random number                                             
+*  FPRINT  : FLAG to print PART bank ( 1.= on,0. = off)                         
+* Note that the 3 cuts EMINF,EMINFB,ACOL are only used at the level of histo-   
+* gramming and computing of Forward-backward assymetry with these additionnal   
+* cuts.Events are not rejected from the created sample if they do not satisfy   
+* these criteria.                                                               
+*         FTYPE   EBEAM  ZMASS  HMASS TMASS  FRAD                               
+GBRE       2.     45.6   91.18  100.  100.     1.                               
+* XKMAX        XKMIN      TETAM  TETAX EMINF  EMINFB                            
+   1.0         0.01       10.    170.   10.    10.                              
+* ACOL       EPOL       RANDOM   FPRINT                                         
+   2.          0.        219.       1.                                          
+*  use Peterson's fragm. functions for c and b quarks                           
+MST 4 / 3                                                                       
+*   mod to lund fragm. functions params                                         
+PAR 12 / 0.325                                                                  
+PAR 31 / 0.45                                                                   
+*  mod Peterson's fragm. functions params                                       
+PAR 44 / -0.025                                                                 
+PAR 45 / -0.015                                                                 
+*  use non discrete masses for resonnances                                      
+MST 8 / 1                                                                       
+*  set next q family out of LEP1 range                                          
+PMAS 107 / 150.                                                                 
+PMAS 108 / 200.                                                                 
+*  use RANMAR generator for random numbers                                      
+*  INSEED : first seed (range assigned per institute)                           
+*  LOSEED : second seed (incremented locally for new runs)                      
+*      INSEED          LOSEED (1-30000)                                         
+RMAR     78             12345                                                   
+ENDQ                                                                            

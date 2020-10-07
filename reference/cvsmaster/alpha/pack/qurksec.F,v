@@ -1,0 +1,70 @@
+head	1.1;
+access;
+symbols
+	alpha126_22:1.1
+	alpha122_22:1.1
+	alpha126_21:1.1
+	alpha126_20:1.1
+	alpha126_19:1.1
+	alpha126_18:1.1
+	alpha126_17:1.1
+	alpha126_16:1.1
+	alpha126_15:1.1
+	alpha126_14:1.1
+	alpha126_13:1.1
+	alpha126_12:1.1
+	alpha126_11:1.1
+	alpha126_10:1.1
+	alpha126_09:1.1
+	alpha126_08:1.1
+	alpha126_07:1.1
+	alpha126_06:1.1
+	alpha126_05:1.1
+	alpha126_04:1.1
+	alpha126_03:1.1
+	alpha126_02:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	2000.12.12.07.28.23;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE QURKSEC(XSEC,XSECE,NEVPR,XPROD,XPRODE)
+C-----------------------------------------------------------------------
+C User access to the MCarlo cross-sections generated for the
+C dataset presently read 
+C Output arguments:
+C  xsec   = cross section (in pb) generated for the present run
+C         = -1. if not found
+C  xsece  = error on xsecru (in pb) , =-1. if not found
+C  nevpr  = total number of events for the whole prouction
+C         = 0 if not found
+C  xprod  = cross section (in pb) for the whole production
+CC        = -1. if not found
+C  xprode = error on xsecpr (in pb), =-1. if not found 
+C
+C Author J. Boucrot 26-10-2000
+C-----------------------------------------------------------------------
+      common / XKSECS / xsecru,xseceru,nevpro,xsecpr,xsecepr
+C ----------------------------------------------------------------------
+      xsec=xsecru
+      xsece=xseceru
+      nevpr=nevpro
+      xprod=xsecpr
+      xprode=xsecepr
+      return
+      end 
+@

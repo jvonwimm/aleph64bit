@@ -1,0 +1,198 @@
+#!/bin/csh
+#-----------------------------------------------------------------------
+# Script : make_generator
+# Devel. : J. Closier
+# Date   : 20 April 1995
+# Goals  : Create the library for the generator
+# Usage  : make_generator name_of_the_generator
+# Modify : B Bloch , oct 2000, introduce Linux option
+# Modify : B Bloch , July 2001 create YFS executable
+# Modify : B Bloch , October 2002 include for NNGP01
+#-----------------------------------------------------------------------
+#  IF YOU HAVE ARGUMENTS KEEP THE NEXT LINE with the right parameters
+if ($#argv != 1) then
+   goto usage
+endif
+set echo on
+
+set reference=$ALEPH_ROOT/$MASTER
+set generator=$1
+set prog_name=kingal
+set prog_dir=$ALEPH/kin
+
+if (${OS} == "HPUX9" || ${OS} == "HPUX10") then
+   set FC=fort77
+else if (${OS} == "Linux" ) then
+   set FC=g77
+else
+   set FC=f77
+endif
+
+if ((${generator} != "kingal") && (${generator} != "kinmar") && (${generator} != "kinagain") && (${generator} != "lutaud")) then
+cd ${prog_dir}
+mkdir src_${generator}
+cd src_${generator}
+#if (${OS} == "Linux" ) then
+# cp ~alkin/dev/linux/*.f .
+#else
+ if ( -r ${reference}/kin/${generator}.f ) fsplit ${reference}/kin/${generator}.f
+ if ( -r ${reference}/kin/${generator}_origine.f ) fsplit ${reference}/kin/${generator}_origine.f
+#endif
+if ( $generator == "hrwg09" ) cp ${reference}/kin/HERWIG58.INC ${prog_dir}/src_${generator}
+if ( $generator == "hrwg10" ) cp ${reference}/kin/HERWIG59.INC ${prog_dir}/src_${generator}
+if ( $generator == "hrwg12" ) cp ${reference}/kin/HERWIG62.INC ${prog_dir}/src_${generator}
+if ( $generator == "hrwg120" ) cp ${reference}/kin/HERWIG62.INC ${prog_dir}/src_${generator}
+if ( $generator == "kk2f01" ) cp ${reference}/kin/kk2f_inc/*.h ${prog_dir}/src_${generator}
+if ( $generator == "kk2f02" ) cp ${reference}/kin/kk2f02_inc/*.h ${prog_dir}/src_${generator}
+if ( $generator == "kk2f03" ) cp ${reference}/kin/kk2f03_inc/*.h ${prog_dir}/src_${generator}
+if ( $generator == "kk2f04" ) cp ${reference}/kin/kk2f04_inc/*.h ${prog_dir}/src_${generator}
+if ( $generator == "krlw04" ) cp ${reference}/kin/krlw04_inc/*.h ${prog_dir}/src_${generator}
+if ( $generator == "krlw03" ) cp ${reference}/kin/krlw03_inc/*.h ${prog_dir}/src_${generator}
+if ( $generator == "ywrewt" ) cp ${reference}/kin/ywrewt_inc/*.h ${prog_dir}/src_${generator}
+if ( $generator == "gr4f02" ) cp ${reference}/kin/gr4f02_inc/*.h ${prog_dir}/src_${generator}
+if ( $generator == "nngp01" ) cp ${reference}/kin/initial_agc.par ${prog_dir}/src_${generator}
+#********** put in lower case
+if (${OS} != "OSF1" && ${OS} != "Linux") then
+  set files = `ls *.f`
+  foreach file ( $files[*] )
+    set tmp = `echo ${file} | tr '[A-Z]' '[a-z]'`
+    mv -f ${file} ${tmp}
+  end
+endif
+
+
+#
+# Compile the generator
+#
+set file_para = "${prog_dir}/f77_options"
+if ( ${generator} == "dizet605") set file_para = "${prog_dir}/f77_options_ext"
+if ( ${generator} == "tauola26") set file_para = "${prog_dir}/f77_options_ext"
+if ( ${generator} == "kk2f01") set file_para = "${prog_dir}/f77_options_ext"
+if ( ${generator} == "kk2f02") set file_para = "${prog_dir}/f77_options_ext"
+if ( ${generator} == "kk2f03") set file_para = "${prog_dir}/f77_options_ext"
+if ( ${generator} == "kk2f04") set file_para = "${prog_dir}/f77_options_ext"
+if ( ${generator} == "dizet605_kk2") set file_para = "${prog_dir}/f77_options_ext"
+if ( ${generator} == "dizet605_kk3") set file_para = "${prog_dir}/f77_options_ext"
+if ( ${generator} == "dizet605_kk4") set file_para = "${prog_dir}/f77_options_ext"
+set all_para = `egrep " ${prog_name} " ${file_para} | awk '{print substr($0,16)}'`
+${FC} ${all_para} *.f | & tee -a ../log/${generator}.log
+if ( -r ../lib${generator}.a ) rm ../lib${generator}.a
+ar rsl ../lib${generator}.a *.o
+\rm -rf *.o
+set file_para = "${prog_dir}/f77_dbx_options"
+if ( ${generator} == "dizet605") set file_para = "${prog_dir}/f77_dbx_options_ext"
+if ( ${generator} == "tauola26") set file_para = "${prog_dir}/f77_dbx_options_ext"
+if ( ${generator} == "kk2f01") set file_para = "${prog_dir}/f77_dbx_options_ext"
+if ( ${generator} == "kk2f02") set file_para = "${prog_dir}/f77_dbx_options_ext"
+if ( ${generator} == "kk2f03") set file_para = "${prog_dir}/f77_dbx_options_ext"
+if ( ${generator} == "kk2f04") set file_para = "${prog_dir}/f77_dbx_options_ext"
+if ( ${generator} == "dizet605_kk2") set file_para = "${prog_dir}/f77_dbx_options_ext"
+if ( ${generator} == "dizet605_kk3") set file_para = "${prog_dir}/f77_dbx_options_ext"
+if ( ${generator} == "dizet605_kk4") set file_para = "${prog_dir}/f77_dbx_options_ext"
+set all_para = `egrep " ${prog_name} " ${file_para} | awk '{print substr($0,16)}'`
+${FC} ${all_para} *.f | & tee -a ../log/${generator}_dbx.log
+if ( -r ../lib${generator}_dbx.a ) rm ../lib${generator}_dbx.a
+ar rsl ../lib${generator}_dbx.a *.o
+else
+  cd ${prog_dir}
+  set file_para = "${prog_dir}/f77_options"
+  set all_para = `egrep " ${prog_name} " ${file_para} | awk '{print substr($0,16)}'`
+  ${FC} ${all_para} ${reference}/kin/${generator}.f | & tee -a ../log/${generator}.log
+endif
+#
+#  extract some special routine
+#
+cd ${prog_dir}
+if (${generator} == "jetset73") then
+   ar x lib${generator}.a ludata.o
+   mv ludata.o ludata73.o
+endif
+
+if (${generator} == "jetset74") then
+   ar x lib${generator}.a ludata.o
+   mv ludata.o ludata74.o
+endif
+
+if (${generator} == "pythia61") then
+   ar x lib${generator}.a pydata.o
+   mv pydata.o pydata61.o
+endif
+
+if (${generator} == "jetset7b") then
+   ar x lib${generator}.a ludata.o
+   mv ludata.o ludata7b.o
+endif
+
+if (${generator} == "pyth02") then
+   ar x lib${generator}.a pydata.o
+   mv pydata.o pydata02.o
+endif
+
+if (${generator} == "pyth03") then
+   ar x lib${generator}.a pydata.o
+   mv pydata.o pydata03.o
+endif
+
+if (${generator} == "pyth04") then
+   ar x lib${generator}.a pydata.o
+   mv pydata.o pydata04.o
+endif
+
+if (${generator} == "hrwg09") then
+   ar x lib${generator}.a hwudat.o
+   mv  hwudat.o  hwudat09.o
+endif
+
+if (${generator} == "hrwg10") then
+   ar x lib${generator}.a hwudat.o
+   mv  hwudat.o  hwudat10.o
+endif
+
+if (${generator} == "hrwg12") then
+   ar x lib${generator}.a hwudat.o
+   mv  hwudat.o  hwudat12.o
+endif
+
+if (${generator} == "aria02") then
+   ar x lib${generator}.a ardata.o
+endif
+
+if (${generator} == "aria04") then
+   ar x lib${generator}.a ardata.o
+   mv ardata.o ardata04.o 
+endif
+
+if (${generator} == "aria64") then
+   ar x lib${generator}.a ardata.o
+   mv ardata.o ardata64.o 
+endif
+
+if (${generator} == "ubab01") then
+   ar x lib${generator}.a ubpini.o
+   mv ubpini.o ubpini01.o
+endif
+
+if (${generator} == "ubab02") then
+   ar x lib${generator}.a ubpini.o
+   mv ubpini.o ubpini02.o
+endif
+
+if (${generator} == "mssm02") then
+   ar x lib${generator}.a phochk.o
+endif
+
+#
+# create link for reference card
+#
+\rm -rf src_${generator}
+if ( -r ${reference}/kin/${generator}.cards ) ln -sf ../../${MASTER}/kin/${generator}.cards ${prog_dir}/${generator}.cards
+if ( -r ${reference}/kin/${generator}.opt ) ln -sf ../../${MASTER}/kin/${generator}.opt ${prog_dir}/${generator}.opt
+
+exit 0
+
+#  usage for the command
+usage:
+echo " Usage : $0 generator_name"
+exit 0
+
+

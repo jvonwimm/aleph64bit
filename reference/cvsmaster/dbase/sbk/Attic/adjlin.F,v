@@ -1,0 +1,72 @@
+head	1.2;
+access;
+symbols
+	dbase02:1.1.1.1
+	dbase01:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.02.14.16.11.27;	author flr;	state dead;
+branches;
+next	1.1;
+
+1.1
+date	97.02.12.10.06.13;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.02.12.10.06.13;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@move subroutine in subr andprograms in prog sbk becomes empty
+@
+text
+@      SUBROUTINE ADJLIN(TEXT)
+      CHARACTER TEXT*(*)
+      COMMON /SLATE/ ND,NE,NF,DUMMY(36)
+C     ND = # of characters in the word
+C     NE = position of 1st blank after the word
+C     JX = position of the 1st character of the word
+C
+      LE = LEN(TEXT)
+      ND = 0
+      JN = 0
+ 10   JN = JN+ND+1
+      NX = LNBLNK(TEXT)
+      IF (JN.LE.NX) THEN
+         JX = ICNEXT(TEXT,JN,NX)
+         TEXT(JN:LE) = TEXT(JX:LE)
+         GOTO 10
+      ENDIF
+      RETURN
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@@
+
+
+1.1.1.1
+log
+@1st release of dbase library
+@
+text
+@@

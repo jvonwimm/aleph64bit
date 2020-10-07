@@ -1,0 +1,118 @@
+#! /bin/csh
+#==========================================================
+# 9/4/97                                         FLR
+#                        copyscript
+# copy file.ext to $HOST/aleph/script. and other local disks
+# copy my.script
+# will copy my.script to shift50:/aleph/script, afal01:/aleph/script
+# and shift9:/aleph/script
+# copy ~bin/my.script
+# will copy my.script to /aleph/script/. and all other disks.
+#==========================================================
+#
+# set echo on if last arg is "-v"
+set verbflr = ""
+
+set nar = $#argv
+if (nar != 0) then
+  if ($argv[${nar}] == "-v") then
+     set echo on
+     set verbflr =    "-v"
+     set argv[${nar}] = ""
+     @ nar = ${nar} - 1 
+  endif
+endif
+
+#
+if ( $?ENVIRONMENT ) then
+ if ( "$ENVIRONMENT" == "INTERACTIVE" && $1 == "-h" ) then
+   echo ""
+   echo "usage:"
+   echo " copyscript <my.script> [<link>]"
+   echo ""
+   echo "an example:"
+   echo " copyscript maklib2.0 "
+   echo " copy maklib2.0 to /aleph/script"
+   echo " copy it onto afal01:/aleph/script if you are NOT on AFAL"
+   echo " copy it onto shift50:/aleph/script if you are NOT on SAGA"
+   echo " copy it onto shift9:/aleph/script if you are NOT on SHIFTALEPH"
+   echo ""
+   echo " copyscript maklib2.0 maklib"
+   echo " copy maklib2.0 onto the 3 /aleph/script platforms and reset the link"
+   echo " rm maklib ; ln -fs maklib2.0 maklib"
+   echo ""
+   exit(1)
+ endif
+endif
+#
+unset noclobber
+
+#
+set file = $1
+set filename = `basename $1`
+set link = $2
+#
+# copy file onto /aleph/script
+
+set script_file = ${ALEPH}/script/${filename}
+
+cp ${file} ${script_file}
+
+# copy /aleph/script file to clones
+     
+if (${SERVICE} != "AFAL") rcp -p ${script_file} afal01:${script_file}
+if (${SERVICE} != "SAGA") rcp -p ${script_file} shift50:${script_file}
+if (${SERVICE} != "SHIFTALEPH") rcp -p ${script_file} shift9:${script_file}
+
+if (${link} != "") then
+
+  set Link = ${ALEPH}/script/${link}
+  set service_list = ( AFAL SAGA SHIFTALEPH )
+  set clone_list   = ( afal01 shift50 shift9 )
+#
+  @ i = 0
+  while ($i <= 2)
+    @ i++
+    if (${SERVICE} == ${service_list[$i]}) then
+      rm ${Link}
+      ln -fs ${filename} ${Link}
+    else
+      rsh ${clone_list[$i]} rm ${Link}
+      rsh ${clone_list[$i]} ln -fs ${filename} ${Link}
+    endif
+  end
+
+endif
+
+goto exit
+#
+exit:
+unsetenv NORETRY
+exit
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,138 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.07.14.02.09;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.10;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK ehgeob
+      SUBROUTINE EHGEOB (ILAY,X,Y,Z,U,V,W,XSEP,YSEP,ZTB,DTB,MFLSI)
+C.----------------------------------------------------------------
+C R.CLIFFT        mod Rumpf
+C! Edges geom for barrel mod.
+C *** CALCULATE EDGES GEOMETRY FOR BARREL MODULES
+C Calls EHBARI
+C.----------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "agcons.h"
+C
+      DATA NCALL /0/
+      IF (NCALL.EQ.0)                   THEN
+        NCALL = 1
+        DTB=0.
+        ZTB=0.
+        TPHB2=TAN(PIBY12)
+        CALL EHBARI(XMAX1,XMAX2,YMAX,ZMAX1,ZMAX2)
+      ENDIF
+      MFLSI=0
+C
+C *** EDGE SEPERATION FOR CURRENT COORDS
+C
+      IWSI=SIGN(1.,W)
+      IF(ILAY.EQ.1) THEN
+        XMAX = XMAX1
+        ZMAX = ZMAX1
+      ELSE
+        XMAX = XMAX2
+        ZMAX = ZMAX2
+      ENDIF
+      XWH=XMAX-(ZMAX-Z)*TPHB2
+      YSEPC=YMAX- ABS(Y)
+      XSEPC=XWH-ABS(X)
+C
+C *** EDGE SEPERATION AT BACK OR FRONT OF MODULE
+C
+      ZTB=ZMAX-IWSI*Z
+      ZB=IWSI*ZMAX
+      IF (ABS(W) .GT. 1.) W = SIGN(1.,W)
+      TH=ACOS(W)
+      PH=ATAN2(U,V)
+      TANTH = TAN(TH)
+      XB=X+ZTB*TANTH*SIN(PH)
+      YB=Y+ZTB*TANTH*COS(PH)
+      XSEPB=XMAX+ZMAX*TPHB2*(IWSI-1)-ABS(XB)
+      YSEPB=YMAX-ABS(YB)
+C
+      IF(XSEPB.LE.0..OR.YSEPB.LE.0..OR.XSEPC.LE.0..OR.YSEPC.LE.0.)
+     &   RETURN
+      YSEP=0.5*(YSEPC+YSEPB)
+      XSEP=0.5*(XSEPC+XSEPB)
+C
+C *** CALCULATE PATH LENGTH IN MODULE
+C
+      DTB=SQRT((X-XB)**2+(Y-YB)**2+(Z-ZB)**2)
+      MFLSI=1
+C
+ 50   CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

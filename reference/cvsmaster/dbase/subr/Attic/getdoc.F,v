@@ -1,0 +1,176 @@
+head	1.2;
+access;
+symbols
+	dbase01:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.02.13.10.50.27;	author flr;	state dead;
+branches;
+next	1.1;
+
+1.1
+date	97.02.12.10.06.06;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.02.12.10.06.06;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release dbase02
+@
+text
+@      SUBROUTINE GETDOC (LUNDA,IER)
+C ------------------------------------------------------------------
+C - F.Ranjard - 900502
+C! get documentation tables from data base
+C - Input    : LUNDA  / I  = data base logical unit number
+C
+C - Output   : IER    / I  = return code
+C                            0   OK
+C                           <10  missing ADAMO table
+C                           <100 missing TDOC
+C                           >99  missing new DOC bank
+C ------------------------------------------------------------------
+#ifndef DOC
+C - Column numbers in the .TAB table for
+C           Table ID, Table name
+#include "tab2jj.h"
+#include "tdocjj.h"
+      CHARACTER*4 NAME,CHAINT
+C
+#include "bcs.h"
+#include "bmacro.h"
+C ------------------------------------------------------------------
+      LUNPR = IW(6)
+      IER = 0
+C
+C - Get Bank .TAB from d/a file into memory
+C
+      INDT = MDARD(IW,LUNDA,'.TAB',0)
+      IF (INDT.EQ.0) THEN
+        IER = IER+1
+        WRITE(LUNPR,6000)
+ 6000   FORMAT(//' * DATOEP * --> No table information on this DAF',//)
+      ELSE
+        WRITE (LUNPR,*) 'DATOEP .TAB ', IW(INDT-2),(IW(INDT+MM),MM=0,2)
+        NWRDS = IW(INDT)
+        NROWT = LROWS(INDT)
+      ENDIF
+C
+C - Get Bank .COL from d/a file into memory
+C
+      INDC = MDARD(IW,LUNDA,'.COL',0)
+      IF (INDC.EQ.0) THEN
+        IER = IER+1
+        WRITE(LUNPR,6001)
+ 6001   FORMAT(//' * DATOEP * -> No Column information on this DAF',//)
+      ELSE
+        WRITE(LUNPR,*)' DATOEP .COL ',IW(INDC-2),(IW(INDC+MM),MM=0,2)
+        NWRDS = NWRDS+IW(INDC)
+      ENDIF
+C
+C - Get Bank TAB2 from d/a file into memory
+C
+      ITA2 = MDARD(IW,LUNDA,'TAB2',1)
+      IF (ITA2.EQ.0) THEN
+        IER = IER+1
+        WRITE(LUNPR,6002)
+ 6002   FORMAT(//' * DATOEP * --> No TAB2 information on this DAF',//)
+      ELSE
+        WRITE (LUNPR,*) 'DATOEP TAB2 ', IW(ITA2-2),(IW(ITA2+MM),MM=0,2)
+        NRTA2 = LROWS(ITA2)
+      ENDIF
+C
+C - Get Bank COL2 from d/a file into memory
+C
+      ICO2 = MDARD(IW,LUNDA,'COL2',1)
+      IF (ICO2.EQ.0) THEN
+        IER = IER+1
+        WRITE(LUNPR,6003)
+ 6003   FORMAT(//' * DATOEP * -> No COL2 information on this DAF',//)
+      ELSE
+        WRITE(LUNPR,*)' DATOEP COL2 ',IW(ICO2-2),(IW(ICO2+MM),MM=0,2)
+      ENDIF
+C
+C - Get Bank TDOC from d/a file into memory
+C
+      JTDOC = MDARD(IW,LUNDA,'TDOC',0)
+      IF (JTDOC.EQ.0) THEN
+        IER = IER+10
+        WRITE(LUNPR,6004)
+ 6004   FORMAT(//' * DATOEP * -> No TDOC information on this DAF',//)
+      ELSE
+        WRITE(LUNPR,*)' DATOEP TDOC ',IW(JTDOC-2),(IW(JTDOC+MM),MM=0,2)
+      ENDIF
+C
+C - Get Banks TADB and CADB
+C
+      JTADB = MDARD(IW,LUNDA,'TADB',0)
+      IF (JTADB.EQ.0) THEN
+        IER = IER+100
+        WRITE(LUNPR,6005)
+ 6005   FORMAT(//' * DATOEP * -> No TADB information on this DAF',//)
+      ELSE
+        WRITE(LUNPR,*)' DATOEP TADB ',IW(JTADB-2),(IW(JTADB+MM),MM=0,2)
+      ENDIF
+      JCADB = MDARD(IW,LUNDA,'CADB',0)
+      IF (JCADB.EQ.0) THEN
+        IER = IER+100
+        WRITE(LUNPR,6006)
+ 6006   FORMAT(//' * DATOEP * -> No CADB information on this DAF',//)
+      ELSE
+        WRITE(LUNPR,*)' DATOEP CADB ',IW(JCADB-2),(IW(JCADB+MM),MM=0,2)
+      ENDIF
+C
+C - Get Banks TPRO and CPRO
+C
+      JTPRO = MDARD(IW,LUNDA,'TPRO',0)
+      IF (JTPRO.EQ.0) THEN
+        IER = IER+100
+        WRITE(LUNPR,6007)
+ 6007   FORMAT(//' * DATOEP * -> No TPRO information on this DAF',//)
+      ELSE
+        WRITE(LUNPR,*)' DATOEP TPRO ',IW(JTPRO-2),(IW(JTPRO+MM),MM=0,2)
+      ENDIF
+      JCPRO = MDARD(IW,LUNDA,'CPRO',0)
+      IF (JCPRO.EQ.0) THEN
+        IER = IER+100
+        WRITE(LUNPR,6008)
+ 6008   FORMAT(//' * DATOEP * -> No CPRO information on this DAF',//)
+      ELSE
+        WRITE(LUNPR,*)' DATOEP CPRO ',IW(JCPRO-2),(IW(JCPRO+MM),MM=0,2)
+      ENDIF
+C
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@@
+
+
+1.1.1.1
+log
+@1st release of dbase library
+@
+text
+@@

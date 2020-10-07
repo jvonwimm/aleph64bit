@@ -1,0 +1,418 @@
+head	1.4;
+access;
+symbols
+	jul313_3:1.4
+	jul313_2:1.4
+	jul313_1:1.4
+	jul313:1.4
+	jul312_1:1.4
+	jul312:1.4
+	jul311:1.4
+	jul310_1:1.4
+	jul310:1.4
+	jul309_1:1.4
+	jul309:1.4
+	jul308_6:1.4
+	jul308_5:1.4
+	jul308_4:1.4
+	jul308_3:1.4
+	jul308_2:1.4
+	jul308_1:1.4
+	jul308:1.4
+	jul307_4:1.4
+	jul307_3:1.4
+	jul307_2:1.4
+	jul307_1:1.4
+	jul307:1.4
+	jul306_3:1.4
+	jul306_2:1.4
+	jul306_1:1.4
+	jul306:1.4
+	jul305_4:1.4
+	jul305_3:1.4
+	jul305_2:1.4
+	jul305_1:1.4
+	jul305:1.4
+	jul304_3:1.4
+	jul304_2:1.4
+	jul304_1:1.4
+	jul304:1.4
+	jul303_7:1.4
+	jul303_6:1.4
+	jul303_5:1.4
+	jul303_4:1.4
+	jul303_3:1.4
+	jul303_2_mc1:1.4
+	jul303_2:1.4
+	jul303_1_mc1:1.4
+	jul303_1:1.4
+	jul303_v:1.4
+	jul303:1.4
+	jul302_6:1.4
+	jul302_5:1.4
+	jul302_4:1.4
+	jul302_3:1.4
+	jul302_2:1.4
+	jul302_1:1.4
+	jul302:1.4
+	jul285_1:1.4
+	jul285:1.4
+	jul284_1:1.4
+	jul284:1.4
+	jul283_1:1.4
+	jul283:1.3
+	jul282_1:1.3
+	jul282:1.3
+	jul281_3:1.3
+	jul281_2:1.3
+	jul281_1:1.3
+	jul281:1.3
+	jul280_1:1.3
+	jul280:1.3
+	jul279:1.2
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.4
+date	96.10.07.14.17.54;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.03.12.14.48.15;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.11.29.17.15.59;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.17.40;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.17.41;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@julia corr file 283.01
+@
+text
+@      SUBROUTINE ECCLUS(IER)
+C***********************************************************************
+C!  PERFORM TOPOLOGICAL ASSOCIATION OF CONNECTED EC_STOREYS IN 2 DIMENSI
+C! INTO  AN ARRAY(IARRAY(6144)) SIMULATING THE ECCAL AND THRU INDIRECT
+C! TO FIND NEIGBHORING STOREYS (IROSEV(25000)).THE ENCODED ADDRESS (ADD)
+C! "IROSEV" (IROSE) ARE STORED IN THE ESDA  BANK (JESDIO ,JESDDI)
+C! THE ALGORITHM SIMULATE RECURSIVITY.
+C!
+C! CHECK FOR DEAD STOREYS WHICH ARE CONNECTED TO A CLUSTER AND
+C! RESCUE THEM.
+C!
+C!  AUTHOR  :    JP ALBANESE APRIL_17TH_1986
+C!  MODIFIED:    JP ALBANESE,A BONISSENT NOVEMBER_1986
+C!  MODIFIED:    C. BENCHOUK 890529
+C!     INPUT  :'ESDA','EDST','ECLU'
+C!     OUPUT  :NONE
+C!     CREATED:NONE
+C***********************************************************************
+#ifndef DOC
+#include "bcs.h"
+#include "rlunit.h"
+#include "eclcom.h"
+#include "ecnamc.h"
+#include "esdajj.h"
+#include "edstjj.h"
+#include "eclujj.h"
+      PARAMETER (IPIMAX=5000)
+      DIMENSION IPIL1(IPIMAX),IPIL2(IPIMAX)
+C
+C -- FILL IARRAY AND CREATE ECLU
+      IER=0
+      CALL ECLUAR(IER)
+C
+C -- CHECK IF ANY 'HIT' (=IN ETDI) STOREY IS 'DEAD'
+      CALL ECCHKB
+C
+C?--- HERE ACCESS ESDA BOS BANK
+C?
+      KESDA = IW(NAESDA)
+      NMNT  = IW(KESDA+LMHROW)
+      INDST = KESDA  + LMHLEN
+C
+C FOR DEAD STOREYS
+      NSTO=NMNT
+      IADDST=0
+      KEDST=IW(NAEDST)
+C
+      KECLU=IW(NAECLU)
+C
+C
+C?- INITIALIZE COUNTERS
+      NPTPI= 0
+      ICL  = 0
+C?- HERE START RECURSIVE ALGORITHM
+      DO 20 IMNT=1,NMNT
+      INDCS = INDST +(IMNT-1)* LESDAA
+C?- GET CURRENT STOREY
+      IADD = IW(INDCS + JESDIO)
+C? TEST IF STOREY ALREADY BELONGS TO A CLUSTER
+      IF (IW(INDCS + JESDEC) .GT. 0)                       GOTO 20
+C? CREATE CLUSTER ONLY STARTING FROM A STOREY ABOVE HIGH THRESHOLD
+      IF (RW(INDCS + JESDME) .LT. ENHIGH)                  GOTO 20
+C?- START A NEW CLUSTER AND INCREMENT STOREYS_NUMBER
+      ICL   = ICL+1
+      IBOUC = IW(INDCS + JESDDI)
+C?-- HERE STORE THE RELATION BETWEEN STOREY AND CLUSTER
+      IW(INDCS+JESDEC) = ICL
+C?- NOW WORDS TO IMPLEMENT CHAINING BETWEEN STOREYS FROM ON SINGLE CLUST
+      INDCC = KECLU + LMHLEN+ (ICL-1)*LECLUA
+      IW(INDCC + JECLES) = IMNT
+      IW(INDCS + JESDES) = 0
+C--- FOR DEAD STOREY INFORMATION
+      IW(INDCC+JECLCH)=0
+C
+C
+C?- GO TO NEXT ADDRESS IN IROSEV
+   40 IBOUC = IBOUC+1
+C?- IF EMPTY MEANS :END IROSEV   , UNWIND STACK
+      IF ( IROSEV(IBOUC) .EQ. 0)                 GOTO 60
+C? COMPUTE NEXT STOREY ADDRESS
+      NPT = IADD + IROSEV(IBOUC)
+      IA  = (NPT-1) / 73728
+      IR  =  NPT - 73728*IA
+      IAA = (IR-1) / 6144
+      IRR =  IR - 6144*IAA
+      IMT1S = IARRAY(IRR)
+C?- IF ARRAY EMPTY EXAMINE DEAD STOREYS ARRAY
+      IF (IMT1S .LE. 0)                          GOTO 70
+      IDE2 = IW(KEWLOC+IMT1S+IAA)
+      IF (IDE2  .LE. 0)                          GOTO 70
+      IMTF = IDE2 + IA
+C
+C
+      INDSN= INDST + (IMTF-1)*LESDAA
+C? IF STOREY ALREADY FOUND GOTO NEXT STOREY
+      IF (IW(INDSN+JESDEC) .GT. 0 )     GOTO 40
+C? -STOP CLUSTERING FOR STOREY BELOW LOW ENERGY THRESHOLD
+C (FOR NON-DEAD STOREYS)
+      IF (RW(INDSN+JESDME) .LT. ENELOW .AND.
+     1  IW(INDSN+JESDED).EQ.0) GOTO 40
+C?- HERE OUTPUT CLUSTER INFOS...
+         IW(INDSN +JESDEC) = ICL
+C? CHAINING BETWEEN STOREYS FROM ONE CLUSTER.FIRST STO. IN CLUSTER_BANK
+         IW(INDSN +JESDES) = IW(INDCC+JECLES)
+         IW(INDCC +JECLES) = IMTF
+C
+C FOR HIT+DEAD, NO CHAINING
+      IF(IW(INDSN+JESDED).GT.0) THEN
+C
+C INFORMATION FOR CLUSTER WITH DEAD STOREY
+           IW(INDCC+JECLCH)=IW(INDCC+JECLCH)+1
+         GO TO 40
+      ENDIF
+C?
+C? AND STORE CURRENT STOREY IN  PROCESSING STACKS
+      NPTPI = NPTPI+1
+      IF(NPTPI.GE.IPIMAX) THEN
+        NPTPI = 0
+        CALL RERROR('ECCLUS',1,
+     1  '  ECCLUS : Stack full. Cluster may be incomplete,Abort Ecal')
+        IER = 1
+        KECLU = NDROP('ECLU',0)
+        KESDA = NDROP('ESDA',0)
+C        GO TO 20
+        RETURN
+      ENDIF
+      IPIL1(NPTPI) = IBOUC
+      IPIL2(NPTPI) = IADD
+C? RESET ARRAY....
+      IBOUC = IW(INDSN +JESDDI)
+      IADD  = NPT
+                                                          GOTO 40
+C? UNWIND THE STACK FOR CURRENT POINTERS
+ 60   IF (NPTPI .EQ. 0) GOTO 20
+      IBOUC = IPIL1(NPTPI)
+      IADD  = IPIL2(NPTPI)
+      NPTPI = NPTPI - 1
+                                                          GOTO 40
+C EXAMINE THE DEAD STOREY ARRAY
+ 70   CONTINUE
+C
+      IMT1S = IDRRAY(IRR)
+C
+C IDRRAY CONTAINS THE DEAD STOREYS
+      IF(IMT1S.LE.0) GO TO 40
+C
+      INST=IMT1S
+ 71   INDFB=KEDST+LMHLEN+(INST-1)*LEDSTA
+      INOR=IW(INDFB+JEDSIO)
+      IF(INOR.EQ.NPT) THEN
+        ISB=INST
+        GO TO 72
+      ELSE
+        INNB=IW(INDFB+JEDSED)
+        IF(INNB.EQ.0) GO TO 40
+        INST=INNB
+        GO TO 71
+      ENDIF
+C
+ 72   CONTINUE
+C
+C TEST IF THE DEAD STOREY IS TREATED ELSEWHERE
+      INDSB=KEDST+LMHLEN+(ISB-1)*LEDSTA
+      IF(IW(INDSB+JEDSES).GT.0) GO TO 40
+C
+C THERE IS A DEAD STOREY WHICH SHOULD JOIN THE CLUSTER.
+C THE DEAD STOREY SHOULD JOIN ESDA BANK
+C TEST IF ENOUGH SPACE IN ESDA
+          IF(IADDST.LE.2) THEN
+            NLEN=(NSTO+10)*LESDAA+LMHLEN
+            CALL AUBOS('ESDA',0,NLEN,KESDA,IGARB)
+            IF(IGARB.EQ.1)THEN
+               KECLU=IW(NAECLU)
+               KEDST=IW(NAEDST)
+               INDCC=KECLU+LMHLEN+(ICL-1)*LECLUA
+               INDSB=KEDST+LMHLEN+(ISB-1)*LEDSTA
+            ENDIF
+            IF(IGARB.EQ.2) GO TO 998
+            IADDST=10
+            INDST=KESDA+LMHLEN
+          ENDIF
+C
+          IADDST=IADDST-1
+          INDSA=KESDA+LMHLEN+NSTO*LESDAA
+          IW(INDSA+JESDTJ)=IW(INDSB+JEDSTJ)
+          IW(INDSA+JESDFI)=IW(INDSB+JEDSFI)
+          IW(INDSA+JESDDK)=IW(INDSB+JEDSDK)
+          RW(INDSA+JESDME)=ENDEAD
+          IW(INDSA+JESDIO)=IW(INDSB+JEDSIO)
+          IW(INDSA+JESDDI)=IW(INDSB+JEDSDI)
+          IW(INDSA+JESDER)=IW(INDSB+JEDSER)
+          IW(INDSA+JESDSC)=IW(INDSB+JEDSSC)
+          IW(INDSA+JESDED)=ISB
+          NSTO=NSTO+1
+          IW(INDSB+JEDSES)=NSTO
+C
+C INFORMATION FOR CLUSTER WITH DEAD STOREY
+           IW(INDCC+JECLCH)=IW(INDCC+JECLCH)+1
+C
+C?- HERE OUTPUT CLUSTER INFOS...
+         IW(INDSA +JESDEC) = ICL
+C? CHAINING BETWEEN STOREYS FROM ONE CLUSTER.
+         IW(INDSA +JESDES) = IW(INDCC+JECLES)
+         IW(INDCC +JECLES) = NSTO
+         IW(KESDA+LMHROW)= NSTO
+C        IW(INDSB+JESDEC)=ICL
+      GO TO 40
+C
+   20 CONTINUE
+C? END OF CLUSTERING
+C
+C -- COMPRESS ESDA
+      CALL AUBOS('ESDA',0,LMHLEN+NSTO*LESDAA,KESDA,IGARB)
+C?- FILL ECLU HEADER AND COMPRESS ECLU BANK
+      IW(KECLU+ LMHROW) = ICL
+      CALL AUBOS('ECLU',0,LMHLEN+LECLUA*ICL,KECLU,IGARB)
+      RETURN
+C
+ 998  IER=1
+      KECLU=NDROP('ECLU',0)
+      KESDA=NDROP('ESDA',0)
+      CALL RERROR('ECCLUS',-2,
+     1  '  ECCLUS : No space for ESDA extension. ECLU,ESDA dropped')
+      RETURN
+      END
+#endif
+@
+
+
+1.3
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+ Modified Files:
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+@
+text
+@d119 1
+a119 1
+        CALL RERROR('ECCLUS',-1,
+@
+
+
+1.2
+log
+@julia version 279
+@
+text
+@a0 1
+*DK ecclus
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d124 1
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

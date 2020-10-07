@@ -1,0 +1,14 @@
+                        Documentation for UNLOCKFILE
+                        ============================
+
+	UNLOCKFILE is run when you have kill a NQS job to remove the
+tape(s) which have been reserved or locked.
+
+The syntax is : unlockfile filename
+
+Example:
+	You were stagein the tape ab1234.epio and you kill this job.
+If you check with the command : sfsh 'ls -al *lock' you will see the
+file ab1234.epio.lock.
+You must remove this file. So you use the command : unlockfile ab1234.epio
+

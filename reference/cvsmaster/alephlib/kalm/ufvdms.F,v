@@ -1,0 +1,494 @@
+head	1.6;
+access;
+symbols
+	aleph316_2:1.6
+	aleph316_1:1.6
+	aleph316:1.6
+	aleph315_7:1.6
+	aleph315_6:1.6
+	aleph315_5:1.6
+	aleph315_4:1.6
+	aleph315_3:1.6
+	aleph315_2:1.6
+	aleph315_1:1.6
+	aleph315:1.6
+	aleph314_2:1.6
+	aleph314_1:1.6
+	aleph314:1.6
+	aleph313_1:1.6
+	aleph313:1.6
+	aleph312_1:1.5
+	aleph312:1.5
+	aleph311_1:1.5
+	aleph311:1.5
+	aleph310_3:1.5
+	aleph310_2:1.5
+	aleph310_1:1.5
+	aleph310:1.5
+	aleph309_1:1.5
+	aleph309:1.5
+	aleph308_3:1.5
+	aleph308_2:1.5
+	aleph308_1:1.5
+	aleph308:1.5
+	aleph307_6:1.5
+	aleph307_5:1.5
+	aleph307_4:1.5
+	aleph307_2:1.5
+	aleph307_1:1.5
+	aleph307:1.5
+	aleph306:1.5
+	aleph305_4:1.5
+	aleph305_3:1.5
+	aleph305_2:1.5
+	aleph305_1:1.5
+	aleph305:1.5
+	aleph304_5:1.5
+	aleph304_4:1.5
+	aleph304_3:1.5
+	aleph304_2:1.5
+	aleph304_1:1.5
+	aleph304:1.5
+	aleph303_3:1.5
+	aleph303_2:1.5
+	aleph303_1_mc1:1.5
+	aleph303_1:1.5
+	aleph303:1.5
+	aleph302_9:1.4
+	aleph302_8:1.3
+	aleph302_7:1.3
+	aleph302_6:1.2
+	aleph302_5:1.2
+	aleph302_4:1.2
+	aleph302_3:1.1
+	aleph302_2:1.1
+	aleph302_1:1.1
+	aleph302:1.5;
+locks; strict;
+comment	@c @;
+
+
+1.6
+date	99.10.26.09.32.31;	author cattanem;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	97.05.05.09.50.06;	author cattanem;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	97.04.25.06.23.19;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.04.16.08.18.01;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.04.02.08.56.03;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.03.06.11.59.25;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.6
+log
+@for Alephlib 313
+@
+text
+@      SUBROUTINE UFVDMS( FIELD, OMEGA, TANL, PHI0, D0, Z0,
+     &  R_STOP, R_START, QMS )
+
+C! GET MULTIPLE SCATTERING IN VDET AND BEAM-PIPE IN A REALISTIC
+C! APPROXIMATION FOR THE VDET GEOMETRY
+C!
+C!    AUTHOR:   T. LOHSE   8.12.1990
+C!              G. Taylor 23.9.1992
+C!              - Add option of allowing a more detailed treatment of th
+C!                multiple scattering in the Vdet to be provided
+C!                through a VDMS bank 0
+C!              D. Casper 6.04.1995
+C!              - Rework for energy loss
+C!                        2.04.1997
+C!              - Protect against very high incidence angle tracks
+C!
+C! Modified: D.Smith 991025 Double precision fixes for Linux
+C!
+C!    INPUT:  FIELD  =  MAGNETIC FIELD IN KG (SINGLE PRECISION)
+C!               THE REST IS DOUBLE PRECISION
+C!            OMEGA  =  CURVATURE OF TRACK  (MUST BE .NE. 0)
+C!            TANL   =  TAN(LAMBDA)
+C!            PHI0   =  PHI-ANGLE OF TRACK AT ORIGIN
+C!            D0     =  IMPACT PARAMETER OF TRACK
+C!            Z0     =  Z AT TRACK ORIGIN
+C!            R_STOP =  INNER RADIUS TO GO TO
+C!                      IF NEGATIVE, FIT STOPS AT ABS(R_STOP)
+C!            R_START=  OUTER RADIUS TO START AT
+C!            QMS    =  2*2 MULTIPLE SCATTERING MATRIX AT R_START
+C!    OUTPUT: QMS    ===>  CHANGED TO MULTIPLE SCATTERING MATRIX
+C!                         UP TO R_STOP
+C!
+C!       ****    EVERYTHING DOUBLE PRECISION    ****
+C!  Entry UFVDMM allows specifying mass of particle
+C!
+C!-------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "vdmsjj.h"
+#include "bcs.h"
+#include "vrldcom.h"
+#include "uftcom.h"
+C
+      DOUBLE PRECISION OMEGA, TANL, PHI0, D0, Z0, R_STOP, R_START,
+     &  QMS(2,2)
+C
+C----LOCAL VARIABLES
+C
+      DOUBLE PRECISION D_ARC, S_CURRENT, R_CURRENT, S_PIPE,
+     +                 R_MAX, S_INNER, S_WAFER, R_INNER, R_TO_P,
+     +                 SCACO, R_WAFER, RADIUS, SXY, XMS, COSV, R_PIPE
+      INTEGER DO_ELOSS_IN, ELOSS_FLAG
+
+      DOUBLE PRECISION UFBEBL, UFBERR
+      DOUBLE PRECISION M_PION, DE_DX, X_RAD, DE, DE_TOT, SIG_DE, BETA,
+     +                  GAMMA, BETA_GAMMA, P_TRK, L_CORR, MASS, MASS_IN,
+     +                  DE_OUT, SIG_OUT
+      DATA M_PION /0.13956995D0/
+
+#include "bmacro.h"
+C
+      SXY(RADIUS)= 2D0*DASIN(0.5D0*OMEGA*DSQRT(DABS((RADIUS**2-D0**2)
+     &               /(1D0-OMEGA*D0))))/OMEGA
+
+C  Default pion mass
+
+      ELOSS_FLAG = 0
+      MASS = M_PION
+      GOTO 101
+
+      ENTRY UFVDMM( FIELD, OMEGA, TANL, PHI0, D0, Z0,
+     &  R_STOP, R_START, MASS_IN, QMS, DO_ELOSS_IN, DE_OUT, SIG_OUT )
+
+      MASS = MASS_IN
+      IF(FIXED_OME .OR. FIXED_P) THEN
+        ELOSS_FLAG = 0
+      ELSE
+        ELOSS_FLAG = DO_ELOSS_IN
+      ENDIF
+
+      DE_OUT = 0.D0
+      SIG_OUT = 0.D0
+
+  101 CONTINUE
+
+C  Initialize multiple scattering parameters
+
+      CALL VRLDGT(IER)
+      IF(IER.NE.0) RETURN
+C
+      R_TO_P = 1000./0.29979/FIELD
+      SCACO = 0.0136D0 * R_TO_P
+      SCACO = (SCACO*OMEGA)**2/(1D0+TANL**2)
+
+C  Beta of track for dE/dx (assuming pion hypothesis)
+
+      P_TRK = DABS(1.D0/(DBLE(R_TO_P) * OMEGA / DSQRT(1.D0+TANL**2)))
+      BETA = P_TRK/DSQRT(P_TRK**2 + MASS**2)
+      BETA_GAMMA = P_TRK/MASS
+      GAMMA = BETA_GAMMA/BETA
+
+C  Correct multiple scattering for low p tracks using beta
+
+      SCACO = SCACO / BETA**2
+
+      DE_TOT = 0.D0
+      SIG_DE = 0.D0
+
+C Start at R_OUTER
+
+      R_CURRENT = R_START
+      R_MAX = DABS( D0 - 2.D0 / OMEGA )
+      IF ( R_CURRENT .GT. R_MAX ) R_CURRENT = R_MAX - 0.0001D0
+      R_INNER = R_STOP
+      IF ( R_INNER .LT. DABS(D0) ) R_INNER = DABS(D0)
+      IF ( R_INNER .GT. R_MAX ) R_INNER = R_MAX - 0.0001D0
+
+C Arc-length to inner and outer radii
+
+      IF(DABS(0.5D0*OMEGA*DSQRT(DABS((R_CURRENT**2-D0**2)
+     &     /(1D0-OMEGA*D0)))).GT.0.9999999D0) RETURN
+      S_CURRENT = SXY(R_CURRENT)
+
+      KVDMS=NLINK('VDMS',0)
+      IF(KVDMS.NE.0) THEN
+
+C Do a more detailed treatment starting from the VDMS 0 bank
+C This treatment also uses a better description of multiple
+C scattering in 'thick' materials as given in the particle data book
+C Assume for now that the 'VDMS' is ordered in decreasing radii
+
+        DO I=1,LROWS(KVDMS)
+          IFLAG=ITABL(KVDMS,I,JVDMFL)
+          IF(IFLAG.NE.0) THEN
+            R_WAFER=RTABL(KVDMS,I,JVDMRA)
+            XMS=RTABL(KVDMS,I,JVDMSG)
+            IF(XMS.LT.0.00001D0) XMS=.00001D0
+            COSV=DBLE(ABS(RTABL(KVDMS,I,JVDMPV)))
+            IF (COSV .LT. 0.05D0) COSV = 0.05D0
+
+C  Check if inner radius is reached
+
+            IF ( R_CURRENT .LE. R_INNER ) RETURN
+            IF ( R_CURRENT .LE. D0 ) RETURN
+
+C  Arc-length to outer radius
+
+            S_CURRENT=SXY(R_CURRENT)
+            IF(R_WAFER.LE.R_CURRENT.AND.R_WAFER.GT.R_INNER) THEN
+              S_WAFER=SXY(R_WAFER)
+
+C  Assume a tiny but finite width of the cylinder in order to avoid
+C  numerical problems
+
+              IF (S_WAFER .GT. 0.00005D0) S_WAFER = S_WAFER-0.00005D0
+
+C  Transport to inner radius
+
+              D_ARC = S_CURRENT - S_WAFER
+              D_ARC = D_ARC * DSQRT( 1D0 + TANL**2 )
+              QMS(1,1) = QMS(1,1)
+     &          + D_ARC*(QMS(1,2)+QMS(2,1))+D_ARC**2*QMS(2,2)
+              QMS(1,2) = QMS(1,2) + D_ARC*QMS(2,2)
+              QMS(2,1) = QMS(2,1) + D_ARC*QMS(2,2)
+
+C  Add multiple scattering at inner radius
+
+              XMS = XMS/COSV
+              L_CORR = MAX(0.7D0,1.D0+0.038D0*DLOG(XMS))**2
+              QMS(2,2)=QMS(2,2)+ XMS * SCACO * L_CORR
+
+C  Calculate energy loss
+
+              IF(XMS.GT.0D0)THEN
+                DE_DX = UFBEBL(BETA_GAMMA, MASS, 1, ELOSS_FLAG)
+                DE = DE_DX * XMS
+                SIG_DE = SIG_DE + DE**2 * UFBERR(XMS)
+                DE_TOT = DE_TOT + DE
+              ENDIF
+
+C  Update the outer radius to inner surface of this layer
+
+              S_CURRENT = S_WAFER
+              R_CURRENT = DSQRT( D0**2 + 4D0/OMEGA**2*(1D0-D0*OMEGA)*
+     +            DSIN(OMEGA*S_WAFER/2D0)**2 )
+            ENDIF
+          ENDIF
+        ENDDO
+      ELSE
+        CALL ALTELL('UFVDMS: no VDMS bank -> no ms in VDET',0,'RETURN')
+      ENDIF
+
+C  Track passed through vdet
+C  now transport to beam pipe if necessary
+
+      IF (R_CURRENT.GE.UKRVAC .AND. R_STOP.LT.UKRVAC)  THEN
+
+C  Transport to beam pipe first
+
+        IF ( UKRVAC .LE. ABS(D0) ) THEN
+          S_PIPE = 0D0
+        ELSE
+          R_PIPE = UKRVAC
+          S_PIPE = SXY(R_PIPE)
+        ENDIF
+        D_ARC = ( S_CURRENT - S_PIPE ) * DSQRT( 1D0 + TANL**2 )
+        QMS(1,1) = QMS(1,1)
+     &    + D_ARC*(QMS(1,2)+QMS(2,1))+D_ARC**2*QMS(2,2)
+        QMS(1,2) = QMS(1,2) + D_ARC*QMS(2,2)
+        QMS(2,1) = QMS(2,1) + D_ARC*QMS(2,2)
+
+C  Add ms and energy loss in beam pipe
+
+        IF ( S_PIPE .GT. 0D0 )THEN
+          XMS = UKSVAC * DSQRT(1.D0 + TANL**2)*OMEGA*UKRVAC
+     +          /DSIN(OMEGA*S_PIPE)/(1.D0-OMEGA*D0)
+          IF(XMS.GT.0D0)THEN
+            L_CORR = MAX(0.7D0,1.D0+0.038D0*DLOG(XMS))**2
+          ELSE
+            L_CORR = 1.D0
+          ENDIF
+          QMS(2,2) = QMS(2,2) + XMS*SCACO*L_CORR
+
+          DE_DX = UFBEBL(BETA_GAMMA, MASS, 4, ELOSS_FLAG)
+          DE = DE_DX * XMS
+          SIG_DE = SIG_DE + DE**2 * UFBERR(XMS)
+          DE_TOT = DE_TOT + DE
+        ENDIF
+        S_CURRENT = S_PIPE
+      ENDIF
+
+C  Now transport to inner radius
+
+      IF ( R_INNER .LE. ABS(D0) ) THEN
+        S_INNER = 0D0
+      ELSE
+        S_INNER = SXY(R_INNER)
+      ENDIF
+      D_ARC = ( S_CURRENT - S_INNER ) * DSQRT( 1D0 + TANL**2 )
+      QMS(1,1) = QMS(1,1) + D_ARC*(QMS(1,2)+QMS(2,1))+D_ARC**2*QMS(2,2)
+      QMS(1,2) = QMS(1,2) + D_ARC*QMS(2,2)
+      QMS(2,1) = QMS(2,1) + D_ARC*QMS(2,2)
+
+      IF(ELOSS_FLAG .GT. 0)THEN
+        DE_OUT = DE_TOT
+        SIG_OUT = SIG_DE
+      ENDIF
+
+      RETURN
+      END
+#endif
+@
+
+
+1.5
+log
+@Kalman filter protections
+@
+text
+@d17 2
+d62 2
+a63 2
+      SXY(RADIUS)= 2.*DASIN(0.5*OMEGA*DSQRT(DABS((RADIUS**2-D0**2)
+     &               /(1.-OMEGA*D0))))/OMEGA
+d92 2
+a93 2
+      SCACO = 0.0136 * R_TO_P
+      SCACO = (SCACO*OMEGA)**2/(1.+TANL**2)
+d113 1
+a113 1
+      IF ( R_CURRENT .GT. R_MAX ) R_CURRENT = R_MAX - 0.0001
+d116 1
+a116 1
+      IF ( R_INNER .GT. R_MAX ) R_INNER = R_MAX - 0.0001
+d120 2
+a121 2
+      IF(DABS(0.5*OMEGA*DSQRT(DABS((R_CURRENT**2-D0**2)
+     &     /(1.-OMEGA*D0)))).GT.0.9999999) RETURN
+d137 1
+a137 1
+            IF(XMS.LT.0.00001) XMS=.00001
+d139 1
+a139 1
+            IF (COSV .LT. 0.05) COSV = 0.05
+d155 1
+a155 1
+              IF ( S_WAFER .GT. 0.00005 ) S_WAFER = S_WAFER - 0.00005
+d160 1
+a160 1
+              D_ARC = D_ARC * DSQRT( 1. + TANL**2 )
+d174 1
+a174 1
+              IF(XMS.GT.0.)THEN
+d184 2
+a185 2
+              R_CURRENT = DSQRT( D0**2 + 4./OMEGA**2*(1.-D0*OMEGA)*
+     +            DSIN(OMEGA*S_WAFER/2.)**2 )
+d201 1
+a201 1
+          S_PIPE = 0.
+d206 1
+a206 1
+        D_ARC = ( S_CURRENT - S_PIPE ) * DSQRT( 1. + TANL**2 )
+d214 1
+a214 1
+        IF ( S_PIPE .GT. 0. )THEN
+d217 1
+a217 1
+          IF(XMS.GT.0.)THEN
+d235 1
+a235 1
+        S_INNER = 0.
+d239 1
+a239 1
+      D_ARC = ( S_CURRENT - S_INNER ) * DSQRT( 1. + TANL**2 )
+@
+
+
+1.4
+log
+@Bug fixes for Alephlib 302.9
+@
+text
+@d14 2
+d137 1
+@
+
+
+1.3
+log
+@aleph302_7 : corr in kalm
+@
+text
+@d48 1
+a48 1
+      INTEGER DO_ELOSS_IN
+d63 1
+a63 1
+      DO_ELOSS = 0
+d72 1
+a72 1
+        DO_ELOSS = 0
+d74 1
+a74 1
+        DO_ELOSS = DO_ELOSS_IN
+d170 1
+a170 1
+                DE_DX = UFBEBL(BETA_GAMMA, MASS, 1, DO_ELOSS)
+d219 1
+a219 1
+          DE_DX = UFBEBL(BETA_GAMMA, MASS, 4, DO_ELOSS)
+d239 1
+a239 1
+      IF(DO_ELOSS .GT. 0)THEN
+@
+
+
+1.2
+log
+@alephlib 302 corr.file no 4
+@
+text
+@d46 1
+a46 1
+     +                 R_MAX, S_INNER, S_WAFER, R_INNER,
+d87 2
+a88 2
+      SCACO = 1000./0.29979/FIELD
+      SCACO = 0.0136 * SCACO
+d93 1
+a93 1
+      P_TRK = DABS(1.D0/(DBLE(ROVERP) * OMEGA / DSQRT(1.D0+TANL**2)))
+@
+
+
+1.1
+log
+@1st test version aleph302
+@
+text
+@d48 1
+a48 1
+      INTEGER DO_ELOSS, DO_ELOSS_IN
+@

@@ -1,0 +1,555 @@
+#!/bin/csh
+#-----------------------------------------------------------------------
+# Script : kinagainrun
+# Devel. : J. Closier
+# Date   : 22 March 2000
+# Goals  :  Submit a job to run kiagain
+# Usage  : kinagainrun
+# Modify :
+#-----------------------------------------------------------------------
+#set echo on
+onintr END 2
+set VER = "1"
+echo "     ***********************************************"
+echo "     **********       KINAGAIN RUN     **** $VER ***"
+echo "     ***********************************************"
+echo "     ***********************************************" 
+echo ""
+echo `date`
+set USE=`id | cut -f2 -d"(" | cut -f1 -d")"`
+set me=$USE
+set DATE=`date "+%Y %m %d %H:%M:%S"`
+set LOGFILE="$ALEPH/log/kinagainrun.log"
+####> 
+set kinagainr_prog = `echo $0`
+####<
+set NODE=`uname -n`
+set opt_name = ""
+set flag_optx = "NO"
+#  initialisation of variables
+set exec  	= "kinagain"
+set alp   	= "$KINAGAINCARDS"
+set run         = "n"
+set run_exec    = "n"
+set FILEOPT     = "${cwd}/kinagain.optx"
+set debug       = "n"
+set machine     = "$STAGE_HOST"
+set timel       = "10000"
+set queue       = "ALEPH"
+set batch       = "n"
+set cluster     = "shift"
+#  test which model will be used
+switch ($#argv)
+	case 0: 
+                goto DIALOG
+                breaksw
+	case 1:
+                if ("$argv[1]" == "-help" || "$argv[1]" == "-h") goto FULLHELP
+                if(`echo $argv[1] | awk '{print index($0,"-")}'` != 1) goto HELP
+                breaksw       
+endsw
+
+#  test if you can write where you are
+if !(-w $cwd) then
+   echo "you can't write in the current directory $cwd"
+   exit 0
+endif
+
+set MODE="OPTIONS"
+#   parse the options and put the right values
+set argv=`getopt xrbpm:t:C:F:s: $*`
+if ($status != 0) goto HELP
+
+while ($#argv > 0)
+	switch ($argv[1])
+                case -x:
+                        set echo on
+                        breaksw
+                case -r:
+                        set run="y"
+                        breaksw
+		case -b:
+			set batch = "y"
+			breaksw
+		case -p:
+			set pvm = "y"
+			breaksw
+		case -C:
+                        if(`echo $argv[2] | awk '{print index($0,"-")}'` == 1) goto HELP
+			set alp = $argv[2]
+			shift
+			breaksw
+                case -s:
+                        if(`echo $argv[2] | awk '{print index($0,"-")}'` == 1) goto HELP
+                        set FILEOPT = $argv[2]
+                        shift
+                        breaksw
+                case -t:
+                        if(`echo $argv[2] | awk '{print index($0,"-")}'` == 1) goto HELP
+                        set timel = $argv[2]
+                        shift
+                        breaksw
+                case -m:
+                        if(`echo $argv[2] | awk '{print index($0,"-")}'` == 1) goto HELP
+                        set machine = $argv[2]
+                        shift
+                        breaksw
+                case -F:
+                        if(`echo $argv[2] | awk '{print index($0,"-")}'` == 1) goto HELP
+                        set FILEOPT = $argv[2]
+                        set point = `echo $FILEOPT | awk '{print index($0,".")-1}'`
+                        if ($point == -1) set opt_name = $FILEOPT
+                        if ($point > -1) set opt_name = `echo $FILEOPT | awk '{print substr ( $0,1,index($0,".")-1)}'`
+                        goto FILE
+                        breaksw
+                case --:
+                        breaksw
+                case *:
+                        if(`echo $argv[1] | awk '{print index($0,"-")}'` == 1) goto HELP
+                        set exec = $argv[1]
+                        breaksw
+		case -?:
+                        goto HELP
+                        breaksw
+	endsw
+	shift
+end
+
+#   test if the name of the executable has been given
+if ($exec == "") then
+  echo There is no name for the binary
+  goto HELP
+endif
+
+goto RUN
+
+########################################################## DIALOG #####
+DIALOG:
+  set MODE = "DIALOG"
+  unset noclobber
+  set run_exec = "y"
+
+  echo " With this script, you can run KINAGAIN with your own CARDS."
+  echo " This script works with the current version of KINAGAIN and the current"
+  echo " version of all the libraries."
+  echo " The scripts helps you to set up a job to be submitted to run on the"
+  echo " ALEPH-Unix-machines."
+  echo ""
+  echo " Please answer the questions."
+  echo " CR = Carriage Return = RETURN"
+  echo " With CR , you select the defaults presented in brackets." 
+  echo " To remove an option, you type none."
+  echo ""
+  echo " To quit at any moment: Ctrl/C followed by CR"
+  echo ""
+  echo "       *******************************************************"
+  echo "       ***  optx files existing in the current directory   ***"
+  set files = `ls -t *.optx`
+  if ($status == 1) then
+    echo no optx file found in this directory
+    set files = ""
+  else 
+    foreach i (${files})
+      echo " $i"
+    end
+  endif
+  set str_CR = ""
+  if ("$files" == "") then
+     set str_CR  = "myanal"
+  else
+     set str_CR = `echo ${files[1]} | awk '{print substr ( $0,1,index($0,".")-1)}'`
+  endif
+  echo " "
+  echo -n " Enter the name for the option file [CR = $str_CR] : "
+  set buf=$<
+  if ($buf == "") set buf = "${str_CR}.optx"
+  set s = `echo "$buf" | awk '{print index($0,"/")+1}'`
+  set point_buf = `echo $buf | awk '{print index($0,".")-1}'`
+  if ($s > -1) then
+     set opt_name = `echo "$buf" | awk '{print substr($0,index($0,"/")+1)}'` 
+     set point = `echo "$opt_name" | awk '{print index($0,".")-1}'`
+     if ($point > -1) set opt_name = `echo "$opt_name" | awk '{print substr($0,1,index($0,".")-1)}'`
+  else
+     if ($point_buf > -1) set opt_name = `echo $buf | awk '{print substr($0,1,index($0,".")-1)}'`
+  endif
+  set FILEOPT = "$buf"
+  if ($point_buf == -1) set FILEOPT = ${opt_name}.optx
+#  echo "point_buf=$point_buf point=$point buf=$buf opt_name=$opt_name FILEOPT=$FILEOPT"
+
+  if (-r $FILEOPT) goto FILE
+
+DIALOG_BEGIN:
+  set MODE = "DIALOG"
+  if ($opt_name == "") set opt_name = $exec 
+
+
+###> .cards
+  echo ""
+  echo "       *****************************************"
+  echo "       ***  Cards in the current directory   ***"
+  echo "       *****************************************"
+  set files = `ls *.cards`
+  if ($status == 1) then
+     echo no cards file found in this directory
+  else 
+     foreach i (${files})
+       set KINAGAINCARDS = $i
+       echo ${cwd}/$i
+    end
+  endif
+  if (-r $FILEOPT) set KINAGAINCARDS=`awk '{if ((NR == 2) && ($1 != "\n")) printf "%s\n",$1 }' $FILEOPT`
+  if ("$KINAGAINCARDS" == "") set KINAGAINCARDS = ${cwd}/${exec}.cards
+  echo ""
+  set flag = ""
+  while ($flag != "OK")
+    echo -n " Enter the name of the kinagain cards [CR = ${KINAGAINCARDS}] : "
+    set alp=$<
+    if ($alp !="") then
+     if !(-f $alp) then
+       echo $alp file does not exist
+     else set flag = "OK"
+     endif
+    else 
+       set alp=$KINAGAINCARDS
+       set flag = "OK"
+    endif
+  end
+  echo ""
+
+
+  echo ""
+  set string_options_1 = "create the binary interactively"
+  set menu_1 = "RUN"
+  goto ASK_OPTIONS
+
+###################################################### END ###
+END:
+  echo "$DATE $USE $MODE $VER $NODE" >> $LOGFILE
+  exit 0
+
+################################################################
+#      Read the file for the option -F
+####################################################### FILE ###
+FILE:
+if !(-r $FILEOPT) then 
+   echo "The file $FILEOPT does not exist."
+   exit 0
+endif
+set MODE="FILE"
+
+set exec=`awk '{if ((NR == 1) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set alp=`awk '{if ((NR == 2) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set timel=`awk '{if ((NR == 3) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set machine=`awk '{if ((NR == 4) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set batch=`awk '{if ((NR == 5) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+
+   set STR_RETURN_OPT = "FILE_LIST_OPT_END"
+   goto LIST_OPT
+FILE_LIST_OPT_END:
+   if ("$yn" == "n") goto DIALOG_BEGIN
+
+   if ($batch == "y") goto SUBMIT
+
+   echo ""
+   set string_options_1 = "create the binary interactively"
+   set menu_1 = "RUN"
+   goto ASK_OPTIONS
+
+  
+
+#################################################### RUN ###
+RUN:
+  setenv KINAGAINCARDS $alp
+  cp $ALEPH/kin/kinagain $exec
+  chmod +x $exec
+  echo ""
+  echo "   ********************"
+  echo "   ***  Execution   ***"
+  echo "   ********************"
+  ### Run the job  ####
+ if (-x $exec && "$MODE" != "OPTIONS") then
+     set rep = ""
+     set batch = "n"
+     if ($debug == "y") set rep = "t"
+     if ($rep == "") then
+        echo -n "Do you want to have the output on your (t)erminal or in a (f)ile [CR = t] ? : "
+        set rep=$<
+     endif
+     set ok="n"
+     set run_exec = "y"
+     set STR_RETURN_exec = "END_Y_N_RM_BIN" 
+     if ($rep == "f" || $rep == "F") then
+        while ($ok == "n")
+         echo -n "Name of your output file ? : "
+         set file_exec=$<
+         if (-r $file_exec) then
+            echo "File already exist ..."
+            set ok="n" 
+         else
+            set ok="y"
+            goto RUN_EXEC
+         endif
+        end
+     else
+        goto RUN_EXEC
+     endif
+END_Y_N_RM_BIN:
+     if ($yn == "n") rm $exec
+     if ("$MODE" == "DIALOG") then
+        set STR_RETURN_ASK_optx = "END"
+        goto ASK_optx
+     endif 
+     goto END
+  else
+     set STR_RETURN_exec = "END" 
+     goto RUN_EXEC
+  endif
+  
+################################################## RUN_EXEC ### 
+RUN_EXEC:
+
+if ("$MODE" == "OPTIONS") $exec
+if ("$MODE" != "OPTIONS") then
+     if ($rep == "f" || $rep == "F") then
+        $exec > $file_exec
+     else
+        $exec
+     endif
+endif
+goto $STR_RETURN_exec
+################################################## SUBMIT ######
+SUBMIT:
+  if (-e ${cwd}/${opt_name}.job_end) rm ${cwd}/${opt_name}.job_end
+  touch ${cwd}/${opt_name}.job_end
+  if ("$alp" != "") then
+      set te=`echo $alp | grep '/'`
+      if ($status == 1) set alp = "${cwd}/$alp"
+      set realalp=`echo $alp | awk -F/ '{if (i = NF) print $i}'`
+      cat >>${cwd}/${opt_name}.job_end << END-OF-JOB
+cp ${alp} ${realalp}
+END-OF-JOB
+  endif
+  set kinagainr="$kinagainr_prog -C $realalp"
+  set DATE_JOB=`date`
+  set DATE_JOB=`echo $DATE_JOB | awk '{print $2,$3,$4}'`
+
+  set kinagainr="$kinagainr -r $exec"
+
+set flag_rcp = "OK"
+set string_rcp = "#"
+# check for user-initiated hist file transfers
+
+cat >> ${cwd}/${opt_name}.job_end <<END-OF-JOB
+# === execute
+${kinagainr}
+$string_rcp
+# === clean up at jobend
+EndJob:
+if ( -r core) then
+   if (`uname` == "HP-UX") then
+      set DBX_OS = "xdb" 
+   else
+      set DBX_OS = "dbx" 
+   endif
+\$DBX_OS ${opt_name} <<EOF
+where
+quit
+EOF
+endif
+echo " Files in the LSF directory  "
+ls -l
+exit
+END-OF-JOB
+if ("$MODE" == "DIALOG") then
+     echo ""
+     echo -n " Enter the time limit [CR = ${timel}] : "
+     set buf=$<
+     if ("$buf" != "") set timel=($buf)
+     echo ""
+     echo  " Enter the machine where to submit [CR = ${machine}] "
+     echo -n " Your choice : $STAGE_HOST or ALOHA etc : "
+     set buf=$<
+     if ("$buf" != "") set machine=($buf)
+     if ("$machine" == "$STAGE_HOST") then
+        set cluster="shift"
+     else
+        set cluster="aleph"
+     endif
+endif
+if ($opt_name == "") set FILEJOB = "${cwd}/${opt_name}.job"
+if ($opt_name != "") set FILEJOB = "${cwd}/${opt_name}.job"
+if ($timel <= 380) set queue=8nm
+if (($timel > 380) && ($timel <= 2839)) set queue=1nh
+if (($timel > 2839) && ($timel <= 22200)) set queue=8nh
+if ($timel > 22200) set queue=1nd
+if (-e $FILEJOB) rm $FILEJOB
+  cat >$FILEJOB <<END-OF-JOB
+#!/bin/csh
+#BSUB -q $queue
+#BSUB -r
+#BSUB -R $cluster
+#BSUB -J $exec
+#
+#
+echo KINAGAIN job prepared by $kinagainr_prog on $DATE_JOB
+#
+echo KINAGAIN job run on \`date\` in the directory \`pwd\`
+set echo on
+cd \$WORKDIR
+#
+END-OF-JOB
+cat ${opt_name}.job_end >> $FILEJOB
+rm ${opt_name}.job_end
+if ("$MODE" != "OPTIONS") then
+   if ("$MODE" == "DIALOG") then  
+      set FILEOPT     = "${cwd}/${opt_name}.optx"
+      set STR_RETURN_ASK_optx = "SUBMIT_ASK_optx"
+      goto ASK_optx
+   endif
+SUBMIT_ASK_optx:
+   if ($flag_optx == "OK") then
+       set temp = `echo $FILEOPT | awk '{print substr($0,1,index($0,".")-1)}'`
+       if ($FILEJOB != "${temp}.job") mv $FILEJOB ${temp}.job
+       set FILEJOB = ${temp}.job
+   endif
+   echo " "
+   echo "   $FILEJOB   has been saved"
+   echo ""
+   set STR_Y_N = "Do you want to submit your job in batch with $timel sec on $machine"
+   set STR_Y_N_CR = "$batch"
+   set STR_RETURN_Y_N = "SUBMIT_BATCH"
+   goto Y_N
+SUBMIT_BATCH:
+  set batch = $yn
+endif
+  if ($batch == "y") then
+     echo " CPU time limit = $timel "
+     echo "Submitting to $machine via LSF"
+     chmod +x $FILEJOB
+     bsub < $FILEJOB
+  endif
+  goto END
+
+##################################################### ASK_optx #####
+ASK_optx: 
+     set FILEOPT = "${cwd}/${opt_name}.optx"
+     echo ""
+     echo -n " Save your options in [CR = ${FILEOPT}] "
+     set buf=$<
+     if ("$buf" == "none" || "$buf" == "NONE") goto $STR_RETURN_ASK_optx
+     if ($buf != "") then
+        set n = `echo $buf | awk '{print index($1,".optx")}'`
+        if ($n > 0) set FILEOPT = ($buf)
+        if ($n < 1) set FILEOPT = (${buf}.optx)
+        set flag_optx = "OK"
+     endif
+     if (-e ${FILEOPT}) mv ${FILEOPT} ${FILEOPT}.BAK
+     set CAT_OPT = ${FILEOPT}
+     goto CAT_OPT
+
+##################################################### ASK_OPTIONS ##### 
+ASK_OPTIONS:
+     set default = 1
+     if ($batch == "y") set default = 2
+     echo  " Do you want with these options : "
+     echo  "                                  1. $string_options_1"
+     echo  "                                  2. run the complete job in batch"
+     echo  "                                  3. exit "
+     echo -n " Please type your choice (1, 2 or 3) [CR = ${default}] : "
+     set buf=$<
+     if ("$buf" == "") set buf = ${default}
+     if ($buf == 1) goto ${menu_1}
+     if ($buf == 2) then
+        set batch = "y"
+        goto SUBMIT
+     endif
+     if ($buf == 3) then
+        set STR_RETURN_ASK_optx = "END"
+        goto ASK_optx
+     endif
+     goto ASK_OPTIONS
+
+######################################################## CAT_OPT ####
+CAT_OPT:
+cat >${CAT_OPT} <<END-OF-CAT
+$exec
+$alp
+$timel
+$machine
+$batch
+END-OF-CAT
+goto $STR_RETURN_ASK_optx
+
+######################################################## LIST_OPT ####
+LIST_OPT:
+  echo ""
+  echo " >>>Your options for KINAGAINRUN are :"
+  echo "card    file    = $alp"
+  echo "binary  name    = $exec"
+  if ("$MODE" == "FILE") then
+     echo "time limit      = $timel"
+     echo "machine         = $machine"
+     echo "batch           = $batch"
+  endif
+  echo ""
+  set STR_Y_N = "Are these options correct"
+  set STR_Y_N_CR = "y"
+  set STR_RETURN_Y_N = ${STR_RETURN_OPT}
+
+############################################################# Y_N ####
+Y_N:
+  set yn = "${STR_Y_N_CR}"
+  echo -n " ${STR_Y_N} (y/n) [CR = ${STR_Y_N_CR}] ? " 
+  set buf=$<
+  if ("$buf" != "") set yn = `echo $buf | awk '{print substr ( $0,1,1 )}'` 
+  if ("$yn" == "q" || "$yn" == "Q") goto END
+  if ($yn == "n" || $yn == "N" || $yn == "y" || $yn == "Y") then
+     if ($yn == "N") set yn = "n"
+     if ($yn == "Y") set yn = "y"
+  else goto Y_N
+  endif
+  goto $STR_RETURN_Y_N
+########################################################### FULLHELP ##
+FULLHELP:
+cat <<EOF
+"kinagainrun"
+ With this script, you can run KINAGAIN interactively or in batch with your 
+ own FORTRAN, your own C code, your own CARDS etc.
+ This script works with the current version of KINAGAIN and the current
+ version of all the libraries.
+ The scripts helps you to set up a job to be submitted to run on the
+ ALEPH-Unix-machines just answering the questions having typed  kinagainrun
+
+"kinagainrun"  can be used in 3 modes
+     1 -- DIALOG
+Interactively with a dialog, just type e.g.   
+kinagainrun
+This is the mode most improved and affected by the changes.
+     2 -- FILE
+By using an option file (produced by kinagainrun in mode 1)  e.g.   
+kinagainrun -F my.optx   
+     3 -- OPTIONS
+With options. This is the mode important for batch processing  e.g.
+kinagainrun -v 122 -j -C mykinagain.cards  -f myalp.f -f myyalp.f -r aldata
+In this mode now the -g option works, but otherwise it should be essentially 
+unchanged compared with  kinagainrun9.0  from Joel.
+
+
+EOF
+echo "==========  Syntax  ============"
+############################################################## HELP ###
+HELP:
+echo "Usage :kinagainrun -help "
+echo "      :kinagainrun [-F filename] "
+echo "      :kinagainrun [-C card_file] [-m machine] [-t time_limit] <binary_name> "
+echo " " 
+echo "Where: "
+echo "     -help             get this (h)elp"
+echo "     -C <string>       expected "C"ard file  (my_cards.cards)"
+echo "     -b                to run in (b)atch"
+echo "     -m <string>       expected machine to submit your job to"
+echo "     -t <number>       (t)ime limit of your batch job in seconds"
+echo "     -s <string>       expected name of the file to (s)ave the options"
+echo "       <binary_name>   expected name for the binary"
+
+exit 0

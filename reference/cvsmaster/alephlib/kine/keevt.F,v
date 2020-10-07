@@ -1,0 +1,179 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.42.28;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.42.29;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE KEEVT (IEVT,ISTAT,NVX,NTRK,WEIT,IDPRO,ECMS,LWRT)
+C -----------------------------------------------------------------
+C - F.Ranjard - 870505
+C! KINGAL end of event
+CKEY KINE KINGAL FILL BANK /  INTERNAL
+C   if it is a good event fill the EVEH and KEVH banks and write
+C   the event on a file if required . Then reset the BOS array (drop
+C   the event list and garbage collect)
+C
+C - structure: SUBROUTINE program
+C              User Entry Name: KEEVT
+C              External references: ALEVEH/ALKEVH(ALEPHLIB)
+C                                   NAMIND/BWRITE/BLIST/BDROP/BGARB(BOS77
+C                                   RDMOUT(CERNLIB)
+C              Comdecks referenced: BCS, BMACRO
+C
+C - usage   : CALL KEEVT (IEVT,ISTAT,NVX,NTRK,WEIT,IDPRO,ECMS,LWRT)
+C - input   : IEVT   = event#
+C             ISTAT  = status word ( = 1 means OK)
+C                      the event is written out only if ISTAT=1
+C             NVX    = # of vertices in the event
+C             NTRK   = # of tracks in the event
+C             IDPRO  = event process identification
+C             WEIT   = event weight
+C             ECMS   = beam energy in center of mass
+C             LWRT   = output logical unit ( 0 means do not write)
+#ifndef DOC
+      SAVE
+#include "bcs.h"
+      INTEGER ALEVEH,ALKEVH,NRDN(3)
+      DATA NARUN/0/
+#include "bmacro.h"
+C ------------------------------------------------------------------
+C
+C - Get RUNH name-index
+      IF (NARUN.EQ.0) NARUN = NAMIND ('RUNH')
+C
+      IF (ISTAT .EQ. 1) THEN
+C     Compress KINE and VERT banks
+      CALL KIBPRS ('VERTKINE')
+C     Fill EVEH and KEVH banks
+         IEXP = IW (IW(NARUN) + 1)
+         IRUN = IW (IW(NARUN) + 2)
+         IPRO = IW (IW(NARUN) + 3)
+         JEVEH = ALEVEH (IEVT,IEXP,IRUN,ECMS,IPRO,ISTAT)
+         IF (JEVEH .EQ. 0) GOTO 100
+C
+         CALL RDMOUT (NRDN)
+         JKEVH = ALKEVH (NRDN,NTRK,NVX,IDPRO,WEIT)
+         IF (JKEVH .EQ. 0) GOTO 100
+C
+C     Write event if required
+         IF (LWRT .NE. 0) THEN
+            IW(1) = 0
+            CALL BWRITE (IW,LWRT,'C')
+            CALL BLIST (IW,'C=','0')
+            IW(1) = 1
+            CALL BWRITE (IW,LWRT,'E')
+         ENDIF
+      ENDIF
+C
+C - Drop 'E' list and garbage collection
+C
+ 100  CONTINUE
+      CALL BDROP (IW,'E')
+      CALL BGARB (IW)
+C
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

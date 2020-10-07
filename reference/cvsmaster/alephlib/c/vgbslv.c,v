@@ -1,0 +1,179 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.2
+	aleph304_5:1.2
+	aleph304_4:1.2
+	aleph304_3:1.2
+	aleph304_2:1.2
+	aleph304_1:1.2
+	aleph304:1.2
+	aleph303_3:1.2
+	aleph303_2:1.2
+	aleph303_1_mc1:1.2
+	aleph303_1:1.2
+	aleph303:1.2
+	aleph302_9:1.2
+	aleph302_8:1.2
+	aleph302_7:1.2
+	aleph302_6:1.2
+	aleph302_5:1.2
+	aleph302_4:1.2
+	aleph302_3:1.2
+	aleph302_2:1.2
+	aleph302_1:1.2
+	aleph302:1.2
+	aleph216:1.2
+	aleph215_3:1.2
+	aleph215_2:1.2
+	aleph215:1.2
+	aleph214:1.2
+	aleph213:1.2
+	c300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	96.05.03.15.19.56;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.04.23.15.22.39;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.04.23.15.22.40;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@replace flag C by ALEPH_C
+Modified Files:
+  c/ 	lpkit.c vgbslv.c vldlps.c
+@
+text
+@#if defined(ALEPH_C)
+
+#include "vgbran.h"
+
+void FORT_CALL(vgbslv) (const int *ntrk, const int nhits[NHITDIM],
+			const int nUseHit[][NHITDIM], 
+			const int *npat, const struct VGBPAT *pat,
+			int *nsoln, int *soln, float *objSoln )
+{
+   lprec *Mlp;
+   int result;
+   int col, l;
+   int ipat;
+
+   *nsoln = 0;
+   
+   /* load the LP_SOLVE structure */
+   Mlp = vldlps(*ntrk, nhits, nUseHit, *npat, pat);
+   if (Mlp == NULL) return;
+   
+   /* set a few defaults, just to be sure */
+   Mlp->anti_degen = FALSE;
+
+   /* write_MPS(Mlp, stderr); */
+   
+   /* solve!! */
+   result = solve(Mlp);
+
+   /* extract the solution */
+   if (result == OPTIMAL)
+   {
+      objSoln[*nsoln] = Mlp->best_solution[0];
+      
+      col = Mlp->rows + 1;
+      for (l=0; l<NHITDIM; l++) col += nhits[l];
+      
+      for (ipat=0; ipat<*npat; ipat++)
+      {
+	 if (Mlp->best_solution[col + ipat] > 0.5)
+	 {
+	    /* be careful about FORTRAN indexing */
+	    soln[(*nsoln)*(*ntrk) + pat[ipat].trk - 1] = ipat+1;
+	 }
+      }
+      
+      (*nsoln)++;
+   }
+
+   /* free the memory */
+   delete_lp(Mlp);
+}
+
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+a1 1
+#if defined(C)
+@
+
+
+1.1.1.1
+log
+@move c300 to alephlib/c
+@
+text
+@@

@@ -1,0 +1,217 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gta302:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.08.24.09.37.47;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.52;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.53;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@galeph 303/gustep: call vdhite (G.Taylor), add a modified version of geaant/gdray
+introduce vdet94
+@
+text
+@*DK vdasig
+      SUBROUTINE VDASIG
+C-----------------------------------------------------------------------
+C! Compute analog signals
+CKEY VDET DIGITIZING
+C!
+C!  Author         F.Forti        11/6/86
+C!  Modified       A. Bonissent   15/02/94
+C!                                Suppress usage of work bank
+C!
+C!  Description
+C!  ===========
+C!  This routine does very little now that VDHT bank is created
+C!  directly in VDHIT routine.
+C!
+C!  No noise is added here, as Minivertex noise must be added strip by
+C!  strip in the digitization part.
+C!  In fact, all the processing of Vdet is done later, by routine VDDIGI
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "vdhtjj.h"
+#include "vdssjj.h"
+#include "jobcom.h"
+#include "bcs.h"
+#include "iocom.h"
+C
+      DATA NAVDSS, NAVDHT /2*0/
+#include "bmacro.h"
+      IF (NAVDSS.EQ.0) THEN
+         NAVDSS = NAMIND('VDSS')
+         NAVDHT = NAMIND('VDHT')
+      ENDIF
+C
+C drop old VDHT bank
+C
+      CALL BDROP(IW,'VDHT')
+C
+C Compress VDSS bank
+C
+      CALL AUBPRS('VDSS')
+      KVDSS = IW(NAVDSS)
+      IF(KVDSS.LE.0) RETURN
+      NVDSS=LROWS(KVDSS)
+      IF(NVDSS.LE.0) RETURN
+      NDATA = LMHLEN + LVDHTA*NVDSS
+      CALL ALBOS('VDHT',0,NDATA,KVDHT,IGARB)
+      IF(IGARB.EQ.1) KVDSS = IW(NAVDSS)
+C
+C?       Add 'VDHT' bank to the 'E' list
+C
+      CALL BLIST(IW,'E+','VDHT')
+      IW(KVDHT+LMHCOL) = LVDHTA
+      IW(KVDHT+LMHROW) = 0
+C
+      I=1
+      DO WHILE(I.LE.NVDSS)
+       IF(ITABL(KVDSS,I,JVDSTN).NE.0) THEN
+        KLINE = KNEXT(KVDHT)
+        IW(KVDHT+LMHROW) = LROWS(KVDHT) + 1
+        IW(KLINE + JVDHTN) = ITABL(KVDSS,I,JVDSTN)
+        IW(KLINE + JVDHLN) = ITABL(KVDSS,I,JVDSLN)
+        IW(KLINE + JVDHPN) = ITABL(KVDSS,I,JVDSPN)
+        RW(KLINE + JVDHXE) = RTABL(KVDSS,I,JVDSXE)
+        RW(KLINE + JVDHYE) = RTABL(KVDSS,I,JVDSYE)
+        RW(KLINE + JVDHZE) = RTABL(KVDSS,I,JVDSZE)
+        RW(KLINE + JVDHER) = 0.
+        J=0
+        DO WHILE(ITABL(KVDSS,I+J,JVDSES).EQ.0.AND.I+J.LT.NVDSS)
+         RW(KLINE + JVDHER) = RW(KLINE + JVDHER)+RTABL(KVDSS,I+J,JVDSER)
+         IW(KROW(KVDSS,I+J)+JVDSRN)=IW(KVDHT+LMHROW)
+         J=J+1
+        ENDDO
+        RW(KLINE + JVDHER) = RW(KLINE + JVDHER)+RTABL(KVDSS,I+J,JVDSER)
+        IW(KROW(KVDSS,I+J)+JVDSRN)=IW(KVDHT+LMHROW)
+        RW(KLINE + JVDHXL) = RTABL(KVDSS,I+J,JVDSXL)
+        RW(KLINE + JVDHYL) = RTABL(KVDSS,I+J,JVDSYL)
+        RW(KLINE + JVDHZL) = RTABL(KVDSS,I+J,JVDSZL)
+        IF(ITABL(KVDSS,I,JVDSTN).NE.ITABL(KVDSS,I+J,JVDSTN).OR.
+     &     ITABL(KVDSS,I,JVDSPN).NE.ITABL(KVDSS,I+J,JVDSPN).OR.
+     &     ITABL(KVDSS,I,JVDSLN).NE.ITABL(KVDSS,I+J,JVDSLN)) THEN
+          CALL ALTELL('VDASIG: Error in track segment', 0, 'RETURN')
+        ENDIF
+        I=I+J+1
+       ELSE
+        I=I+1
+       ENDIF
+      ENDDO
+C
+C Compress VDHT bank
+C
+      CALL AUBPRS('VDHT')
+C -----------------------------------------------------------------
+C
+C  Check run conditions to see if long debug activated
+C
+      IF (FDEBJO.AND.ICVDJO(6).NE.0) THEN
+        KVDHT = IW(NAVDHT)
+        ND = IW(KVDHT)
+        WRITE(LOUTIO,8000) ND
+ 8000   FORMAT(/' +++VDASIG+++ Named bank VDHT exists.',
+     &      '  Length of bank is:',I5)
+      ENDIF
+C
+C    Normal debug
+C
+      IF (FDEBJO.AND.IPRIJO(1).NE.0) CALL VDPRHT
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d22 2
+a23 2
+      SAVE NAVDHT
+C
+d28 1
+a28 2
+      LOGICAL FIRST
+      DATA FIRST /.TRUE./
+d30 3
+a32 3
+      IF(FIRST)THEN
+        FIRST=.FALSE.
+        NAVDHT = NAMIND('VDHT')
+d35 55
+a108 3
+C     Update statistics
+C
+  999 CONTINUE
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

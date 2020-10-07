@@ -1,0 +1,177 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.12.05.10.10.39;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.40.37;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.40.38;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@Alephlib 307 second test
+@
+text
+@      INTEGER FUNCTION ALTRHV (IBITHV)
+C --------------------------------------------------------------
+CKEY ALEF TRIGGER HV
+C - F.Ranjard -940426
+C! Obsolete. Use XHVBIT directly instead - MC 971205
+C! returns trigger HV word from XTCN or X1RG
+C - Output : - IBITHV  / I = word 4
+C              ALTRHV  / I = 0 if no bank there
+C                            1 if XTCN is there
+C                            2 if X1RG is there
+C
+C ----------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+      INTEGER  IBITHV
+      INTEGER  XHVBIT
+      EXTERNAL XHVBIT
+C ------------------------------------------------------------
+      ALTRHV = XHVBIT(IBITHV)
+      IF( ALTRHV .GT. 2 ) ALTRHV = 0
+C
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d5 1
+d14 4
+a17 4
+#include "bcs.h"
+      SAVE NXTCN, NX1RG
+      DATA NXTCN / 0/
+#include "bmacro.h"
+d19 2
+a20 24
+C - 1st entry : get name indices
+      IF (NXTCN.EQ.0) THEN
+        NXTCN = NAMIND ('XTCN')
+        NX1RG = NAMIND ('X1RG')
+      ENDIF
+C
+C - next entry
+      IF (IW(NX1RG).NE.0) THEN
+         JTRIG = IW(NX1RG)
+         IROW  = 2
+         ICOL  = 4
+         ALTRHV = 2
+      ELSEIF (IW(NXTCN).NE.0) THEN
+         JTRIG = IW(NXTCN)
+         IROW  = 1
+         ICOL  = 7
+         ALTRHV = 1
+      ELSE
+         ALTRHV = 0
+         RETURN
+      ENDIF
+C
+C - get HV trigger word
+      IBITHV = ITABL (JTRIG,IROW,ICOL)
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

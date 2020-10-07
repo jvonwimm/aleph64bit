@@ -1,0 +1,81 @@
+head	1.1;
+access;
+symbols
+	alio83:1.1
+	alio82:1.1
+	alio81:1.1
+	alio80:1.1
+	alio74:1.1
+	alio73:1.1
+	alio72:1.1
+	alio71:1.1
+	alio70:1.1
+	alio68:1.1
+	alio69:1.1
+	alio67:1.1
+	alio66:1.1
+	alio65:1.1
+	alio64:1.1
+	alio63:1.1
+	alio62:1.1
+	alio61:1.1
+	alio60:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.04.23.10.01.16;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@move alph, dbas, a part of alef and a part of c to alephio
+Modified Files:
+ 	version.h
+ Added Files:
+ 	adbrow.F adbrpn.F adbrun.F adbswp.F adbver.F agetdb.F agtfil.F
+	albos.F aldawr.F aldtyp.F aleveh.F alfind.F alfmt.F algtbk.F
+ 	algtdb.F algtlu.F algtro.F algtyp.F alinst.F alk7fil.F
+ 	alk7fru.F alk7op.F alk7tru.F alredb.F alrune.F alrunh.F
+ 	alrunr.F alseed.F alstho.F alstin.F alstri.F altabl.F alvsn.F
+ 	aopdbs.F aublis.F aubos.F aubprs.F bkcari.F bkinca.F bkrhab.F
+ 	bkrhal.F bkrhaw.F bktobk.F cafiht.F chahol.F dafrds.F gtdbas.F
+ 	gtstup.F igtfmt.F jhocha.F julrec.F junial.F junidb.F
+ 	kbytrec.F loctab.F nameru.F ubpack.F uclean.F uindxs.F usbos.F
+ 	usgtdb.F utcblk.F utccop.F utcofo.F utwocl.F utwoex.F
+Removed Files:
+	noibm.F
+@
+text
+@      SUBROUTINE UTCCOP(ICHIN,ICOUT,NWORD)
+C.
+C! - Copy one textstring into another
+C! - This subroutine is needed since UCOPY doesn't work properly for
+C! - characters on VAX.
+C.
+C. - Author   : A. Putzer  - 87/08/18
+C.
+C.
+C.   Arguments: -  ICHIN CHA*4 (input) Character string to be copied
+C.              -  ICOUT CHA*4 (output) Character to be copied into
+C.              -  NWORD INTE  (input) Number of 32-bit words to be
+C.                                     copied
+C.  Comment   :    The order of the arguments which does not correspond
+C.                 to the ALEPH rules is kept as for the original UCOPY
+C.
+C ---------------------------------------------------------------------
+#ifndef DOC
+      CHARACTER*4 ICHIN(*),ICOUT(*)
+      DO 100 I=1,NWORD
+ 100  ICOUT(I) = ICHIN(I)
+      RETURN
+      END
+#endif
+@

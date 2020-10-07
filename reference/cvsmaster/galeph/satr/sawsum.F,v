@@ -1,0 +1,133 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.1
+	gal302_2:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.01.25.13.43.33;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.06.30.14.08.34;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@put a ifndef DOC in gdray
+modify WRITE statment to please fpp on alpha/vms
+ Modified Files:
+ 	catino.F
+ Modified Files:
+	agchck.F
+ Modified Files:
+ 	gdray.F
+ Modified Files:
+ 	hchist.F hcshow.F hcstat.F hnewtk.F
+ Modified Files:
+ 	lcasig.F
+Modified Files:
+	sabook.F sahist.F sahit.F sawsum.F
+@
+text
+@*DK sawsum
+      SUBROUTINE SAWSUM
+C-----------------------------------------------------------------------
+C!    print out averages for the SATR test run
+C                                H.Burkhardt October 1986
+C-----------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "iocom.h"
+#include "jobcom.h"
+#include "satrco.h"
+      IF(XEVTSA.GT.0.) THEN
+        WRITE(LOUTIO,*) ' +++SAWSUM+++ SATR run summary '
+        WRITE(LOUTIO,*)
+     &   ' Total number of events with hits in the SATR ',
+     &     INT(XEVTSA)
+        WRITE(LOUTIO,*)' For these events:'
+        WRITE(LOUTIO,*)
+     &   '   Average number of hits per event in sens. region  :',
+     &       XHITSA/XEVTSA
+        WRITE(LOUTIO,*)      
+     &   '   Average number of hits lost in dead material      :',
+     &       XLOSSA/XEVTSA
+        WRITE(LOUTIO,*)
+     &   '   Average number of wires set (excluding multihits) :',
+     &       XWIRSA/XEVTSA
+      ELSE
+         WRITE (LOUTIO,*)' +++SAWSUM+++ NO signal in SATR'
+      ENDIF
+      END
+#endif
+@
+
+
+1.1
+log
+@release galeph 302.
+ Added Files:
+ saasig.F sabook.F sadigi.F sahist.F sahit.F sairun.F sawsum.F
+@
+text
+@d13 14
+a26 11
+         WRITE(LOUTIO,'(/1X,''+++SAWSUM+++ SATR run summary '',
+     .     /'' Total number of events with hits in the SATR        :'',
+     .       I8,
+     .     /'' For these events:'',
+     .     /''   Average number of hits per event in sens. region  :'',
+     .       F10.3,
+     .     /''   Average number of hits lost in dead material      :'',
+     .       F10.3,
+     .     /''   Average number of wires set (excluding multihits) :'',
+     .       F10.3)')
+     .        INT(XEVTSA),XHITSA/XEVTSA,XLOSSA/XEVTSA,XWIRSA/XEVTSA
+d28 1
+a28 1
+         WRITE (LOUTIO,'(/1X,''+++SAWSUM+++ NO signal in SATR'')')
+@

@@ -1,0 +1,222 @@
+head	1.2;
+access;
+symbols
+	alpha126_22:1.2
+	alpha122_22:1.2
+	alpha126_21:1.2
+	alpha126_20:1.2
+	alpha126_19:1.2
+	alpha126_18:1.2
+	alpha126_17:1.2
+	alpha126_16:1.2
+	alpha126_15:1.2
+	alpha126_14:1.2
+	alpha126_13:1.2
+	alpha126_12:1.2
+	alpha126_11:1.2
+	alpha126_10:1.2
+	alpha126_09:1.2
+	alpha126_08:1.2
+	alpha126_07:1.2
+	alpha126_06:1.2
+	alpha126_05:1.2
+	alpha126_04:1.2
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	2001.02.06.07.58.02;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	99.03.22.14.07.02;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE MINFVB(KDTRA)
+C
+CKEY MDST /INTERNAL
+C-----------------------------------------------------------------------
+C! Fill vertex bit pattern in DTRA, and 'DYV0' bank for MINIs >= 205
+C
+C     Author: Stephen Haywood      10-Feb-1993
+C     Modif : Jacques Boucrot      09-Jan-2001
+C
+C     Input  : PYER,PYFR,YV0V banks
+C              KDTRA  = index of DTRA bank
+C     Output : vertex bits of DTRA bank
+C              and 'DYV0 bank for MINIs >= 205
+C
+C     Called by MINTRA
+C-----------------------------------------------------------------------
+C
+#ifndef DOC
+C
+#include "bcs.h"
+#include "pyfrjj.h"
+#include "yv0vjj.h"
+#include "dtrajj.h"
+#include "dyv0jj.h"
+C
+      DIMENSION INDV0(100),CHIV0(100)
+C
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+      NDTRA = LROWS(KDTRA)
+C
+C++   Find the number of main vertices.
+C
+      KPYER = NLINK('PYER',0)
+      IF (KPYER.GT.0) THEN
+         NPYER = LROWS(KPYER)
+      ELSE
+         NPYER = 0
+      ENDIF
+C
+C++   Fill vertex bits corresponding to PYER vertices.
+C
+      KPYFR = NLINK('PYFR',0)
+      IF (KPYFR.GT.0) THEN
+         NPYFR = LROWS(KPYFR)
+      ELSE
+         NPYFR = 0
+      ENDIF
+C
+      DO 100 I=1,NPYFR
+         IVER = ITABL(KPYFR,I,JPYFVN)
+         IF (IVER.GT.30) GOTO 100
+         IDTRA = ITABL(KPYFR,I,JPYFTN)
+         IF (IDTRA.GT.NDTRA) GOTO 100
+         IND = KROW(KDTRA,IDTRA) + JDTRVB
+         CALL SBIT1(IW(IND),IVER)
+  100 CONTINUE
+C
+C++   Next, YV0V vertices.
+C
+      KYV0V = IW(NAMIND('YV0V'))
+      IF (KYV0V.GT.0) THEN
+         NYV0V = LROWS(KYV0V)
+      ELSE
+         NYV0V = 0
+      ENDIF
+C
+C++ Store V0 daughter numbers in 'DYV0' bank: 
+C
+      IF (NYV0V.GT.0) THEN
+         LDYV0=LMHLEN+LDYV0A*NYV0V
+         CALL AUBOS('DYV0',0,LDYV0,JDYV0,IGARB)
+         IF (IGARB.EQ.2) GO TO 120
+         IW(JDYV0+LMHCOL)=LDYV0A
+         IW(JDYV0+LMHROW)=NYV0V
+         DO 110 IDYV0=1,NYV0V
+            KDYV0=KROW(JDYV0,IDYV0)
+            IW(KDYV0+JDYVK1)=IW(KROW(KYV0V,IDYV0)+JYV0K1)
+            IW(KDYV0+JDYVK2)=IW(KROW(KYV0V,IDYV0)+JYV0K2)
+ 110     CONTINUE   
+ 120     CONTINUE
+      ENDIF
+C
+C++   Check that there are not too many V0's. If the total number of
+C++   vertices will excede 30, then the V0's are sorted in increasing
+C++   chi-squared.
+C
+      IF (NPYER+NYV0V.LE.30) THEN
+         DO 150 I=1,NYV0V
+  150    INDV0(I) = I
+      ELSE
+         DO 160 I=1,NYV0V
+  160    CHIV0(I) = RTABL(KYV0V,I,JYV0C2)
+         CALL SORTZV(CHIV0,INDV0,NYV0V,+1,0,0)
+      ENDIF
+C
+C++   Fill vertex bits corresponding to YV0V vertices.
+C
+      DO 200 I=1,NYV0V
+         IYV0V = INDV0(I)
+         IVER = NPYER + I
+         IF (IVER.GT.30) GOTO 200
+         DO 210 IDAU=0,1
+            IDTRA = ITABL(KYV0V,IYV0V,JYV0K1+IDAU)
+            IF (IDTRA.GT.NDTRA) GOTO 210
+            IND = KROW(KDTRA,IDTRA) + JDTRVB
+            CALL SBIT1(IW(IND),IVER)
+  210    CONTINUE
+  200 CONTINUE
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@d5 1
+a5 1
+C! Fill vertex bit pattern in DTRA.
+d7 2
+a8 1
+C     Author: Stephen Haywood      10-Feb-93
+d13 1
+d24 1
+a29 1
+C
+d66 16
+@
+

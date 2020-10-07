@@ -1,0 +1,353 @@
+#!/bin/sh
+#
+# stage tape out
+#       
+#       @(#)stageout	1.8  10/8/91  CERN CN-SW/DC Les Robertson
+#
+#  Copyright (C) 1990,1991 by CERN/CN/SW/DC
+#  All rights reserved
+#
+# First special version for Aleph
+#
+#	Defaults to 	-p alephdata
+#		    	-F F -L 32040
+#		    	-f ALDATA
+#		    	-u aleph
+#                       -link /aleph/data
+#		 filename VID.LABEL.FSEQ
+#		  fileprot -rwxrwxr-x       
+#			-l sl -q 1
+#
+# calling seqence:
+#
+# stageout 
+#   {tpwrite parameters}
+#         -v VSN [-V VID] [-g {CART|TAPE|SMCF}] [-l {sl|nl|al|blp}]
+#         [-d {6250|1600}] [-q sequence] [-f fileid] [-F record-format]
+#         [-L record-length] [-b block-size] [-N block-count] [-G]
+#         [-t retention-period] [-S server]
+#   {sfget parameters}
+#         [-p pool] [-u user] [-s size] [-r] [-link pathname] filename
+#   {assign parameter}
+#         [-U fun]
+#
+#    {other parameters}
+#         [ -x ]  debug mode
+#         [ -K ]  for Cray compatibility      (ignored)
+#         [ -S sbin ] for Cray compatibility  (ignored)
+#
+####
+# Example:  alstageout -v AC1663 ac1663.1.sl  
+####
+# Modifications: 
+#  26aug91: Clean up; add -G, -t, -S options
+# 09sep91: Default user taken from environment variable STAGE_USER
+# 30 oct 92 : add -link option for sfget    JC
+#
+# JC  1-03-95  5.0: stageout for the new stager
+#   
+# Hag 15-5-97  5.1: modifications for redwoods with -b 262144
+# Hag 08-7-97  5.2: modifications for redwoods removed, copies now transparent
+#              just -L 32040 needed, -b is ignored  and -l needed for filename
+# JC 26-1-01  6.0 : Add option C to copy file on tape
+###############################################################################
+#
+#
+# set defaults, initialise variables
+#
+VER="6.0"
+CMD="stageout"
+FILELOG="$ALEPH/log/stageout.log"
+FILELOGAUX="$ALEPH/log/stageoutaux.log"
+#FILELOG="/u/xu/aleph/log/stageout.log"
+REMOVE=TRUE
+VSNVID=FALSE
+FILENAME=""
+NODE=`uname -n`
+ALEPHPARM=""
+ALEPHLABEL="al"
+ALEPHSFGETPARM=""
+ALEPHCOPY="N"
+echo "$0 $*" >> $FILELOGAUX
+echo "ALEPH=$ALEPH" >> $FILELOGAUX
+if [ "x$STAGE_USER" != "x" ]
+  then
+    USER="-u $STAGE_USER"
+  else
+    USER=""
+fi
+#
+###############################################################################
+#
+#                  functions
+#
+###############################################################################
+#
+usage()
+{
+  echo "usage: $CMD [-v VSN] [-V VID] [-g {CART|TAPE|SMCF}] [-l {sl|nl|al|blp}]" 1>&2
+  echo "       [-d {6250|1600}] [-q sequence] [-f fileid] [-F record-format]" 1>&2
+  echo "       [-L record-length] [-b block-size] [-N block-count] [-G]" 1>&2
+  echo "       [-t retention-period] [-S server]" 1>&2
+  echo "       [-p pool] [-u user] [-s size] [-r] [-link pathname]" 1>&2
+  echo "       [-U fun]" 1>&2
+  echo "       filename" 1>&2
+  exit 5
+}
+###############################################################################
+#
+#
+#---------------------------------
+para=""
+LINKDIR="yes"
+parm=""
+optlink=""
+while [ $# -gt 0 ]
+do
+  case $1 in
+  -link)  if [ $2 != no -o $2 != NO ]
+             then
+                ALEPHLINKDIR="$2"
+             else 
+                ALEPHLINKDIR=""
+                DPMLINKDIR=""
+                LINKDIR="$2"
+          fi
+          shift
+          ;;
+  *) para="$para $1"
+      ;;
+  esac
+  shift
+done
+#
+# parse parameters
+#
+set -- `getopt xrGKv:V:g:l:d:q:f:F:L:C:b:N:t:S:p:u:s:U: $para`
+#
+while [ $# -gt 0 ]
+do
+  case $1 in
+  -x) set -x ;;
+  -G) parm="$parm $1" ;;
+  -r) parm="$parm $1" ;;
+  -K) REMOVE=FALSE; parm="$parm $1";;
+  --) ;;
+  -?)
+#     remaining options require a value
+      if [ $# -lt 2 ]
+        then
+          usage
+      fi
+      case $1 in 
+#     look for a tpread/tpwrite parameters
+      -v)  VSNVID=TRUE
+	   ALEPHFILENAME=$2
+	   CASTORTAPENAME=$2
+           ALEPHFILENAME=`echo $ALEPHFILENAME | tr "[A-Z]" "[a-z]"`
+           ALEPHPARM="$ALEPHPARM $1 $2"
+           shift
+           ;;
+      -V)  VSNVID=TRUE
+	   ALEPHFILENAME=$2
+	   CASTORTAPENAME=$2
+           ALEPHFILENAME=`echo $ALEPHFILENAME | tr "[A-Z]" "[a-z]"`
+           ALEPHPARM="$ALEPHPARM $1 $2"
+           shift
+           ;;
+      -l)  ALEPHLABEL="$2"
+#           ALEPHPARM="$ALEPHPARM $1 $2"
+           shift
+           ;;
+      -q)  ALEPHFSEQ="$2"
+           ALEPHPARM="$ALEPHPARM $1 $2"
+           shift
+           ;;
+      -f)  ALEPHFID="$1 $2"
+           ALEPHPARM="$ALEPHPARM $1 $2"
+           shift
+           ;;
+      -C)  ALEPHCOPY="$2"
+           shift
+           ;;
+      -F)  ALEPHRECFM="$1 $2"
+           ALEPHPARM="$ALEPHPARM $1 $2"
+           shift
+           ;;
+      -b)  ALEPHBLKSIZ="$1 $2"
+#           ALEPHPARM="$ALEPHPARM $1 $2"
+           shift
+           ;;
+      -L)  ALEPHBLRECL="$1 $2"
+           ALEPHPARM="$ALEPHPARM $1 $2"
+           shift
+           ;;
+#     and now sfget parameters
+      -p)  ALEPHPOOLNAME="$1 $2"	
+           ALEPHSFGETPARM="$ALEPHSFGETPARM $1 $2"
+           shift
+           ;;
+      -u)  USER="$1 $2"
+           ALEPHSFGETPARM="$ALEPHSFGETPARM $1 $2"
+           shift
+           ;;
+      -?)  parm="$parm $1 $2" 
+           shift
+           ;;
+      *)   parm="$parm $1 $2" ;;
+      esac
+      ;;
+# must be the filename
+  *)
+       if [ "$FILENAME" != "" ]
+         then
+           usage
+       fi
+       FILENAME=$1
+       ;;
+  esac
+  shift
+done
+
+# CASTOR software scheme
+if [ "$ALEPHCOPY" = "C" ]
+then
+     if [ "$OS" = "OSF1" ]
+     then
+        /afs/cern.ch/asis/packages/CASTOR/castor-1.2.4.6/alpha_dux40/usr.local/bin/stageupdc $FILENAME
+     else
+        /afs/cern.ch/asis/packages/CASTOR/castor-1.2.4.6/i386_redhat61/usr.local/bin/stageupdc $FILENAME
+     fi
+   exit 0
+else
+# SHIFT software scheme
+   if [ "$ALEPHCOPY" = "S" ]
+   then
+     if [ "$OS" = "OSF1" ]
+     then
+        /afs/cern.ch/asis/packages/CASTOR/castor-1.2.4.6/alpha_dux40/usr.local/bin/stageput $FILENAME
+     else
+        /afs/cern.ch/asis/packages/CASTOR/castor-1.2.4.6/i386_redhat61/usr.local/bin/stageput $FILENAME
+     fi
+      exit 0
+   fi
+fi
+#
+# parameters parsed - check that a vsn and filename were supplied
+#if [ -z "$ALEPHLABEL" ]
+#  then
+#       ALEPHLABEL="sl"
+#       ALEPHPARM="$ALEPHPARM -l sl"
+#  fi
+if [ -z "$ALEPHFSEQ" ]
+  then
+	ALEPHFSEQ="1"
+        ALEPHPARM="$ALEPHPARM -q 1"
+  fi
+if [ -z "$ALEPHFID" ]
+  then 
+	ALEPHPARM="$ALEPHPARM -f ALDATA"
+  fi
+if [ -z "$ALEPHRECFM" ]
+  then
+	ALEPHPARM="$ALEPHPARM -F F"
+  fi
+if [ -z "$ALEPHLRECL" ]
+  then
+	ALEPHPARM="$ALEPHPARM -L 32040"
+  fi
+if [ -z "$USER" ]
+  then
+	ALEPHSFGETPARM="$ALEPHSFGETPARM -u aleph"
+  fi
+if [ -z "$ALEPHPOOLNAME" ]
+  then
+	ALEPHSFGETPARM="$ALEPHSFGETPARM -p $ALSTOUT"
+  fi
+if [ -z "$ALEPHLINKDIR" ]
+  then
+        if [ "$LINKDIR" = "yes" ]
+           then
+ 	       ALEPHLINKDIR="$ALEPH/data"
+        fi
+  fi
+if [ -z "$FILENAME" ]
+  then
+       FILENAME="$ALEPHFILENAME.$ALEPHFSEQ.$ALEPHLABEL"
+  fi
+if [ -z "$FILENAME" -o "$VSNVID" = "FALSE" ]
+  then
+    echo $CMD: "{vsn or vid} and filename required" 1>&2
+    usage
+fi
+#
+#
+STAGESTAT1=-1
+STAGESTAT2=-1
+STAGESTAT3=-1
+STAGESTAT4=0
+USE=`id | cut -f2 -d"(" | cut -f1 -d")"`
+DATE_LOG=`date "+%Y %m %d %H:%M:%S"`
+DATE=`date`
+DATE=`echo $DATE | awk '{print $6,$2,$3,$4}'`
+
+CASTORTAPENAME=`echo $CASTORTAPENAME.$ALEPHFSEQ.$ALEPHLABEL | tr [a-z] [A-Z]`
+CASTORTAPENAME1=`echo $CASTORTAPENAME | awk '{print substr($0,1,1)}' | tr [a-z] [A-Z]`
+CASTORTAPENAME2=`echo $CASTORTAPENAME | awk '{print substr($0,1,2)}' | tr [a-z] [A-Z]`
+if [ "$CASTORTAPENAME2" = "ZD" ]
+then
+   CASTORDIR="/castor/cern.ch/aleph/data"
+else
+  if [ "$CASTORTAPENAME2" = "ZM" ]
+  then
+     CASTORDIR="/castor/cern.ch/aleph/mc"
+  else
+     CASTORDIR="/castor/cern.ch/aleph"
+  fi
+fi
+#echo "stageout $parm $ALEPHPARM $ALEPHSFGETPARM $ALEPHLINKDIR/$FILENAME" >> $FILELOGAUX
+if [ "$CASTORTAPENAME1" = "Z" ]
+then
+   echo stageout -M $CASTORDIR/$CASTORTAPENAME $ALEPHSFGETPARM $ALEPHLINKDIR/$FILENAME
+     if [ "$OS" = "OSF1" ]
+     then
+       /afs/cern.ch/asis/packages/CASTOR/castor-1.2.4.6/alpha_dux40/usr.local/bin/stageout -M $CASTORDIR/$CASTORTAPENAME $ALEPHSFGETPARM $ALEPHLINKDIR/$FILENAME
+        STAGESTAT1=$?
+     else
+        /afs/cern.ch/asis/packages/CASTOR/castor-1.2.4.6/i386_redhat61/usr.local/bin/stageout -M $CASTORDIR/$CASTORTAPENAME $ALEPHSFGETPARM $ALEPHLINKDIR/$FILENAME
+        STAGESTAT1=$?
+     fi
+else
+   stageout $parm $ALEPHPARM $ALEPHSFGETPARM $ALEPHLINKDIR/$FILENAME
+   STAGESTAT1=$?
+fi
+#echo stageout $parm $ALEPHPARM $ALEPHSFGETPARM $ALEPHLINKDIR/$FILENAME  
+
+PARM_LOG=`echo $ALEPHPARM | awk '{print $1 $2 " " $3 $4}'`
+DATE2=`echo $DATE | awk '{print $4}'`
+DATE1=`date`
+DATE1=`echo $DATE1 | awk '{print $4}'`
+DAYTIME=86400
+h1=`echo $DATE2 | awk -F: '{print $1}'`
+m1=`echo $DATE2 | awk -F: '{print $2}'`
+s1=`echo $DATE2 | awk -F: '{print $3}'`
+h1=`expr ${h1} \* 3600`
+m1=`expr ${m1} \* 60`
+SDATE=`expr ${h1} + ${m1} + ${s1}`
+h2=`echo $DATE1 | awk -F: '{print $1}'`
+m2=`echo $DATE1 | awk -F: '{print $2}'`
+s2=`echo $DATE1 | awk -F: '{print $3}'`
+h2=`expr ${h2} \* 3600`
+m2=`expr ${m2} \* 60`
+SDATE1=`expr ${h2} + ${m2} + ${s2}`
+ELAPSED=`expr ${SDATE1} - ${SDATE}`
+if [ $SDATE1 -lt $SDATE ]
+  then
+    ELAPSED=`expr ${DAYTIME} + ${ELAPSED}`
+fi
+he=`expr ${ELAPSED} / 3600 | awk -F. '{print $1}'`
+me=`expr ${ELAPSED} - 3600 \* ${he}`
+me=`expr ${me} / 60 | awk -F. '{print $1}'`
+se=`expr ${ELAPSED} - 3600 \* ${he} - 60 \* ${me}`
+echo "$DATE_LOG $he:$me:$se $USE $FILENAME $PARM_LOG rc=($STAGESTAT1) $VER $NODE">> $FILELOG
+exit $STAGESTAT1

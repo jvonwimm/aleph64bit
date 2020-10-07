@@ -1,0 +1,142 @@
+head	1.1;
+access;
+symbols
+	jul313_3:1.1
+	jul313_2:1.1
+	jul313_1:1.1
+	jul313:1.1
+	jul312_1:1.1
+	jul312:1.1
+	jul311:1.1
+	jul310_1:1.1
+	jul310:1.1
+	jul309_1:1.1
+	jul309:1.1
+	jul308_6:1.1
+	jul308_5:1.1
+	jul308_4:1.1
+	jul308_3:1.1
+	jul308_2:1.1
+	jul308_1:1.1
+	jul308:1.1
+	jul307_4:1.1
+	jul307_3:1.1
+	jul307_2:1.1
+	jul307_1:1.1
+	jul307:1.1
+	jul306_3:1.1
+	jul306_2:1.1
+	jul306_1:1.1
+	jul306:1.1
+	jul305_4:1.1
+	jul305_3:1.1
+	jul305_2:1.1
+	jul305_1:1.1
+	jul305:1.1
+	jul304_3:1.1
+	jul304_2:1.1
+	jul304_1:1.1
+	jul304:1.1
+	jul303_7:1.1
+	jul303_6:1.1
+	jul303_5:1.1
+	jul303_4:1.1
+	jul303_3:1.1
+	jul303_2_mc1:1.1
+	jul303_2:1.1
+	jul303_1_mc1:1.1
+	jul303_1:1.1
+	jul303_v:1.1
+	jul303:1.1
+	jul302_6:1.1
+	jul302_5:1.1
+	jul302_4:1.1
+	jul302_3:1.1
+	jul302_2:1.1
+	jul302_1:1.1
+	jul302:1.1
+	jul285_1:1.1
+	jul285:1.1
+	jul284_1:1.1
+	jul284:1.1
+	jul283_1:1.1
+	jul283:1.1
+	jul282_1:1.1
+	jul282:1.1
+	jul281_3:1.1
+	jul281_2:1.1
+	jul281_1:1.1
+	jul281:1.1
+	jul280_1:1.1
+	jul280:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.05.06.15.53.52;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@re-installed jul280 from the historian source because some routines were missing.
+@
+text
+@      SUBROUTINE VDRNDM(MXALN,EMAT,RVEC)
+C ----------------------------------------------------------------------
+C!  VDRNDM calculates a random vector RVEC of MXALN dimensions
+C!         depending on a MXALN by MXALN error matrix EMAT
+C!
+C - Author         Manoj Thulasidas  5-Nov-1994
+CKEY V_DECK VDET
+C
+C  Input :  MXALN  - dimension
+C           EMAT   - error matrix
+C
+C  Output : RVEC   - random vector
+C
+C -----------------------------------------------------------------------
+#ifndef DOC
+      INTEGER MXALN
+      REAL EMAT(MXALN,MXALN), RVEC(MXALN)
+
+      INTEGER LMAX
+      PARAMETER ( LMAX = 6 )
+      REAL EVAL(LMAX),EVEC(LMAX,LMAX),WORK(LMAX), VTMP(LMAX)
+      INTEGER IERR, MXBY2, I
+      IF (MXALN.GT.LMAX) THEN
+        CALL RERROR ('VDRNDM',1,'Dimension overflow')
+        RETURN
+      ENDIF
+C-- diagonalize the error matrix
+C-- MXALN = 6, the number of alignment parameters
+C-- EMAT is the input error matrix
+C-- EVAL contains the eigen values (=diagonal elements)
+C-- EVEC contains the eigen vectors as columns
+C-- IERR.NE.0 => goofed
+C-- WORK is a work area
+      CALL EISRS1(MXALN,MXALN,EMAT,EVAL,EVEC,IERR,WORK)
+CCC CHECK THE RETURN CODE HERE SOMETIME
+C-- WORK will be filled with MXALN normally dist ran vars
+      MXBY2 = MXALN/2
+      DO I = 1, MXBY2
+        CALL RANNOR(VTMP(I),VTMP(MXBY2+I))
+      ENDDO
+C-- scale work by sqrt of eigen values.  gets the random variables in
+C-- the eigen basis
+      DO I = 1, MXALN
+        WORK(I) = SQRT(EVAL(I))*VTMP(I)
+      ENDDO
+C-- go to the original basis.
+C-- [origanal] = [eigen basis][eigen vecs in rows]
+      CALL VMATR(WORK,EVEC,RVEC,MXALN,MXALN)
+      RETURN
+      END
+#endif
+@

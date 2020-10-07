@@ -1,0 +1,130 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.57.53;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.40;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.41;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE UCORR(ID,Y,X)
+      COMMON/HCS/KW(100)
+      REAL XW(1)
+      EQUIVALENCE (XW(1),KW(1))
+#include "bosmdl.h"
+#include "concom.h"
+      EQUIVALENCE (R,K),(S,L)
+      INTEGER IP1(10),IP2(10)
+      DATA    IP1    /1,8,64,512,4096,32768,262144,2097152,
+     +                16777216,134217728/
+      DATA    IP2    /7,56,448,3584,28672,229376,1835008,14680064,
+     +                117440512,939524096/
+
+      IF(IBS.LT.0.OR.ID.LT.0) GOTO 100
+      NA=ID
+      IF(IBS.EQ.0) THEN
+         IF(NA.GT.999999999) GOTO 100
+      ELSE
+         IF(NA.GT.99) GOTO 100
+         NA=NA+IBS
+      END IF
+
+   10 IND=MLINK(KW,'CORR',NA)
+      IF(IND.EQ.0) GOTO 200
+      N=KW(IND+21)
+      N=N+1
+      IF(N-316) 20,30,40
+   20 XW(IND+50+N+N-1)=Y
+      XW(IND+50+N+N)=X
+      GOTO 90
+   30 CALL CCOR(IND)
+   40 CONTINUE
+      NY=(Y-XW(IND+22))/XW(IND+23)
+      NX=(X-XW(IND+24))/XW(IND+25)
+      IF(NX.LT.0.OR.NX.GT.99) NX=-51
+      IF(NY.LT.0.OR.NY.GT.49) NY=-2
+      XW(IND+35)=AMIN1(XW(IND+35),Y)
+      XW(IND+36)=AMAX1(XW(IND+36),Y)
+      XW(IND+43)=AMIN1(XW(IND+43),X)
+      XW(IND+44)=AMAX1(XW(IND+44),X)
+      IF(NX+51.EQ.0.OR.NY+2.EQ.0) GOTO 90
+      KW(IND+NX+101)=KW(IND+NX+101)+1
+      KW(IND+NY+51)=KW(IND+NY+51)+1
+      YR=Y-XW(IND+33)
+      XR=X-XW(IND+34)
+      XW(IND+37)=XW(IND+37)+YR
+      XW(IND+38)=XW(IND+38)+XR
+      XW(IND+39)=XW(IND+39)+YR*YR
+      XW(IND+40)=XW(IND+40)+XR*XR
+      XW(IND+41)=XW(IND+41)+XR*YR
+      I=NX/10
+      J=NX-I*10
+      IJ=IND+201+NY*10+I
+      IF(IAND(KW(IJ),IP2(J+1)).NE.IP2(J+1)) KW(IJ)=KW(IJ)+IP1(J+1)
+      KW(IND+26)=KW(IND+26)+1
+   90 KW(IND+21)=N
+  100 RETURN
+  200 IND=MBANK(KW,'CORR',NA,700)
+      IF(IND.EQ.0) GOTO 100
+      IF(IBS.NE.0) THEN
+         KW(IND+1)=IHE(7)
+         KW(IND+2)=IHE(8)
+      END IF
+      GOTO 10
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK ucorr
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

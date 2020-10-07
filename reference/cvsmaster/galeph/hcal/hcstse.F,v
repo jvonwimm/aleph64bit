@@ -1,0 +1,188 @@
+head	1.3;
+access;
+symbols
+	gal309_3:1.3
+	gal309_2:1.3
+	gal309_1:1.3
+	gal309:1.3
+	gal308_2:1.3
+	gal308_1:1.3
+	gal308:1.3
+	gal307_2:1.3
+	gal307_1:1.3
+	gal307:1.3
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	98.07.03.14.47.32;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.06.29.16.22.57;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.21;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.22;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@gal307 look at galeph/news/news.h
+@
+text
+@*DK hcstse
+      SUBROUTINE HCSTSE(VTUB,IPOR,IMOD,ILAY,XTUB,YTUB,DYTUB,ITUB,NTUB)
+C ----------------------------------------------------
+C - F.Ranjard - 860529
+C-  mod by G.Catanesi 871021
+C - mod by F.Ranjard  890523 : do not keep negative tube #
+C!  mod by A.Venturi 980701 : allow one set of absolute coordinates
+C!  for each track segment: VTUB(100,3)
+C! - Fill the bank JDHCSE with the NTUB fired tubes with
+C!   numbers listed in ITUB from plane # IPLAN
+C
+C ------------------------------------------
+#ifndef DOC
+#include "jobcom.h"
+#include "bcs.h"
+#include "hcnamc.h"
+#include "hcsejj.h"
+#include "trkcom.h"
+      DIMENSION VTUB(3,*),XTUB(*),YTUB(*),DYTUB(*),ITUB(*)
+C
+#include "bmacro.h"
+C --------------------------------------------------------
+C
+      ND = NTUB*LHCSEA
+      IF (LFRWRD(JDHCSE) .LT. ND) THEN
+         ND = MAX (ND,IW(JDHCSE)/2)
+         CALL WBANK (IW,JDHCSE,IW(JDHCSE)+ND,*20)
+      ENDIF
+      KHCSE = KNEXT (JDHCSE)
+      DO 10 J = 1, NTUB
+         IF (ITUB(J) .LT. 0) GOTO 10
+         IW(KHCSE+1) = ITUB(J)
+         IW(KHCSE+2) = ILAY
+         IW(KHCSE+3) = IMOD
+         IW(KHCSE+4) = IPOR
+         ITADD = ITUB(J) + ILAY*1000+IMOD*100000+IPOR*10000000
+         IW(KHCSE+5) = ITADD
+         RW(KHCSE+6) = XTUB(J)
+         RW(KHCSE+7) = YTUB(J)
+         RW(KHCSE+8) = DYTUB(J)
+         RW(KHCSE+9) = VTUB(1,J)
+         RW(KHCSE+10) = VTUB(2,J)
+         RW(KHCSE+11) = VTUB(3,J)
+         IW(KHCSE+12) = ITRKEL(1)
+C
+         IW(JDHCSE+LMHROW) = IW(JDHCSE+LMHROW) + 1
+         KHCSE = KHCSE + LHCSEA
+ 10   CONTINUE
+      RETURN
+C
+C       not enough space to extend JDHCSE
+C
+   20 CONTINUE
+      CALL WDROP (IW,JDHCSE)
+      CALL ALTELL ('HCSTSE: not enough space to enlarge JDHCSE ',1,
+     &'NEXT')
+      RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+@
+text
+@d2 1
+a2 1
+      SUBROUTINE HCSTSE(VIN,IPOR,IMOD,ILAY,XTUB,YTUB,DYTUB,ITUB,NTUB)
+d7 2
+d19 1
+a19 1
+      DIMENSION VIN(*),XTUB(*),YTUB(*),DYTUB(*),ITUB(*)
+d41 3
+a43 3
+         RW(KHCSE+9) = VIN(1)
+         RW(KHCSE+10) = VIN(2)
+         RW(KHCSE+11) = VIN(3)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d9 2
+a10 1
+C ---------------------------------------------------------
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

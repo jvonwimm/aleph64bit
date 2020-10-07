@@ -1,0 +1,118 @@
+head	1.2;
+access;
+symbols
+	look25:1.2
+	look24:1.2
+	look23:1.2
+	look22:1.2
+	look21:1.2
+	look20:1.2
+	v15:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.04.18.09.07.11;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.09.15.50.29;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.09.15.50.30;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@change VAX to DEC.AND..NOT.UNIX ==> version 20
+
+ Modified Files:
+ 	lkevt.h lkfil.h lklast.h lkunpk.h version.h
+ Removed Files:
+	lookend.h
+@
+text
+@      SUBROUTINE LKSHOW (JTYP)
+C -----------------------------------------------------------
+C - Input  : JTYP /I = LKGTEVT return code
+C ----------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "lkevt.h"
+#include "lkfil.h"
+      DATA NEVEH,NRUNR,NRUNH/3*0/
+C -----------------------------------------------------------
+      IF (NEVEH.EQ.0) THEN
+         NEVEH = NAMIND('EVEH')
+         NRUNR = NAMIND('RUNR')
+         NRUNH = NAMIND('RUNH')
+      ENDIF
+C
+      ITYP = JTYP
+      IF (ITYP .EQ. 0) CALL LKGTEVR (ITYP)
+C
+      IF(ITYP .EQ.1) THEN
+        IEVTR = IW(IW(NEVEH)+6)
+        IRUNTR = IW(IW(NEVEH)+2)
+        WRITE(LOUT,*)' EVENT RECORD,    event:',IEVTR,' , run:',IRUNTR
+      ELSEIF(ITYP.EQ.2) THEN
+        IRUNTR = IW(IW(NRUNR)+2)
+        WRITE(LOUT,*)' RUN RECORD,    run:',IRUNTR
+      ELSEIF(ITYP.EQ.3) THEN
+        WRITE(LOUT,*)' UNKNOWN RECORD'
+      ENDIF
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+a1 2
+*DK lkshow
+      SUBROUTINE LKSHOW
+d3 1
+d9 1
+a9 1
+      DATA IOLD/0/
+d11 12
+a22 3
+      IF(IW(IW(3)-3).EQ.INTCHA('EVEH')) THEN
+        IEVTR = IW(IW(3)+6)
+        IRUNTR = IW(IW(3)+2)
+d24 2
+a25 2
+      ELSEIF(IW(IW(3)-3).EQ.INTCHA('RUNR')) THEN
+        IRUNTR = IW(IW(3)+2)
+d27 1
+a27 4
+      ELSEIF(IW(IW(3)-3).EQ.INTCHA('RUNH')) THEN
+        IRUNTR = IW(IW(3)+2)
+        WRITE(LOUT,*)' RUN RECORD,    run:',IRUNTR
+      ELSE
+@
+
+
+1.1.1.1
+log
+@import look 15
+@
+text
+@@

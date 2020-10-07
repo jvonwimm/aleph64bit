@@ -1,0 +1,160 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.45.15;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.45.16;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE YPRVER(XVER,KBIT,LDMP)
+C----------------------------------------------------------*
+C!    Project vertex into VDET/ITC/TPC bit pattern
+CKEY YTOP
+C!    Author :     W. Manner 25/01/93
+C!
+C!    Description
+C!    ===========
+C!     Given a vertex with coordinates XVER(3) define a bit in
+C!     INTEGER array KBIT(31) depending on the vertex position
+C      bit 1: before VDET layer 1
+C      bit 2: between VDET layer 1 and 2
+C      bit 3: between VDET layer 2 and ITC or closest to ITC  layer 1
+C      bit 2+I, I=2,8: closest to ITC layer I
+C      bit 10+I, I=1,21: closest to TPC layer I
+C----------------------------------------------------------*
+#ifndef DOC
+      SAVE
+      REAL XVER(3),ZARR(31)
+      INTEGER IBIT(31)
+      LOGICAL LDMP
+      DATA ZARR/ 6.,11.5,
+     +   16.10, 17.20, 18.70, 19.80,
+     +   21.67, 23.00, 24.68, 26.00,
+     +   39.87, 46.27, 52.67, 59.00, 65.47,
+     +   71.87, 78.27, 84.67, 91.07,100.22,
+     +   106.62,113.02,119.40,125.82,132.22,
+     +   138.62,145.02,151.42,157.82,164.22,170.62 /
+C -----------------------------------------------------------
+      CALL UZERO(IBIT,1,31)
+      KBIT=0
+      RAD=SQRT(XVER(1)**2+XVER(2)**2)
+      DIS=10000.
+C For VDET the logic is different
+      IF(RAD.LT.ZARR(2)) KBIT=2
+      IF(RAD.LT.ZARR(1)) KBIT=1
+      IF(KBIT.NE.0) GO TO 100
+      DO I=3,31
+        IF(ABS(RAD-ZARR(I)).LT.DIS) THEN
+          DIS=ABS(RAD-ZARR(I))
+          KBIT=I
+        ENDIF
+        IF(ABS(RAD-ZARR(I)).GT.DIS.AND.KBIT.GT.0) GO TO 100
+      ENDDO
+  100 CONTINUE
+      IBIT(KBIT)=1
+      IF(LDMP)
+     +  WRITE(6,'('' VERTX'',''   '',I2,8X,I2,8X,4X,8I2,4X,21I2)') IBIT
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

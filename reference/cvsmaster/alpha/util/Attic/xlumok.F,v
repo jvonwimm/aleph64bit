@@ -1,0 +1,110 @@
+head	1.2;
+access;
+symbols
+	alpha122_41:1.1.1.1
+	alpha122_40:1.1.1.1
+	alpha122_39:1.1.1.1
+	alpha122_38:1.1.1.1
+	alpha122_37:1.1.1.1
+	alpha122_36:1.1.1.1
+	alpha122_35:1.1.1.1
+	alpha122_34:1.1.1.1
+	alpha122_33:1.1.1.1
+	alpha122_32:1.1.1.1
+	alpha122_31:1.1.1.1
+	alpha122_30:1.1.1.1
+	alpha122_29:1.1.1.1
+	alpha122_28:1.1.1.1
+	alpha122_27:1.1.1.1
+	alpha122_26:1.1.1.1
+	alpha122_25:1.1.1.1
+	alpha122_24:1.1.1.1
+	alpha122_23:1.1.1.1
+	alpha122_22:1.1.1.1
+	alpha122_21:1.1.1.1
+	alpha122_20:1.1.1.1
+	alpha122_19:1.1.1.1
+	alpha122_18:1.1.1.1
+	alpha122_17:1.1.1.1
+	alpha122_16:1.1.1.1
+	alpha122_15:1.1.1.1
+	alpha122_14:1.1.1.1
+	alpha122_13:1.1.1.1
+	alpha122_12:1.1.1.1
+	alpha122_11:1.1.1.1
+	alpha122_10:1.1.1.1
+	alpha122_9:1.1.1.1
+	alpha122_8:1.1.1.1
+	alpha122_6:1.1.1.1
+	alpha122_5:1.1.1.1
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	98.01.19.09.01.07;	author boucrot;	state dead;
+branches;
+next	1.1;
+
+1.1
+date	96.03.14.12.42.24;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.42.25;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@      LOGICAL FUNCTION XLUMOK(DUMMY)
+CKEY XLUMOK TRIG /USER
+C----------------------------------------------------------------------
+C! Checks HV status, enabled triggers, and t0 synchronization, both
+C! for SICAL and LCAL
+C! Called from user
+C!    Author:     H. Meinhard       26-Apr-1993
+C!
+C!    Output:     - XLUMOK  /L      both LCAL and SICAL okay, or SICAL
+C!                                  not existing
+C!
+C!    Description
+C!    ===========
+C!    see routine XLSLUM
+C---------------------------------------------------------------------
+#ifndef DOC
+      LOGICAL XLUM,SLUM,LLUM
+      CALL XLSLUM(XLUM,SLUM,LLUM)
+      XLUMOK = XLUM
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

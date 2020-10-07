@@ -1,0 +1,118 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.29.16.08.52;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.00;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.01;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+@
+text
+@*DK cashem
+      FUNCTION CASHEM(S,INIT)
+C -----------------------------------------------------------
+CKEY CALO GEANTINO E.M.
+C - M.N.Minard
+C!
+C - Input   : INIT   / I = initialisation flag
+C           : S      / R = track length
+C - Output  : CASHEM / R =
+C ------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "capano.h"
+C -------------------------------------------------------------
+      IF( INIT .EQ.  0) ALONEN = EMBETA ** EMALFA / GAMMA( EMALFA ) *
+     +EMGNRJ
+C ----- Parametrisation longitudinale de galeph normalisee.
+      IF( S .LE. . 0001) GO TO 10
+      X = EMBETA * S
+      A = -X +  EMALM1  * ALOG(S)
+      IF(ABS(A) .GT. 100.) GO TO 10
+      CASHEM = EXP(A) * ALONEN
+      GO TO 20
+   10 CASHEM = 0.
+   20 IF (CASHEM .LT. 0.00001) CASHEM = 0.00001
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 8
+d14 1
+a14 1
+C
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

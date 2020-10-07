@@ -1,0 +1,68 @@
+head	1.2;
+access;
+symbols
+	mini202_4:1.1
+	mini202_2:1.1
+	mini202_1:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	98.11.11.10.42.39;	author flr;	state dead;
+branches;
+next	1.1;
+
+1.1
+date	98.10.27.11.48.46;	author jachol;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@remove bprint word mindel minalgo
+@
+text
+@      FUNCTION WORD(STRING,N)
+*     -----------------------
+ 
+* Find Nth word in STRING. Note limitations on lengths.
+ 
+      CHARACTER*80 STRING
+      CHARACTER*20 WORD
+      CHARACTER*1  CHAR,LAST
+ 
+      WORD = ' '
+      IWORD = 0
+      J = 0
+      LAST = ' '
+      DO I=1,LNBLNK(STRING)
+         CHAR = STRING(I:I)
+         IF (CHAR.EQ.' ') THEN
+            IF (IWORD.EQ.N) RETURN
+         ELSE
+            IF (LAST.EQ.' ') IWORD = IWORD + 1
+            IF (IWORD.EQ.N) THEN
+               J = J + 1
+               IF (J.GT.20) RETURN
+               WORD(J:J) = CHAR
+            ENDIF
+         ENDIF
+         LAST = CHAR
+      ENDDO
+ 
+      END
+@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@@

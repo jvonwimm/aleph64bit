@@ -1,0 +1,169 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.44.53;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.44.54;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE X1HIST
+C ----------------------------------------------------------------------
+C.
+C. - Author   : A. Putzer  - 86/08/08  FOR GALEPH 13.0
+C. - Modified : A. Putzer  - 87/04/04  FOR GALEPH 17.0
+C.
+C.
+C! - Fill the Level1  Trigger Histograms
+C.
+C.
+C.
+C. - Called by      X1TRIG                        from this .HLB
+C. - Calls          HF1                           from HBOOK
+C.
+#ifndef DOC
+      SAVE
+C.
+#include "alcons.h"
+#include "x1tcom.h"
+#include "bcs.h"
+      LOGICAL BTEST
+      DIMENSION IEQUI(2)
+      EQUIVALENCE (IEQUI ,ITRG12)
+C.
+#include "bmacro.h"
+C ----------------------------------------------------------------------
+C.
+C.
+C  - Fill accepted trigger segments for each trigger
+C.
+      DO 101 K=1,NPHTR
+        IF(IEQUI(2*K).EQ.0.AND.IEQUI(2*K-1).EQ.0)  GOTO 101
+        DO 102 L=1,NFSEG
+          IF (L.GT.NBITVW) THEN
+            N  = 2*K - 1
+            IS = L - NBITVW - 1
+          ELSE
+            N  = 2*K
+            IS = L - 1
+          ENDIF
+          IF(BTEST(IEQUI(N),IS)) CALL HF1(1100+K,FLOAT(L),1.)
+ 102    CONTINUE
+ 101  CONTINUE
+C
+C -  Fill physics trigger bits
+C
+      DO 111 L=1,NPHTR
+        IF(BTEST(NTRBIT,L-1)) CALL HF1(1111,FLOAT(L),1.)
+ 111  CONTINUE
+C
+C -  Fill total energy values
+C
+      DO 121 L=1,NTOEV
+       CALL HF1(1120+L,FLOAT(IECTTE(L))/1000.,1.)
+       CALL HF1(1124+L,FLOAT(IHCTTE(L))/1000.,1.)
+  121 CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

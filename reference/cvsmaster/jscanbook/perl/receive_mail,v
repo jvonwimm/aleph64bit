@@ -1,0 +1,302 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	V0060:1.1.1.1
+	V0059:1.1.1.1
+	V0058:1.1.1.1
+	V0057:1.1.1.1
+	V0056:1.1.1.1
+	V0055:1.1.1.1
+	V0054:1.1.1.1
+	V0053:1.1.1.1
+	V0052:1.1.1.1
+	V0051:1.1.1.1
+	V0050:1.1.1.1
+	V0049:1.1.1.1
+	V0048:1.1.1.1
+	V0047:1.1.1.1
+	V0046:1.1.1.1
+	V0045:1.1.1.1
+	V0044:1.1.1.1
+	V0043:1.1.1.1
+	V0042:1.1.1.1
+	V0041:1.1.1.1
+	V0040:1.1.1.1
+	V0039:1.1.1.1
+	V0038:1.1.1.1
+	V0037:1.1.1.1
+	V0036:1.1.1.1
+	V0035:1.1.1.1
+	V0034:1.1.1.1
+	V0033:1.1.1.1
+	V0032:1.1.1.1
+	V0031:1.1.1.1
+	V0030:1.1.1.1
+	V0029:1.1.1.1
+	V0028:1.1.1.1
+	V0027:1.1.1.1
+	V0026:1.1.1.1
+	V0025:1.1.1.1
+	V0024:1.1.1.1
+	V0023:1.1.1.1
+	V0022:1.1.1.1
+	V0021:1.1.1.1
+	V0020:1.1.1.1
+	V0019:1.1.1.1
+	V0018:1.1.1.1
+	V0017:1.1.1.1
+	V0016:1.1.1.1
+	V0015:1.1.1.1
+	V0014:1.1.1.1
+	V0013:1.1.1.1
+	V0000:1.1.1.1
+	V0001:1.1.1.1
+	v1:1.1.1.1
+	jacotf:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2000.03.01.10.29.43;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	2000.03.01.10.29.43;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#!/usr/local/bin/perl -w
+#
+# Receive the incoming mail and save it into a "savmail"
+# directory. 
+#
+# In case of any problem write the incoming mail into the
+# /aleph/scweek/... directory
+# If it's not possible forward the incoming mail to the System
+# Manager
+#***********************************************************************
+#***********************************************************************
+# Define the main directory
+$main_dir = "/afs/cern.ch/user/a/alsoft/";
+#####$main_dir = "/afs/cern.ch/user/j/jacotf/alsoft/";
+#
+# Define the System Manager Mailing address
+$syst_manager = "Jacques.Boucrot\@@cern.ch,Francoise.Loverre\@@cern.ch";
+#####$syst_manager = "Francoise.Loverre\@@cern.ch";
+#
+# Store the quota commands quota into local variables
+$quota_command_1 = "/usr/local/bin/vos exam user.alsoft | grep On-line"; 
+$quota_command_2 = "/usr/local/bin/vos exam user.alsoft | grep MaxQuota"; 
+#
+# Define a limit for free quota
+$alarm_quota = 5000;
+#####$alarm_quota = 74000;
+#
+# If any problem occurs the incoming mail will be written onto the 
+# /aleph/scweek/... directory - Define it
+$scweek_dir = "/aleph/scweek/alsoft/savmail/";
+#####$scweek_dir = "/aleph/scweek/jacotf/savmail/";
+#
+#***********************************************************************
+#***********************************************************************
+#
+######  Define some local variables  ##########
+# On which machine are we running ?
+$machine = `uname -n`;
+#
+# Define a directory where to write the incoming mail
+$sav_mail_dir = $main_dir . "savmail/";
+#
+# Store the full name and base name of this Perl script into local variables
+$script_file = $0;
+#
+# Store the current process PID number into a local variable
+$pid_num = $$;
+#
+# In case of errors during the execution - Define a message subject 
+$subj_message = " In ALSOFT - From perl program $script_file ";
+#
+# Define the file name of the file to save
+$sav_name = "savtemp." . $pid_num . "_" . time();
+#
+# In any problem occurs an error flag is set
+$error_from_script = 0;
+#
+######  Call the routine CHECK_QUOTA
+&CHECK_QUOTA;
+#
+# If quota is not ok the incoming mail will be written onto the 
+# directory scweek_dir
+if ($err_check_quota ne 0) {
+    $error_from_script = 1;
+    &WRITE_SCWEEK($scweek_dir,$sav_name);
+}
+#
+# Check if the savmail directory exists
+if (! -d $sav_mail_dir) {
+    $error_from_script = 1;
+    $mail_line = " ******** Directory $sav_mail_dir does not exist !! \n";
+    push(@@file_mail,$mail_line); 
+    &WRITE_SCWEEK($scweek_dir,$sav_name);
+}
+#
+# Open the file to write the incoming mail
+$sav_file = $sav_mail_dir . $sav_name;
+if (!open(BUFMAIL, "> $sav_file")) {
+    $error_from_script = 1;
+    $mail_line = " ******** Could not open file $sav_file in write mode !! \n";
+    push(@@file_mail,$mail_line); 
+    &WRITE_SCWEEK($scweek_dir,$sav_name);
+}
+#
+# Read the incoming mail and write it onto the defined file
+while (<STDIN>) {
+    $linin = $_;
+    print BUFMAIL $linin;
+}
+close BUFMAIL;
+#
+#
+##
+## 
+sub CHECK_QUOTA {
+# Check free space 
+#
+  $err_check_quota = 0;
+#
+# Quota used
+  $quota_line = `$quota_command_1`;
+  @@fields = split(/\s+/,$quota_line);
+  $quota_used = $fields[3];
+#
+# Quota assigned
+  $quota_line = `$quota_command_2`;
+  @@fields = split(/\s+/,$quota_line);
+  $quota_assigned = $fields[2];
+#
+# Check if free quota is sufficient
+  $quota_free = $quota_assigned - $quota_used;
+  if ($quota_free < $alarm_quota) {
+      $mail_line = " ******** Only $quota_free K free !! \n";
+      push(@@file_mail,$mail_line); 
+      $err_check_quota = 1;
+  }
+  return $err_check_quota;
+#
+# End of routine CHECK_QUOTA
+#
+}
+#
+##
+##
+sub WRITE_SCWEEK { 
+# Check if a the directory scweek exists
+# If no, must forward the incoming mail to the system Manager 
+my($dirname,$filname)= @@_;
+  $mail_line = " Try to write the incoming mail onto the directory $scweek_dir \n";
+  push(@@file_mail,$mail_line); 
+  if (! -d $dirname) {
+      $error_from_script = 1;
+      $mail_line = " ******** Directory $dirname does not exist !! \n";
+      push(@@file_mail,$mail_line); 
+      &FORWARD_MESSAGE;
+  }
+#
+# Open the file to write the incoming mail
+  $file_name = $dirname . $filname ;
+  if (!open(BUFMAIL, "> $file_name")) {
+      $error_from_script = 1;
+      $mail_line = " ********* Could not open file $file_name in write mode !! \n";
+      push(@@file_mail,$mail_line); 
+      &FORWARD_MESSAGE;
+}
+#
+# Read the incoming mail and write it onto the defined file
+  while (<STDIN>) {
+      $linin = $_;    
+      print BUFMAIL $linin;
+  }
+  close BUFMAIL;
+#
+  $mail_line = " Incoming mail has be written onto the directory $scweek_dir on $machine \n";
+  push(@@file_mail,$mail_line); 
+#
+&EXIT;
+#
+# End of routine WRITE_SCWEEK
+#
+}
+##
+##
+sub FORWARD_MESSAGE {
+# Forward the incoming mail to the System Manager 
+#
+  $mail_line = " NB: Incoming mail not saved - You can find it bellow:  \n\n";
+  push(@@file_mail,$mail_line);
+#
+  while (<STDIN>) { push (@@file_mail,$_); }
+#
+  &EXIT;
+#
+# End of routine FORWARD_MESSAGE
+}
+##
+##
+sub SEND_MAIL { 
+# Send a mail to the system Manager
+  open (MAIL, "| mailx -s \"$subj_message\" $syst_manager");
+  print MAIL <<EOT;
+  @@file_mail
+EOT
+#
+  close MAIL;
+#
+# End of routine SEND_MAIL
+}
+##
+##
+sub EXIT {
+# If any error occured inform the System Manager 
+  if ($error_from_script ne 0) { &SEND_MAIL; }
+# 
+exit;
+#
+# End of routine EXIT
+}
+##
+##
+
+
+
+
+
+
+
+
+
+
+
+@
+
+
+1.1.1.1
+log
+@ import jscanbook
+@
+text
+@@

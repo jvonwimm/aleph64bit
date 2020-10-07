@@ -1,0 +1,108 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.07.14.02.11;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.12;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK ehtran
+      SUBROUTINE EHTRAN (XV,YV,ZV,UV,VV,WV,X,Y,Z,U,V,W)
+C.----------------------------------------------------------------
+C R.CLIFFT
+C! Towards local coordinates
+C
+C.----------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "trkcom.h"
+C
+      X = TRKELE(18)*(XV-TRKELE(15))  +
+     1    TRKELE(19)*(YV-TRKELE(16))  +
+     2    TRKELE(20)*(ZV-TRKELE(17))
+      Y = TRKELE(21)*(XV-TRKELE(15))  +
+     1    TRKELE(22)*(YV-TRKELE(16))  +
+     2    TRKELE(23)*(ZV-TRKELE(17))
+      Z = TRKELE(24)*(XV-TRKELE(15))  +
+     1    TRKELE(25)*(YV-TRKELE(16))  +
+     2    TRKELE(26)*(ZV-TRKELE(17))
+      U = TRKELE(18)*UV  +
+     1    TRKELE(19)*VV  +
+     2    TRKELE(20)*WV
+      V = TRKELE(21)*UV  +
+     1    TRKELE(22)*VV  +
+     2    TRKELE(23)*WV
+      W = TRKELE(24)*UV  +
+     1    TRKELE(25)*VV  +
+     2    TRKELE(26)*WV
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

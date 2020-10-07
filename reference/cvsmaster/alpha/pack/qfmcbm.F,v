@@ -1,0 +1,281 @@
+head	1.4;
+access;
+symbols
+	alpha126_22:1.4
+	alpha126_21:1.4
+	alpha126_20:1.4
+	alpha126_19:1.4
+	alpha126_18:1.4
+	alpha126_17:1.4
+	alpha126_16:1.4
+	alpha126_15:1.4
+	alpha126_14:1.4
+	alpha126_13:1.4
+	alpha126_12:1.4
+	alpha126_11:1.4
+	alpha126_10:1.4
+	alpha126_09:1.4
+	alpha126_08:1.4
+	alpha126_07:1.4
+	alpha126_06:1.4
+	alpha126_05:1.4
+	alpha126_04:1.4
+	alpha126_03:1.4
+	alpha126_02:1.4
+	alpha126_1:1.4
+	alpha125_17:1.4
+	alpha125_16:1.4
+	alpha125_15:1.4
+	alpha125_14:1.4
+	alpha125_13:1.4
+	alpha125_12:1.4
+	alpha125_11:1.4
+	alpha125_10:1.4
+	alpha125_09:1.4
+	alpha125_08:1.4
+	alpha125_07:1.4
+	alpha125_06:1.4
+	alpha125_05:1.4
+	alpha125_04:1.4
+	alpha125_03:1.4
+	alpha125_02:1.4
+	alpha125_01:1.4
+	alpha124_19:1.4
+	alpha125:1.4
+	alpha124_18:1.4
+	alpha124_17:1.4
+	alpha124_16:1.4
+	alpha124_15:1.4
+	alpha124_14:1.4
+	alpha124_13:1.4
+	alpha124_12:1.4
+	alpha124_11:1.4
+	alpha124_10:1.4
+	alpha124_09:1.4
+	alpha124_08:1.4
+	alpha124_07:1.4
+	alpha124_7:1.4
+	alpha124_06:1.4
+	alpha124_05:1.4
+	alpha124_04:1.4
+	alpha124_03:1.4
+	alpha124_02:1.4
+	alpha124_01:1.4
+	alpha124:1.4
+	alpha123_12:1.4
+	alpha123_11:1.3
+	alpha123_10:1.3
+	alpha123_9:1.3
+	alpha123_8:1.3
+	alpha123_7:1.3
+	alpha123_6:1.3
+	alpha123_5:1.3
+	alpha123_4:1.3
+	alpha123_3:1.3
+	alpha123_2:1.3
+	alpha123:1.3
+	alpha122_48:1.3
+	alpha122_47:1.3
+	alpha122_46:1.3
+	alpha122_45:1.3
+	alpha122_44:1.3
+	alpha122_43:1.3
+	alpha122_42:1.3
+	alpha122_41:1.3
+	alpha122_40:1.3
+	alpha122_39:1.3
+	alpha122_38:1.3
+	alpha122_37:1.3
+	alpha122_36:1.3
+	alpha122_35:1.3
+	alpha122_34:1.3
+	alpha122_33:1.3
+	alpha122_32:1.3
+	alpha122_31:1.3
+	alpha122_30:1.3
+	alpha122_29:1.3
+	alpha122_28:1.3
+	alpha122_27:1.3
+	alpha122_26:1.3
+	alpha122_25:1.3
+	alpha122_24:1.3
+	alpha122_23:1.3
+	alpha122_22:1.3
+	alpha122_21:1.3
+	alpha122_20:1.3
+	alpha122_19:1.3
+	alpha122_18:1.2
+	alpha122_17:1.2
+	alpha122_16:1.2
+	alpha122_15:1.2
+	alpha122_14:1.2
+	alpha122_13:1.2
+	alpha122_12:1.2
+	alpha122_11:1.2
+	alpha122_10:1.2
+	alpha122_9:1.2
+	alpha122_8:1.2
+	alpha122_6:1.2
+	alpha122_5:1.2
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.4
+date	99.03.15.08.01.11;	author boucrot;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.01.16.09.06.06;	author boucrot;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.06.27.10.49.52;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.03.14.12.41.42;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.41.43;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE QFMCBM
+CKEY FILL MASKS MC /INTERNAL
+C-----------------------------------------------------------------------
+C! Fill bit masks
+C!called from QFILMC
+C!                                                   H.Albrecht 27.11.88
+C!                                Modified           E.Blucher  02.02.93
+C!                                Add ENTRY QSMCTM   D.Casper   09.01.97
+C!                                to set single particles (QUFSIM)
+C!                  protection added for mothers     S.Thompson 24.02.99
+C-----------------------------------------------------------------------
+#ifndef DOC
+      SAVE IERR
+#include "qcdesh.h"
+      DATA IERR /0/
+C-----------------------------------------------------------------------
+C
+      NBIT = 0
+      NWRD = 0
+      JQVEC = KOQVEC + KFMCT * KCQVEC
+C
+      DO 20 ITK=KFMCT,KLMCT
+        jmoth1 = -1
+        IF (IW(JQVEC+JQVEND) .NE. 0)  GO TO 20
+        IF (NBIT .LT. 32)  THEN
+          NBIT = NBIT + 1
+        ELSE
+          NBIT = 1
+          NWRD = NWRD + 1
+          IF (NWRD .GE. KLOCKM)  GO TO 80
+        ENDIF
+        IW(JQVEC+JQVEBM+NWRD) = KBIT(NBIT)
+        JMOTH = JQVEC
+   10   IF (IW(JMOTH+JQVENO) .EQ. 0)  GO TO 20
+        JMOTH = KOQVEC+IW(KOQLIN+IW(JMOTH+JQVEOL)+1)*KCQVEC
+        IF (JMOTH.LE.0.OR.JMOTH.GT.IW(12))  GO TO 90
+        if(jmoth.eq.jmoth1) then
+          write(iw(6),*) 'QFMCBM looping problem at track',itk,jmoth1
+          write(iw(6),*) 'QFMCBM run/event', krun,kevt
+          go to 20
+        endif
+        IW(JMOTH+JQVEBM+NWRD) = IOR (IW(JMOTH+JQVEBM+NWRD), KBIT(NBIT))
+        jmoth1 = jmoth
+        GO TO 10
+C
+   20 JQVEC = JQVEC + KCQVEC
+C
+      GO TO 90
+C
+      ENTRY QSMCTM(ITK1)
+
+      JQVEC = KOQVEC + ITK1 * KCQVEC
+      IF (IW(JQVEC+JQVEND) .NE. 0)  GO TO 90
+      IF (NBIT .LT. 32)  THEN
+        NBIT = NBIT + 1
+      ELSE
+        NBIT = 1
+        NWRD = NWRD + 1
+        IF (NWRD .GE. KLOCKM)  GO TO 80
+      ENDIF
+      IW(JQVEC+JQVEBM+NWRD) = KBIT(NBIT)
+      JMOTH = JQVEC
+   30 IF (IW(JMOTH+JQVENO) .EQ. 0)  GO TO 90
+      JMOTH = KOQVEC+IW(KOQLIN+IW(JMOTH+JQVEOL)+1)*KCQVEC
+      IF (JMOTH.LE.0.OR.JMOTH.GT.IW(12))  GO TO 90
+      IW(JMOTH+JQVEBM+NWRD) = IOR (IW(JMOTH+JQVEBM+NWRD), KBIT(NBIT))
+      GO TO 30
+C
+C       more than 448 non-decaying MC objects
+C
+   80 IERR = IERR + 1
+      IF (IERR .GT. 10)  GO TO 90
+      CALL QWMESS ('_QFMCBM_ Max. number of LOCK bits exceeded')
+C
+   90 END
+#endif
+@
+
+
+1.3
+log
+@*** empty log message ***
+@
+text
+@a0 1
+
+d10 1
+d23 1
+d37 5
+d43 1
+@
+
+
+1.2
+log
+@alpha122_5 taken from alws
+@
+text
+@d1 1
+d9 2
+d42 19
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d32 1
+@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

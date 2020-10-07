@@ -1,0 +1,78 @@
+      SUBROUTINE MINPGA
+C
+CKEY MDST /INTERNAL
+C-----------------------------------------------------------------------
+C! Fill PGAC bank from DGAC.
+C
+C     Author: Agnieszka Jacholkowska    17-Oct-94
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+C
+      PARAMETER (AFACTM=10000.,DFACTM=10000.,EFACTM=1000.)
+#include "pgacjj.h"
+#include "dgacjj.h"
+
+C!    set of intrinsic functions to handle BOS banks
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+C
+C++   Pick up DGAC bank.
+C
+      KDGAC = NLINK('DGAC',0)
+      IF (KDGAC.LE.0) RETURN
+      NDGAC = LROWS(KDGAC)
+      IF (NDGAC.LE.0) RETURN
+C
+C++   Create PGAC bank.
+C
+      NPGAC = NDGAC
+      LEN = LMHLEN + LPGACA * NDGAC
+      CALL AUBOS('PGAC',0,LEN, KPGAC,IGARB)
+      CALL BLIST(IW,'S+','PGAC')
+      IF (IGARB.GE.2) THEN
+         RETURN
+      ELSE IF (IGARB.NE.0) THEN
+         KDGAC = NLINK('DGAC',0)
+      ENDIF
+      IW(KPGAC+LMHCOL) = LPGACA
+      IW(KPGAC+LMHROW) = NDGAC
+C
+C++   Fill PGAC bank.
+C
+      DO 100 I=1,NDGAC
+         RW(KROW(KPGAC,I)+JPGAEC) = FLOAT(ITABL(KDGAC,I,JDGAEC))/EFACTM
+         RW(KROW(KPGAC,I)+JPGATC) = FLOAT(ITABL(KDGAC,I,JDGATC))/AFACTM
+         RW(KROW(KPGAC,I)+JPGAPC) = FLOAT(ITABL(KDGAC,I,JDGAPC))/AFACTM
+         RW(KROW(KPGAC,I)+JPGAR1) = FLOAT(ITABL(KDGAC,I,JDGAR1))/1000.
+         RW(KROW(KPGAC,I)+JPGAR2) = FLOAT(ITABL(KDGAC,I,JDGAR2))/1000.
+         RW(KROW(KPGAC,I)+JPGAF4) = FLOAT(ITABL(KDGAC,I,JDGAF4))/1000.
+         MDIST = ITABL(KDGAC,I,JDGADM)
+         IF (MDIST.EQ.-1) MDIST = +99990
+         RW(KROW(KPGAC,I)+JPGADM) = FLOAT(MDIST)/10.
+         IW(KROW(KPGAC,I)+JPGAST) = ITABL(KDGAC,I,JDGAST)
+         IW(KROW(KPGAC,I)+JPGAQU) = ITABL(KDGAC,I,JDGAQU)
+         RW(KROW(KPGAC,I)+JPGAQ1) = FLOAT(ITABL(KDGAC,I,JDGAQ1))/100.
+         RW(KROW(KPGAC,I)+JPGAQ2) = FLOAT(ITABL(KDGAC,I,JDGAQ2))/100.
+         RW(KROW(KPGAC,I)+JPGAM1) = FLOAT(ITABL(KDGAC,I,JDGAM1))/100.
+         RW(KROW(KPGAC,I)+JPGAM2) = FLOAT(ITABL(KDGAC,I,JDGAM2))/100.
+         RW(KROW(KPGAC,I)+JPGAMA) = FLOAT(ITABL(KDGAC,I,JDGAMA))/EFACTM
+         RW(KROW(KPGAC,I)+JPGAER) = FLOAT(ITABL(KDGAC,I,JDGAER))/EFACTM
+         RW(KROW(KPGAC,I)+JPGATR) = FLOAT(ITABL(KDGAC,I,JDGATR))/AFACTM
+         RW(KROW(KPGAC,I)+JPGAPR) = FLOAT(ITABL(KDGAC,I,JDGAPR))/AFACTM
+
+         RW(KROW(KPGAC,I)+JPGAEF) = FLOAT(ITABL(KDGAC,I,JDGAEF))/AFACTM
+         RW(KROW(KPGAC,I)+JPGAGC) = FLOAT(ITABL(KDGAC,I,JDGAGC))/AFACTM
+         RW(KROW(KPGAC,I)+JPGAZS) = FLOAT(ITABL(KDGAC,I,JDGAZS))/AFACTM
+         RW(KROW(KPGAC,I)+JPGAPL) = FLOAT(ITABL(KDGAC,I,JDGAPL))/AFACTM
+         RW(KROW(KPGAC,I)+JPGAPH) = FLOAT(ITABL(KDGAC,I,JDGAPF))/AFACTM
+         IW(KROW(KPGAC,I)+JPGAPN) = ITABL(KDGAC,I,JDGAPN)
+         IW(KROW(KPGAC,I)+JPGAFA) = ITABL(KDGAC,I,JDGAFA)
+
+         IW(KROW(KPGAC,I)+JPGAPE) = ITABL(KDGAC,I,JDGAPE)
+  100 CONTINUE
+C
+      RETURN
+      END
+#endif

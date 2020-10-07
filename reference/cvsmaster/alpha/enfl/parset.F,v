@@ -1,0 +1,291 @@
+head	1.2;
+access;
+symbols
+	alpha126_22:1.2
+	alpha126_21:1.2
+	alpha126_20:1.2
+	alpha126_19:1.2
+	alpha126_18:1.2
+	alpha126_17:1.2
+	alpha126_16:1.2
+	alpha126_15:1.2
+	alpha126_14:1.2
+	alpha126_13:1.2
+	alpha126_12:1.2
+	alpha126_11:1.2
+	alpha126_10:1.2
+	alpha126_09:1.2
+	alpha126_08:1.2
+	alpha126_07:1.2
+	alpha126_06:1.2
+	alpha126_05:1.2
+	alpha126_04:1.2
+	alpha126_03:1.2
+	alpha126_02:1.2
+	alpha126_1:1.2
+	alpha125_17:1.2
+	alpha125_16:1.2
+	alpha125_15:1.2
+	alpha125_14:1.2
+	alpha125_13:1.2
+	alpha125_12:1.2
+	alpha125_11:1.2
+	alpha125_10:1.2
+	alpha125_09:1.2
+	alpha125_08:1.2
+	alpha125_07:1.2
+	alpha125_06:1.2
+	alpha125_05:1.2
+	alpha125_04:1.2
+	alpha125_03:1.2
+	alpha125_02:1.2
+	alpha125_01:1.2
+	alpha124_19:1.2
+	alpha125:1.2
+	alpha124_18:1.2
+	alpha124_17:1.1.1.1
+	alpha124_16:1.1.1.1
+	alpha124_15:1.1.1.1
+	alpha124_14:1.1.1.1
+	alpha124_13:1.1.1.1
+	alpha124_12:1.1.1.1
+	alpha124_11:1.1.1.1
+	alpha124_10:1.1.1.1
+	alpha124_09:1.1.1.1
+	alpha124_08:1.1.1.1
+	alpha124_07:1.1.1.1
+	alpha124_7:1.1.1.1
+	alpha124_06:1.1.1.1
+	alpha124_05:1.1.1.1
+	alpha124_04:1.1.1.1
+	alpha124_03:1.1.1.1
+	alpha124_02:1.1.1.1
+	alpha124_01:1.1.1.1
+	alpha124:1.1.1.1
+	alpha123_12:1.1.1.1
+	alpha123_11:1.1.1.1
+	alpha123_10:1.1.1.1
+	alpha123_9:1.1.1.1
+	alpha123_8:1.1.1.1
+	alpha123_7:1.1.1.1
+	alpha123_6:1.1.1.1
+	alpha123_5:1.1.1.1
+	alpha123_4:1.1.1.1
+	alpha123_3:1.1.1.1
+	alpha123_2:1.1.1.1
+	alpha123:1.1.1.1
+	alpha122_48:1.1.1.1
+	alpha122_47:1.1.1.1
+	alpha122_46:1.1.1.1
+	alpha122_45:1.1.1.1
+	alpha122_44:1.1.1.1
+	alpha122_43:1.1.1.1
+	alpha122_42:1.1.1.1
+	alpha122_41:1.1.1.1
+	alpha122_40:1.1.1.1
+	alpha122_39:1.1.1.1
+	alpha122_38:1.1.1.1
+	alpha122_37:1.1.1.1
+	alpha122_36:1.1.1.1
+	alpha122_35:1.1.1.1
+	alpha122_34:1.1.1.1
+	alpha122_33:1.1.1.1
+	alpha122_32:1.1.1.1
+	alpha122_31:1.1.1.1
+	alpha122_30:1.1.1.1
+	alpha122_29:1.1.1.1
+	alpha122_28:1.1.1.1
+	alpha122_27:1.1.1.1
+	alpha122_26:1.1.1.1
+	alpha122_25:1.1.1.1
+	alpha122_24:1.1.1.1
+	alpha122_23:1.1.1.1
+	alpha122_22:1.1.1.1
+	alpha122_21:1.1.1.1
+	alpha122_20:1.1.1.1
+	alpha122_19:1.1.1.1
+	alpha122_18:1.1.1.1
+	alpha122_17:1.1.1.1
+	alpha122_16:1.1.1.1
+	alpha122_15:1.1.1.1
+	alpha122_14:1.1.1.1
+	alpha122_13:1.1.1.1
+	alpha122_12:1.1.1.1
+	alpha122_11:1.1.1.1
+	alpha122_10:1.1.1.1
+	alpha122_9:1.1.1.1
+	alpha122_8:1.1.1.1
+	alpha122_6:1.1.1.1
+	alpha122_5:1.1.1.1
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	99.10.28.14.19.13;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.03.14.12.42.31;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.42.32;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE PARSET
+C----------------------------------------------------------------
+C! Read the ENFLW datacards
+C
+C  Patrick Janot -- 21 june 1990
+C----------------------------------------------------------------
+#ifndef DOC
+#include "parcut.h"
+      COMMON / vernvw / vernfw
+#include "qcde.h"
+C
+C  Welcome !
+C
+      vernfw = 2.09
+      WRITE (IW(6),1000) vernfw
+C
+C  Card for q qbar gamma search
+C
+      nngama = 0
+      kkgama = namind('GAMA')
+      IF ( kkgama .GT. 0 ) nngama = IW(kkgama)
+C
+C  Card for pad/wire ratio
+C
+      rpsf = 1.
+      irpsf = 0
+      nnrpsf = namind('RPSF')
+      IF ( nnrpsf .GT. 0 ) irpsf = IW(nnrpsf)
+      IF ( irpsf .GT. 0 ) rpsf = RW(irpsf+1)
+C
+C  Calorimeter cleaning card
+C
+      nclea = 1
+      iclea = 0
+      nnclea = namind('CLEA')
+      IF ( nnclea .GT. 0 ) iclea = IW(nnclea)
+      IF ( iclea .GT. 0 ) nclea = IW(iclea+1)
+C
+C  Card for ENFLW parameters
+C
+      nnnflw = namind('NFLW')
+      IF ( nnnflw .GT. 0 ) inflw = IW(nnnflw)
+      IF ( inflw .GT. 0 ) THEN
+        ntrack = IW(inflw+1)
+        mtrack = IW(inflw+2)
+        echmin = RW(inflw+3)
+        echmax = RW(inflw+4)
+        n0     = IW(inflw+5)
+        d0     = RW(inflw+6)
+        z0     = RW(inflw+7)
+        idbg   = IW(inflw+8)
+      ELSE
+        ntrack = 0
+        mtrack = 200
+        echmin = 0.
+        echmax = 1000.
+        n0 = 4
+        d0 = 2.0
+        z0 = 10.0
+        idbg = 0
+      ENDIF
+      IF ( idbg .GE. 1 ) WRITE (IW(6),1001) ntrack, mtrack, echmin,
+     &                                 echmax,n0, d0, z0, idbg
+C
+C  Tuning of e/pi ratio, xi value
+C
+      nnnepi = namind('NEPI')
+      IF ( nnnepi .GT. 0 ) inepi = IW(nnnepi)
+      IF ( inepi .GT. 0 ) THEN
+        sigec  = RW(inepi+1)
+        sighc  = RW(inepi+2)
+        epilca = RW(inepi+3)
+        epiend = RW(inepi+4)
+        epibar = RW(inepi+5)
+      ELSE
+        sigec  = 0.5
+        sighc  = 1.0
+        epilca = 1.5
+        epiend = 1.0
+        epibar = 1.0
+      ENDIF
+      IF ( idbg .GE. 1 ) WRITE (IW(6),1002) sigec,sighc,epilca,
+     .                                 epiend,epibar
+C
+      RETURN
+C----------------------------------------------------------------
+ 1000 FORMAT(//1X,'+---------------------------------------------+'/
+     .       1X,'|     Welcome to the Energy Flow Package      |'/
+     .       1X,'|                                             |'/
+     .       1X,'|                   ENFLW                     |'/
+     .       1X,'|                                             |'/
+     .       1X,'|                Version ',F4.2,'                 |'/
+     .       1X,'|                                             |'/
+     .       1X,'|  Last date of change : 27 October 1999      |'/
+     .       1X,'|  P. Janot      CERN                         |'/
+     .       1X,'+---------------------------------------------+'//)
+ 1001 FORMAT(/' The program will deal with events such that : '/,
+     .       '     * Number of charged tracks : '/
+     .       '          Minimum : ',I6/
+     .       '          Maximum : ',I6/
+     .       '     * Total charged energy : '/
+     .       '          Minimum : ',F8.1,' GeV'/
+     .       '          Maximum : ',F8.1,' GeV'/
+     .       '     * Good track definition : '/
+     .       '          TPC coords : >= ',I6/
+     .       '          |d0|       : <= ',F8.2,' cm'/
+     .       '          |z0|       : <= ',F8.2,' cm'//
+     .       '     * Print level : ',I2//)
+ 1002 FORMAT('     * XI values to determine',
+     .       ' the neutral hadronic energy : '/
+     .       '          In ECAL    : ',F8.2,' GeV**(1/2)'/
+     .       '          In HCAL    : ',F8.2,' GeV**(1/2)'/
+     .       '     * e/pi ratios :'/
+     .       '          In LCAL    : ',F8.2/
+     .       '          In Endcaps : ',F8.2,' (scaling factor)'/
+     .       '          In Barrel  : ',F8.2,' (scaling factor)'//)
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d94 2
+a95 2
+     .       1X,'|  Last date of change : 14 November 1994     |'/
+     .       1X,'|  P. Janot      LAL-ORSAY                    |'/
+@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

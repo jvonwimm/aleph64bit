@@ -1,0 +1,212 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.43.18;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.43.19;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE PRKINE
+C ----------------------------------------------------------------
+C  J. Boucrot , Y. Karyotakis , F.Ranjard  - 860929 -
+C! Print Kinematics Track and Vertex banks in Readable Format
+#ifndef DOC
+      SAVE
+#include "bcs.h"
+#include "kvoljj.h"
+      CHARACTER*4 TVOL,TMEC,TBLK,CHAINT,NAME(3)
+      DATA NAMK /0/
+#include "bmacro.h"
+C
+      IF (NAMK .EQ. 0) THEN
+         LOUT = IW(6)
+         NAMK = NAMIND('KINE')
+         NAMV = NAMIND('VERT')
+         CALL KIAVER (AVER,IPROG)
+      ENDIF
+      IF (IW(NAMK).EQ.0 .OR. IW(NAMV).EQ.0) THEN
+        WRITE (LOUT,'(/1X,''+++PRKINE+++ NO KINE/VERT bank - RETURN'')')
+        RETURN
+      ENDIF
+C
+C - get 'PART' bank index , The name of the part# ITYP is in
+C                           ITABL(JPART,ITYP,2):ITABL(JPART,ITYP,4)
+      JPART = NLINK ('PART',0)
+      IF (JPART .EQ. 0) THEN
+         WRITE (LOUT,'(/1X,''+++PRKINE+++ NO PART bank so no name '')')
+      ENDIF
+C
+C - get 'KVOL' bank index if it exists
+      JKVOL = IW(NAMIND('KVOL'))
+      TBLK  = '    '
+C
+      WRITE(LOUT,1000)
+ 1000 FORMAT(/1X,'+++ PRKINE +++ Vertex banks' /
+     &  T2,'Number',14X,'Vx',11X,'Vy',9X,'Vz',3X,'TOF nsec',
+     & 3X,'Mother track #',T80,'generated track #s'/)
+C
+      JVER = NAMV + 1
+ 1    JVER = IW(JVER-1)
+      IF (JVER .NE. 0) THEN
+         NVX = IW(JVER-2)
+         LHDR = IW(JVER+1)
+         LPVER= IW(JVER+2)
+         MXTRK= IW(JVER+3)
+         KVER = JVER + LHDR
+         TVOL = TBLK
+         TMEC = TBLK
+         IF (JKVOL .GT. 0) THEN
+            TVOL = CHAINT(ITABL(JKVOL,NVX,JKVOVN))
+            IF (LCOLS(JKVOL).GE.JKVOVM)THEN
+               TMEC = CHAINT(ITABL(JKVOL,NVX,JKVOVM))
+            ENDIF
+         ENDIF
+C
+         WRITE (LOUT,1001) NVX,TVOL,TMEC,(RW(KVER+J),J=1,3)
+     &                   , RW(KVER+4)*10.**9
+     &                   ,(IW(KVER+LPVER+I),I=0,MXTRK)
+ 1001    FORMAT (T2,I4,1X,A4,1X,A4,4F11.4,4X,I4,(T76,11I4))
+         GO TO 1
+      ENDIF
+C
+      IF (AVER .GE. 9.0) THEN
+        WRITE ( LOUT,1010 )
+ 1010   FORMAT(/1X,'+++PRKINE+++ kinematics banks '/T3,
+     & 'Number',2X,'Particle',12X,'Px',10X,'Py',10X,'Pz',10X,'Mass',
+     &  6X,'Origin Vertex #',T95,'Generated Vertex #s'/)
+      ELSE
+        WRITE ( LOUT,1009 )
+ 1009   FORMAT(/1X,'+++PRKINE+++ kinematics banks '/T3,
+     & 'Number',2X,'Particle',12X,'Px',10X,'Py',10X,'Pz',8X,'Energy',
+     &  6X,'Origin Vertex #',T95,'Generated Vertex #s'/)
+      ENDIF
+C
+      JKIN = NAMK + 1
+ 2    JKIN = IW(JKIN-1)
+      IF (JKIN .NE. 0) THEN
+         NTRK = IW(JKIN-2)
+         LHKIN = IW(JKIN+1)
+         LPKIN = IW(JKIN+2)
+         MXVX = IW(JKIN+3)
+         KIN  = JKIN + LHKIN
+         ITYP = IW(KIN+5)
+         IF (JPART .EQ. 0) THEN
+            WRITE (LOUT,1012) NTRK,ITYP,(RW(KIN+J),J=1,LPKIN-1)
+     &                       ,(IW(KIN+LPKIN+I),I=1,MXVX)
+         ELSE
+            DO 21 J=1,3
+ 21         NAME(J) = CHAINT(ITABL(JPART,ITYP,J+1))
+            WRITE ( LOUT,1011 ) NTRK,NAME
+     &                         ,(RW(KIN+K),K=1,LPKIN-1)
+     &                         ,(IW(KIN+LPKIN+I),I=1,MXVX)
+         ENDIF
+         GO TO 2
+      ENDIF
+C
+      RETURN
+1011  FORMAT(T3,I4,4X,3A4,4(F12.3),9X,I4,(T95,8I4))
+1012  FORMAT(T3,I4,4X,I8,4X,4(F12.3),9X,I4,(T95,8I4))
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

@@ -1,0 +1,144 @@
+head	1.1;
+access;
+symbols
+	alpha126_22:1.1
+	alpha122_22:1.1
+	alpha126_21:1.1
+	alpha126_20:1.1
+	alpha126_19:1.1
+	alpha126_18:1.1
+	alpha126_17:1.1
+	alpha126_16:1.1
+	alpha126_15:1.1
+	alpha126_14:1.1
+	alpha126_13:1.1
+	alpha126_12:1.1
+	alpha126_11:1.1
+	alpha126_10:1.1
+	alpha126_09:1.1
+	alpha126_08:1.1
+	alpha126_07:1.1
+	alpha126_06:1.1
+	alpha126_05:1.1
+	alpha126_04:1.1
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	99.03.22.14.06.55;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE MINEGI
+C
+CKEY MDST /USER
+C-----------------------------------------------------------------------
+C! Fill EGID bank from DGAM.
+C
+C     Author: Stephen Haywood      17-Jan-91
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+#include "dgamjj.h"
+#include "egidjj.h"
+#include "minfac.h"
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+C
+      KDGAM = NLINK('DGAM',100)
+      IF (KDGAM.LE.0) THEN
+         CALL MINUPD('DGAM')
+         KDGAM = NLINK('DGAM',100)
+         IF (KDGAM.LE.0) RETURN
+      ENDIF
+C
+C++   Create EGID bank.
+C
+      NEGID = LROWS(KDGAM)
+      IF(NEGID.LE.0) RETURN
+      LEN = LMHLEN + LEGIDA * NEGID
+      CALL AUBOS('EGID',0,LEN, KEGID,IGARB)
+      CALL BLIST(IW,'S+','EGID')
+      IF(IGARB.GE.2) THEN
+         RETURN
+      ELSE IF(IGARB.NE.0) THEN
+         KDGAM = NLINK('DGAM',100)
+      ENDIF
+      IW(KEGID+LMHCOL) = LEGIDA
+      IW(KEGID+LMHROW) = NEGID
+C
+C++   Fill EGID bank.
+C
+      DO 100 I=1,NEGID
+         IWORD = ITABL(KDGAM,I,JDGANA)
+         IW(KROW(KEGID,I)+JEGIIF) = MOD(IWORD,16)
+         IW(KROW(KEGID,I)+JEGINA) = IWORD / 16
+         RW(KROW(KEGID,I)+JEGIE1) = FLOAT(ITABL(KDGAM,I,JDGAE1))/10.
+         RW(KROW(KEGID,I)+JEGIE2) = FLOAT(ITABL(KDGAM,I,JDGAE2))/10.
+         RW(KROW(KEGID,I)+JEGIE3) = FLOAT(ITABL(KDGAM,I,JDGAE3))/1000.
+         RW(KROW(KEGID,I)+JEGIE5) = FLOAT(ITABL(KDGAM,I,JDGAE5))/10.
+         RW(KROW(KEGID,I)+JEGIE6) = FLOAT(ITABL(KDGAM,I,JDGAE6))/10.
+         RW(KROW(KEGID,I)+JEGIE8) = FLOAT(ITABL(KDGAM,I,JDGAE8))/EFACTM
+         RW(KROW(KEGID,I)+JEGICE) = FLOAT(ITABL(KDGAM,I,JDGAE0))/EFACTM
+         RW(KROW(KEGID,I)+JEGITH) = FLOAT(ITABL(KDGAM,I,JDGATH))/AFACTM
+         RW(KROW(KEGID,I)+JEGIPH) = FLOAT(ITABL(KDGAM,I,JDGAPH))/AFACTM
+         IW(KROW(KEGID,I)+JEGIPE) = ITABL(KDGAM,I,JDGADE)
+  100 CONTINUE
+C
+      RETURN
+      END
+#endif
+@

@@ -1,0 +1,316 @@
+head	1.2;
+access;
+symbols
+	alpha126_22:1.2
+	alpha126_21:1.2
+	alpha126_20:1.2
+	alpha126_19:1.2
+	alpha126_18:1.2
+	alpha126_17:1.2
+	alpha126_16:1.2
+	alpha126_15:1.2
+	alpha126_14:1.2
+	alpha126_13:1.2
+	alpha126_12:1.2
+	alpha126_11:1.2
+	alpha126_10:1.2
+	alpha126_09:1.2
+	alpha126_08:1.2
+	alpha126_07:1.2
+	alpha126_06:1.2
+	alpha126_05:1.2
+	alpha126_04:1.2
+	alpha126_03:1.2
+	alpha126_02:1.2
+	alpha126_1:1.2
+	alpha125_17:1.2
+	alpha125_16:1.2
+	alpha125_15:1.2
+	alpha125_14:1.2
+	alpha125_13:1.2
+	alpha125_12:1.2
+	alpha125_11:1.2
+	alpha125_10:1.2
+	alpha125_09:1.2
+	alpha125_08:1.2
+	alpha125_07:1.2
+	alpha125_06:1.2
+	alpha125_05:1.2
+	alpha125_04:1.2
+	alpha125_03:1.2
+	alpha125_02:1.2
+	alpha125_01:1.2
+	alpha124_19:1.2
+	alpha125:1.2
+	alpha124_18:1.2
+	alpha124_17:1.2
+	alpha124_16:1.2
+	alpha124_15:1.2
+	alpha124_14:1.2
+	alpha124_13:1.2
+	alpha124_12:1.2
+	alpha124_11:1.2
+	alpha124_10:1.2
+	alpha124_09:1.2
+	alpha124_08:1.2
+	alpha124_07:1.2
+	alpha124_7:1.2
+	alpha124_06:1.2
+	alpha124_05:1.2
+	alpha124_04:1.2
+	alpha124_03:1.2
+	alpha124_02:1.2
+	alpha124_01:1.2
+	alpha124:1.2
+	alpha123_12:1.2
+	alpha123_11:1.2
+	alpha123_10:1.2
+	alpha123_9:1.2
+	alpha123_8:1.2
+	alpha123_7:1.2
+	alpha123_6:1.2
+	alpha123_5:1.2
+	alpha123_4:1.1.1.1
+	alpha123_3:1.1.1.1
+	alpha123_2:1.1.1.1
+	alpha123:1.1.1.1
+	alpha122_48:1.1.1.1
+	alpha122_47:1.1.1.1
+	alpha122_46:1.1.1.1
+	alpha122_45:1.1.1.1
+	alpha122_44:1.1.1.1
+	alpha122_43:1.1.1.1
+	alpha122_42:1.1.1.1
+	alpha122_41:1.1.1.1
+	alpha122_40:1.1.1.1
+	alpha122_39:1.1.1.1
+	alpha122_38:1.1.1.1
+	alpha122_37:1.1.1.1
+	alpha122_36:1.1.1.1
+	alpha122_35:1.1.1.1
+	alpha122_34:1.1.1.1
+	alpha122_33:1.1.1.1
+	alpha122_32:1.1.1.1
+	alpha122_31:1.1.1.1
+	alpha122_30:1.1.1.1
+	alpha122_29:1.1.1.1
+	alpha122_28:1.1.1.1
+	alpha122_27:1.1.1.1
+	alpha122_26:1.1.1.1
+	alpha122_25:1.1.1.1
+	alpha122_24:1.1.1.1
+	alpha122_23:1.1.1.1
+	alpha122_22:1.1.1.1
+	alpha122_21:1.1.1.1
+	alpha122_20:1.1.1.1
+	alpha122_19:1.1.1.1
+	alpha122_18:1.1.1.1
+	alpha122_17:1.1.1.1
+	alpha122_16:1.1.1.1
+	alpha122_15:1.1.1.1
+	alpha122_14:1.1.1.1
+	alpha122_13:1.1.1.1
+	alpha122_12:1.1.1.1
+	alpha122_11:1.1.1.1
+	alpha122_10:1.1.1.1
+	alpha122_9:1.1.1.1
+	alpha122_8:1.1.1.1
+	alpha122_6:1.1.1.1
+	alpha122_5:1.1.1.1
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	98.11.05.09.35.18;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.03.14.12.42.30;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.42.31;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@      FUNCTION LKFORM(ICLUEC,IECOBJ,CORFAC)
+C----------------------------------------------------------------------
+C!  Checks clusters
+C  Returns  1 if the cluster is good ,  0 otherwise
+C  diftot = difference pad-wire in the cluster module .
+C
+C----------------------------------------------------------------------
+#ifndef DOC
+#include "parabank.h"
+#include "parcut.h"
+#include "qhac.h"
+#include "qcde.h"
+      DIMENSION QT(KCQVEC,1), KT(KCQVEC,1), QV(KCQVRT,1), KV(KCQVEC,1)
+#include "qmacro.h"
+C----------------------------------------------------------------------
+      esmax = 0.
+      diftot = 0.
+      nstocl = 0
+      mod1 = 0
+      mod2 = 0
+      mod3 = 0
+      corfac = 1.
+      etotrw = rtabl(ipeco, icluec, jpecer)
+      IF ( idbg .GE. 1 ) CALL looses('BADCLUST',1)
+C
+C  Energye of cluster is too big
+C
+      IF ( etotrw .GE. 2.*qelep ) THEN
+        lkform = 1
+        GOTO 999
+      ENDIF
+      IF ( idbg .GE. 1 ) CALL looses('BADCLUST',2)
+      IF ( ipest .LE. 0 .OR. ietdi .LE. 0 ) GOTO 997
+C
+C  Loop on storeys. Storey maxi. Difference pad/wire
+C
+      DO 1 ipads = 1 , npest
+        IF ( itabl(ipest, ipads, jpespe) .NE. icluec ) GOTO 1
+        IF ( itabl(ipest, ipads, jpesed) .NE. 0) GOTO 1
+        ntow  = itabl(ipest, ipads, jpeset)
+        itlab = itabl(ietdi, ntow,  jetdtl)
+        irow  = ibits(itlab, 16,    8     )
+        icol  = ibits(itlab,  2,    9     )
+        IF ( invalid(irow,icol) .EQ. 0 ) GOTO 1
+        CALL emdtow(irow, icol, ksbd, kmodu, krg)
+        modu = kmodu + 12*(ksbd-1)
+        IF ( mod1 .EQ. 0 ) THEN
+          mod1 = modu
+        ELSEIF ( mod2 .EQ. 0 .AND. modu .NE. mod1 ) THEN
+          mod2 = modu
+        ELSEIF ( mod3 .EQ. 0 .AND. modu .NE. mod2 .AND.
+     .                             modu .NE. mod1 ) THEN
+          mod3 = modu
+        ENDIF
+        esto = rtabl(ipest, ipads, jpeser)
+        IF ( esto .GT. esmax ) THEN
+          esmax = esto
+          modmx = modu
+        ENDIF
+    1 CONTINUE
+      diftot = ediff(mod1)
+      padene = epad (mod1)
+      wirene = ewire(mod1)
+      IF ( mod2 .NE. 0 ) THEN
+        diftot = diftot + ediff(mod2)
+        padene = padene + epad (mod2)
+        wirene = wirene + ewire(mod2)
+      ENDIF
+      IF ( mod3 .NE. 0 ) THEN
+        diftot = diftot + ediff(mod3)
+        padene = padene + epad (mod3)
+        wirene = wirene + ewire(mod3)
+      ENDIF
+      IF ( idbg .GE. 10 )
+     .  WRITE (IW(6),*) 'Modules/pad/fil/raw : ',
+     .              mod1,mod2,mod3,padene,wirene,etotrw
+C
+C  Wire energy less than  50 MeV  --> bad cluster
+C
+      IF ( wirene .LT. .05 ) THEN
+        lkform = 1
+        GOTO 999
+      ENDIF
+      IF ( idbg .GE. 1 ) CALL looses('BADCLUST',3)
+C
+C  Ratio E-cluster/E_fil > 5 --> bad cluster
+C
+      IF ( etotrw .GT. .5 .AND. etotrw/wirene .GE. 5. ) THEN
+        lkform = 1
+        GOTO 999
+      ENDIF
+      IF ( idbg .GE. 1 ) CALL looses('BADCLUST',4)
+C
+C  Difference E_cluster-wire > 500 MeV --> rescale
+C
+C     IF ( etotrw-wirene .GT. .5 .and. rpsf .LE. 1.001 ) THEN
+      IF ( etotrw-wirene .GT. .5 ) THEN
+        corfac = wirene/etotrw
+        IF ( idbg .GE. 10 ) WRITE (IW(6),*) 'All storeys corrected by ',
+     .                                  corfac
+        rw(ipeco+lmhlen+(icluec-1)*iw(ipeco+1)+jpecer) =
+     .  rw(ipeco+lmhlen+(icluec-1)*iw(ipeco+1)+jpecer) * corfac
+        rw(ipeco+lmhlen+(icluec-1)*iw(ipeco+1)+jpecec) =
+     .  rw(ipeco+lmhlen+(icluec-1)*iw(ipeco+1)+jpecec) * corfac
+        etotrw = etotrw * corfac
+        esmax  = esmax  * corfac
+        DO 2 ipads = 1 , npest
+          IF ( itabl(ipest, ipads, jpespe) .NE. icluec ) GOTO 2
+C         IF ( itabl(ipest, ipads, jpesed) .NE. 0) GOTO 2
+          rw(ipest+lmhlen+(ipads-1)*iw(ipest+1)+jpeser) =
+     .    rw(ipest+lmhlen+(ipads-1)*iw(ipest+1)+jpeser) * corfac
+    2   CONTINUE
+      ENDIF
+C
+C Quality of cluster
+C
+997   lkform = 0
+      pp3  = 1. - qpece1(iecobj) - qpece2(iecobj)
+      nhlk = knhcal(iecobj)
+C     IF ( qpecer(iecobj) .LE. 1. .OR.
+C    .     diftot .GE. qpecer(iecobj)/5. ) THEN
+      IF ( diftot .ge. AMAX1(.5,qpecer(iecobj)/5.) ) then
+        IF ( qpece1(iecobj) .GT. .99 .OR.
+     .       qpece2(iecobj) .GT. .99 .OR.
+     .     ( pp3 .GT. .99 .AND. nhlk .EQ. 0 ) ) THEN
+          lkform = 1
+          GOTO 999
+        ENDIF
+      ENDIF
+      IF ( idbg .GE. 1 ) CALL looses('BADCLUST',5)
+C
+      IF ( diftot .GE. AMAX1(.5,qpecer(iecobj)/5.) .AND.
+     .     etotrw .GT. 1. .AND. esmax .LT. .2 ) THEN
+        lkform = 1
+        GOTO 999
+      ENDIF
+      IF ( idbg .GE. 1 ) CALL looses('BADCLUST',6)
+C
+  999 IF ( lkform .EQ. 1 .AND. idbg .GE. 10 )
+     .    WRITE (IW(6),*) 'ECAL tue : clus/st1/st2/pad/wire : ',
+     .    etotrw/corfac,qpece1(iecobj),qpece2(iecobj),padene,wirene
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d28 1
+a28 1
+      IF ( etotrw .GE. 100. ) THEN
+@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

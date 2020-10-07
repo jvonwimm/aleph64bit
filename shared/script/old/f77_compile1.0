@@ -1,0 +1,80 @@
+#! /bin/csh
+#============================================================================
+#                         f77_compile
+# 20/10/92                                          F.Blin
+#============================================================================
+# to compile all ALEPH libraries foreach routines
+# All parameters on file ${prog_dir}/f77_options without debug
+# All parameters on file ${prog_dir}/f77_dbx_options with debug
+#=============================================================================
+#============================================================================
+# P1 program name
+# P2 output file name log
+# P3 dbx
+#============================================================================
+# f77_compile1.0
+# 930802 - remove writing on /aleph/alib/pub/spy
+#============================================================================
+#set echo on
+ set UNAME = `uname`
+ set flag = "OK"
+ set exec_name = "f77_compile"
+ set alib_dir = "/aleph/alib"
+#*******> first parameter
+if ($1 == "") then
+  echo -n "Enter Aleph program name [eg:julia <CR>=exit]-> "
+   set prog_name = $<
+   if (${prog_name} == "") exit
+else
+   set prog_name = $1
+endif
+ 
+#*******> second parameter
+ if ($2 == "") set file_name_log = "compile"
+ if ($2 != "") set file_name_log = $2
+ 
+set idir = `egrep ${prog_name} ${alib_dir}/pub/progl | awk '{print $2}'`
+set tmp_dir = `pwd`
+if (${idir} == "") then
+   set tmp_dir = `pwd`
+   cd ..
+   set prog_dir = `pwd`
+else
+   set prog_dir = "/aleph/${idir}"
+endif
+ 
+#*******> third parameter
+ set file_para = "${prog_dir}/f77_options"
+ if ($3 == "dbx") set file_para = "${prog_dir}/f77_dbx_options"
+ if !(-e ${file_para}) then
+    echo "*** WARNING file -> ${file_para} is unknown"
+    set flag = "NO"
+    goto exec_end
+ endif
+ set all_para = `egrep "${prog_name} " ${file_para} | awk '{print substr($0,15)}'`
+
+#*******> f77 foreach routine
+ cd ${tmp_dir}
+ set files = `ls *.f`
+ echo "-> f77 begin" > f77_check$3.log
+ foreach file ( $files[*] )
+   echo "Now -> f77 ${all_para} ${file} "
+   echo "-> f77 ${all_para} ${file} " >> f77_check$3.log
+   f77 ${all_para} ${file} | & tee -a ${file_name_log}.log
+ end
+ echo "-> f77 end" >> f77_check$3.log
+ set file_error = "${file_name_log}_Error"
+ echo "Now -> grep -n 'Error' ${file_name_log}.log > ${file_error}.log"
+ grep -n 'Error' ${file_name_log}.log > ${file_error}.log
+ if !(-z ${file_error}.log) then
+    set flag = "NO"
+    echo "WARNING ***> compilation problems"
+    echo "see file -> ${file_error}.log"
+ endif
+ 
+#*******> spy
+set dmyh = `date '+%d-%h-19%y %T'`
+ echo "${exec_name} ${user} ${dmyh} ${prog_name} ${all_para} ${flag}" >> ${prog_dir}/spy
+ 
+exec_end:
+ echo ${flag}

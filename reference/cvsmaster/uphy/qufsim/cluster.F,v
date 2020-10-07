@@ -1,0 +1,144 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  uphy1-0:1.1.1.1 flr:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.08.16.13.38.14;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.08.16.13.38.15;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@       SUBROUTINE cluster(vec,nobj,acut)
+C------------------------------------------------------------------
+C! Assign a cluster number to CAL-object
+C
+C   Input :     VEC   ,   the 4-momentum
+C               NOBJ  ,   the current number of CAL-objects
+C               ACUT  ,   the angular cut
+C
+C   Output:     ICLU  ,   the list of clusters
+C
+C  Patrick Janot -- 22 Nov 1993
+C------------------------------------------------------------------
+#include "parcut.h"
+#include "hadpho.h"
+#include "resolu.h"
+      INTEGER last(maxclu), indx(maxclu)
+      INTEGER nbob(maxclu), lsto(maxclu,maxclu)
+      REAL angul(maxclu), vobj(5,maxclu)
+C
+      IF ( nobj .EQ. 1 ) THEN
+        nclu = 0
+        CALL vzero(iclu (1)  ,maxclu)
+        CALL vzero(last (1)  ,maxclu)
+        CALL vzero(indx (1)  ,maxclu)
+        CALL vzero(nbob (1)  ,maxclu)
+        CALL vzero(angul(1)  ,maxclu)
+C       CALL vzero(jord (1,1),maxclu*maxclu)
+        CALL vzero(lsto (1,1),maxclu*maxclu)
+      ENDIF
+C
+C Compute the angular distance with the previous objects
+C
+      CALL ucopy(vec(1),vobj(1,nobj),4)
+      vobj(5,nobj) = SIGN(1.0,vec(4))
+     .             * SQRT(vec(1)**2+vec(2)**2+vec(3)**2)
+C
+      DO iobj = 1, nobj-1
+        angul(iobj) = ( vobj(1,iobj)*vec(1)
+     .                + vobj(2,iobj)*vec(2)
+     .                + vobj(3,iobj)*vec(3) )
+     .                / vobj(5,iobj)
+     .                / vobj(5,nobj)
+      ENDDO
+C
+C Classify the distances in decreasing order
+C
+      CALL sortzv(angul,indx,nobj-1,1,1,0)
+      IF ( idbg .GE. 15 ) THEN
+        WRITE(6,*) 'Cluster # ',nobj,', Distances angulaires : '
+        DO iobj = 1, nobj-1
+          WRITE(6,*) indx(iobj),angul(indx(iobj))
+        ENDDO
+      ENDIF
+C
+C Find the last object satifying the angular cut
+C
+      DO iobj = 1, nobj-1
+        IF ( angul(indx(iobj)) .LT. acut ) GOTO 5
+      ENDDO
+    5 last(nobj) = iobj - 1
+      IF ( idbg .GE. 15 ) WRITE(6,*) ' Dernier objet : ',last(nobj)
+      IF ( last(nobj) .GE. 1 ) THEN
+C
+C Find an existing cluster
+C
+        jclu = iclu(indx(1))
+        iclu(nobj) = jclu
+        nbob(jclu) = nbob(jclu) + 1
+        lsto(nbob(jclu),jclu) = nobj
+C
+C Renumber all the other cluster attached to the current object
+C
+        DO iobj = 2, last(nobj)
+          kclu = iclu(indx(iobj))
+          IF ( kclu .NE. jclu ) THEN
+            DO kbob = 1, nbob(kclu)
+              iclu(lsto(kbob,kclu)) = jclu
+              nbob(jclu) = nbob(jclu) + 1
+              lsto(nbob(jclu),jclu) = lsto(kbob,kclu)
+            ENDDO
+C
+C Drop the dummy clusters
+C
+            nbob(kclu) = 0
+          ENDIF
+        ENDDO
+C
+      ELSE
+C
+C Or create a new one
+C
+        nclu = nclu + 1
+        iclu(nobj) = nclu
+        nbob(nclu) = 1
+        lsto(1,nclu) = nobj
+C
+      ENDIF
+C
+      IF ( idbg .GE. 15 ) THEN
+        DO iobj = 1, nobj
+          WRITE(6,*) iobj,iclu(iobj)
+        ENDDO
+      ENDIF
+C
+  999 RETURN
+      END
+@
+
+
+1.1.1.1
+log
+@2nd try to import uphy
+@
+text
+@@

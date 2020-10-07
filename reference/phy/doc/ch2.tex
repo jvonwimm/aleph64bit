@@ -1,0 +1,38 @@
+\chapter{\label{sec-GS}Getting Started}
+\par
+Two files must be provided to run an ALPHA job:
+\begin{enumerate}
+\item A file which contains the Fortran or CVS code for the
+user
+subroutines (see Ch.
+\ref{sec-U}).
+\item A card file which defines the input / output
+data files, and allows the user to select several optional parameters
+(see Ch. \ref{sec-DC}).
+\end{enumerate}
+The libraries needed to link the program are described in Appendix
+\ref{sec-ZB}. To run ALPHA, the following Fortran units
+must be assigned:\footnote{Other units used by ALPHA are listed in
+Section~\ref{sec-MCU}; Fortran units 90, 91, 92, and 93 are always free for
+private output files.}
+\begin{indentlist}{ 1.25cm}{ 1.50cm}
+\indentitem{unit}
+\indentitem{6}Print output file
+\indentitem{7}Card file
+\indentitem{76}(optional): in an interactive session,
+this unit may be assigned to the
+terminal. Short messages will be sent to the terminal
+and long listings sent to the output file.
+\end{indentlist}
+A command file, {\bf alpharun}, described in Appendix~\ref{sec-ZB}
+ is available on all ALEPH computers 
+to make
+these file assignments, and to perform the following tasks:
+\begin{enumerate}
+\item compile and link the Fortran (or CVS)  code;
+\item link with all additional needed libraries (BOS, ALEPHLIB, JULIA, MINI);
+\item run the program interactively or submit a BATCH job.
+\end{enumerate}
+On the DEC/VMS  machines, {\bf alpharun} also facilitates the use of a
+set of DEC debugger command files which simplify
+ALPHA program debugging.

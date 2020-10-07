@@ -1,0 +1,116 @@
+      SUBROUTINE DADAT(IACT,JW,*)
+
+*     DATA RECORDS IACT = 1 2 3 4   READ DELETE ADD REPLACE
+
+      COMMON/BCS/IW(1000)
+      INTEGER JW(*)
+#include "dacom.h"
+#include "param.h"
+*     ...
+      ND=0
+      NDD=0
+      IF(IACT.NE.3) THEN
+         IREC=NRD
+      ELSE
+         IREC=IW(IUB+13)
+         IF(IREC.LE.3) IREC=4
+      END IF
+
+      JREC=-1
+   10 JREC=JREC+1
+      CALL DAFRD(IREC+JREC,1)
+
+C     IF(IACT.EQ.2.OR.IACT.EQ.4) CALL WPRNT(IW,IDD)
+*     TRY TO FIND BANK
+
+      N=0
+      IF(IW(IDD).LE.4) GOTO 40
+      IF(IACT.EQ.3.AND.JREC.NE.0) GOTO 40
+   20 IF(N.GE.IW(IDD)) GOTO 40
+      N=N+4
+      IF(NADA.EQ.IW(IDD+N-3).AND.NRDA.EQ.IW(IDD+N-2)) GOTO 30
+      N=N+IW(IDD+N)
+      IF(JREC.NE.0) GOTO 40
+      GOTO 20
+
+*     BANK FOUND
+
+   30 IF(IACT.EQ.3) THEN
+         NDTR=IW(IDD+N-1)
+         NDDR=IW(IDD+N)
+         NRD =IREC+JREC
+         GOTO 90
+      END IF
+*                        **
+
+      NP=IW(IDD+N)
+      IF(IACT.EQ.1) THEN
+*        READ
+         IF(ND+NP.GT.NDDA) GOTO 90
+*                               **
+         CALL UCOPY(IW(IDD+N+1),JW(INDA+ND+1),NP)
+      ELSE IF(IACT.EQ.2) THEN
+*        DROP
+         IF(IW(IDD)-N-NP.GT.0)
+     +   CALL UCOPY2(IW(IDD+N+NP+1),IW(IDD+N-3),IW(IDD)-N-NP)
+         IW(IDD)=IW(IDD)-NP-4
+         IDDR=-IABS(IDDR)
+C        CALL WPRNT(IW,IDD)
+      ELSE
+*        REPLACE
+         IF(ND+NP.GT.NDDA) GOTO 90
+*                               **
+         CALL UCOPY(JW(INDA+ND+1),IW(IDD+N+1),NP)
+         IW(IDD+N-1)=NDTC
+         IDDR=-IABS(IDDR)
+      END IF
+
+      ND=ND+NP
+      IF(NDD.EQ.0) NDD=IREC+JREC
+      IF(IACT.GE.2) CALL DAFWR(0,1)
+      IF(ND.EQ.NDDR) GOTO 100
+      IF(IACT.NE.2.AND.ND.GT.NDDR) GOTO 90
+      GOTO 10
+
+*     BANK NOT FOUND
+
+   40 IF(IACT.EQ.2) GOTO 100
+      IF(IACT.NE.3) GOTO 50
+      NP=MIN0(NWRDA-5-N,NDDA-ND)
+      IF(NP.LE.0) GOTO 10
+      IDDR=-IABS(IDDR)
+      CALL UCOPY(JW(INDA-3),IW(IDD+N+1),4)
+      IW(IDD+N+3)=NDTC
+      N=N+4
+      IW(IDD+N)=NP
+      CALL UCOPY(JW(INDA+ND+1),IW(IDD+N+1),NP)
+      ND=ND+NP
+      IW(IDD)=N+NP
+      IW(IUB+13)=IREC+JREC
+      IF(NDD.EQ.0) NDD=IREC+JREC
+      IF(ND.EQ.NDDA) GOTO 100
+      CALL DAFWR(0,1)
+      GOTO 10
+
+   50 IF(JW(LUP).GT.0) WRITE(JW(LUP),101) LUNDA,NADA,NRDA
+      IF(JW(LUP).GT.0) WRITE(JW(LUP),102)
+      CALL WPRNT(IW,IDR)
+      IF(JW(LUP).GT.0) WRITE(JW(LUP),103)
+      CALL WPRNT(IW,IDD)
+      IF(IACT.EQ.1) CALL DARES
+      CALL DADIR(2)
+      CALL DAFWR(0,0)
+      CALL DADES
+      CALL BABEND('DADAT')
+
+   90 RETURN 1
+
+  100 RETURN
+  101 FORMAT('0----------  INCONSISTENCY FOUND ON DIRECT ACCESS DATA',
+     + ' SET',I3,/13X,'DIRECTORY ENTRY FOR BANK ',A4,I9,' EXISTS, BUT',
+     + 'BANK CANNOT BE FOUND IN DATA RECORD.'/
+     + 13X,'THE INCONSISTENCY WILL BE REMOVED BY DELETING THE DIRECTORY'
+     + ,' ENTRY, AND THE PROGRAM WILL STOP WITH ABEND'/)
+  102 FORMAT('0DIRECTORY RECORD')
+  103 FORMAT('0DATA RECORD')
+      END

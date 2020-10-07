@@ -1,0 +1,2 @@
+      COMMON / ECNMSK / NAECLU , NAESDA , NAETP1 , NAECT1 , NAERL3 ,
+     +                  NAEHYP , NAECOB , NAEIDT , NAFRFT , NAHSDA

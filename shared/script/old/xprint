@@ -1,0 +1,365 @@
+#!/bin/csh -f
+########################################################################
+#                                                                      #
+#    VM/CMS job submission via DECNET-TCP/IP  gateway                  #
+#                                                                      #
+#    XPRINT     Printing from Unix Systems                             #
+#                                                                      #
+#               Gordon LEE CERN/DD/SW   Last Update 7-June-1991        #
+#                                                                      #
+#               PostScript support on 3812's added                     #
+#                                                                      #
+#  M.Marquina  94/04/17  Make it operational on all CERN-supported ws  #
+#                        Accept PS-Adobe-3.0 as PS file                #
+#                        Send correct USERID, filename and filetype    #
+#  R.Hagelberg 94/05/24  Fix processing of "-o"                        #
+#                        Use lpr only if no options given e.g. -f ...  #
+#                        The options are not translated for lpr.       #
+########################################################################
+
+#setenv SYSTYPE bsd4.2
+setenv PATH .:/usr/local/bin:/usr/local/unix:/usr/bsd:/usr/ucb:/bin:/usr/bin:
+set qdir    = "/vmjobs/queue"
+set rundir  = "/vmjobs/run"
+set qdir=$rundir
+set tstamp  = `date | awk '{ printf("%s-%s %s\n",$3,$2,$4)}' `
+set host    = `hostname`
+set gate    = springer
+set dgate    = dxspr
+set dist    = LOCAL
+set linecount = "  "
+set notify  = "no"
+set help    = "no"
+set vx      = "VX"
+set prt     = "PRT"
+set cc      = "NOCC"
+set jobtype = "xprint"
+set option  = " "
+set xoption = "no"
+
+switch ( $host )
+  case shift*:
+set d = ` echo $USER\: ; date `
+set jobname = ` echo $d | awk ' BEGIN { FS=":"} { printf("%.4s%2s%.2s\n",$1,$3,$4) } ' `
+       breaksw
+  default:
+set d = ` date '+%M%S' `
+set jobname = `echo $USER $d | awk  '{ printf("%.4s%.4s\n",$1,$2%10000)}'`
+       breaksw
+  endsw
+
+set control = $jobname"."$USER"."$host
+set temp    = /tmp
+#
+onintr rm
+#
+
+if ( $#argv == 0) then
+	echo "Usage: xprint [ -d printer ] [ -f forms ]  [ -r room ] [ -n ]  file"
+	exit(0)
+endif
+#
+#       decode arguments
+#
+while ( $#argv >0 )
+
+	switch ( $argv[1] )
+
+	case -d:
+	case -p:
+	case -P:
+	  set printer = $argv[2]
+	  shift
+	  shift
+	  breaksw
+
+	case -f:
+	  set forms = $argv[2]
+          set xoption = "yes"
+	  shift
+	  shift
+	  breaksw
+
+	case -r:
+	  set dist = $argv[2]
+          set xoption = "yes"
+	  shift
+	  shift
+	  breaksw
+
+	case -n:
+	  set notify = "yes"
+          set xoption = "yes"
+	  shift
+	  breaksw
+
+	case -cc:
+	  set cc = "CC"
+          set xoption = "yes"
+	  shift
+	  breaksw
+
+	case -o:
+	  set option = "$argv[2]"
+          set xoption = "yes"
+	  shift
+	  shift
+	  breaksw
+
+	case -H:
+	  set help = "yes"
+	  shift
+	  breaksw
+
+
+	default:
+	  set files = ($*)
+	  set file = $argv[1]
+	  shift
+	  breaksw
+
+	endsw
+end
+#
+#       check for help information first
+#
+if ( $help == yes ) then
+	clear
+	echo "LASERWRITERS:"
+	echo ""
+	rsh $gate cat /etc/printcap | grep '^[a-z,A-Z,0-9]' | sed 's/\:\\//' | tr A-Z a-z |     \
+	awk 'BEGIN   { FS = "|";  i = 0 }                                       \
+		     { printf("%-10s ",$1)                                      \
+		       i++                                                      \
+		       if ( i == 8 )                                            \
+		       {  printf("\n"); i = 0; }                                \
+		       }                                                        \
+	     END   { printf("\n\n") }'
+
+	echo "3812 PRINTERS and LOCATIONS:"
+	echo ""
+	echo "DD31A   [B31  2.023     ]   L3B32   [B32  3.A24     ]   DD513A  [B513 R.052     ]"
+	echo "DELPHI  [B1   1.009     ]   TC3812A [B13  1.004     ]   SPS01   [BSPS           ]"
+	echo "DELB13  [B13  3.023     ]   EP28A   [B28  R.corridor]   PS3812  [B6   R.02      ]"
+	echo "MIS     [B513 R.021     ]   EP04A   [B4   1.corridor]   LEP112  [B112 4.corridor]"
+	echo "EP22A   [B22  1.corridor]   SP3812A [B865 R.D02     ]   PR32B2  [B32  2.B20     ]"
+	echo "PR03A   [B03  1.corridor]   PR892A  [B892 1.corridor]   PR892B  [B892 1.corridor]"
+	echo "PR582A  [B582 R.010     ]   PR18A   [B18  2.corridor]   PR899A  [B899 1.004     ]"
+	echo "PR602A  [B602 1.corridor]   PR73C   [B73  3.007     ]   PR864A  [B864           ]"
+	echo "PR585A  [B585 R.corridor]   PR188A  [B188 5.007     ]   PR32B0  [B32  R.B20     ]"
+	echo "PR2A    [B2   1.032     ]   PR29A   [B29  R.404     ]   PR57A   [B57            ]"
+	echo "PR28B   [B28  R.003     ]   PROPL1  [B6593R.ctrl rm ]                              "
+	echo ""
+	exit(0)
+
+endif
+
+
+if ( ! $?files ) then
+	set files = "-"
+	set file  = "-"
+endif
+
+if ( $file != - ) then
+	foreach f ($files)
+		if ( ! -f $f ) then
+			echo file $f not found
+			exit(0)
+		endif
+	end
+endif
+#
+#       set default printer if no in-line parameter defined
+#
+if ( ! $?printer ) then
+	if ( $?XPRINTER ) then
+		set printer = $XPRINTER
+	else
+		set printer = xeroxdd
+	endif
+endif
+#
+#       set default forms parameter according to printer
+#
+if ( ! $?forms ) then
+
+	switch ( $printer )
+
+	case xeroxdd:
+	case 4050:
+	  set forms = L2C
+	  set linecount = "LC 70 XMIT(LPI 9)"
+	  breaksw
+
+	default:
+	  set forms = P1CT
+	  breaksw
+
+
+	endsw
+
+endif
+#
+#       check for existance of lpr and printer a known printcap entry
+#
+grep -s ^$printer /etc/printcap
+if ( $status == 0 & $xoption == "no" ) then
+	lpr -P$printer $files
+#
+#       Inform the user that something happened
+#
+	if ( $#files > 1 ) then
+		echo $#files files sent to printer $printer
+		else
+		if ( $file == - ) then
+			echo stdin sent to printer $printer
+		else
+			echo $file sent to printer $printer
+		endif
+	endif
+	exit(0)
+endif
+
+ibm:
+################################################################
+#       Come here if the job has to go to the IBM
+################################################################
+#
+#       Set vx to be 1st field of the file name - no dots or _'s
+#       If filename start with dot, then call it DOT
+#       Always trim to 8 characters
+#
+set vx =  ` basename $file | tr _ . | cut -d"." -f1 | tr a-z A-Z  `
+set vx2 = ` echo $file | tr _ . | cut -d"." -f2 | cut -c1-8 | tr a-z A-Z  `
+
+if ( $vx == "" ) set vx = "DOT"
+if ( $vx2 == "" ) set vx2 = "NONE"
+#
+#       check for PostScript files
+#
+   set Sys = `uname -s`
+   switch ( $Sys )
+     case IRIX:
+      set HEAD = "/usr/bsd/head" ; breaksw
+     case HP-UX:
+      set HEAD = "/usr/bin/head" ; breaksw
+     case SunOS:
+      set sver = `uname -r | awk -F. '{ print $1 }'`
+                        set HEAD = "/usr/ucb/head"
+      if ( $sver >= 5 ) set HEAD = "/usr/bin/head"
+      breaksw
+     case OSF1:
+      set HEAD = "/bin/head"     ; breaksw
+     default:
+      set HEAD = "/usr/ucb/head" ; breaksw
+   endsw
+
+   $HEAD -50 $file | grep -s "%\!PS-Adobe-"
+   if ( $status == 0 ) then
+	set prt = PS
+	set jobtype = "xprint_ps"
+	set cmd = "$vx $prt (PRINTER $printer DIST $dist USERID $USER"
+   else
+    	set prt = $vx2
+    	set jobtype = "xprint_tx"
+    	set cmd = "$vx $prt (PRINTER $printer $cc $option FO $forms $linecount DIST $dist USERID $USER"
+   endif
+#echo parameters: $cmd
+#
+cat << EOF  > $temp/dx$$
+/*BATCH JOBNAME $jobname LOCALID VAXUSER/NOLOG*/
+/*BATCH BMON VMON */
+/*BATCH ORGUSER $jobname ORGNODE $dgate */
+/* ATCH STOR 32M */
+/*BATCH CLASS J */                                                              
+/*BATCH TIME 2 */                                                               
+/*BATCH PRINT 100K */
+/*BATCH NOCLEANUP */                                                            
+/*BATCH NORET "* *" */                                                          
+/* REXX EXEC FOR XPRINT FROM UNIX */
+ADDRESS "COMMAND"                                                               
+TRACE C                                                                         
+"MAKEBUF"                                                                       
+QUEUE "C0 8B D0 9B A1 5F"                                                       
+"COPYFILE $vx $prt A (TRANS NOPROMPT"
+"DROPBUF"                                                                       
+"EXEC XPRINT $cmd"
+step1 = rc
+if step1 = 0 & $notify = no then do
+ADDRESS "CMS"
+"cp spool cons stop purge"
+end
+/*BEGIN $vx $prt */
+EOF
+#
+#       Add the data file at the end of the REXX exec
+#
+if ( $prt == PS ) then
+	cat $files >>$temp/dx$$
+else
+  if (( -f /usr/local/bin/tuc ) && ( $cc != CC)) then
+    cat $files | tuc -m -u -c132 |sed -e "s:/\*BEGIN:/\*BxGIN:g" >>$temp/dx$$
+	 else
+    cat $files | expand |sed -e "s:/\*BEGIN:/\*BxGIN:g" >>$temp/dx$$
+  endif
+endif
+#
+#       generate control file
+#
+cat /dev/null >$temp/cx$$
+echo $tstamp jobname $jobname user $USER host $host jobtype $jobtype remfile $file   >>$temp/cx$$
+#
+#       Copy the job across INTERLINK (via $gate if no Decnet access)
+#
+if ( -f /usr/bin/dcp)  then
+	dcp $temp/dx$$ cernvm::rscs\$cernvm:\[YAKA\]$jobname.exec
+	if ( $status != 0 ) then
+		echo "Decnet/Interlink access to cernvm down - xprint failed"
+		goto rm
+	endif
+else
+ftp -n $gate <<EOF
+quote "USER CERNVM::"
+quote "PASS  "
+put $temp/dx$$ RSCS\$CERNVM:\[YAKA\]$jobname.exec
+bye
+EOF
+endif
+#
+#       put control file to subsequent locates
+#
+ftp  -n $gate <<EOF
+user anonymous guests
+cd $qdir
+put $temp/cx$$ $control
+quit
+EOF
+#
+#       Inform the user that something happened
+#
+if ( $#files > 1 ) then
+	echo job \[$jobname\]  $#files files sent to printer $printer
+	else
+
+	if ( $file == - ) then
+		echo job \[$jobname\]  stdin sent to printer $printer
+	else
+		echo job \[$jobname\]  $file sent to printer $printer
+	endif
+endif
+#
+#       end of if loop for VM printers
+#
+#
+#
+#       end of xprint
+#
+rm:
+    if ( -f $temp/dx$$ ) then
+	    rm $temp/dx$$
+    endif
+    if ( -f $temp/cx$$ ) then
+	    rm $temp/cx$$
+    endif
+    exit(0)
+

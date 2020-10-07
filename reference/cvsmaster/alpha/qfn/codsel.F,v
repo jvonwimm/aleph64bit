@@ -1,0 +1,227 @@
+head	1.2;
+access;
+symbols
+	alpha126_22:1.2
+	alpha122_22:1.2
+	alpha126_21:1.2
+	alpha126_20:1.2
+	alpha126_19:1.2
+	alpha126_18:1.2
+	alpha126_17:1.2
+	alpha126_16:1.2
+	alpha126_15:1.2
+	alpha126_14:1.2
+	alpha126_13:1.2
+	alpha126_12:1.2
+	alpha126_11:1.2
+	alpha126_10:1.2
+	alpha126_09:1.2
+	alpha126_08:1.2
+	alpha126_07:1.2
+	alpha126_06:1.2
+	alpha126_05:1.2
+	alpha126_04:1.2
+	alpha126_03:1.2
+	alpha126_02:1.2
+	alpha126_1:1.2
+	alpha125_17:1.2
+	alpha125_16:1.2
+	alpha125_15:1.2
+	alpha125_14:1.2
+	alpha125_13:1.2
+	alpha125_12:1.2
+	alpha125_11:1.2
+	alpha125_10:1.2
+	alpha125_09:1.2
+	alpha125_08:1.2
+	alpha125_07:1.2
+	alpha125_06:1.2
+	alpha125_05:1.2
+	alpha125_04:1.2
+	alpha125_03:1.2
+	alpha125_02:1.2
+	alpha125_01:1.2
+	alpha124_19:1.2
+	alpha125:1.2
+	alpha124_18:1.2
+	alpha124_17:1.2
+	alpha124_16:1.2
+	alpha124_15:1.2
+	alpha124_14:1.2
+	alpha124_13:1.2
+	alpha124_12:1.2
+	alpha124_11:1.2
+	alpha124_10:1.2
+	alpha124_09:1.2
+	alpha124_08:1.2
+	alpha124_07:1.2
+	alpha124_7:1.2
+	alpha124_06:1.2
+	alpha124_05:1.2
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1
+	alpha124:1.1
+	alpha123_12:1.1
+	alpha123_11:1.1
+	alpha123_10:1.1
+	alpha123_9:1.1
+	alpha123_8:1.1
+	alpha123_7:1.1
+	alpha123_6:1.1
+	alpha123_5:1.1
+	alpha123_4:1.1
+	alpha123_3:1.1
+	alpha123_2:1.1
+	alpha123:1.1
+	alpha122_48:1.1
+	alpha122_47:1.1
+	alpha122_46:1.1
+	alpha122_45:1.1
+	alpha122_44:1.1
+	alpha122_43:1.1
+	alpha122_42:1.1
+	alpha122_41:1.1
+	alpha122_40:1.1
+	alpha122_39:1.1
+	alpha122_38:1.1
+	alpha122_37:1.1
+	alpha122_36:1.1
+	alpha122_35:1.1
+	alpha122_34:1.1
+	alpha122_33:1.1
+	alpha122_32:1.1
+	alpha122_31:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	99.04.19.14.04.37;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.05.20.13.54.02;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE CODSEL(NEWCOD)
+CKEY   QIPBTAG / INTERNAL
+C ----------------------------------------------------------------------
+C! Selects John carrs modifications depending on year and CARDS
+C  Manoj Thulasidas 13-2-97
+C  Mod. Ian Tomalin 10/3/99 - New code used by default.
+C  Called from QIPBTAG and TRSEL
+C
+C  OUTPUT:
+C         NEWCOD     : logical, true if new code is called for
+C ----------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+      SAVE
+C
+      LOGICAL NEWCOD
+C
+C  Global includes
+C
+#include "bcs.h"
+      LOGICAL FIRST,NEW
+      INTEGER JULVER
+      DATA FIRST/.TRUE./
+C
+C  Functions
+C
+      INTEGER NAMIND,VDYEAR
+C
+C  Locals
+C
+      LOGICAL OLDCOD
+C  Inline functions
+C
+      INTEGER LCOLS, ID, LROWS, KNEXT, KROW, NRBOS, LFRWRD,
+     $   LFRROW, ITABL, L
+      REAL RTABL
+#include "bmacro.h"
+C ----------------------------------------------------------------------
+      IF (FIRST) THEN
+        FIRST = .FALSE.
+
+C By default use the new John Carr modifications ...
+        NEW = .TRUE.
+
+C ... except if running on LEP1 data processed with old tracking.
+        IF (VDYEAR().LE.92) THEN
+          CALL GETJUV(JULVER)
+          IF (JULVER.LT.300) NEW = .FALSE.
+        END IF
+C
+C Cards can overrule default.
+        IF (IW(NAMIND('OQIP')).GT.0) NEW = .FALSE.
+        IF (IW(NAMIND('NQIP')).GT.0) NEW = .TRUE.
+
+        IF (NEW) THEN
+          WRITE (IW(6),*)'Using new version of QIPBTAG'
+        ELSE
+          WRITE (IW(6),*)'Using old version of QIPBTAG'
+        END IF
+      END IF
+C
+      NEWCOD = NEW
+      END
+#endif
+
+
+
+
+@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@d6 1
+d10 1
+a10 1
+C          NECOD     : logical, true if new code is called for
+d14 3
+d21 3
+a23 1
+      LOGICAL NEWCOD
+d39 22
+d62 1
+a62 19
+C  see if John Carr's modifications are called for explicitly.
+C
+      NEWCOD = IW(NAMIND('NQIP')).GT.0
+      OLDCOD = IW(NAMIND('OQIP')).GT.0
+C
+C  if not, see if the VDET geometry is old or new
+C
+      IF (.NOT.NEWCOD .AND. .NOT.OLDCOD) THEN
+        NEWCOD = VDYEAR().GT.92
+        OLDCOD = VDYEAR().LE.92
+      ENDIF
+C
+C  make sure that NEWCOD and OLDCOD are mutually exclusive
+C  default is old code
+C
+      IF (NEWCOD .AND. OLDCOD) THEN
+        NEWCOD = .FALSE.
+      ENDIF
+      RETURN
+d65 4
+@

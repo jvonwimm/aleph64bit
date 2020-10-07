@@ -1,0 +1,87 @@
+head	1.1;
+access;
+symbols
+	aleph316_2:1.1
+	aleph316_1:1.1
+	aleph316:1.1
+	aleph315_7:1.1
+	aleph315_6:1.1
+	aleph315_5:1.1
+	aleph315_4:1.1
+	aleph315_3:1.1
+	aleph315_2:1.1
+	aleph315_1:1.1
+	aleph315:1.1
+	aleph314_2:1.1
+	aleph314_1:1.1
+	aleph314:1.1
+	aleph313_1:1.1
+	aleph313:1.1
+	aleph312_1:1.1
+	aleph312:1.1
+	aleph311_1:1.1
+	aleph311:1.1
+	aleph310_3:1.1
+	aleph310_2:1.1
+	aleph310_1:1.1
+	aleph310:1.1
+	aleph309_1:1.1
+	aleph309:1.1
+	aleph308_3:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	98.07.15.11.40.20;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Alephlib 308.3
+@
+text
+@C ---------------------------------------------------------------------------
+      subroutine VDGTCH(XCOR,NR,IVIEW,JCHIP)
+C ---------------------------------------------------------------------------
+C! Given the local coordinate, bank number and view, returns the chip  
+C! number
+C!
+C - Author         Manoj Thulasidas  3-Jul-1998
+C  
+C ---------------------------------------------------------------------------
+#ifndef DOC
+      implicit none
+C  arguments
+      INTEGER NR, IVIEW, JCHIP
+      REAL XCOR
+C  functions
+      EXTERNAL VDLCRS, VRSWMX, VFWAFF
+      INTEGER VDLCRS, VRSWMX, VFWAFF
+C  locals
+      INTEGER IRET, JLAY, IWFF, IFAC, JVIEW, IROS, IWAF, IDATC, ICHIP,
+     $   IMOD, JMOD
+      REAL RSTRP
+C============================================================================
+C  decode the address
+      CALL VADEWA (NR,JLAY,IWFF,IFAC,JVIEW)
+      IRET = VFWAFF(IWFF,IMOD,IWAF)
+C  get the read out strip from coord
+      IRET = VDLCRS (XCOR,IVIEW,RSTRP)
+C  integerize
+      IROS = INT(RSTRP)
+C  read out strip to chip#
+      IRET = VRSWMX (IROS,IWAF,IVIEW,IDATC,ICHIP)
+C  return a line driver#
+C  8 chips per module, 2 modules per face, (9+15=24) faces, 2 views
+      CALL VDCHNB(JLAY, IFAC, IMOD, IVIEW, ICHIP, JCHIP)
+ 999  return
+      end
+#endif
+@

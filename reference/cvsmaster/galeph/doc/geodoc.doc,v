@@ -1,0 +1,112 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	94.12.07.14.03.05;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.03.06;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK geodoc
+#if defined(DOC)
+.chapter GEOMETRY DATA CARDS
+      Geometrical constants can be input via BOS data cards read
+      from the logical unit set by a UNIT  N data cards.
+
+      The rules to write data cards are the same as the ones
+      described for the input data cards in *DK DATDOC.
+
+.section keyword definition
+
+  --> ENDQ         last data card
+
+
+.section   How to select part of the detector set-up
+
+   Two possibilities are offered to build a partial geometry set-up:
+
+   1. - Modify the fiducial radius and/or maximum extension along
+   beam line on the FIDUcial card, keeping all detector geometry
+   as read from Data Base.
+        This will activate only the detectors fully contained inside
+   the fiducial volume.
+
+   2. - Keep the overall fiducial volume and suppress the unwanted
+   detectors by a GEOM  'xxyy' 0  card.
+      ( xx should be among the official list of detector 2 letter code, yy being
+          free )
+
+       An array of flags IGEOJO is set up in the common /JOBCOM/,
+   each index corresponding to a component of the set-up, in the
+   following order:
+        VD, IT, TP, EC, LC, SA, HC, MU, CO, BP, QU, PM, TS
+        The value 1 means that the corresponding detector geometry
+   has been selected and is contained inside the fiducial volume.
+
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

@@ -1,0 +1,74 @@
+head	1.2;
+access;
+symbols
+	dbase22:1.2
+	dbase21:1.2
+	dbase20:1.2
+	dbase19:1.2
+	dbase18:1.2
+	dbase17:1.2
+	dbase04:1.1.1.1
+	dbase03:1.1.1.1
+	dbase02:1.1.1.1
+	dbase01:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	97.04.14.15.38.30;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.02.12.10.05.57;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.02.12.10.05.57;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release dbslib 17
+@
+text
+@      INTEGER LMHLEN, LMHCOL, LMHROW
+      PARAMETER (LMHLEN=2, LMHCOL=1, LMHROW=2)  
+C - NAMAX = number of ALEPH banks + number of data cards
+C   do not forget to update NBNK in SBKPAR  
+      PARAMETER (LBOS=900000,NAMAX=1520)
+      COMMON /BCS/   IW(LBOS)   
+      INTEGER IW
+      REAL RW(1000) 
+      EQUIVALENCE (RW(1),IW(1)) 
+C   
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d5 1
+a5 1
+      PARAMETER (LBOS=700000,NAMAX=1520)
+@
+
+
+1.1.1.1
+log
+@1st release of dbase library
+@
+text
+@@

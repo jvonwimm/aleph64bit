@@ -1,0 +1,157 @@
+*DK tssham
+      SUBROUTINE TSSHAM(ITYPE,KCHAN,JCHN,IPLS1,NLPLS,IADC1,NLADC)
+C--------------------------------------------------------------------
+C!  Here we simulate the shaping and amplification of raw input signals
+C!  as well as the noise inherent in the amplification.
+C
+C  Called from:  TSRESP
+C  Calls:        TPCDET
+C
+C  Inputs:   PASSED:      --ITYPE,  sector type
+C                         --KCHAN,  channel type
+C                         --JCHN,   channel number
+C                         --IPLS1,  first bin of raw pulse
+C                         --NLPLS,  number of bins in raw pulse
+C            TPCONS.INC:  --TPCFET, FET capacitance, preamp
+C                         --TCFEED, feedback capacitance, preamp
+C                         --TPRSER, series resistance, preamp
+C                         --NTMXDI, max num of bins in shaped signal
+C                         --NTBAPD, number of analog signal bins per
+C                                   digitized signal bin
+C            TPCBOS.INC:  --NLSHAP, length of shaping signal
+C                         --NSHPOF, offset of shaping signal from zero
+C            BANKS:       --id ITPULS, the input raw pulse
+C                         --id ITPNOI, parallel noise spectrum
+C                         --id ITSNOI, series noise spectrum
+C                         --id ITSHAP, shaping signal
+C
+C  Outputs:  BANKS:       --id ITMADC, the shaped and amplified signal
+C                                      (created in TPINEL)
+C                           IW(ITMADC+I) = Ith bin of signal
+C
+C  R. Richter 29.11.84; D. DeMille
+C--------------------------------------------------------------------
+#include "bcs.h"
+#include "tpcbos.h"
+#include "tpcons.h"
+#include "tpcond.h"
+C
+      LOGICAL LDBS2
+      DATA ICALL/0/
+C
+      ICALL = ICALL + 1
+C
+C  Debug levels
+C
+      LDBS2 = ( NTPCSA .GE. 2 .AND. ICALL .LE. NCALSA )
+C
+C  Zero-index of input pulse
+C
+      IDPLS = ITPULS + IPLS1 - 1
+C
+C  Choose random addresses for beginning to look at the noise signals;
+C  one each for series and parallel noise.
+C  LNOIS is chosen to ensure that we remain in the noise signal
+C
+      LNOIS = IW(ITPNOI) - (NLPLS + NLSHAP + 1)
+      IDPNO = ITPNOI + INT(LNOIS*RNDM(PN)) + 1
+      IDSNO = ITSNOI + INT(LNOIS*RNDM(SN)) + 1
+C
+C  We must add a scaling factor to the series noise to account for
+C  differing detector channel capacitances; see ALEPH-TPC note 84-89
+C  and routine TPNOIS
+C
+      CDET = TPCDET(ITYPE,KCHAN,JCHN)
+      CTOT = TPCFET + TCFEED + CDET
+      SERFC = TPRSER * CTOT
+C
+C  Since we are usually compressing the analog signal into fewer (and
+C  thus longer) time bins for digitizing, we need to decide how to make
+C  the correspondence.  We decide to say that the shaped signal begins
+C  in bucket IADC1 if the signal begins before the halfway point of
+C  that bucket.  First we find the bucket in the shaped signal time
+C  scale in which the raw analog signal actually begins:
+C
+      IADC1 = (IPLS1-1)/NTBAPD + 1
+C
+C  Now find the position of the beginning of the raw signal within
+C  this bucket; if this position is at least halfway along the length of
+C  the bucket, begin filling the shaped signal (and sampling the raw
+C  signal) only in the next bucket.
+C
+      INBK = IPLS1 - (IADC1-1)*NTBAPD
+      IBUK1 = (NTBAPD+1)/2 - INBK + 1
+C
+      IF ( INBK .GT. (NTBAPD+1)/2 )  THEN
+         IADC1 = IADC1 + 1
+         IBUK1 = IBUK1 + NTBAPD
+      ENDIF
+C
+C  The shaped signal is the result of the convolution integral
+C
+C                     |\ +inf
+C                     |
+C  shaped_signal(T) = |    input_pulse(T-T')*response(T')*dT'
+C                     |
+C                    \| 0
+C
+C  IRANGE limits T so that it never exceeds the time range covered by
+C  the raw signal nor the significant range determined by the end of the
+C  raw signal plus the end of the significant part of the response funct
+C
+      IRANG = MIN0( NTMXAN, NLPLS+NSHPOF+NLSHAP-1 )
+      NLADC = ( IRANG - IBUK1 ) / NTBAPD
+C
+C  If drift time is near upper limit, JBUCK can exceed the predefined
+C  length of the ITMADC bank.  Correct for this below.  DFC 15-OCT-88.
+C
+      IF ( (IADC1 + NLADC) .GT. NTMXDI ) THEN
+         NLADC = NTMXDI - IADC1
+         IRANG = NTBAPD*NLADC + IBUK1
+      ENDIF
+C
+      IBUCK = 0
+C
+C  Loop over bins of input pulse to be sampled
+C
+      DO 13 IT = IBUK1, IRANG, NTBAPD
+C
+C  IBUCK is the number of time steps in the shaped-signal binning
+C
+         IBUCK = IBUCK + 1
+         JBUCK = ITMADC + IADC1 + IBUCK
+C
+C  Here's the integration; IRSMX and IRSMN limit the range of the
+C  double loop so that we stay within the limits of the pulse and of
+C  the shaping signal
+C
+         IRSMX = MIN0( NSHPOF+NLSHAP, IT-1 )
+         IRSMN = MAX0( NSHPOF, IT - NLPLS )
+C
+         RW(JBUCK) = 0.
+         DO 12 ITPRM = IRSMN, IRSMX
+ 12        RW(JBUCK) = RW(JBUCK) +
+     *                 IW(IDPLS+IT-ITPRM)*RW(ITSHAP+1+ITPRM-NSHPOF)
+C
+C  Add in the noise.  Note that we add in noise over the length of one
+C  analog signal bin, not over the length of one digitized signal bin;
+C  this is because the rest of the electronics chain will see
+C  instantaneous noise, not noise over a finite range, and one analog
+C  signal bin is as instantaneous as we can get.
+C
+         RW(JBUCK) = RW(JBUCK) + RW(IDPNO+IBUCK) +
+     *                           SERFC*RW(IDSNO+IBUCK)
+C
+C  Include normalization factor for different amplifications on
+C  the different channel types.  This should be needed only for wires,
+C  since the electronics response and its normalization are based on
+C  the design and performance of the pad electronics.
+C
+         RW(JBUCK) = RW(JBUCK)/FACNRM(KCHAN)
+C
+C  Next bin of raw analog signal
+C
+ 13   CONTINUE
+C
+      RETURN
+      END

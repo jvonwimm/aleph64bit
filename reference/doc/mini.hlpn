@@ -1,0 +1,2297 @@
+1 MINI    
+
+  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    CKEY ALEF UTILITY BANK
+     general comdecks common to ALEPH programs
+  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+     MINVSN    Mini-DST version number (of current library).
+     MINDST    Steering routine to create Mini-DST banks not already on POT
+     MININI    Mini code initialisation.
+     MINPRE    Mini code preparation of new event.
+     MINBLD    Build Mini banks for data.
+     MINBLM    Build Mini banks for Monte-Carlo.
+     MINFMT    Define bank formats for Mini-DST.
+     MINRUN    Define run banks to be written for Mini-DST.
+     MINLIS    Add a bank to the list of Mini-DST banks.
+     MINSIC    Fill Sical bank DSIC for Mini-DST.
+     MINVRS    Fill version information bank DVRS for Mini-DST.
+     MINEVT    Fill event information bank DEVT for Mini-DST.
+     MINTBP    Fill vertex bank DTBP for Mini-DST.
+     MINVER    Fill vertex bank DVER for Mini-DST.
+     MINTRA    Fill track bank DTRA for Mini-DST.
+     MINFVB    Fill vertex bit pattern in DTRA.
+     MINGID    Fill photon bank DGID for Mini-DST.
+     MINGPC    Fill photon bank DGPC for Mini-DST.
+     MINHIT    Find number of hits in MVD, ITC or TPC from DTRA bank.
+     MINEID    Fill electron ID bank DEID for Mini-DST.
+     MINMUI    Modify and save muon banks for Mini-DST.
+     MINCRL    Fill calorimeter relation bank DCRL for Mini-DST.
+     MINECO    Fill Ecal calorimeter bank DECO for Mini-DST.
+     MINEWI    Fill Ecal wire energy bank DEWI for Mini-DST.
+     MINHCO    Fill Hcal calorimeter bank DHCO for Mini-DST.
+     MINHRL    Fill Hcal tower-digital relation DHRL for Mini-DST.
+     MINPOB    Fill Hcal digital pattern object DPOB for Mini-DST.
+     MINENF    Fill energy flow bank DENF for Mini-DST.
+     MINJET    Fill jet bank DJET for Mini-DST.
+     MINADD    Add other requested banks to Mini-DST list.
+     MINTMC    Fill track MC bank DTMC for Mini-DST.
+     MINVMC    Fill vertex MC bank DVMC for Mini-DST.
+     MINFMC    Fill fragmentation MC bank DFMC for Mini-DST.
+     MINOUT    Simple routine to write a Mini-DST.
+     MINNOF    Ensure no formats are written for POT banks.
+     MINHIS    Fill some simple histograms to monitor the Mini-DST.
+     MINMON    Simple monitoring of the Mini-DST.
+     MINGTV    Mini-DST version number used to produce current data.
+     MINFIL    Fill POT banks from Mini-DST.
+     MINUPD    Update style of Mini-DST banks to ensure backward compatibil
+     MINLOL    Fill LOLE bank from DEVT or DHEA.
+     MINXTR    Fill XTRB bank from DTBP.
+     MINFRF    Fill FRFT bank from DTRA.
+     MINFRT    Fill FRTL bank from DTRA.
+     MINPYE    Fill PYER bank from DVER.
+     MINYV0    Fill YV0V bank from DTRA.
+     MINPYF    Fill PYFR bank from DTRA.
+     MINPCP    Fill PCPA bank from DNEU and DRES.
+     MINPCQ    Fill PCQA bank from DNEU and DRES.
+     MINPCR    Fill PCRL bank from DCRL.
+     MINPEC    Fill PECO bank from DECO.
+     MINPHC    Fill PHCO bank from DHCO.
+     MINEGI    Fill EGID bank from DGAM.
+     MINEGP    Fill EGPC bank from DFOT.
+     MINPGI    Fill PGID bank from DGID.
+     MINPGP    Fill PGPC bank from DGPC.
+     MINEIT    Fill EIDT bank from DEID.
+     MINFRI    Fill FRID bank from DTRA.
+     MINEFO    Fill EFOL bank from DENF.
+     MINEJE    Fill EJET bank from DJET.
+     MINFKI    Fill FKIN from DTMC.
+     MINFVE    Fill FVER from DVMC.
+     MINFZF    Fill FZFR from DFMC.
+     MINQMU    Mini-DST interface for QMUIDO.
+     MINMSC    Fill  bank DMSC for Mini-DST.
+     MINPSC    Fill  bank PMSC for Alpha   .
+     MINBIP    Swap bank DBTG and NBIP.
+     MINTHR    Fill thrust bank DTHR for Mini-DST.
+     MINPHR    Fill PTHR bank from DTHR.
+     MINGAC    Fill photon bank DGAC for Mini-DST.
+     MINPGA    Fill PGAC bank from DGAC.
+     MINDLT    Fill Reconstructed tagged lepton bank DDLT for Mini-DST.
+     MINPDL    Fill PDLT bank from DDLT.
+     MINMLT    Fill History of tagged lepton bank DMLT for Mini-DST.
+     MINPML    Fill PMLT bank from DMLT.
+     MINJLT    Fill Reconstructed tagged lepton bank DDLT for Mini-DST.
+     MINPJL    Fill PLJT bank from DLJT.
+
+2 MINVSN
+        INTEGER FUNCTION MINVSN(DUMMY)
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Mini-DST version number (of current library).
+ 
+       This can be overrode by use of MVSN card which allows a new
+       version to be started without changing MINI code.
+       Useful if other code has major modifications.
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MININI                                                     set of intrinsic
+   MINVRS                                                     set of intrinsic
+   MINOUT                                                     set of intrinsic
+        |---- MINVSN                                          Mini-DST version
+                   |----  NLINK                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINDST
+        SUBROUTINE MINDST(ELIST,RLIST)
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Steering routine to create Mini-DST banks not already on POT.
+ 
+       Author: Stephen Haywood      22-Jan-90
+       Modify: Stephen Haywood      06-Jan-93 ! Break up into parts
+ 
+       Input  : POT banks
+       Output : MDST banks
+                ELIST = event bank-list (character*800)
+                RLIST = run   bank-list (character*800)
+ 
+       A list of banks which are formed for the event are stored in the
+       string MLISTE in / MINCOM /.
+       The event and run lists are also passed as local variables.
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+ 
+              MINDST                                          set of intrinsic
+                   |----  MININI                              set of intrinsic
+                   |----  MINPRE                              set of intrinsic
+                   |----  MINBLD                              set of intrinsic
+                   |----  MINBLM                              set of intrinsic
+                   |----  MINADD                              Add other reques
+  ------------------------------------------------------------------------------
+2 MININI
+        SUBROUTINE MININI(NWANT,WLIST)
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Mini code initialisation.
+ 
+       Author: Stephen Haywood      06-Jan-93
+ 
+       Output : NWANT  = number of banks listed on MINI card
+                       = 1 if no MINI card
+                WLIST  = list of banks on MINI card
+                       = ' ' if no MINI card
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINDST                                                     set of intrinsic
+        |---- MININI                                          set of intrinsic
+                   |----  MINVSN                              Mini-DST version
+                   |----  NLINK                               External
+                   |----  CHAINT                              External
+                   |----  MINRUN                              Define run banks
+                   |----  MINFMT                              Define bank form
+  ------------------------------------------------------------------------------
+ 
+2 MINPRE
+        SUBROUTINE MINPRE(WLIST, CLASS,IMINI,KEEP)
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Mini code preparation of new event.
+ 
+       Author: Stephen Haywood      06-Jan-93
+ 
+       Input  : WLIST  = Wish-list of banks to be written on Mini
+       Output : CLASS  = logical array set according to class word
+                IMINI  = flag indicating whether Mini is being read
+                       = 0 if not Mini i/p
+                       = 1 if Mini i/p with no wish-list on MINI card
+                       = 2 if Mini i/p with wish-list on MINI card
+                KEEP   = flag indicating whether event should be kept
+                       =  0 do not keep event
+                       = -1 lumi ervent: keep limited set of banks
+                       = +1 interesting event: create all possible banks
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINDST                                                     set of intrinsic
+        |---- MINPRE                                          set of intrinsic
+                   |----  MINLIS                              Add a bank to th
+                   |----  ABRUEV                              Returns current
+                   |----  ALVSN                               set of intrinsic
+                   |----  NAMIND                              External
+                   |----  CHAINT                              External
+                   |----  INDEX                               External
+                   |----  CLAS24                              set of intrinsic
+                   |----  SBIT1                               External
+                   |----  BTEST                               External
+                   |----  NLIST                               External
+                   |----  NLINK                               External
+                   |----  NDROP                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINBLD
+        SUBROUTINE MINBLD(NWANT,WLIST,KEEP,CLASS)
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Build Mini banks for data.
+ 
+       Author: Stephen Haywood      06-Jan-93
+       Modify: Agnieszka Jacholkowska   01-Sep-94
+ 
+       Input  : NWANT  = number of banks listed on MINI card
+                WLIST  = Wish-list of banks to be written on Mini
+                KEEP   = flag indicating whether event should be kept
+                CLASS  = logical array set according to class word
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINDST                                                     set of intrinsic
+        |---- MINBLD                                          set of intrinsic
+                   |----  INDEX                               External
+                   |----  MINLIS                              Add a bank to th
+                   |----  NLINK                               External
+                   |----  MINSIC                              set of intrinsic
+                   |----  MINVRS                              set of intrinsic
+                   |----  MINEVT                              set of intrinsic
+                   |----  MINTBP                              set of intrinsic
+                   |----  MINVER                              set of intrinsic
+                   |----  MINTRA                              set of intrinsic
+                   |----  MINGID                              set of intrinsic
+                   |----  MINGAC                              set of intrinsic
+                   |----  MINEID                              set of intrinsic
+                   |----  MINDLT                              set of intrinsic
+                   |----  MINMLT                              set of intrinsic
+                   |----  MINJLT                              set of intrinsic
+                   |----  MINMUI                              set of intrinsic
+                   |----  MINCRL                              set of intrinsic
+                   |----  MINECO                              set of intrinsic
+                   |----  MINEWI                              set of intrinsic
+                   |----  MINHCO                              set of intrinsic
+                   |----  MINHRL                              set of intrinsic
+                   |----  MINPOB                              set of intrinsic
+                   |----  MINMSC                              !   IRM = IR
+                   |----  MINENF                              set of intrinsic
+                   |----  MINJET                              set of intrinsic
+                   |----  NSWAP                               External
+                   |----  BLIST                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINBLM
+        SUBROUTINE MINBLM
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Build Mini banks for Monte-Carlo.
+ 
+       Author: Stephen Haywood      06-Jan-93
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINDST                                                     set of intrinsic
+        |---- MINBLM                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  MINLIS                              Add a bank to th
+                   |----  MINTMC                              set of intrinsic
+                   |----  MINVMC                              set of intrinsic
+                   |----  MINFMC                              set of intrinsic
+                   |----  NAMIND                              External
+  ------------------------------------------------------------------------------
+ 
+2 MINFMT
+        SUBROUTINE MINFMT
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Define bank formats for Mini-DST.
+ 
+       Author: Stephen Haywood      22-Jan-90
+       Modify: Stephen Haywood      22-Feb-93
+ 
+       On official Mini's the bank formats are absent to save space.
+       This is a delicate operation and is not in general encouraged.
+       It seems to work for data written on IBM and read on any machine.
+       provided that the format does not contain an 'A'.
+       For this reason, the format for DVMC is explicitly written out by
+       MINVMC.
+ 
+       MINFMT should be called at initialisation, before banks are
+       written or read.
+ 
+       On writing a Mini:
+       If 'NOFM' is added to COMP card then
+          formats for Mini banks are not invoked and formats for POT
+          banks may be dropped by MINNOF (when MINOUT is called rather
+          than QWRITE). This is communicated by NOFORM.
+       Else
+          formats for Mini banks are supplied by ALFMT, while those
+          for the POT banks are already present.
+ 
+       On reading a Mini:
+       Formats are supplied by ALFMT (or implicitly by CMPINI).
+ 
+       New banks which have not made it to BANKAL FMT can be handled
+       temporarily by explicit calls to BKFMT.
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MININI                                                     set of intrinsic
+        |---- MINFMT                                          Define bank form
+                   |----  NAMIND                              External
+                   |----  INTCHA                              External
+                   |----  ALFMT                               set of intrinsic
+  ------------------------------------------------------------------------------
+ 
+2 MINRUN
+        SUBROUTINE MINRUN
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Define run banks to be written for Mini-DST.
+ 
+       Author: Stephen Haywood      15-May-90
+       Modify: Stephen Haywood      08-Jun-90   v 3.0
+       Modify: Agnieszka Jacholkowska  1-Nov-1994
+ 
+       Called by MINDST
+       More banks may be added from MINA card, interpreted by MINADD.
+       Also the nature of the data (MC or real) is determined.
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MININI                                                     set of intrinsic
+        |---- MINRUN                                          Define run banks
+                   |----  ALVSN                               set of intrinsic
+                   |----  NLINK                               External
+                   |----  NLIST                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINLIS
+        SUBROUTINE MINLIS(BANK)
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Add a bank to the list of Mini-DST banks.
+ 
+       Author: Stephen Haywood      15-Mar-90
+ 
+       Called by MINDST
+ 
+       INPUT  : BANK  = bank name to be added to Mini list
+                        '0   ' to initialise list for new event
+       The common block / MINCOM / is modified.
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINPRE                                                     set of intrinsic
+   MINBLD                                                     set of intrinsic
+   MINBLM                                                     set of intrinsic
+   MINSIC                                                     set of intrinsic
+   MINVRS                                                     set of intrinsic
+   MINEVT                                                     set of intrinsic
+   MINTBP                                                     set of intrinsic
+   MINVER                                                     set of intrinsic
+   MINTRA                                                     set of intrinsic
+   MINGID                                                     set of intrinsic
+   MINGPC                                                     set of intrinsic
+   MINEID                                                     set of intrinsic
+   MINMUI                                                     set of intrinsic
+   MINCRL                                                     set of intrinsic
+   MINECO                                                     set of intrinsic
+   MINEWI                                                     set of intrinsic
+   MINHCO                                                     set of intrinsic
+   MINHRL                                                     set of intrinsic
+   MINPOB                                                     set of intrinsic
+   MINENF                                                     set of intrinsic
+   MINJET                                                     set of intrinsic
+   MINADD                                                     Add other reques
+   MINTMC                                                     set of intrinsic
+   MINVMC                                                     set of intrinsic
+   MINFMC                                                     set of intrinsic
+   MINMSC                                                     !   IRM = IR
+   MINTHR                                                     set of intrinsic
+   MINGAC                                                     set of intrinsic
+   MINDLT                                                     set of intrinsic
+   MINMLT                                                     set of intrinsic
+   MINJLT                                                     set of intrinsic
+        |---- MINLIS                                          Add a bank to th
+                   |----  ABRUEV                              Returns current
+                   |----  LENOCC                              External
+                   |----  BLIST                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINSIC
+        SUBROUTINE MINSIC
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill Sical bank DSIC for Mini-DST.
+ 
+       Author: Stephen Haywood      24-May-93
+ 
+       Input  : SILU bank
+       Output : DSIC bank
+ 
+       Called by MINDST
+ 
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLD                                                     set of intrinsic
+        |---- MINSIC                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  NINT                                External
+                   |----  MINLIS                              Add a bank to th
+  ------------------------------------------------------------------------------
+ 
+2 MINVRS
+        SUBROUTINE MINVRS
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill version information bank DVRS for Mini-DST.
+ 
+       Author: Stephen Haywood      01-Mar-93
+ 
+       Input  : from MINVSN and YV0V bank
+       Output : DVRS bank
+ 
+       Called by MINDST
+ 
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLD                                                     set of intrinsic
+        |---- MINVRS                                          set of intrinsic
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  MINVSN                              Mini-DST version
+                   |----  NAMIND                              External
+                   |----  MINLIS                              Add a bank to th
+  ------------------------------------------------------------------------------
+ 
+2 MINEVT
+        SUBROUTINE MINEVT
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill event information bank DEVT for Mini-DST.
+ 
+       Author: Stephen Haywood      08-Jan-93
+ 
+       Input  : LOLE, XTCN, VFHL, PECO, PRPW, PEWI, PHST banks
+       Output : DEVT bank
+ 
+       Called by MINDST
+ 
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLD                                                     set of intrinsic
+        |---- MINEVT                                          set of intrinsic
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  NLINK                               External
+                   |----  VZERO                               External
+                   |----  FLOAT                               External
+                   |----  NINT                                External
+                   |----  NAMIND                              External
+                   |----  VSUM                                External
+                   |----  MOD                                 External
+                   |----  MINLIS                              Add a bank to th
+  ------------------------------------------------------------------------------
+ 
+2 MINTBP
+        SUBROUTINE MINTBP
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill vertex bank DTBP for Mini-DST.
+ 
+       Author: Stephen Haywood      04-Apr-90
+ 
+       Input  : XTRB(or XTEB) bank
+       Output : DTBP bank
+ 
+       Called by MINDST
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLD                                                     set of intrinsic
+        |---- MINTBP                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  MINLIS                              Add a bank to th
+  ------------------------------------------------------------------------------
+ 
+2 MINVER
+        SUBROUTINE MINVER
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill vertex bank DVER for Mini-DST.
+ 
+       Author: Stephen Haywood      22-Jan-90
+ 
+       Input  : PYER bank
+       Output : DVER bank
+ 
+       Called by MINDST
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLD                                                     set of intrinsic
+        |---- MINVER                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  NINT                                External
+                   |----  PROB                                External
+                   |----  MINLIS                              Add a bank to th
+  ------------------------------------------------------------------------------
+ 
+2 MINTRA
+        SUBROUTINE MINTRA
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill track bank DTRA for Mini-DST.
+ 
+       Author: Stephen Haywood      22-Jan-90
+ 
+       Input  : FRFT,PYFR,YV0V,FRID,dE/dx banks
+       Output : DTRA bank
+ 
+       Called by MINDST
+ 
+       If the card FRF0 is present, the fit FRFT/0 without the VDET is
+       used.
+       Track quality is obtained from FRID. For old data, a call to
+       UFITQL is made - this requires FRFT, FRTL and YV0V.
+       Unlike the original version of this routine, FRFT is now used
+       rather than PFRF because of changes to error matrix.
+       Vdet hit information is obtained by a call to VDHITS and VDAMB.
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLD                                                     set of intrinsic
+        |---- MINTRA                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  ABRUEV                              Returns current
+                   |----  GTSTUP                              set of intrinsic
+                   |----  NDROP                               External
+                   |----  NAMIND                              External
+                   |----  FPTOJ                               add JLIST to S-l
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  ALFIEL                              set of intrinsic
+                   |----  SQRT                                External
+                   |----  NINT                                External
+                   |----  SIGN                                External
+                   |----  ABS                                 External
+                   |----  ATAN                                External
+                   |----  ALOG                                External
+                   |----  FLOAT                               External
+                   |----  FPKCM                               define universal
+                   |----  UFITQL                              set of intrinsic
+                   |----  MINFVB                              set of intrinsic
+                   |----  VDHITS                              set of intrinsic
+                   |----  VDAMB                               set of intrinsic
+                   |----  MINLIS                              Add a bank to th
+  ------------------------------------------------------------------------------
+ 
+2 MINFVB
+        SUBROUTINE MINFVB(KDTRA)
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill vertex bit pattern in DTRA.
+ 
+       Author: Stephen Haywood      10-Feb-93
+ 
+       Input  : PYER,PYFR,YV0V banks
+                KDTRA  = index of DTRA bank
+       Output : vertex bits of DTRA bank
+ 
+       Called by MINTRA
+ 
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINTRA                                                     set of intrinsic
+        |---- MINFVB                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  SBIT1                               External
+                   |----  NAMIND                              External
+                   |----  SORTZV                              External
+  ------------------------------------------------------------------------------
+ 
+2 MINGID
+        SUBROUTINE MINGID
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill photon bank DGID for Mini-DST.
+ 
+       Author: Stephen Haywood      02-Mar-93
+ 
+       Input  : PGID bank
+       Output : DGID bank
+ 
+       Called by MINDST
+ 
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLD                                                     set of intrinsic
+        |---- MINGID                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  NINT                                External
+                   |----  MINLIS                              Add a bank to th
+  ------------------------------------------------------------------------------
+ 
+2 MINGPC
+        SUBROUTINE MINGPC
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill photon bank DGPC for Mini-DST.
+ 
+       Author: Stephen Haywood      02-Mar-93
+ 
+       Input  : PGPC bank
+       Output : DGPC bank
+ 
+       Called by MINDST
+ 
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+ 
+              MINGPC                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  NINT                                External
+                   |----  MINLIS                              Add a bank to th
+  ------------------------------------------------------------------------------
+2 MINHIT
+        FUNCTION MINHIT(IH,IDET)
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Find number of hits in MVD, ITC or TPC from DTRA bank.
+ 
+       Author: Stephen Haywood      22-Jan-90
+ 
+       Input  : IH     = hit pattern from DTRA bank
+                IDET   = 1, 2 or 3 for MVD, ITC or TPC
+       Output : MINHIT = number of hits observed in specified detector
+ 
+       The routine counts the number of bits in the part of the hit
+       pattern word (word-part) corresponding to the specified detector.
+       For reasons of speed, it uses the word-part (or 8-bit sub-parts)
+       as indices to an array K which contains the bit sums
+       corresponding to the addressing byte.
+       This is a factor 4 faster than doing the bit sums dirrectly, and
+       a factor 6 faster than using a logical bit test.
+       This method was suggested to me by David Asbury of DD.
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINUPD                                                     set of intrinsic
+   MINFRF                                                     set of intrinsic
+        |---- MINHIT                                          Find number of h
+                   |----  JBIT                                External
+                   |----  JBYT                                External
+  ------------------------------------------------------------------------------
+ 
+2 MINEID
+        SUBROUTINE MINEID
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill electron ID bank DEID for Mini-DST.
+ 
+       Author: Stephen Haywood      22-Jan-90
+       Modify: Agnieszka Jacholkowska   24-Oct-94
+ 
+       Input  : EIDT,DTRA banks
+       Output : DEID bank
+ 
+       Called by MINDST
+ 
+       Electron information is only interesting for particles with
+       energies greater than about 2 GeV.
+       Therefore, a conservative momentum cut is made.
+       The DTRA track bank is used for this - if not present, it can be
+       created from PFRF by calling MINTRA.
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLD                                                     set of intrinsic
+        |---- MINEID                                          set of intrinsic
+                   |----  NINT                                External
+                   |----  NLINK                               External
+                   |----  PEIDTJ                              add JLIST to S-l
+                   |----  NAMIND                              External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  MIN                                 External
+                   |----  MAX                                 External
+                   |----  MINLIS                              Add a bank to th
+                   |----  BDROP                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINMUI
+        SUBROUTINE MINMUI
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Modify and save muon banks for Mini-DST.
+ 
+       Author: Stephen Haywood      28-Jul-92
+ 
+       Input  : HMAD, MCAD, MUID
+       Output : HMAD, MCAD, MUID
+ 
+       Called by MINDST.
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLD                                                     set of intrinsic
+        |---- MINMUI                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AMUID                               set of intrinsic
+                   |----  UCOPY                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  MINLIS                              Add a bank to th
+  ------------------------------------------------------------------------------
+ 
+2 MINCRL
+        SUBROUTINE MINCRL
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill calorimeter relation bank DCRL for Mini-DST.
+ 
+       Author: Stephen Haywood      22-Jan-90
+ 
+       Input  : PCRL bank
+       Output : DCRL bank
+ 
+       Called by MINDST
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLD                                                     set of intrinsic
+        |---- MINCRL                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  WBANK                               External
+                   |----  SORTZV                              External
+                   |----  MINLIS                              Add a bank to th
+                   |----  BDROP                               External
+                   |----  WDROP                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINECO
+        SUBROUTINE MINECO
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill Ecal calorimeter bank DECO for Mini-DST.
+ 
+       Author: Stephen Haywood      22-Jan-90
+ 
+       Input  : PECO bank
+       Output : DECO bank
+ 
+       Called by MINDST
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLD                                                     set of intrinsic
+        |---- MINECO                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  NAMIND                              External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  NINT                                External
+                   |----  MINLIS                              Add a bank to th
+  ------------------------------------------------------------------------------
+ 
+2 MINEWI
+        SUBROUTINE MINEWI
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill Ecal wire energy bank DEWI for Mini-DST.
+ 
+       Author: Stephen Haywood      22-Jan-90
+ 
+       Input  : PEWI bank
+       Output : DEWI bank
+ 
+       Called by MINDST
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLD                                                     set of intrinsic
+        |---- MINEWI                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  FLOAT                               External
+                   |----  NINT                                External
+                   |----  MINLIS                              Add a bank to th
+  ------------------------------------------------------------------------------
+ 
+2 MINHCO
+        SUBROUTINE MINHCO
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill Hcal calorimeter bank DHCO for Mini-DST.
+ 
+       Author: Stephen Haywood      22-Jan-90
+ 
+       Input  : PHCO bank
+       Output : DHCO bank
+ 
+       Called by MINDST
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLD                                                     set of intrinsic
+        |---- MINHCO                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  NINT                                External
+                   |----  MINLIS                              Add a bank to th
+  ------------------------------------------------------------------------------
+ 
+2 MINHRL
+        SUBROUTINE MINHRL
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill Hcal tower-digital relation DHRL for Mini-DST.
+ 
+       Author: Stephen Haywood      22-Jan-90
+ 
+       Input  : PCRL bank
+       Output : DHRL bank
+ 
+       Called by MINDST
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLD                                                     set of intrinsic
+        |---- MINHRL                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  WBANK                               External
+                   |----  SORTZV                              External
+                   |----  MINLIS                              Add a bank to th
+                   |----  BDROP                               External
+                   |----  WDROP                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINPOB
+        SUBROUTINE MINPOB
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill Hcal digital pattern object DPOB for Mini-DST.
+ 
+       Author: Stephen Haywood      22-Jan-90
+ 
+       Input  : PPOB bank
+       Output : DPOB bank
+ 
+       Called by MINDST
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLD                                                     set of intrinsic
+        |---- MINPOB                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  NINT                                External
+                   |----  MINLIS                              Add a bank to th
+  ------------------------------------------------------------------------------
+ 
+2 MINENF
+        SUBROUTINE MINENF
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill energy flow bank DENF for Mini-DST.
+ 
+       Author: Stephen Haywood      05-Feb-91
+ 
+       Input  : EFOL banks
+       Output : DENF bank
+ 
+       Called by MINDST
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLD                                                     set of intrinsic
+        |---- MINENF                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  NINT                                External
+                   |----  VMOD                                External
+                   |----  SQRT                                External
+                   |----  MAX                                 External
+                   |----  MINLIS                              Add a bank to th
+  ------------------------------------------------------------------------------
+ 
+2 MINJET
+        SUBROUTINE MINJET
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill jet bank DJET for Mini-DST.
+ 
+       Author: Stephen Haywood      05-Feb-91
+ 
+       Input  : EJET banks
+       Output : DJET bank
+ 
+       Called by MINDST
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLD                                                     set of intrinsic
+        |---- MINJET                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  NINT                                External
+                   |----  MINLIS                              Add a bank to th
+  ------------------------------------------------------------------------------
+ 
+2 MINADD
+        SUBROUTINE MINADD
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Add other requested banks to Mini-DST list.
+ 
+       Author: Stephen Haywood      15-Mar-90
+       Modify: Stephen Haywood      08-Jun-90   v 3.0
+ 
+       Input  : MINA data card
+       Output : Extra names in MLISTE in / MINCOM /
+ 
+       Called by MINDST
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINDST                                                     set of intrinsic
+        |---- MINADD                                          Add other reques
+                   |----  NAMIND                              External
+                   |----  NLIST                               External
+                   |----  CHAINT                              External
+                   |----  INDEX                               External
+                   |----  LENOCC                              External
+                   |----  MINLIS                              Add a bank to th
+  ------------------------------------------------------------------------------
+ 
+2 MINTMC
+        SUBROUTINE MINTMC
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill track MC bank DTMC for Mini-DST.
+ 
+       Author: Stephen Haywood      21-Nov-90
+ 
+       Input  : FKIN bank
+       Output : DTMC bank
+ 
+       Called by MINDST
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLM                                                     set of intrinsic
+        |---- MINTMC                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  NINT                                External
+                   |----  UCOPY                               External
+                   |----  MINLIS                              Add a bank to th
+  ------------------------------------------------------------------------------
+ 
+2 MINVMC
+        SUBROUTINE MINVMC
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill vertex MC bank DVMC for Mini-DST.
+ 
+       Author: Stephen Haywood      21-Nov-90
+ 
+       Input  : FVER bank
+       Output : DVMC bank
+ 
+       Called by MINDST
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLM                                                     set of intrinsic
+        |---- MINVMC                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  INTCHA                              External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  NINT                                External
+                   |----  IUCOMP                              External
+                   |----  MINLIS                              Add a bank to th
+                   |----  BKFMT                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINFMC
+        SUBROUTINE MINFMC
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill fragmentation MC bank DFMC for Mini-DST.
+ 
+       Author: Stephen Haywood      21-Nov-90
+ 
+       Input  : FZFR bank
+       Output : DFMC bank
+ 
+       Called by MINDST
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLM                                                     set of intrinsic
+        |---- MINFMC                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  NINT                                External
+                   |----  MINLIS                              Add a bank to th
+  ------------------------------------------------------------------------------
+ 
+2 MINOUT
+        SUBROUTINE MINOUT
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Simple routine to write a Mini-DST.
+ 
+       Author: Stephen Haywood      15-Mar-90
+ 
+       Input  : List of Mini-DST banks in / MINCOM /
+ 
+       This routine is required for standalone output.
+       The data base should be opened and events read with ABRSEL.
+       The Mini o/p file should be closed with
+          CALL BWRITE(IW,LMINI,'0')
+       where LMINI is the o/p unit obtained from ABUNIT.
+       The event records are dropped for each event by adding Mini banks
+       to 'E' list; which is then dropped by ABRSEL.
+       Since the compression package uses BLIST, one of the BOS lists
+       must be used - we use the 'T' list.
+ 
+       This routine used to create the EDIR. This is now done from REVH
+       and the corresponding code has been removed.
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+ 
+              MINOUT                                          set of intrinsic
+                   |----  NAMIND                              External
+                   |----  INTCHA                              External
+                   |----  ABUNIT                              Subr. ABRREC : R
+                   |----  ABRUEV                              Returns current
+                   |----  BKRHAL                              set of intrinsic
+                   |----  MINVSN                              Mini-DST version
+                   |----  BWRITE                              External
+                   |----  BLIST                               External
+                   |----  LENOCC                              External
+                   |----  CMPLIS                              Compress banks c
+                   |----  NLIST                               External
+                   |----  MINNOF                              Ensure no format
+  ------------------------------------------------------------------------------
+2 MINNOF
+        SUBROUTINE MINNOF(MODE)
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Ensure no formats are written for POT banks.
+ 
+       Author: Stephen Haywood      28-Feb-91
+ 
+       Input  : MODE   = -1 to delete links to formats
+                       = +1 to restore links to formats
+ 
+       Called by MINOUT.
+ 
+       The banks whose formats will be dropped are listed on 'T' list,
+       which is prepared by MINOUT.
+ 
+       This requires changes to BOS system common.
+       The formats are disabled by zeroing their address. However, these
+       are restablished by garbage collections in the work space, and so
+       must be done just before the banks are written.
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINOUT                                                     set of intrinsic
+        |---- MINNOF                                          Ensure no format
+                   |----  VZERO                               External
+                   |----  MOD                                 External
+                   |----  IABS                                External
+                   |----  INTCHA                              External
+                   |----  NLIST                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINHIS
+        SUBROUTINE MINHIS(IMAQQ)
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill some simple histograms to monitor the Mini-DST.
+ 
+       Author: Stephen Haywood      25-Apr-90
+       Modify: Agnieszka Jacholkowska  16-Nov-94
+ 
+       To obtain histograms, HBOOK must already be initialised.
+ 
+       Output : IMAQQ  = 1 for hadronic event candidate (Class 16)
+                       = 0 for other events written to Mini-DST
+                       =-1 for events which are not writen to Mini-DST
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+ 
+              MINHIS                                          set of intrinsic
+                   |----  FLOAT                               External
+                   |----  TIMAD
+                   |----  HBOOK1                              External
+                   |----  HIDOPT                              External
+                   |----  INDEX                               External
+                   |----  NAMIND                              External
+                   |----  BTEST                               External
+                   |----  HFILL                               External
+                   |----  SUMMIN                              set of intrinsic
+                   |----  NLINK                               External
+                   |----  SQRT                                External
+                   |----  JBIT                                External
+                   |----  JBYT                                External
+  ------------------------------------------------------------------------------
+2 MINMON
+        SUBROUTINE MINMON(MODE,IMAQQ, SUMRY)
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Simple monitoring of the Mini-DST.
+ 
+       Author: Stephen Haywood      25-Apr-90
+       Modify: Stephen Haywood      08-Jun-90   v 3.0
+ 
+       Input  : MODE   = -1 for reset
+                          0 for event monitoring
+                         +1 for termination, then reset
+                IMAQQ  = 1 for hadronic event candidate, 0 otherwise
+       Output : SUMRY  = summary array
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+ 
+              MINMON                                          set of intrinsic
+                   |----  LENOCC                              External
+                   |----  IUCOMP                              External
+                   |----  INTCHA                              External
+                   |----  NAMIND                              External
+                   |----  CUTOL                               External
+                   |----  SORTZV                              External
+                   |----  VZERO                               External
+                   |----  FLOAT                               External
+                   |----  CHAINT                              External
+  ------------------------------------------------------------------------------
+2 MINGTV
+        INTEGER FUNCTION MINGTV(DUMMY)
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Mini-DST version number used to produce current data.
+ 
+       This is obtained from the event bank DVRS or the run bank RHAH by
+       a call to ALVSN.
+       It can be overrode by the MVOK data card.
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINUPD                                                     set of intrinsic
+   MINFRF                                                     set of intrinsic
+   MINPCQ                                                     set of intrinsic
+   MINFRI                                                     set of intrinsic
+   MINEFO                                                     set of intrinsic
+        |---- MINGTV                                          set of intrinsic
+                   |----  ABRUEV                              Returns current
+                   |----  NLINK                               External
+                   |----  ALVSN                               set of intrinsic
+  ------------------------------------------------------------------------------
+ 
+2 MINFIL
+        SUBROUTINE MINFIL
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Fill POT banks from Mini-DST.
+ 
+       Author: Stephen Haywood      03-Apr-90
+       Modify: Stephen Haywood      08-Jun-90   for NOCH etc
+       Modify: Stephen Haywood      17-Feb-93
+       Modify: Agnieszka Jacholkowska  22-Nov-94
+ 
+       POT banks are filled as far as is possible from the Mini-DST.
+       This is done provided the POT banks do not exist already.
+       If the cards NOCH etc are present, then the corresponding banks
+       will not be filled.
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+ 
+              MINFIL                                          set of intrinsic
+                   |----  NAMIND                              External
+                   |----  NLINK                               External
+                   |----  ALVSN                               set of intrinsic
+                   |----  MINLOL                              set of intrinsic
+                   |----  MINXTR                              set of intrinsic
+                   |----  MINFRF                              set of intrinsic
+                   |----  MINFRT                              set of intrinsic
+                   |----  MINPYE                              set of intrinsic
+                   |----  MINYV0                              set of intrinsic
+                   |----  MINPYF                              set of intrinsic
+                   |----  MINPCQ                              set of intrinsic
+                   |----  MINPCR                              set of intrinsic
+                   |----  MINPEC                              set of intrinsic
+                   |----  MINPHC                              set of intrinsic
+                   |----  MINEGI                              set of intrinsic
+                   |----  MINPGA                              set of intrinsic
+                   |----  MINPSC                              set of intrinsic
+                   |----  MINPDL                              set of intrinsic
+                   |----  MINPML                              set of intrinsic
+                   |----  MINPJL                              set of intrinsic
+                   |----  MINPTH                              set of intrinsic
+                   |----  MINBIP                              set of intrinsic
+                   |----  MINPGI                              set of intrinsic
+                   |----  MINPGP                              set of intrinsic
+                   |----  MINEIT                              set of intrinsic
+                   |----  MINFRI                              set of intrinsic
+                   |----  MINEFO                              set of intrinsic
+                   |----  MINEJE                              set of intrinsic
+                   |----  MINFKI                              set of intrinsic
+                   |----  MINFVE                              set of intrinsic
+                   |----  MINFZF                              set of intrinsic
+                   |----  PTGMAJ                              add JLIST to S-l
+                   |----  ALFIEL                              set of intrinsic
+                   |----  PITMAJ                              add JLIST to S-l
+                   |----  MINUPD                              set of intrinsic
+  ------------------------------------------------------------------------------
+2 MINUPD
+        SUBROUTINE MINUPD(BANK)
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Update style of Mini-DST banks to ensure backward compatibility.
+ 
+       Author: Stephen Haywood      10-Jan-91
+       Modify: Stephen Haywood      17-Feb-93
+ 
+       Input  : BANK  = bank name to be updated
+                      = 'DROP' to drop all updated banks
+ 
+       This routine is a 'dirty' routine to modify old banks written
+       by old versions of MINDST to the new format.
+       It decides what to do on the basis of MVER - the version number.
+       New banks with number 100 are created.
+       These are dropped after the banks have been used by MINFIL.
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+   MINXTR                                                     set of intrinsic
+   MINFRF                                                     set of intrinsic
+   MINFRT                                                     set of intrinsic
+   MINPYE                                                     set of intrinsic
+   MINYV0                                                     set of intrinsic
+   MINPYF                                                     set of intrinsic
+   MINPEC                                                     set of intrinsic
+   MINEGI                                                     set of intrinsic
+   MINEIT                                                     set of intrinsic
+   MINFRI                                                     set of intrinsic
+        |---- MINUPD                                          set of intrinsic
+                   |----  NDROP                               External
+                   |----  ABRUEV                              Returns current
+                   |----  MINGTV                              set of intrinsic
+                   |----  NLINK                               External
+                   |----  MIN100                              set of intrinsic
+                   |----  UCOPY                               External
+                   |----  NAMIND                              External
+                   |----  FLOAT                               External
+                   |----  NINT                                External
+                   |----  MINHIT                              Find number of h
+                   |----  AMAX1                               External
+                   |----  CHISIN                              External
+  ------------------------------------------------------------------------------
+ 
+2 MINLOL
+        SUBROUTINE MINLOL
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Fill LOLE bank from DEVT or DHEA.
+ 
+       Author: Stephen Haywood      03-Apr-90
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINLOL                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINXTR
+        SUBROUTINE MINXTR
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Fill XTRB bank from DTBP.
+ 
+       Author: Stephen Haywood      18-Apr-91
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINXTR                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  MINUPD                              set of intrinsic
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINFRF
+        SUBROUTINE MINFRF
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Fill FRFT bank from DTRA.
+ 
+       Author: Stephen Haywood      03-Apr-90
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINFRF                                          set of intrinsic
+                   |----  AMAX1                               External
+                   |----  FLOAT                               External
+                   |----  AMIN1                               External
+                   |----  NLINK                               External
+                   |----  NAMIND                              External
+                   |----  MINUPD                              set of intrinsic
+                   |----  MINGTV                              set of intrinsic
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+                   |----  ALFIEL                              set of intrinsic
+                   |----  SIN                                 External
+                   |----  TAN                                 External
+                   |----  SQRT                                External
+                   |----  EXP                                 External
+                   |----  FUPKCM                              Unpack covarianc
+                   |----  MINHIT                              Find number of h
+  ------------------------------------------------------------------------------
+ 
+2 MINFRT
+        SUBROUTINE MINFRT
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Fill FRTL bank from DTRA.
+ 
+       Author: Stephen Haywood      03-Apr-90
+ 
+       The number of hits is available in the bit pattern stored in the
+       DTRA bank. This word (or parts of it) is used as the index to a
+       look up table, K, which contains the bit sums.
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINFRT                                          set of intrinsic
+                   |----  JBIT                                External
+                   |----  NLINK                               External
+                   |----  MINUPD                              set of intrinsic
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+                   |----  JBYT                                External
+  ------------------------------------------------------------------------------
+ 
+2 MINPYE
+        SUBROUTINE MINPYE
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Fill PYER bank from DVER.
+ 
+       Author: Stephen Haywood      03-Apr-90
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINPYE                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  MINUPD                              set of intrinsic
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+                   |----  FLOAT                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINYV0
+        SUBROUTINE MINYV0
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Fill YV0V bank from DTRA.
+ 
+       Author: Stephen Haywood      03-Apr-90
+ 
+       V0 daughters are identified from DTRA and the YV0V bank is
+       reconstructed by calling YMFMIN.
+       This requires FRFT be rebuilt from DTRA.
+       DVER is required to determine number of main vertices.
+       DVRS is required to determine bank number for YV0V.
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINYV0                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  MINUPD                              set of intrinsic
+                   |----  JBIT                                External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+                   |----  UCOPY                               External
+                   |----  NAMIND                              External
+                   |----  YMFMIN                              set of intrinsic
+                   |----  SNGL                                External
+  ------------------------------------------------------------------------------
+ 
+2 MINPYF
+        SUBROUTINE MINPYF
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Fill PYFR bank from DTRA.
+ 
+       Author: Stephen Haywood      03-Apr-90
+ 
+       DVER bank also used.
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINPYF                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  MINUPD                              set of intrinsic
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+                   |----  JBIT                                External
+  ------------------------------------------------------------------------------
+ 
+2 MINPCP
+        SUBROUTINE MINPCP
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Fill PCPA bank from DNEU and DRES.
+ 
+       Author: Stephen Haywood      17-Jan-91
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+ 
+              MINPCP                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+                   |----  FLOAT                               External
+  ------------------------------------------------------------------------------
+2 MINPCQ
+        SUBROUTINE MINPCQ
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Fill PCQA bank from DNEU and DRES.
+ 
+       Author: J.Carr    14 May 1991
+  c              ( modified from MINPCP of Stephen Haywood )
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINPCQ                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  MINGTV                              set of intrinsic
+                   |----  FLOAT                               External
+                   |----  COS                                 External
+                   |----  SIN                                 External
+                   |----  PCMECU                              set of intrinsic
+  ------------------------------------------------------------------------------
+ 
+2 MINPCR
+        SUBROUTINE MINPCR
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Fill PCRL bank from DCRL.
+ 
+       Author: Stephen Haywood      03-Apr-90
+ 
+       It appears that the PCRL bank is essential for the operation of
+       ALPHA.
+       If no DCRL bank exists, a dummy PCRL with one empty row is made.
+       This is necessary since, if there are simple isolated calobjects,
+       they will not appear in the DCRL bank, and if all objects are of
+       this form, then the DCRL bank will be empty.
+       It would be better to create rows in the PCRL bank with the
+       trivial relations in (ie. one object, and the other entries zero).
+       However, this requires looking at PECO/PHCO banks and reduces
+       simplicity.
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINPCR                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINPEC
+        SUBROUTINE MINPEC
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Fill PECO bank from DECO.
+ 
+       Author: Stephen Haywood      03-Apr-90
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINPEC                                          set of intrinsic
+                   |----  NAMIND                              External
+                   |----  NLINK                               External
+                   |----  MINUPD                              set of intrinsic
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+                   |----  FLOAT                               External
+                   |----  SBIT1                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINPHC
+        SUBROUTINE MINPHC
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Fill PHCO bank from DHCO.
+ 
+       Author: Stephen Haywood      03-Apr-90
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINPHC                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+                   |----  FLOAT                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINEGI
+        SUBROUTINE MINEGI
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Fill EGID bank from DGAM.
+ 
+       Author: Stephen Haywood      17-Jan-91
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINEGI                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  MINUPD                              set of intrinsic
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+                   |----  MOD                                 External
+                   |----  FLOAT                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINEGP
+        SUBROUTINE MINEGP
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Fill EGPC bank from DFOT.
+ 
+       Author: Stephen Haywood      04-Nov-91
+ 
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+ 
+              MINEGP                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+                   |----  FLOAT                               External
+                   |----  MOD                                 External
+  ------------------------------------------------------------------------------
+2 MINPGI
+        SUBROUTINE MINPGI
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill PGID bank from DGID.
+ 
+       Author: Stephen Haywood      02-Mar-93
+ 
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINPGI                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+                   |----  FLOAT                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINPGP
+        SUBROUTINE MINPGP
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill PGPC bank from DGPC.
+ 
+       Author: Stephen Haywood      02-Mar-93
+ 
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINPGP                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+                   |----  FLOAT                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINEIT
+        SUBROUTINE MINEIT
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Fill EIDT bank from DEID.
+ 
+       Author: Stephen Haywood      11-Oct-90
+       Modify: Agnieszka Jacholkowska 24-Oct-94
+ 
+       Logically this routine should be called MINEID - but this name
+       is already used for the routine to create DEID.
+       R5 is not calculated unless GETR5 is set true. This calculation
+       takes a long time, and is not yet done for the DST.
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINEIT                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  MINUPD                              set of intrinsic
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+                   |----  FLOAT                               External
+                   |----  ABS                                 External
+                   |----  NAMIND                              External
+                   |----  ALFIEL                              set of intrinsic
+                   |----  TIDHYP                              Get banks from D
+  ------------------------------------------------------------------------------
+ 
+2 MINFRI
+        SUBROUTINE MINFRI
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Fill FRID bank from DTRA.
+ 
+       Author: Stephen Haywood      14-Jan-91
+ 
+       Track quality is filled from DTRA if it is contained there.
+       If not, UFITQL is called, and this requires FRFT, FRTL and YV0V.
+       These banks can be obtained by calling MINFRF, MINFRT and MINYV0.
+       These banks will not be present if NOCH or NOV0 are used.
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINFRI                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  MINUPD                              set of intrinsic
+                   |----  MINGTV                              set of intrinsic
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+                   |----  UFITQL                              set of intrinsic
+  ------------------------------------------------------------------------------
+ 
+2 MINEFO
+        SUBROUTINE MINEFO
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Fill EFOL bank from DENF.
+ 
+       Author: Stephen Haywood      05-Feb-91
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINEFO                                          set of intrinsic
+                   |----  MINGTV                              set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+                   |----  FLOAT                               External
+                   |----  VMOD                                External
+                   |----  SQRT                                External
+  ------------------------------------------------------------------------------
+ 
+2 MINEJE
+        SUBROUTINE MINEJE
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Fill EJET bank from DJET.
+ 
+       Author: Stephen Haywood      05-Feb-91
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINEJE                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+                   |----  FLOAT                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINFKI
+        SUBROUTINE MINFKI
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill FKIN from DTMC.
+ 
+       Author: Stephen Haywood      21-Nov-90
+ 
+       Input  : DTMC bank
+       Output : FKIN bank
+ 
+       Called by MINFIL
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINFKI                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+                   |----  FLOAT                               External
+                   |----  UCOPY                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINFVE
+        SUBROUTINE MINFVE
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill FVER from DVMC.
+ 
+       Author: Stephen Haywood      21-Nov-90
+ 
+       Input  : DVMC bank
+       Output : FVER bank
+ 
+       Called by MINFIL
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINFVE                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  INTCHA                              External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+                   |----  FLOAT                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINFZF
+        SUBROUTINE MINFZF
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill FZFR from DFMC.
+ 
+       Author: Stephen Haywood      21-Nov-90
+ 
+       Input  : DFMC bank
+       Output : FZFR bank
+ 
+       Called by MINFIL
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINFZF                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+                   |----  FLOAT                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINQMU
+        SUBROUTINE MINQMU(ITRK, IBE,IBT,IM1,IM2,NEXP,NFIR,N10,N03,XMULT,
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+       &  ISHAD,IER)
+ 
+   Mini-DST interface for QMUIDO.
+ 
+       Author: Stephen Haywood      09-Jan-91
+ 
+       Input  : DMUO bank
+                ITRK  = Julia track number
+       Output : variables for QMUIDO - see QMUIDO for description
+                IER   = error code: 0 if ok, +10 if no information
+ 
+       Called by QMUIDO
+ 
+       Note:
+       Because some variables are stored in DMUO with limited precision,
+       the results may not be identical to those obtained from the POT.
+       However, the differences should not be important.
+       XMULT is stored to 2 DP in range [0.00,5.11].
+       If a charged track points to a shadowed muon track, then if the
+       charged track is the best matching one, ISHAD is set to that track
+       number; else it is set to -1.
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+ 
+              MINQMU                                          set of intrinsic
+                   |----  NAMIND                              External
+                   |----  MVBITS                              External
+                   |----  FLOAT                               External
+                   |----  JBIT                                External
+                   |----  NINT                                External
+                   |----  VSUM                                External
+  ------------------------------------------------------------------------------
+2 MINMSC
+        SUBROUTINE MINMSC
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill  bank DMSC for Mini-DST.
+ 
+       Author: Agnieszka Jacholkowska    30-Sep-94
+ 
+       Input  : FRFT bank
+       Output : DMSC bank (multiple scattering angle)
+ 
+       Called by MINDST
+ 
+       FRFT is  used after call to MINTRA
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLD                                                     set of intrinsic
+        |---- MINMSC                                          !   IRM = IR
+                   |----  NLINK                               External
+                   |----  ABRUEV                              Returns current
+                   |----  GTSTUP                              set of intrinsic
+                   |----  NDROP                               External
+                   |----  NAMIND                              External
+                   |----  FPTOJ                               add JLIST to S-l
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  NINT                                External
+                   |----  MINLIS                              Add a bank to th
+  ------------------------------------------------------------------------------
+ 
+2 MINPSC
+        SUBROUTINE MINPSC
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill  bank PMSC for Alpha   .
+ 
+       Author: Agnieszka Jacholkowska    30-Sep-94
+ 
+       Input  : DMSC bank
+       Output : PMSC bank
+ 
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINPSC                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+                   |----  FLOAT                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINBIP
+        SUBROUTINE MINBIP
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Swap bank DBTG and NBIP.
+ 
+       Author: Agnieszka Jacholkowska 1-Oct-94
+ 
+       Input  : DBTG bank
+       Output : NBIP bank
+ 
+       Called by ALPHA
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINBIP                                          set of intrinsic
+                   |----  NSWAP                               External
+                   |----  BLIST                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINTHR
+        SUBROUTINE MINTHR (THRU,CTHR)
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill thrust bank DTHR for Mini-DST.
+ 
+       Author: Agnieszka Jacholkowska 1-Oct-94
+ 
+       Input  : QJTHRU output
+       Output : DTHR bank
+ 
+       Called by QUEVT - MINALGO
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+ 
+              MINTHR                                          set of intrinsic
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  NINT                                External
+                   |----  MINLIS                              Add a bank to th
+  ------------------------------------------------------------------------------
+2 MINPHR
+        SUBROUTINE MINPTH
+  ------------------------------------------------------------------------------
+    CKEY MDST /USER
+  ------------------------------------------------------------------------------
+ 
+   Fill PTHR bank from DTHR.
+ 
+       Author: Agnieszka Jacholkowska      19-Sep-94
+2 MINGAC
+        SUBROUTINE MINGAC
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill photon bank DGAC for Mini-DST.
+ 
+       Author: Agnieszka Jacholkowska    17-Oct-94
+ 
+       Input  : PGAC bank
+       Output : DGAC bank
+ 
+       Called by MINDST
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLD                                                     set of intrinsic
+        |---- MINGAC                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  NINT                                External
+                   |----  MINLIS                              Add a bank to th
+  ------------------------------------------------------------------------------
+ 
+2 MINPGA
+        SUBROUTINE MINPGA
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill PGAC bank from DGAC.
+ 
+       Author: Agnieszka Jacholkowska    17-Oct-94
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINPGA                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+                   |----  FLOAT                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINDLT
+        SUBROUTINE MINDLT
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill Reconstructed tagged lepton bank DDLT for Mini-DST.
+ 
+       Author: Agnieszka Jacholkowska    24-Oct-94
+ 
+       Input  : PDLT bank
+       Output : DDLT bank
+ 
+       Called by MINDST
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLD                                                     set of intrinsic
+        |---- MINDLT                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  NINT                                External
+                   |----  MINLIS                              Add a bank to th
+  ------------------------------------------------------------------------------
+ 
+2 MINPDL
+        SUBROUTINE MINPDL
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill PDLT bank from DDLT.
+ 
+       Author: Agnieszka Jacholkowska    24-Oct-94
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINPDL                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+                   |----  FLOAT                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINMLT
+        SUBROUTINE MINMLT
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill History of tagged lepton bank DMLT for Mini-DST.
+ 
+       Author: Agnieszka Jacholkowska    24-Oct-94
+ 
+       Input  : PMLT bank
+       Output : DMLT bank
+ 
+       Called by MINDST
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLD                                                     set of intrinsic
+        |---- MINMLT                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  MINLIS                              Add a bank to th
+  ------------------------------------------------------------------------------
+ 
+2 MINPML
+        SUBROUTINE MINPML
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill PMLT bank from DMLT.
+ 
+       Author: Agnieszka Jacholkowska    24-Oct-94
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINPML                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+  ------------------------------------------------------------------------------
+ 
+2 MINJLT
+        SUBROUTINE MINJLT
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill Reconstructed tagged lepton bank DDLT for Mini-DST.
+ 
+       Author: Agnieszka Jacholkowska    14-Nov-94
+ 
+       Input  : PLJT bank
+       Output : DLJT bank
+ 
+       Called by MINDST
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINBLD                                                     set of intrinsic
+        |---- MINJLT                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  NINT                                External
+                   |----  MINLIS                              Add a bank to th
+  ------------------------------------------------------------------------------
+ 
+2 MINPJL
+        SUBROUTINE MINPJL
+  ------------------------------------------------------------------------------
+    CKEY MDST /INTERNAL
+  ------------------------------------------------------------------------------
+ 
+   Fill PLJT bank from DLJT.
+ 
+       Author: Agnieszka Jacholkowska    14-Nov-94
+ 
+  ------------------------------------------------------------------------------
+   Caller(s)  Node        Calls                               Description
+  ------------------------------------------------------------------------------
+   MINFIL                                                     set of intrinsic
+        |---- MINPJL                                          set of intrinsic
+                   |----  NLINK                               External
+                   |----  AUBOS                               Book/enlarge a b
+                   |----  BLIST                               External
+                   |----  FLOAT                               External
+  ------------------------------------------------------------------------------
+ 
+

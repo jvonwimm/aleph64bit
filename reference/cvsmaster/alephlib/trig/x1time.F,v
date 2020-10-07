@@ -1,0 +1,162 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.44.57;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.44.58;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE X1TIME(IPTIM,IDTIM)
+C----------------------------------------------------------------------
+C!  - Unpack the event time
+C.
+C.   Author   :- Alois Putzer           4-AUG-1989
+C.               Martin Wunsch          4-AUG-1989
+C.               Yves A. Maumary       20-DEC-1989 Adapted for ALEPHLIB
+C.
+C.   Inputs:
+C.        - IPTIM : INTEGER  Array of dimension 2 containing the
+C.                           packed time
+C.
+C.   Outputs:
+C.        - IDTIM : INTEGER  Array of dimension 7 containing the event
+C.                           time in the following order:
+C.                           day, month, year, hour, minute, second,
+C.                           1/100 second
+C.
+C.   Libraries required: CERNLIB
+C.
+C.   Calls: IAND, ISHFT
+C.
+C?   Description
+C?   ===========
+C?   The time when the event occured is contained in the trigger bank
+C?   XTCN, but in a packed form. This routine decodes the time into
+C?   an array of 7 integers with, in order:
+C?   day, month, year, hour, minute, second, 1/100 second
+C?
+C.======================================================================
+#ifndef DOC
+      SAVE
+      DIMENSION IPTIM(*),IDTIM(*)
+      INTEGER MASK
+      DATA MASK/255/
+C - Get Day
+      IDTIM(1) = IAND(IPTIM(1),MASK)
+C - Get Month
+      IDTIM(2) = IAND(ISHFT(IPTIM(1),-8),MASK)
+C - Get Year
+      IDTIM(3) = ISHFT(IPTIM(1),-16)
+C - Get Hour
+      IDTIM(4) = ISHFT(IPTIM(2),-24)
+C - Get Minute
+      IDTIM(5) = IAND(ISHFT(IPTIM(2),-16),MASK)
+C - Get Second
+      IDTIM(6) = IAND(ISHFT(IPTIM(2),- 8),MASK)
+C - Get 1/100 Second
+      IDTIM(7) = IAND(IPTIM(2),MASK)
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

@@ -1,0 +1,157 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.29.16.12.40;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.02;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.03;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ Removed Files:
+ guinti.F
+@
+text
+@*DK ecirun
+      SUBROUTINE ECIRUN
+C.----------------------------------------------------------------
+C  M.Rumpf dec 85
+C                           modified by F.Ranjard - 880308
+C!   Modified :- E. Lancon              3-DEC-1990
+C! ECAL run initialisation
+C     - Called by ASIMOD
+C     - Calls     ERDDAF,ECDFRD,ECDFCD,ECDFPA,ECISTA,ECIBUG
+C                 ALTELL, GTSTUP
+C.----------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "bcs.h"
+#include "iocom.h"
+#include "jobcom.h"
+      INTEGER GTSTUP, ALGTDB
+C ----------------------------------------------------------------
+C
+C Define formats and name-indices of EC BOS banks
+C
+      CALL ECNAMI
+C
+C Initialize Debug Variables for ECAL
+C
+      CALL ECIBUG
+C
+C Define Readout Geometry for ECAL
+C
+      CALL ERDDAF (LRDBIO,IRUNJO,IERR)
+      IF (IERR .EQ. 0) THEN
+         CALL ALTELL ('ECIRUN: missing data base bank(s)',0,'STOP')
+      ENDIF
+      CALL ECDFRD
+C
+C Define Run Conditions for ECAL Analog Signals and Digits
+C
+      CALL ECDFCD
+C
+C Define Parameters for ECAL
+C
+      CALL ECDFPA
+C
+C?   Get EZTH Bank from data base and put it on run header
+      CALL BKFMT('EZTH','2I,(I,3F)')
+C    Get ENNO Bank from data base
+      IECST = GTSTUP ('EC',IRUNJO)
+      IRET = ALGTDB (LRDBIO,'EZTHENNOEDPA',IECST)
+      CALL BLIST (IW,'C+','EZTH')
+      CALL EUPPAR
+C
+C Initialize Statistics for ECAL
+C
+      CALL ECISTA
+C
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d13 1
+d48 1
+a48 1
+      IRET = ALGTDB (LRDBIO,'EZTHENNO',IECST)
+d50 1
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

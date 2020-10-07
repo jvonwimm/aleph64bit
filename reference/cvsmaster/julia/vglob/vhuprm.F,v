@@ -1,0 +1,98 @@
+head	1.1;
+access;
+symbols
+	jul313_3:1.1
+	jul313_2:1.1
+	jul313_1:1.1
+	jul313:1.1
+	jul312_1:1.1
+	jul312:1.1
+	jul311:1.1
+	jul310_1:1.1
+	jul310:1.1
+	jul309_1:1.1
+	jul309:1.1
+	jul308_6:1.1
+	jul308_5:1.1
+	jul308_4:1.1
+	jul308_3:1.1
+	jul308_2:1.1
+	jul308_1:1.1
+	jul308:1.1
+	jul307_4:1.1
+	jul307_3:1.1
+	jul307_2:1.1
+	jul307_1:1.1
+	jul307:1.1
+	jul306_3:1.1
+	jul306_2:1.1
+	jul306_1:1.1
+	jul306:1.1
+	jul305_4:1.1
+	jul305_3:1.1
+	jul305_2:1.1
+	jul305_1:1.1
+	jul305:1.1
+	jul304_3:1.1
+	jul304_2:1.1
+	jul304_1:1.1
+	jul304:1.1
+	jul303_7:1.1
+	jul303_6:1.1
+	jul303_5:1.1
+	jul303_4:1.1
+	jul303_3:1.1
+	jul303_2_mc1:1.1
+	jul303_2:1.1
+	jul303_1_mc1:1.1
+	jul303_1:1.1
+	jul303:1.1
+	jul303_v:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	97.05.15.15.45.48;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Add vglob
+@
+text
+@        subroutine vhuprm(id, view, hit, bank)
+C--------------------------------------------------------------
+C
+C! Unpack and transform to an address in the VDXY or VDZT bank
+C
+C       Author:  D. Casper      24/04/97
+C
+C  INPUT:  integer ID    - pack hit ID
+C          integer VIEW  - 1=w, 2=v
+C OUTPUT:  integer HIT   - hit number within wafer
+C          integer BANK  - encoded readout module address
+C---------------------------------------------------------------
+#ifndef DOC
+        IMPLICIT NONE
+        INTEGER id, view, hit, bank
+        INTEGER wafer
+
+C Unpack the wafer number and hit id
+
+        call vhupck(id, wafer, hit)
+
+C Get the readout module (bank)
+
+        call vrmwf(wafer, view, bank)
+
+        return
+        end
+#endif
+@

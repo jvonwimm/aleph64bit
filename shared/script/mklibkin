@@ -1,0 +1,41 @@
+#! /bin/tcsh
+
+set name = `echo $1 | cut -d " " -f1 | sed s/"_origine"/""/ | sed s/"\.f"/""/`
+set name4 = `echo $name | cut -b1-4`
+if ( $2 == 'NULL' ) then
+ set incl = -I$ALEPH_ROOT/reference/kin
+else
+ set incl = "-I$ALEPH_ROOT/reference/kin/$2"
+endif
+
+set dirname = "$ALEPH_ROOT/Linux/kin"
+
+cd $ALEPH_ROOT/reference/kin
+cp -p $1 $dirname/temp/
+cd $dirname/temp
+f77split $1
+rm -f $1
+if ($name4 == kk2f || $name4 == dize) then
+ echo "ffixed-line-length-132 option enabled"
+ ${FC} ${FCOPT} -ffixed-line-length-132 $incl `ls *.f`
+else
+ ${FC} ${FCOPT} $incl `ls *.f`
+endif
+ar rs lib${name}.a *.o
+if ( $3 != '' ) then
+ echo "moving $3 to $dirname/$4"
+ /bin/mv -f $3 $dirname/$4
+endif
+rm -f *.o
+if ($name4 == kk2f || $name4 == dize) then
+  echo "ffixed-line-length-132 option enabled"
+ ${FC} -g ${FCOPT} -ffixed-line-length-132 $incl `ls *.f`
+else
+ ${FC} -g ${FCOPT} $incl `ls *.f`
+endif
+ar rs lib${name}_dbx.a *.o
+rm -f *.f *.o
+
+echo "moving lib${name}*.a to $ALEPH_ROOT/Linux/kin"
+/bin/mv -f lib${name}*.a $dirname/
+

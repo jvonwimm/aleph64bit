@@ -1,0 +1,93 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  aleph212:1.1.1.1 ALEPH212:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.02.07.11.40.42;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.02.07.11.40.43;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE UCLEAN(NAME,NUM,IER)
+C ----------------------------------------------------------------------
+C - J.F. Grivaz 15-03-1989
+C! Remove duplicate rows from a Tabular Bank
+C - Designed for relation bank, and works correctly only if
+C - the first column is normally filled with a positive integer
+C - Input :
+C -   NAME  = Bank name
+C -   NUM   = Bank number
+C - Output :
+C -   IER = 1 if Unsuccessful
+C - Calls UBPACK
+C  ----------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+      CHARACTER*4 NAME
+#include "bmacro.h"
+C ----------------------------------------------------------------------
+C
+      KINDX = NLINK(NAME,NUM)
+      IF(KINDX.LE.0) GO TO 999
+      NCOLS = LCOLS(KINDX)
+      NROWS = LROWS(KINDX)
+C
+      KIND1 = KINDX + LMHLEN
+      DO 1 I1 = 1,NROWS-1
+        IF(IW(KIND1+1).LT.0) GO TO 2
+        KIND2 = KIND1 + NCOLS
+        DO 3 I2 = I1+1,NROWS
+          IF(IW(KIND2+1).LT.0.) GO TO 4
+          DO 5 J = 1,NCOLS
+            IF(IW(KIND2+J).NE.IW(KIND1+J)) GO TO 4
+    5     CONTINUE
+          IW(KIND2+1)=-IW(KIND2+1)
+    4     CONTINUE
+          KIND2 = KIND2 + NCOLS
+    3   CONTINUE
+    2   CONTINUE
+        KIND1 = KIND1 + NCOLS
+    1 CONTINUE
+C
+      KTAG = 1
+      LTAG = 0
+      JTAG = -1
+      CALL UBPACK(NAME,NUM,KTAG,LTAG,JTAG,IER)
+      IF(IER.NE.0) GO TO 100
+      GO TO 100
+C
+  999 CONTINUE
+      IER = 1
+C
+  100 CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

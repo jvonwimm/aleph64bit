@@ -1,0 +1,230 @@
+#!/bin/csh
+#-----------------------------------------------------------------------
+# Script : purge_nqs_dir
+# Devel. : j. Closier
+# Date   : 20 April 1994
+# Goals  : Clean the temporary NQS directory ($ALEPH/tmp/nqs on OSF1
+#          and /usr/tmp/nqs on IRIX
+# Usage  : purge_nqs_dir
+# Modify : 26 Jan 1995 . If january, then check for the previous year
+#  1.3      8 May 1995  . Check if the batch is still running or not
+#
+#-----------------------------------------------------------------------
+#
+#set echo on
+set ALEPH=/aleph
+set FILE_IN="$ALEPH/tmp/filein.txt"
+set FILE_LOG="$ALEPH/log/purge.log"
+set MONTH=`date | awk '{print $2}'`
+set DAY=`date | awk '{print $3}'`
+set DELAY="4"
+
+echo "***  Purge start `date`  ***" >> $FILE_LOG
+goto CALCUL
+
+REMOVE:
+cd /usr/tmp/nqs
+ls -l  > $FILE_IN
+set nb_lines=`cat $FILE_IN | wc -l`
+set nb_day1=$nb_day
+while ($nb_lines != 0)
+  set line=`head -$nb_lines $FILE_IN | tail -1`
+  set l_month=`echo $line | awk '{print $6}'`
+  set l_day=`echo $line | awk '{print $7}'`
+  set filename=`echo $line | awk '{print $9}'`
+  set nb_day=0
+  switch($l_month)
+  case Jan: 
+            set nb_day=0
+            set nb_day = `expr ${nb_day} + ${l_day}`
+            breaksw 
+  case Feb: 
+            set nb_day=31
+            set nb_day = `expr ${nb_day} + ${l_day}`
+            breaksw 
+  case Mar: 
+            set nb_day=59
+            set nb_day = `expr ${nb_day} + ${l_day}`
+            breaksw 
+  case Apr: 
+            set nb_day=90
+            set nb_day=`expr ${nb_day} + ${l_day}`
+            breaksw 
+  case May: 
+            set nb_day=120
+            set nb_day = `expr ${nb_day} + ${l_day}`
+            breaksw 
+  case Jun: 
+            set nb_day=151
+            set nb_day = `expr ${nb_day} + ${l_day}`
+            breaksw 
+  case Jul: 
+            set nb_day=181
+            set nb_day = `expr ${nb_day} + ${l_day}`
+            breaksw 
+  case Aug: 
+            set nb_day=212
+            set nb_day = `expr ${nb_day} + ${l_day}`
+            breaksw 
+  case Sep: 
+            set nb_day=243
+            set nb_day = `expr ${nb_day} + ${l_day}`
+            breaksw 
+  case Oct: 
+            set nb_day=273
+            set nb_day = `expr ${nb_day} + ${l_day}`
+            breaksw 
+  case Nov: 
+            set nb_day=304
+            set nb_day = `expr ${nb_day} + ${l_day}`
+            breaksw 
+  case Dec: 
+            set nb_day=334
+            set nb_day = `expr ${nb_day} + ${l_day}`
+            if ($MONTH == Jan) set nb_day = `expr ${nb_day} - 365`
+            breaksw 
+  endsw
+
+  @ nb_lines--
+  set diff_day=`expr ${nb_day1} - ${nb_day}`
+  if ($diff_day >= $DELAY) then
+     set requestid=`echo $filename | awk -F_ '{print $3}'`
+     qstat -n $requestid | grep $requestid
+     if ($status != 0) then
+        echo "$line" >> $FILE_LOG
+        \rm -rf $filename
+     endif
+  endif
+  continue
+end
+\rm -f $FILE_IN
+
+cd /var/spool/nqs/nqs
+ls -l > $FILE_IN
+set nb_lines=`cat $FILE_IN | wc -l`
+#set nb_day1=$nb_day
+while ($nb_lines != 0)
+  set line=`head -$nb_lines $FILE_IN | tail -1`
+  set l_month=`echo $line | awk '{print $6}'`
+  set l_day=`echo $line | awk '{print $7}'`
+  set filename=`echo $line | awk '{print $9}'`
+  set nb_day=0
+  switch($l_month)
+  case Jan: 
+            set nb_day=0
+            set nb_day = `expr ${nb_day} + ${l_day}`
+            breaksw 
+  case Feb: 
+            set nb_day=31
+            set nb_day = `expr ${nb_day} + ${l_day}`
+            breaksw 
+  case Mar: 
+            set nb_day=59
+            set nb_day = `expr ${nb_day} + ${l_day}`
+            breaksw 
+  case Apr: 
+            set nb_day=90
+            set nb_day=`expr ${nb_day} + ${l_day}`
+            breaksw 
+  case May: 
+            set nb_day=120
+            set nb_day = `expr ${nb_day} + ${l_day}`
+            breaksw 
+  case Jun: 
+            set nb_day=151
+            set nb_day = `expr ${nb_day} + ${l_day}`
+            breaksw 
+  case Jul: 
+            set nb_day=181
+            set nb_day = `expr ${nb_day} + ${l_day}`
+            breaksw 
+  case Aug: 
+            set nb_day=212
+            set nb_day = `expr ${nb_day} + ${l_day}`
+            breaksw 
+  case Sep: 
+            set nb_day=243
+            set nb_day = `expr ${nb_day} + ${l_day}`
+            breaksw 
+  case Oct: 
+            set nb_day=273
+            set nb_day = `expr ${nb_day} + ${l_day}`
+            breaksw 
+  case Nov: 
+            set nb_day=304
+            set nb_day = `expr ${nb_day} + ${l_day}`
+            breaksw 
+  case Dec: 
+            set nb_day=334
+            set nb_day = `expr ${nb_day} + ${l_day}`
+            if ($MONTH == Jan) set nb_day = `expr ${nb_day} - 365`
+            breaksw 
+  endsw
+
+  @ nb_lines--
+  set diff_day=`expr ${nb_day1} - ${nb_day}`
+  if ($diff_day >= $DELAY) then
+     set requestid=`echo $filename | awk -F_ '{print $3}'`
+     qstat -n -h saga $requestid | grep $requestid
+     if ($status != 0) then
+        echo "$line" >> $FILE_LOG
+        \rm -rf $filename
+     endif
+  endif
+  continue
+end
+\rm -f $FILE_IN
+exit 0
+
+CALCUL:
+switch($MONTH)
+  case Jan: 
+            set nb_day=0
+            set nb_day = `expr ${nb_day} + ${DAY}`
+            breaksw 
+  case Feb: 
+            set nb_day=31
+            set nb_day = `expr ${nb_day} + ${DAY}`
+            breaksw 
+  case Mar: 
+            set nb_day=59
+            set nb_day = `expr ${nb_day} + ${DAY}`
+            breaksw 
+  case Apr: 
+            set nb_day=90
+            set nb_day=`expr ${nb_day} + ${DAY}`
+            breaksw 
+  case May: 
+            set nb_day=120
+            set nb_day = `expr ${nb_day} + ${DAY}`
+            breaksw 
+  case Jun: 
+            set nb_day=151
+            set nb_day = `expr ${nb_day} + ${DAY}`
+            breaksw 
+  case Jul: 
+            set nb_day=181
+            set nb_day = `expr ${nb_day} + ${DAY}`
+            breaksw 
+  case Aug: 
+            set nb_day=212
+            set nb_day = `expr ${nb_day} + ${DAY}`
+            breaksw 
+  case Sep: 
+            set nb_day=243
+            set nb_day = `expr ${nb_day} + ${DAY}`
+            breaksw 
+  case Oct: 
+            set nb_day=273
+            set nb_day = `expr ${nb_day} + ${DAY}`
+            breaksw 
+  case Nov: 
+            set nb_day=304
+            set nb_day = `expr ${nb_day} + ${DAY}`
+            breaksw 
+  case Dec: 
+            set nb_day=334
+            set nb_day = `expr ${nb_day} + ${DAY}`
+            breaksw 
+endsw
+goto REMOVE

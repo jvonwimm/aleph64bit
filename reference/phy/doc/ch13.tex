@@ -1,0 +1,282 @@
+\chapter{\label{sec-OAR}ALPHA Utility Routines: Printing, Writing
+Events, Timing, etc.}
+\par
+\section{\label{sec-QMT}Program termination}
+\par
+\fbox{CALL QMTERM ('any message')}
+\par
+\par
+Can be called from anywhere.
+\begin{description}\item[\bf{Calls}]QUTERM, QUTHIS, QWMESS.\end{description}
+\par
+{\bf Input argument:}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{'any message'}
+character string,
+The message will be printed and should contain the
+reason for the program termination.
+\end{indentlist}
+\section{\label{sec-QWR}Write the current event on the output file}
+\par
+\fbox{CALL QWRITE}
+\par
+\par
+The file name is specified on the FILO card (see
+\ref{sec-DCFILO}). This routine can be called from user routines;
+it is
+called automatically from QMEVNT
+if the COPY option (\ref{sec-DCCOPY}) is selected.
+If QWRITE is called more than once for the same event, the event will
+be written only once.
+ 
+\section{\label{sec-QWCLAS}Set classification word written to event
+directory}
+\par
+\fbox{CALL QWCLAS (IBIT)}
+\par
+\par
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{Input argument:}
+\indentitem{IBIT}
+Turn on bit IBIT in classification word. IBIT = 1 $-$ 30.
+\end{indentlist}
+QWCLAS has to
+be called once for each bit which is to be set; i.e.,
+if three bits are to be set, QCLASW has to be
+called three times.
+Note that a call to QWCLAS simply turns on a single
+bit while leaving other bits unchanged.  The intial classification
+word is the one read from the input file;  therefore,
+the classification word must be zeroed before storing your
+own values:
+\begin{verbatim}
+       CALL QWCLAS(0).
+\end{verbatim}
+If QWCLAS is not called, the classification
+word will be set equal to that on the input file.
+\par
+\section{\label{sec-OARTI}Timing}
+\par
+\subsection{\label{sec-OARPT}Print job time consumption}
+\par
+\fbox{CALL QWTIME}
+\par
+\par
+Called automatically from QMTERM.
+ 
+\subsection{\label{sec-OARTE}Measure time consumption of part of
+program}
+\par
+\fbox{CALL QTIMED(INUM)}
+\par
+\par
+This subroutine measures the time between two subsequent calls
+to QTIMED. 
+Time statistics can be kept for up to 9 different
+subroutine calls (INUM = 1 $-$ 9).
+The time consumption
+summary is printed automatically during job termination.
+The summary includes the number of calls and the total time / call.
+The first CALL QTIMED sets the start time. The time consumption for
+QTIMED itself (0.25 msec on CERNVM) is not subtracted in the time
+summary.
+(The CERNLIB routines TIMED/TIMAD should not be used with QTIMED.)
+ 
+{\bf Example:}
+\begin{verbatim}
+    CALL QTIMED(1)
+      CODE A
+    CALL QTIMED(2)
+      CODE B
+    CALL QTIMED(3)
+ 
+  Results:
+QTIMED  Ncalls  total_time   time/call   %
+   1      499      35          0.07     92.2
+   2      500       1          0.002     2.6
+   3      500       2          0.004     5.2
+\end{verbatim}
+In this example, time 2 gives the time consumption of `CODE A', time 3
+gives the time consumption of `CODE B', and time 1 gives the time consumption
+between CALL QTIMED(3) and CALL QTIMED(1).
+\section{\label{sec-OARPR}Print routines}
+\par
+The routines described in this section are used to print information
+about events or to print messages.
+Some of the routines have the subroutine argument {\bf 'option'}.
+ 
+{\bf 'option'} is composed of one or
+several characters. Each character has a special meaning:
+\begin{indentlist}{ 1.75cm}{ 2.00cm}
+\indentitem{'H'}
+print a header line. Without this option, you will get a sequence
+of numbers without any description. With this option, an extra
+line containing the mnemonic symbols for the numbers given
+underneath is printed.
+\indentitem{'0'}print an empty line and the header line.
+\indentitem{'1'}start at a new page and print the header line.
+\indentitem{' `}blank space = no option
+\end{indentlist}
+More options can be given for specific subroutines.
+ 
+\subsection{\label{sec-OARPM}Print a message}
+\par
+\fbox{CALL QWMESS ('any message')}
+\par
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{Input argument:}
+\indentitem{'any message'}
+(character string or character variable)
+If the 1st character of `any message' is `0' or `1',
+it is taken as carriage control character ('0': empty
+line; `1': new page).
+If it is not `0' nor `1', it is taken as part of the message.
+\end{indentlist}
+\subsection{\label{sec-OARPE}Print a message plus run, event number}
+\par
+\fbox{CALL QWMESE ('any message')}
+\par
+ 
+\subsection{\label{sec-QWE}Print full event summary (many pages)}
+\par
+\fbox{CALL QWEVNT}
+\par
+\begin{description}\item[\bf{Calls}]QWHEAD, QWSEC, QWTREE\end{description}
+\subsection{\label{sec-QWH}Print event header (one line)}
+\par
+\fbox{CALL QWHEAD ('option', `any text')}
+\par
+{\bf Input arguments:}
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{'option'}one of `H', `0', or `1' (see \ref{sec-OARPR})
+\indentitem{'any text'}message; may be blank space: ` '
+\indentitem{Output}
+ 
+see printer output of QWHEAD called with option `H'.
+Here, as in many other print routines, it's a matter of taste
+which data are important enough to be printed, and comments
+are welcome. For better readability, the output should always
+fit onto one printer line.
+\end{indentlist}
+\subsection{\label{sec-QWHF}Print full event header (many lines)}
+\par
+\fbox{CALL QWHFUL ('option', `any text')}
+\par
+\par
+Subroutine arguments are the same as for QWHEAD.
+ 
+\subsection{\label{sec-QWTK}Print information for ``track''}
+\par
+\fbox{CALL QWITK (ITK, `option')}
+\par
+\par
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{Input arguments:}
+\indentitem{ITK}
+ALPHA track number.
+\indentitem{'option'}
+one of `H', `0', or `1' (see \ref{sec-OARPR}).
+`L': Do not print locked tracks.
+\indentitem{Output}see printer output when called with option `H'.
+ 
+Meaning of column ``det. data'':
+\begin{indentlist}{ 1.25cm}{ 1.50cm}
+\indentitem{F }general track fit data are available
+\indentitem{T }dE/dx data are available
+\indentitem{H }HCAL data are available
+\indentitem{M }muon chamber data are available
+\indentitem{E }Ecal data are available
+\indentitem{H }Hcal data are available
+\indentitem{... rightmost characters:}
+\indentitem{C }object is associated to one or several charged tracks
+\indentitem{E }object is associated to one or several Ecal objects
+\indentitem{H }object is associated to one or several Hcal objects
+\end{indentlist}
+\end{indentlist}
+\subsection{\label{sec-QWV}Print information for vertex}
+\par
+\fbox{CALL QWIVX (IVX, `option')}
+\par
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{Input arguments:}
+\indentitem{IVX}ALPHA vertex number.
+\indentitem{'option'}one of `H', `0', or `1' (see \ref{sec-OARPR})
+\indentitem{Output}see printer output when called with option `H'.
+ 
+\end{indentlist}
+\subsection{\label{sec-QWS}Print summary for categories of
+tracks or vertices}
+\par
+\fbox{CALL QWSEC (ISEC, `option')}
+\par
+\begin{description}\item[\bf{Calls}]QWITK, QWIVX\end{description}
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{Input arguments:}
+\indentitem{ISEC}
+section number = section in QVEC and QVRT:
+\begin{indentlist}{ 2.00cm}{ 2.25cm}
+\indentitem{KSOVT}Overlap objects
+\indentitem{KSCHT}Charged tracks
+\indentitem{KSIST}Isolated = neutral cal objects
+\indentitem{KSAST}Cal objects associated to charged tracks
+\indentitem{KSV0T}Neutral tracks pointing to reconstructed vertices
+\indentitem{KSDCT}Tracks outgoing from reconstructed vertices
+\indentitem{KSEFT}Energy flow objects
+\indentitem{KSNET}Neutral objects from PCPA
+\indentitem{KSGAT}Photons from GAMPEC
+\indentitem{KSJET}Jets from energy flow objects
+\indentitem{KSMCT}MC particles
+\indentitem{KSREV}Reconstructed vertices
+\indentitem{KSMCV}MC vertices.
+\end{indentlist}
+\indentitem{'option'}
+one of `0', or `1' (see \ref{sec-OARPR}).
+'L': Do not print locked tracks.
+\end{indentlist}
+\subsection{\label{sec-QWTR}Print decay tree of track ITK.}
+\par
+\fbox{CALL QWTREE (ITK, `option')}
+\par
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{Input arguments:}
+\indentitem{ITK}
+Track / particle number.
+\indentitem{'option'}one of `H', `0', or `1' (see \ref{sec-OARPR})
+\indentitem{Output:}
+ 
+Similar to CALL QWITK.
+\end{indentlist}
+
+\subsection{\label{sec-TXTR}Create \LaTeX   source of the decay tree of track ITK.}
+\par
+\fbox{CALL TXTREE (MOTHER,option)}
+\par
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{Input arguments:}
+\indentitem{MOTHER}
+ALPHA Track number where the tree will start.
+
+\indentitem{option}if option='TRACK\#'
+ the ALPHA track number will be displayed as well as the particle names;
+ otherwise only the particle code is displayed.
+
+\indentitem{Output:}
+
+The output consists of a file with name txtree.tex, in the user's working
+directory on UNIX and on the SCWEEK area on AXAL.
+
+\end{indentlist}
+
+Example of use of this routine :
+\begin{verbatim}
+
+C Find the ALPHA track number of a J/PSI :
+      NPSI=KPDIR('JPSI',KMONTE) 
+C  Find the mother of this J/Psi :
+      MOTH=KMOTH(NPSI,1)
+C Produce the tree with labels only :
+      CALL TXTREE(MOTH,' ')
+C Produce the tree with labels and track numbers :
+      CALL TXTREE(MOTH,'TRACK#')
+\end{verbatim}
+

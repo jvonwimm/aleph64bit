@@ -1,0 +1,221 @@
+#! /bin/csh
+#============================================================================
+#                             export
+#                                                       F.Ranjard
+#============================================================================
+# procedure to export a given version of a given library from CVSROOT
+# to ALROOT
+# and to compile it on SHIFT9, CSF and SAGA making a library
+#============================================================================
+# call "cvs export" to get a new source file on ALROOT/sourcexxx
+# send a batch job "newlib" on various machines to compile and make the library.
+#============================================================================
+# P1 -> prog_name i.e: alephlib
+# P2 -> cycle     i.e.: 154
+# P3 -> tag       i.e.: v154 (if not given the tag is built from the mnemonic
+#                             stored in script_dir/alib.dir and the cycle no.)
+# P4 -> idir      i.e.: kin  (used only when the prog_name is not known from
+#                             script_dir/alib.dir)
+# when the prog_name is not part of script_dir all arguments must be given,
+# and the mnemonic is assumed to be the prog_name.
+#============================================================================
+# 960411 - export1.0
+# 960523 - export2.0
+#          use checkout instead of export 
+# 970613 - use sfsub instead of qsub and SHARED instead of ALEPH
+# 980216 - export3.0
+#          copy to other platform (afs<->nfs)
+# 990512 - export3.1
+#          send lsf batch jobs to shift50 and hpplus from dxplus
+# 991001 - export3.2
+#          add Linux platform
+#===========================================================================
+#
+#
+set exec_name = "export3.2"
+set verbflr = ""
+set nar = $#argv
+if (${nar} != 0) then
+  if ($argv[${nar}] == "-v") then
+     echo "${exec_name}"
+     set verbflr = "-v" 
+     set echo on
+     set argv[${nar}] = ""
+     @ nar = ${nar} - 1
+  endif
+endif
+#
+if ( $?ENVIRONMENT ) then
+ if ( ("$ENVIRONMENT" == "INTERACTIVE" || "$ENVIRONMENT" == "LOGIN") && $1 == "-h" ) then
+   echo ""
+   echo "usage:"
+   echo " export <prog_name> <version no.> [<tag>] [<aleph_sub_dir>]"
+   echo ""
+   echo "some examples:"
+   echo " export alpha 123 "
+   echo " makes a cvs checkout of alpha onto $ALROOT/alpha123 using alpha123 tag"
+   echo " builds a batch job to compile and make a library on the 3 platforms"
+   echo "   $ALROOT/alpha123/alpha123.job and alpha123.input"
+   echo ""
+   echo " export galeph 304 gal304_2"
+   echo " makes a cvs checkout of galeph onto $ALROOT/gal304 using gal304_2 tag"
+   echo " builds a batch job to compile, make a library and a module on the 3 platforms"
+   echo " $ALROOT/gal304/gal304_2.job and gal304_2.input"
+   echo ""
+   echo " export bos77 3289"
+   echo " makes a cvs checkout of bos77 onto $ALROOT/bos77 using bos3289 tag"
+   echo " builds a batch job to compile and make a library on the 3 platforms"
+   echo "   $ALROOT/bos77/bos3289.job and bos3289.input"
+   echo ""
+   exit(1)
+ endif
+endif
+#
+unset noclobber
+
+set script_dir = "${SHARED}/script"
+set alib_dir = "${SHARED}/script/alib.dir"
+set flag = "OK"
+ 
+# =====================================================================
+#
+#------> get program name from 1st argument
+#
+if ($1 == "") then
+  echo -n "Enter Aleph program name [eg:alephlib <CR>=exit]-> "
+   set prog_name = $<
+   if (${prog_name} == "") goto exec_end
+else
+   set prog_name = $1
+endif
+#
+#-------> get version number from 2nd argument
+#
+if ($2 == "") then
+   set string_cr = "<CR>=exit"
+   echo -n "Enter version number[${string_cr}]-> "
+   set cycle = $<
+   if (${cycle} == "") goto exec_end
+else
+   set cycle = $2
+endif
+# 
+#-------> get idir, mnemonic and src_dir 
+#
+if (-e ${alib_dir}) then
+# - idir -
+   if ($4 != "") then
+      set idir = $4
+   else 
+      set idir = `egrep ^" ${prog_name} " ${alib_dir} | awk '{print $2}'`
+      if (${idir} == "") then
+         set string_cr = "<CR>=exit"
+         echo -n "Enter sub-directory where to store library[${string_cr}]-> "
+         set idir = $<
+         if (${idir} == "") goto exec_end
+      endif
+   endif
+# - mnemonic -   
+   set mnemonic = `egrep ^" ${prog_name} " ${alib_dir} | awk '{print $3}'`
+   if (${mnemonic} == "") then
+      set mnemonic = ${prog_name}
+   endif 
+# - src_nam-
+   set src_nam  = `egrep ^" ${prog_name} " ${alib_dir} | awk '{print $4}'`
+   if (${src_nam} == "") then
+      set src_nam = ${mnemonic}${cycle}
+   endif
+else
+   set flag = "${alib_dir} does not exist - STOP"
+   goto exec_end
+endif 
+#
+#-------> get tag from 3rd argument or from mnemonic and cycle no.
+#
+if ($3 != "") then
+   set tag = $3
+else
+   set tag = ${mnemonic}${cycle}
+endif
+#
+#-------> set prog_dir and src_dir
+#
+set prog_dir = "${ALEPH_ROOT}/${OS}/${idir}"
+set src_dir  = "${ALROOT}/${src_nam}"
+    
+#
+# ===============================================================================
+#
+#------> get a new source from CVSROOT
+#
+cd ${ALROOT}
+cvs checkout -P -r ${tag} -d ${src_dir} ${prog_name}
+#
+# =====================================================================
+#          compile and make a library on various unix platforms
+# =====================================================================
+#
+cd ${src_dir}
+set batch = "${src_dir}/${tag}"
+
+#  
+# build the file ${batch}.lsfjob
+echo '#\!/bin/csh' >! ${batch}.lsfjob
+echo '#BSUB -J' "${tag}_${HOST}" >> ${batch}.lsfjob
+echo "time ${script_dir}/maklib < ${batch}.input" >> ${batch}.lsfjob
+echo 'exec_end:' >> ${batch}.lsfjob
+echo 'exit' >> ${batch}.lsfjob
+#
+#
+# build the file ${batch}.input
+echo "${prog_name}" >! ${batch}.input
+echo "${cycle}" >> ${batch}.input
+echo "${verbflr}" >> ${batch}.input 
+#
+chmod +x ${batch}.lsfjob
+#
+if ( ${SERVICE} == "dxplus" ) then
+### from dxplus submit the job in batch to shift50, csf and pcsf to build libraries
+   bsub -q 1nh < ${batch}.lsfjob
+   bsub -q csf_1nd < ${batch}.lsfjob
+   bsub -q pcsf_1nd < ${batch}.lsfjob
+else
+
+### at CERN if you are not on dxplus : logout and log on dxplus
+  if (${SERVICE} == "SHIFTALEPH" || ${SERVICE} == "AFAL" || ${SERVICE} == "CSF" || ${SERVICE} == "hpplus") then
+     echo " ===> BECAREFUL you are not on dxplus: you should logout and login on dxplus"
+     echo " ===> from dxplus you can submit the ${batch}.lsfjob to shift50, csf and pcsf"
+     echo "      bsub -q 1nh < ${batch}.lsfjob"
+     echo "      bsub -q csf_1nd < ${batch}.lsfjob"
+     echo "      bsub -q pcsf_1nd < ${batch}.lsfjob"
+  else   
+
+### you are not at CERN: build libraries interactively
+     ${batch}.lsfjob
+  endif
+endif
+#
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> spy
+spy:
+#*******> spy
+echo `date` " END of ${exec_name} ${OS} ${user} ${prog_name} ${cycle} ${flag}" >> ${prog_dir}/spy
+
+# 
+# ====================copy on $COREHOME all files created =======
+#
+#cp2clone ${src_dir}
+# 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> exec_end
+exec_end:
+ exit
+ 
+
+
+
+
+
+
+
+
+
+

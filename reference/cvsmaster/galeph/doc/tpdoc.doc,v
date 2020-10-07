@@ -1,0 +1,195 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	94.12.07.14.03.08;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.03.09;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK tpdoc
+#if defined(DOC)
+.chapter TPC
+.section Geometry
+
+   The geometrical constants are obtained from the "data base" in the
+form of BOS free-format data cards.  The GEANT3 tracking-related
+geometry (banks 'TPG1', 'TPG2') is separated from the readout geometry
+described in the banks 'TPRD' (one per sector type).  For the purpose
+of signal simulation, it is convenient to store frequently used
+quantities in local tables (Comdecks TPGEOM,TPGEOS).  This is done
+by subroutine TPUGEO which also tests the validity of the geometry
+(eg that pad rows do not cross sector boundaries).   A similar
+approach is used to store simulation constants (routine TPGCON).
+
+   There are two geometry detail levels for the description of the
+endplates. Level 1 (default) treats each endplate as a homogeneous
+medium of average properties estimated by the material composition.
+The second level takes into account the concentration of material in
+the sector support structure. The code to describe the level 2
+structure is activated with the Historian flag *DEF TPDETAIL. To
+implement the level 2 structure at run-time, the data card
+GEOM 'TPC ' 2 should be specified.   It should be noted that the
+endplate detail level is of no direct relevance to the TPC
+simulation; it should be a choice for ECAL and HCAL applications.
+
+.section Hit generation in the TPC.
+
+  The TPC is equipped with three types of readout: sense wire, pads and
+trigger pads, which can be activated independently by the run condition
+flags ICTPJO(1-3) set by means of the data card RUNC 'TPC '.  No
+information is produced for the sense wires at present.
+
+  Hits are generated for the pads and trigger pads in a similar way to
+the ITC: ie by computing intersections of charged tracks with
+hypothetical cylinders formed by extending the pad rows along the
+full active volume.  By default, hits are produced for pads and trigger
+pads (ICTPJO(2)=1, ICTPJO(3) = 1) and stored in BOS banks 'TPHT' and
+'TTHT', respectively.   For reconstruction studies and display purposes
+it is convenient to have the parameters of track elements in the TPC
+volume, as the step positions cannot be recovered from the kinematics.
+Setting ICTPJO(4) = 1 causes the parameters to be saved in the BOS bank
+'TPTE' at the start of each track element.  Reference banks 'TPHE','TTHE'
+are also created to relate the hits to the track elements.  By default,
+track elements are not saved.
+
+.section Digitisation in the TPC
+
+   Digitisation is not treated in the present version of GALEPH.
+However, a stand-alone detailed simulation package exists
+(ALEPH TPC 85-10) which can read the GALEPH BOS output file and
+generate the TPP readout from the track elements (which must be saved
+in the GALEPH run as described above.)  The package simulates to full
+detail the ionisation energy loss along the track and the secondary
+cluster formation, including non-local energy deposition (delta-rays).
+The ionisation electrons are drifted to the endplate taking account
+of diffusion and ExB shift near the wire.  The network response is
+simulated allowing for pedestal variation, differential non-linearity
+and noise to form the digital readout in the envisaged TPP format.
+It should be noted that this code is very time-consuming (about
+20 min VAX11/780 per LUND event) owing to the high level of detail.
+A fast signal simulation based on a parametrisation or library
+of pulse shapes is forseen.
+  For the purpose of reconstruction and physics studies, a poor-man's
+"prepare data" routine is provided (TPCOOR) which generates the pad
+coordinate bank by smearing the hit positions using a simple error
+parametrisation.  This routine can be elaborated to introduce
+inefficiencies, loss due to track overlap, noise, etc.
+  This is done only on request (ICTPJO(6)=1). The default
+  is ICTPJO(6)=0 .
+
+.section TPC Steering
+
+   Initialisation:
+
+      ASIPAC ---> TPIRUN       Define name indices and formats for TPC
+                               BOS banks
+                          ---> TPGCON extract some simulation constants
+                          ---> TPUGEO Validate geometry, compute and
+                                      store useful quantities
+
+   Tracking:
+
+      GUSTEP ---> TPHIT       Save track element paramenters in 'TPTE'
+                              bank (optionally)
+                         ---> TPIBOS  Called on first entry of an event
+                                      to drop banks if they exist.
+                         ---> TPGETH  Compute pad intersections (hits)
+                         ---> TTGETH  Compute trigger pad hits
+
+
+      ASASIG ---> TPASIG ---> TPHSRT  Sort hits in increasing pad row/
+                                      sector/pad number.  Accumulate
+                                      statistics for run summary
+                         ---> TPRHIT  Print out hits (optionally)
+   Run summary:
+
+     ASCRUN ---> TPWSUM       Print run conditions and statistics for TPC
+
+   RUN CARDS
+
+        GEOM 'TPC ' level       Specifies geometry level for TPC endplate
+                                Level = 1 (or card absent) -> uniform,
+                                average material description.
+                                Level = 2  Explicit sector frame support
+                                           (*DEF TPDETAIL must have been
+                                            selected in Historian run)
+
+        RUNC 'TPC ' ICTPJO(1-10)
+
+                    ICTOJO(1) = 1  Create wire hits (Presently inactive)
+                           2  = 1  Create pad hits (default)
+                           3  = 1  Create trigger pad hits (default)
+                           4  = 1  Save track elements in TPC active
+                                   volume.  (Not saved by default)
+                           5  =    Debug print level
+                                  (0 = none, 1 = brief, 2 = plenty)
+                        6-10  =    Reserved for future use.
+
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

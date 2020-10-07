@@ -1,0 +1,310 @@
+      SUBROUTINE AOPEN(LUN,ANAME,ATYPE,FDEVI,IER )
+C----------------------------------------------------------------------
+CKEY ALREAD OPEN
+C   Created  by : D.SCHLATTER          11-AUG-1988
+C   modified by : F.Ranjard - 890302
+C                             891128
+C
+C!   Purpose   : OPEN  BOS-file according to the ALEPH filetypes.
+C
+C    Inputs    : LUN      logical unit
+C               ANAME    'filename.type'
+C
+C               ATYPE    '    '    use type from filename
+C                                  or 'NATIVE' if FNAME='    '.
+C                        'NATIVE'  for native fortran
+C                        'EPIO'    for EPIO
+C                        'EDIR'    for event directory files
+C                        'CARDS'   for runcards
+C                        'DAF'     for BOS direct access files
+C
+C               FDEVI    '    '    for DISK file
+C                        'DISK'    for disk file
+C                        'TAPE'    for tape file
+C                        'CART'    for cartridge file
+C
+C  N.B. For UNIX, FDEVI will be 'GIME userid addr'
+C       to fetch file FNAME from VM disk userid, address addr.
+C       alternative forms are   'ACQUire userid addr'
+C       to acquire it or        'FETCh userid addr'
+C       to fetch it. Only the first 4 letters are significant but
+C       the full command may be given, in upper or lower case. The
+C       first 4 letters must all be in the same case, not mixed.
+C
+C   Output    : IER  = 0  successful opening
+C
+C   Calls:      ACLOSE,AOPTAP,BUNIT,KBYTREC,EPINIT,EPDEFU,EPSETW,PRSTAT
+C----------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "alrcom.h"
+#include "albitw.h"
+C - get  declarations of local character variables
+#include "gtchdecl.h"
+      CHARACTER*20 REMOTEHOST, RHOST, RUSER, TEXT*80
+C - UNIX local variables
+      CHARACTER     CRNAM*40, CRACQU*8, UXTYP*5, CRQUOT*1, CRDEVI*60
+      CHARACTER     CRSTAG*30
+      LOGICAL       FCRYES, FCRSTAG
+      INTEGER ALGTENV, SYSTEM
+#if ! defined(ALEPH_GFORT)
+      EXTERNAL SYSTEM     
+#endif
+      LOGICAL FIRST
+      DATA FIRST/.TRUE./
+C
+C----------------------------------------------------------------------
+      IF (FIRST) THEN
+         FIRST = .FALSE.
+C      define header banks for SEVT cards in BOS
+         CALL BSEQH('EVEH',0,2,6)
+         CALL BSEQH('RUNR',0,2,0)
+         CALL BSEQH('RUNH',0,2,0)
+C      set the DIRECT flag to false if not done yet
+         CALL ADIREC (DIRECT)
+      ENDIF
+C
+      SUBR = ' AOPEN  '
+      FNAME = ANAME
+#include "prfname.h"
+C ======================================================================
+C             if TAPE or CARTrige is requested call AOPTAP
+C =====================================================================
+C
+      IF (INDEX (TAPPAR,FDEVI(1:4)) .GT. 0) THEN
+         CALL AOPTAP (LUN,ANAME,ATYPE,FDEVI,IER)
+         RETURN
+      ENDIF
+C
+C ===================================================================
+C             now for disk files only
+C ===================================================================
+C
+      IER=0
+      IST=0
+C
+C -------------------------------------------------------------------
+C             get filetype and character logical unit
+C -------------------------------------------------------------------
+      IST = ALGTENV (ANAME,FNAME)
+#include "gtftyp.h"
+#include "gtchunit.h"
+C
+C ==================== MACHINE DEPENDENT PART ====================
+C
+#if defined(ALEPH_DEC) &&  ! defined(UNIX)
+C ===== VAX ===== VAX ===== VAX ===== VAX ===== VAX ===== VAX ====
+C
+C ----------------------------------------------------------------
+C      open file
+C ---------------------------------------------------------------
+C
+      IF (FTYP3.EQ.'DAF') THEN
+         OPEN (LUN,STATUS='OLD',ACCESS='DIRECT',RECL=MRECL,READONLY,
+     &   FILE=FNAME,ERR=98,IOSTAT=IST)
+         IW(1)=2
+         CALL BDABF(LUN,LWRDS,'    ','    ')
+C
+      ELSEIF (FTYP3.EQ.'CAR'.OR.FTYP3.EQ.'EDI') THEN
+          OPEN (LUN,STATUS='OLD',READONLY,
+     &    FILE=FNAME,ERR=98,IOSTAT=IST)
+C
+      ELSE
+C       open data file
+         IF (DIRECT) THEN
+            OPEN (LUN,STATUS='OLD',FILE=FNAME,READONLY,
+     &      ACCESS='DIRECT',RECL=MRECL,ERR=98,IOSTAT=IST)
+         ELSE
+C         for sequential reading
+            OPEN (LUN,STATUS='OLD',FORM='UNFORMATTED',READONLY,
+     &      RECORDTYPE='FIXED',FILE=FNAME,ERR=98,IOSTAT=IST)
+         ENDIF
+      ENDIF
+C ========== END VAX ======= END VAX ======== END VAX ==============
+#endif
+#if defined(IBM)
+C         IBM   IBM   IBM   IBM   IBM   IBM   IBM   IBM   IBM   IBM
+C ===================================================================
+C
+      IF(DIRECT)  CALL FILEINF (IRC,'MAXREC',10000)
+C
+C -----------------------------------------------------------------
+C               open file
+C ----------------------------------------------------------------
+      IF (FTYP3.EQ.'DAF') THEN
+C      open DAF file
+         OPEN (LUN,STATUS='OLD',ACCESS='DIRECT',RECL=MRECL,
+     &   ACTION='READ',FILE = '/'//FNAME,ERR=98,IOSTAT=IST)
+         IW(1)=2
+         CALL BDABF(LUN,LWRDS,'    ','    ')
+C
+      ELSEIF (FTYP3.EQ.'CAR' .OR. FTYP3.EQ.'EDI') THEN
+C       open EDIR or CARD files
+         OPEN (LUN,STATUS='OLD',ACTION='READ',ERR=98,IOSTAT=IST,
+     &   FILE='/'//FNAME)
+C
+      ELSEIF (FTYP3.EQ.'NAT') THEN
+C       open NATIVE file
+         IF (DIRECT) THEN
+C          in direct access mode
+            OPEN( LUN,STATUS='OLD',ACCESS='DIRECT',RECL=MRECL,
+     &      ACTION='READ',
+     &      FILE='/'//FNAME,FORM='UNFORMATTED',ERR=98,IOSTAT=IST)
+         ELSE
+C          open NATIVE in sequential mode
+            OPEN (LUN,STATUS='OLD',ACTION='READ',FILE='/'//FNAME,
+     &      FORM='UNFORMATTED',IOSTAT=IST,ERR=98)
+         ENDIF
+C
+      ELSEIF (FTYP3.EQ.'EPI') THEN
+C       EPIO FILEDEF statment
+         LE = LNBLNK (FNAME)
+         MSG = 'FILEDEF '//DSNAME//' DISK '//FNAME(1:LE)//' (PERM '
+         IF (DIRECT) MSG = MSG(1:LNBLNK(MSG))//' XTENT 10000'
+         LE = LNBLNK(MSG)
+#include "prmsg.h"
+         CALL VMCMS (MSG(1:LE),IER)
+C       open EPIO file
+         IF (DIRECT) THEN
+            OPEN (LUN,STATUS='OLD',ACCESS='DIRECT',RECL=MRECL,
+     &      ACTION='READ',FILE=DSNAME,IOSTAT=IST,ERR=98)
+         ELSE
+            OPEN (LUN,STATUS='OLD',FORM='UNFORMATTED',
+     &      ACTION='READ',FILE=DSNAME,IOSTAT=IST,ERR=98)
+         ENDIF
+      ENDIF
+C ====== END IBM ========== END IBM =========== END IBM =============
+#endif
+#if defined(UNIX)
+C ===== UNIX ===== UNIX ===== UNIX ===== UNIX ===== UNIX ===== UNIX ===
+C
+C --------------------------------------------------------------------
+C                fetch file if required
+C --------------------------------------------------------------------
+      LENDEV = LNBLNK(FDEVI)
+      IFETCH = INDEX (FDEVI,'FETCH')
+      CRACQU = 'sfetch  '
+      IF (IFETCH.EQ.0) THEN
+         IFETCH = INDEX (FDEVI,'GIME')
+         IF (IFETCH.GT.0) THEN
+            CRACQU = 'sacquire'
+         ENDIF
+      ENDIF
+C
+      IF (IFETCH .GT. 0) THEN
+C       get the 1st 2 words following GIME or FETCH
+C        if from cernvm decode disk and address
+C          if 2 words then
+C            disk = FDEVI(JDF:JDL) and address = FDEVI(JAF:JAL)
+C          else
+C            disk.add = FDEVI(JDF:JDL)
+C          endif
+C        else from other machines decode file address and user name
+C          file address = FDEVI(JDF:JDL)
+C          user name    = FDEVI(JAF:JAL)
+C        endif
+         JDF  = ICNEXT (FDEVI,IFETCH+5,LENDEV)
+         JDL  = NE432-1
+         IF (JDL.LT.LENDEV) THEN
+            JAF  = ICNEXT (FDEVI,JDL+1,LENDEV)
+            JAL  = NE432-1
+         ENDIF
+C       FETCH OR GIME command, get the remotehost name
+         IHOST = INDEX(FDEVI,':')
+         IF (IHOST.EQ.0) THEN
+            CALL GETENV ('REMOTEHOST',RHOST)
+         ELSE
+            RHOST = FDEVI(JDF:IHOST)
+         ENDIF
+         LRH = LNBLNK(RHOST)
+         IF (RHOST.EQ.'cernvm') THEN
+            IF (JDL.GE.LENDEV) THEN
+C           only 1 word, remove host name if given
+               IF (IHOST.GT.0) JDF = IHOST+1
+               RUSER = FDEVI(JDF:JDL)
+            ELSE
+               RUSER = FDEVI(JDF:JDL)//'.'//FDEVI(JAF:JAL)
+            ENDIF
+            TEXT = RHOST(1:LRH)//':'
+         ELSE
+C         remotehost is not cernvm
+C         fetch al1w10::al1$user3:[ranjard.subdir]
+C         fetch dxal00:/home/dxal10/flr/
+C         fetch alws  means fetch alws::sys$login:
+            TEXT = FDEVI(JDF:JDL)
+            LTXT = LNBLNK(TEXT)
+            CALL CUTOL (TEXT)
+            ISLASH = INDEX(TEXT,'/')
+            IF (ISLASH.NE.0 .AND.TEXT(LTXT:LTXT).NE.'/') THEN
+               TEXT(LTXT+1:LTXT+1)='/'
+               LTXT = LTXT+1
+            ENDIF
+            RUSER = ' '
+            IF (JDL.LT.LENDEV) RUSER = FDEVI(JAF:JAL)
+C          fetch from alws cluster
+            IF (TEXT(1:LTXT).EQ.'alws')  TEXT = 'alws::sys$login:'
+         ENDIF
+         LTXT = LNBLNK(TEXT)
+         LUS = LNBLNK(RUSER)
+C
+         LF = LNBLNK(FNAME)
+         ISTART = 1
+   80    CONTINUE
+         ISTA = INDEX(FNAME(ISTART:LF),'/')
+         IF ( ISTA.NE.0 ) THEN
+            ISTART = ISTART+ISTA
+            GO TO 80
+         END IF
+C
+         CRQUOT = ''''
+         MSG = CRACQU(1:LNBLNK(CRACQU))//' '//
+     &         FNAME(1:LF)//
+     &        ' -t '//CRQUOT//TEXT(1:LTXT)//FNAME(ISTART:LF)//CRQUOT//
+     &        ' -f ascii'
+         IF (LUS.GT.0) MSG =MSG(1:LNBLNK(MSG))//' -u '//RUSER(1:LUS)
+#include "prmsg.h"
+         IST = SYSTEM (MSG(1:LNBLNK(MSG))) / 256
+      ENDIF
+C
+C----------------------------------------------------------------------
+C               open file
+C----------------------------------------------------------------------
+      IF (FTYP3.EQ.'DAF') THEN
+         OPEN (LUN,STATUS='OLD',ACCESS='DIRECT',RECL=MRECL,
+     &   FILE=FNAME,ERR=98,IOSTAT=IST)
+         IW(1)=2
+         CALL BDABF(LUN,LWRDS,'    ','    ')
+C
+      ELSEIF (FTYP3.EQ.'CAR' .OR .FTYP3.EQ.'EDI') THEN
+         OPEN(LUN,STATUS='OLD',FORM='FORMATTED',
+     &   FILE=FNAME,ERR=98,IOSTAT=IST)
+C
+      ELSEIF (FTYP3.EQ.'NAT') THEN
+         OPEN (LUN,STATUS='OLD',FORM='UNFORMATTED',
+     &   FILE=FNAME,ERR=98,IOSTAT=IST)
+C
+      ELSEIF (FTYP3.EQ.'EPI') THEN
+C        file is opened by rfio through epio
+         CALL EPSETW (LUN,33,2,IST)
+      ENDIF
+C ===== END UNIX ==== END UNIX ==== END UNIX ==== END UNIX ==== END UNIX
+#endif
+C ====================== END OF MACHINE DEPENDENT CODE =================
+C
+C ----------------------------------------------------------------------
+C           define BOS file format  (FORT,EPIO,TEXT)
+C ----------------------------------------------------------------------
+      BFORM2='SEQ'
+      IF (DIRECT) BFORM2='DIR'
+#include "stbforma.h"
+      GOTO 999
+C
+C - Cannot open input file
+   98 CONTINUE
+      IER=-1
+      CALL PRSTAT ('AOPEN',FNAME,IST)
+C
+ 999  CONTINUE
+      DIRECT = .FALSE.
+      END
+#endif

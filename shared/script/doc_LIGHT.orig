@@ -1,0 +1,287 @@
+#!/usr/local/bin/perl 
+require "complete.pl"; 
+require "ctime.pl";
+
+#######################################################################
+#                       doc_LIGHT [only on alephwww]
+# 07/04/98                                                    F.Blin
+#######################################################################
+#### checked : directory on alephwww -> /usr/local/src/Light/bin
+#
+# 3 parameters any order
+#
+# eg: doc_LIGHT program_name cycle step  [default for step = 0]
+#
+# step = 0 begin : Help guides : 
+#                  run gen_hg 
+#                  run hg
+# step = 1 begin : Fortran : 
+#                  cp $ALROOT/inc
+#                  cp $ALROOT/{PROG_mnemonic}{CYCLE}/ .F
+#                  run inc_sort
+#                  create all.conf 
+#                  run F2Web
+# step = 2 begin : Variables :
+#                  run gen_var_list
+#                  run var_nodes
+# step = 3 begin : External only alephlib
+# step = 4 begin : Update all the headers with the version number
+# step = 5 begin : run type_index
+# step = 6 begin : run gen_wl
+# step = 7 begin : run xref2token
+# step = 8 begin : Update the version number in
+#                   /www/Aleph_Light/program_name.html
+#######################################################################
+$ALDOC = $ENV{'ALDOC'};
+$ALROOT = $ENV{'ALROOT'};
+
+$program_name = "";
+$CYCLE = "";
+$step = 0;
+
+foreach $i (0.. $#ARGV){
+   $new_PAR = shift(@ARGV);
+   &help if ($new_PAR eq "-h");
+   $program_name = $new_PAR if ($new_PAR=~ /^[a-zA-Z]+$/);
+   $CYCLE = $new_PAR if ($new_PAR=~ /^(\d+)$/ && $new_PAR > 10);
+   $step = $new_PAR if ($new_PAR=~ /^(\d+)$/ && $new_PAR < 10);
+}
+&help if ($program_name eq "" || $CYCLE eq "");
+
+$program_name =~ tr/A-Z/a-z/;
+$first_letter = substr($program_name,0,1);
+$first_letter =~ tr/a-z/A-Z/;
+$next_letters = substr($program_name,1);
+$Program_name = "${first_letter}${next_letters}";
+
+$PROG_mnemonic = "";
+$PROG_mnemonic = $program_name if ($program_name eq "alpha");
+$PROG_mnemonic = substr($program_name,0,5) if ($program_name eq "alephlib");
+$PROG_mnemonic = substr($program_name,0,3) if ($program_name eq "julia" || $program_name eq "galeph");
+if ($PROG_mnemonic eq ""){
+    print "Please check program name \n";
+    print "only alephlib alpha julia and galeph \n";
+    exit;
+}
+#print "PROG_mnemonic=$PROG_mnemonic CYCLE=$CYCLE step=$step\n";
+#print "program_name=$program_name Program_name=$Program_name \n";
+#$DIR_Light_bin = "/usr/local/src/Light/bin";
+$DIR_Light_bin = "/www/WWW/src/Light/bin";
+
+if (!-e "$ALDOC/${PROG_mnemonic}${CYCLE}.hlpn"){
+    print "Please check : file ${ALDOC}/${PROG_mnemonic}${CYCLE}.hlpn does not exist !...\n"; 
+    exit;
+}
+
+if ($step == 0){
+    $DIR_www = "/www/Light/web/$program_name/src/hg";
+    &change_DIR($DIR_www,"Help guides");
+    system("rm -f *.*") if ($program_name ne "alephlib"); 
+    print "  Now run ${DIR_Light_bin}/gen_hg $ALDOC/${PROG_mnemonic}${CYCLE}.hlpn\n";
+    system("${DIR_Light_bin}/gen_hg $ALDOC/${PROG_mnemonic}${CYCLE}.hlpn");
+
+    if ($program_name eq "alephlib"){
+	print "  Now run ${DIR_Light_bin}/gen_hg $ALDOC/alephio.hlpn\n";
+	system("${DIR_Light_bin}/gen_hg $ALDOC/alephio.hlpn");
+    }
+    print "  Now run ${DIR_Light_bin}/hg \n";
+    system("${DIR_Light_bin}/hg ../../HelpGuide.RZ *.hg");
+    $step ++;
+}
+
+if ($step == 1){
+    $DIR_www = "/www/Light/web/$program_name/src/$program_name";
+    &change_DIR($DIR_www,"Fortran");
+    system("rm -f *.*") if ($program_name ne "alephlib");
+    print "  Now cp $ALROOT/inc \n";
+    system("cp $ALROOT/inc/[a-e]*.h .");
+    system("cp $ALROOT/inc/[f-j]*.h .");
+    system("cp $ALROOT/inc/[k-o]*.h .");
+    system("cp $ALROOT/inc/[p-z]*.h .");
+    if ($program_name eq "alephlib"){
+	print "  Now cp $ALROOT/alephio/ .h \n";
+	system("cp $ALROOT/alephio/*/*.h .");
+	print "  Now cp $ALROOT/alephio/ .F \n";
+	system("cp $ALROOT/alephio/*/*.F .");
+    }
+    print "  Now cp $ALROOT/${PROG_mnemonic}${CYCLE}/ .F \n";
+    system("cp $ALROOT/${PROG_mnemonic}${CYCLE}/[a-e]*/*.F .");
+    system("cp $ALROOT/${PROG_mnemonic}${CYCLE}/[f-j]*/*.F .");
+    system("cp $ALROOT/${PROG_mnemonic}${CYCLE}/[k-o]*/*.F .");
+    system("cp $ALROOT/${PROG_mnemonic}${CYCLE}/[p-z]*/*.F .");
+    system("cp $ALROOT/${PROG_mnemonic}${CYCLE}/*/*.h .");
+    print "  Now sorts *.h files so they appear before *.F on file all.conf\n\n";
+    $file_all_conf = "all.conf";
+    @all_conf = "";
+    @all_conf = `${DIR_Light_bin}/inc_sort *.F`;
+
+    open(ALL_CONF, ">$file_all_conf");
+    print ALL_CONF "dictname $Program_name \n\n";
+    print ALL_CONF "START_FILE_LIST \n";
+    print ALL_CONF @all_conf;
+    print ALL_CONF "END_FILE_LIST \n";
+    close(ALL_CONF);
+    print "  Now Fortran parser, creates .html files and .RZ, .RZ.INQ\n\n";
+    system("${DIR_Light_bin}/F2Web all.conf"); 
+    print "  Now cp ${Program_name}.* ../.. \n";
+    system("cp ${DIR_www}/${Program_name}.* ../..");
+    $step ++;
+}
+
+if ($step == 2){
+    print " Variable usage (NB, requires ${Program_name}.RZ as input)\n\n";
+    if (!-e "$ALDOC/${PROG_mnemonic}${CYCLE}.comcom"){
+	print "Please check : file ${ALDOC}/${PROG_mnemonic}${CYCLE}.comcom does not exist !...\n"; 
+	exit;
+    }
+    $DIR_www = "/www/Light/web/${program_name}/src/var_nodes";
+    &change_DIR($DIR_www,"Variables :");
+    print "  Now run ${DIR_Light_bin}/gen_var_list\n";
+    if ($program_name ne "alephlib"){
+        system("rm *.*") if ($program_name ne "julia");
+        system("rm Var*") if ($program_name eq "julia");
+        system("rm varNode.index") if ($program_name eq "julia");
+        system("${DIR_Light_bin}/gen_var_list $ALDOC/${PROG_mnemonic}${CYCLE}.comcom Var_Nodes.list");
+    }
+    if ($program_name eq "alephlib"){
+	system("${DIR_Light_bin}/gen_var_list $ALDOC/${PROG_mnemonic}${CYCLE}.comcom ${PROG_mnemonic}${CYCLE}.list");
+	system("${DIR_Light_bin}/gen_var_list $ALDOC/alephio.comcom alephio.list");
+        system("rm Var_Nodes.*");
+        system("cat ${PROG_mnemonic}${CYCLE}.list alephio.list > Var_Nodes.list");
+    }
+    print "  Now run ${DIR_Light_bin}/var_nodes\n";
+    system("${DIR_Light_bin}/var_nodes Var_Nodes.list ../../${Program_name}.RZ ../../VarNodes.RZ varNode.index > Var_Nodes.log");
+    $step ++;
+}
+
+if ($step == 3){
+# Alephlib needs its own copy of the external dictionary, because the default
+# version contains a reference to the Alephlib routines.....
+    if ($program_name eq "alephlib"){
+	$DIR_www = "/www/Light/web/alephlib/src/external";
+	&change_DIR($DIR_www,"External alephlib :");
+	system("${DIR_Light_bin}/external ../../ExtRef.RZ *.dict");
+    }
+    $step ++;
+}
+
+if ($step == 4){
+#    exit (1) if (!&ask_command("continue"));
+    $DIR_www = "/www/Light/web/${program_name}/headers";
+    &change_DIR($DIR_www,"Update all the headers with the version number");
+    system("rm -f *_old");
+    @headers_files = `ls`;
+    foreach $i (0 .. $#headers_files){ &change_version($headers_files[$i])};
+    $step ++;   
+ }
+
+ if ($step == 5){
+    print "  Now ->  Make an index (must be done after updating the headers)\n";
+#    exit (1) if (!&ask_command("continue"));
+    $DIR_www = "/www/Light/web/${program_name}/src/index";
+    &change_DIR($DIR_www,"run ${DIR_Light_bin}/type_index");
+    system("${DIR_Light_bin}/type_index ConfigIndex ../../Index.RZ");
+    $step ++;
+ }
+
+ if ($step == 6){
+    print "  Now ->  Make the LIGHT dictionary and html files\n";
+    print " (output could be directly to /www/Light/websolver/${Program_name}.dict - try it...)\n";
+    $DIR_www = "/www/Light/web/$program_name";
+    &change_DIR($DIR_www,"run ${DIR_Light_bin}/gen_wl");
+    system("${DIR_Light_bin}/gen_wl -h ConfigHeader -f ConfigFiles -c ../ConfigConst -r ../ConfigRules /www/Light/websolver/${Program_name}.dict");
+    if ($program_name eq "alephlib"){
+	$DIR_www = "/www/Light/web/generic/src/external";
+	&change_DIR($DIR_www,"External generic :");
+        system("${DIR_Light_bin}/lextract subroutine_name /www/Light/web/alephlib/Alephlib.RZ Alephlib.dict test.dict");
+	system("mv test.dict Alephlib.dict");
+	system("${DIR_Light_bin}/external ../../ExtRef.RZ *.dict");
+    }
+    $step ++;
+}
+
+if ($step == 7){
+    print "  Now -> Make the web:\n";
+    $DIR_www = "/www/Light/websolver";
+    &change_DIR($DIR_www,"Please now run ->${DIR_Light_bin}/xref2token ${Program_name}.dict n ");
+    system("rm ${Program_name}.dict.*");
+    print " After type in the suggested values... (10, 80, 10, 10) \n";
+    system("${DIR_Light_bin}/xref2token ${Program_name}.dict n");
+    $step ++;
+}
+
+if ($step == 8){
+    print "  Update the version number in /www/Aleph_Light/${program_name}.html\n";
+    &change_version("/www/Aleph_Light/${program_name}.html");
+}
+exit;
+
+###############################################################################
+sub change_DIR {
+
+    local($PWD) = "";
+
+    chdir($_[0]);
+    $PWD = `pwd`;
+    $PWD =~ s/\s+$//;
+    if ($PWD ne $_[0]){
+	print "***WARNING $PWD ne $_[0] \n";
+        exit;
+    }
+    print "\n*** -> Now $_[1]\n";
+    print " on directory $_[0] \n\n";
+    return 1;
+}
+###############################################################################
+sub change_version {
+
+   local($new_file,$new_line,$old_file) = "";
+   local(@buf,@new_buf) = ();
+
+   $new_file = $_[0];
+   $new_file =~ s/\s+$//;
+   @buf = `cat $new_file`;
+   foreach $j (0 .. $#buf){
+	 if (index($buf[$j],"</H3>") > 1){
+	     $begin_line = substr($buf[$j],0,index($buf[$j],"Version:")+8);
+	     $new_line = "${begin_line} ${CYCLE}</H3>\n";
+	     print "***new_file=$new_file $new_line\n"; 
+             $buf[$j] = $new_line; 
+         }
+	 push(@new_buf, $buf[$j]);
+    }
+    $old_file = "${new_file}_old";
+    system("cp -p $new_file $old_file");
+
+    open (NEW_FILE, ">$new_file");
+    print NEW_FILE @new_buf;
+    close(NEW_FILE);
+    return 1;
+}
+###############################################################################
+sub ask_command {
+
+    while(1){
+       print "\n OK to $_[0] [Yes or No <CR>=No] ? : ";
+       $answ = <>;
+       $answ =~ s/^\s+//;
+       $answ =~ s/\s+$//;
+       $answ =~ tr/a-z/A-Z/;
+       exit(1) if ($answ =~ /^q\b/i );
+       return 0 if ($answ eq "" || substr($answ,0,1) eq "N");
+       if (substr($answ,0,1) eq "Y"){
+          system($_[0]);
+          return 1;
+       }
+    }
+}
+###############################################################################
+sub help {
+    print "Syntax   : doc_LIGHT  program_name [- cycle step]\n";
+    print "                      default step = 0 [all steps]\n\n";
+
+    print "examples : doc_LIGHT 306 GALEPH \n";
+    print "           doc_LIGHT alephib 214 2\n";
+    exit;
+}
+###############################################################################

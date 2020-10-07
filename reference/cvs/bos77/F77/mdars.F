@@ -1,0 +1,77 @@
+      FUNCTION MDARS(JW,LUN)
+C
+C     IND=MDARS(JW,LUN)   READ NEXT BANK FROM DA DATA SET
+C     CHECK FIRST JW(2), THEN IND
+C     JW(2)=0 NO ERROR
+C           1 DATA SET NOT INITIALIZED
+C           7 END-OF-DATA (LIKE REWIND)
+C     IND=0 IF SPACE INSUFFICIENT
+C
+      COMMON/BCS/IW(1000)
+#include "dacom.h"
+      INTEGER JW(*)
+      CHARACTER*4 CHAINT,NAME
+      MDARS=0
+      JW1=JW(1)
+      JW(1)=0
+      JW2=0
+*     TEST INITIALIZATION OF DATA SET
+      IUB=NLINK('+BUF',LUN)
+      IF(IUB.EQ.0) THEN
+         JW2=1
+         GOTO 100
+      END IF
+*     PREPARE POINTER TO RECORD AND BANK WITHIN RECORD
+      LUNDA=LUN
+      NWRDA=IW(IUB+11)
+      IF(IW(IUB+9).LT.4) THEN
+         IW(IUB+9)=4
+         N=4
+      ELSE
+         N=IW(IUB+10)
+      END IF
+*     TEST END-OF-DATA
+   10 IF(IW(IUB+9).GT.IW(IUB+13)) THEN
+         IW(IUB+ 9)=0
+         IW(IUB+10)=0
+         JW2=7
+         GOTO 100
+      END IF
+*     READ DATA RECORD
+      CALL DAFRD(IW(IUB+9),1)
+      IF(IW(IDD).LE.N) THEN
+         IW(IUB+9)=IW(IUB+9)+1
+         N=4
+         GOTO 10
+      END IF
+*     GET NAME AND NR OF BANK
+      NADA=IW(IDD+N-3)
+      NRDA=IW(IDD+N-2)
+      NAME=CHAINT(NADA)
+      ND  =0
+*     CREATE BANK OR INCREASE LENGTH OF BANK AND COPY DATA WORDS
+   20 NP=IW(IDD+N)
+      JW(1)=JW1
+      MDARS=MBANK(JW,NAME,NRDA,ND+NP)
+      IF(MDARS.NE.0) CALL UCOPY(IW(IDD+N+1),JW(MDARS+ND+1),NP)
+      ND=ND+NP
+      N =N+IW(IDD+N)+4
+*     TEST CONTINUATION OF BANK IN NEXT RECORD
+      IF(N.GE.IW(IDD)) THEN
+         IW(IUB+9)=IW(IUB+9)+1
+         N=4
+         IF(IW(IUB+9).LE.IW(IUB+13)) THEN
+*           READ NEXT DATA RECORD
+            CALL DAFRD(IW(IUB+9),1)
+            IF(IW(IDD).GT.N) THEN
+               IF(NADA.EQ.IW(IDD+N-3).AND.NRDA.EQ.IW(IDD+N-2)) GOTO 20
+            END IF
+         END IF
+      END IF
+      IW(IUB+10)=N
+*     DROP BANK IN CASE OF INSUFFICIENT SPACE
+      IF(MDARS.EQ.0) MDARS=MDROP(JW,NAME,NRDA)
+  100 JW(1)=0
+      JW(2)=JW2
+      RETURN
+      END

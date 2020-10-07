@@ -1,0 +1,556 @@
+      subroutine bcaldata(ebeam,Year,imod,idev,pmt,apd,sil,
+     .                    e,th,ph,Rcn,Phcn,ierr)
+c
+c Author : G. Merino - 19970424
+c
+c Description: This subroutine returns information of the 
+c              tagged electron 3-momenta in the IP taking as
+c              input the raw data information. 
+c
+c Inputs:   
+c          ebeam = Nominal beam energy [REAL] (GeV)
+c          Year  = 97 or 98 (for the Silicon Mapping) [INTEGER] 
+c          imod = BCAL++ module number [INTEGER] 
+c          idev = Device used to reconstruct the Energy (1=pmt;2=apd) [INTEGER]  
+c          pmt = PMT Signal [REAL] (GeV)  
+c          apd = APD Signal [REAL] (GeV)  
+c          sil(16,6) = Silicon signals <-> (Radial,Azimuthal) [INTEGER] (ADC counts)  
+c
+c Outputs: e = Measured energy [REAL] (GeV) 
+c          th = Measured Theta angle in the IP [REAL] (Rad)
+c          ph = Measured Phi angle in the IP [REAL] (Rad) 
+c          Rcn = Radial centroid [REAL] (cm)
+c          Phcn = Azimuthal centroid [REAL] (degrees)
+c          ierr = Error Flag : 0=> No error; 1=>Some problem in the reconstruction  
+c                                              or Silicon cut not passed.
+c Modifications:
+c
+c   19971210 = Add Rcen and Phcen as Outputs
+c   19970112 = Add SilCut routine to reject events which we cannot correct
+c              properly
+c   19970114 = Increase Low energy protections (Emin=3GeV, thmin=0.5mrad)
+c   19980609 = Include the possibility of choosing the Energy device, Idev.
+c   19980611 = Add the "Year" input
+c------------------------------------------------------------------------------------------                              
+      implicit none
+c
+      integer i,j
+      integer ierr,Imod,Idev,sil(16,6)
+      real pmt,apd
+      integer rmax,phmax,epad1,epad2,esilc,emax
+      real e,th,ph
+      real rcen,phcen,sndmom
+      real r,p
+      real ebeam,xbcal(2),pIP(3)
+      real Rcn,Phcn,pi
+      integer icut
+      integer Year 
+c------------------------------------------------------------------------------------------
+
+      pi = acos(-1.)
+      e = 0.
+      th = 0.
+      ph = 0.
+      Rcn = 0.
+      Phcn = 0.
+      ierr = 0
+c
+c Process the silicon information
+c
+      call silinfo(sil,rcen,phcen,sndmom,epad1,epad2,esilc,rmax,phmax,
+     .             emax)
+      call SilCut(rmax,epad1,epad2,icut)
+      if (icut.eq.0) then
+        Ierr = 1
+        goto 999
+      endif 
+      Rcn  = rcen*100.
+      Phcn = phcen*180./pi
+c
+c Correct the Energy measurement for the scintillator 
+c inhomogeneity effect (1st on R and on PHI afterwards):
+c
+
+      call REcorr(rcen,Imod,Idev,r)
+      call PhiEcorr(phcen,Imod,Idev,p)
+c
+c Energy Measurement
+c Do not reconstruct energies smaller than 1 GeV.
+c
+      if (Idev.eq.1) then 
+        e = pmt/r/p
+      else
+        e = apd/r/p
+      endif
+c 
+      if (e.lt.3.) then
+       ierr = 1
+       goto 999
+      endif
+c     
+c Unfold the Quadrupole effect and recover the 3-momenta at the IP
+c
+      xbcal(1) = rcen*cos(phcen)
+      xbcal(2) = rcen*sin(phcen)
+c      
+      call quad_inv(ebeam,e,xbcal,pIP,ierr)      
+      if (ierr.ne.0) goto 999
+c
+      th=acos(abs(pIP(3))/sqrt(pIP(1)**2+pIP(2)**2+pIP(3)**2))
+      if (th.lt.5.e-4) then
+       ierr = 1
+       goto 999
+      endif
+c
+      call angles (imod,pIP,th,ph)
+c      
+ 999  continue
+      return
+      end
+
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+      subroutine silinfo(sil,rcen,phcen,sndmom,
+     .                   epad1,epad2,esilc,rmax,phmax,smax)
+c
+c Author : G. Merino - 19970424
+c
+c Description: Translates the Silicon Raw data into meaningful quantities such
+c              as the centroids.
+c 
+c Input:   sil(16,6) = Silicon signals <-> (Radial,Azimuthal) [INTEGER] (ADC counts)  
+c 
+c Outputs: rcen = Radial centroid [REAL] (Meters)
+c          phcen = Azimuthal centroid [REAL] (Rad)
+c          sndmom = Second momentum of the radial energy distribution [REAL] (Microns)
+c          epad1 = Energy deposited in the 1st radial pad [INTEGER] (ADC counts)
+c          epad2 = Energy deposited in the 2nd radial pad [INTEGER] (ADC counts)
+c          esilc = Total energy deposited in the silicon [INTEGER] (ADC counts)
+c          rmax = Radial pad # in which the maximum deposition took place [INTEGER] 
+c          phmax = Azimuthal pad # in which the maximum deposition took place [INTEGER] 
+c          smax = Energy in the more energetic pad [INTEGER]
+
+      implicit none
+c
+      integer i,j
+      integer ierr
+      integer sil(16,6),epad1,epad2,esilc,rmax,phmax
+      integer smax,wght
+      real rcen,phcen,sndmom
+      real dwaf,drad
+      real pi
+c
+      real Rpad(16,6),PhPad(16,6)      
+      common /silmap_shifted/ Rpad,PhPad
+c
+      pi = acos(-1.)
+c
+c Localize the most energetic pad
+c
+      smax = 0
+      do i = 1,6
+         do j = 1,16
+            if (j.eq.1.or.j.eq.2) then
+               wght = 2
+            else
+               wght = 1
+            endif       
+            if (wght*sil(j,i).gt.smax) then
+               smax = wght*sil(j,i)
+               rmax = j
+               phmax = i
+            endif
+         enddo
+      enddo
+c
+c Centroid computation and 2 1st pads energy
+c
+      epad1 = 0
+      epad2 = 0
+      rcen = 0
+      phcen = 0
+      esilc = 0
+c
+      do i = 1,6
+         do j = 1,16
+            dwaf = abs(i - phmax)
+            drad = abs(j - rmax)
+            if (dwaf.le.1) then
+               if (j.eq.1) epad1 = epad1 + sil(j,i)
+               if (j.eq.2) epad2 = epad2 + sil(j,i)
+               if ((dwaf+drad).le.2) then
+                  esilc = esilc + sil(j,i)
+                  rcen = rcen + float(sil(j,i))*Rpad(j,i)
+                  phcen = phcen + float(sil(j,i))*PhPad(j,i)
+               endif
+            endif
+         enddo
+      enddo
+c
+      if(esilc.ne.0) then
+         rcen = rcen/esilc
+         phcen = phcen/esilc
+      endif
+c
+c Compute the second momentum of the radial energy distribution
+c
+      if (esilc.ne.0) then
+         do i = 1,6
+            do j = 1,16
+               sndmom = sndmom + float(sil(j,i))*(Rpad(j,i)-rcen)**2
+            enddo
+         enddo
+         sndmom = sqrt(sndmom/esilc)
+      else
+         sndmom = 0.
+      endif
+c
+c Correct for the S_shape on Phi
+c
+      call PhiSShCorr(phcen,ierr)
+c
+c Change units: rcen (microns -> meters) , phcen (degrees -> radians)
+c
+      rcen = rcen*1.e-6
+      phcen = phcen*pi/180
+c
+ 999  continue
+      return
+      end
+
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+      subroutine PhiSShCorr(phcen,ierr)
+c
+c Author : G. Boix  and G. Merino - 19970424
+c
+c Description: Corrects the Phi centroid value for the S_shape distortion 
+c          Takes from /PhSS/ common the parameters of the fit to the s-shape.
+c
+c Input:  phcen before correcting [REAL] (deg)
+c
+c Output: phcen once corrected [REAL] (deg)
+c
+      implicit none
+c
+      real pcor,phcen,pno,preal,psi
+      real PhSSpar(5)
+c
+      integer i,ierr
+c
+      common /PhSS/ PhSSpar
+c
+      ierr = 0
+c
+c Compute the centroid position in pad units 
+c and normalised between (0,1) 
+c
+      psi = phcen/11.25
+      if (psi.gt.0.) then
+         pno = psi - float(int(psi))
+      else
+         pno = psi + float(int(abs(psi))+1)
+      endif
+c     
+      if (abs(psi).gt.4) then
+         ierr = 1
+         goto 100
+      endif
+c
+c Correct for the S_shape on phi direction.
+c
+      call Fcorr_Phi_SSh(pno,PhSSpar,pcor)
+      preal = (psi - pcor)*11.25
+c
+      phcen = preal
+c
+ 100  return
+      end
+
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+      subroutine Fcorr_Phi_SSh(x,par,pcor)
+c  
+c Author : G. Merino - 19970424
+c
+c Description: Subroutine that computes the correction to the 
+c              phi value of the centroid
+c              due to the S_shape distortion.
+c
+c Inputs: x = Phi centroid value (in pad units, normalised between 0 and 1)
+c         par(5) = Correction parameters
+c Output: pcor = Corrected Phi centroid  (in pad units, normalised between 0 and 1)  
+c
+      implicit none
+c
+      real fact,fit,p1,p2,p3,p4,p5,p6,p7,p8,par(5),pcor,x
+c
+        x = x - 0.5
+c
+        p1 = par(1)
+        p2 = par(2)
+        p5 = par(3)
+        p6 = par(4)
+c
+        p8 = 2*p5*p2+p6
+c
+        p3 = 2.*p5*p1+p6
+c
+        p7 = p2*(p8-p5*p2-p6)
+c
+        p4 = p7+p1*(p5*p1+p6-p3)
+c
+        fact = 1.
+c
+        if(x.gt.0.0) then 
+          x = -x
+          fact = -1.
+        endif
+c
+        if(x.lt.p1) then 
+c
+          fit = p3*x+p4
+c
+        elseif(x.lt.p2) then
+c
+          fit = p5*x*x+p6*x+p7
+c
+        else
+c
+          fit = p8*x
+c
+        endif
+c
+            fit = (fit+par(5))*fact
+c
+        pcor = fit
+c
+        return
+        end
+c
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+      subroutine PhiEcorr(ph,Imod,Idev,p)
+c
+c Author : G. Boix and G. Merino - 19970424
+c
+c Description: Computes the correction factor for the Energy measurement 
+c              due to the the Scintillator 
+c              non-uniform light yield along the Phi direction.
+c
+c Input:   ph   = Phi centroid measured [REAL] (rad)
+c          Imod = BCAL++ Module number  [INTEGER]
+c          Idev = Device (1=PMT;2=APD)  [INTEGER] 
+c Output:  p = Correction factor
+c
+c Modifications: 
+c 
+c  19980420 = Include a Module-dependent PhEpar parameterisation.
+c  19980609 = Include a Device-dependent PhEpar parameterisation.
+c
+      implicit none
+c
+      real ph
+      real p,phcen
+      real pi
+c
+      integer n,i,j
+      integer Imod,Idev
+c
+
+      real PhEpar(5,4)
+      real PhEparA(5,4),PhEparP(5,4)
+      common /PhE/ PhEparA,PhEparP
+
+*= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+
+      if (Idev.eq.1) then
+       do i = 1,5
+        do j = 1,4
+         PhEpar(i,j) = PhEparP(i,j)
+        enddo
+       enddo
+      elseif (Idev.eq.2) then
+       do i = 1,5
+        do j = 1,4
+         PhEpar(i,j) = PhEparA(i,j)
+        enddo
+       enddo 
+      else
+       write(6,*) 'PHIECORR: Bad Idev number',IDev
+      endif
+c
+c Change Phcen units: Radians -> Degrees
+c
+      pi = acos(-1.)
+      phcen = ph*180./pi
+c
+c Phi leakage correction function: p4
+c
+      p = PhEpar(1,Imod) *( 1. + PhEpar(2,Imod) * phcen   
+     .     +  PhEpar(3,Imod) *phcen*phcen 
+     .     +  PhEpar(4,Imod) *phcen*phcen*phcen
+     .     +  PhEpar(5,Imod) *phcen*phcen*phcen*phcen)
+c  
+      return 
+      end
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+      
+      subroutine REcorr(r,Imod,Idev,f)
+c
+c Author : G. Merino - 19970424
+c
+c Description: Computes the correction factor for the Energy measurement 
+c              due to the Scintillator 
+c              non-uniform light yield along the Radial direction.
+c
+c Input:   r = Radial centroid measured [REAL] (Meters)
+c          Imod = BCAL++ Module number  [INTEGER]
+c          Idev = Device (1=PMT;2=APD)  [INTEGER] 
+c Output:  f = Correction factor
+c
+c Modifications: 
+c 
+c  19980420 = Include a Module-dependent REpar parameterisation.
+c  19980609 = Include a Device-dependent REpar parameterisation.
+c
+      implicit none
+c
+      real r,f
+      real rcen,p6
+      real rmax,fmax
+c
+      integer Imod,Idev,i,j
+c
+      real REpar(6,4)
+      real REparA(6,4),REparP(6,4)
+      common /RE/ REparA,REparP
+
+*= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+
+      if (Idev.eq.1) then
+       do i = 1,6
+        do j = 1,4
+         REpar(i,j) = REparP(i,j)
+        enddo
+       enddo
+      elseif (Idev.eq.2) then
+       do i = 1,6
+        do j = 1,4
+         REpar(i,j) = REparA(i,j)
+        enddo
+       enddo 
+      else
+       write(6,*) 'RECORR: Bad Idev number',IDev
+      endif
+c
+      p6 = (REpar(1,Imod)-REpar(4,Imod))*REpar(6,Imod)*REpar(6,Imod)+
+     .        (REpar(2,Imod)-REpar(5,Imod))*REpar(6,Imod)+REpar(3,Imod)
+c
+c Change Rcen units: Meters -> Centimeters
+c
+      rcen = r*100.
+c
+c radial leakage correction function: 2 parabolas
+c
+      if (rcen.gt.REpar(6,Imod)) then
+         f = REpar(4,Imod)*rcen*rcen+REpar(5,Imod)*rcen+p6
+       else
+         f = REpar(1,Imod)*rcen*rcen+REpar(2,Imod)*rcen+REpar(3,Imod)
+      endif
+c  
+c Normalise it to have max. value = 1
+c
+      rmax = - REpar(5,Imod)/2./REpar(4,Imod)
+      fmax = REpar(4,Imod)*rmax*rmax+REpar(5,Imod)*rmax+p6 
+      f = f/fmax
+c
+      return 
+      end
+   
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+      subroutine angles(imod,pIP,th,ph)
+c
+c Author : G. Merino - 19970424
+c
+c Purpose: Returns the measurable quantities in the proper Ref. System
+c 
+c Inputs: imod = BCAL++ Module number [INTEGER]
+c         pIP(3) = Measured 3-momenta in the IP [REAL] (GeV)
+c 
+c Outputs: e = Energy [REAL] (GeV)         
+c          th = Measured Theta angle in the IP [REAL] (Rad)
+c          ph = Measured Phi angle in the IP [REAL] (Rad) 
+c 
+c Modifications:
+c  
+c 19970117 = Solve the ambiguity to compute ph when pIP(2) = 0.
+c
+      implicit none
+c
+      integer imod
+      real pIP(3)
+      real e,th,ph
+      real pi
+c
+      pi = acos(-1.)
+c
+      e = sqrt(pIP(1)**2+pIP(2)**2+pIP(3)**2)
+c
+      if (imod.eq.2) then
+         pIP(1) = - abs(pIP(1))
+      elseif (imod.eq.3) then
+         pIP(3) = - abs(pIP(3))
+      elseif (imod.eq.4) then
+         pIP(3) = - abs(pIP(3))
+         pIP(1) = - abs(pIP(1))
+      endif
+c
+      th = acos(pIP(3)/e)
+      ph = atan2(pIP(2),pIP(1))
+c
+c Protection for the case pIP(2) = 0.
+c
+      if (ph.eq.0.0) then
+       if (imod.eq.1.or.imod.eq.3) then
+         ph = 0.
+       else
+         ph = pi
+       endif
+      endif
+c
+      return
+      end
+
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+      subroutine SilCut(rmax,epad1,epad2,icut)
+c
+c Author : G. Merino - 19970112
+c
+c Description: Defines a cut to reject those events with a lot of leakage
+c              which we cannot correct.
+c Inputs: rmax  = Radial pad # in which the maximum deposition took place [INTEGER]  
+c         epad1 = Energy deposited in the 1st radial pad [INTEGER] (ADC counts)
+c         epad2 = Energy deposited in the 2nd radial pad [INTEGER] (ADC counts)
+c Output: icut (=1=> Accept the event; =0=>Reject the event)  
+c
+
+      implicit none
+c
+      integer icut,rmax,epad1,epad2
+c
+      icut  = 0
+      if (rmax.gt.2) then
+       icut = 1
+      else
+       if (epad1.lt.epad2) then
+        icut = 1
+       endif
+      endif
+c
+      return
+      end
+
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc

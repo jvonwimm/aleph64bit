@@ -1,0 +1,19 @@
+NAME    = /afs/cern.ch/aleph/aleph/kin/ywrewt.exe 
+CFILES  =  
+CFLAGS  = 
+FFILES  = /afs/cern.ch/aleph/reference/kin/ywrewt.f /afs/cern.ch/aleph/reference/kin/ywrewt_origine.f
+FFLAGS = -c  -fno-automatic -fdollar-ok -fno-backslash -DUNIX -DALEPH_LINUX -I/afs/cern.ch/aleph/reference/kin/ywrewt_inc
+LDFLAGS = 
+CERNLIB = `cernlib mathlib packlib shift`
+
+LIBS    = \
+     		$(CERNLIB)
+
+
+# Rules...
+
+SRCFILES = $(CFILES) $(FFILES)
+OBJFILES = $(CFILES:.c=.o) $(FFILES:.f=.o)
+
+$(NAME): $(OBJFILES) 
+	g77 -o $@  $(OBJFILES) $(LIBS) $(LDFLAGS)

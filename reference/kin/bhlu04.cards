@@ -1,0 +1,41 @@
+KCAR 0 / $TEXT
+POFF
+  RUN #                   RUN'S TITLE
+RUN  183  'BHLUMI GENERATOR - BHLU04 JADACH/RICHTER-WAS/WARD/WAS'
+*     FIRST EVENT   LAST EVENT TO BE GENERATED
+TRIG       1           500
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG
+DEBU  6/           49         51                                               *
+ requested time left at the end of job (in sec)
+TIME 10
+*  use RANMAR generator for random numbers
+RMAR      183           1
+*    to save event file (EPIO format)
+*FILO 'SCWEEK:BHLU02.EPIO | EPIO '
+*    to save histograms
+*HSTO 'SCWEEK:BHLU02.HIST | NATIVE '
+*       sigma-x      sigma-y     sigma-z  (cm)
+SVRT     0.012       0.0005       0.70
+*    97-181   XPOS        Ypos       zpos
+*XVRT     0.00498   -0.05374    0.1557
+*   97-181    alphax       alphay      peak scan
+*AVRT     -0.298E-03 0.179E-03
+* CMSENE : Center of mass energy ( in GeV);
+* THMIN  : Minimum generation angle (in degrees)
+* THMAX  : Maximum generation angle (in degrees)
+* EPSCM  : Separation between soft and hard photons (in units of beam
+*          energy) - recommanded value 0.0001;
+* KEYRAD : 1 see BHLUMI manual
+* KEYOPT : 3001    see BHLUMI manual
+* WTMAX  : Maximum generation weight
+*     CMSENE  THMIN  THMAX   EPSCM   KEYOPT keyopt WTMAX isica nevtm
+*   95 values  with z contribution
+*GBHL   91.280  1.7  10.31   0.0001   3001  1023  3.0  0  500   ! Lcal
+*GBHL   91.202  0.600   4.100   0.0001   3001  1023  3.0  1 500000 ! moriond96
+*GBHL   91.194  0.600   4.100   0.0001   3001  1023  3.0  1 500000 ! varsaw96
+GBHL   183.2  1.7   10.31   0.0001   3001  1023  3.0  0 100 ! jerus97
+*       R0A     R0B     CORMIN  CORMAX   Z0MIN    Z0MAX
+*GBGO  60.9680  60.9604  -0.004 -0.024  2530.47  2528.09 .44 .713
+GBGO  60.9680  60.9604  -0.004 -0.024  2524.228  2528.342 .44 .767
+END$
+ENDQ

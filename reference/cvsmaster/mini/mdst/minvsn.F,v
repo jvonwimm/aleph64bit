@@ -1,0 +1,133 @@
+head	1.3;
+access;
+symbols
+	mini202_9:1.3
+	mini202_8:1.3
+	mini202_7:1.3
+	mini202_6:1.3
+	mini202_5:1.3
+	mini202_4:1.3
+	mini202_2:1.3
+	mini202_1:1.3
+	mini202:1.3
+	mini201_1:1.2
+	mini104_1:1.2
+	mini103_1:1.2
+	mini102_7:1.2
+	mini102_5:1.2
+	mini102_4:1.2
+	mini102_3:1.2
+	mini102_2:1.2
+	mini102_1:1.2
+	mini102:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	98.09.16.15.02.16;	author jachol;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.08.15.12.59.35;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.08.15.11.09.36;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.08.15.11.09.37;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@mini202 - 1st version for LEP1 and LEP2
+@
+text
+@      INTEGER FUNCTION MINVSN(DUMMY)
+C
+CKEY MDST /INTERNAL
+C-----------------------------------------------------------------------
+C! Mini-DST version number (of current library).
+C
+C     This can be overrode by use of MVSN card which allows a new
+C     version to be started without changing MINI code.
+C     Useful if other code has major modifications.
+C-----------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "version.h"
+C
+      LOGICAL FIRST
+      SAVE MVER,FIRST
+      DATA FIRST / .TRUE. /
+C
+C++   Check for card input.
+C
+      IF (FIRST) THEN
+         KMVSN = NLINK('MVSN',0)
+         IF (KMVSN.GT.0) THEN
+            MVER = IW(KMVSN+1)
+c!       ELSE
+c!          MVER = MINIVER 
+         ENDIF 
+         FIRST = .FALSE.
+      ENDIF
+C
+C
+C++   Overwrite MVSN card
+C
+      MVER = 202
+      MINVSN = MVER
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@ add version.* change WRITE stament
+@
+text
+@d25 2
+a26 2
+         ELSE
+            MVER = MINIVER 
+d31 4
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d13 1
+a17 1
+      DATA MVER / 102 /
+d23 5
+a27 1
+         IF (KMVSN.GT.0) MVER = IW(KMVSN+1)
+@
+
+
+1.1.1.1
+log
+@1st release of mini under cvs
+@
+text
+@@

@@ -1,0 +1,86 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.55.50;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.35;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.36;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      CHARACTER*4 FUNCTION NLISTB(JW,N,LIST)
+C! copy of NLIST to avoid confusion with MULTINET TCP/IP
+C     RETURN N-TH NAME OF LIST
+C
+      INTEGER JW(*)
+#include "boscom.h"
+#include "param.h"
+      CHARACTER*(*) LIST
+      CHARACTER*4 NAME,CHAINT
+C     ...
+      IF(JW(ICK).NE.12345) CALL BBNOT(JW,'LISTI')
+      NLISTB='    '
+      IF(N.LE.0) GOTO 100
+      NN=0
+#include "listnn.h"
+      IF(NAMI.EQ.0) GOTO 100
+      NN=NN+1
+      IF(N.NE.NN) GOTO 3
+      NLISTB=CHAINT(IW(IDNAM+NAMI-NSYST))
+  100 RETURN
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK nlistb
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

@@ -1,0 +1,117 @@
+head	1.1;
+access;
+symbols
+	alio83:1.1
+	alio82:1.1
+	alio81:1.1
+	alio80:1.1
+	alio74:1.1
+	alio73:1.1
+	alio72:1.1
+	alio71:1.1
+	alio70:1.1
+	alio68:1.1
+	alio69:1.1
+	alio67:1.1
+	alio66:1.1
+	alio65:1.1
+	alio64:1.1
+	alio63:1.1
+	alio62:1.1
+	alio61:1.1
+	alio60:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.04.23.09.58.54;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@move alph, dbas, a part of alef and a part of c to alephio
+Modified Files:
+ 	version.h
+ Added Files:
+ 	adbrow.F adbrpn.F adbrun.F adbswp.F adbver.F agetdb.F agtfil.F
+	albos.F aldawr.F aldtyp.F aleveh.F alfind.F alfmt.F algtbk.F
+ 	algtdb.F algtlu.F algtro.F algtyp.F alinst.F alk7fil.F
+ 	alk7fru.F alk7op.F alk7tru.F alredb.F alrune.F alrunh.F
+ 	alrunr.F alseed.F alstho.F alstin.F alstri.F altabl.F alvsn.F
+ 	aopdbs.F aublis.F aubos.F aubprs.F bkcari.F bkinca.F bkrhab.F
+ 	bkrhal.F bkrhaw.F bktobk.F cafiht.F chahol.F dafrds.F gtdbas.F
+ 	gtstup.F igtfmt.F jhocha.F julrec.F junial.F junidb.F
+ 	kbytrec.F loctab.F nameru.F ubpack.F uclean.F uindxs.F usbos.F
+ 	usgtdb.F utcblk.F utccop.F utcofo.F utwocl.F utwoex.F
+Removed Files:
+	noibm.F
+@
+text
+@      INTEGER FUNCTION ADBRUN ( DET,IROW,IPERIOD,IRUN,ISETUP)
+C -----------------------------------------------------------
+C - F.Ranjard - 901018
+CKEY ALEF ADBR PERIOD
+C! get elements of an ADBR period
+C
+C - Input  : DET      / A = CHARACTER*2 variable to define the det:
+C                           'BP VD IT TP EC LC SA HC MU TR GE DB SI BE'
+C            IRUN     / I = run #
+C - Output : IROW     / I = ADBR row # valid for this run
+C            IPERIOD  / I = period # of this row
+C            ISETUP   / I = setup code
+C                           = 0 if DET does not exist
+C            ADBRUN   / I = 1st run of the period
+C                           = 0 if no bank or row # does not exist
+C
+C -------------------------------------------------------------
+#ifndef DOC
+      CHARACTER*2 DET
+#include "bcs.h"
+#include "adbrjj.h"
+#include "adbrlist.h"
+      DATA NADBR / 0/
+#include "bmacro.h"
+C ------------------------------------------------------------
+C - 1st entry : get ADBR bank from data base
+#include "gtadbr.h"
+C
+C - return row# valid for a given run
+      IR1 = ITABL(JADBR,1,JADBFR)
+      IF (IRUN.LT.IR1) GOTO 998
+      IR2 = ITABL(JADBR,LADBR,JADBFR)
+      IF (IRUN.EQ.IR1) THEN
+         IROW = 1
+      ELSEIF (IRUN.GE.IR2) THEN
+         IROW = LADBR
+      ELSE
+         DO 10 I=2,LADBR
+            IR2 = ITABL(JADBR,I,JADBFR)
+            IF (IRUN.GE.IR1 .AND.IRUN.LT.IR2) THEN
+               IROW = I-1
+               GOTO 20
+            ENDIF
+            IR1 = IR2
+ 10      CONTINUE
+         GOTO 998
+      ENDIF
+C
+C - return content of the row
+ 20   CONTINUE
+      IPERIOD = ITABL(JADBR,IROW,JADBPN)
+      ISETUP = 0
+      IF (JDETJJ.GT.0) ISETUP = ITABL(JADBR,IROW,JDETJJ)
+      ADBRUN = ITABL(JADBR,IROW,JADBFR)
+      RETURN
+C
+C - period not found
+ 998  ADBRUN = 0
+      END
+#endif
+@

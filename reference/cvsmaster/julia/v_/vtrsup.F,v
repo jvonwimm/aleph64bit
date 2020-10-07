@@ -1,0 +1,188 @@
+head	1.1;
+access;
+symbols
+	jul313_3:1.1
+	jul313_2:1.1
+	jul313_1:1.1
+	jul313:1.1
+	jul312_1:1.1
+	jul312:1.1
+	jul311:1.1
+	jul310_1:1.1
+	jul310:1.1
+	jul309_1:1.1
+	jul309:1.1
+	jul308_6:1.1
+	jul308_5:1.1
+	jul308_4:1.1
+	jul308_3:1.1
+	jul308_2:1.1
+	jul308_1:1.1
+	jul308:1.1
+	jul307_4:1.1
+	jul307_3:1.1
+	jul307_2:1.1
+	jul307_1:1.1
+	jul307:1.1
+	jul306_3:1.1
+	jul306_2:1.1
+	jul306_1:1.1
+	jul306:1.1
+	jul305_4:1.1
+	jul305_3:1.1
+	jul305_2:1.1
+	jul305_1:1.1
+	jul305:1.1
+	jul304_3:1.1
+	jul304_2:1.1
+	jul304_1:1.1
+	jul304:1.1
+	jul303_7:1.1
+	jul303_6:1.1
+	jul303_5:1.1
+	jul303_4:1.1
+	jul303_3:1.1
+	jul303_2_mc1:1.1
+	jul303_2:1.1
+	jul303_1_mc1:1.1
+	jul303_1:1.1
+	jul303_v:1.1
+	jul303:1.1
+	jul302_6:1.1
+	jul302_5:1.1
+	jul302_4:1.1
+	jul302_3:1.1
+	jul302_2:1.1
+	jul302_1:1.1
+	jul302:1.1
+	jul285_1:1.1
+	jul285:1.1
+	jul284_1:1.1
+	jul284:1.1
+	jul283_1:1.1
+	jul283:1.1
+	jul282_1:1.1
+	jul282:1.1
+	jul281_3:1.1
+	jul281_2:1.1
+	jul281_1:1.1
+	jul281:1.1
+	jul280_1:1.1
+	jul280:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.05.06.15.54.38;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@re-installed jul280 from the historian source because some routines were missing.
+@
+text
+@      SUBROUTINE VTRSUP(IROMD)
+C----------------------------------------------------------------------
+C!  - Update the VTRS bank
+C!
+C
+C  Bank VTRS contains the relations between VDET electronic channels
+C  and monte carlo tracks. For VDET95, we demultiplex the strips
+C  before clustering. VTRS now needs to contain the readout strip
+C  address. Has to be done now that we have the relation between
+C  el. chann. and R/O strips in bank VCSG
+C
+C  A. Bonissent June 1995
+C
+C  INPUT  :
+C      IROMD   :  Readout module address
+C
+C?
+C!======================================================================
+#ifndef DOC
+C
+      SAVE NAVCSG,NAVTRS
+C
+      INTEGER VIWFFW,VFWAFF
+C
+C  Inputs
+C
+      INTEGER IROMD
+      LOGICAL GOOD
+C
+C  Global includes
+C
+#include "bcs.h"
+#include "vrecon.h"
+#include "vcsgjj.h"
+#include "vtrsjj.h"
+C
+C  Function calls
+C
+C
+      LOGICAL FIRST
+      DATA FIRST /.TRUE./
+#include "bmacro.h"
+      IF(FIRST)THEN
+        FIRST=.FALSE.
+        NAVCSG=NAMIND('VCSG')
+        NAVTRS=NAMIND('VTRS')
+      ENDIF
+      KVTRSN=NLINK('VTRS',100)
+C
+C Decode address,
+C get the view and the number of readout channels
+C
+      CALL VADEWA(IROMD,ILAY,IZ,IPH,IVIEW)
+C Find the module (1 or 2)
+      IRET = VFWAFF(IZ,IMOD,IWAF)
+C
+      KVTRS=IW(NAVTRS)
+      NVTRS=LROWS(KVTRS)
+      KVCSG=IW(NAVCSG)
+      NVCSG=LROWS(KVCSG)
+      DO 20 IVTRS=1,NVTRS
+         IAVT=ITABL(KVTRS,IVTRS,JVTRAD)
+         CALL VUNADD(IAVT,NC,IL,IWF,IFA,IV,ICH)
+         IF(IL.NE.ILAY.OR.
+     >      IWF.NE.IZ.OR.
+     >      IFA.NE.IPH.OR.
+     >      IV.NE.IVIEW)GO TO 20
+            CH = RTABL(KVTRS,IVTRS,JVTRCH)
+            IVDHT = ITABL(KVTRS,IVTRS,JVTRHT)
+            INX = ITABL(KVTRS,IVTRS,JVTRVT)
+C
+C Transform the el. channel nb. from Galeph into data channel
+C
+            IVCSG = ICH + CHNOFF(IV)
+C
+            DO IWAF=1,3
+              JSTRP = ITABL(KVCSG,IVCSG,JVCSSA+IWAF-1)
+              IF(JSTRP.NE.0)THEN
+                NL=LROWS(KVTRSN)+1
+                IW(KVTRSN+LMHROW)=NL
+                IRET = VIWFFW(IMOD,IWAF,IWFF)
+                CALL VPKADD(IAVTN,NC,IL,IWFF,IFA,IV,JSTRP)
+                KLINE=KROW(KVTRSN,NL)
+                IW(KLINE+JVTRAD)=IAVTN
+                RW(KLINE+JVTRCH)=CH
+                IW(KLINE+JVTRHT)=IVDHT
+C In Julia, we do not use the relation to next for same track;
+C and VTRS is not output on POT
+C Keeping it up to date would be too complicated
+                IW(KLINE+JVTRVT)=0
+C
+              ENDIF
+            ENDDO
+  20  CONTINUE
+      RETURN
+      END
+#endif
+@

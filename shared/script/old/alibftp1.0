@@ -1,0 +1,188 @@
+#! /bin/csh
+#============================================================================
+#                             alibftp
+#                                              FLR from F.Blin
+#============================================================================
+# get aleph library fortran files from CERNVM using ftp
+#
+#============================================================================
+# All ALEPH CERNVM disks on file -> ${alib_dir}/alibdisk
+#
+# the /aleph/ directory of an ALEPH library is found in ${alib_dir}/pub/progl
+# the last version number installed is taken from ${prog_dir}/alib.log
+# if it exists.
+# at the end ${prog_dir}/alib.log is updated with the new version number.
+#
+# source files are stored on ${prog_dir/src${prog_name}${cycle}
+# special fortran files are stored on ${prog_dir}
+# object files and library files are stored on ${lib_dir}
+# usually ${prog_dir} and {lib_dir} are identical
+# ----------------------------------------------
+#
+# -> run FTP on CERNVM.CERN.CH
+#            get ${file_name}.${file_type}
+#            if ${prog_name}= alpha julia or galeph -> get ${file_type_corr}
+#            if ${prog_name}= alpha -> get qxxxx .inc${cycle}
+#            if ${prog_name}= alephlib -> get ${file_type_c}
+#============================================================================
+# P1 -> prog_name eg: alephlib
+# P2 -> cycle     eg: 154
+# P3 -> file_name eg: aleph154
+#============================================================================
+#include "~/flr/bin/verbflr.h"
+#
+set nar = $#argv
+if (nar != 0) then
+  if ($argv[${nar}] == "-v") then
+     echo "alibftp1.0"
+     set echo on
+     set argv[${nar}] = ""
+  endif
+endif
+# =========================================================================
+unset noclobber
+set exec_name = "alibftp"
+set alib_dir = "/aleph/alib"
+set prog_dir = `pwd`
+set prog_aleph = "OK"
+set file_name_c = "alc"
+set file_type_c = "c"
+set mnemonic = ""
+set cycle = ""
+set cycle_new = ""
+set file_type = ""
+ 
+#===> first parameter: prog_name
+if ($1 == "") then
+  echo -n "Enter Aleph program name [eg:alephlib <CR>=exit]-> "
+   set prog_name = $<
+   if (${prog_name} == "") goto exec_end
+else
+   set prog_name = $1
+endif
+ 
+#===> second parameter: cycle
+if ($2 == "") then
+   if (${cycle_new} == "") then
+      set string_cr = "<CR>=exit"
+   else
+      set string_cr = "<CR>=${cycle_new}"
+   endif
+   echo -n "Enter version number[${string_cr}]-> "
+   set cycle = $<
+   if (${cycle} == "") then
+      if (${cycle_new} == "") then
+         goto exec_end
+      else
+         set cycle = ${cycle_new}
+      endif
+   endif
+else
+   set cycle = $2
+endif
+ 
+#
+# =============================================================================
+#                  set idir, prog_dir and mnemonic
+#
+set idir = `egrep ^" ${prog_name} " ${alib_dir}/pub/progl | awk '{print $2}'`
+set mnemonic = `egrep ^" ${prog_name} " ${alib_dir}/pub/progl | awk '{print $4}'`
+set prog_dir = /al/${OS}/${idir}
+#
+if (${idir} == "") then
+   echo "*** WARNING not official ALEPH program"
+   set prog_aleph = "NO"
+   set mnemonic = "${prog_name}"
+endif
+# ===============================================================================
+#                   set file_name and file_type
+#
+set file_name = ${mnemonic}${cycle}
+# 
+set file_type = `egrep ^" ${prog_name} " ${prog_dir}/f77_options | awk '{print $2}'`
+if (${file_type} == "") goto exec_end
+#
+# =============================================================================
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> begin
+begin:
+
+set ftp_dir = `pwd`
+cd ftp_dir
+ 
+# ================================================================
+#                    ftp on CERNVM
+echo `date` "===== START of ${exec_name} ${user} ${file_name} " >> ${ftp_dir}/spy
+set disk_ibm_name = "pub"
+set transfert_type = "ascii"
+set disk_ibm = `egrep "${disk_ibm_name} " ${alib_dir}/alibdisk | awk '{print $2 "." $3}'`
+ 
+set mv_tmp = "NO"
+set transfert_type = "ascii"
+ 
+if (-e ftp_tmp) rm ftp_tmp
+echo -n "Enter ibm user [<CR>=${USER}]-> "
+set ibm_user = $<
+if (${ibm_user} == "") then
+   set ibm_user = ${USER}
+endif
+echo "${ibm_user}" > ftp_tmp
+echo "cd ${disk_ibm}" >> ftp_tmp
+echo "${transfert_type}" >> ftp_tmp
+#====> ftp ${file_type}
+echo "get ${file_name}.${file_type}" >> ftp_tmp
+#====> ftp ${file_type_c}
+if (${prog_name} == "alephlib") then
+   echo "get ${file_name_c}.${file_type_c}" >> ftp_tmp
+endif
+#====> ftp file type = NEWS
+   set file_news = ${file_name}
+   if (${prog_name} == "alephio") set file_news = ${prog_name}
+   if (${prog_name} == "bos77") set file_news = ${prog_name}
+   if (${prog_name} == "look") set file_news = ${prog_name}
+   echo "get ${file_news}.news ${file_name}.news" >> ftp_tmp
+#====> ftp ${file_type_corr}
+if (${prog_name} == "julia" || ${prog_name} == "galeph" || ${prog_name} == "alpha" ) then
+   set file_type_corr = ${file_type}
+   set mnemonic_corr = `echo ${prog_name} | awk '{print substr($0,1,1) "cor"}'`
+   if (${prog_name} == "alpha") then
+      set mnemonic_corr = `echo ${prog_name} | awk '{print substr($0,1,2) "cor"}'`
+      set disk_ibm_phy = `egrep "phy " ${alib_dir}/alibdisk | awk '{print $2 "." $3}'`
+   endif
+   set file_corr = ${mnemonic_corr}${cycle}
+   echo "get ${file_corr}.${file_type_corr} ${file_corr}.f"  >> ftp_tmp
+endif
+#====> ftp .inc${cycle}
+if (${prog_name} == "alpha") then
+   echo "cd ${disk_ibm_phy}" >> ftp_tmp
+   echo "get qmacro.inc${cycle}" >> ftp_tmp
+   echo "get qcde.inc${cycle}" >> ftp_tmp
+   echo "get qdecl.inc${cycle}" >> ftp_tmp
+   echo "get qhac.inc${cycle}" >> ftp_tmp
+endif
+ 
+echo "quit" >> ftp_tmp
+#********
+ 
+ftp cernvm < ftp_tmp
+ 
+if !(-e ${ftp_dir}/${file_name}.${file_type}) then
+   echo "*** FATAL ${exec_name} failed -> ${ftp_dir}/${file_name}.${file_type} is unknown"\
+ >> ${ftp_dir}/spy 
+   goto exec_end
+endif
+# ================= end of ftp on CERNVM ===================================
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> spy
+spy:
+#*******> spy
+set dmyh = `date '+%d-%h-19%y %T'`
+echo `date` "===== END of ${exec_name} ${user} ${file_name} " >> ${ftp_dir}/spy
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> exec_end
+exec_end:
+ exit
+ 

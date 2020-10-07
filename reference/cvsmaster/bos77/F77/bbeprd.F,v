@@ -1,0 +1,218 @@
+head	1.3;
+access;
+symbols
+	bos3489-1:1.3.0.2
+	bos3589:1.3
+	bos3489:1.3
+	bos3389:1.3
+	bos3289:1.3
+	bos3189:1.3
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	96.04.19.09.03.55;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.03.11.12.46.36;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.06;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.07;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@remove O.Callot correction to read only once any physical record
+because it was no longer possible to read MINI MC.
+ Modified Files:
+ 	bbeprd.F
+@
+text
+@      SUBROUTINE BBEPRD(LUN,IACM,NRECA,NRECR,NSEGA,NSEGR,
+     +                  MODE,NHEDA,IHEDA,IBUF,IER)
+*     this subroutine handles the modern and beautiful CERN standard
+*     IO package EPIO - input
+*
+*     EPIO read / skip
+*
+*        LUN     = unit
+*        IACM    = 0 sequential = 1 direct access    = 2 special
+*        NRECA   = actual record number                       updated
+*        NRECR   = number of record, to be read
+*        NSEGA   = actual segment number                      updated
+*        NSEGR   = number of segment, to be read
+*        MODE    = EPIO mode = 30 or 20 or 13
+*        NHEDA   = length of header or data            -      defined
+*        IHEDA   = header or data area                 -       filled
+*        IBUF    = buffer area                         -       filled
+*        IER     = EPIO error code                     -      defined
+*
+      CHARACTER*4 CHAINT
+      INTEGER IHEDA(*),IBUF(*)
+
+      JACM=IACM
+*     only standard EPIO sequential access available so far
+C     IF(IACM.EQ.1) JACM=0
+      IF(IACM.EQ.2) JACM=0
+      IF(JACM.EQ.0) THEN
+*        sequential
+         NREC=NRECA
+         NSEG=NSEGA
+         IF(MODE.EQ.30) THEN
+*           read physical record header, ignoring NRECR
+            CALL EPREAD(LUN,30,NHEDA,IHEDA,IBUF,IER)
+            CALL EPGETW(LUN,11,NREC,IDUMER)
+            NRECA=NREC
+            NSEGA=0
+         ELSE IF(MODE.EQ.20) THEN
+*           logical record header
+            IF(NRECR.LT.NREC) THEN
+*              rewind because of reverse order
+               CALL EPRWND(LUN,IBUF,IER)
+               NREC=0
+               NSEG=0
+            ELSE IF(NRECR.EQ.NREC) THEN
+*              check within record for segment
+               IF(NSEGR.LE.NSEGA) THEN
+                  CALL EPRWND(LUN,IBUF,IER)
+                  NREC=0
+                  NSEG=0
+               END IF
+            END IF
+   10       IF(NRECR.GT.NREC) THEN
+*              read next physical record
+               CALL EPREAD(LUN,30,NHEDA,IHEDA,IBUF,IER)
+               CALL EPGETW(LUN,11,NREC,IDUMER)
+               NSEG=0
+               GOTO 10
+            END IF
+   20       NRECD=NREC
+            CALL EPREAD(LUN,MODE,NHEDA,IHEDA,IBUF,IER)
+            CALL EPGETW(LUN,11,NREC,IDUMER)
+            IF(NREC.NE.NRECD) NSEG=0
+            IF(IER.NE.0) GOTO 100
+            NSEG=NSEG+1
+C           IF(NSEGR.GT.NSEG) GOTO 20
+            CALL EPGETW(LUN,11,NREC,IDUMER)
+            NRECA=NREC
+            NSEGA=NSEG
+         ELSE IF(MODE.EQ.13) THEN
+            CALL EPREAD(LUN,MODE,NHEDA,IHEDA,IBUF,IER)
+         END IF
+
+      ELSE IF(JACM.EQ.1) THEN
+*        direct access
+         IF(MODE.EQ.30) THEN
+
+            IF(NRECR.NE.0) THEN
+C              read new EPIO record directly
+              CALL EPDACR(LUN,NRECR,4,IER)
+              CALL EPREAD(LUN,MODE,NHEDA,IHEDA,IBUF,IER)
+              NRECA=NRECR
+              NSEGA=0
+              NSEG=0
+            ELSE
+C               1. time one has to define record length
+            LHREC=IHEDA(1)
+C            record length comes from BUNIT
+            CALL EPSETW(LUN,1,LHREC,IER)
+            ENDIF
+         ELSE IF(MODE.EQ.20) THEN
+           IF(NRECA.NE.NRECR) THEN  
+C              read new EPIO record directly
+            CALL EPDACR(LUN,NRECR,4,IER)
+            CALL EPREAD (LUN,30 ,NHEDA,IHEDA,IBUF,IER)  
+            NRECA=NRECR 
+            NSEGA=0 
+            NSEG=0  
+          ENDIF 
+ 120        CALL EPREAD (LUN,MODE,NHEDA,IHEDA,IBUF,IER)
+            IF(IER.NE.0) GOTO 100
+            NSEG=NSEG+1
+*              check within record for segment
+            IF(NSEGR.GT.NSEG) GOTO 120
+            NRECA=NRECR
+            NSEGA=NSEGR
+         ELSE IF(MODE.EQ.13) THEN
+            CALL EPREAD(LUN,MODE,NHEDA,IHEDA,IBUF,IER)
+         ENDIF
+      ELSE IF(JACM.EQ.2) THEN
+*        special access - TO BE CODED BY EXPERT
+      END IF
+  100 RETURN
+      END
+@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@d91 1
+a91 12
+            CALL EPGETW( LUN, 11, NREC, IST )
+C
+C? If requested record is not last requested one, count again segments:
+C? If the last record in memory is lower than the wanted one, read the
+C? record, but only in this case... Avoids re-reading the record.
+C?
+C? NOTE: POT  EDIR have a bad NRECR, it may be less than the real one.
+C?       MINI EDIR are what one expects, the event starts in the record.
+C
+            IF( NRECR .GT. NRECA ) NSEG = 0
+            IF( NREC  .LT. NRECR .OR.
+     &          NRECA .EQ. 0         ) THEN
+d94 5
+a98 5
+            CALL EPREAD (LUN,30 ,NHEDA,IHEDA,IBUF,IER)
+            NRECA=NRECR
+            NSEGA=0
+            NSEG=0
+          ENDIF
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK bbeprd
+d91 12
+a102 1
+           IF(NRECA.NE.NRECR) THEN
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

@@ -1,0 +1,211 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.2
+	aleph304_5:1.2
+	aleph304_4:1.2
+	aleph304_3:1.2
+	aleph304_2:1.2
+	aleph304_1:1.2
+	aleph304:1.2
+	aleph303_3:1.2
+	aleph303_2:1.2
+	aleph303_1_mc1:1.2
+	aleph303_1:1.2
+	aleph303:1.2
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.05.21.16.32.17;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.41.50;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.41.51;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@Touch fyinev.F to force recompilation
+@
+text
+@      SUBROUTINE FYINEV(IBFUL)
+C ----------------------------------------------------------
+CKEY FYXX  /INTERNAL
+C J.Hilgart - 871307          mods 310588
+C! Fxxx DST format event initialization.
+C If this routine has already been called in this event, do not
+C repeat certain steps dealing w/ MC info.
+C OUTPUT : IBFUL = -1 if not enough space to book a bank
+C
+C - Called from    USER
+C - Calls          BLIST,BWIND,BDROP,WBANK,WDROP    from BOS.OLB
+C                  FYKILL                           from ALEPHLIB
+#ifndef DOC
+      SAVE
+#include "bcs.h"
+#include "fyrela.h"
+#include "kgjjpar.h"
+      DATA IONC /0/
+C
+#include "bmacro.h"
+C ====================================================================
+C Name indices
+      IF (IONC.EQ.0) THEN
+         NKINE = NAMIND('KINE')
+         NVERT = NAMIND('VERT')
+         NCALO = NAMIND('CALO')
+         NKEVH = NAMIND('KEVH')
+         NKHIS = NAMIND('KHIS')
+         IONC = 1
+      ENDIF
+      IBFUL = 0
+C
+C Drop any negative KINE banks to avoid any trouble
+      KK = NKINE + 1
+ 2    KK = IW(KK-1)
+      IF (KK .GT. 0) THEN
+         NR = IW(KK-2)
+         IF (NR .GT. 0) GOTO 3
+         IDRP = NDROP('KINE',NR)
+         GOTO 2
+      ENDIF
+ 3    CONTINUE
+C
+C Get no. of tracks and vertices which came from event generator
+      JKEVH = IW(NKEVH)
+      IF (JKEVH .NE. 0) THEN
+         KINTRK = ITABL(JKEVH,1,JKEVNT)
+         KINVER = ITABL(JKEVH,1,JKEVNV)
+      ELSE
+         KINTRK = 0
+         KINVER = 0
+      ENDIF
+C
+C Drop previous Fxxx banks
+      LEN = LNBLNK (ELISAD)
+      CALL BDROP(IW,ELISAD(1:LEN))
+C
+C Add the Fxxx banks to E list.
+      CALL BLIST(IW,'E+',ELISAD(1:LEN))
+C
+C - get all KINE and VERT indices
+      CALL BWIND (IW,'KINE',MAXMCX,INDKIN)
+      IF (INDKIN.EQ.0) GOTO 990
+      LAST = IW(INDKIN)
+      KLAST = IW(INDKIN+LAST)
+      IF (IW(KLAST-1).NE.0) GOTO 989
+      CALL BWIND (IW,'VERT',MAXMCX,INDVER)
+      IF (INDVER.EQ.0) GOTO 990
+      LAST = IW(INDVER)
+      KLAST = IW(INDVER+LAST)
+      IF (IW(KLAST-1).NE.0) GOTO 989
+C
+C Set work banks JDKEKS and JDVNFO with new track #s and new
+C     vertex #s or 0 if the track or the vertex has to be dropped.
+       CALL FYKILL (IBFUL)
+       IF (IBFUL .EQ. -1) GOTO 990
+C
+C normal, healthy return
+      RETURN
+C sick return: not enough space to book bank...
+ 989  CONTINUE
+      WRITE (IW(6),*) ' FYINEV MAXMCX in /FYRELA/ is too small '
+ 990  CONTINUE
+      IBFUL = -1
+      IW(1) = LFXWBK
+      CALL WDROP (IW,JDFXWB)
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a60 1
+C
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

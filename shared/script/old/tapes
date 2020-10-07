@@ -1,0 +1,2748 @@
+#!/usr/local/bin/perl 
+require "complete.pl";
+require "ctime.pl";
+
+#################################################################
+#             ALEPH BOOK KEEPING - TAPE HANDLING
+#
+#             BY   : SOODABEH ESHGHI
+#             DATE : JUNE 1995
+#################################################################
+# 03/07/95 F.Blin
+#   - checking if tapes_lock exist now in one function tlock
+#   - unlink(tapes_lock) before sub print_tms_output
+#   - change format in spy [date bos_cards_spy host]
+#   - now Mail with parameter -s
+# 07/07/95 F.Blin + R.Hagelberg 
+#   - new format bos_cards BTLI with range + number of tapes
+#      eg :BTLI 'AT0010 | TO | AT0100 | 15
+#   - now tapes find the first free tape and book the number 
+#     required only if possible
+#     [free tapes in this range >= number required] 
+# 10/07/95 R.Hagelberg 
+#   - put right format, no blank line etc for TSCRATCH and TMODLOCA
+#   - append to tapes.output , not overwrite
+#   - etc... added AU .....
+# 11/07/95 R.Hagelberg 
+#   - exitrc defined ... for exit_tapes
+#   - get 3-letter uuu on saga 
+#   - if set manager on  not possible,  continue ( not exit)
+# 07/08/95 F.Blin
+#   - new option : VFREE and RFREE [only users :HAG FBLXU ISAXU]
+#     to count free tapes in vault or rest 
+#     append to /aleph/log/tapes.VAULT or /aleph/log/tapes.REST
+#################################################################
+#                          F.Blin
+# 02/10/95 - adapted -> DLT and EXABYTE
+#          - suppressed label PA and IO
+# 04/10/95 - updated file .instit if pool GERMANY, ITALY or BRITAIN 
+#            for all labos in same pool 
+#          - suppressed next_book in file .instit
+# 10/10/95 - suppressed error institut -> 0 in function tms_tag_bin
+# 18/10/95 - check also the group in function get_loginid
+# 19/10/95 - new_owner -> upper in function ask_owner
+# 24/10/95 - new info into tapes_lock file
+##################################################################
+
+$host = $ENV{'HOST'};
+$host =~ tr/a-z/A-Z/;
+
+# Check the user if from ALEPH, get userid (uuu) and group id (gr)
+$user_loginid = getlogin;
+if (!&get_uuu_gr($user_loginid)){
+  print("\n *** You are not authorized to use this program. ***\n");
+  exit(1);
+}
+$user_uuu = $uuu;	
+$user_uuu =~ tr/a-z/A-Z/;
+$user_loginid =~ tr/a-z/A-Z/;
+
+# To trap Ctrl-c
+$SIG{'INT'}= 'IGNORE';
+
+&init();
+
+# To check whether there is an input file as an argument
+# or the debug flag has been set. 
+
+$no_inputs = @ARGV;
+if($no_inputs > 2 ){
+  print"\n *** tapes.exec <input filename> <output filename> ***\n";
+  exit(1);
+}
+if($no_inputs > 0){
+  $arg = shift(@ARGV);
+  if($arg eq "-debug" || $arg eq "-DEBUG"){
+    $debug = 1;
+  }
+  else{
+    $input_file = $arg;
+    $output_file = shift(@ARGV) if ($no_inputs > 1);
+    print"\n DEBUG:output_file = $output_file, input_file = $input_file" if($debug);
+    $bos_cards_flag = 1;
+    $bos_cards_spy = "C";
+  }
+}
+print "\n DEBUG: HOST machine = $host" if($debug);
+print "\n DEBUG: user_loginid=$user_loginid, user_uuu = $user_uuu \n" if($debug);
+
+print " ******** A L E P H   BOOKKEEPING - TMS Tape managment *********** \n";
+  
+if(!$bos_cards_flag){
+  while(1){
+    last if(&ask_device());
+}
+  &init_inst();
+  while(1){
+    last if(&user_inst_name());
+  }
+}
+
+&check_user($user_loginid);
+$debug = 0 if(!$spec_user_flag);
+
+#Processing the tasks.
+while(1){
+  if ($bos_cards_flag == 0){
+    next if(!&main_menu);
+  }
+  if ($bos_cards_flag == 1 && $first_flag == 0){
+    if(!&bos_cards){
+      print"\n error\n";
+      &exit_tapes ;
+    }
+    $first_flag = 1;
+  }
+  if ($command eq "CHAN"){
+    while(1){
+      last if(&ask_device());
+    }
+    &init_inst();
+    &user_inst_name();
+    &check_user($user_loginid);
+  } 
+  if ($command eq "VFREE" || $command eq "RFREE"){    
+    &numfree();
+  }
+  if ($command eq "MOD" || $command eq "SCRA" || $command eq "BOOK" || $command eq "FREE"){  
+      if(&find($current_label, *off_label_list)==1 && $spec_user_flag==0){
+        print "\n *** You are not authorized for $current_label tapes. ***\n";
+        next;
+      }
+   }  
+  if ($command eq "SCAN"){    
+    &scan() if (!$bos_cards_flag);
+    &scan_exec($current_label,$first_num,$last_num,$t_owner,$location,$t_status) if($bos_cards_flag);
+    &print_tms_output(@tms_output) if ($scan_cnt > 0);
+  }
+  if ($command eq "ADD"){
+    &tlock();
+    next if(!$tapes_lock_flag);
+    &add() if (!$bos_cards_flag);
+    &add_exec($current_label,$first_num,$last_num,$prch_inst,$location,$C_D_E) if($bos_cards_flag);
+    unlink("$tapes_lock");
+    &tms_spy($first_lab, $last_lab, $tapes_num, $location) if($tmsrc>0);
+    &print_tms_output(@tms_output) if($tmsrc == 1);
+    &update_list($current_inst, $inst_series) if($tmsrc == 1);
+  }
+  if ($command eq "SCRA"){
+    &tlock();
+    next if(!$tapes_lock_flag);
+    &scra() if (!$bos_cards_flag);
+    &scra_exec($current_label,$first_num,$tapes_num,$t_owner) if($bos_cards_flag);    
+    unlink("$tapes_lock");
+    &tms_spy($first_lab, $last_lab, $tapes_num, $location) if($tmsrc>0 || $tmsrc == -99);
+    &print_tms_output(@tms_output) if($tmsrc == 1);
+    &update_list($current_inst, $inst_series) if($tmsrc == 1);
+  }
+  if ($command eq "BOOK"){
+    &tlock();
+    next if(!$tapes_lock_flag);
+    &book() if (!$bos_cards_flag);
+    &book_exec($current_label,$first_num,$tapes_num,$location,$C_D_E,@t_comments) if($bos_cards_flag);
+    unlink("$tapes_lock");
+    &tms_spy($first_lab, $last_lab, $tapes_num, $location) if($tmsrc>0);
+    &print_tms_output(@tms_output) if($tmsrc == 1);
+  }
+  if ($command eq "FREE"){
+    &tlock();
+    next if(!$tapes_lock_flag);
+    &free() if (!$bos_cards_flag);
+    &free_exec($current_label,$first_num,$tapes_num,$t_owner) if ($bos_cards_flag);
+    unlink("$tapes_lock");
+    &tms_spy($first_lab, $last_lab, $tapes_num, $locations) if($tmsrc>0 || $tmsrc == -99);
+    &print_tms_output(@tms_output) if($tmsrc == 1);
+  }
+  if ($command eq "MOD"){
+    if($current_label eq "I2"){
+       print "\n *** You can not move ROBOT tapes! ***\n";
+       next;
+      }
+    &tlock();
+    next if(!$tapes_lock_flag);
+    &mod() if(!$bos_cards_flag);
+    &mod_exec($current_label,$first_num,$tapes_num,$t_owner,$t_new_inst,$location,$t_status,
+	      $t_labty,$t_dens,@t_comments) if($bos_cards_flag);
+    unlink("$tapes_lock");
+    &tms_spy($first_lab, $last_lab, $tapes_num, $location) if($tmsrc>0 || $tmsrc == -99);
+    &print_tms_output(@tms_output) if($tmsrc == 1);
+  }
+  if ($command eq "OUT"){
+    &ask_output_file();
+    print("\n output = $output_file\n");
+  }
+  &exit_tapes if ($command eq "EXIT");
+  $last_command = $command;
+  print("\n DEBUG: tmsrc = $tmsrc\n") if ($debug);
+  &exit_tapes  if($bos_cards_flag);
+}
+##############################################################
+# This function asks for the required information.
+##############################################################
+sub add{
+  
+  &get_first_print();
+  &check_inst_get_info($current_inst);
+  &ask_firstnum($inst_next_add);
+  &ask_tapesnum($ADD_MAX_NUM);
+  $last_num = $first_num + $tapes_num - 1;
+
+  while(1){
+      if($C_D_E ne "E") {
+        $prch_inst = &Complete("\n Enter the purchasing institute (<CR> = cern), type Ctrl-d for the list : ", @lc_inst_list); 
+      } 
+      if($C_D_E eq "E") {  
+        print "\n Enter the purchasing institute (<CR> = cern) : ";
+        $prch_inst = <>;
+      }
+    $prch_inst =~ s/^\s+//;
+    $prch_inst =~ s/\s+$//;
+    &exit_tapes if ($prch_inst =~ /^q\b/i );
+    if ($prch_inst eq ""){
+      $prch_inst = "CERN";
+      last;
+    }
+    $prch_inst =~ tr/A-Z/a-z/;
+    last if ($C_D_E ne "E" && &match($prch_inst, *lc_inst_list));
+    last if ($C_D_E eq "E");    
+  }  
+  $prch_inst =~ tr/a-z/A-Z/;
+  &check_inst_get_info($current_inst);
+  &ask_location();
+
+  print ("\n DEBUG: firs_num=$first_num, last_num=$last_num, no_tapes=$tapes_num") if($debug);
+  print ("\n DEBUG: current_inst=$current_inst,prch_inst=$prch_inst") if($debug);
+  return if(!&check_labo($current_label, $current_inst, $first_num, $last_num));
+
+  &add_exec($current_label,$first_num,$last_num,$prch_inst,$location,$C_D_E);
+}
+#####################################################
+# This function performs the add task.
+#F.Blin 04/10/95 added rsh for sysreq BINARY and TEXT
+#####################################################
+sub add_exec{
+
+  @tms_output = ();
+  @main_buffer=();
+  local($i) = 0;
+  $tmsrc = 0;
+  ($current_label,$first_num,$last_num,$prch_inst,$location,$C_D_E) = @_;
+
+  $tapes_num = $last_num - $first_num + 1;
+
+  &get_first_last_lab();
+
+  $current_lib = "$current_label _ $location";
+  $current_lib = "3495_2" if ($current_label eq "I2");
+  $current_lib=~ s/\s\w\s/_/;
+  print "\n DEBUG: current_lib=$current_lib in sub add_exec" if($debug);
+
+  $current_pool = &inst_pool($current_label, $current_inst);
+  return if(!$current_pool);
+  print "\n DEBUG: current_pool=$current_pool in sub add_exec" if($debug);
+  $prch_inst = substr($prch_inst, 0 , 4);
+
+  if($C_D_E eq "C"){
+    $add_model = "3480";
+    $add_max_dens  = "38000";
+    $add_dens  = "38000";
+    $add_labty = "SL";
+    $add_labty = "AL" if ($current_label eq "AA"); # special AA tapes 
+  }
+  if($C_D_E eq "D"){
+    $add_model = "DLT2";
+    $add_max_dens  = "10GC";
+    $add_dens  = "10GC";
+    $add_labty = "AL";
+    $add_labty = "SL" if ($current_label eq "AR"); #special AA tapes 
+  }
+  if($C_D_E eq "E"){
+    $add_model = "8200";
+    $add_max_dens  = "8500";
+    $add_dens  = "8500";
+    $add_labty = "NL";
+  }
+  @main_buffer = ($first_lab,$last_lab,$current_inst,$current_lib,$C_D_E,$prch_inst);
+  if(!$bos_cards_flag){
+    return if(!&tms_confirm($tapes_num, $current_pool, @main_buffer));
+    &tms_warn();
+  }
+  $add_cnt = 0;
+  foreach $i ($first_num .. $last_num){
+    $i = sprintf("%04d",$i);
+    $current_vid = $current_label.$i;
+    print "\n DEBUG: current_vid=$current_vid in sub add_exec\n\n" if($debug);
+
+    $spy_err = `rsh -n shift9 sysreq TMS ENTER VSN $current_vid TOLIB $current_lib US $current_pool ACC XU MODEL $add_model MAXD $add_max_dens DENS $add_dens LAB $add_labty 2>&1`;
+
+#    if($?){
+    if($spy_err =~ /RC\(/){
+      &get_tmsrc200("ENTER VSN $current_vid TOLIB $current_lib");
+      return;
+    } 
+    if (&find($current_label, *off_label_list)){
+      $spy_err = `rsh -n shift9 sysreq TMS  PROTECT XU_DATA ACC XU  APPLY SET $current_vid  2>&1`;
+#      if($?){
+      if($spy_err =~ /RC\(/){
+	&get_tmsrc200("PROTECT XU_DATA ACC XU APPLY SET $current_vid");
+	return;
+      }
+    }
+    else{
+      $spy_err = `rsh -n shift9 sysreq TMS PROTECT XU_USER ACC XU  APPLY SET $current_vid 2>&1`;
+#      if($?){
+      if($spy_err =~ /RC\(/){
+        &get_tmsrc200("PROTECT XU_USER ACC XU APPLY SET $current_vid");
+	return;
+      }
+    }
+    $spy_err = `sysreq TMS ACTION TAKE MOVE VID $current_vid 2>&1`;
+    if($?){
+      &get_tmsrc200("ACTION TAKE MOVE VID $current_vid");
+      return;
+    }
+    
+    $spy_err = `sysreq TMS ACTION COMP MOVE VID $current_vid  2>&1`;
+    if($?){
+      &get_tmsrc200("ACTION COMP MOVE VID $current_vid");
+      return; 
+    }
+    $spy_err = `rsh -n shift9 sysreq TMS TAG VID $current_vid SET BINARY $prch_inst 2>&1`;
+    if($?){
+      &get_tmsrc200("TAG VID $current_vid SET BINARY $prch_inst");
+      return;
+    } 
+    $t_comment  = "Not yet booked";
+    $spy_err = `rsh -n shift9 sysreq TMS TAG VID $current_vid SET TEXT $t_comment 2>&1`;
+    if($?){
+      &get_tmsrc200("TAG VID $current_vid SET TEXT $t_comment");
+      return;
+    }	
+    print" Tape $current_vid ADDed successfully...\n";
+    $add_cnt++;
+  } 
+  
+  return if (!$add_cnt);
+  $current_vid = "$first_lab - $last_lab";
+  &tms_vid_pool($tmsrc,"POOL");
+
+  foreach $i (0..$#main_buffer){
+    &get_main_buffer($i);
+    return if(!&tms_tag_bin($t_vsn));
+    print "\n DEBUG: intitute tag=$t_inst in sub add_exec\n" if($debug);;
+    $t_comment = "Not yet booked";
+    $line = "$line:$t_inst:$t_comment";
+    push(@tms_output, $line); 
+  }
+  $tmsrc = 1;
+}
+########################################
+# F.Blin function to enter comments
+########################################
+sub ask_comments{
+
+ local($i) = 0; 
+ local($temp) = "";
+ local($temp_book) = "";
+
+  if ($command eq "BOOK"){  
+  while(1){
+    print"\n Comment for tape 1: ";    
+    $temp_book = <>;
+    $temp_book =~ s/^\s+//;
+    $temp_book =~ s/\s+$//;
+    &exit_tapes if ($temp_book =~ /^q\b/i );
+    last if($temp_book ne "");
+    print"\n *** You must enter the first comment. ***\n";
+  }
+  $current_comments[$i] = $temp_book ;
+  $i = 1;
+ }
+ print "With <CR> last comment will be repeated for the rest.\n" if($tapes_num > 1);
+ for($i ; $i<$tapes_num ; $i++){
+   $j = $i+1;
+   print" Comment for tape $j: ";
+   $temp = <>;
+   $temp =~ s/^[\b \t]+//;
+   $temp =~ s/[\b \t]+$//;
+   last if ($temp eq "\n");
+   chop($temp);
+   &exit_tapes if ($temp =~ /^q\b/i );
+   $current_comments[$i] = $temp;
+ }	
+ $no_comm = $i-1;
+ foreach $i ($#current_comments+1..$tapes_num-1){
+   $current_comments[$i] = $current_comments[$no_comm] ;
+ }
+ return;
+}
+########################################################################
+# F.Blin 26/07/95 function to ask device type and assign C_D_E 
+######################################################################
+sub ask_device{
+
+     local($input) = "";
+     print("\n Device type: C=Cartridge, D=DLT, E=Exabyte");
+     print("\n Enter the device type (<CR> = $C_D_E) {C,D,E}: ");
+     $input = <>;
+     $input =~ tr/a-z/A-Z/;
+     $input =~ s/^\s+//;
+     $input =~ s/\s+$//;
+     $input = $C_D_E if ($input eq "");
+     if ($input =~ /^q\b/i){ &exit_tapes};
+     $input = "CARTRIDGE" if ($input eq "C");
+     $input = "DLT" if ($input eq "D");
+     $input = "EXABYTE" if ($input eq "E");
+     if($input eq "CARTRIDGE" || $input eq "DLT" || $input eq "EXABYTE"){
+        $C_D_E = substr($input,0,1);
+     }
+     else{
+	 return 0;
+     }
+    return 1;
+}
+########################################
+# F.Blin function to enter first number
+########################################
+sub ask_firstnum{
+
+ ($t_cr) = @_;
+
+ while(1){
+   print "\n Enter first tape number: " if ($t_cr eq "");
+   print "\n Enter first tape number (<CR> = $t_cr): " if ($t_cr ne "");
+   $first_num = <>;
+   $first_num =~ s/^\s+//;
+   $first_num =~ s/\s+$//;
+   &exit_tapes if ($first_num =~ /^q\b/i);
+   if ($first_num eq "" && $t_cr eq ""){
+     print "\n *** You must enter the first tape number. ***\n";
+     next; 
+   }
+   if ($first_num eq "" && $t_cr ne ""){
+      $first_num = $t_cr;
+      last;
+    }
+   last if ($first_num=~ /^(\d+)$/  && $first_num <= 9999 && $first_num>0);
+   print"\n *** ERR: Invalid number! ***\n";
+ }	
+return ;
+}
+#########################################
+# F.Blin function to enter last number
+#########################################
+sub ask_lastnum{
+
+ ($t_cr) = @_;
+
+ while(1){
+   print "\n Enter the last number (<CR> = $t_cr): ";
+   $last_num = <>;
+   $last_num =~ s/^\s+//;
+   $last_num =~ s/\s+$//;
+   &exit_tapes if ($last_num =~ /^q\b/i );
+   if ($last_num eq ""){
+     $last_num = $t_cr;
+     last;
+   }			
+   last if($last_num=~ /^(\d+)$/ && $last_num<=9999 && $last_num>=$first_num );
+   print"\n *** ERR: Invalid number or last number is smaller than start number. ***\n";
+ }
+ return;
+}
+#################################################
+# F.Blin function to enter the location of tapes
+#################################################
+sub ask_location{
+
+  local($flag) = 0;
+  local($t_cr) = "";
+
+  $t_cr = "VAULT" if ($command eq "BOOK" || $command eq "ADD"); 
+
+ while(1){
+   if (!$flag){
+     return 0 if (!&get_loca_list($current_label));
+   }
+   $flag = 1; 
+   $location = &Complete(" Tape location, (<CR> = $t_cr), type Ctrl-d for the list: ", @loca_list) if ($t_cr ne "");
+   $location = &Complete(" Tape location, type Ctrl-d for the list: ", @loca_list)if ($t_cr eq "");
+   $location =~ s/^\s+//;
+   $location =~ s/\s+$//;
+   &exit_tapes if ($location =~ /^q\b/i );
+   return if ($location eq "" && ($command eq "MOD" || $command eq "SCAN"));
+   if ($location eq ""){
+       $location = "VAULT" if ($command eq "ADD" || $command eq "BOOK");
+   }
+   $location =~ tr/A-Z/a-z/;
+   if ( $location ne "" && (&check_loca($location)) ){
+     $location =~ tr/a-z/A-Z/;
+     last;
+   } 
+ }
+ return;
+}
+##############################################################
+# F.Blin function to check the output file name.
+#############################################################
+sub ask_output_file{
+
+  print"\n Enter the name of output file (<CR>=$output_file): " if ($command eq "OUT");
+  if ($command ne "OUT"){
+     print"\n type output file name (<CR>=$output_file): " if (!-e "$output_file");
+     print"\n type output file name (<CR>=append to $output_file): " if (-e "$output_file");
+  }
+  $temp = <>;
+  $temp =~ s/^\s+//;
+  $temp =~ s/\s+$//;
+  &exit_tapes if ($temp =~ /^q\b/i);
+  return if ( $temp eq "" );
+  $output_file = $temp;
+  return;
+}
+########################################
+# F.Blin function to enter the logonid
+########################################
+sub ask_owner{
+
+  while(1){
+    print" The owner, enter loginid: ";
+    $new_owner = <>;
+    $new_owner =~ s/^\s+//;
+    $new_owner =~ s/\s+$//;
+    &exit_tapes if ($new_owner =~ /^q\b/i);
+    last if ($new_owner eq "");
+    if(&find($new_owner, *spec_owners)==0 && (substr($new_owner, 0, 2) ne $current_label && $command eq "SCAN") || (index($new_owner,"_") == -1 && $command eq "MOD")){
+      next if (!&get_uuu_gr($new_owner));
+      $new_owner = $uuu;
+      last;
+    }
+  }
+ $new_owner =~ tr/a-z/A-Z/ if($new_owner ne ""); 
+ return;
+}
+########################################
+# F.Blin function to enter the status
+########################################
+sub ask_status{
+
+ @temp_list = @status_list if ($command eq "SCAN");
+ @temp_list = @mod_status_list if ($command eq "MOD");
+
+  while(1){
+    $status = &Complete(" Tape status, type Ctrl-d for the list: ", @temp_list);
+    $status =~ s/^\s+//;
+    $status =~ s/\s+$//;
+    $status =~ tr/A-Z/a-z/;
+    &exit_tapes if ($status =~ /^q\b/i);
+    last if ($status eq "");
+    if(&find($status, *temp_list)){
+      $status =~ tr/a-z/A-Z/;
+      last ;
+    }
+   print "\n *** ERR: $status is not a valid status change. ***\n";
+ }
+ return;
+}
+###############################################
+# F.Blin function to enter the number of tapes
+###############################################
+sub ask_tapesnum{
+
+ ($t_max) = @_;
+
+ while(1){
+   print "\n Enter the number of tapes (<CR> = 1): ";
+   $tapes_num = <>;
+#   chop($tapes_num); 
+   $tapes_num =~ s/^\s+//;
+   $tapes_num =~ s/\s+$//;
+   &exit_tapes if ($tapes_num =~ /^q\b/i);
+   if ($tapes_num eq ""){
+      $tapes_num = 1;
+      last;
+    }
+   last if ($tapes_num=~ /^(\d+)$/  && $tapes_num <= $t_max && $tapes_num>0 && $t_max>0);
+   last if ($tapes_num=~ /^(\d+)$/ && $tapes_num>0 && $t_max==0);
+   print"\n *** ERR: Invalid number! ***\n";
+ }	
+return ;
+}
+###################################################
+# This function asks for the required information.
+###################################################
+sub book{
+  
+  $first_free = "";
+  local(@buffer) = ();
+  $tmsrc = 0;
+
+  &get_first_print();
+  &ask_location();
+
+  $current_lib = "$current_label _ $location";
+  $current_lib =~ s/\s\w\s/_/;
+  $current_pool = &inst_pool($current_label, $current_inst);
+  
+  print"\n !!! Please wait ...\n";
+  @buffer = `sysreq TMS Q CONTENT LIBRARY $current_lib OWNER $current_pool SLOTS 0 2>&1`;
+  if ($?){
+    $spy_err = "@buffer";
+    &get_tmsrc200("Q CONTENT LIBRARY $current_lib OWNER $current_pool SLOTS 0");
+    return;
+  }
+  @tape_info = split(/\s+/,$buffer[2]);
+  $first_free = substr($tape_info[3], 2, 4);
+  $first_free = sprintf("%04d",$first_free); 
+
+  &ask_firstnum($first_free);
+  &ask_tapesnum($BOOK_MAX_NUM);
+  $last_num = $first_num + $tapes_num - 1;
+  print "\n DEBUG: first_num=$first_num, last_num=$last_num, no_tapes=$tapes_num" if($debug);
+  return if(!&check_labo($current_label, $current_inst, $first_num, $last_num));
+
+  print "\n *** Enter comments for booked tapes. ***";
+  &ask_comments();
+  print "\n DEBUG: current_comments=@current_comments" if($debug);
+  
+  &book_exec($current_label,$first_num,$tapes_num,$location,$C_D_E,@current_comments);
+}
+###############################################
+# This function executes the booking task
+###############################################
+sub book_exec{
+  
+  @tms_output = ();
+  @main_buffer=();
+  local($i) = 0;
+  local(@output) =();
+  $current_group = "";
+  $tmsrc = 0;
+  $oper = $command;
+  ($current_label,$first_num,$tapes_num,$location,$C_D_E,@current_comments) = @_;
+
+  $last_num = $inst_last_num if (!$bos_cards_flag);
+  &get_first_last_lab();
+
+  $current_lib = "$current_label _ $location";
+  $current_lib =~ s/\s\w\s/_/;
+  $current_pool = &inst_pool($current_label, $current_inst);
+  if(!$current_pool){
+    $tmsrc = -98;
+    return;
+  }
+
+  $current_group = "NEWGROUP XU_DATA" if (&find($current_label, *off_label_list));
+  $current_group = "NEWGROUP XU_DATA" if (&find($user_loginid, *spec_owner));
+
+  $current_vid = "$first_lab - $last_lab";
+  print ("\n DEBUG: current_vid=$current_vid in sub book_exec") if($debug);
+
+ &tms_vid_pool($tmscr,"POOL");
+
+  if($bos_cards_flag){
+    if((@main_buffer) < $tapes_num){
+      $tmsrc = 300;
+      return($tmsrc);
+    }
+  }  
+  $no_loop = $#main_buffer;
+  if(!$bos_cards_flag){
+     return if(!&tms_confirm($tapes_num, $current_pool, @main_buffer));
+     &tms_warn();
+  }
+  &tms_confirm($tapes_num, $current_pool, @main_buffer) if($bos_cards_flag);
+  if($no_ok < $tapes_num && $bos_cards_flag){
+     $tmsrc = 300;
+     return($tmsrc);
+  }
+  $no_loop = $no_ok -1;
+  $book_cnt = 0;
+  $tape_cnt = 0;
+  foreach $i (0..$no_loop){
+    &get_main_buffer($i);
+    next if ($t_status ne "F");
+    last if ($tape_cnt == $tapes_num);
+    $tape_cnt++;
+    $first_lab = $t_vsn if($tape_cnt == 1);
+    $last_lab = $t_vsn;
+    $spy_err = `sysreq TMS GETPOOL VID $t_vsn FROM $current_pool $current_group 2>&1`;
+    if($?){
+      &get_tmsrc200("GETPOOL VID $t_vsn FROM $current_pool $current_group");
+      return;
+    } 
+    $t_comment  = $current_comments[$tape_cnt-1];
+#    print"\n t_comment = $t_comment, current_comments = @current_comments tape_cnt = $tape_cnt";
+    $spy_err = `sysreq TMS TAG VID $t_vsn SET TEXT $t_comment 2>&1`;
+    if($?){
+      &get_tmsrc200("TAG VID $t_vsn SET TEXT $t_comment");
+      return;
+    }   
+    @temp_output = ();		
+    $line = `sysreq TMS Q VID $t_vsn OWNER $user_uuu \"(\"VSN OWN LIB LASTW LASTU MODEL STAT RING 2>&1`;
+    if ($?){
+      $spy_err = $line;
+      &get_tmsrc200("Q VID  $t_vsn OWNER $user_uuu");
+      return;
+    }
+    @temp_output  = split(/\s+/,$line);
+    ($t_vol,$t_vsn,$t_owner,$t_lib,$t_lastw,$t_lastu,$t_model,$t_status,$t_ring)=@temp_output;
+    print "\n DEBUG: $t_vol,$t_vsn,$t_owner,$t_lib,$t_lastw,$t_lastu,$t_model,$t_status,$t_ring" if($debug);
+    return if(!&tms_tag_bin($t_vsn));
+    return if(!&tms_tag_text($t_vsn));
+    print "\n DEBUG: intitute tag = $t_inst\n" if ($debug);
+    print "\n DEBUG: comment tag = $t_comment" if ($debug);
+    splice(@temp_output, 2, 1, $user_loginid);
+    $line = "@temp_output:$t_inst:$t_comment";
+    push(@tms_output, $line); 
+    $book_cnt++;
+  }
+  &get_tmsrc100 if(!$book_cnt);
+  return if(!$book_cnt);
+
+  $tmsrc = 1;
+}
+#####################################################################
+# This function whther the input file has the right format.
+#####################################################################  
+sub check_input_file{
+
+  @input_array = ();
+
+  if(! -e "$input_file"){
+    print("\n *** ERR: $input_file does not exist. ***\n");
+    return 0;
+  }
+  if(!open(INPUT, "$input_file")){
+    print"\n *** ERR: Cannot open the file $input_file. ***\n";
+    return 0;
+  }
+  @input_buffer = <INPUT>;
+  for($i=0; $i< @input_buffer; $i++){
+    chop($input_buffer[$i]);
+    last if ($input_buffer[$i] eq "ENDQ");
+  }
+  $no_cards = $i + 1;
+  for($i=0 ; $i<@input_buffer ; $i++){
+    $line = $input_buffer[$i];
+    chop($line);
+    $len_rec = length ($line);
+    if($len_rec > 80){
+      $j=$i+1;
+      print"\n *** ERR: The length of the line $j of $input_file is more then 80. ***\n";
+      return 0;
+    }
+    if($len_rec > 72){
+      for ($j=73 ; $j < $len_rec ; $j++){
+        if(substr($line, $j, 1) ne " "){
+          print("\n *** ERR: The line $i of the $input_file contains information after column 72. ***");
+          return 0
+        }
+      }
+    }
+  }
+  return 1;
+}
+#########################################################################
+# This function checks whether the inst. name is valid. If so gets all the
+# information which corresponds to that institute. Returns 0 in case of
+# of any errors.
+#########################################################################
+sub check_inst_get_info{
+
+  local(@inst_info) = ();
+
+  if(!open(INSTFILE, "$tapes_instit")){
+    print "\n *** ERR: can not open tapes.instit file. ***\n";
+    return;
+  }
+  while(<INSTFILE>){
+    chop;
+    @inst_info = split;
+    $inst_name = $inst_info[0];
+    if($_[0] eq $inst_name ){
+	if($C_D_E eq $inst_info[1]) {
+           $inst_name       = $inst_info[0];
+           $inst_series     = $inst_info[1];
+           $inst_label      = $inst_info[2];
+           $inst_first_num  = $inst_info[3];
+           $inst_last_num   = $inst_info[4];
+           $inst_next_add   = $inst_info[5];
+           $inst_manage1    = $inst_info[6];
+           $inst_manage2    = $inst_info[7];
+           @inst_manager_list=($inst_manage1,"  ",$inst_manage2);
+           return 1;
+        }
+    }
+  }
+  print("\n *** ERR: $_[0] is not a valid institute name or tape category. ***\n");
+  print("\n           !!! You may change the name. !!!\n");
+  return 0; 
+}
+#########################################################################
+# This function checks whether the inst. name is valid. If so
+# also check if the lable entered by the user is valid for it. Returns
+# 0 in case of any error.
+#########################################################################
+sub check_inst_label{
+  
+  if(!open(INSTFILE, "$tapes_instit")){
+    print " *** ERR: can not open tapes.instit file";
+    return;
+  }
+  while(<INSTFILE>){
+    chop;
+    @inst_info = split;
+    $inst_name = $inst_info[0];
+    if($_[1] eq $inst_name && $inst_info[1] eq $C_D_E){
+      return 1 if($_[0] eq $inst_info[2]);
+      print "\n *** ERR:  $_[0] is not a valid label for $_[1]. ****\n";
+      return 0;
+    }
+  }
+  print "\n *** ERR: $_[1] is not a valid institute name. ****\n";
+  return 0;
+}
+#################################
+# check the range for this Lab.
+#################################
+sub check_labo{
+  
+  return 0 if (!&check_inst_get_info($_[1]));
+  if ($_[2] < $inst_first_num || $_[3] > $inst_last_num){
+    print "\n Tape label $_[0] out of range allocated to the Lab. $_[1]\n";
+    return 0;
+  }
+  return 1;
+} 
+#####################################################################
+# This function checks if the location entered by the user is valid
+#####################################################################
+sub check_loca{
+  
+  $_[0] = "VAULT" if ($_[0] eq "CERN");
+  if (!&find($_[0], *loca_list)){
+    print("\n *** ERR: $_[0] is not a valid location, type Ctrl` D for the list. ***\n");
+    return 0;
+  }
+  return 1;
+}
+####################################################
+# 27/09/95 F. Blin 
+# all options but only command BOOK is checked today
+# eg: BTSK 'CTAP | BOOK'
+#     BCOM 'USED BY ALPROD'
+#     BPRM 'DEV =D,LOCA=CERN,INST=MCDLT'
+#     ENDQ
+####################################################
+sub check_tms_cards{
+
+  $btsk_cnt    = 0;
+  $first_num = 1;
+  $last_num  = 9999;
+  $bcom_cnt    = 0;
+  $endq_flag   = 0;
+  $btli_flag   = 0;
+  $no_add_opt  = 0;
+  $location      = "";
+  $t_owner     = "";
+  $t_user      = "";
+  $t_status    = "";
+  $prch_inst = ""; 
+  @t_comments  = ();
+  $current_inst = "";
+  $current_label = "";
+
+ for($i=0 ; $i< $no_cards ; $i++){
+    $line = $input_buffer[$i];
+    next if(!length($line));            # if it is a blank line
+    next if(substr($line,0,1) eq "*");  # if it is a comment
+    $line =~ s/^\s+//;
+    $line =~ s/\s+$//;
+    $j = $i + 1;
+    $tms_card = substr($line,0,4);
+    if(!&find($tms_card, *tms_cards_list)){
+      print("\n *** ERR: The line $j contains an illegal BOS option. ***\n");
+      return 0;
+    }
+    $rest_line = substr($line, 4); 
+    $rest_line =~ tr/a-z/A-Z/;
+#print"\n DEBUG: tms_card = $tms_card";
+
+    if($tms_card eq "BTSK"){
+      $rest_line =~ tr/|',/ /; 
+      $rest_line =~ s/^\s+//;
+      $rest_line =~ s/\s+$//;
+      @array = split(/\s+/, $rest_line);
+#print"\n DEBUG: array = @array";
+      if($array[0] ne "CTAP"){
+        print("\n *** ERR: BTSK card must begin with CTAP. ***\n");
+        return 0;
+      }
+      if(@array > 2){
+        print"\n *** ERR: The line $j contains more than one BTSK task. ***\n";
+        return 0;
+      }
+      $array[1]="SCRA" if($array[1] eq "SCR");
+      if(!&find($array[1], *task_list)){
+        print"\n *** ERR: The line $j contains an unknown BTSK option ***\n";
+        return 0;
+      }
+      $btsk_cnt = $btsk_cnt + 1;
+      $command  = $array[1];
+    }
+
+    @array = ();
+    if($tms_card eq "BTLI"){
+      $btli_flag = 1;
+      $rest_line =~ tr/'|,-/ /;
+      $rest_line =~ s/^\s+//;
+      $rest_line =~ s/\s+$//;
+      @array = split(/\s+/, $rest_line);
+#print"\n DEBUG: array[0]= $array[0]";
+      $first_lab = $array[0];
+      $last_lab  = $array[2];
+      $tapes_num  = $array[3];
+      if(length($first_lab) != 6 || length($last_lab) != 6){
+	print"\n *** ERR: Tape labels must be six characters. ***";
+	return 0;
+      }
+      $current_label = substr($first_lab, 0, 2); 
+
+      $last_lab = $first_lab if ($last_lab eq "");
+      $last_num  = substr($last_lab,2,4);
+
+      $first_num = substr($first_lab,2,4);
+
+      $first_num =~ s/^0+//;
+      $last_num  =~ s/^0+//;
+      if(!&find($current_label, *label_list)){
+        print("\n *** ERR: $current_label refers to an unknown ALEPH label. ***\n");
+        return 0;
+      }
+      $C_D_E = "D" if (&find($current_label, *DLT_label_list));
+      $C_D_E = "E" if ($current_label eq "AX");
+      
+#print"\n DEBUG: current_label=$current_label, first_lab=$first_lab, last_lab=$last_lab in sub check_tms_cards";
+    }
+
+    if($tms_card eq "BPRM"){
+      $rest_line =~ tr/'|,=/ /;
+      $rest_line =~ s/^\s+//;
+      $rest_line =~ s/\s+$//;
+      @array = split(/\s+/, $rest_line);
+      while(@array != 0){
+        $card_opt = shift(@array);
+        $card_opt_val = shift(@array);
+        if ($command eq "ADD"){
+          if(!&find($card_opt, *add_opt_list)){
+            print("\n *** ERR: Line $j contains an unknown ADD option. ***\n");
+            return 0;
+          }
+          $no_add_opt++;
+        }
+        if ($command eq "SCAN" && &find($card_opt, *scan_opt_list) == 0){
+            print("\n *** ERR: Line $j contains an unknown SCAN option. ***\n");
+            return 0;
+        }
+        if ($command eq "MOD"  && &find($card_opt, *mod_opt_list) == 0){
+            print("\n *** ERR: Line $j contains an unknown MOD option. ***\n");
+            return 0;
+        }     
+        if ($command eq "BOOK" && &find($card_opt, *book_opt_list) == 0){
+          print("\n ** ERR: Line $j conatains an unknown BOOK option. ***\n");
+          return 0;
+        }
+
+        if($card_opt eq "INST"){
+          return 0 if(!&check_inst_label($current_label, $card_opt_val));
+          $current_inst = $card_opt_val;
+          return 0 if (!&check_inst_get_info($current_inst));
+        }
+
+        if($card_opt eq "CAT" && $command eq "SCAN"){
+          if(!&find($card_opt_val, $label_list)){
+            print"\n *** ERR: Line $j, invalid ALEPH label. ***\n";
+            return 0;
+          }
+          $current_label  = $card_opt_val;
+        }
+
+        if($card_opt eq "STAT"){
+          if ($command eq "SCAN" && &find($card_opt_val, *status_list) == 0){
+              print("\n *** ERR: Line $j refers to an unknown tape status. ***\n");
+              return 0;
+          }
+          if ($command eq "MOD" && &find($card_opt_val, *mod_status_list) == 0){
+            print("\n *** ERR: Line $j refers to an unknown tape status. ***\n");
+            return 0;
+          }  
+          $t_status = $card_opt_val;
+        }
+
+        if ($card_opt eq "RANG" && $command eq "SCAN"){
+          $card_opt_val =~ tr/-/ /;
+          @range = ();
+          @range = split(/\s+/, $card_opt_val);
+          ($first_num, $last_num) = @range;
+          &get_first_last_lab();
+        }
+        $t_user = $card_opt_val if($card_opt eq "USER");
+        $location = $card_opt_val if($card_opt eq "LOCA");
+      }
+#END WHILE
+
+      $location = "CERN" if ($command ne "SCAN" && $location eq "" );
+      if ($location ne ""){
+        $location =~ tr/A-Z/a-z/;
+        return 0 if(!&get_loca_list($current_label));
+#print"\n DEBUG: @loca_list";
+        $location = "vault" if($location eq "cern");
+        if(!&find($location, *loca_list)){
+          print("\n *** ERR: Line $j, invalid location. ***\n");
+          return 0;
+        }
+        $location =~ tr/a-z/A-Z/;
+      }
+    }
+
+    if ($tms_card eq "ENDQ"){
+       $endq_flag = 1;
+    }
+
+    if ($tms_card  eq "BCOM"){
+      $rest_line =~ tr/'|/ /;
+      $rest_line =~ s/^\s+//;
+      $rest_line =~ s/\s+$//;
+      $t_comments[$bcom_cnt] = $rest_line;
+      $bcom_cnt = $bcom_cnt + 1;
+    }
+  }
+#END FOR
+
+  if ($btsk_cnt > 1){
+    print("\n *** ERR: contains more than one BTSK task. ***\n");
+    return 0;
+  }
+
+  if ($btsk_cnt == 0){
+    print("\n *** ERR: contains no BTSK task. ***\n");
+    return 0;
+  }
+
+  if (!$endq_flag){
+    print("\n *** ERR: contains no ENDQ in column 1. ***\n");
+    return 0;
+  }
+#
+#For add command the user institute name and the purchasing institute
+# are the same.
+
+  if($current_inst eq ""){
+    print"\n *** ERR: You have to specify on BPRM card INST=... ***\n";
+    return 0;
+  }   
+
+  $prch_inst = $current_inst if ($command eq "ADD");
+
+  if ($command eq "BOOK"){
+    if ($btli_flag == 0 || $bcom_cnt == 0){
+      print("\n *** ERR: BOOK requires BTLI and BCOM cards. ***\n");
+      return 0;
+    } 
+    for($i=$bcom_cnt ; $i<$tapes_num ; $i++){
+      $t_comments[$i] = $t_comments[$bcom_cnt-1] ;
+    }
+# print"\n DEBUG: t_comments = @t_comments";
+  }
+  $t_owner = $t_user;
+  if ($t_user ne "" && &find($t_user, *spec_owners) == 0 && index($t_user,"_") == -1){
+    return 0 if(!&get_uuu_gr($t_owner));
+    $t_owner = $uuu;
+  }   
+
+  if ($command eq "BOOK" || $command eq "SCRA" || $command eq "FREE"){
+    $t_owner = $user_uuu if ($t_owner eq "");
+  }
+
+  if ($command ne "SCAN"){
+    if (&find($current_label, *off_label_list) && $spec_user_flag == 0 ){
+      print("\n *** ERR: $current_label refers to an unauth. privileged action on tapes. ***\n");
+      return 0;
+    }     
+  }  
+  return 0  if(!&check_labo($current_label, $current_inst, $first_num, $last_num));
+  return  1        
+}  
+###########################################################################
+# This function checks whether the user is a special user. If so it sets a 
+# flag.
+# F.Blin 03/10/95 added spec_user_flag = 1 if current_label = AU and
+#                 checked if user_loginid in all_manager_list
+# F.Blin 06/11/95 added spec_user_flag = 1 if current_label = AX
+###########################################################################
+sub check_user{
+  $spec_user_flag = 0;
+  $spec_user_flag = 1 if (&find($_[0], *spec_users));
+  $spec_user_flag = 1 if (&find($_[0], *inst_manager_list));
+  $spec_user_flag = 1 if (&find($_[0], *all_manager_list) && $current_label eq "AU");
+  $spec_user_flag = 1 if (&find($_[0], *all_manager_list) && $current_label eq "AX");
+  
+  if ($spec_user_flag == 1){
+    $spy_err = `rsh -n shift9 sysreq TMS SET MANAGER ON 2>&1`;
+    if($spy_err =~ /RC\(/){
+      $spy_err =~ s/\n/, /;
+      print "\n *** sysreq TMS SET MANAGER ON request failed ***\n";
+      print "       $spy_err"; 
+      return;
+    }
+  }
+}
+##############################################################
+# This function sets the required param. in the case of input
+# cards.
+############################################################
+sub bos_cards{
+  
+  return 0 if(!&check_input_file);
+  return 0 if(!&check_tms_cards);
+  return 1;
+}
+###########################################################
+# This function prepares the format of the record to be
+# written in the tapes.instit file.
+##########################################################
+sub do_packing{
+
+  local(@inst_info) = @_;
+  local($var) = "";
+
+  $inst_info[0] = pack(A20, "$inst_info[0]");
+  $inst_info[1] = pack(A2, "$inst_info[1]");
+  $inst_info[2] = pack(A3, "$inst_info[2]");
+  $inst_info[3] = sprintf("%4s", $inst_info[3]);
+  $inst_info[4] = sprintf("%4s", $inst_info[4]);
+  $inst_info[5] = sprintf("%4s", $inst_info[5]);
+  $inst_info[6] = pack(A8, "$inst_info[6]");    	
+  $inst_info[7] = pack(A8, "$inst_info[7]");    	
+
+  $var = "$inst_info[0] $inst_info[1] $inst_info[2]  $inst_info[3]   $inst_info[4]      $inst_info[5]   $inst_info[6]  $inst_info[7]\n";
+
+  return $var;
+}
+##############################################
+# This function is performed before exit
+#############################################
+sub exit_tapes{
+  
+  $command = $last_command if(!$bos_cards_flag);
+  local($opts) = "";
+  if(!open(INPUT,"> tapes.opt")){
+    print" *** WARNING: The  tapes.opt  file cannot be opened for update. ***";
+  }
+  $opts = "$user_inst $command $output_file $C_D_E";
+  print INPUT $opts;
+  close (INPUT);
+
+  unlink("$tapes_lock") if(-e "$tapes_lock" && $tapes_lock_flag);
+
+  if ($spec_user_flag == 1){
+    $spy_err = `rsh -n shift9 sysreq TMS SET MANAGER OFF 2>&1`;
+    if($spy_err =~ /RC\(/){
+      $spy_err =~ s/\n/, /;
+      print "\n *** sysreq TMS SET MANAGER OFF request failed ***\n";
+      print "       $spy_err"; 
+      exit($spy_err);
+    }
+    print"\n *** Your privileges as manager have been set off!  ***";
+    print"\n !!! They will be restored next time you use TAPES. !!!\n";
+  }
+  $exitrc = $tmsrc-1;
+  exit($exitrc);
+}
+#############################################
+# This function finds an element among a list.
+##############################################
+sub find{
+  local($elem) = $_[0];
+  local(*list)  = $_[1];
+  foreach $i (0..$#list){
+    return 1 if  ($list[$i] eq $elem);
+  }
+  return 0;
+} 
+########################################################################
+# This function asks for the required information.
+######################################################################
+sub free{
+
+ &get_first_print();
+ &ask_firstnum();
+ &ask_lastnum($first_num);
+
+ $tapes_num = $last_num - $first_num + 1;
+ print "\n DEBUG: first num=$first_num, last num=$last_num, no_tapes=$tapes_num" if ($debug);
+ return if(!&check_labo($current_label, $current_inst, $first_num, $last_num));
+ 
+ &free_exec($current_label,$first_num, $tapes_num, $user_uuu);
+}
+########################################################
+#This function executes the free task
+######################################################## 
+sub free_exec{
+
+ @tms_output = ();
+ @tms_off = ();
+ @main_buffer=();
+ local($i) = 0;
+ local(@output) =();
+ $tmsrc = 0;
+ $oper = $command;
+ $tape_off_no = 0;
+ ($current_label,$first_num, $tapes_num, $user_uuu) = @_;
+
+ $last_num = $first_num + $tapes_num - 1;
+
+ &get_first_last_lab();
+ $current_vid = "$first_lab - $last_lab";
+ print "\n DEBUG: current_vid = $current_vid" if ($debug);
+
+ $current_pool = &inst_pool($current_label, $current_inst);
+ if(!$current_pool){
+   $tmsrc = -98;
+   return;
+ }
+ print "\n DEBUG: pool in $command = $current_pool" if ($debug);
+
+ &tms_vid_pool($tmsrc);
+
+ $no_loop = $#main_buffer;
+ if(!$bos_cards_flag){
+   return if(!&tms_confirm($tapes_num, $current_pool,@main_buffer));
+   &tms_warn();
+   $no_loop = $no_ok -1;
+ }
+ $free_cnt = 0;
+ foreach $i (0..$no_loop){
+   &get_main_buffer($i);
+ # Because it is a free tape   
+   next if ($t_owner eq $current_pool);
+     
+#>>>>check  authorizations 
+   if ($t_owner ne $user_uuu) {
+     if ($spec_user_flag == 0){
+       $loginid = $t_owner;
+       &get_loginid($t_owner) if(!&find($t_owner, *spec_owners));
+       print "\n *** Permission denied, owner of tape $t_vsn = $loginid ***\n\n";
+       $tmsrc = -99;
+       next;
+     }
+     else {
+       $spy_err = `rsh -n shift9 sysreq TMS TRANSFER VID $t_vsn FROM $t_owner TO USER $user_uuu 2>&1`;
+#       if($?){
+       if ($spr_err =~ /RC\(/){
+	  &get_tmsrc200("TRANSFER VID $t_vsn FROM $t_owner TO USER $user_uuu request");
+	  return;
+       }
+     }
+   }
+#???? used? ????
+#   $location = substr($t_lib, 3, 5);
+#   $location = "ROBOT" if ($current_label eq "I2");
+#????
+#>>>> check if official tape  ; if yes, prepare file for SCANBOOK
+   return if (!&tms_tag_bin($t_vsn));
+   print ("\n DEBUG: t_dsn = $t_dsn") if($debug);
+   if ($t_dsn ne ""){
+     &tms_tag_text($t_vsn);
+     push(@tms_off,"$t_vsn!$t_dsn ! $t_comment");
+     $tape_off_no = $tape_off_no + 1;
+     print " tms_off1 = @tms_off \n" if($debug);
+   }
+   if (&find($current_label, $off_label_list)){
+     $spy_err = `rsh -n shift9 sysreq TMS PROTECT XU_DATA ACC XU  APPLY SET $t_vsn 2>&1`;
+#     if($?){
+     if ($spr_err =~ /RC\(/){
+       &get_tmsrc200("PROTECT XU_DATA ACC XU APPLY SET $t_vsn");
+       return;    
+     }
+   }
+   else {
+     $spy_err = `rsh -n shift9 sysreq TMS PROTECT XU_USER ACC XU  APPLY SET $t_vsn 2>&1`; 
+#     if($?){
+     if ($spr_err =~ /RC\(/){
+       &get_tmsrc200("PROTECT XU_USER ACC XU APPLY SET $t_vsn request");
+       return;
+     }
+   }
+   if ($t_ring eq "R"){
+     $spy_err = `sysreq TMS LOCK ENABLE WRITE VID $t_vsn 2>&1`;
+     if($?){
+       &get_tmsrc200("LOCK ENABLE WRITE VID $t_vsn");
+       return;
+     }
+   }
+   $t_comment  = "Not yet booked";
+   $spy_err = `sysreq TMS TAG VID $t_vsn SET TEXT $t_comment 2>&1`;
+   if($?){
+     &get_tmsrc200("TAG VID $t_vsn SET TEXT $t_comment");
+     return;
+   }	
+   $spy_err = `rsh -n shift9 sysreq TMS TAG VID $t_vsn SET BINARY $t_inst  2>&1`;
+   if($?){
+     &get_tmsrc200("TAG VID $t_vsn SET BINARY $t_inst");
+     return;
+   }	
+   $spy_err = `sysreq TMS TRANSFER VID $t_vsn TO USER $current_pool  2>&1`;
+   if($?){
+     &get_tmsrc200("TRANSFER VID $t_vsn TO USER $current_pool");
+     return;
+   } 
+  
+   @temp_output = ();		
+   $line = `sysreq TMS Q VID $t_vsn  \"(\"VSN OWN LIB LASTW LASTU MODEL STAT RING 2>&1`;
+   if ($?){
+     $spy_err = $line;
+     &get_tmsrc200("Q VID $t_vsn");
+     return;
+   }
+   @temp_output  = split(/\s+/,$line);
+   ($t_vol,$t_vsn,$t_owner,$t_lib,$t_lastw,$t_lastu,$t_model,$t_status,$t_ring)=@temp_output;
+   print "\n DEBUG: $t_vol,$t_vsn,$t_owner,$t_lib,$t_lastw,$t_lastu,$t_model,$t_status,$t_ring" if ($debug);
+   $line = "$line:$t_inst:$t_comment";
+   push(@tms_output, $line); 
+   $free_cnt++;
+ }
+ &get_tmsrc100 if (!$free_cnt);
+ return if (!$free_cnt);
+
+ $tmsrc =  1;
+ &tape_off(@tms_off) if($tape_off_no);
+}
+##################################################
+# F.Blin function to assign first_lab and last_lab
+##################################################
+sub get_first_last_lab{
+
+ $temp_num = sprintf("%04d",$first_num); 
+ $first_lab = $current_label.$temp_num;
+
+ $temp_num = sprintf("%04d",$last_num);
+ $last_lab = $current_label.$temp_num;
+ return;
+}
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# F.Blin function to print first comments
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+sub get_first_print{
+ 
+  print("\n *** In order to quit a command press  q  ***\n");
+  print "\n Label prefix: $current_label\n";
+  print "\n DEBUG:current inst = $current_inst\n" if ($debug);
+ return;
+}
+##############################################################
+# This function gets the list of locations associated to a 
+# label.
+############################################################
+sub get_loca_list{
+  
+  local(@buffer) = ();
+  local(@array) = ();
+  @loca_list = ();
+  local($line) ="";
+
+  if ($_[0] eq "I2"){
+    push(@loca_list,"robot");
+    return 1;
+  }
+  @buffer = `sysreq TMS Q LIB $_[0]\"*\" 2>&1`;
+  if ($?){
+    $spy_err = "@buffer";
+    &get_tmsrc200("Q LIB $_[0]*");
+    return 0;
+  } 
+  foreach $i (2..$#buffer){
+    $line = $buffer[$i];
+    @array = split(/\s+/, $line);
+    next if (!($array[0]=~ /.*_.*/));
+    substr($array[0], 3, 5)=~ tr/A-Z/a-z/;
+    push(@loca_list, substr($array[0], 3, 5));
+  }
+  return 1;
+}
+########################################################################
+# This function gets the uuu part and returns the corresponding loginid
+# F.Blin 18/10/95 grep $uuu\$xu to check also the group
+########################################################################
+sub get_loginid{
+  
+  local(@account_info) = ();
+  local($line) = "";
+  
+  $uuu = $_[0];
+  $uuu =~ tr/A-Z/a-z/;
+
+  @line_buffer = `ypcat account | grep $uuu\$xu` if ($host =~ /shift/i);
+  @line_buffer = `more /etc/account | grep $uuu\$xu` if($host =~ /afal/i);
+  return 0 if ($?);
+  foreach $i (0 .. $#line_buffer){
+    $line = $line_buffer[$i];
+    chop($line);
+    @account_info = split(/:/, $line);
+    if($uuu eq substr($account_info[1],0,3)){
+      $loginid = $account_info[0];
+      $loginid =~ tr/a-z/A-Z/;
+      return 1;
+    }
+  }
+  return 0;
+}
+##############################################################
+# f.Blin function to get main buffer
+#############################################################
+sub get_main_buffer{
+
+   local ($n_search) = @_;
+   @output = ();
+   $t_loca = "";
+   $line = $main_buffer[$n_search];	 
+   @output = split(/\s+/,$line);
+   ($t_vol,$t_vsn,$t_owner,$t_lib,$t_lastw,$t_lastu,$t_model,$t_status,$t_ring)=@output;
+   print "\n DEBUG: $t_vol,$t_vsn,$t_owner,$t_lib,$t_lastw,$t_lastu,$t_model,$t_status,$t_ring" if ($debug);
+   $t_loca = substr($t_lib, 3, 5);
+   $t_loca = "ROBOT" if($current_label eq "I2");
+   return;
+}
+#############################################################
+# F.Blin function to assign tmsrc=100 and print error message
+#############################################################
+sub get_tmsrc100{
+
+   print"\n *** No tapes satisfying your request in the database. ***\n\n";
+   $tmsrc = 100;
+   return;
+}
+#############################################################
+# F.Blin function to assign tmsrc=200 and print error message
+#############################################################
+sub get_tmsrc200{
+
+ ($str_print) = @_; 
+         $tmsrc = 200;
+         $spy_err =~ s/\n/, /;
+         print("\n *** sysreq TMS $str_print failed. ***\n");
+         print "       $spy_err";                      
+ return;
+}
+######################################################
+# This function gets the uuu and gr of an loginid
+#######################################################
+sub get_uuu_gr{
+  
+  local ($loginid) = 0;
+  local ($line) = "";
+  local ($uid) = 0;
+  local ($gr) = 0;
+  local (@account_info) = ();
+  local (@line_buffer) = ();
+  
+  $loginid = $_[0];
+  
+  ($name, $passwd, $uid, $gid)=getpwnam($loginid);
+  $gr = getgrgid($gid);		
+  $gr =~ tr/a-z/A-Z/;
+  if ($gr ne "XU"){ 
+    print "\n *** $loginid is not from ALEPH ***\n";
+    return 0;
+  }
+  if ($uid == 0){
+    print "\n *** $loginid is not a known loginid ***\n";
+    return 0;
+  }
+#  @line_buffer = `ypcat account | grep $loginid` if ($host =~ /shift/i);
+  @line_buffer = `ypcat account | grep $loginid` if !($host =~ /afal/i);
+  @line_buffer = `grep $loginid /etc/account` if($host =~ /afal/i);
+  if($?){
+    print "\n *** ERR: $loginid is not valid. ****\n";
+    return 0;
+  }
+  foreach $i (0 .. $#line_buffer){
+    $line = $line_buffer[$i];
+    chop($line);
+    @account_info = split(/:/, $line);
+    if($loginid eq $account_info[0]){
+      $uuu = substr($account_info[1],0,3);
+      return 1;
+    }
+  }
+  print "\n *** ERR: $loginid is not valid. ****\n";
+  return 0;
+}
+#####################################################
+# This function initiliases variables, lists, formats...
+#####################################################
+sub init{
+  
+  $current_label = "";
+  $current_inst = "";
+  $command      = "SCAN";
+  $user_inst    = "CERN";
+  $output_file  = "tapes.output";
+  $C_D_E = "";
+  $tapes_instit = "/aleph/log/tapes.instit";
+  $tapes_instit_old = "/aleph/log/tapes.instit_old";
+  $tapes_spy    = "/aleph/log/tapes.spy";
+  $tapes_lock   = "/aleph/log/tapes.lock";
+  $last_command = $command ;
+  $ADD_MAX_NUM  = 250; 
+  $MOD_MAX_NUM  = 250;
+  $BOOK_MAX_NUM = 100;
+
+  local($line) = "";
+  local(@array) = ();
+
+  $spec_user_flag  = 0;
+  $bos_cards_flag  = 0;
+  $bos_cards_spy  = " ";
+  $first_flag      = 0;
+  $tmsrc           = 0;
+  $debug           = 0;
+
+format TAPE_INFO_OUTPUT_TOP = 
+  VSN |  Owner | Instit | Last Us.  |Last Us| Library|Status| Comment
+      |        |        |  date     | time  |        |      |        
+------|--------|--------|-----------|-------|--------|------|----------
+.
+format TAPE_INFO_OUTPUT = 
+@<<<<< @<<<<<<< @<<<<<<< @<<<<<<<<< @<<<<<<< @<<<<<<< @<@<@< @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+$t_vsn, $t_owner, $t_inst, $t_lastud, $t_lastut, $t_lib,$t_status, $t_ring, $C_D_E, $t_comment
+.
+
+format SPY_OUTPUT = 
+@<<<<<<<@@<<<<<<<<<<<<<< @<<< @<<<<< @<< @<<<<< @<<<<< @<<<<< @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+$spy_loginid,$bos_cards_spy,$spy_date,$spy_command,$spy_loca,$spy_no_tapes,$spy_first_lab,$spy_last_lab,$host,$spy_err
+. 
+
+  $~ = 'TAPE_INFO_OUTPUT';
+  $^ = 'TAPE_INFO_OUTPUT_TOP';
+
+#>>>>To retrieve the last options
+  if(-e "tapes.opt"){
+    if(!open(INPUT, "tapes.opt")){
+      print "\n *** ERR: can not open tapes.opt file ***\n";
+      return;
+    }
+    $line = <INPUT>;
+    @array = split(/\s+/, $line);
+    $user_inst = $array[0];
+    $command   = $array[1];
+    $output_file = $array[2];
+    $C_D_E = $array[3];
+  }
+    $C_D_E = "C" if ($C_D_E ne "C" && $C_D_E ne "D" && $C_D_E ne "E" );
+
+  @task_list      = ('SCAN','ADD','BOOK','MOD','FREE','SCRA');
+ 
+  @tms_cards_list = ('BUSR','BSPY','BKAR','BTSK','BDIA','BTLI','BCOM','BPRM','ENDQ');
+
+  @add_opt_list   = ('MANU','LOCA','TIMP','INST','DEV');
+
+  @book_opt_list = ('DEV','LOCA','CAT','INST');
+
+  @scan_opt_list = ('CAT','STAT','USER','INST','DEV','LOCA','RANG');
+
+  @mod_opt_list  = ('CAT','LOCA','USER','INST','STAT');
+ 
+  @label_list  = ('AA','AB','AC','AD','AF','AG','AH','AI','AM','AR','I2','AX','AS','AT','AU','AV');
+
+  @DLT_label_list = ('AR','AS','AT','AU','AV');
+  
+  @off_label_list = ('AA','AB','AM','AR','AS','AU','I2');
+  
+  @status_list = ('booked','free','locked','unlocked');
+  
+  @mod_dens_list    = ('8200','8500');
+  
+  @mod_labty_list   = ('SL','NL','AL');
+  
+  @mod_status_list  = ('locked','unlocked');		
+  
+#  @spec_loginid  = ('HAG','FBLXU','ISAXU');
+  @spec_loginid  = ('HAG','ISAXU');
+#  @spec_users  = ('HAG','FBLXU','ALPROD','ALSOFT','EDGECOCK','BOUCROT','MAGGIM','ISAXU','AMLUTZ');
+  @spec_users  = ('HAG','ALPROD','ALSOFT','EDGECOCK','BOUCROT','MAGGIM','ISAXU','AMLUTZ');
+  
+  @spec_owners = ('ALPROD','ALEPH','ALEPHONL','ALREPRO');
+}
+########################################################################
+# F.Blin 26/07/95 init C_D_E_list and lc_inst_list 
+# F.Blin 03/10/95 added all_manager_list
+######################################################################
+sub init_inst{
+ 
+     @inst_list = ();
+     @C_D_E_list = ();
+     @lc_inst_list = ();
+     @all_manager_list = ();
+
+  if(!open(INSTFILE, "$tapes_instit")){
+    print "\n *** ERR: can not open $tapes_instit file ***\n";
+    return 0;
+  }
+
+  while(<INSTFILE>){
+    chop;
+    @inst_info = split;
+    push(@inst_list, $inst_info[0]);
+    push(@C_D_E_list, $inst_info[1]);
+    push(@all_manager_list, $inst_info[6]);
+    push(@all_manager_list, $inst_info[7]);
+  }
+  for($i=0 ; $i<@inst_list ; $i++){
+    $temp = $inst_list[$i];
+    $temp =~ tr/A-Z/a-z/;
+    $lc_inst_list[$i] = $temp if($C_D_E_list[$i] eq $C_D_E);
+  }
+    return 1;
+}
+##############################################################
+# This function gets the pool of a class of tapes.
+#############################################################
+sub inst_pool{
+  
+  local($pool) = "";
+  return 0  if (!&check_inst_get_info($_[1])); 
+  if ($_[0] ne $inst_label){
+    print " *** ERR: $_[0] label is not valid for $inst_name. *** \n";
+    return 0;
+  } 
+  $pool = substr($inst_name, 0, 5);
+  $pool ="GERMANY" if ($_[0] eq "AD"); 
+  $pool ="BRITAIN" if ($_[0] eq "AG");
+  $pool ="ITALY"   if ($_[0] eq "AI");
+  $pool = "$_[0] _ $pool"; 
+  $pool =~ s/\s\w\s/_/;
+  $pool = substr($pool, 0, 8);
+    print "\n DEBUG: pool=$pool in sub inst_pool\n" if ($debug);
+  return ($pool);
+}
+#####################################
+# This function prints the main menu
+#####################################
+sub main_menu{
+
+  local($input) = "";
+  print "\n 1. Change          tape category and/or institute";
+  print "\n 2. Scan	    gives list of tapes";
+  print "\n 3. Book            to book tapes";
+  print "\n 4. Free            to liberate tapes";
+  print "\n 5. Modify";
+  print "\n 6. Output	    change name of output file";
+  print "\n 7. Exit";
+  if($spec_user_flag){
+    print "\n 8. Add";
+    print "\n 9. SCRatch";
+  }
+  if(&find($user_loginid,*spec_loginid)){
+    print "\n10. Vfree           count free tapes in vault";
+    print "\n11. Rfree           count free tapes in rest";
+  } 
+  print "\n Please, choose one of the options above (<CR> = $command): ";
+  $input = <>;
+  $input =~ s/^\s+//;
+  $input =~ s/\s+$//;
+  $input =~ tr/a-z/A-Z/;
+  return 1 if ($input eq "");
+  if ($input == 1 || $input eq "C" || $input eq "CHAN" || $input eq "CHANGE"){
+    $command = "CHAN";
+    return 1;
+  }
+  if ($input == 2 || $input eq "S" || $input eq "SCAN"){
+    $command = "SCAN";
+    return 1;
+  }
+  if ($input == 3 || $input eq "B" || $input eq "BOOK"){
+    $command = "BOOK";
+    return 1;
+  }
+  if ($input == 4 || $input eq "F" || $input eq "FREE"){
+    $command = "FREE";
+    return 1;
+  }
+  if ($input == 5 || $input eq "M"  || $input eq "MOD"  || $input eq "MODIFY"){
+    $command = "MOD";
+    return 1;
+  }
+  if ($input == 6 || $input eq "O"  || $input eq "OUT"  || $input eq "OUTPUT"){
+    $command = "OUT";
+    return 1;
+  }
+  if ($input == 7 || $input eq "E"  || $input eq "EXIT" || $input eq "Q"){
+    $command = "EXIT";
+    return 1;
+  }
+  if (($input == 8 || $input eq "A" || $input eq "ADD") && $spec_user_flag == 1){
+    $command = "ADD";
+    return 1;
+  }
+  if (($input == 9 || $input eq "SCR" || $input eq "SCRATCH") && $spec_user_flag == 1){
+    $command = "SCRA";
+    return 1;
+  }
+  if (($input == 10 || $input eq "V" || $input eq "VFREE") && (&find($user_loginid,*spec_loginid))) { 
+    $command = "VFREE";
+    return 1;
+  }
+  if (($input == 11 || $input eq "R" || $input eq "RFREE") && (&find($user_loginid,*spec_loginid))) { 
+    $command = "RFREE";
+    return 1;
+  }
+  print "\n *** ERR: $input is not a valid command! ***\n";
+  return 0;
+}
+#############################################
+# This function matches a pattern among a list.
+# It returns the full pattern.
+##############################################
+sub match{
+  
+  local($elem) = $_[0];
+  local(*list)  = $_[1];
+  foreach $i (0..$#list){
+    if ($list[$i]=~ /$elem/){
+      return $list[$i];
+    }
+  }
+  return 0;
+}
+########################################################################
+# This function asks for the required information.
+######################################################################
+sub mod{
+
+ @current_comments = ();
+ 
+ &get_first_print();
+ &ask_firstnum();
+ &ask_tapesnum($MOD_MAX_NUM);
+ $last_num = $first_num + $tapes_num - 1;
+ return if(!&check_labo($current_label, $current_inst, $first_num, $last_num));
+
+ print "\n *** Enter one or more tape attributes to be modified: ***";
+ print "\n *** <CR> = this tape attribute not modified: ***\n";
+
+ &ask_status();
+
+# mod_dens for exabytes
+ if($current_label eq "AX"){
+   while(1){
+     print " New dens for exabytes {8200,8500}: ";
+     $mod_dens = <>;
+     $mod_dens =~ s/^\s+//;
+     $mod_dens =~ s/\s+$//; 
+     &exit_tapes if ($mod_dens =~ /^q\b/i);
+     last if ($mod_dens eq "");
+     last if (&find($mod_dens, *mod_dens_list));
+     print("\n *** ERR: Invalid density ***\n");
+  }
+ }
+ MODLABTYPE:
+ while(1){
+   print " New label type {SL,NL,AL}: ";
+   $mod_labty = <>;
+   chop($mod_labty);
+   $mod_labty =~ s/^\s+//;
+   $mod_labty =~ s/\s+$//; 
+   &exit_tapes if ($mod_labty =~ /^q\b/i);
+   $mod_labty =~ tr/a-z/A-Z/;
+   last MODLABTYPE if ($mod_labty eq "");
+   last MODLABTYPE if (&find($mod_labty, *mod_labty_list));
+   print("\n *** ERR: Invalid label type. ***\n");
+ }
+
+ &ask_location();
+ &ask_owner();
+ $new_inst = "";
+# MODINST:
+# while(1){
+#   print" New institute: ";
+#   $new_inst = <>;
+#   $new_inst  =~ s/^\s+//;
+#   $new_inst  =~ s/\s+$//; 
+#   &exit_tapes if ($new_inst =~ /^q\b/i);
+#   last if ($new_inst eq "");
+#   $new_inst =~ tr/a-z/A-Z/;
+#   next if(!&check_inst_label($current_label, $new_inst));
+#   next if(!&check_labo($current_label, $new_inst, $first_num, $last_num));
+#   last MODINST; 
+# }
+
+ print "*** Enter comments for MODified tapes. ***\n ";
+ &ask_comments();
+ print "\n DEBUG: current_comments=@current_comments in sub mod" if($debug) ;
+
+ &mod_exec($current_label,$first_num,$tapes_num,$new_owner,$new_inst,
+	   $location,$status,$mod_labty,$mod_dens,@current_comments);
+ return;
+}
+#####################################################
+# this function performs the modification task
+#####################################################
+sub mod_exec{
+
+ @tms_output = ();
+ @main_buffer = ();
+ @tms_off = ();
+ local($i) = 0;
+ local(@output) =();
+ $oper ="Modify";
+ $tape_off_no = 0;
+ $tmsrc = 0;
+local($current_label,$first_num,$tapes_num,$new_owner,$new_inst,$location,
+      $status,$mod_labty,$mod_dens,@current_comments) = @_;
+
+ print"\n DEBUG: $current_label,$tapes_num,$new_owner,$new_inst,$location,$status,$mod_labty,$mod_dens,@current_comments" if($debug);
+
+ $last_num = $first_num + $tapes_num - 1;
+
+ &get_first_last_lab();
+ $current_vid = "$first_lab - $last_lab";
+ print"\n DEBUG: current_vid = $current_vid" if($debug);
+
+ $t_inst = $current_inst; 
+ $t_inst = $new_inst if ($new_inst ne "");
+
+ $current_pool = &inst_pool($current_label, $t_inst);
+ if(!$current_pool){
+   $tmsrc = -98;
+   return;
+ }
+ print "\n DEBUG: pool in $command = $current_pool" if($debug);
+
+ &tms_vid_pool($tmsrc);
+
+ $mod_cnt = 0;
+ return if(!&tms_confirm($tapes_num, $current_pool, @main_buffer));
+ &tms_warn();
+ print ("\n DEBUG: no_ok=$no_ok") if($debug);;
+ $no_ok = $no_ok -1;
+ foreach $i (0..$no_ok){
+   &get_main_buffer($i);
+   if($t_owner eq $current_pool){
+     if($new_owner ne "" || $status ne "" || $current_comments[$i] ne "" ){
+       print"\n *** Permission denied, tape $t_vsn has to be booked first. ***\n";
+       $tmsrc = -99;
+       next;
+     }
+   }
+   if ($t_owner ne $user_uuu){
+     if($spec_user_flag == 0){
+       next if(!&get_loginid($t_owner));
+       print "\n *** Permission denied, owner of tape $t_vsn = $loginid ***\n\n";
+       $tmsrc = -99;
+       next;
+     }
+   }
+
+#>>>>owner 
+   if ($new_owner ne ""){
+     if ($t_owner ne $user_uuu){
+       $spy_err = `rsh -n shift9 sysreq TMS TRANSFER VID $t_vsn FROM $t_owner TO USER $new_owner 2>&1 `;
+#rsh command does not return the status of the sysreq command! Therefore the message is checked
+#if the RC( pattern exists. If so then an error has happened.
+#       if ($?){
+        if ($spr_err =~ /RC\(/){
+	   &get_tmsrc200("TRANSFER VID $t_vsn FROM $t_owner TO USER $new_owner");
+           return;
+       }
+     }
+     else {
+       $spy_err = `sysreq TMS TRANSFER VID $t_vsn TO USER $new_owner 2>&1 `;
+       if ($?){
+	  &get_tmsrc200("TRANSFER VID $t_vsn FROM $t_owner TO USER $new_owner");
+          return;
+       }
+     }
+   } 
+
+#>>>>status
+   if($status ne ""){
+     if($t_owner ne $user_uuu){
+       $spy_err = `rsh -n shift9 sysreq TMS TRANSFER VID $t_vsn FROM $t_owner TO USER $user_uuu 2>&1`;
+#       if ($?){
+        if ($spr_err =~ /RC\(/){
+           &get_tmsrc200("TRANSFER VID $t_vsn FROM $t_owner TO USER $user_uuu");
+      	   return;
+       }
+     }
+     $t_status = "ENABLE";
+     $t_status = "DISABLE" if($status eq "LOCKED");
+#     print "\n t_status = $t_status, status = $status"; 
+     $spy_err = `sysreq TMS LOCK $t_status WRITE VID $t_vsn  2>&1`;
+     if ($?){
+	&get_tmsrc200("LOCK $t_status WRITE VID $t_vsn");
+        return;
+     }
+     if($t_owner ne $user_uuu){ 
+       $spy_err = `sysreq TMS TRANSFER VID $t_vsn TO USER $t_owner 2>&1`;
+       if ($?){
+ 	  &get_tmsrc200("TRANSFER VID $t_vsn TO USER $t_owner");
+	  return;
+       }
+     }
+     $t_status = $status;
+   }
+
+#>>>>label type 
+   if($mod_labty ne ""){
+     $spy_err = `sysreq TMS UPDATE VID $t_vsn SET LABEL $mod_labty 2>&1`;
+     if ($?){
+        &get_tmsrc200("UPDATE VID $t_vsn SET LABEL $mod_labty");
+	return;
+     }
+   }
+
+#>>>>density
+   if($mod_dens ne ""){
+     $spy_err = `sysreq TMS UPDATE VID $t_vsn SET DENS $mod_dens 2>&1`;
+     if ($?){
+	&get_tmsrc200("UPDATE VID $t_vsn SET DENS $mod_dens");
+        return;
+     }
+   }
+
+#>>>>institut 
+   $t_inst = "";
+   $t_dsn  = "";
+   return if(!&tms_tag_bin($t_vsn));
+   if($new_inst ne ""){
+     if($t_inst ne $new_inst){
+       $t_inst = $new_inst;
+       $t_binary = substr($t_inst, 0, 4);
+       $t_binary = "$t_binary $t_dsn";
+       $spy_err = `rsh -n shift9 sysreq TMS TAG VID $t_vsn SET BINARY $t_binary 2>&1`;
+       if ($?){
+	 &get_tmsrc200("TAG VID $t_vsn SET BINARY $t_binary");
+ 	 return;
+       }
+     }
+   }
+
+#>>>>location
+   if($location ne ""){
+     $current_lib = "$current_label _ $location";
+     $current_lib=~ s/\s\w\s/_/;
+     print ("\n DEBUG: lib in $command = $current_lib") if($debug);
+     $spy_err =  `rsh -n shift9 sysreq TMS MOVE VID $t_vsn TOLIB $current_lib 2>&1`;
+#     if($?){
+     if($spy_err =~ /RC\(/){;  	
+       &get_tmsrc200("MOVE VID $t_vsn TOLIB $current_lib");
+       return;
+     }
+     $spy_err = `sysreq TMS ACTION TAKE MOVE VID $t_vsn  2>&1`;
+     if($?){
+       &get_tmsrc200("ACTION TAKE MOVE VID $t_vsn");
+       return;
+     }
+     $spy_err = `sysreq TMS ACTION COMP MOVE VID $t_vsn  2>&1`;
+     if($?){
+       &get_tmsrc200("ACTION COMP MOVE VID $t_vsn");
+       return;
+     }
+     if ($t_dsn ne ""){
+       &tms_tag_text($t_vsn);
+       push(@tms_off,"$t_vsn ! $t_dsn ! $t_comment");
+       $tape_off_no = $tape_off_no + 1;
+     } 
+   }
+
+#>>>>comments 
+   $t_comment  = "";
+   return if(!&tms_tag_text($t_vsn));
+   if($current_comments[$i] ne ""){
+     $spy_err = `sysreq TMS TAG VID $t_vsn SET TEXT $current_comments[$i] 2>&1`;
+     if($?){
+       &get_tmsrc200("TAG VID $t_vsn SET TEXT $current_comments[$i]");
+       return;
+     }
+     $t_comment = $current_comments[$i];
+   }
+   $t_comment = "Not yet booked" if($t_comment eq "");
+   
+#>>>>output
+   @temp_output = ();	
+   $line = `sysreq TMS Q VID $t_vsn \"(\"VSN OWN LIB LASTW LASTU MODEL STAT RING 2>&1`;
+   if ($?){
+     $spy_err = $line;
+     &get_tmsrc200("Q VID $t_vsn request");
+     return;
+   }
+   @temp_output  = split(/\s+/,$line);
+   ($t_vol,$t_vsn,$t_owner,$t_lib,$t_lastw,$t_lastu,$t_model,$t_status,$t_ring)=@temp_output;
+   print "\n DEBUG: $t_vol,$t_vsn,$t_owner,$t_lib,$t_lastw,$t_lastu,$t_model,$t_status,$t_ring" if($debug);
+   splice(@temp_output, 2, 1, $loginid) if(&get_loginid($t_owner));
+   $line = "@temp_output:$t_inst:$t_comment";
+   push(@tms_output, $line); 
+#???? next used????
+   $location = substr($t_lib, 3, 5);
+   $location = "ROBOT" if($current_label eq "I2");
+#????
+   $mod_cnt++;
+ }
+ &get_tmsrc100 if(!$mod_cnt);
+ return if(!$mod_cnt);
+
+ $tmsrc = 1;  
+ &tape_off(@tms_off) if($tape_off_no);
+}
+########################################################
+# F.Blin function to count free tapes [VAULT or REST]
+# F.Blin 04/10/95 added to save tms_output and call print_tms_output
+######################################################## 
+sub numfree{
+
+ local(@main_buffer) = ();
+ local($i) = 0;
+ local($opts) = "";
+ @tms_output = ();
+ $tmsrc = 0;
+
+ $vault_rest = "VAULT" if ($command eq "VFREE");
+ $vault_rest = "REST" if ($command eq "RFREE");
+ $first_num = $inst_first_num;
+ $last_num = $inst_last_num;
+
+ &get_first_last_lab();
+ $current_vid = "$first_lab - $last_lab";
+ $current_pool = &inst_pool($current_label, $current_inst);
+ if(!$current_pool){
+   $tmsrc = -98;
+   return;
+ }
+ print "\n $current_pool in range $current_vid\n";
+
+ &tms_vid_pool($tmsrc,"POOL");
+
+ $no_loop = $#main_buffer;
+ $nfree_cnt = 0;
+ foreach $i (0..$no_loop){
+   &get_main_buffer($i);
+   if(substr($t_lib,3,5) eq $vault_rest){
+     $nfree_cnt++;
+     $tms_output[$nfree_cnt] = $main_buffer[$i];
+     }
+  }
+ print "\n $inst_name => $nfree_cnt free tapes in $vault_rest\n"; 
+
+format VR_OUTPUT = 
+@<<<<<<<<<< @<<<<<<<<<<<<<< @<<<<<<<<<<<<<<<<<<<< @<<<<<
+$user_loginid, $date, $inst_name, $nfree_cnt
+. 
+ $date = `date '+%y%m%d %H:%M:%S'`;
+ open (VR_OUTPUT, ">> /aleph/log/tapes.$vault_rest");
+ write VR_OUTPUT;
+ close (VR_OUTPUT);
+ &print_tms_output(@tms_output) if ($nfree_cnt > 0);
+ return;
+}
+#######################################################################
+# This function writes the result in the output file and send it to the
+# screen if the user wants.
+########################################################################
+sub print_tms_output{
+
+  local($i)=0;
+  local(@output) = @_;
+  print"\n DEBUG: output = \n @output" if($debug);
+  if(!$bos_cards_flag){
+    if(&yes_or_no("\n Do you want to see the result (y/n)? ")){
+      $^ = 'TAPE_INFO_OUTPUT_TOP'; 
+      $~ = 'TAPE_INFO_OUTPUT';
+      $- = 0; #to force a top of form.
+      foreach $i (0..$#output){     
+	$line = $output[$i];
+  	@input  = split(/:/,$line);
+	$t_inst = $input[1];
+	$t_comment = $input[2];
+	@fields  = split(/\s+/,$input[0]);
+	($t_vol,$t_vsn,$t_owner,$t_lib,$t_lastw,$t_lastu,$t_model,$t_status,$t_ring)=@fields;
+	$year = substr($t_lastu, 0, 4);
+	$month= substr($t_lastu, 4, 2);
+	$day  = substr($t_lastu, 6, 2);
+	$hour = substr($t_lastu, 9, 2);
+	$min  = substr($t_lastu, 11, 2);     
+	$sec  = substr($t_lastu, 13, 2);
+	$t_lastud = "$year/$month/$day";
+	$t_lastut = "$hour/$min/$sec";
+	write; 
+      }  
+    }
+  }
+  &ask_output_file() if(!$bos_cards_flag);
+#  select(TAPE_INFO_OUTPUT);  
+#  $~ = 'TAPE_INFO_OUTPUT';
+#  $^ = 'TAPE_INFO_OUTPUT_TOP'; 
+#  $- = 0;
+  $date_output = `date '+%y%m%d %H:%M:%S'`;
+  open(TAPE_INFO_OUTPUT,">> $output_file");
+  print TAPE_INFO_OUTPUT "\n-------- tapes command: $command  ---------------------------  $date_output";
+  print TAPE_INFO_OUTPUT "\n  VSN |  Owner | Instit | Last Us. |Last Us.| Library|Status| Comment";
+  print TAPE_INFO_OUTPUT "\n      |        |        |  date    |  time  |        |      |";        
+  print TAPE_INFO_OUTPUT "\n------|--------|--------|----------|--------|--------|------|----------\n";
+  foreach $i (0..$#output){
+    $line = $output[$i];
+    @input  = split(/:/,$line);
+    $t_inst = $input[1];
+    $t_comment = $input[2];
+    @fields  = split(/\s+/,$input[0]);
+    ($t_vol,$t_vsn,$t_owner,$t_lib,$t_lastw,$t_lastu,$t_model,$t_status,$t_ring)=@fields;
+    $year = substr($t_lastu, 0, 4);
+    $month= substr($t_lastu, 4, 2);
+    $day  = substr($t_lastu, 6, 2);
+    $hour = substr($t_lastu, 9, 2);
+    $min  = substr($t_lastu, 11, 2);     
+    $sec  = substr($t_lastu, 13, 2);
+    $t_lastud = "$year/$month/$day";
+    $t_lastut = "$hour:$min:$sec";
+
+    $t_vsn     = pack(A6, "$t_vsn");
+    $t_owner   = pack(A8, "$t_owner");
+    $t_inst    = pack(A8, "$t_inst");
+    $t_lastud  = pack(A10,"$t_lastud");
+    $t_lastut  = pack(A8, "$t_lastut");
+    $t_lib     = pack(A8, "$t_lib");
+    $t_status  = pack(A2, "$t_status");
+    $t_ring    = pack(A2, "$t_ring");
+#    $t_comment = pack(A40,"$t_comment");
+
+    $var = "$t_vsn $t_owner $t_inst $t_lastud $t_lastut $t_lib $t_status$t_ring$C_D_E $t_comment\n";
+
+#    write(TAPE_INFO_OUTPUT); 
+     print TAPE_INFO_OUTPUT $var; 
+  }
+  close(TAPE_INFO_OUTPUT);
+#  select(STDOUT);
+  return;			       
+}
+##############################################################
+# This function asks for the required information.
+##############################################################
+sub scan{
+
+  &get_first_print();
+  print "\n *** Enter one or more tape attributes as scan criterion: ***";
+  print "\n *** <CR> = this tape attribute not selected: ***\n";
+
+  &ask_status();
+  &ask_location();
+  &ask_firstnum($inst_first_num);
+  &ask_lastnum($inst_last_num);
+  &ask_owner();
+
+  if ($status eq "" && $first_num == 1 && $last_num == 9999 && $location eq ""     && $new_owner eq ""){
+    print "\n *** The search will take too long, please restrict your choices! ***\n"; 
+    return;
+  }
+  &scan_exec($current_label,$first_num,$last_num,$new_owner,$location,$status);
+}
+###########################################################
+# This function executes the scan task
+###########################################################
+sub scan_exec{
+
+  @tms_output = ();
+  local(@output)=();
+  local($i)=0;
+  local($big_loop)=0;
+  local(@main_buffer) = ();
+  local($current_label,$first_num,$last_num,$new_owner,$location,$status) = @_;
+
+  &get_first_last_lab();
+  $current_vid = "$first_lab - $last_lab";
+  print "\n DEBUG: current_vid = $current_vid in sub scan_exec" if($debug);
+  
+  $current_lib = "$current_label _ $location";
+  $current_lib = "3495_2" if ($current_label eq "I2");
+  $current_lib=~ s/\s\w\s/_/;
+  print "\n DEBUG: current_lib = $current_lib in sub scan_exec" if($debug);
+  
+  $owner = "";
+  $owner = "OWNER $new_owner" if ($new_owner ne "");
+  if ($status eq "FREE"){
+    $current_pool = &inst_pool($current_label, $current_inst);
+    if(!current_pool){  
+      $tmsrc = -98;
+      return; 
+    }
+    $owner = "OWNER $current_pool";
+  }
+  print "\n DEBUG: OWNER = $owner in sub scan_exec" if($debug);
+  &tms_warn() if(!$bos_cards_flag); 
+  if($location ne ""){
+     @main_buffer = `sysreq TMS  Q CONTENT LIB $current_lib $owner SLOTS 0 2>&1`;
+  }
+  else{
+    @main_buffer =`sysreq TMS Q VID $current_vid ACCOUNT XU $owner \"(\"VSN OWN LIB LASTW LASTU MODEL STAT RING 2>&1`; 
+  }
+
+  if ($?){
+    $spy_err = "@main_buffer";
+    &get_tmsrc200("Q CONTENT or VID");
+    return;
+  }
+  $scan_cnt =0;
+  foreach $big_loop (0..$#main_buffer){
+    $line = $main_buffer[$big_loop];
+    @output  = split(/\s+/,$line);
+    if($location ne ""){
+      next if ($big_loop < 2); #to skip two first lines.
+      ($t_lib,$t_slot,$t_type,$t_vsn,$t_model,$t_owner,$t_account,$t_status)=@output;
+      print "\n\n DEBUG: $t_lib,$t_slot,$t_type,$t_vsn,$t_model,$t_owner,$t_account,$t_status in sub scan_exec" if($debug);
+    }
+    else {
+      ($t_vol,$t_vsn,$t_owner,$t_lib,$t_lastw,$t_lastu,$t_model,$t_status,$ring)=@output;
+      print "\n\n DEBUG: $t_vol,$t_vsn,$t_owner,$t_lib,$t_lastw,$t_lastu,$t_model,$t_status,$ring in sub scan_exec" if($debug);
+    }
+    next  if( $t_vsn lt $first_lab);
+    last if( $t_vsn gt $last_lab);
+    return if (!&tms_tag_bin($t_vsn));
+    print "\n DEBUG: institute tag = $t_inst" if ($debug);
+    @tag_buff = ();
+    $t_comment = "Not yet booked";
+    if($status ne "FREE"){
+      return if(!&tms_tag_text($t_vsn));
+      $t_comment = "Not yet booked" if ($t_comment eq "" && $t_dsn eq "");
+    }
+    
+    print "\n DEBUG: comment tag = $t_comment" if ($debug);
+    if ($location ne ""){
+      $line = `sysreq TMS Q VID $t_vsn OWNER $t_owner \"(\"VSN OWN LIB LASTW LASTU MODEL STAT RING 2>&1`;  
+      if ($?){
+	$spy_err = $line;
+	&get_tmsrc200("Q VID $t_vsn OWNER $t_owner");
+	return;
+      } 
+      @output  = split(/\s+/,$line);
+      ($t_vol,$t_vsn,$t_owner,$t_lib,$t_lastw,$t_lastu,$t_model,$t_status,$t_ring)=@output;
+      print "\n DEBUG: $t_vol,$t_vsn,$t_owner,$t_lib,$t_lastw,$t_lastu,$t_model,$t_status,$t_ring" if($debug);
+    }
+    next if($status eq "LOCKED" && $t_ring ne "R");
+    next if($status eq "UNLOCKED" && $t_ring ne "W");
+
+    splice(@output, 2, 1, $loginid) if(&get_loginid($t_owner));
+    $line = "@output:$t_inst:$t_comment";
+    push(@tms_output, $line); 
+    $scan_cnt++;
+  }
+  &get_tmsrc100 if(!$scan_cnt);
+}
+##############################################################
+# This function asks for the required information.
+##############################################################
+sub scra{
+  
+  &get_first_print();
+  &ask_firstnum();
+  &ask_tapesnum(0);
+
+  $last_num = $first_num + $tapes_num - 1;
+  print ("\n DEBUG: first_num=$first_num, last_num=$last_num, no_tapes=$tapes_num") if($debug);
+  return if(!&check_labo($current_label, $current_inst, $first_num, $last_num));
+  
+  &scra_exec($current_label,$first_num,$tapes_num,$user_uuu);
+}
+#############################################################
+# This function executes the scratch task
+#############################################################
+sub scra_exec{
+
+  @tms_output = ();
+  @main_buffer=();
+  local($i) = 0;
+  $oper = "SCRatch";
+  $tmsrc = 0;
+  $tape_off_no =  0;
+  ($current_label,$first_num,$tapes_num,$user_uuu) = @_;
+ 
+  $last_num = $first_num + $tapes_num - 1;
+
+  &get_first_last_lab();
+  $current_vid = "$first_lab - $last_lab";
+
+  $current_pool = &inst_pool($current_label, $current_inst);
+  if(!$current_pool){
+    $tmsrc = -98;
+    return;
+  }
+  print "\n DEBUG: current_pool=$current_pool in sub scra_exec" if ($debug);
+  
+  &tms_vid_pool($tmsrc); 
+
+  $no_loop = $#main_buffer;
+  if(!$bos_cards_flag){
+    return if(!&tms_confirm($tapes_num, $current_pool, @main_buffer));
+    &tms_warn();
+    $no_loop = $no_ok -1;
+  }
+  $scra_cnt = 0;
+  foreach $i (0..$no_loop){
+    &get_main_buffer($i);
+    if($t_owner ne $user_uuu && $spec_user_flag == 0){
+      $loginid = $t_owner;
+      &get_loginid($t_owner) if(!&find($t_owner, *spec_owners));
+      print "\n *** Permission denied, owner of tape $t_vsn = $loginid. ***\n";
+      $tmsrc = -99;
+      next;
+    }
+#???? next used????
+    $location = substr($t_lib, 3, 5);
+    $location = "ROBOT" if ($current_label eq "I2");;
+#????
+#>>>>check if official tape  ; if yes, prepare file for SCANBOOK
+    return if (!&tms_tag_bin($t_vsn));
+    print ("\n DEBUG: t_dsn = $t_dsn") if ($debug);
+    if ($t_dsn ne ""){
+      return if (!&tms_tag_text($t_vsn));
+      push(@tms_off,"$t_vsn ! $t_dsn ! $t_comment"); 
+      $tape_off_no = $tape_off_no + 1;
+    }
+    print "\n DEBUG: institute tag = $t_inst in sub scra_exec" if ($debug);
+    print "\n DEBUG: comment tag = $t_comment in sub scra_exec\n" if ($debug);
+    print " @tms_off\n" if ($debug);
+    $spy_err = `rsh -n shift9 sysreq TMS REMOVE VID $t_vsn DELETE 2>&1`;
+    @array = split(/\s+/,$spy_err);
+#    if($?){
+     if($spy_err =~ /RC\(/){
+      &get_tmsrc200("REMOVE VID $t_vsn DELETE");
+      return;
+    } 
+    
+    $spy_err = `sysreq TMS ACTION TAKE MOVE VID $t_vsn 2>&1`;
+    if($?){ 
+      &get_tmsrc200("ACTION TAKE MOVE VID $t_vsn");
+      return;
+    }
+    
+    $spy_err = `sysreq TMS ACTION COMP MOVE VID $t_vsn 2>&1`;
+    if($?){
+      &get_tmsrc200("ACTION COMP MOVE VID $t_vsn");
+      return; 
+    }
+    print" Tape $t_vsn SCRAtched from database successfully...\n";
+    $scra_cnt++;    
+
+    splice(@output, 2, 1, $loginid) if(&get_loginid($t_owner));
+    $line = "@output:$t_inst:Scratched";
+    push(@tms_output, $line); 
+  }
+
+  $tmsrc = 1;
+  &tape_off(@tms_off) if($tape_off_no);
+}
+#####################################################################
+# This function sets the variables required to perform a tms task by 
+# reading the cards in the input file. prints an error message and
+# returns 0 if any error happens. The user institute name is derived 
+# from INST option of the BPRM cards. So if there is not INST option
+# the program sends an error message and exits.
+#
+# function to send one mail
+######################################################################
+sub send_mail{
+
+  local($message) = @_;
+
+  $date = `date '+%m/%d/%y %H:%M:%S'`;
+  open (MAIL, "|Mail -s tapes hagxu@cernvm.cern.ch ");
+  print MAIL "$date\n";
+  print MAIL "$message";
+  close (MAIL);
+}
+###########################################################
+# This program tidies up and send message to alsoft
+###########################################################
+sub tape_off{
+
+  local(@buffer) = @_;
+  local($mess1) = "";
+  local($line) = "";
+  local($no_elem) = 0;
+  local(@array) = ();
+
+  $no_elem = @buffer;
+  print "\n no_elem = $no_elem\n" if($debug);
+
+  return if(!$no_elem);
+  $date = `date '+%m/%d/%y %H:%M:%S'`;
+  $off_tape_filename = "TSCRATCH";
+  $off_tape_filename = "TMODLOCA" if ($command eq "MOD");
+
+  $mess1=" SCRATCHED DATASETS : LIST SENT BY $user_loginid FROM TAPES $command" if($command eq "FREE" || $command eq "SCRA");
+  $mess1=" MOVED DATASETS : LIST SENT BY $user_loginid FROM TAPES $command" if($command eq "MOD");
+  for($i=0 ; $i< $no_elem ; $i++){
+    $line = $buffer[$i];
+    @array  = split(/!/, $line);
+    print "\n DEBUG: array = @array \n" if($debug);
+
+    ($t_vsn, $t_dsn, $t_comment) = @array;
+    print "\n DEBUG: t_vsn = $t_vsn, t_dsn = $t_dsn, t_commen = $t_comment" if($debug);
+    next if ($t_vsn eq "");
+    $t_comment=~ tr/#%$@/ /;
+    $t_comment=~ s/^\s+//;
+    $t_comment=~ s/\s+$//;
+    $t_dsn    =~ s/^\s+//;
+    $t_dsn    =~ s/\s+$//;
+    $t_comment=  pack("A60",$t_comment); 
+    $t_vsn    =  pack("A9", $t_vsn);
+    $t_dsn    =  pack("A22",$t_dsn);
+    $buffer[$i] = "$t_vsn $t_dsn ! $t_comment\n";
+    $cnt++;
+  }
+  $message = "$mess1 \n @buffer";
+  return if (!$cnt);
+  open(TAPE_OFF, "> $off_tape_filename");
+  print TAPE_OFF " $date $message";
+  close (TAPE_OFF);
+#  &send_mail($message);
+  $ext = `date '+%d%H%M%S'`;
+  chop($ext);
+  print"\n Please be patient, disposing to ALSOFT ...";
+# print"\n dispose $off_tape_filename -t cernvm:$off_tape_filename.$ext -u hagxu";
+  $result = `dispose $off_tape_filename -t cernvm:$off_tape_filename.$ext -u alsoft 2>&1`;
+  $result = `dispose $off_tape_filename -t cernvm:$off_tape_filename.$ext -u hagxu 2>&1`;
+  if ( -e $off_tape_filename ){
+    unlink($off_tape_filename);
+  }
+}  
+########################################################################
+# F.Blin function check if file tapes_lock already there
+######################################################################
+sub tlock{
+
+    if(-e "$tapes_lock"){
+      $line = `ls -l $tapes_lock 2>&1`; 
+      @array = split(/\s+/,$line);
+      $user_lock = $array[2];
+      $date_lock = "$array[5] $array[6] $array[7]";
+      print"\n ***  $user_lock  is executing  tapes  since $date_lock! Please, try later. ***\n\n";     
+      $tmsrc = 5;
+      &exit_tapes  if($bos_cards_flag);
+      $tapes_lock_flag = 0;
+    }
+    else {
+      open(INPUT, "> $tapes_lock");
+      print INPUT "$host $user_loginid $command $C_D_E $current_inst $current_label";
+      close (INPUT);
+      $tapes_lock_flag = 1;
+    }
+    return;
+}
+###############
+#tms confirm
+##############
+sub tms_confirm{
+
+  local($write_lock)   = 0;
+  local($free_flag)    = 0;
+  local($owner_flag)   = 0;
+  local($first_flag)   = 1;
+  local($no_tapes_cnt) = 0;
+  $no_ok = 0;
+  ($no_tapes, $pool, @main_buffer)= @_;
+
+  if ($command ne "ADD"){
+    foreach $i (0..$#main_buffer){
+      &get_main_buffer($i);
+      next if( ($command eq "BOOK") && $t_status ne "F");
+      next if( ($command eq "BOOK") && $t_loca ne substr($location, 0, 5)); 
+
+      last if ($no_tapes_cnt == $no_tapes);
+      $no_tapes_cnt = $no_tapes_cnt + 1;
+
+      $write_lock = 1 if ($t_ring eq "R");
+
+      $loginid = $t_owner;
+      if( ($t_owner ne $pool) && &find($t_owner, *spec_owners) == 0){
+	&get_loginid($t_owner);
+      }
+      print "\n DEBUG: loginid = $loginid" if ($debug);
+      if ( ($command eq "FREE") && ($t_owner eq $pool) ){
+	$free_flag = 1;
+	next;
+      }
+      if ( ($command eq "FREE") && ($t_owner ne $user_uuu) && ($t_owner ne $pool) ){
+	$owner_flag = 1;
+	$other_owner = $t_owner;
+      }
+      if ( ($command eq "MOD") && ($t_owner ne $user_uuu) && ($t_owner ne $pool) ){
+	$owner_flag = 1;
+	$other_owner = $t_owner;
+      }
+      if (!$bos_cards_flag){   
+        $vsn = pack("A6",  $t_vsn);
+        $loginid = pack("A10", $loginid);
+        $lib = pack("A9",  $t_lib);
+        $tape_status = pack("A2",  $t_status);
+        if($first_flag){
+	  print"\n------- You will $oper the following tapes -----------";
+	  print"\n-";                  
+	  print"\n-  VSN  |   OWNER    |  Library  | Status";          
+	  print"\n------------------------------------------------------";
+	  $first_flag = 0;
+        }
+      
+        print"\n $vsn | $loginid | $lib | $tape_status";
+      }
+      $main_buffer[$no_ok] = $main_buffer[$i];
+      $no_ok = $no_ok + 1;
+    }
+  }
+  else{
+    return 0 if ($bos_cards_flag);
+    ($first_label, $last_label, $inst, $lib, $device, $prch_inst) = @main_buffer;
+      print "\n*****************************************************\n";
+      print "  !!!    You will ADD  the following tapes :    !!!\n"; 
+      print "\n  Range: ($first_label) to ($last_label)";
+      print "\n  Institute: $inst";
+      print "\n  To the library: $lib";
+      print "\n  Device: $device";
+      print "\n  Purchasing Institute: $prch_inst";
+      print "\n********************** Please check *****************\n"; 
+      $first_flag = 0;
+  }
+
+  print"\n *** WARNING: some of the tapes in the range are WRITE LOCKed. ***\n" if ($write_lock);
+  print"\n *** WARNING: some of the tapes in the range are already free. ***\n" if ($free_flag);
+  print"\n *** WARNING: These tapes are owned by another user: $other_owner, not  $user_uuu  ***\n" if($owner_flag);
+
+  return 1 if ($bos_cards_flag);
+  &get_tmsrc100 if ($first_flag);
+  return 0 if ($first_flag);
+  return 1 if (&yes_or_no("\n Do you really want to store modifications into database (y or n)? "));
+  $tmsrc = 999;
+  return 0;
+}
+##############################################################
+# This fuction performs spy task
+#############################################################
+sub tms_spy{
+
+  local($spy_first_lab,$spy_last_lab,$spy_no_tapes,$spy_loca) = @_;
+  local($spy_loginid) = $user_loginid;
+  local($spy_command) = $command;
+  $spy_no_tapes = sprintf("%03d", $spy_no_tapes);
+
+  print("\n DEBUG SPY: spy_loginid=$spy_loginid, spy_command=$spy_command")       if($debug);
+  print("\n DEBUG SPY: spy_loca=$spy_loca, spy_no_tapes=$spy_no_tapes")           if($debug);
+  print("\n DEBUG SPY: spy_first_lab=$spy_first_lab, spy_last_lab=$spy_last_lab") if($debug);
+  select(SPY_OUTPUT);
+  $~ = 'SPY_OUTPUT';
+#  $^ = '';
+  $spy_err = "Failed TMS $spy_err" if ($tmsrc == 200);
+  $spy_err = "Canceled" if ($tmsrc == 999);
+  $spy_err = "Executed" if ($tmsrc == 1);
+  $spy_err = "Failed TMS $tmsrc" if ($tmsrc != 1 && $tmsrc != 999 && $tmsrc != 200);
+#  $spy_date = `date '+%m/%d/%y  %H:%M:%S'`;
+  $spy_date = `date '+%y%m%d %H:%M:%S'`;
+  open(SPY_OUTPUT,">> $tapes_spy");
+  write(SPY_OUTPUT);
+  close(SPY_OUTPUT); 
+  select(STDOUT);
+} 
+#######################################################
+# function performs the tms tag get binary task
+# to get the institute name.
+# 10/10/95 F.Blin 
+#    return 0 if t_inst eg "" and suppressed institut -> 0
+#    change t_inst minuscule to match with lc_inst_list
+###################################################### 
+sub tms_tag_bin{
+
+  local($tag_buff) = "";
+  local(@array) = ();
+  $tag_buff = `sysreq TMS TAG VID $_[0] GET BINARY 2>&1`;
+  if ($?){
+    $spy_err = $tag_buff;
+    &get_tmsrc200("TAG VID $_[0] GET BINARY");
+    return 0;
+  }
+  chop($tag_buff);
+  print ("\n DEBUG: tms tag bin = $tag_buff") if ($debug); 
+  @array = split(/\s+/, $tag_buff);
+  $t_inst = shift(@array);
+  print "\n *** WARNING: Institue for tape $_[0] has not been set. ***\n\n" if($t_inst eq "");  
+  return 0 if ($t_inst eq "");
+  $t_dsn = join(" ", @array);
+  $t_inst =~ tr/A-Z/a-z/; 
+  $t_inst = &match($t_inst, *lc_inst_list) if ($C_D_E ne "E");
+  $t_inst =~ tr/a-z/A-Z/; 
+  print "\n DEBUG: institute tag=$t_inst t_dsn=$t_dsn" if ($debug);
+  return 1 ;
+}
+######################################################
+# Thsi function performs the tms tag get text task
+# to get the comment.
+###################################################### 
+sub tms_tag_text{ 
+  
+  local($tag_buff) = "";
+  $tag_buff = `sysreq TMS TAG VID $_[0] GET TEXT 2>&1`;
+  if ($?){
+    $spy_err = $tag_buff;
+    &get_tmsrc200("TAG VID $_[0] GET TEXT");
+    return 0;
+  } 
+  chop($tag_buff);
+  $t_comment = $tag_buff;
+  print("\n DEBUG: tms tag text = $t_comment") if($debug);
+  return 1;
+}
+##############################
+# TMS warn
+##############################      
+sub tms_warn{
+#    system("clear");
+  print "\n ***  Your request is being processed by TMS  ***";
+  print "\n          This may take quite a while !!         ";
+  print "\n               Please, be patient...               \n";
+  return;
+} 
+###########################################################################
+# F.Blin function to execute sysreq with current_vid and or not current_pool
+############################################################################
+sub tms_vid_pool{
+
+  $str = "";
+  @main_buffer = ();
+ ($tmsrc,$t_pool) = @_; 
+
+ $str = "OWNER $current_pool" if($t_pool eq "POOL");
+ @main_buffer = `sysreq TMS Q VID $current_vid $str\"(\"VSN OWN LIB LASTW LASTU MODEL STAT RING 2>&1`; 
+ if ($?){
+   $spy_err = "@main_buffer";
+   &get_tmsrc200("Q VID $current_vid");
+   return;
+ }
+ if (@main_buffer < $tapes_num){
+    print "\n**** Not enough tapes to fulfil your request. ****";
+    print "\n        Available tapes will be proceeded. \n" if ($t_pool ne "POOL");
+    print "\n        Available tapes will be proceeded. \n" if ($command == "BOOK" && !$bos_cards_flag);
+ }
+ return;
+}
+###########################################################
+# This function updates the tapes.instit file.
+# F.Blin 04/10/95 updated for all labos with label AD, AI or AG
+############################################################
+sub update_list{
+
+  local($mess0, $mess1, $mess2, $mess3, $mess4, $mess5)="";
+  local($first_free) = "";
+  local($temp) = "";
+  local($update_inst, $update_series) = @_;
+  $message = "";
+  if(!open(INSTFILE, "$tapes_instit")){
+    print "*** ERR: can not open the tapes.instit file. ***\n";
+    return 0;
+  }
+  @the_file = <INSTFILE>;
+  close (INSTFILE);
+  for( $i=0 ; $i<@the_file ; $i++){
+    $line = $the_file[$i];
+    @inst_info = split(/\s+/, $line);
+    $inst_name = $inst_info[0];
+    $inst_serie= $inst_info[1];
+    $inst_label= $inst_info[2];
+    if ($current_label eq "AD" || $current_label eq "AI" || $current_label eq "AG"){
+       next if ($current_label ne $inst_label);  
+    }
+    if ($current_label ne "AD" && $current_label ne "AI" && $current_label ne "AG"){
+       next if(substr($inst_name, 0, 4) ne substr($update_inst, 0, 4) || $inst_serie ne $C_D_E);
+    }
+    $inst_last_num = $inst_info[4];
+    if ($command eq "ADD"){
+      $new_next_add = $inst_last_num;
+      $new_next_add = $last_num + 1 if(($last_num + 1) < $inst_last_num);
+      $inst_info[5] = $new_next_add if ($new_next_add > $inst_info[5]);
+    }
+    if ($command eq "SCRA"){
+      $old_next_add = $inst_info[5] - 1; #This is the last added tape
+      $inst_info[5] = $first_num if ($last_num >= $old_next_add);
+    }
+    $the_file[$i] = &do_packing(@inst_info);
+
+    system("cp $tapes_instit $tapes_instit_old");
+    if(!open(INSTFILE, ">$tapes_instit")){
+      print"\n *** ERR: Cannot open the file tapes.instit. ***\n";
+      $mess1 = " Could not open the file tapes.instit\n";
+      $mess2 = " Failed to update the tapes.instit\n";
+      $message = "$mess1 $mess2";
+      &send_mail($message);
+      return;
+    }
+    print INSTFILE  @the_file;
+    close (INSTFILE);
+    last if ($current_label ne "AD" && $current_label ne "AI" && $current_label ne "AG");
+  }
+}
+#####################################################################
+# This function asks for a user inst. name and update the current inst and labels.
+##################################################################### 
+sub user_inst_name{
+
+  local($input) = "";
+  $user_inst =~ tr/A-Z/a-z/;   
+  $input = &Complete("\n Enter Institute or tape category (<CR> = $user_inst), Ctrl-d for the list: ", @lc_inst_list);
+  $input =~ tr/a-z/A-Z/;
+  $input =~ s/^\s+//;
+  $input =~ s/\s+$//;
+  $input = $user_inst if ($input eq "");
+  if ($input =~ /^q\b/i){ &exit_tapes};
+
+  $input =~ tr/a-z/A-Z/;
+  return 0 if (!&check_inst_get_info($input));
+  print " Label Prefix : $inst_label\n";
+  $user_inst = $input;
+  $current_inst  = $user_inst;
+  $current_label = $inst_label;
+  return 1;
+}
+###################################################################
+# This function prompt an exper, returns 1 if the answer is yes.
+# 0 if the answer is no.
+#####################################################################
+sub yes_or_no{
+  
+  local($prompt) = @_;
+  while(1){
+    print STDOUT $prompt;
+    local($answer) = scalar(<STDIN>);
+    $answer =~ s/^\s+//;
+    $answer =~ s/\s+$//;
+    $answer =~ tr/a-z/A-Z/;
+    return 1 if ($answer eq "Y" || $answer eq "YES");
+    return 0 if ($answer eq "N" || $answer eq "NO");
+    print("\n\n *** You have to answer with (y)es or (n)o!  ***\n");
+  }
+}

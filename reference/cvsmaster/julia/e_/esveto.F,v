@@ -1,0 +1,276 @@
+head	1.3;
+access;
+symbols
+	jul313_3:1.3
+	jul313_2:1.3
+	jul313_1:1.3
+	jul313:1.3
+	jul312_1:1.3
+	jul312:1.3
+	jul311:1.3
+	jul310_1:1.3
+	jul310:1.3
+	jul309_1:1.2
+	jul309:1.2
+	jul308_6:1.2
+	jul308_5:1.2
+	jul308_4:1.2
+	jul308_3:1.2
+	jul308_2:1.2
+	jul308_1:1.2
+	jul308:1.2
+	jul307_4:1.2
+	jul307_3:1.2
+	jul307_2:1.2
+	jul307_1:1.2
+	jul307:1.2
+	jul306_3:1.2
+	jul306_2:1.2
+	jul306_1:1.2
+	jul306:1.2
+	jul305_4:1.2
+	jul305_3:1.2
+	jul305_2:1.2
+	jul305_1:1.2
+	jul305:1.2
+	jul304_3:1.2
+	jul304_2:1.2
+	jul304_1:1.2
+	jul304:1.2
+	jul303_7:1.2
+	jul303_6:1.2
+	jul303_5:1.2
+	jul303_4:1.2
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2
+	jul280_1:1.2
+	jul280:1.2
+	jul279:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	99.10.27.12.27.03;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.03.12.14.58.34;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.18.05;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.18.06;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@For julia 310
+@
+text
+@      SUBROUTINE ESVETO ( EWSUM , JERR)
+C----------------------------------------------------------------------
+C!  - Veto spark event for E-Flow
+C
+C     Author : M.N.Minard  9-5-90
+C     Input : EWSUM wire energy
+C     Output: JERR = 0 not a spark event
+C                  = 1 spark event detected
+C?
+C!======================================================================
+#ifndef DOC
+#include "eclujj.h"
+#include "prpwjj.h"
+#include "bcs.h"
+       DIMENSION ECATOW (36) , EWIRE (36)
+       LOGICAL LDECOD
+       EXTERNAL NAMIND
+       DATA FRCU , FRTU,EGOODU / 0.5,0.9,10./
+       DATA EMIN /  80. /
+#include "bmacro.h"
+C
+C-     Calculate energy in Pads & Highest fraction
+C
+      JERR = 0
+      NAETDI = NAMIND('ETDI')
+      NAEWHE = NAMIND ('EWHE')
+      KEWHE = IW(NAEWHE)
+      CALL VZERO (EWIRE , 36)
+      IF ( KEWHE.EQ.0) GO TO 990
+      DO 5 IMOD = 1,LROWS(KEWHE)
+      IMD = ITABL (KEWHE,IMOD,2)
+      IF ( IMD.LT.1.OR.IMD.GT.36) GO TO 5
+      EWIRE (IMD) = FLOAT(ITABL(KEWHE,IMOD,1))*1.E-6
+ 5    CONTINUE
+      EFRAC = 0.
+      NMOD = 0
+      JERR = 0
+      ETOT = 0.
+      CALL VZERO (ECATOW,36)
+      KETDI  = IW(NAETDI)
+      IF (KETDI.NE.0) THEN
+      LETDI  = IW(KETDI + LMHCOL )
+      NTOW   = IW(KETDI + LMHROW )
+C? Verify on line bank consistency
+      IF (IW(KETDI) .NE. LETDI*NTOW+2) GOTO 990
+      KETDI  = KETDI + LMHLEN
+      DO 20 ITOW = 1,NTOW
+      LDECOD = .FALSE.
+       DO 10 K=1,3
+         IF(IW(KETDI+K+1).NE.0) THEN
+             IF (.NOT.LDECOD) THEN
+                 ITH = IBITS(IW(KETDI+1),16,8)
+                 IPH = IBITS(IW(KETDI+1),2,9)
+                 IF ( ITH.LT.1.OR.ITH.GT.228) GO TO 10
+                 IF ( IPH.LT.1.OR.IPH.GT.384) GO TO 10
+                 CALL EMDTOW(ITH,IPH,ISC,IMD,IRG)
+                 IMOD = IMD + 12 * (ISC - 1 )
+                 LDECOD = .TRUE.
+             END IF
+             IF ( IMOD.GT.0.AND.IMOD.LT.37) THEN
+             ECATOW (IMOD) = ECATOW(IMOD)+FLOAT(IW(KETDI+1+K))*1.E-6
+             ETOT = ETOT+FLOAT(IW(KETDI+1+K))*1.E-6
+             ENDIF
+         END IF
+   10    CONTINUE
+      KETDI=KETDI+LETDI
+   20 CONTINUE
+C
+C-    Calculate maximal fraction  & enErgy
+C
+      IF ( ETOT.LT.250.) GO TO 990
+      EGOOD = 0
+      FRW = 0.
+      FRT = 0.
+      IMD = 0
+      DO 30 IMOD = 1, 36
+      IF ( ECATOW(IMOD).LT. EMIN ) GO TO 30
+      FRWC = EWIRE(IMOD)/ECATOW(IMOD)
+      IF ( FRWC .GT.0.8 ) THEN
+         EGOOD = EGOOD + EWIRE (IMOD)
+      ENDIF
+      FRTC = ECATOW(IMOD) / ETOT
+      IF ( FRTC.GT.FRT) THEN
+        FRW = FRWC
+        FRT = FRTC
+        IMD = IMOD
+      ENDIF
+ 30   CONTINUE
+C
+C-    Remove spark event
+      IF ( FRW.LT.FRCU.AND.FRT.GT.FRTU.AND.EGOOD.LT.EGOODU) THEN
+         CALL RERROR ('ESVETO ' ,1,' Spark Ecal candidate')
+         JERR = 1
+      ENDIF
+      ENDIF
+ 990  RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+ Modified Files:
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+@
+text
+@d71 1
+a71 1
+      IF ( ETOT.LT.200.) GO TO 990
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK esveto
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

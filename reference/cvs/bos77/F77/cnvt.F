@@ -1,0 +1,15 @@
+      SUBROUTINE CNVT(TEXT,STRUT)
+      EXTERNAL STRUT
+      CHARACTER*(*) TEXT,STR*256
+      COMMON/FMTSTR/STR
+      COMMON/STRSTR/JS,IAST,IBST
+      N=LEN(TEXT)
+      IF(JS+1+N.GT.IBST) CALL STRUT
+      IF(JS.EQ.0) THEN
+         STR=' '
+         JS=IAST-1
+      END IF
+      STR(JS+1:JS+N)=TEXT
+      JS=JS+N
+      RETURN
+      END

@@ -1,0 +1,103 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.07.14.02.01;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.02;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK ebethe
+      SUBROUTINE EBETHE(EP,GABE,EP1)
+C----------------------------------------------------------
+C:
+C! CALCULATE DE/DX FROM BETHE-BLOCH Formula
+C:                               M.N. Minard Feb. 88
+C      EP   = INVERSE PARTICLE BETA ( E/P )
+C      GABE = PARTICLE GAMMA*BETA   ( P/M )
+C:     EP1= EP * ( DE/DX (BETHE)/ DE/DX (5 GEV))**0.5
+C----------------------------------------------------------
+#ifndef DOC
+      SAVE
+C      XME , WXE in Kev
+       DATA XME,WXE/511. ,0.019/
+C      SQD5 is in (mev*g-1*cm2)**0.5 taken from test data
+      DATA SQD5,SQ20 / 3.52,5./
+       IF (EP.GT.1.E-10) THEN
+        BETA = 1./EP
+        COEFF = 2.*XME*(GABE**2)/WXE
+        DEX = ALOG(COEFF)-BETA**2
+        DEX1 = ABS(DEX)
+        EP1 = EP*SQRT(DEX1)/SQD5
+         IF (EP1.GT.SQ20) EP1 = SQ20
+       ELSE
+         EP1 = SQ20
+       ENDIF
+       END
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

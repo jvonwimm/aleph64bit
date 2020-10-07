@@ -1,0 +1,117 @@
+head	1.1;
+access;
+symbols
+	alio83:1.1
+	alio82:1.1
+	alio81:1.1
+	alio80:1.1
+	alio74:1.1
+	alio73:1.1
+	alio72:1.1
+	alio71:1.1
+	alio70:1.1
+	alio68:1.1
+	alio69:1.1
+	alio67:1.1
+	alio66:1.1
+	alio65:1.1
+	alio64:1.1
+	alio63:1.1
+	alio62:1.1
+	alio61:1.1
+	alio60:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.04.23.10.00.54;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@move alph, dbas, a part of alef and a part of c to alephio
+Modified Files:
+ 	version.h
+ Added Files:
+ 	adbrow.F adbrpn.F adbrun.F adbswp.F adbver.F agetdb.F agtfil.F
+	albos.F aldawr.F aldtyp.F aleveh.F alfind.F alfmt.F algtbk.F
+ 	algtdb.F algtlu.F algtro.F algtyp.F alinst.F alk7fil.F
+ 	alk7fru.F alk7op.F alk7tru.F alredb.F alrune.F alrunh.F
+ 	alrunr.F alseed.F alstho.F alstin.F alstri.F altabl.F alvsn.F
+ 	aopdbs.F aublis.F aubos.F aubprs.F bkcari.F bkinca.F bkrhab.F
+ 	bkrhal.F bkrhaw.F bktobk.F cafiht.F chahol.F dafrds.F gtdbas.F
+ 	gtstup.F igtfmt.F jhocha.F julrec.F junial.F junidb.F
+ 	kbytrec.F loctab.F nameru.F ubpack.F uclean.F uindxs.F usbos.F
+ 	usgtdb.F utcblk.F utccop.F utcofo.F utwocl.F utwoex.F
+Removed Files:
+	noibm.F
+@
+text
+@      INTEGER FUNCTION JUNIDB(LDUM)
+C ----------------------------------------------------------------
+C - F.Ranjard - 881110
+C!  return the data base logical unit
+C   LDUM is a dummy argument
+C   JUNIDB = LDEF (=4 by default)
+C   there is an entry point : NUNIDB(LDUM) to redefine the default
+C   IF 0< LDUM <99 THEN
+C      reset default unit LDEF = LDUM
+C   ENDIF
+C   2 more entry points are forseen for the LongTermConstant file:
+C   JUNISQ(LDUM) and NUNISQ(LDUM)
+C   The default logical unit # for the LTC file is LSEQ=8
+C   2 more entry points are forseen for the Documentation file:
+C   JUNIDO(LDUM) and NUNIDO(LDUM)
+C   The default logical unit # for the DOC file is LDOC=9
+C
+C - called by USER
+C   -------------------------------------------------
+#ifndef DOC
+      DATA LDEF /4/ , LSEQ /0/ , LDOC /0/
+C -----------------------------------------------------------------
+C
+      JUNIDB = LDEF
+      RETURN
+C
+C - redefine logical unit #
+      ENTRY NUNIDB (LDUM)
+      NUNIDB = LDEF
+      IF (LDUM.GT.0 .AND. LDUM.LE.99) THEN
+         LDEF = LDUM
+      ENDIF
+      RETURN
+C
+C - get logical unit # for LongTermConstant file
+      ENTRY JUNISQ (LDUM)
+      JUNISQ = LSEQ
+      RETURN
+C
+C - redefine logical unit # for LTC file
+      ENTRY NUNISQ (LDUM)
+      NUNISQ = LSEQ
+      IF (LDUM.GT.0 .AND. LDUM.LE.99) THEN
+         LSEQ = LDUM
+      ENDIF
+C
+C - get logical unit # for Documentation file
+      ENTRY JUNIDO (LDUM)
+      JUNIDO = LDOC
+      RETURN
+C
+C - redefine logical unit # for DOC file
+      ENTRY NUNIDO (LDUM)
+      NUNIDO = LDOC
+      IF (LDUM.GT.0 .AND. LDUM.LE.99) THEN
+         LDOC = LDUM
+      ENDIF
+C
+      END
+#endif
+@

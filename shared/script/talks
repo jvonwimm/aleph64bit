@@ -1,0 +1,25 @@
+#!/bin/csh
+#------------------------------------------------------------------------
+#
+# talks
+# finds the talks given by an Aleph member
+#
+# J. Boucrot  27-Jun-1996
+#
+# Argument given :  Aleph member name
+# If no argument , a warning is given on screen
+#
+#------------------------------------------------------------------------
+#
+#  no argument given : type a warning :    
+#
+if (${#argv} == 0) then
+   echo  " Please give the name of an ALEPH member as argument "
+else
+#  1  argument given : display the header of the speakers list
+#                      then the lines matching the Aleph member
+      set arg_name = $argv[1] 
+      head -4  /afs/cern.ch/aleph/reference/book/speakers.list
+      grep -F -i   $arg_name  /afs/cern.ch/aleph/reference/book/speakers.list
+endif
+exit

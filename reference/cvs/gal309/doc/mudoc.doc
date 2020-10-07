@@ -1,0 +1,324 @@
+*DK mudoc
+#if defined(DOC)
+.chapter MUON
+.section Chamber structure and local reference system
+
+     Muon chambers consist of two layers of streamer tubes with their
+  wires in parallel with each other. Each layer of tubes has two layers
+  of readout strips, one has strips in parallel with wires, another
+  has strips perpendicular to wires.
+
+     In the MUON part of GALEPH, each physical muon chamber is
+  regarded as a module which is filled completely with a sensetive
+  medium. The correspondences between the GALEPH defined volumes and
+  the physical modules are followings.
+
+     MUB1 -- inner layer of barrel
+     MUB2 -- outer layer of barrel
+     MUM1 -- inner layer of middle angle
+     MUM2 -- outer layer of middle angle
+     MUC1 -- inner layer of endcap
+     MUC2 -- outer layer of endcap
+
+     The modules in the barrel and the middle angle have a shape of
+  boxes. The shapes of the modules in the endcaps are not regular. But
+  MUC1 and MUC2 are defined as boxes, because GEANT3 does not allow
+  to define an arbitrary shape.
+
+     The origin of a local reference system (LRS) is positioned at the
+  center of the box. The Z axis of the LRS is perpendicular to the tube
+  wire planes and from inside (interaction point) to outside. The X axis
+  of the LRS is in the wire plane and perpendicular to the wires. The Y
+  axis of the LRS is along with the wire directions.
+
+     The terms used for describing the geomrtric demension of modules
+  are always related to this definition of LRS. The width of modules
+  means the dimension along with X axis, the length of modules means
+  the dimension along with Y axis, and the thickness of modules means
+  the dimension along with Z axis. The exeptions are the modules in
+  the endcaps, the terms "width" and "length" are not obiviosly clear,
+  so the terms "length of X direction in ALEPH" and "length of Y
+  direction in ALEPH" are used in BOS bank descriptions.
+
+.section Orientation of LRS in different subcomponents
+
+     There are 12 modules in the inner layer of the barrel
+  subcomponents and 12 in the outer layer. The tube wires of these
+  modules are at the Z direction of the ALEPH system (beam direction).
+  Then the position of a slot could be defined by a radius and an
+  azimuthal angle (0, pi/6, pi/3,...). The theta and phi of 3 axis of
+  a LRS in the ALEPH system have relations with ANGLE (the azimuthal
+  angle of the module) as
+
+                        theta            phi
+
+            X           pi/2          ANGLE+pi/2
+            Y             0               0
+            Z           pi/2            ANGLE
+
+     There are 10 modules in the inner layer of each middle angle and
+  9 in the outer layer. The tube wires of these 38 modules are rotated
+  from slot to slot but perpendicular to the Z direction of the ALEPH
+  system. However the position of a slot could still be defined by a
+  radius and an azimuthal angle. The theta and phi of 3 axis of a LRS
+  in the ALEPH system have relations with ANGLE as
+
+     A side:
+
+                        theta            phi
+
+            X             0               0
+            Y           pi/2          ANGLE-pi/2
+            Z           pi/2            ANGLE
+
+     B side:
+
+                        theta            phi
+
+            X            pi               0
+            Y           pi/2           ANGLE+pi/2
+            Z           pi/2             ANGLE
+
+     There are 4 modules in the inner layer of each endcap
+  subcomponent and 4 in the outer layer. The tube wires of these 16
+  modules are along with the X direction of the ALEPH system (
+  horizontal). The configuration of 4 slots inside one subcomponent
+  is the same from the inner layer to the outer layer, but is
+  differenr from A side to B side, they can be reresented as the
+  diagrams followed. (View from +Z)
+
+    A side:        __________________________________
+                   |                |               |
+                   |                |               |
+                   |                |               |
+                   |       2        |       1       |
+                   |                |               |
+                   |                |               |
+                   |----------------|               |
+                   |              |+|               |
+                   |              |-----------------|
+                   |              |                 |
+                   |       3      |         4       |
+                   |              |                 |
+                   |              |                 |
+                   ----------------------------------
+
+    B side:        __________________________________
+                   |              |                 |
+                   |              |                 |
+                   |              |                 |
+                   |       3      |         2       |
+                   |              |                 |
+                   |              |                 |
+                   |              |-----------------|
+                   |              |+|               |
+                   |----------------|               |
+                   |                |               |
+                   |       4        |       1       |
+                   |                |               |
+                   |                |               |
+                   ----------------------------------
+
+     The numbers in these diagrams refer to the slot numbers. The theta
+  and phi of 3 axis of the LRS in the ALEPH system are followings.
+
+     A side (slot 1 and 4) :
+
+                        theta            phi
+
+            X           pi/2            3pi/2
+            Y           pi/2              0
+            Z             0               0
+
+     A side (slot 2 and 3) :
+
+                        theta            phi
+
+            X           pi/2             pi/2
+            Y           pi/2             pi
+            Z             0               0
+
+     B side (slot 1 and 2) :
+
+                        theta            phi
+
+            X           pi/2             pi/2
+            Y           pi/2              0
+            Z            pi               0
+
+     B side (slot 3 and 4) :
+
+                        theta            phi
+
+            X           pi/2            3pi/2
+            Y           pi/2             pi
+            Z            pi               0
+
+     The orientations of the LRS are different from the slots at the right
+  side to those at the left side, because the real shapes of these modules
+  are not boxes so that the lengths of tubes in these modules are variable.
+
+.section Hit generation in MUON
+
+     MUHIT is called from GUSTEP to generate hit data in MUON. Since the
+  muon detector of ALEPH has only digital outputs, the hit data of MUON
+  are only intermediate.
+
+     MUHIT is called each time a track reaches a sensitive volume of MUON
+  (MUB1, MUB2, MUM1, MUM2, MUC1 or MUC2). One calling of MUHIT deals with
+  the generation of all hit signals from this module by the track.
+
+     MUGETC is called from MUHIT first to get all concerned constants
+  from BOS bank xxG1 and xxRD and to store those into common block
+  /MUSGCN/. The only exception is that in the case of MUC1 or MUC2, the
+  length of eightfold tubes can not be fixed, then the pointer to the
+  corresponding module is kept in /MUSGCN/. A function MUNSTA is called
+  by MUGETC to find the address of a slot in the BOS bank xxG1 and xxRD
+  from the slot number.
+
+     MUSTRM is called from MUHIT to generate streamers. It calles MUTRSF
+  to transform the track elements from ALEPH system to LRS. Then in
+  MUSTSG, the track element is extrapolated to find the track segments
+  inside the streamer tubes. A temporary working bank JDMUST is used to
+  store the contents of the track segments which are the tube plane
+  number in the module, the eightfold tube number in the plane, the tube
+  number in the eightfold tube, the coordinates of the entry and exit
+  points of the segments and the direction tangents. A flag to indicate
+  if the segment fires a streamer is also included. At this moment, it
+  is set to 0. Afterward, MUSMFR is called by MUSTRM to fire streamers
+  by track segments. If a segment crosses spacers, it is treated as more
+  than one independent segments. A segment will fire a streamer if its
+  length is longer than a cerntain constans and it passes a random
+  efficiency checking, then the fire flag of the segment ia set to 1.
+  Otherwise the flag is kept 0.
+
+     MUSGNL is called from MUHIT to transform streamers to strip signals.
+  The X and Y strips against the streamers (fired track segments) are
+  found. Then these strips and the adjacent ones pass a random
+  efficiency checking, those accepted are stored in the BOS bank MUHT.
+
+.section Digitization in MUON
+
+     MUDIGI is called from ASDIGI to generate the digitizing information.
+  It calls MUUNOI first to add some noise signals unrelated to tracks to
+  MUHT. (Not implemented yet)
+
+     MUDGTZ is called from MUDIGI to loop over the signals in MUHT and
+  find clusters. The contents of a digitizing are the electronics module
+  number, the strip plane number, the length of a cluster and the first
+  strip address of the cluster. It calls MUFLDI, MUFLDT and MUFLTD to
+  storethe digitizings, the cross reference between the digitizings and
+  the tracks into BOS banks MUDI, MUDT and MUTD.
+
+.section Special modules
+
+     There are several modules with special shapes in the barrel. Two
+  top ones have gaps allowing the cooling tubes passing through.
+  Therefore each standard modules is replaced by two narrower ones since
+  the gap is along with the beam direction. Four modules close to the
+  bottom ones have holes allowing the legs of the ALEPH passing through.
+  Therefore each standard module will be shorten to fit the space between
+  two legs. In addition, it is still under discussion to have two small
+  modules outside the legs. So there will be 8 or 16 special modules in
+  the barrel depending on the decision.
+
+     The constants describing the special modules are stored in the BOS
+  bank MSG1 and MSRD. As an option, a condition flag ICMUJO(1) is used
+  to control if GALEPH deals with the special modules. If the flag is
+  set, the special modules are used. Otherwise, the standard modules are
+  used.
+
+     Nomatter whether or not the flag ICMUJO(1) is set, GALEPH initialize
+  all MUON modules as standard ones. However as the flag ICMUJO(1) is
+  set to 1, subroutine MUSPMD is called from MUSTRM after the
+  transformation of the track elements (MUTRSF). MUSPMD checks if the
+  track element is in a module with a special one first, for those in a
+  normal module, MUSPMD returns immidiately. If the track element is in
+  a module with special ones, then the coordinates of the track element
+  in LRS is used to decide whether it is in a special modules. If it is
+  the case, The track element is translated to the LRS of the special
+  module, and the constants of the special module are found  out to
+  replace those of the standard one. Otherwise, the track element is
+  given up.
+
+     The rest of the processing (MUSTSG and MUSMFR) is the same as the
+  normal case.
+
+.section Conditions to control MUON part of GALEPH
+
+     Four flags are used to give options as running MUON part of GALEPH.
+
+     ICMUJO(1) = 0, no treatment for special modules;
+               = 1, with treatment for special modules.
+               ( See the section "Special modules")
+
+     ICMUJO(2) = 0, no treatment for dead tubes and strips;
+               = 1, with treatment for dead tubes and strips.
+     MUDTUB is called from MUHIT after calling MUSTRM. It checks the tube
+  addresses of streamers, if a streamer is in a dead tube, the fire flag
+  of the streamer is changed. MUDSTP is called from MUFLHT before a hit
+  is stored into MUHT, it looks up the list of dead strips and decides
+  if the current hit signal needs to be stored. MUDTUB and MUDSTP have
+  not been implemented yet.
+
+     ICMUJO(3) = 0, no track unrelated noices added;
+                 1, track unrelated noices added.
+     MUUNOI is called from MUDIGI before calling MUDGTZ. (See section
+  "Digitization in MUON") MUUNOI has not been implemented yet.
+
+     ICMUJO(4) = 0, the sensitice material in MUON detector is air;
+               = 1, the sensitive material in MUON detector is average
+                    one of MUON chamber. (Aluminium shell with plastic
+                    tube inside)
+     ICMUJO(4) is used in AGMUCH to decide with which material the
+  sensetive volumes of MUON detector are filled. Notice for the current
+  version, lead is used instead of the average material in order to
+  exaggerate the effects.
+
+.section Histograms and bebug printout
+
+     If the flag FHISJO(8) is set, then
+     (1) MUBOOK is called from MUIRUN to book a bunch of histograms which
+  will record some statistics of MUON part;
+     (2) Several HFILL are called in MUSGNL;
+     (3) MUFILL is called from MUDIGI to record most of statistics.
+
+     If the flag FDEBJO and IPRIJO(8) are set, then MUPRHT is called from
+  MUASIG, which is called between the Hit process and the digitizing
+  process, to print out the information about hit signals and MUPHDI is
+  called from the end of MUDIGI to print the information in MUDI, MUDT
+  and MUTD.
+
+.section Flow chart
+
+     ASIPAC
+            ---> MUIRUN
+
+     GUSTEP
+            ---> MUHIT
+                        ---> MUGETC
+                                    ---> MUNSTA
+                        ---> MUSTRM
+                                    ---> MUTRSF
+                                    ---> MUSPMD
+                                    ---> MUSTSG
+                                    ---> MUSMFR
+                        ---> MUDTUB
+                        ---> MUSGNL
+                                    ---> MUFLHT
+                                                ---> MUDSTP
+
+     ASPEVE
+            ---> MUASIG
+                        ---> MUPRHT
+
+     ASDIGI
+            ---> MUDIGI
+                        ---> MUUNOI
+                        ---> MUDGTZ
+                                    ---> MUFLDI
+                                    ---> MUFIDT
+                                    ---> MUFLTD
+                        ---> MUPRDI
+
+#endif

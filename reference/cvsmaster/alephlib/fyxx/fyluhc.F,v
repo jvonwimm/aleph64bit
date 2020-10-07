@@ -1,0 +1,173 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.41.50;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.41.51;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      INTEGER FUNCTION FYLUHC(IFKIN,MXDAU,LUDAU)
+C -----------------------------------------------------------
+CKEY FYXX MCARLO KINE HISTORY / USER
+C - F.Ranjard - 880920
+C! Decode LUND history code.
+C  Return the # of daughters and the list of daughter#s of a track
+C  known by its FKIN row #.
+C  There are FYLUHC such daughters.
+C  if FYLUHC .eq. 0 then NO daughter, or NOT a LUND history code
+C  if FYLUHC .gt. MXDAU then the buffer LUDAU is too small
+C
+C - structure: INTEGER FUNCTION subprogram
+C              User Entry Name: FYLUHC
+C              External References: NAMIND(BOS77)
+C              Comdecks referenced: BCS, BMACRO
+C
+C - usage  : NDAU  = FYLUHC (IHCOD,MXDAU,LUDAU)
+C - input  : IFKIN = track# known by its row# in FKIN bank
+C            MXDAU = length of LUDAU array
+C - output : LUDAU = array which contains the list of daughters
+C            FYLUHC= # of daughters ( the #s of the 1st MXDAU are
+C                    stored in LUDAU)
+#ifndef DOC
+      SAVE
+#include "bcs.h"
+#include "fxjjpar.h"
+      INTEGER LUDAU(*)
+      DATA NFKIN /0/
+#include "bmacro.h"
+C - history code
+      IHCOD(IFLR) = ITABL(JFKIN,IFLR,JFKIHC)
+C - mother track#
+      MOTHER(IFLR)= MOD (IHCOD(IFLR),10000)
+C --------------------------------------------------------------
+      IF (NFKIN.EQ.0) THEN
+         NFKIN = NAMIND('FKIN')
+      ENDIF
+C
+      NDAU = 0
+C
+C - IF not FKIN bank RETURN with FYLUHC=0
+      JFKIN = IW(NFKIN)
+      IF (JFKIN.EQ.0) GOTO 900
+C
+C - IF not a valid track# THEN RETURN with FYLUHC=0
+      IF (IFKIN.EQ.0 .OR. IFKIN.GT.LROWS(JFKIN)) GOTO 900
+C
+C - IF not a valid LUND history code THEN RETURN with FYLUHC=0
+      IF (IHCOD(IFKIN) .EQ. 0) GOTO 900
+C
+C - Loop over all history codes which are .ne. 0 to find the
+C   daughters of track# IFKIN
+      DO 10 I=1,LROWS(JFKIN)
+         IF (IHCOD(I) .EQ. 0) GOTO 10
+         IF (MOTHER(I).EQ.IFKIN) THEN
+            NDAU = NDAU + 1
+            IF (NDAU.LE.MXDAU) LUDAU(NDAU) = I
+         ENDIF
+ 10   CONTINUE
+C
+ 900  FYLUHC = NDAU
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

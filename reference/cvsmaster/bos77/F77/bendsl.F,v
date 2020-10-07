@@ -1,0 +1,88 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.48.03;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.11;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.12;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE BENDSL(LUN,NRCPTR,JWREC)
+#include "boscom.h"
+      INTEGER JWREC(*)
+*     internal routine to handle select output
+*     to be called after new input
+      IF(LUN.NE.LUNDAT) GOTO 100
+      NRUN=0
+      NEVT=0
+      NPTR=NRCPTR
+      IF(NPTR.EQ.0) GOTO 100
+      DO 20 ITRY=1,2
+         DO 10 I=1,NRE
+            IF(JWREC(1).NE.NAMERE(I)) GOTO 10
+            IF(ITRY.EQ.1) THEN
+              IF(JWREC(2).NE.NUMMRE(I)) GOTO 10
+            ENDIF
+            NRUN=JWREC(4+IRUNRE(I))
+            NEVT=JWREC(4+IEVTRE(I))
+            GOTO 100
+   10    CONTINUE
+   20 CONTINUE
+  100 RETURN
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK bendsl
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

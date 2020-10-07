@@ -1,0 +1,64 @@
+#!/bin/csh
+# ========================================================
+#                   cardaf             from W.Wiedenmann
+# =======================================================
+# 941004 - cardaf1.0                   flr
+# 970213 - cardaf1.1                   flr
+# rmove extension .exe from chkcrd and cardaf
+# =======================================================
+set usage='---> Usage: '$0' card_file [input_database]'
+set exec_name = "cardaf1.1"
+set nar = $#argv
+if (nar != 0) then
+  if ($argv[${nar}] == "-v") then
+     set echo on
+     echo "${exec_name}"
+     set argv[${nar}] = ""
+     @ nar = ${nar} - 1  
+  endif
+endif
+#*******>
+
+set BIN = "${ALEPH}/bin"
+
+#--- card_file
+if ("$1" == "") then
+   echo "$usage"
+   exit
+endif
+set cr_fil=$1
+#
+# check card_file 
+cp $cr_fil fort.7
+cp $cr_fil ftn07
+${BIN}/chkcrd
+if ( $status != 0 ) goto exit
+rm fort.7 ftn07
+#
+#--- data base
+set db_fil=`grep "FDBA" $cr_fil | cut -f2 -d"'"|cut -f1 -d"|"`
+#
+if ("$2" == "") then
+   cp -i $ADBSTEST $db_fil
+   echo $0 'copy' $ADBSTEST '--->' $db_fil  
+else
+   cp -i $2 $db_fil
+   echo $0 'copy' $2 '--->' $db_fil  
+endif
+#
+#--- set environment variables
+#
+setenv CARDAFCARDS $1
+#
+#--- run
+#
+${BIN}/cardaf
+#
+unsetenv CARDAFCARDS
+#
+date 
+#
+exit:
+exit
+
+

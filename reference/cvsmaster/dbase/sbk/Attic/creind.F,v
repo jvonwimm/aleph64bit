@@ -1,0 +1,198 @@
+head	1.2;
+access;
+symbols
+	dbase02:1.1.1.1
+	dbase01:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.02.14.16.11.29;	author flr;	state dead;
+branches;
+next	1.1;
+
+1.1
+date	97.02.12.10.06.09;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.02.12.10.06.09;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@move subroutine in subr andprograms in prog sbk becomes empty
+@
+text
+@      PROGRAM CREIND
+C-----------------------------------------------------------------------
+C!    A primer program to be executed at every change of the file:
+CKEY CREATE INDEX
+C!    Author: A. McSporran    19/8/88
+C!
+C!    DOC:SBANK.LBF
+C!
+C!    Other file(s) referenced : DOC:ALL.ASSIGN
+C!
+C!    so as to create the file:
+C!
+C!    DOC:SBANK.ADR
+C!
+C!    Which contains information of :
+C!                BANK NAME
+C!                SHORT DESCRIPTION OF BANK
+C!                POSITION OF FULL BANK DESCRIPTION IN SBANK.LBF
+C!                WHERE THE BANK IS BOOKED
+C!                WHERE THE BANK IS REFERENCED
+C!
+C!    Algorithm
+C!    =========
+C?
+C?    Repeat
+C?        Open LBF file;
+C?        Repeat
+C?            Read line;
+C?        Until line contains bank name;
+C?        Put bank name in BANK_NAME_ARRAY;
+C?        Put file position in INDEX_ARRAY;
+C?        Read short description of bank from file;
+C?        Format description;
+C?        Put description in DESCRIPTION_ARRAY;
+C?    Until end of file reached;
+C?    Sort Arrays into alphabetical order based on bank names;
+C?    Call STBOOK to assign BOOKED_ARRAY;
+C?    Call STREFER to assign REFERENCED_ARRAY;
+C?    open output file;
+C?    For each bank do write all arrays to output file;
+C?    close files;
+C?    end.
+C=======================================================================
+#ifndef DOC
+#include "version.h"
+#include "sbkpar.h"
+#include "sbkloc.h"
+#include "fildat.h"
+      CHARACTER*4 BANK,SEARCH
+      CHARACTER*80 BCOM,SPACES
+      LOGICAL FOUND
+      EXTERNAL SPACES,LNBLNK
+C --------------------------------------------------------------------
+C
+      WRITE (LOUT,*) ' CREATE_INDEX version ',IVERS
+C
+C
+#if UNIX
+#include "gtaldoc.h"
+      OPEN (UNIT=LINP,FILE=ALDOCC(:ILDOCC)//'/sbank.lbf',STATUS='OLD')
+#else
+      OPEN (UNIT=LINP,FILE='DOC:SBANK.LBF',STATUS='OLD',READONLY)
+#endif
+C
+      LINCNT=0                                        ! Line counter.
+      IARCNT=0                                        ! No. banks found.
+C
+   10 READ(LINP,'(A)',END=17) INPLIN
+      LINCNT=LINCNT+1
+C
+C - find line where bankname is given (form " | NAME | ... ")
+      IF(INPLIN(2:2).EQ.'|')THEN
+      BANK=INPLIN(4:7)
+C
+C - set up the short descriptor line of bank name and short text
+      BCOM=BANK//': '//INPLIN(10:80)
+      READ(LINP,'(A)',END=17) INPLIN
+      BCOM=BCOM(1:LNBLNK(BCOM))//INPLIN(10:80)
+      READ(LINP,'(A)',END=17) INPLIN
+      BCOM=BCOM(1:LNBLNK(BCOM))//INPLIN(10:80)
+      IF (IARCNT.GE.NBNK) THEN
+         WRITE(LOUT,*)' Too many bank names: increase NBNK in SBKPAR'
+         CALL EXIT
+      ENDIF
+      IARCNT=IARCNT+1
+      NAMARR(IARCNT)=BANK           ! Aray of all BANK names.
+      IADARR(IARCNT)=LINCNT         ! Array of position within LBF.
+      COMLIN(IARCNT)=SPACES(BCOM,1) ! Short descriptor array.
+      LINCNT=LINCNT+2
+      ENDIF
+      GOTO 10
+C
+   17 CLOSE (LINP)
+      IADARR(0)=IARCNT
+C
+C - sort array into alphabetical and use to rearrange the remaining
+C   arrays
+      WRITE (6,*) ' [Sorting Banks...]'
+      CALL SORCHA(COMLIN,1,4,IARCNT,1)
+      DO 18 I=1,IARCNT
+        SEARCH=COMLIN(I)(1:4)
+        FOUND=.FALSE.
+        J=I-1
+C-     selection sort algorithm
+   19   J=J+1
+        IF (NAMARR(J).EQ.SEARCH) THEN
+          BANK=NAMARR(I)
+          NAMARR(I)=NAMARR(J)
+          NAMARR(J)=BANK
+          K=IADARR(I)
+          IADARR(I)=IADARR(J)
+          IADARR(J)=K
+          FOUND=.TRUE.
+        ENDIF
+        IF (J.LT.IARCNT.AND..NOT.FOUND) GOTO 19
+        IF (NAMARR(I).NE.SEARCH) THEN
+          WRITE (6,*) 'Error with bank ',SEARCH
+          STOP
+        ENDIF
+   18 CONTINUE
+C
+      WRITE (6,*) ' [Checking for when booked...]'
+      CALL STBOOK(IARCNT)
+      WRITE (6,*) ' [Checking for when referenced...]'
+      CALL STREFER(IARCNT)
+C
+      WRITE (6,*) ' [Writing to file...]'
+#if UNIX
+      OPEN (UNIT=LINP2,FILE=ALDOCC(:ILDOCC)//'/sbank.adr',STATUS='NEW')
+#else
+      OPEN (UNIT=LINP2,FILE='DOC:SBANK.ADR',STATUS='NEW')
+#endif
+      WRITE (LINP2,'(I5)') IARCNT
+      DO 20 I=1,IARCNT
+        WRITE (LINP2,'(3I5,2A)') IADARR(I),NUMBKD(I),NUMREF(I),
+     &                           NAMARR(I),COMLIN(I)
+        DO 30 J=1,NUMBKD(I)
+   30   WRITE (LINP2,'(A)') BKDLIN(I,J)
+        DO 35 J=1,NUMREF(I)
+   35   WRITE (LINP2,'(A)') REFLIN(I,J)
+C
+   20 CONTINUE
+      CLOSE (LINP2)
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@@
+
+
+1.1.1.1
+log
+@1st release of dbase library
+@
+text
+@@

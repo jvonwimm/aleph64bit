@@ -1,0 +1,170 @@
+head	1.3;
+access;
+symbols
+	mini202_9:1.3
+	mini202_8:1.3
+	mini202_7:1.3
+	mini202_6:1.3
+	mini202_5:1.3
+	mini202_4:1.3
+	mini202_2:1.3
+	mini202_1:1.3
+	mini202:1.2
+	mini201_1:1.2
+	mini104_1:1.2
+	mini103_1:1.2
+	mini102_7:1.2
+	mini102_5:1.2
+	mini102_4:1.2
+	mini102_3:1.2
+	mini102_2:1.2
+	mini102_1:1.2
+	mini102:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	98.10.27.11.48.41;	author jachol;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.08.15.12.59.33;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.08.15.11.09.39;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.08.15.11.09.40;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE MINADD
+C
+CKEY MDST /INTERNAL
+C-----------------------------------------------------------------------
+C! Add other requested banks to Mini-DST list.
+C
+C     Author: Stephen Haywood      15-Mar-90
+C     Modify: Stephen Haywood      08-Jun-90   v 3.0
+C
+C     Input  : MINA data card
+C     Output : Extra names in MLISTE in / MINCOM /
+C
+C     Called by MINDST
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+#include "mincom.h"
+C
+      PARAMETER (MAX=100)
+      CHARACTER*800 CLIST
+      CHARACTER*4 ALIST,BANK,NLIST,CHAINT
+      LOGICAL FIRST,NONE
+      DIMENSION ALIST(MAX)
+      SAVE FIRST,NONE,NADDE,ALIST
+      DATA FIRST,NONE,NADDE / .TRUE.,.FALSE.,0 /
+C
+      IF(NONE) RETURN
+C
+C++   Initialisation.
+C
+      IF(FIRST) THEN
+         FIRST = .FALSE.
+C
+C++      See if there are banks to be added on MINA card.
+C
+         KMINA = IW(NAMIND('MINA'))
+         IF(KMINA.LE.0 .OR. IW(KMINA).LE.0) THEN
+            NONE = .TRUE.
+            RETURN
+         ENDIF
+         NADD = IW(KMINA)
+         IF(NADD.GT.MAX) THEN
+            WRITE(IW(6),*)' MINADD: Cannot add more than',
+     &      MAX,' banks with MINA card'
+            NADD = MAX
+         ENDIF
+C
+C++      Identify run banks on 'C' list and set up.
+C
+         CLIST = ' '
+         DO 10 I=1,200
+            BANK = NLIST(IW,I,'C')
+            IF(BANK.EQ.' ') GOTO 15
+            CLIST(4*I-3:4*I) = BANK
+   10    CONTINUE
+   15    CONTINUE
+C
+C++      Loop over banks to be added, and store as lists.
+C
+         DO 20 I=1,NADD
+            BANK = CHAINT(IW(KMINA+I))
+            IF(INDEX(CLIST,BANK).GT.0) THEN
+               LAST = LNBLNK(MLISTR)
+               MLISTR(LAST+1:LAST+4) = BANK
+            ELSE
+               NADDE = NADDE + 1
+               ALIST(NADDE) = CHAINT(IW(KMINA+I))
+            ENDIF
+   20    CONTINUE
+      ENDIF
+C
+C++   Add banks to Mini-DST list.
+C
+      DO 100 I=1,NADDE
+  100 IF(IW(NAMIND(ALIST(I))).GT.0) CALL MINLIS(ALIST(I))
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@ add version.* change WRITE stament
+@
+text
+@d64 1
+a64 1
+               LAST = LENOCC(MLISTR)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d44 2
+a45 2
+            WRITE(IW(6),'(//'' MINADD: Cannot add more than'',I3,
+     &        '' banks with MINA card''//)') MAX
+@
+
+
+1.1.1.1
+log
+@1st release of mini under cvs
+@
+text
+@@

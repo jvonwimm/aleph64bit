@@ -1,0 +1,160 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.41.31;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.41.32;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE CLAS278 (KLASW)
+C ---------------------------------------------------------------------
+C! Set Lepton Tagging bits 27 and 28 in REVH class-word
+C - M.N Minard   28-Nov-1994
+CKEY EDIR
+C - Output : KLASW / I = updated REVH class word
+C     Bit 27 = Electron selection (Rt>-3, -3<Rl<3))
+C     Bit 28 = Muon selection ( QMUIDO flag 13 or 14 )
+C  Called from QFLEPT
+C ---------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "revhjj.h"
+#include "pdltjj.h"
+      INTEGER KLASW
+      DATA NAREVH,NAPDLT /2*0/
+#include "bmacro.h"
+C ---------------------------------------------------------------------
+      IF (NAREVH.EQ.0) THEN
+         NAREVH = NAMIND('REVH')
+         NAPDLT = NAMIND('PDLT')
+      ENDIF
+C
+      KREVH = IW(NAREVH)
+      IF ( KREVH.NE.0) THEN
+        IF (LCOLS(KREVH).GE.JREVEC) THEN
+C
+C - get existing class word
+          KLASW = ITABL(KREVH,1,JREVEC)
+C
+C - Look to lepton bank content
+          KPDLT = IW(NAPDLT)
+          IF ( KPDLT.GT.0) THEN
+            NLMU = 0
+            NLEL = 0
+            DO IK = 1,LROWS(KPDLT)
+              ITYP = ITABL(KPDLT,IK,JPDLPA)
+              IF (MOD(ITYP,10).EQ.2.OR.MOD(ITYP,10).EQ.3) NLEL = NLEL+1
+              IF (MOD(ITYP,10).EQ.5.OR.MOD(ITYP,10).EQ.6) NLMU = NLMU+1
+            ENDDO
+            IF ( NLEL.GT.0) KLASW = IBSET (KLASW,27)
+            IF ( NLMU.GT.0) KLASW = IBSET (KLASW,28)
+          ENDIF
+C
+C - Update REVH Bank
+          IW(KREVH+LMHLEN+JREVEC) = KLASW
+        ENDIF
+      ENDIF
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

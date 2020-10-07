@@ -1,0 +1,167 @@
+#! /bin/csh
+#============================================================================
+#                             export
+#                                                       F.Ranjard
+#============================================================================
+# procedure to export a given version of a given library from CVSROOT
+# to ALROOT
+# and to compile it on SHIFT9, CSF and SAGA making a library
+#============================================================================
+# call "cvs export" to get a new source file on ALROOT/sourcexxx
+# send a batch job "newlib" on various machines to compile and make the library.
+#============================================================================
+# P1 -> prog_name i.e: alephlib
+# P2 -> cycle     i.e.: 154
+# P3 -> tag       i.e.: v154 (if not given the tag is built from the mnemonic
+#                             stored in script_dir/alib.dir and the cycle no.)
+# P4 -> idir      i.e.: kin  (used only when the prog_name is not known from
+#                             script_dir/alib.dir)
+# when the prog_name is not part of script_dir all arguments must be given,
+# and the mnemonic is assumed to be the prog_name.
+#============================================================================
+# 960411 - export1.0
+#===========================================================================
+#include "~/flr/bin/verbflr.h"
+#
+set exec_name = "export1.0"
+set verbflr = ""
+set nar = $#argv
+if (${nar} != 0) then
+  if ($argv[${nar}] == "-v") then
+     echo "${exec_name}"
+     set verbflr = "-v" 
+     set echo on
+     set argv[${nar}] = ""
+     @ nar = ${nar} - 1
+  endif
+endif
+#
+unset noclobber
+set script_dir = "${ALEPH}/script"
+set alib_dir = "${script_dir}/alib.dir"
+set flag = "OK"
+ 
+# =====================================================================
+#
+#------> get program name from 1st argument
+#
+if ($1 == "") then
+  echo -n "Enter Aleph program name [eg:alephlib <CR>=exit]-> "
+   set prog_name = $<
+   if (${prog_name} == "") goto exec_end
+else
+   set prog_name = $1
+endif
+#
+#-------> get version number from 2nd argument
+#
+if ($2 == "") then
+   set string_cr = "<CR>=exit"
+   echo -n "Enter version number[${string_cr}]-> "
+   set cycle = $<
+   if (${cycle} == "") goto exec_end
+else
+   set cycle = $2
+endif
+# 
+#-------> get idir, mnemonic and src_dir 
+#
+if (-e ${alib_dir}) then
+# - idir -
+   if ($4 != "") then
+      set idir = $4
+   else 
+      set idir = `egrep ^" ${prog_name} " ${alib_dir} | awk '{print $2}'`
+      if (${idir} == "") then
+         set string_cr = "<CR>=exit"
+         echo -n "Enter sub-directory where to store library[${string_cr}]-> "
+         set idir = $<
+         if (${idir} == "") goto exec_end
+      endif
+   endif
+# - mnemonic -   
+   set mnemonic = `egrep ^" ${prog_name} " ${alib_dir} | awk '{print $3}'`
+   if (${mnemonic} == "") then
+      set mnemonic = ${prog_name}
+   endif 
+# - src_nam-
+   set src_nam  = `egrep ^" ${prog_name} " ${alib_dir} | awk '{print $4}'`
+   if (${src_nam} == "") then
+      set src_nam = ${mnemonic}${cycle}
+   endif
+else
+   set flag = "${alib_dir} does not exist - STOP"
+   goto exec_end
+endif 
+#
+#-------> get tag from 3rd argument or from mnemonic and cycle no.
+#
+if ($3 != "") then
+   set tag = $3
+else
+   set tag = ${mnemonic}${cycle}
+endif
+#
+#-------> set prog_dir and src_dir
+#
+set prog_dir = "${ALEPH_ROOT}/${OS}/${idir}"
+set src_dir  = "${ALROOT}/${src_nam}"
+    
+#
+# ===============================================================================
+#
+#------> get a new source from CVSROOT
+#
+cd ${ALROOT}
+if (-d ${src_nam}) then
+   rm -r ${src_nam}
+endif
+cvs export -r ${tag} -d ${src_dir} ${prog_name}
+#
+# =====================================================================
+#          compile and make a library on various unix platforms
+# =====================================================================
+#
+cd ${src_dir}
+set batch = "${src_dir}/${tag}"
+#  
+# build the file ${batch}.job
+echo '#@$-s /bin/csh' > ${batch}.job
+echo '#@$-eo' >> ${batch}.job
+echo '#@$-lt 1000' >> ${batch}.job
+echo '#@$-r '"${tag}_${HOST}" >> ${batch}.job
+echo '#@$-mu '"${USER}" >>  ${batch}.job
+echo '#@$-me' >>  ${batch}.job
+echo "time ${script_dir}/maklib < ${batch}.input" >> ${batch}.job
+echo 'exec_end:' >> ${batch}.job
+echo 'exit' >> ${batch}.job
+#
+# build the file ${batch}.input
+echo "${prog_name}" > ${batch}.input
+echo "${cycle}" >> ${batch}.input
+echo "${verbflr}" >> ${batch}.input 
+#
+
+if ( ${SERVICE} == "AFAL" || ${SERVICE} == "SHIFTALEPH" || ${SERVICE} == "SAGA" || \
+     ${SERVICE} == "CSF" ) then
+### submit the job in batch to build libraries
+   unalias qsub
+   qsub -h shift9 ${batch}.job
+   qsub -h saga ${batch}.job
+   qsub -h csf -q cpqS ${batch}.job
+else
+### build libraries interactively
+   chmod +x ${batch}.job
+   ${batch}.job
+endif
+#
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> spy
+spy:
+#*******> spy
+echo `date` " END of ${exec_name} ${OS} ${user} ${prog_name} ${cycle} ${flag}" >> ${prog_dir}/spy
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> exec_end
+exec_end:
+ exit
+ 

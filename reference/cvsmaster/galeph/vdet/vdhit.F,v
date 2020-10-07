@@ -1,0 +1,279 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gta302:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.08.24.09.37.49;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.54;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.55;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@galeph 303/gustep: call vdhite (G.Taylor), add a modified version of geaant/gdray
+introduce vdet94
+@
+text
+@*DK   vdhit
+      SUBROUTINE VDHIT
+C-----------------------------------------------------------------------
+C! Compute hits for VDET
+CKEY VDET DIGITIZE
+C!
+C!
+C!  Author         F.Forti        12/6/86
+C!  Modified       G.Triggiani    02/02/88
+C!                 F.Ranjard      30/05/90
+C!                 A. Bonissent   15/02/94
+C!                                Suppress usage of work bank
+C!                 G.Taylor       1/08/95
+C!                                use GEANT to treat landau
+C!                                fluctuations inside the VDET
+C!
+C!  Description
+C!  ===========
+C!  When control is given to this routine, data from the
+C!  common block TRKCOM are use to accumulate hit information in
+C!  VDSS bank
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+      SAVE NAVDSS
+      SAVE ENER
+C
+      PARAMETER (NVDSS = 1200)
+C
+#include "jobcom.h"
+#include "bcs.h"
+#include "vdssjj.h"
+#include "trkcom.h"
+#include "iocom.h"
+      INTEGER VIFACI
+      EXTERNAL CHAINT
+      CHARACTER*4 CHAINT
+      LOGICAL FIRST
+      DATA FIRST /.TRUE./
+#include "bmacro.h"
+      IF(FIRST)THEN
+        FIRST=.FALSE.
+        NAVDSS = NAMIND('VDSS')
+      ENDIF
+C
+C? If it is a new event drop VDSS and create new one
+C
+      IF (FBEGJO(1)) THEN
+        FBEGJO(1) = .FALSE.
+C           Create bank
+        NDATA = LMHLEN + LVDSSA*NVDSS
+        CALL ALBOS('VDSS',0,NDATA,KVDSS,IGARB)
+        IW(KVDSS+LMHCOL) = LVDSSA
+        IW(KVDSS+LMHROW) = 0
+C add bank to T list so that it is removed between events
+        CALL BLIST(IW,'T+','VDSS')
+        IF (FDEBJO.AND.ICVDJO(6).NE.0) WRITE(LOUTIO,8000)
+ 8000   FORMAT(/' +++VDHIT +++ New event. VDSS bank created')
+      ENDIF
+C
+C? Process track element.
+C
+C        Check for first,intermediate and last steps inside volume.
+C
+C? If enter volume for the first time
+C           Check that there is enough space in bank
+C           If not increase bank size
+C
+      KVDSS = IW(NAVDSS)
+      IF (ITRKEL(8).EQ.1) THEN
+        IF (LFRROW(KVDSS).LT.1) THEN
+          NDATA = IW(KVDSS) + NVDSS*LVDSSA
+          CALL ALBOS('VDSS',0,NDATA,KVDSS,IGARB)
+        ENDIF
+C
+        ENER = 0.
+C
+C           Calculate layer number, phi coord, zed coord.
+C
+        ISLOT = ITRKEL(10)
+        IBID = VIFACI(ISLOT,NLAY,NPHI)
+C
+C              Store ENTRY point
+C
+        KLINE = KNEXT(KVDSS)
+        IW(KLINE + JVDSTN) = ITRKEL(1)
+C
+C this particle is a delta ray or other non primary track
+C store its track number as 0 to indicate this
+C
+        IF(ITRKEL(2).NE.0) IW(KLINE + JVDSTN) = 0
+        IW(KLINE + JVDSLN) = NLAY
+        IW(KLINE + JVDSPN) = NPHI
+        IW(KLINE + JVDSRN) = 0
+        IW(KLINE + JVDSES) = 0
+        RW(KLINE + JVDSXE) = TRKELE(1)
+        RW(KLINE + JVDSYE) = TRKELE(2)
+        RW(KLINE + JVDSZE) = TRKELE(3)
+        IF(FDEBJO.AND.ICVDJO(6).NE.0) WRITE(LOUTIO,810) LROWS(KVDSS)+1
+  810   FORMAT(' +++VDHIT +++ First step. Hit number= ',I5 )
+C
+C? IF intermediate step accumulate energy release
+C
+      ELSEIF (ITRKEL(8).EQ.0 .AND. ITRKEL(9).EQ.0) THEN
+        ENER = ENER + TRKELE(12)
+        IF (FDEBJO.AND.ICVDJO(6).NE.0) WRITE(LOUTIO,8100) ENER
+ 8100   FORMAT(' +++VDHIT +++ Intermediate step. ENERGY= ',G8.3)
+C
+C? IF enter volume for the last time store the exit point
+C
+      ELSEIF (ITRKEL(8).EQ.2 .OR. ITRKEL(9).GT.0) THEN
+        KLINE = KNEXT(KVDSS)
+        RW(KLINE + JVDSXL) = TRKNXT(1)
+        RW(KLINE + JVDSYL) = TRKNXT(2)
+        RW(KLINE + JVDSZL) = TRKNXT(3)
+        RW(KLINE + JVDSER) = ENER + TRKELE(12)
+C
+C if the track ends in this volume set the end segment flag
+C
+        IF(ITRKEL(9).GT.0) IW(KLINE + JVDSES) = 1
+        IF (RW(KLINE+JVDSER).GT.0.) IW(KVDSS+LMHROW) = LROWS(KVDSS) + 1
+        IF(FDEBJO.AND.ICVDJO(6).NE.0)
+     &    WRITE(LOUTIO,8120) RW(KVDSS+JVDSER)
+ 8120   FORMAT(' +++VDHIT +++ Last step in volume. ENER= ',G8.3)
+      ENDIF
+      RETURN
+      END
+
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d13 3
+d21 1
+a21 1
+C!  VDHT bank
+d25 4
+a28 1
+      SAVE NAVDHT
+a29 1
+      PARAMETER (NVDHT = 1200)
+d32 1
+a32 1
+#include "vdhtjj.h"
+d43 1
+a43 1
+        NAVDHT = NAMIND('VDHT')
+d46 1
+a46 1
+C? If it is a new event drop VDHT and create new one
+a49 2
+C           Drop old hits bank
+        CALL BDROP(IW,'VDHT')
+d51 6
+a56 8
+        NDATA = LMHLEN + LVDHTA*NVDHT
+        CALL ALBOS('VDHT',0,NDATA,KVDHT,IGARB)
+C
+C?       Add 'VDHT' bank to the 'E' list
+C
+      CALL BLIST(IW,'E+','VDHT')
+        IW(KVDHT+LMHCOL) = LVDHTA
+        IW(KVDHT+LMHROW) = 0
+d58 1
+a58 1
+ 8000   FORMAT(/' +++VDHIT +++ New event. VDHT bank created')
+d69 1
+a69 1
+      KVDHT = IW(NAVDHT)
+d71 3
+a73 3
+        IF (LFRROW(KVDHT).LT.1) THEN
+          NDATA = IW(KVDHT) + NVDHT*LVDHTA
+          CALL ALBOS('VDHT',0,NDATA,KVDHT,IGARB)
+d85 15
+a99 8
+        KLINE = KNEXT(KVDHT)
+        IW(KLINE + JVDHTN) = ITRKEL(1)
+        IW(KLINE + JVDHLN) = NLAY
+        IW(KLINE + JVDHPN) = NPHI
+        RW(KLINE + JVDHXE) = TRKELE(1)
+        RW(KLINE + JVDHYE) = TRKELE(2)
+        RW(KLINE + JVDHZE) = TRKELE(3)
+        IF(FDEBJO.AND.ICVDJO(6).NE.0) WRITE(LOUTIO,810) LROWS(KVDHT)+1
+d112 12
+a123 7
+        KLINE = KNEXT(KVDHT)
+        RW(KLINE + JVDHXL) = TRKNXT(1)
+        RW(KLINE + JVDHYL) = TRKNXT(2)
+        RW(KLINE + JVDHZL) = TRKNXT(3)
+        RW(KLINE + JVDHER) = ENER + TRKELE(12)
+        IF (RW(KLINE+JVDHER).GT.0.) IW(KVDHT+LMHROW) = LROWS(KVDHT) + 1
+        IF(FDEBJO.AND.ICVDJO(6).NE.0) WRITE(LOUTIO,8120) RW(KVDHT+10)
+d128 1
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

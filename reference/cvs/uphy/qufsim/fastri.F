@@ -1,0 +1,70 @@
+      SUBROUTINE FASTRI(IOK)
+C----------------------------------------------------------------
+C  Fast simulation of the trigger  -- G. Ganis
+C
+C  Modifications:
+C    o Patrick Janot -- 21 Oct 1993
+C       Make it work ! Lund Function PLU is pointing to /LUJETS/
+C       while particles were stored in CUTRIG !!! First Try.
+C
+C----------------------------------------------------------------
+#include "parcut.h"
+#include "qcde.h"
+#include "qhac.h"
+#include "lundcom.h"
+      INTEGER QKLUND
+      EXTERNAL QKLUND
+#include "qmacro.h"
+C
+      iok= 0
+      n7lu = 0
+C -- Photons
+      itk = KPDIR(prnam(3),kreco)
+10    IF ( itk .EQ. 0 ) GOTO 11
+      n7lu         = n7lu+1
+      KCUP(n7lu)   = 1
+      k7lu(n7lu,1) = 0
+      k7lu(n7lu,2) = QKLUND(KTPCOD(ITK))
+      p7lu(n7lu,1) = QX(ITK)
+      p7lu(n7lu,2) = QY(ITK)
+      p7lu(n7lu,3) = QZ(ITK)
+      p7lu(n7lu,4) = QE(ITK)
+      p7lu(n7lu,5) = 0.
+      itk = KFOLLO(itk)
+      GOTO 10
+11    CONTINUE
+C -- Hadrons
+      ITK= KPDIR(prnam(4),kreco)
+20    IF(ITK.EQ.0) GOTO 21
+      n7lu         = n7lu+1
+      KCUP(n7lu)   = 2
+      k7lu(n7lu,1) = 0
+      k7lu(n7lu,2) = QKLUND(KTPCOD(ITK))
+      p7lu(n7lu,1) = QX(ITK)
+      p7lu(n7lu,2) = QY(ITK)
+      p7lu(n7lu,3) = QZ(ITK)
+      p7lu(n7lu,4) = QE(ITK)
+      p7lu(n7lu,5) = QM(ITK)
+      itk = KFOLLO(itk)
+      GOTO 20
+21    CONTINUE
+C -- Charged tracks
+      ITK= KPDIR(prnam(1),kreco)
+30    IF ( itk .EQ. 0) GOTO 31
+      n7lu         = n7lu+1
+      KCUP(n7lu)   = 3
+      k7lu(n7lu,1) = 0
+      k7lu(n7lu,2) = QKLUND(KTPCOD(ITK))
+      p7lu(n7lu,1) = QX(ITK)
+      p7lu(n7lu,2) = QY(ITK)
+      p7lu(n7lu,3) = QZ(ITK)
+      p7lu(n7lu,4) = QE(ITK)
+      p7lu(n7lu,5) = QM(ITK)
+      itk = KFOLLO(itk)
+      GOTO 30
+31    CONTINUE
+C
+      CALL trigger(iok)
+C
+      RETURN
+      END

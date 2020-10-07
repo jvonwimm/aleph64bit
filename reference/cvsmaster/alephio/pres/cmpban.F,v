@@ -1,0 +1,491 @@
+head	1.5;
+access;
+symbols
+	alio83:1.5
+	alio82:1.5
+	alio81:1.5
+	alio80:1.5
+	alio74:1.5
+	alio73:1.5
+	alio72:1.5
+	alio71:1.5
+	alio70:1.5
+	alio68:1.5
+	alio69:1.5
+	alio67:1.4
+	alio66:1.4
+	alio65:1.4
+	alio64:1.4
+	alio63:1.4
+	alio62:1.4
+	alio61:1.4
+	alio60:1.4
+	alephio53:1.3
+	v4:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.5
+date	97.01.16.13.55.59;	author flr;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.05.03.14.46.52;	author flr;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.03.13.15.01.53;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.01.18.13.52.22;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.52.41;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.52.42;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.5
+log
+@alephio68 introduce ALEPH_LINUX flag
+@
+text
+@      INTEGER FUNCTION CMPBAN(IB,INFS,NCC)
+C-----------------------------------------------------------------------
+C!    Compress all banks with a given name.
+C!    on DECS: write non-compressed float numbers in VAX format
+CKEY PRESS CMPBAN COMPRESS /INTERNAL
+C!
+C!    AUTHOR: D.Harvatis    MAR 89
+C!
+C!    INPUT :
+C!           - IB      : index of the bank in the INDEXW array
+C!           - INFS    : information block size
+C!           - NCC     : number of compressible columns
+C!
+C!    RETURN VALUE     : -1  no banks were compressed
+C!                        0  some banks were compressed
+C!                       +1  all banks were compressed
+C!
+C-----------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+      CHARACTER*4 BNAME,BNAM2,HOST,CHAINT
+      EQUIVALENCE (BNAME,IBNAM)
+      EQUIVALENCE (BNAM2,IBNA2)
+      EQUIVALENCE (HOST,IHOST)
+      DOUBLE PRECISION    GAP,RLOW,RHI
+#include "bcs.h"
+#include "cmpinf.h"
+      PARAMETER   (MAXROW=10000)
+      INTEGER     IARR(MAXROW),JARR(MAXROW)
+      DATA IFI /0/
+C-----------------------------------------------------------------------
+      IF (IFI.EQ.0) THEN
+         IFI=1
+#include "ctolow.h"
+#include "cmphost.h"
+      ENDIF
+C     Number Of Banks
+      NOB=0
+C     Number of Compressed Banks
+      NCB=0
+C     Number of Columns as in Database
+      NCI=IW(INDEXW(IB))/2
+      IBNAM=IW(INDEXW(IB)-3)
+      NAMI=NAMIND(BNAME)
+      INEXT=IW(NAMI)
+C     loop through all banks named BNAME
+   10     IND=INEXT
+          IF (IND.EQ.0) GO TO 99
+          INEXT=IW(IND-1)
+          NOB=NOB+1
+          NC=IW(IND+1)
+C         check if actual number of columns matches Database info
+          IF (NCI.NE.NC) GO TO 10
+C         NSIZ is the original bank size
+          NSIZ=IW(IND)
+C         check if it is worth to compress it
+          IF (NSIZ.LE.(INFS+MINGAI)) GO TO 10
+          NROW=IW(IND+2)
+C         check if IARR and JARR arrays are big enough
+          IF (NROW.GT.MAXROW) GO TO 10
+C         estimate the compressed bank size, it should be
+C         at least MINGAI words shorter than the original one.
+          IF ((RATMAX*NCC*NROW-INFS).LT.MINGAI) GO TO 10
+          NR=IW(IND-2)
+          IBNA2=IW(IND-3)+TOLOWER
+C         allocate NSIZ words for the compressed bank
+          IND2=NBANK(BNAM2,NR,NSIZ)
+          IF (IND2.EQ.0) THEN
+C             if NBANK failed do a garbage collection
+C             and reposition pointers
+              CALL BGARB(IW)
+              INEXT=IW(NAMI)
+   11             IND=INEXT
+                  INEXT=IW(IND-1)
+                  IF (IW(IND-2).NE.NR) GO TO 11
+              IND2=NBANK(BNAM2,NR,NSIZ)
+C             if it fails again skip this bank
+              IF (IND2.EQ.0) GO TO 10
+          END IF
+C         maximum size of the compressed bank is NSIZ-6
+C         so that when we resize the bank BOS won't have to copy it
+C         in a new position
+          IEND=IND2+NSIZ-6
+          IW(IND2+1)=NC
+          IW(IND2+2)=NROW
+C         mark ID of the computer
+          IW(IND2+3)=IHOST
+C         IN2 points to next data word to be written in compressed bank
+          IN2=IND2+INFS+1
+C         INF2 points to next information word to be written
+          INF2=IND2+4
+C         loop through every column
+          DO 20 IC=1,NC
+              ITYPE=IW(INDEXW(IB)+2*IC-1)
+              FACT=RW(INDEXW(IB)+2*IC)
+C             IN1 points to next data word to be read from original bank
+              IN1=IND+2+IC
+              GO TO (101,101,103,104),ITYPE
+C             case real :
+C             find actual range
+  103         RLOW=1.E37
+              RHI=-1.E37
+              DO 113 J1=IN1,IND+NSIZ-NC+IC,NC
+                  IF (RW(J1).GT.RHI) RHI=RW(J1)
+                  IF (RW(J1).LT.RLOW) RLOW=RW(J1)
+  113         CONTINUE
+              RLOW=RLOW*FACT
+              RHI=RHI*FACT
+              GAP=RHI-RLOW
+C             check if actual range is small enough
+C             to fit in a 31 bit integer
+              IF ((GAP.GT.2.147483E9).OR.(RLOW.LT.-2.147483E9).OR.
+     +           (RHI.GT.2.147483E9)) GO TO 101
+C             if not, don't compress
+              ILOW=NINT(RLOW)
+              IGAP=NINT(RHI)-ILOW
+C             find Number of BITS required
+              NBITS=0
+              NNB=0
+  123             NBITS=NBITS+1
+C                 a faster way to find 2**NBITS-1
+                  NNB=2*NNB+1
+              IF (IGAP.GT.NNB) GO TO 123
+C             Number of words the compressed column will take up
+              NW=(NROW*NBITS+31)/32
+C             check that the reserved space is enough
+              IF ((IN2+NW-1).GT.IEND) GOTO 2020
+C             write information block : type, number of bits,
+C             low limit, precision factor.
+              IW(INF2)=3
+              IW(INF2+1)=NBITS
+              IW(INF2+2)=ILOW
+              RW(INF2+3)=FACT
+#if defined(APOLLO) || defined(ALEPH_HP) || defined(RS6K) || defined(ALEPH_SGI)
+              CALL CTOIBM(RW(INF2+3),1,3)
+#endif
+C             increase information pointer
+              INF2=INF2+4
+#if defined(ALEPH_DEC) || defined(ALEPH_LINUX)
+C             use MACRO routine for converting and compressing.
+              CALL CMPBU3(RW(IN1),IW(IN2),NROW,NBITS,NC,ILOW,FACT)
+#else
+C             convert reals into possitive integers and
+C             store in array IARR
+              DO 133 IR=1,NROW
+                  IARR(IR)=NINT(RW(IN1)*FACT)-ILOW
+  133             IN1=IN1+NC
+C             call compression routine.
+C             IARR contains the column data.
+C             compressed data will be placed in array JARR
+              CALL BUNCH(IARR,JARR,NROW,NBITS)
+C             copy JARR in compressed bank
+              DO 143 IR=1,NW
+  143             IW(IN2+IR-1)=JARR(IR)
+#endif
+C             increase data pointer
+              IN2=IN2+NW
+              GO TO 20
+C             case integer :
+C             find actual range
+  104         ILOW=2147483647
+              IHI=-2147483647
+              DO 114 J1=IN1,IND+NSIZ-NC+IC,NC
+                  IF (IW(J1).GT.IHI) IHI=IW(J1)
+                  IF (IW(J1).LT.ILOW) ILOW=IW(J1)
+  114         CONTINUE
+              GAP=DBLE(IHI)-ILOW
+C             check if we can compress
+              IF (GAP.GT.2.147483E9) GO TO 101
+              IGAP=IHI-ILOW
+C             find Number of BITS
+              NBITS=0
+              NNB=0
+  124             NBITS=NBITS+1
+                  NNB=2*NNB+1
+              IF (IGAP.GT.NNB) GO TO 124
+              NW=(NROW*NBITS+31)/32
+              IF ((IN2+NW-1).GT.IEND) GOTO 2020
+C             check if it is a possitive integer that fits
+C             in the same number of bits (type 5)
+              IF ((ILOW.GE.0).AND.(IHI.LE.NNB)) GO TO 105
+C             write information block
+              IW(INF2)=4
+              IW(INF2+1)=NBITS
+              IW(INF2+2)=ILOW
+              INF2=INF2+3
+#if defined(ALEPH_DEC) || defined(ALEPH_LINUX)
+C             use MACRO routine for converting and compressing
+              CALL CMPBU4(RW(IN1),IW(IN2),NROW,NBITS,NC,ILOW)
+#else
+C             convert into possitive integers
+              DO 134 IR=1,NROW
+                  IARR(IR)=IW(IN1)-ILOW
+  134             IN1=IN1+NC
+C             call compression routine.
+C             IARR contains the column data.
+C             compressed data will be placed in array JARR
+              CALL BUNCH(IARR,JARR,NROW,NBITS)
+C             copy JARR into compressed bank
+              DO 144 IR=1,NW
+  144             IW(IN2+IR-1)=JARR(IR)
+#endif
+              IN2=IN2+NW
+              GO TO 20
+C             Type 5 integer (possitive)
+C             write information block
+  105         IW(INF2)=5
+              IW(INF2+1)=NBITS
+              IW(INF2+2)=0
+              INF2=INF2+3
+#if defined(ALEPH_DEC) || defined(ALEPH_LINUX)
+C             use MACRO routine
+              CALL CMPBU5(RW(IN1),IW(IN2),NROW,NBITS,NC)
+#else
+C             no conversion is needed ! just copy into IARR
+              DO 135 IR=1,NROW
+                  IARR(IR)=IW(IN1)
+  135             IN1=IN1+NC
+C             call compression routine.
+C             IARR contains the column data.
+C             compressed data will be placed in array JARR
+              CALL BUNCH(IARR,JARR,NROW,NBITS)
+              DO 145 IR=1,NW
+  145             IW(IN2+IR-1)=JARR(IR)
+#endif
+              IN2=IN2+NW
+              GO TO 20
+C             column can't be compressed
+  101             NW=NROW
+                  IF ((IN2+NW-1).GT.IEND) GO TO 2020
+C                 write information block
+                  IW(INF2)=ITYPE
+                  IF (ITYPE.GT.2) THEN
+C                     for compressible types set NBITS to 0 to mark
+C                     that they were not compressed
+                      IW(INF2+1)=0
+                  END IF
+C                 increase information pointer
+                  INF2=INF2+INFSIZ(ITYPE)
+C                 copy data in compressed bank
+                  IN2XX = IN2
+                  DO 111 IN2=IN2,IN2+NW-1
+                      IW(IN2)=IW(IN1)
+  111                 IN1=IN1+NC
+#if defined(ALEPH_DEC) && defined(UNIX) || defined(ALEPH_LINUX)
+C -- convert DECS floating point format (little-endian IEEE)
+C -- to VAX format
+                  IF (ITYPE .EQ. 2) THEN
+                      CALL SDRSX(RW(IN2XX),NW)
+                  END IF
+#else
+#if defined(APOLLO) || defined(ALEPH_HP) || defined(RS6K) || defined(ALEPH_SGI)
+C                 on the APOLLO convert reals to 32 bit IBM format
+                  IF ((ITYPE.EQ.2).OR.(ITYPE.EQ.3)) THEN
+                      CALL CTOIBM(RW(IN2-NW),NW,3)
+                  END IF
+#endif
+#endif
+   20     CONTINUE
+C         if CHECKS flag is ON add a checksum at the end of each bank
+          IF (CHECKS) THEN
+              CALL CMPSUM(IW(IND+1),NSIZ,IW(IN2))
+              IN2=IN2+1
+          END IF
+C         find compressed bank size
+          NSI2=IN2-1-IND2
+C         change compressed bank size
+          IND2=NBANK(BNAM2,NR,NSI2)
+C         this should never fail as the new size is at least 5 words
+C         smaller than the old one and BOS only has to drop the last
+C         unused words. However if it fails, drop the compressed bank
+C         and keep the old one.
+          IF (IND2.EQ.0) GO TO 2020
+C         increase Number of Compressed Banks
+          NCB=NCB+1
+C         drop old (original) bank
+          IN=NDROP(BNAME,NR)
+C         go for the next one
+          GO TO 10
+C         if compressed bank needs more space than
+C         the original abort the compression, drop compressed bank
+ 2020     IN=NDROP(BNAM2,NR)
+          GO TO 10
+C     no more banks to compress
+   99 IF (NCB.EQ.0) THEN
+C         no banks were compressed
+          CMPBAN=-1
+          RETURN
+      ELSE IF (NCB.LT.NOB) THEN
+C         not all banks were compressed
+          CMPBAN=0
+          RETURN
+      ELSE
+C         all banks were compressed
+          CMPBAN=1
+          RETURN
+      ENDIF
+      END
+#endif
+@
+
+
+1.4
+log
+@replace flag ${VENDOR} with ALEPH_${VENDOR}
+Modified Files:
+  ard/	ainqui.F algtenv.F aopen.F aopenw.F aoperd.F aoptap.F astage.F
+ 	awrtap.F
+  c/	cmpbu3.c cmpbu4.c cmpbu5.c dmpbl3.c dmpbl4.c dmpbl5.c dmpcop.c
+ 	extzv.c insv.c
+  epio/ epinit.F
+  inc/ 	cmphost.h ctolow.h gtchunit.h gtftyp.h
+  io/ 	almach.F openda.F opendb.F opensq.F sdrsx.F sibsdr.F sxsdr.F
+  news/	news.h
+  pres/	cfrvax.F cmpban.F cotest.F dmpban.F dmpchr.F
+@
+text
+@d139 1
+a139 1
+#if defined(ALEPH_DEC)
+d187 1
+a187 1
+#if defined(ALEPH_DEC)
+d211 1
+a211 1
+#if defined(ALEPH_DEC)
+d245 1
+a245 1
+#if defined(ALEPH_DEC) && defined(UNIX)
+@
+
+
+1.3
+log
+@import alephio 52 from historian. Modify aclose.F to NOT call brwnd twice
+for the same file. update version.h to 5.3
+@
+text
+@d134 1
+a134 1
+#if defined(APOLLO) || defined(HP) || defined(RS6K) || defined(SGI)
+d139 1
+a139 1
+#if defined(DEC)
+d187 1
+a187 1
+#if defined(DEC)
+d211 1
+a211 1
+#if defined(DEC)
+d245 1
+a245 1
+#if defined(DEC) && defined(UNIX)
+d252 1
+a252 1
+#if defined(APOLLO) || defined(HP) || defined(RS6K) || defined(SGI)
+@
+
+
+1.2
+log
+@ Modified Files:
+	acdarg.F afilin.F afilou.F ainqui.F amount.F aoptap.F astage.F
+	awrtap.F
+ Modified Files:
+	cmphost.h ctolow.h gtchdecl.h version.h
+ Removed Files:
+	albitw.h
+ Modified Files:
+ 	altell.F babend.F jalrec.F noibm.F opensq.F sdrsx.F sibsdr.F
+	sxsdr.F
+ Modified Files:
+	ardnews.h news.h
+ Modified Files:
+	cfrvax.F cmpban.F cmpdro.F cmpin2.F cmpini.F cmplis.F cmpsum.F
+	cmptoi.F cotest.F detest.F dmpban.F dmpchr.F dmpfmt.F udmper.F
+@
+text
+@d139 1
+a139 1
+#if defined(VAX) || defined(DEC)
+d187 1
+a187 1
+#if defined(VAX) || defined(DEC)
+d211 1
+a211 1
+#if defined(VAX) || defined(DEC)
+d245 1
+a245 1
+#if defined(DEC)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK cmpban
+d4 1
+a4 1
+C!    on DEC: write non-compressed float numbers in VAX format
+d134 1
+a134 1
+#if defined(UNIX) &&  ! defined(DEC)
+d246 1
+a246 1
+C -- convert DEC floating point format (little-endian IEEE)
+d252 1
+a252 1
+#if defined(UNIX) &&  ! defined(DEC)
+@
+
+
+1.1.1.1
+log
+@import alephio 4
+@
+text
+@@

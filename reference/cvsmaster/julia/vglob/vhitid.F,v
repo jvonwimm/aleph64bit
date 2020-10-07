@@ -1,0 +1,121 @@
+head	1.1;
+access;
+symbols
+	jul313_3:1.1
+	jul313_2:1.1
+	jul313_1:1.1
+	jul313:1.1
+	jul312_1:1.1
+	jul312:1.1
+	jul311:1.1
+	jul310_1:1.1
+	jul310:1.1
+	jul309_1:1.1
+	jul309:1.1
+	jul308_6:1.1
+	jul308_5:1.1
+	jul308_4:1.1
+	jul308_3:1.1
+	jul308_2:1.1
+	jul308_1:1.1
+	jul308:1.1
+	jul307_4:1.1
+	jul307_3:1.1
+	jul307_2:1.1
+	jul307_1:1.1
+	jul307:1.1
+	jul306_3:1.1
+	jul306_2:1.1
+	jul306_1:1.1
+	jul306:1.1
+	jul305_4:1.1
+	jul305_3:1.1
+	jul305_2:1.1
+	jul305_1:1.1
+	jul305:1.1
+	jul304_3:1.1
+	jul304_2:1.1
+	jul304_1:1.1
+	jul304:1.1
+	jul303_7:1.1
+	jul303_6:1.1
+	jul303_5:1.1
+	jul303_4:1.1
+	jul303_3:1.1
+	jul303_2_mc1:1.1
+	jul303_2:1.1
+	jul303_1_mc1:1.1
+	jul303_1:1.1
+	jul303:1.1
+	jul303_v:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	97.05.15.15.45.46;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Add vglob
+@
+text
+@      SUBROUTINE VHITID(wafHit, view, hitID)
+C ---------------------------------------------------------------------
+C!Map packed wafer/hit to unique hit ID
+CKEY VGLOB VDET
+C      Paul Rensing   - 28-8-95
+C
+C Given a packed wafer number / hit number (see VHPCK), return a unique
+C     ID for the hit. This is the cluster number within the event, so it
+C     is a reasonable array index.
+C
+C  INPUT:
+C       integer wafHit   - the packed wafer,hit numbers
+C       integer view     - the view ( 1 = Z, 2 = r/phi )
+C OUTPUT:
+C       integer hitID    - hit id
+C ------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+C
+      integer wafHit, view, hitID
+C
+C  Global includes
+C
+#include "bcs.h"
+C
+#include "vdmrjj.h"
+C
+      integer NLINK
+      external NLINK
+C
+      integer wafer, hit, bank, indVDMR
+C
+#include "bmacrod.h"
+#include "bmacro.h"
+C
+      if (wafhit .gt. 0) then
+         call vhuprm(wafHit, view, hit, bank)
+         indVDMR = NLINK('VDMR', bank+view-1)
+         if (indVDMR .le. 0) then
+            call rerror('VHITID', -1, ' VDMR bank is missing')
+            hitID = 0
+            return
+         end if
+         hitID = ITABL(indVDMR, hit, JVDMVD)
+      else
+         hitID = wafhit
+      end if
+C
+      return
+      end
+#endif
+@

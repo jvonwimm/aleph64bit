@@ -1,0 +1,55 @@
+*---   First section : steering ---------------------------------------
+NREFCARD
+*----------------------------------------------------------------------
+DBVSCARD
+*     RUN #    RUN'S TITLE
+RUN   NUMRUN   'KEYWORD PRODUCTION' 
+*     FIRST EVENT    LAST EVENT    TO BE GENERATED
+TRIG     1          NUMEVT
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG
+DEBU  6     /      1          5  
+* requested time left at the end of job (in sec) 
+TIME    120
+* event file (EPIO format)
+* FILO ' test.epio | EPIO '
+*FILO ' KINDATA | EPIO | CART  OUTK7.FSEQ.SL '
+FILOCARD
+*  use RANMAR generator for random numbers
+*  INSEED : first seed (range assigned per institute)
+*  LOSEED : second seed (incremented locally for new runs)
+*     INSEED  LOSEED (1-30000)
+RMAR     RMAR1           RMAR2
+*----------------------------------------------------------------------
+ENDQ
+*---   second section : modifications to Data Base setup
+KCAR 0 / $TEXT
+POFF
+*-----modify here if wanted--------------------------------------------
+*       x        y        z    vertex smearing x y z for yeear at CMSENE GeV
+SVRTCARD
+* IFLAVOR select subprocesses
+* ECMS  Center of mass energy in Gev
+* IPRINT   0=noprintout ,1=PRINTOUT of PART bank , 2= as 1 plus Decay ta
+*     IFLAVOR     ECMS     IPRINT
+GPYT   PYTYPE     CMSENE    1
+*    setup MSUB properly 
+MSUBCARD
+CKINCARD
+PMA3 20433 / 0.054   ! truncation after 54 mev to avoid infinite loops
+MSTJ 28 / 0     ! let's PYTHIA decay the tau's
+*  Tuning from G.Rudolph June 2001 fot Pythia 6.1 
+MSTJ  12  /  2    !  old diquark + popcorn ( ie =3 in JETSET 7.4)
+*   parton shower parameters :
+PARJ 81 / 0.277   ! LAMBDA QCD was .291 in Jetset 7.4
+PARJ 82 / 1.58    ! M min.     was 1.52
+*   flavor-neutral fragmentation parameters  :
+PARJ 21 / 0.372   ! SIGMA MT   was .371
+PARJ 41 / 0.50    ! a          was .4
+PARJ 42 / 0.894   ! B          was .805
+*   Use Standard LUND values for  Epsilon_c,Measured one for Epsilon_b
+*   ( Peterson's fragm. functions params )
+PARJ 55 / -0.0024 ! Epsilon_b  was -0.0035
+*
+GGNOTAGCARD
+*
+END$

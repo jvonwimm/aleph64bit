@@ -1,0 +1,226 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.2
+	aleph304_5:1.2
+	aleph304_4:1.2
+	aleph304_3:1.2
+	aleph304_2:1.2
+	aleph304_1:1.2
+	aleph304:1.2
+	aleph303_3:1.2
+	aleph303_2:1.2
+	aleph303_1_mc1:1.2
+	aleph303_1:1.2
+	aleph303:1.2
+	aleph302_9:1.2
+	aleph302_8:1.2
+	aleph302_7:1.2
+	aleph302_6:1.2
+	aleph302_5:1.2
+	aleph302_4:1.2
+	aleph302_3:1.2
+	aleph302_2:1.2
+	aleph302_1:1.2
+	aleph302:1.2
+	aleph216:1.2
+	aleph215_3:1.2
+	aleph215_2:1.2
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.09.03.13.06.13;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.43.39;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.43.40;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@add missing #ifdef DOCs
+@
+text
+@      SUBROUTINE TCRTOF(FIELD,R,Z,ITK,BNAME,ZC)
+C
+C-----------------------------------------------------------------------
+C! Correct TPC time for time-of-flight
+C
+CKEY TPC,TOF
+C
+C  Author:  R. Johnson     18-01-90
+C  Modified by: F.Ranjard  24-02-92
+C               call TPDVEL to get drift velocity
+C
+C  Input:   FIELD   /F       Magnitude of B-field
+C           R       /F       Coordinate radius
+C           Z       /F       Coordinate z
+C           ITK     /I       Associated track (0 if none yet)
+C           BNAME   /C       Name of track bank (TGFT or FRFT)
+C  Output:  ZC      /F       Corrected z position
+C
+C-----------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "tgftjj.h"
+#include "alcons.h"
+C
+      SAVE
+      CHARACTER BNAME*4
+      DIMENSION S(2),PHE(2),ZE(2),DVA(3),DVB(3)
+      DATA RMPI2/0.019477/
+C
+#include "bmacro.h"
+C----------------------------------------------------------------
+C
+C++   Link to the drift velocity, if not found return without
+C     correction
+C
+      CALL TPDVEL ('POT',DVA,DVB,IRET)
+      IF (IRET.NE.0) GOTO 998
+C
+C++   If there is no associated track, assume a straight flight path
+C++   from the origin and a velocity equal to speed of light
+C
+      IF (ITK.EQ.0) THEN
+        D=SQRT(R**2+Z**2)
+        V=CLGHT
+      ELSE
+        KTGFT=IW(NAMIND(BNAME))
+        IF (KTGFT.EQ.0) THEN
+          D=SQRT(R**2+Z**2)
+          V=CLGHT
+        ELSE
+C
+C++       Don't correct if the track is not coming from near the origin
+C
+          D0=RTABL(KTGFT,ITK,JTGFD0)
+          IF (ABS(D0).GT.8.) goto 998
+C
+C++       Calculate the particle velocity, assuming it is a pion
+C
+          TL= RTABL(KTGFT,ITK,JTGFTL)
+          RI= RTABL(KTGFT,ITK,JTGFIR)
+          IF (RI.NE.0.) THEN
+            RADC=1./RI
+          ELSE
+            RADC=1.E20
+          ENDIF
+          PT=RADC*CLGHT*FIELD/100000.
+          SECL=SQRT(1.+TL**2)
+          P=ABS(PT)*SECL
+          V= (P/SQRT(P**2+RMPI2))*CLGHT
+C
+C++       Find the path length from the origin to the coordinate
+C++       If the particle is not completely in the x-y plane, then
+C++       this calculation is trivial.  Otherwise, we must be careful
+C++       not to divide by a zero dip angle.
+C
+          IF (ABS(TL).LT.0.003) THEN
+            CALL THLCIR(RW(KROW(KTGFT,ITK)+JTGFIR),R,S,PHE,ZE,IER)
+            IF (IER.NE.0) THEN
+              D=SQRT(R**2+Z**2)
+            ELSE
+              D=S(1)
+            ENDIF
+          ELSE
+            Z0= RTABL(KTGFT,ITK,JTGFZ0)
+            DZT= Z-Z0
+            D= DZT*SECL/TL
+          ENDIF
+        ENDIF
+      ENDIF
+      TIME=D/V
+      IF (Z.LT.0.) THEN
+        ZC = Z - TIME*DVB(3)/1000.
+      ELSE
+        ZC = Z + TIME*DVA(3)/1000.
+      ENDIF
+C
+      RETURN
+C - some information is missing or track is not coming from
+C   near the origin, return without correction
+ 998  CONTINUE
+      ZC = Z
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d20 1
+d103 1
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

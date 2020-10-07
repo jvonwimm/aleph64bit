@@ -1,0 +1,163 @@
+head	1.2;
+access;
+symbols
+	alpha126_22:1.2
+	alpha122_22:1.2
+	alpha126_21:1.2
+	alpha126_20:1.2
+	alpha126_19:1.2
+	alpha126_18:1.2
+	alpha126_17:1.2
+	alpha126_16:1.2
+	alpha126_15:1.2
+	alpha126_14:1.2
+	alpha126_13:1.2
+	alpha126_12:1.2
+	alpha126_11:1.2
+	alpha126_10:1.2
+	alpha126_09:1.2
+	alpha126_08:1.2
+	alpha126_07:1.2
+	alpha126_06:1.2
+	alpha126_05:1.2
+	alpha126_04:1.2
+	alpha126_03:1.2
+	alpha126_02:1.2
+	alpha126_1:1.2
+	alpha125_17:1.2
+	alpha125_16:1.2
+	alpha125_15:1.2
+	alpha125_14:1.2
+	alpha125_13:1.2
+	alpha125_12:1.2
+	alpha125_11:1.2
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	2000.10.17.13.01.02;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	99.03.22.14.07.15;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE MINPCR
+C
+CKEY MDST /USER
+C-----------------------------------------------------------------------
+C! Fill PCRL bank from DCRL.
+C
+C     Author: Stephen Haywood      03-Apr-90
+C
+C     It appears that the PCRL bank is essential for the operation of
+C     ALPHA.
+C     If no DCRL bank exists, a dummy PCRL with one empty row is made.
+C     This is necessary since, if there are simple isolated calobjects,
+C     they will not appear in the DCRL bank, and if all objects are of
+C     this form, then the DCRL bank will be empty.
+C     It would be better to create rows in the PCRL bank with the
+C     trivial relations in (ie. one object, and the other entries zero).
+C     However, this requires looking at PECO/PHCO banks and reduces
+C     simplicity.
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+#include "dcrljj.h"
+#include "pcrljj.h"
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+C
+      IF (IW(NAMIND('PCRL')).GT.0) RETURN
+      KDCRL = NLINK('DCRL',0)
+      IF(KDCRL.GT.0) THEN
+         NDCRL = LROWS(KDCRL)
+      ELSE
+         NDCRL = 0
+      ENDIF
+      IF(NDCRL.GT.0) THEN
+         NPCRL = NDCRL
+      ELSE
+         NPCRL = 1
+      ENDIF
+C
+C++   Create PCRL bank.
+C
+      LEN = LMHLEN + LPCRLA * NPCRL
+      CALL AUBOS('PCRL',0,LEN, KPCRL,IGARB)
+      CALL BLIST(IW,'S+','PCRL')
+      IF(IGARB.GE.2) THEN
+         RETURN
+      ELSE IF(IGARB.NE.0) THEN
+         KDCRL = NLINK('DCRL',0)
+      ENDIF
+      IW(KPCRL+LMHCOL) = LPCRLA
+      IW(KPCRL+LMHROW) = NPCRL
+C
+C++   Fill PCRL bank.
+C
+      DO 100 I=1,NDCRL
+         IW(KROW(KPCRL,I)+JPCRPE) = ITABL(KDCRL,I,JDCRDE)
+         IW(KROW(KPCRL,I)+JPCRPF) = ITABL(KDCRL,I,JDCRDT)
+         IW(KROW(KPCRL,I)+JPCRPH) = ITABL(KDCRL,I,JDCRDH)
+  100 CONTINUE
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@d28 1
+@
+

@@ -1,0 +1,186 @@
+#!/bin/csh
+#============================================================================
+#                             stagerror
+# 26/04/95                                                             F.Blin
+# 21/04/97 changed /aleph by $ALEPH
+#============================================================================
+# P1 IN or OUT      default = in
+# P1 or P2 tape number        
+# P2 or P3 time [HH:MM] if last parameter else date      
+# P2 + P3 or P3 + P4 time [HH:MM] 
+#============================================================================
+# only tape number -> search last stagein(out)
+# tape number + time -> search stagein(out) at time 
+# tape number + date + time -> search stagein(out) at date and time 
+#============================================================================
+# eg : stagerror ab4269 09/16 13:
+#      stagerror ab4269.epio 09/16 13:
+#      stagerror ab4269_11 09/16 13:
+#      stagerror ab4269_11.epio 09/16 13:
+#============================================================================#
+#set echo on
+#
+if (${HOST} != "shift9") then
+   echo "Please run on shift9"
+   exit
+endif
+#
+set IN_OUT = "in"
+set PAR1 = ""
+set PAR2 = ""
+set file = ""
+set l1 = `echo $1 | awk '{print length($0)}'`
+set string = "last "
+if ($l1 < 4) then
+   if ($1 == "IN" || $1 == "in") set IN_OUT = "in"
+   if ($1 == "OUT" || $1 == "out") set IN_OUT = "out"
+   set PAR1 = $2
+   set point = `echo $2 | awk '{print index($0,".")}'`
+   if (${point} > 0) set PAR1 = `echo $2 | awk '{print substr($0,1,index($0,".")-1)}'`
+   if ($#argv > 2) then
+      set PAR2 = $3
+      set string = "at time $3 "
+      if ($#argv == 4) then
+         set PAR2 = "$3 $4" 
+         set string = "for day $3 at time $4 "
+      endif
+   endif
+else
+   set PAR1 = $1
+   set point = `echo $1 | awk '{print index($0,".")}'`
+   set underscore = `echo $1 | awk '{print index($0,"_")}'`
+   if (${point} > 0) set PAR1 = `echo $1 | awk '{print substr($0,1,index($0,".")-1)}'`
+   if (${underscore} > 0) then
+      set file = `echo $PAR1 | awk '{print substr($0,index($0,"_")+1)}'`
+      set PAR1 = `echo $PAR1 | awk '{print substr($0,1,index($0,"_")-1)}'`
+   endif
+   if ($#argv > 1) then
+      set PAR2 = $2
+      set string = "at time $2 "
+      if ($#argv == 3) then
+         set PAR2 = "$2 $3" 
+         set string = "for day $2 at time $3 "
+      endif
+   endif
+endif
+if ($PAR1 == "") then
+   echo "To get help type stagerror -h"
+   goto USAGE
+endif
+#
+if (-e $HOME/tmp_stagerror) \rm -f $HOME/tmp_tms
+sysreq tms q v $PAR1 >& $HOME/tmp_tms
+set problem = `grep "PIT " $HOME/tmp_tms`
+if ("$problem" == "") set problem = `grep "B186 " $HOME/tmp_tms`
+if ("$problem" == "") set problem = `grep "REST " $HOME/tmp_tms`
+if ("$problem" != "") then
+   echo "tms problem : $problem" 
+   goto END
+endif
+set str_RC = `grep "RC(" $HOME/tmp_tms` 
+if ($str_RC == "") goto CONTINUE
+set problem = `tail -1 $HOME/tmp_tms ` 
+echo "tms problem : $problem" 
+goto END
+
+CONTINUE:
+set l_string = `echo $string | awk '{print length($0)}'`
+if (-e $HOME/tmp_stagerror) \rm -f $HOME/tmp_stagerror
+#set LOGFILE = $ALEPH/log/stagerror.log
+set begin_date = `date`
+@ week = `date '+%U'` + 1
+#@ last_week_log = ${week} - 6
+#22/01/97
+@ last_week_log = ${week} - 2
+#echo $week $last_week_log
+if ($last_week_log < 1) @ last_week_log = 1
+set year = `date '+%y'`
+set stage_file = /usr/spool/stage/log
+
+if ($file == "") set str_search = "${PAR1}.epio"
+if ($file != "") set str_search = "${PAR1}_$file.epio"
+if (${l_string} < 5) set str_message = "${str_search}"
+if (${l_string} >= 5) set str_message = "${str_search} at time ${PAR2}"
+
+if (${l_string} < 5) then
+   grep stage${IN_OUT} ${stage_file} | grep -i ${str_search} > $HOME/tmp_stagerror
+else
+   grep stage${IN_OUT} ${stage_file} | grep -i ${str_search} | grep "${PAR2}"  > $HOME/tmp_stagerror
+endif
+#
+if !(-z $HOME/tmp_stagerror) goto LOOP_LOG_END
+LOOP_LOG:
+# for year 95 first log file -> /usr/spool/stage/log.9512
+  @ week-- 
+  if (${week} == ${last_week_log}) then
+     echo "+++++Not found ${str_message} in year ${year} for last ${last_week_log} weeks, in e.g. ${stage_file}++++++++++"
+     goto END_${IN_OUT}
+  endif
+  \rm -f $HOME/tmp_stagerror
+  set stage_file = /usr/spool/stage/log.${year}${week}
+  if !(-e ${stage_file}) goto LOOP_LOG
+  echo "Now search the string ${str_search} in ${stage_file}"
+if (${l_string} < 5) then
+   grep stage${IN_OUT} ${stage_file} | grep -i ${str_search} > $HOME/tmp_stagerror
+else
+   grep stage${IN_OUT} ${stage_file} | grep -i ${str_search} | grep "${PAR2}"  > $HOME/tmp_stagerror
+endif
+  if(-z $HOME/tmp_stagerror) goto LOOP_LOG
+
+LOOP_LOG_END:
+
+set n_line = `wc -l $HOME/tmp_stagerror | awk '{print $1}'`
+
+echo "+++++Now check stage error for ${str_message} on file ${stage_file} ++++++++++"
+
+echo ${begin_date}
+echo "--> ${string}stage${IN_OUT}"
+#cat $HOME/tmp_stagerror
+if (${IN_OUT} == "out") goto END_${IN_OUT}
+set id = ""
+@ n = 1
+
+while ($n <= $n_line)
+   set line = `tail -$n $HOME/tmp_stagerror | head -1`
+   echo ${line}
+   set id_n = `echo ${line} | awk '{print $3}'`
+   if ($n == 1) set id = ${id_n}
+   if("$PAR2" == "") goto STAGEQRY
+   if ($n > 1) set id = "${id} | ${id_n}"
+   @ n++
+end
+
+STAGEQRY:
+echo "--> stageqry" 
+if ($file != "") grep stageqry ${stage_file} | grep ${PAR1} | grep "\-q $file"
+if ($file == "") grep stageqry ${stage_file} | grep ${PAR1} 
+echo "--> all ${id}"
+egrep "${id}" ${stage_file} 
+
+END_in:
+set str_search = "${PAR1}$file"
+if ($file < 10 && $file != "") set str_search = "${PAR1}0${file}"
+echo "--> grep -i ${str_search} $ALBOOK/bkmbytes.cerntaps"
+if ($file == "" || $file > 9) grep -i ${str_search} $ALBOOK/bkmbytes.cerntaps
+#
+END_out:
+if ($file == "") set str_search = "${PAR1}.epio"
+if ($file != "") set str_search = "${PAR1}_$file.epio"
+echo "--> grep -i ${str_search} $ALEPH/log/stage${IN_OUT}.log | tail -5"
+grep -i ${str_search} $ALEPH/log/stage${IN_OUT}.log | tail -5
+#
+END:
+if (-e $HOME/tmp_tms) \rm -f $HOME/tmp_tms
+if (-e $HOME/tmp_stagerror) \rm -f $HOME/tmp_stagerror
+exit 0
+#
+USAGE:
+echo "Syntax: stagerror [in or out] [tape number] [MM/DD] [hh:mm]"
+echo "e.g.         "
+echo "     stagerror in AB2001             idem stagerror AB2001"
+echo "     stagerror in AB2001 14:08       idem stagerror AB2001 14:08 "
+echo "     stagerror IN AB2001 04/28 14:08 idem stagerror AB2001 04/28 14:08"
+echo "     "
+echo "     stagerror out AD4075"
+echo "     stagerror out AD4075 14:08"
+exit 0

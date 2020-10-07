@@ -1,0 +1,76 @@
+#!/bin/csh
+#============================================================================
+#                             stagerror
+# 26/04/95                                                             F.Blin
+#============================================================================
+# P1 tape number        
+# p2 time [HH:MM]       
+# only P1 -> search last stagein
+# P1 + P2 -> search stagein at time P2
+#============================================================================
+#set echo on
+#
+   if ($#argv == 0) then
+      echo "To get help type stagerror -h"
+      goto USAGE
+   endif
+#
+if (-e $HOME/tmp_stagerror) rm -f $HOME/tmp_stagerror
+#set LOGFILE = /aleph/log/stagerror.log
+set begin_date = `date`
+set par1 = $1
+set point = `echo $1 | awk '{print index($0,".")}'`
+if (${point} > 0) set par1 = `echo $1 | awk '{print substr($0,1,index($0,".")-1)}'`
+set week = `date '+%U'`
+@ last_week_log = ${week} - 6
+set year = `date '+%y'`
+set stage_file = /usr/spool/stage/log
+grep stagein ${stage_file} | grep -i ${par1} > $HOME/tmp_stagerror
+#
+LOOP_LOG:
+if (-z $HOME/tmp_stagerror) then
+  @ week-- 
+# for year 95 first log file -> /usr/spool/stage/log.9512
+  if (${week} == ${last_week_log}) then
+     echo "+++++Sorry nothing for ${par1} in year ${year} for last 6 weeks++++++++++"
+     goto END
+  endif
+  rm -f $HOME/tmp_stagerror
+  set stage_file = /usr/spool/stage/log.${year}${week}
+  grep stagein ${stage_file} | grep -i ${par1} > $HOME/tmp_stagerror
+  goto LOOP_LOG
+endif
+set line = `tail -1 $HOME/tmp_stagerror`
+set string = "last "
+if ($#argv == 2) then
+   grep $2 $HOME/tmp_stagerror > $HOME/tmp2_stagerror
+   if !(-z $HOME/tmp2_stagerror) then
+       set line = `grep $2 $HOME/tmp_stagerror`
+       set string = "at time $2 "
+   endif
+   rm -f $HOME/tmp2_stagerror
+endif
+echo "+++++Now check stage error for ${par1}++++++++++"
+echo ${begin_date}
+echo "--> ${string}stagein"
+echo ${line}
+set id = `echo ${line} | awk '{print $3}'`
+echo "--> stageqry"
+grep stageqry ${stage_file} | grep ${par1}
+echo "--> all ${id}"
+grep ${id} ${stage_file}
+echo "--> grep -i ${par1} /u3/xu/albook/aleph/book/bkmbytes.cerntaps"
+grep -i ${par1} /u3/xu/albook/aleph/book/bkmbytes.cerntaps
+echo "--> grep ${par1} /aleph/log/stagein.log | tail -5"
+grep ${par1} /aleph/log/stagein.log | tail -5
+#
+END:
+if (-e $HOME/tmp_stagerror) rm -f $HOME/tmp_stagerror
+exit 0
+#
+USAGE:
+echo "Syntax: stagerror [tape number] [hh:mm]"
+echo "e.g.         "
+echo "     stagerror AB2001"
+echo "     stagerror AB2001 14:08"
+exit 0

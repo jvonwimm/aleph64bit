@@ -1,0 +1,92 @@
+*DK agvf92
+      SUBROUTINE AGVF92
+C------------------------------------------------------
+C!  Defines and positions VDET 92 faces in GEANT
+CKEY VDET GEOM FACE
+C - W.Manner - 921103
+C - Modified : A. Bonissent 940215 : use geom. package
+C - Modified : F.Ranjard 950419 : restore AGFV92
+C.  -Called by AGVDET                 from this .HLB
+C.  -Calls GSROTM,GSPOS               from  GEANT3
+C.
+C. - positions volumes VDBX and VDB2
+C.
+C------------------------------------------------
+#ifndef DOC
+      REAL XYZ(3), XVDBX, XVDB2
+      CHARACTER*4 VOLU, VDAU, CHAINT
+      INTEGER VNTFAC,VXYZFC,VPHIFC
+#include "iocom.h"
+#include "bcs.h"
+#include "vposjj.h"
+#include "agcons.h"
+#include "bmacro.h"
+C -------------------------------------------------------------------
+C
+C     Find X-position of the center of box VDBX with respect to
+C     X-center of silicon active region VDWA in the face
+C
+      KVPOS = IW(NAMIND('VPOS'))
+      IF(KVPOS.EQ.0)THEN
+          CALL ALTELL ('AGVF92 : VPOS bank missing',0,'STOP')
+      ENDIF
+      VOLU = 'VDWA'
+      XVDBX = 0.
+   13 CONTINUE
+      IF(VOLU .NE.'VDBX')THEN
+         DO  IVPOS = 1, LROWS(KVPOS)
+            VDAU = CHAINT(ITABL(KVPOS,IVPOS,JVPODA))
+            IF(VDAU.EQ.VOLU)THEN
+              VOLU = CHAINT(ITABL(KVPOS,IVPOS,JVPOMO))
+              XVDBX = XVDBX + RTABL(KVPOS,IVPOS,JVPOPO)
+              GO TO 13
+            ENDIF
+         ENDDO
+         CALL ALTELL ('AGVF92 : NO VDBX in VPOS bank',0,'STOP')
+      ENDIF
+C
+C X-position of box VDB2
+C
+      XVDB2 = -0.311785
+C
+C-----Loop over faces
+C
+      NFAC = VNTFAC()
+      DO IFAC = 1,NFAC
+C
+C-----Define the rotation angle of each side, possibly with inversion
+C
+         IDUM = VPHIFC(IFAC,PHI)
+         ROTAN = PHI*RADEG
+         IF(ROTAN.GT.D360)   ROTAN = ROTAN-D360
+         ROTA2 = ROTAN+D90
+         IF(ROTA2.GT.D360)   ROTA2 = ROTA2-D360
+         IAGROT= IAGROT+1
+         CALL GSROTM(IAGROT,D90,ROTAN,D90,ROTA2,0.,0.)
+C
+C-----Find the position of the centre of each face
+C
+         IDUM = VXYZFC(IFAC,XYZ)
+C
+C Compute displacements for the center of the box
+C
+         DX  = XVDBX * COS(PHI)
+         DY  = XVDBX * SIN(PHI)
+         XX  = XYZ(1)-DX
+         YY  = XYZ(2)-DY
+         ZZ  = XYZ(3)
+         DX2 = XVDB2 * COS(PHI)
+         DY2 = XVDB2 * SIN(PHI)
+         XX2 = XX+DX2
+         YY2 = YY+DY2
+         ZZ2 = ZZ
+C
+C?----Put in place the faces
+C
+         CALL GSPOS('VDBX',IFAC,'VDET',XX,YY,ZZ,IAGROT,'ONLY')
+         CALL GSPOS('VDB2',IFAC,'VDET',XX2,YY2,ZZ2,IAGROT,'ONLY')
+      ENDDO
+C
+      RETURN
+      END
+#endif

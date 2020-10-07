@@ -1,0 +1,269 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.49.15;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.19;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.20;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE BOSWR(JW,LUN,LIST)
+C
+C     WRITE SET OF BANKS USING FORTRAN WRITE
+C
+      INTEGER JW(*)
+#include "boscom.h"
+#include "param.h"
+#include "mparam.h"
+      REAL RW(1000)
+      EQUIVALENCE (IW(1),RW(1))
+      CHARACTER*(*) LIST
+      CHARACTER*4   NAME
+C     ...
+      JW1=JW(1)
+      NBLK=NBLKD
+      NEVW=0
+      IBF= NLINK('+BUF',LUN)
+      IF(IBF.EQ.0) GOTO 10
+#include "unpackio.h"
+
+*     STOP, IF WRONG UNIT
+
+      IF(IOMD.NE.0.OR.IOST.EQ.1) THEN
+         IF(JW(LUP).GT.0) WRITE(JW(LUP),1001) LUN
+         CALL BABEND('BOSWR')
+      END IF
+      IF(IOST.EQ.2) GOTO 15
+      IF(IW(IBF+2).NE.0) NBLK=IW(IBF+2)
+   10 IBF= NBANK('+BUF',LUN,10+NBLK)
+      IF(IBF.EQ.0) GOTO 201
+      DO 12 M=1,11
+   12 IW(IBF+M)=0
+#include "unpackio.h"
+      IOST=2
+#include "packio.h"
+      IW(IBF+2)=NBLK
+*     clear record number
+   15 IW(IBF+9)=0
+*
+*     check list '0' (write buffer)
+*
+      IF(LEN(LIST).EQ.1) THEN
+         IF(LIST.EQ.'0'.OR.LIST.EQ.'O') THEN
+*           write buffer
+            IF(IW(IBF+11).NE.0) THEN
+               CALL BBFWRS(LUN,IOAC,IW(IBF+4)+1,IW(IBF+11),IW(IBF+2))
+               IW(IBF+4)=IW(IBF+4)+1
+               RW(IBF+8)=RW(IBF+8)+1.0E-6*FLOAT(NBYTWD*(IW(IBF+11)+1))
+               IF(JW(LUP).NE.0.AND.JW(LUW).GT.0) THEN
+                  WRITE(JW(LUP),1002) LUN
+                  JW(LUW)=JW(LUW)-1
+               END IF
+            END IF
+            IW(IBF+11)=0
+            GOTO 100
+         END IF
+      END IF
+*
+*     write format banks
+*
+C     IF(IW(IBF+9).NE.IEFMT) THEN
+      IF(IEFMT.LT.0) THEN
+*        error stop for incorrect format banks
+         IF(JW(LUP).GT.0) WRITE(JW(LUP),1003)
+         CALL BABEND('BOSWR')
+      END IF
+*     write format banks
+      CALL BBOSF(JW,LUN,IBF,LIST)
+*        IW(IBF+9)=IEFMT
+C     END IF
+C
+C     INIT LOOP ON BANKS
+C
+      JW(LCH)=JW(LCH)+1
+      IC=0
+      ISTART=0
+      ICOUNT=0
+      IBH=0
+#include "listnn.h"
+      IF(NAMI.EQ.0) THEN
+         IF(ICOUNT.EQ.0) THEN
+            GOTO 100
+         ELSE
+            GOTO 80
+         END IF
+      END IF
+C
+C     IO-STATISTIC FOR THIS NAME
+C
+      IOA=NAMI-NSYST
+      IF(JW(IOS).EQ.0.OR.JW(JW(IOS)).LT.2*IOA) THEN
+         CALL WBANC(JW,JW(IOS),2*IOA+10,*201)
+      END IF
+      IF(JW(NAMI).NE.0) JW(JW(IOS)+2*IOA)=JW(JW(IOS)+2*IOA)+1
+C
+C     INIT LOOP FOR THIS NAME
+C
+      IND=NAMI+1
+   20 IND=JW(IND-1)
+      IF(IND.EQ.0) GOTO 70
+C
+C     IF NOT CONTIGUOUS SPACE, COPY TO BUFFER
+C
+      IF(ICOUNT.NE.0.AND.ISTART+ICOUNT.NE.IND-3) GOTO 80
+   30 NW=JW(IND)
+      IF(ISTART.EQ.0) ISTART=IND-3
+      ICOUNT=ICOUNT+NW+4
+      GOTO 20
+C
+C     END OF BANKS FOR THIS NAME
+C
+   70 IF(JW1.NE.1) GOTO 3
+      JW(NAMI)=0
+C
+C     RESET LINK BANKS
+C
+      JND=JW(IDL)+NAMI-NSYST
+      IF(JW(JND).NE.0) JW(JW(JND))=0
+      GOTO 3
+C
+C     COPY TO BUFFER
+C
+   80 JSTART=ISTART
+      JCOUNT=ICOUNT
+      NEVW=NEVW+ICOUNT
+      NTOT=IW(IBF+11)
+   85 NDIF=IW(IBF+2)-1-NTOT
+      NBH=5
+      IF(IBH.NE.0) NBH=0
+      IF(NDIF.LE.NBH) THEN
+C
+C        WRITE BUFFER
+C
+         IW(IBF+11)=NTOT
+         CALL BBFWRS(LUN,IOAC,IW(IBF+4)+1,IW(IBF+11),IW(IBF+2))
+         IW(IBF+4)=IW(IBF+4)+1
+         IW(IBF+5)=0
+         RW(IBF+8)=RW(IBF+8)+1.0E-6*FLOAT(NBYTWD*(IW(IBF+11)+1))
+         NTOT=0
+         IBH=0
+         GOTO 85
+      END IF
+      NW=MIN(NDIF-NBH,JCOUNT)
+      IF(NW.NE.JCOUNT) THEN
+         IF(IC.LE.1) IC=IC+1
+      ELSE IF(NW.EQ.JCOUNT.AND.NAMI.EQ.0) THEN
+         IF(IC.NE.0) IC=3
+      ELSE IF(JCOUNT.EQ.NDIF-NBH.AND.NAMI.NE.0) THEN
+         IF(IC.LE.1) IC=IC+1
+      END IF
+C
+C     ADD HIDD BANK
+C
+      IF(IBH.EQ.0) THEN
+         IW(IBF+5)=IW(IBF+5)+1
+         IW(IBF+NTOT+12)=INTCHA('HIDD')
+         IW(IBF+NTOT+13)=IW(IBF+5)
+         IW(IBF+NTOT+14)=0
+         IW(IBF+NTOT+15)=1
+         IBH=IBF+NTOT+14
+         NTOT=NTOT+5
+*        store record number
+         IF(IW(IBF+9).EQ.0) IW(IBF+9)=1000*(IW(IBF+4)+1)+IW(IBF+5)
+      END IF
+      IW(IBH+1)=IW(IBH+1)+NW
+      IW(IBH+2)=IC
+      CALL UCOPY(JW(JSTART),IW(IBF+NTOT+12),NW)
+      NTOT=NTOT+NW
+      JSTART=JSTART+NW
+      JCOUNT=JCOUNT-NW
+      IF(JCOUNT.GT.0) GOTO 85
+      IW(IBF+11)=NTOT
+C
+C     DROP BANKS
+C
+      IF(JW1.NE.0) THEN
+         JND=ISTART+3
+   90    NW=JW(JND)
+         NDIF=NW+4
+         JW(JND)=-NDIF
+         JW(NDN)=JW(NDN)+NDIF
+         JW(IGN)=MIN(JW(IGN),JND)
+         ICOUNT=ICOUNT-NDIF
+         JND=JND+NDIF
+         IF(ICOUNT.GT.0) GOTO 90
+      END IF
+      IF(NAMI.NE.0) THEN
+         ISTART=0
+         ICOUNT=0
+         GOTO 30
+      END IF
+      IW(IBF+6)=IW(IBF+6)+1
+      IW(IBF+7)=MAX0(IW(IBF+7),NEVW)
+C
+  100 JW(1)=0
+      JW(2)=IW(IBF+9)
+      RETURN
+  201 CALL BBSPC(IW,'BOSWR')
+      GOTO 100
+ 1001 FORMAT('0BOS--BOSWR-  WRONG UNIT - STOP',
+     1       14X,'UNIT =',I3)
+ 1002 FORMAT('0BOS--BOSWR-  BUFFER WRITTEN UNIT',I3)
+ 1003 FORMAT('0BOS--BOSWR-  ERROR IN BANK FORMAT DEFINITION - STOP')
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK boswr
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

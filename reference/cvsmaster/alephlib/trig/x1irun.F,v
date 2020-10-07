@@ -1,0 +1,207 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.2
+	aleph304_5:1.2
+	aleph304_4:1.2
+	aleph304_3:1.2
+	aleph304_2:1.2
+	aleph304_1:1.2
+	aleph304:1.2
+	aleph303_3:1.2
+	aleph303_2:1.2
+	aleph303_1_mc1:1.2
+	aleph303_1:1.2
+	aleph303:1.2
+	aleph302_9:1.2
+	aleph302_8:1.2
+	aleph302_7:1.2
+	aleph302_6:1.2
+	aleph302_5:1.2
+	aleph302_4:1.2
+	aleph302_3:1.2
+	aleph302_2:1.2
+	aleph302_1:1.2
+	aleph302:1.2
+	aleph216:1.2
+	aleph215_3:1.2
+	aleph215_2:1.2
+	aleph215:1.2
+	aleph214:1.2
+	aleph213:1.2
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.06.05.10.52.47;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.44.54;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.44.55;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@x1irun: pick up setup dependent trigger threshold in MC
+@
+text
+@      SUBROUTINE X1IRUN(IRUN)
+C ----------------------------------------------------------------------
+C.
+C. - Author   : A. Putzer  - 95/03/20  FOR ALEPHLIB 205
+C.              modified B.Bloch may 96 for setup dependent thresholds
+C.
+C! - Initialize the Level1 Trigger Part of GALEPH
+C.
+C. - Banks    : X1TV (Trigger thresholds taken from data base)
+C.              Bank formats defined for trigger output banks
+C.
+#ifndef DOC
+      SAVE
+      EXTERNAL NAMIND ,GTSTUP,AGETDB
+      INTEGER AGETDB ,GTSTUP
+#include "bcs.h"
+#include "x1tcom.h"
+#include "x1namc.h"
+C.
+C ----------------------------------------------------------------------
+C.
+C.  -  Reset Level1 Physics Trigger counters
+C.
+      DO 98 I = 1,NPHTR
+ 98   NPHYTR(I) = 0
+      NAX1TV = NAMIND ('X1TV')
+
+C.  -  Get Sical thresholds if needed and trigger related constants
+      MCRUN = IRUN
+      ISTUP = GTSTUP ('SI',MCRUN)
+      IF ( ISTUP.GT.0) THEN
+         JND = AGETDB('SITCSRCO',ISTUP)
+         IF (JND.NE.0) GO TO 97
+         WRITE(IW(6),990)
+ 990  FORMAT(////,'  Warning No SICAL Thresholds found for this run  ',
+     $       /,'  Trigger will be applied using defaults settings',
+     $       ///)
+ 97      CONTINUE
+         CALL SITRIN
+      ENDIF
+C.
+C.
+C.  -  Get table containing trigger thresholds for this run
+C.     using a setup dependent scheme
+C.
+C.
+      ISTUP = GTSTUP ('TR',MCRUN)
+      IF ( ISTUP.GT.0) THEN
+          IND = AGETDB('X1TV',ISTUP)
+          IF (IND.NE.0) GO TO 99
+      ENDIF
+      WRITE(IW(6),991)
+ 991  FORMAT(////,'  Warning No Thresholds found for this run; ',
+     X          /,'  Trigger cannot be applied!!!!',
+     X          /,'  Therefore the job will be stopped.',
+     X          /,'  Resubmit without requiring the trigger'
+     X          /,'  part or provide the bank X1TV',///)
+      CALL ALTELL('X1IRUN Missing bank X1TV',0,'STOP')
+      GO TO 999
+  99  CONTINUE
+      DO 100 I = 1,NPHTR
+ 100  NPHYTR(I) = 0
+C
+C - Define bank formats
+C
+      CALL BKFMT('X1IP','2I,(A,36I)')
+      NASIXA = NAMIND ('SIXA')
+      CALL BKFMT('SIXA','I')
+      NASIX2 = NAMIND ('SIX2')
+      CALL BKFMT('SIX2','I')
+      NASIFO = NAMIND ('SIFO')
+      CALL BKFMT('SIFO','I')
+C
+ 999  CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d5 1
+d29 1
+a29 1
+      MCRUN = 1
+d44 1
+d47 5
+a51 2
+      IND = AGETDB('X1TV',IRUN)
+      IF (IND.NE.0) GO TO 99
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

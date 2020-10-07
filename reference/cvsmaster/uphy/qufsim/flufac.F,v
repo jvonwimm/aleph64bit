@@ -1,0 +1,89 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  uphy1-0:1.1.1.1 flr:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.08.16.13.38.14;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.08.16.13.38.15;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      FUNCTION FLUFAC(POL,AZI)
+C----------------------------------------------------------------
+C! ECAL resolution factor
+C  Input  POL :  polar angle ( degrees )
+C         AZI :  azimuthal angle ( degrees )
+C
+C  J.F. Grivaz  < 1989
+C----------------------------------------------------------------
+#include "resolu.h"
+      DATA azimod /30./
+C
+C Resolution degradation
+C
+      flufac = 1.
+C
+C Cracks du barrel
+C
+      IF     ( pol .GT. polcor(2) ) THEN
+        iaz = ABS(azi) / azimod
+        raz = ABS(azi) - iaz * azimod
+        IF ( raz .LT. azicra .OR. raz .GT. azimod-azicra )
+     .  flufac = flufac * flucra
+C
+C Overlap Barrel/Endcap
+C
+      ELSEIF ( pol .GT. polcor(1) ) THEN
+        flufac=flufac*flucor(1)
+C
+C Cracks du Endcap
+C
+      ELSEIF ( pol .GT. polcor(4) ) THEN
+        iaz = ABS(azi+azimod/2.) / azimod
+        raz = ABS(azi+azimod/2.) - iaz * azimod
+        IF ( raz .LT. azicra .OR. raz .GT. azimod-azicra )
+     .  flufac = flufac * flucra
+C
+C Crack Endcap/Lumi
+C
+      ELSEIF ( pol .GT. polcor(3) ) THEN
+        flufac=flufac*flucor(2)
+C
+C Crack Lumi
+C
+      ELSE
+        flufac = flufac * flulum
+        raz = abs(azi) - 90.
+        IF ( ABS(raz) .LT. azicrl ) flufac = flufac * flucrl
+      ENDIF
+C
+  999 RETURN
+      END
+@
+
+
+1.1.1.1
+log
+@2nd try to import uphy
+@
+text
+@@

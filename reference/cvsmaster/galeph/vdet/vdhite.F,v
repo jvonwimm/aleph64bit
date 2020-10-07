@@ -1,0 +1,82 @@
+head	1.1;
+access;
+symbols
+	gal309_3:1.1
+	gal309_2:1.1
+	gal309_1:1.1
+	gal309:1.1
+	gal308_2:1.1
+	gal308_1:1.1
+	gal308:1.1
+	gal307_2:1.1
+	gal307_1:1.1
+	gal307:1.1
+	gal306_3:1.1
+	gal306_2:1.1
+	gal306_1:1.1
+	gal306:1.1
+	gal305_3:1.1
+	gal305_2:1.1
+	gal305_1:1.1
+	gal305:1.1
+	gal304_11:1.1
+	gal304_10:1.1
+	gal304_9:1.1
+	gal304_8:1.1
+	gal304_7:1.1
+	gal304_6:1.1
+	gal304_5:1.1
+	gal304_4:1.1
+	gal304_3:1.1
+	gal304_2:1.1
+	gal304_1:1.1
+	gal304:1.1
+	gal303_3:1.1
+	gal303_2:1.1
+	gal303_1:1.1
+	v-303:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	95.08.24.09.37.51;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@galeph 303/gustep: call vdhite (G.Taylor), add a modified version of geaant/gdray
+introduce vdet94
+@
+text
+@*DK vdhite
+      SUBROUTINE VDHITE
+C-----------------------------------------------------------------------
+C! updates end segment flag in VDSS when track leaves the active volume
+CKEY VDET DIGITIZE
+C!
+C!
+C!  Author         G. Taylor       1/8/95
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+#include "vdssjj.h"
+      DATA NAVDSS /0/
+#include "bmacro.h"
+      IF (NAVDSS.EQ.0) NAVDSS = NAMIND('VDSS')
+      KVDSS=IW(NAVDSS)
+      IF(KVDSS.GT.0) THEN
+       ILAST=LROWS(KVDSS)
+       IF(ILAST.GT.0) IW(KROW(KVDSS,ILAST)+JVDSES)=1
+      ENDIF
+      RETURN
+      END
+#endif
+@

@@ -1,0 +1,62 @@
+#!/bin/sh
+
+# Get the original cernlib sources
+
+tar -zxvf $CERN/cernlib_2005.tgz > cernlib_2005_orig.lst
+
+# Unpack the source files and set up the build structure in $CERN
+
+list=`ls src_*.gz`
+
+for ffile in $list
+do
+  gunzip -c $ffile | tar xf -
+done
+
+# Overload corrections to cernlib 2005
+
+tar -zxvf $CERN/cernlib.2005.corr.tgz > cernlib_corr.lst
+###### JVW fixes ########################################################
+tar -zxvf $CERN/myfixes.corr.tar.gz > myfixes.corr.lst
+# add -no-pie option for GCC 5
+# add -fno-range-check option in order to compile mathlib tests
+# add VERBOSE option to see details of above tests
+/bin/mv -f linux.cf $CERN/2005/src/config/
+/bin/mv -f linux.cf.debug $CERN/2005/src/config/
+/bin/mv -f linux-lp64.cf $CERN/2005/src/config/
+/bin/mv -f linux-lp64.cf.debug $CERN/2005/src/config/
+# fix to make GCC 5 work
+/bin/mv -f Imake.cf $CERN/2005/src/config/
+# increase number of steps (MAXNST) before giving up in GTRACK from 10000 to 100000
+# see Rene Brun suggestion: https://root.cern.ch/root/vmctalk/vmc09/0062.html
+/bin/mv -f ginit.F $CERN/2005/src/geant321/gbase/
+# Allow kolmogorov-smirnov test for 2-d distributions (hopefully correct)
+/bin/mv -f hdiff.F $CERN/2005/src/packlib/hbook/hdiff/
+# increase number of shared objects from 100 to 1000
+# (allows more iterations of calling functions when plotting things)
+/bin/mv -f cstab64.inc $CERN/2005/src/pawlib/comis/comis/
+# increase paw memory from 2000000 16000000 to handle bigger files etc
+/bin/mv -f pawbig.inc $CERN/2005/src/pawlib/paw/paw/
+/bin/mv -f piafs.F $CERN/2005/src/pawlib/paw/piafs/
+# put the patchy 4 executables in standard cernlib bin directory (instead of symbolic links)
+/bin/mv -f Imakefile $CERN/2005/src/patchy/
+# hack to make stdarg.h and stddef.h visible to makedepend
+ln -s `gcc --print-file-name=include/stdarg.h` $CERN/2005/src/include/stdarg.h
+ln -s `gcc --print-file-name=include/stddef.h` $CERN/2005/src/include/stddef.h
+ln -s `gcc --print-file-name=include/float.h` $CERN/2005/src/include/float.h
+#####################################################################################
+# Make sure that "kuip" uses its own "strndup" version
+
+sed -i -e '{s/strndup/Strndup/g}' \
+  ./2005/src/packlib/kuip/code_kuip/kalias.c \
+  ./2005/src/packlib/kuip/code_kuip/kbrow.c \
+  ./2005/src/packlib/kuip/code_kuip/kedit.c \
+  ./2005/src/packlib/kuip/code_kuip/kexec.c \
+  ./2005/src/packlib/kuip/code_kuip/kkern.c \
+  ./2005/src/packlib/kuip/code_kuip/kmacro.c \
+  ./2005/src/packlib/kuip/code_kuip/kmath.c \
+  ./2005/src/packlib/kuip/code_kuip/kmenu.c \
+  ./2005/src/packlib/kuip/code_motif/kmfile.c \
+  ./2005/src/packlib/kuip/kuip/kstring.h \
+  ./2005/src/packlib/kuip/ykuip/kmath.y
+

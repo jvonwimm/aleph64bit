@@ -1,0 +1,314 @@
+head	1.5;
+access;
+symbols
+	aleph316_2:1.5
+	aleph316_1:1.5
+	aleph316:1.5
+	aleph315_7:1.5
+	aleph315_6:1.5
+	aleph315_5:1.5
+	aleph315_4:1.5
+	aleph315_3:1.5
+	aleph315_2:1.4
+	aleph315_1:1.4
+	aleph315:1.4
+	aleph314_2:1.4
+	aleph314_1:1.4
+	aleph314:1.4
+	aleph313_1:1.4
+	aleph313:1.4
+	aleph312_1:1.4
+	aleph312:1.4
+	aleph311_1:1.4
+	aleph311:1.4
+	aleph310_3:1.4
+	aleph310_2:1.4
+	aleph310_1:1.4
+	aleph310:1.4
+	aleph309_1:1.4
+	aleph309:1.4
+	aleph308_3:1.4
+	aleph308_2:1.4
+	aleph308_1:1.4
+	aleph308:1.4
+	aleph307_6:1.4
+	aleph307_5:1.4
+	aleph307_4:1.4
+	aleph307_2:1.4
+	aleph307_1:1.4
+	aleph307:1.4
+	aleph306:1.4
+	aleph305_4:1.4
+	aleph305_3:1.4
+	aleph305_2:1.4
+	aleph305_1:1.4
+	aleph305:1.4
+	aleph304_5:1.4
+	aleph304_4:1.4
+	aleph304_3:1.4
+	aleph304_2:1.4
+	aleph304_1:1.4
+	aleph304:1.4
+	aleph303_3:1.4
+	aleph303_2:1.4
+	aleph303_1_mc1:1.4
+	aleph303_1:1.4
+	aleph303:1.4
+	aleph302_9:1.3
+	aleph302_8:1.2
+	aleph302_7:1.2
+	aleph302_6:1.2
+	aleph302_5:1.2
+	aleph302_4:1.2
+	aleph302_3:1.2
+	aleph302_2:1.2
+	aleph302_1:1.2
+	aleph302:1.4
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.5
+date	2000.07.25.14.56.56;	author cattanem;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	97.05.14.06.55.53;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.04.25.06.39.21;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.03.06.11.58.58;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.40.40;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.40.41;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.5
+log
+@2x2 running in 2000
+@
+text
+@      FUNCTION GTT0GL (IRUN)
+C -----------------------------------------------------
+CKEY ALEF GET T0GL
+C! Get T0 depending on run number and number of bunches
+C - F.Ranjard - 920924
+C               940323 : T0GL depends on setup code
+C - D.Casper  - 970325 : Support for new alignment (TNFV)
+C               970423 : Check alignment type before
+C                        applying t0 correction
+C               970512 : Correct bug in the above mod; TNLO
+C                        has not been read in yet the first
+C                        time this routine is called, and
+C                        checking for it puts the wrong
+C                        value in JCON!  Instead, check for
+C                        a valid TNFV entry and absence of
+C                        user card (TOAL) to disable it.
+C - W.Wiedenmann 20000721: handle 2x2 bunch running in 2000
+C
+C - Input   : IRUN    / I = run number
+C - Output  : GTT0GL  / R = T0 or 0. in case of error
+C ----------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "t0gljj.h"
+#include "tnfvjj.h"
+#include "rlepjj.h"
+#include "lxtrjj.h"
+      SAVE T0, OF
+      Parameter (cethrsh=0.0001)
+      INTEGER AGETDB,GTSTUP,TNFVRU
+      DATA NT0GL, NRLEP, IRLST /3*0/
+#include "bmacro.h"
+C -----------------------------------------------------
+C - 1st entry
+      IF (NT0GL.EQ.0) THEN
+         NT0GL = NAMIND('T0GL')
+         NRLEP = NAMIND('RLEP')
+         NTOAL = NAMIND('TOAL')
+         NLXTR = NAMIND('LXTR')
+      ENDIF
+C
+C - next entry
+      IF (IRUN.NE.IRLST) THEN
+         IRLST = IRUN
+         IF (IRUN.LE.2000) THEN
+            ITP = GTSTUP ('TP',IRUN)
+         ELSE
+            ITP = IRUN
+         ENDIF
+         IER = AGETDB ('T0GL',-ITP)
+         JT0GL = IW(NT0GL)
+         IF (JT0GL.EQ.0) THEN
+            T0 = 0.
+            OF = 0.
+            GTT0GL = 0.
+            GOTO 999
+         ELSE
+            T0 = RTABL(JT0GL,1,JT0GGT)
+            IF (LCOLS(JT0GL).GE.JT0GOF) THEN
+               OF = RTABL(JT0GL,1,JT0GOF)
+               IF (IW(NTOAL).EQ.0) THEN
+                JTNFV = TNFVRU(ITP, IROW)
+                JTNFV = ABS(JTNFV)
+                IF (JTNFV.GT.0 .AND. IROW.GT.0) THEN
+                  DT = RTABL(JTNFV,IROW,JTNFDT)
+                  T0 = T0 + DT
+                  WRITE(IW(6),1) DT
+ 1    FORMAT(1x,'GTT0GL - Applying ',F12.8,'us t0 correction from TNFV')
+                ENDIF
+               ENDIF
+            ELSE
+               OF = 0.
+            ENDIF
+         ENDIF
+      ENDIF
+C
+      JRLEP = IW(NRLEP)
+      IF (JRLEP.EQ.0) THEN
+         GTT0GL = T0
+      ELSE
+         IF (ITABL(JRLEP,1,JRLELD).EQ.8) THEN
+            GTT0GL = T0 - OF
+         ELSE
+            GTT0GL = T0
+         ENDIF
+      ENDIF
+C
+C++   2x2 bunch running in 2000
+C
+      If (irun.ge.53000) Then
+C
+         JLXTR = IW(NLXTR)
+C
+C++      This are runs in 2000 with 2x2 bunch mode and not 
+C++      correct RLEP information
+C
+         If ((irun.eq.55102).or.(irun.eq.55103)) Then   
+            GTT0GL = T0 - OF
+         Elseif ((irun.ge.55488).and.(irun.le.55513)) Then   
+            GTT0GL = T0 - OF
+C
+C++      This are runs in 2000 which may have been taken in 2x2 
+C++      mode. Try to deduce the number of bunches from the bunch
+C++      currents in the LXTR bank.
+C
+         Elseif ((irun.ge.55514).and.(jlxtr.ne.0)) Then
+            nbunch = 0
+            Do irow = 1,Lrows(jlxtr)
+               If (rtabl(jlxtr,irow,jlxtce).gt.cethrsh) 
+     +            nbunch = nbunch + 1  
+            Enddo
+            If (nbunch.eq.2) Then
+               GTT0GL = T0 - OF
+            Else
+               GTT0GL = T0  
+            Endif
+         Else
+            GTT0GL = T0  
+         Endif  
+      Endif 
+C
+ 999  CONTINUE
+      END
+#endif
+@
+
+
+1.4
+log
+@Bug fix in GTT0GL
+@
+text
+@d17 2
+d27 1
+d29 1
+d39 1
+d87 34
+@
+
+
+1.3
+log
+@Bug fixes for Alephlib 302.9
+@
+text
+@d10 7
+a32 1
+         NTNLO = NAMIND('TNLO')
+d34 1
+d56 1
+a56 1
+               IF (IW(NTNLO).GT.0) THEN
+d60 4
+a63 2
+                    DT = RTABL(JTNFV,IROW,JTNFDT)
+                    T0 = T0 + DT
+@
+
+
+1.2
+log
+@1st test version aleph302
+@
+text
+@d7 3
+d26 1
+d49 7
+a55 5
+               JTNFV = TNFVRU(ITP, IROW)
+               JTNFV = ABS(JTNFV)
+               IF (JTNFV.GT.0 .AND. IROW.GT.0) THEN
+                DT = RTABL(JTNFV,IROW,JTNFDT)
+                T0 = T0 + DT
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d13 1
+d16 1
+a16 1
+      INTEGER AGETDB,GTSTUP
+d45 6
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

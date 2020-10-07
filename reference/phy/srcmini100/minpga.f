@@ -1,0 +1,108 @@
+      SUBROUTINE MINPGA
+C
+CKEY MDST /INTERNAL
+C-----------------------------------------------------------------------
+C! Fill PGAC bank from DGAC.
+C
+C     Author: Agnieszka Jacholkowska    17-Oct-94
+C-----------------------------------------------------------------------
+C
+      INTEGER LMHLEN, LMHCOL, LMHROW
+      PARAMETER (LMHLEN=2, LMHCOL=1, LMHROW=2)
+C
+      COMMON /BCS/   IW(1000)
+      INTEGER IW
+      REAL RW(1000)
+      EQUIVALENCE (RW(1),IW(1))
+C
+C
+      PARAMETER (AFACTM=10000.,DFACTM=10000.,EFACTM=1000.)
+      PARAMETER(JPGAEC=1,JPGATC=2,JPGAPC=3,JPGAR1=4,JPGAR2=5,JPGAF4=6,
+     +          JPGADM=7,JPGAST=8,JPGAQU=9,JPGAQ1=10,JPGAQ2=11,
+     +          JPGAM1=12,JPGAM2=13,JPGAMA=14,JPGAER=15,JPGATR=16,
+     +          JPGAPR=17,JPGAEF=18,JPGAGC=19,JPGAZS=20,JPGAPL=21,
+     +          JPGAPF=22,JPGAPN=23,JPGAFA=24,JPGAPE=25,LPGACA=25)
+      PARAMETER(JDGAEC=1,JDGATC=2,JDGAPC=3,JDGAR1=4,JDGAR2=5,JDGAF4=6,
+     +          JDGADM=7,JDGAST=8,JDGAQU=9,JDGAQ1=10,JDGAQ2=11,
+     +          JDGAM1=12,JDGAM2=13,JDGAMA=14,JDGAER=15,JDGATR=16,
+     +          JDGAPR=17,JDGAEF=18,JDGAGC=19,JDGAZS=20,JDGAPL=21,
+     +          JDGAPF=22,JDGAPN=23,JDGAFA=24,JDGAPE=25,LDGACA=25)
+
+C!    set of intrinsic functions to handle BOS banks
+C!    set of intrinsic functions to handle BOS banks
+C - # of words/row in bank with index ID
+      LCOLS(ID) = IW(ID+1)
+C - # of rows in bank with index ID
+      LROWS(ID) = IW(ID+2)
+C - index of next row in the bank with index ID
+      KNEXT(ID) = ID + LMHLEN + IW(ID+1)*IW(ID+2)
+C - index of row # NRBOS in the bank with index ID
+      KROW(ID,NRBOS) = ID + LMHLEN + IW(ID+1)*(NRBOS-1)
+C - # of free words in the bank with index ID
+      LFRWRD(ID) = ID + IW(ID) - KNEXT(ID)
+C - # of free rows in the bank with index ID
+      LFRROW(ID) = LFRWRD(ID) / LCOLS(ID)
+C - Lth integer element of the NRBOSth row of the bank with index ID
+      ITABL(ID,NRBOS,L) = IW(ID+LMHLEN+(NRBOS-1)*IW(ID+1)+L)
+C - Lth real element of the NRBOSth row of the bank with index ID
+      RTABL(ID,NRBOS,L) = RW(ID+LMHLEN+(NRBOS-1)*IW(ID+1)+L)
+C
+C
+C
+C++   Pick up DGAC bank.
+C
+      KDGAC = NLINK('DGAC',0)
+      IF (KDGAC.LE.0) RETURN
+      NDGAC = LROWS(KDGAC)
+      IF (NDGAC.LE.0) RETURN
+C
+C++   Create PGAC bank.
+C
+      NPGAC = NDGAC
+      LEN = LMHLEN + LPGACA * NDGAC
+      CALL AUBOS('PGAC',0,LEN, KPGAC,IGARB)
+      CALL BLIST(IW,'S+','PGAC')
+      IF (IGARB.GE.2) THEN
+         RETURN
+      ELSE IF (IGARB.NE.0) THEN
+         KDGAC = NLINK('DGAC',0)
+      ENDIF
+      IW(KPGAC+LMHCOL) = LPGACA
+      IW(KPGAC+LMHROW) = NDGAC
+C
+C++   Fill PGAC bank.
+C
+      DO 100 I=1,NDGAC
+         RW(KROW(KPGAC,I)+JPGAEC) = FLOAT(ITABL(KDGAC,I,JDGAEC))/EFACTM
+         RW(KROW(KPGAC,I)+JPGATC) = FLOAT(ITABL(KDGAC,I,JDGATC))/AFACTM
+         RW(KROW(KPGAC,I)+JPGAPC) = FLOAT(ITABL(KDGAC,I,JDGAPC))/AFACTM
+         RW(KROW(KPGAC,I)+JPGAR1) = FLOAT(ITABL(KDGAC,I,JDGAR1))/1000.
+         RW(KROW(KPGAC,I)+JPGAR2) = FLOAT(ITABL(KDGAC,I,JDGAR2))/1000.
+         RW(KROW(KPGAC,I)+JPGAF4) = FLOAT(ITABL(KDGAC,I,JDGAF4))/1000.
+         MDIST = ITABL(KDGAC,I,JDGADM)
+         IF (MDIST.EQ.-1) MDIST = +99990
+         RW(KROW(KPGAC,I)+JPGADM) = FLOAT(MDIST)/10.
+         IW(KROW(KPGAC,I)+JPGAST) = ITABL(KDGAC,I,JDGAST)
+         IW(KROW(KPGAC,I)+JPGAQU) = ITABL(KDGAC,I,JDGAQU)
+         RW(KROW(KPGAC,I)+JPGAQ1) = FLOAT(ITABL(KDGAC,I,JDGAQ1))/100.
+         RW(KROW(KPGAC,I)+JPGAQ2) = FLOAT(ITABL(KDGAC,I,JDGAQ2))/100.
+         RW(KROW(KPGAC,I)+JPGAM1) = FLOAT(ITABL(KDGAC,I,JDGAM1))/100.
+         RW(KROW(KPGAC,I)+JPGAM2) = FLOAT(ITABL(KDGAC,I,JDGAM2))/100.
+         RW(KROW(KPGAC,I)+JPGAMA) = FLOAT(ITABL(KDGAC,I,JDGAMA))/EFACTM
+         RW(KROW(KPGAC,I)+JPGAER) = FLOAT(ITABL(KDGAC,I,JDGAER))/EFACTM
+         RW(KROW(KPGAC,I)+JPGATR) = FLOAT(ITABL(KDGAC,I,JDGATR))/AFACTM
+         RW(KROW(KPGAC,I)+JPGAPR) = FLOAT(ITABL(KDGAC,I,JDGAPR))/AFACTM
+
+         RW(KROW(KPGAC,I)+JPGAEF) = FLOAT(ITABL(KDGAC,I,JDGAEF))/AFACTM
+         RW(KROW(KPGAC,I)+JPGAGC) = FLOAT(ITABL(KDGAC,I,JDGAGC))/AFACTM
+         RW(KROW(KPGAC,I)+JPGAZS) = FLOAT(ITABL(KDGAC,I,JDGAZS))/AFACTM
+         RW(KROW(KPGAC,I)+JPGAPL) = FLOAT(ITABL(KDGAC,I,JDGAPL))/AFACTM
+         RW(KROW(KPGAC,I)+JPGAPF) = FLOAT(ITABL(KDGAC,I,JDGAPF))/AFACTM
+         IW(KROW(KPGAC,I)+JPGAPN) = ITABL(KDGAC,I,JDGAPN)
+         IW(KROW(KPGAC,I)+JPGAFA) = ITABL(KDGAC,I,JDGAFA)
+
+         IW(KROW(KPGAC,I)+JPGAPE) = ITABL(KDGAC,I,JDGAPE)
+  100 CONTINUE
+C
+      RETURN
+      END

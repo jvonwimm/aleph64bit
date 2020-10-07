@@ -1,0 +1,204 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.44.02;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.44.03;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      INTEGER FUNCTION VDARGE (LUNDAF,IGET)
+C ----------------------------------------------------------------------
+CKEY VDETDES READ DBASE / INTERNAL
+C!  Read VDET geography banks from DAF
+C     J. Rothberg      24 Oct. 1995
+C - based on Steve Wasserbaech, January 1994
+C   (Based on VRDDAF, G. Triggiani, 17/02/87.)
+C   Modified 31 July 1995, S. Wasserbaech: add NWFBIT to VRDOCO
+C
+C  Called by: VINIVG
+C  Calls:     ALGTDB
+C
+C - Input:
+C   LUNDAF / I  Logical unit number of DAF file
+C   IGET   / I  VDET setup code to be read
+C
+C - Output:
+C   VDARGE / I  = VDOK if successful
+C               = VDERR if an error occurred
+C ----------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+C!    Parameters for VDET geometry package
+C ----------------------------------------------------------------------
+C
+C     Labels for return codes:
+C
+#include "vglobl.h"
+#include "bcs.h"
+C     Arguments:
+      INTEGER LUNDAF, IGET
+C
+C     Parameters:
+C     List of VDET geography banks to read:
+      CHARACTER*12 LIST1
+      PARAMETER (LIST1 = 'VFMCVUECVXCH')
+C
+C     Local variables
+      INTEGER LOUT, IRET, I
+      INTEGER KVFMC, KVUEC, KVXCH, KVMBE, KVUBE
+      INTEGER ILAY, IFAC, IMOD
+      LOGICAL MISS
+C
+C     External functions:
+      INTEGER ALGTDB, NAMIND, MDARD
+#include "bmacrod.h"
+#include "bmacro.h"
+C ----------------------------------------------------------------------
+C
+      VDARGE = VDERR
+      LOUT = IW(6)
+C
+C     Initialize all VDET geometry commons:
+C
+C ----------------------------------------------------------------------
+C
+C     Read the banks from the DAF:
+      IRET = ALGTDB(LUNDAF,LIST1,-IGET)
+C
+      IF (IRET .EQ. 0) THEN
+C       Something went wrong...
+        GO TO 1000
+      ENDIF
+C
+C ----------------------------------------------------------------------
+C
+C     Get the indices to banks just read in:
+C
+      KVFMC = IW(NAMIND('VFMC'))
+      KVUEC = IW(NAMIND('VUEC'))
+      KVXCH = IW(NAMIND('VXCH'))
+C
+      MISS = (KVFMC .LE. 0) .OR. (KVUEC .LE. 0) .OR.
+     >       (KVXCH .LE. 0)
+C
+      IF (MISS) THEN
+        GO TO 1000
+      ENDIF
+C
+C ----------------------------------------------------------------------
+C Read bonding error banks; bank number is seial module number
+      DO I =1,100
+        IRET= MDARD(IW,LUNDAF,'VMBE',I)
+      ENDDO
+C ----------------------------------------------------------------------
+C
+C     Success!
+C
+      VDARGE = VDOK
+C
+ 1000 CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

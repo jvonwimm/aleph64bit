@@ -1,0 +1,42 @@
+      SUBROUTINE ICFMT(I,R,M)
+*                -   -
+*     CALL ICFMT(I,R,M)
+*                  -
+*     I = INTEGER, TO BE CONVERTED TO CHARACTER STRING
+*     R = CHARACTER STRING
+*     M = NUMBER OF CHARACTERS (UP TO 20)
+*
+*     I=0 IS CONVERTED TO ' '  FOR POSITIVE M
+*     I=0 IS CONVERTED TO '0'  FOR NEGATIVE M
+*
+*     EXAMPLES:   CALL ICFMT( 123,R,4)   R = ' 123'
+*                 CALL ICFMT(-123,R,5)   R = ' -123'
+*                 CALL ICFMT( 123,R,3)   R = '123'
+*                 CALL ICFMT(1234,R,3)   R = '*34'
+*                 CALL ICFMT(   0,R,3)   R = '   '
+*
+      CHARACTER*(*) R
+      CHARACTER*20 S
+      CHARACTER*1 LCH(10)
+      DATA        LCH    /'0','1','2','3','4','5','6','7','8','9'/
+      N=IABS(M)
+      J=IABS(I)
+      S=' '
+      IF(J.EQ.0.AND.M.GT.0) GOTO 100
+      DO 10 L=1,N
+      K=J
+      J=J/10
+      K=K-J*10
+      S(N+1-L:N+1-L)=LCH(K+1)
+      IF(J.EQ.0) THEN
+         IF(I.LT.0) THEN
+            IF(L.NE.1) S(N-L:N-L)='-'
+            IF(L.EQ.1) S(1  :1  )='*'
+         END IF
+         GOTO 100
+      END IF
+   10 CONTINUE
+      S(1:1)='*'
+  100 R=S
+      RETURN
+      END

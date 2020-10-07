@@ -1,0 +1,211 @@
+head	1.3;
+access;
+symbols
+	gal309_3:1.3
+	gal309_2:1.3
+	gal309_1:1.3
+	gal309:1.3
+	gal308_2:1.3
+	gal308_1:1.3
+	gal308:1.3
+	gal307_2:1.3
+	gal307_1:1.3
+	gal307:1.3
+	gal306_3:1.3
+	gal306_2:1.3
+	gal306_1:1.3
+	gal306:1.3
+	gal305_3:1.3
+	gal305_2:1.3
+	gal305_1:1.3
+	gal305:1.3
+	gal304_11:1.3
+	gal304_10:1.3
+	gal304_9:1.3
+	gal304_8:1.3
+	gal304_7:1.3
+	gal304_6:1.3
+	gal304_5:1.3
+	gal304_4:1.3
+	gal304_3:1.3
+	gal304_2:1.3
+	gal304_1:1.3
+	gal304:1.3
+	gal303_3:1.3
+	gal303_2:1.3
+	gal303_1:1.3
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	96.01.25.13.44.18;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.06.30.07.11.53;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.45;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.46;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@put a ifndef DOC in gdray
+modify WRITE statment to please fpp on alpha/vms
+ Modified Files:
+ 	catino.F
+	agchck.F
+ 	gdray.F
+ 	hchist.F hcshow.F hcstat.F hnewtk.F
+ 	lcasig.F
+	sabook.F sahist.F sahit.F sawsum.F
+ 	siasig.F sidfrt.F sishow.F sitrak.F
+@
+text
+@*DK siasig
+      SUBROUTINE SIASIG
+C--------------------------------------------------------------
+C! Controls the analog signal processing in SCal
+C. - B.Bloch-Devaux October 91
+C. - Called by  ASASIG                             from this Lib
+C. - Calls      BDROP                              from BOS  Lib
+C. - Calls      AUBPRS,PRTABL,SIDCOD,CAFIHT,ALTELL from ALEPHLIB
+C --------------------------------------------------------------
+#ifndef DOC
+#include "iocom.h"
+#include "jobcom.h"
+#include "bcs.h"
+#include "sinamc.h"
+#include "sistat.h"
+      INTEGER CAFIHT
+#include "bmacro.h"
+C -------------------------------------------------------------
+C
+C - If no SIHI exists nothing to be done
+      IF (IW(NASIHI) .LE. 0) GO TO 999
+C - Reduce bank size to real one
+      CALL AUBPRS('SIHI')
+C - protect against zero length
+      IF (LROWS(IW(NASIHI)).LE.0) GO TO 999
+      IF (NSIPRT.GT.0)  CALL PRTABL('SIHI',0)
+C - Fill hit bank
+      JSIHT = CAFIHT(NASIHI,'SIHT')
+      IF (JSIHT.LE.0) GO TO 998
+      CALL BLIST (IW,'T+','SIHT')
+C - count number of pads hit per event
+      RET = 0.
+      DO 120 I=1 , LROWS(JSIHT)
+      DO 120 J = 1,3
+         IF ( ITABL(JSIHT,I,J+1).GT.0) NSICOU(4)=NSICOU(4)+1
+         RET =RET+ 0.001*FLOAT(ITABL(JSIHT,I,J+1))
+ 120  CONTINUE
+      IF (NSIPRT.GT.0) THEN
+         WRITE (LOUTIO,'(1X,''Total pad energy (Mev)  '',F10.3)') RET
+         IF (NSIPRT.GE.2) THEN
+            WRITE (LOUTIO,*)' +++SIASIG+++'
+            WRITE (LOUTIO,*)'  SIHT bank : nrows/ncols ',
+     &             LROWS(JSIHT),LCOLS(JSIHT)
+            WRITE (LOUTIO,*)' Pad hits bank SIHT'
+            WRITE (LOUTIO,777)
+            DO 130 J =1 , LROWS(JSIHT)
+               IAD = IW(KROW(JSIHT,J)+1)
+               CALL SIDCOD(IAD,0,IMD,IST,IPH,IRD)
+               WRITE(LOUTIO,'(9I8)') IMD,IPH,IRD,IST,IST+1,IST+2,
+     $              (IW(KROW(JSIHT,J)+K),K=2,4)
+  130       CONTINUE
+          ENDIF
+       ENDIF
+C
+      ESICOU(10)= ESICOU(10)+DBLE(RET**2)
+      IF (FHISJO(9)) CALL SIFILH(1)
+C
+ 999  RETURN
+ 777  FORMAT(3X,'Module    phi radius      Planes',19X,'Hits')
+C
+C - not enough space
+C
+ 998  CONTINUE
+      CALL ALTELL ('SIASIG: not enough space for HIT banks ',1,'NEXT')
+      END
+#endif
+@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ cahtra.h gmacro.h lccomc.h lcnamc.h ljjpar.h siconst.h
+ sigeco.h version.h
+ itmsk1.F itmsk2.F itnois.F itres.F itxtlk.F
+ lcadc.F lcamp.F lcasig.F lcbhab.F lcbkpr.F lcdigi.F lcfral.F
+ lchit.F lcirun.F lcnami.F lcnois.F lcpad.F lcroc.F lcsamp.F
+ lcsatu.F lcshow.F lcstrt.F lctrak.F lctrdi.F lctrht.F lcwire.F
+ lcwsum.F lcwtri.F
+ muasig.F mubook.F muirun.F muunoi.F muwsum.F
+ trignews.h
+ siasig.F sitrak.F siwsum.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+ xtrcom.h
+ ecalnews.h geomnews.h lcalnews.h news.h skelnews.h vdetnews.h
+@
+text
+@d41 2
+a42 2
+            WRITE (LOUTIO,'(/1X,''+++SIASIG+++'')')
+            WRITE (LOUTIO,'(1X,'' SIHT bank : nrows/ncols '',2I5)')
+d44 2
+a45 2
+            WRITE (LOUTIO,'(1X,''Pad hits bank SIHT''/3X,''Module'',4X,
+     &              ''phi '',''radius '',5X,''Planes'',19X,''Hits'')')
+d59 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d9 1
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

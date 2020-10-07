@@ -1,0 +1,30 @@
+      SUBROUTINE TESTB1
+
+*     TEST PROGRAM FOR BOS NR 1
+
+      COMMON/BCS/IW(1000)
+      REAL       RW(1000)
+      EQUIVALENCE (RW(1),IW(1))
+*     ...
+      CALL BOSTA
+
+*     USE SOME FUNCTIONS
+
+      IND=NBANK('FRST',1,6)
+      IND=NBANK('SCND',2,6)
+      IND=NPRNT('SCND',2)
+      CALL BPRNT(IW,'FRSTSCND')
+      CALL BOSBK(IW)
+
+*     USE BANK FORMAT
+
+      IND=NLINK('FRST',1)
+      IF(IND.EQ.0) GOTO 100
+      IW(IND+1)=1
+      RW(IND+2)=2.0
+      IW(IND+3)=INTCHA('THRE')
+      CALL BKFMT('FRST','I,F,A,(I)')
+      IND=NPRNT('FRST',1)
+
+  100 RETURN
+      END

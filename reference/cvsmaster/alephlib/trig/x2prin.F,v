@@ -1,0 +1,186 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.45.04;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.45.05;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE X2PRIN (TFLAG)
+C ---------------------------------------------------------
+C - F.Ranjard - 890530
+C! Print various quantities from level 2 trigger
+CKEY TRIGGER PRINT LEVEL2 / USER
+C
+C - Input   : TFLAG / CHAR*4 = 'INIT'  initialization
+C                              'EVEN'  event printout
+C
+#ifndef DOC
+      SAVE
+      CHARACTER*(*) TFLAG
+#include "bcs.h"
+#include "x2cons.h"
+C --------------------------------------------------------
+      IF (IW(6) .EQ. 0) RETURN
+C
+C - print initial values
+C
+C Now try and print out the constants that were just read in.
+C
+      IF (TFLAG .EQ. 'INIT') THEN
+        WRITE(IW(6),7040)ZACPMM,IX2PRL,ADVELO,TDVELO,IGNPAD,
+     +                    NTBINS,CLOCKR,IRWDTH,
+     +                    ((IPADPR(IO,IPAIR),IO=1,2),IPAIR=1,ICHX),
+     +                    ITHRSH
+C
+      ELSEIF (TFLAG .EQ. 'EVEN') THEN
+C
+C - print event results
+C
+C       pretty print mask.
+C
+        WRITE(IW(6),9311)IX2MSK(40),IX2MSK(39),IX2MSK(28),IX2MSK(27),
+     +    IX2MSK(16),IX2MSK(15),IX2MSK(56),IX2MSK(50),IX2MSK(41),
+     +    IX2MSK(38),IX2MSK(29),IX2MSK(26),IX2MSK(17),
+     +    IX2MSK(14),IX2MSK(8),IX2MSK(2),IX2MSK(57),IX2MSK(55),
+     +    IX2MSK(51),IX2MSK(49),IX2MSK(42),IX2MSK(37),IX2MSK(30),
+     +    IX2MSK(25),IX2MSK(18),IX2MSK(13),IX2MSK(9),IX2MSK(7),
+     +    IX2MSK(3),IX2MSK(1),IX2MSK(58),IX2MSK(60),IX2MSK(52),
+     +    IX2MSK(54),IX2MSK(43),IX2MSK(48),IX2MSK(31),IX2MSK(36),
+     +    IX2MSK(19),IX2MSK(24),IX2MSK(10),IX2MSK(12),IX2MSK(4),
+     +    IX2MSK(6),IX2MSK(59),IX2MSK(53),IX2MSK(44),IX2MSK(47),
+     +    IX2MSK(32),IX2MSK(35),IX2MSK(20),IX2MSK(23),IX2MSK(11),
+     +    IX2MSK(5),IX2MSK(45),IX2MSK(46),IX2MSK(33),IX2MSK(34),
+     +    IX2MSK(21),IX2MSK(22)
+C
+C       Print level 3 bos banks.
+C
+        CALL X2PRHI
+C
+      ENDIF
+C
+ 7040 FORMAT(/1X,'+++X2PRIN+++   Second level trigger conditions*****'/
+     +   4X, 'Z-acceptance     ',F10.4,' Print level ',I7,/,
+     +   4X, 'Drift velocities ',2(F10.4,2X),/,
+     +   4X, 'Ignored Pads     ',3I3,'  Theta bins ',2I3,/,
+     +   4X, 'Clockrate        ',F10.4,' Roads data ',2I3,/,
+     +   4X, 'Padpairs         ',8(I2,1X),/,
+     +   4X, 'Chosen Threshs   ',8(I2,1X),/,
+     +   4X, '*****************************************'/)
+C
+ 9311 FORMAT(/,' +++X2PRIN+++  Level 2 track mask.',/,/,
+     + 23X,2(2I1,8X),2I1,/,
+     + 5X,I1,8X,I1,7X,I1,2(2X,I1,6X,I1),2X,I1,7X,I1,8X,I1,/,
+     + 2(3X,I1),4X,I1,3X,I1,7(4X,I1),3X,I1,4X,I1,3X,I1,/,
+     + 2(3X,I1),4X,I1,3X,I1,7(4X,I1),3X,I1,4X,I1,3X,I1,/,
+     + 5X,I1,8X,I1,7X,I1,2(2X,I1,6X,I1),2X,I1,7X,I1,8X,I1,/,
+     + 23X,2(2I1,8X),2I1,/,
+     + 2X,'154-165  165-141   141-120   120-60     60-39'
+     +      ,4X,'39-26    26-15  <-Theta',/,
+     + 6X,'Endcap -Z',12X,'B  A  R  R  E  L',11X
+     +      ,'Endcap +Z',/,/)
+C
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

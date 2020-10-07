@@ -1,0 +1,707 @@
+*DK agmuch
+      SUBROUTINE AGMUCH
+C-----------------------------------------------------------
+C!  Implement Muon chambers geometry
+C  Author :   B. Bloch-Devaux       4 October 85
+C           - Taijie Wang  last  revised 30 November 86
+C           - modified for DAF and new bank layout
+C             by F.Bossi,D.Kuhn,R.Xu 87-09-14
+C            - adapted to GAL196 by B. Bloch 25-01-88
+C           - modified for final dbase
+C             by A. Antonelli, F. Bossi 1 July 89
+C.  -Called by AGEOME                  from this .HLB
+C.  -Calls GSTMED,GSVOLU,GSPOS,GSPOSP,
+C          GSROTM                      from  GEANT3
+C.
+C. -Stores extra Tracking Media needed
+C. -Builds geometry levels below 'MUON' level
+C.
+C-----------------------------------------------------------
+#ifndef DOC
+#include "agcons.h"
+#include "agecom.h"
+#include "alfgeo.h"
+#include "jobcom.h"
+#include "bcs.h"
+#include "munamc.h"
+#include "mug1pr.h"
+#include "mjjpar.h"
+C
+C       Angle region of middle angle modules -- MMIA, MMOA,
+C       MMBA, MMIB, MMOB and MMBB is defined by numbers directly.
+C       Unless the design being chenged a lot, it should not
+C       make troubles.
+C
+      PARAMETER (ANGM1 = -55., ANGM2 = 235.)
+      EXTERNAL JHOCHA,NAMIND
+      PARAMETER (LTAB1 = 5, LTAB2=5, LMED=2 )
+      DIMENSION TAB1(LTAB1,LMED),TAB2(LTAB2)
+      DATA TAB1/10.,0.05,0.2,1.0,0.1,
+     *          10.,0.05,0.2,1.0,0.1/
+C
+C       Notice, this is the constants of LEAD !!!
+C
+      DATA TAB2/207.19,82.,11.35,0.56,18.5/
+#include "bmacro.h"
+#include "muiwna.h"
+C
+C      Material for muon chamber set to sensitive air
+C
+      IAGMED=IAGMED+1
+C
+C      Define sensitive volume flag as defined if SET 'MUON' is selected
+C
+C      IAG is the material number of the active gas
+C
+C       Run condition ICMUJO(4) decides which material is filled
+C       inside the sensitive volume:
+C         = 0,  air; otherwise, some streamer tube material.
+C
+      ISV=IDETJO(8)
+      IF( ICMUJO(4) .EQ. 0 )THEN
+        IAG = 15
+        CALL GSTMED(IAGMED,'MUON SENSITIVE GAS $',IAG,ISV,0,ALFIEL,
+     *       TAB1(1,1),TAB1(2,1),TAB1(3,1),TAB1(4,1),TAB1(5,1),0,0)
+      ELSE
+        IAGMAT = IAGMAT + 1
+        CALL GSMATE(IAGMAT,'STREAMER TUBE MATTER$',
+     *       TAB2(1),TAB2(2),TAB2(3),TAB2(4),TAB2(5),0,0)
+        IAG = IAGMAT
+        CALL GSTMED(IAGMED,'MUON SENSITIVE GAS $',IAG,ISV,0,ALFIEL,
+     *       TAB1(1,2),TAB1(2,2),TAB1(3,2),TAB1(4,2),TAB1(5,2),0,0)
+      ENDIF
+C
+C       IMDIN is the insensitive medium outside magnetic field
+C
+      IMDIN = 2
+C
+C       The barrel modules
+C
+      THCKB = RTABL(JMBAG,1,JMBATH)
+C
+C       Define sensitive volume 'MUB1' for inner barrel module
+      FLMB=RTABL(JMBAG,1,JMBALE)
+      PTAB(1) = 0.5 * RTABL(JMBTG,1,JMBTRB)
+      PTAB(2) = 0.5 * FLMB
+      PTAB(3) = 0.5 * THCKB
+      IF (IAGSLV.GE.LSENV) GOTO 998
+      IAGSLV = IAGSLV + 1
+      IAGSEN(IAGSLV,1) = JHOCHA('MUB1')
+      IAGSEN(IAGSLV,2) = 4
+      CALL GSVOLU('MUB1','BOX ',IAGMED,PTAB,3,IVOL)
+C
+C       Define 'MUB1' inside 'HBAR' only once, because
+C       'HBAR' was defined 12 times
+C
+      X = RTABL(JMBAG,1,JMBAR1)
+      Y = 0.
+      Z = 0.
+C
+C       Define a rotation matrix for turning Z to X, Y to Z and X to Y
+C
+      IAGROT = IAGROT + 1
+      CALL GSROTM(IAGROT,D90,D90,0.,0.,D90,0.)
+      IR = IAGROT
+C
+      CALL GSPOS('MUB1',1,'HBAR',X,Y,Z,IR,'ONLY')
+C
+C       Fake volume MUBO containing 12 outer barrel modules.
+C       MUBO is inside MUON.
+C
+      PTAB(1) = AGLIMR(8)
+      PTAB(2) = ALRMAX
+      PTAB(3) = 0.5 * FLMB
+      CALL GSVOLU('MUBO','TUBE',IMDIN,PTAB,3,IVOL)
+      X = 0.
+      Y = 0.
+      Z = 0.
+      IR = 0
+      CALL GSPOS('MUBO',1,'MUON',X,Y,Z,IR,'ONLY')
+C
+C       Define sensitive volume MUB2 for outer barrel modules
+C
+      IF (IAGSLV.GE.LSENV) GOTO 998
+      IAGSLV = IAGSLV + 1
+      IAGSEN(IAGSLV,1) = JHOCHA('MUB2')
+      IAGSEN(IAGSLV,2) = 4
+      CALL GSVOLU('MUB2','BOX ',IAGMED,PTAB,0,IVOL)
+C
+C       12 outer barrel modules
+C
+      IAGFHB=IAGROT+1
+      PHI = 0.
+      LHSEC=12
+      DPHI=TWOPI/LHSEC
+      DO 3 N=1,LHSEC
+         IAGROT = IAGROT + 1
+         PHID = PHI*RADEG
+         CALL GSROTM(IAGROT,D90,PHID + D90,0.,0.,D90,PHID)
+         PHI = PHI+DPHI
+   3  CONTINUE
+      PTAB(2) = 0.5 * FLMB
+      PTAB(3) = 0.5 * THCKB
+      NPAR = 3
+      NSLOP=-1
+      DO 10 I = 18,34
+         NSLOT = ITABL(JMBSG,I,JMBSVO)
+         IF (NSLOT.EQ.NSLOP) GO TO 10
+         NSLOP=NSLOT
+         PHI = (NSLOT-1)*PIBY6
+         RIN = RTABL(JMBAG,1,JMBAR2)
+         DELTA = RTABL(JMBSG,I,JMBSDE)
+         IF(NSLOT.EQ.4) DELTA = 0.
+         COSP = COS( PHI )
+         SINP = SIN( PHI )
+         X = RIN*COSP - DELTA*SINP
+         Y = RIN*SINP + DELTA*COSP
+         ITYPE=ITABL(JMBSG,I,JMBSK2)
+         IF(ITYPE.EQ.8) ITYPE=5
+         PTAB(1) = 0. 5* RTABL(JMBTG,ITYPE,JMBTRB)
+         IR = IAGFHB + NSLOT - 1
+         CALL GSPOSP('MUB2',NSLOT,'MUBO',X,Y,Z,IR,'ONLY', PTAB,NPAR)
+  10  CONTINUE
+ 888  CONTINUE
+C
+C       Define two intermediate modules 'MUEA' and 'MUEB'
+C
+      PTAB(1) = 0.
+      PTAB(2) = D360
+      PTAB(3) = 4
+      PTAB(4) = 0.5 * FLMB
+      PTAB(5) = AGLIMR(8)
+      PTAB(6) = ALRMAX
+      PTAB(7) = AGLIMZ(4)-0.01
+      PTAB(8) = PTAB(5)
+      PTAB(9) = PTAB(6)
+      PTAB(10) = AGLIMZ(4)
+      PTAB(11) = AGLIMR(4)
+      PTAB(12) = PTAB(6)
+      PTAB(13) = ALZMAX
+      PTAB(14) = PTAB(11)
+      PTAB(15) = PTAB(6)
+      CALL GSVOLU('MUEA','PCON',IMDIN,PTAB,15,IVOL)
+      X = 0.
+      Y = 0.
+      Z = 0.
+      CALL GSPOS('MUEA',1,'MUON',X,Y,Z,0,'ONLY')
+C
+C       'MUEB' is defined as the same as 'MUEA' with a rotation
+C
+      CALL GSVOLU('MUEB','PCON',IMDIN,PTAB,15,IVOL)
+      IR = 2
+      CALL GSPOS('MUEB',1,'MUON',X,Y,Z,IR,'ONLY')
+C
+C       The middle angle modules
+C
+      THCK10 = RTABL(JMMAG,1,JMMATH)
+      THCKM = RTABL(JMMAG,1,JMMATB)
+C
+C       Find the minimum and the maximum radius for inner and outer
+C       layers as well as widest width --- A side
+C
+C
+      RMNOU = ALRMAX
+      WDSIN = 0.
+C
+      DO 30 I=1,NMMIN
+         IF( I .EQ. IMMBT )GOTO 30
+         INDVL = ITABL(JMMSG,I,JMMSK2)
+         WIDTH = RTABL(JMMTG,INDVL,JMMTZB)
+         WDSIN = MAX( WIDTH, WDSIN )
+   30 CONTINUE
+C
+      MMIN = ITABL(JMMSG,10,JMMSID)
+      Z0PLAN = RTABL(JMMAG,1,JMMAZ0)
+      Z10PLA = RTABL(JMMAG,1,JMMAZ1)
+      PLANDS = RTABL(JMMAG,1,JMMAPD)
+      DO 40 I=1,NMMOU
+         IMMRW = MMIN + I
+         RC = RTABL(JMMSG,IMMRW,JMMSRC)
+         IF(I.GE.2.AND.I.LE.6) THEN
+           RIN = RC - Z0PLAN
+         ELSE
+           RIN = RC + PLANDS + Z0PLAN - THCKM
+         ENDIF
+         RMNOU = MIN( RIN, RMNOU )
+   40 CONTINUE
+      RMINA = RMNOU
+C
+C       Use RMNOU instead of RMAXIN  as Rmax of 'MMIA'.
+C       In this way, avoid MMIA touching the modules of
+C       outer layer.
+C
+      PTAB(1) = AGLIMR(8)
+      PTAB(2) = RMNOU
+      PTAB(3) = 0.5*WDSIN
+      PTAB(4) = ANGM1
+      PTAB(5) = ANGM2
+      CALL GSVOLU('MMIA','TUBS',IMDIN,PTAB,5,IVOL)
+      X = 0.
+      Y = 0.
+      Z = 0.5  * ( FLMB + WDSIN )
+      ZMMIA = Z
+      CALL GSPOS('MMIA',1,'MUEA',X,Y,Z,0,'ONLY')
+      PTAB(1) = RMNOU
+      PTAB(2) = ALRMAX
+      WIDMO = RTABL(JMESG,5,JMESZC) - RTABL(JMECG,1,JMECZE) - 0.5*FLMB
+      PTAB(3) = 0.5 * WIDMO
+      PTAB(4) = ANGM1
+      PTAB(5) = ANGM2
+      CALL GSVOLU('MMOA','TUBS',IMDIN,PTAB,5,IVOL)
+      X = 0.
+      Y = 0.
+      Z = 0.5 * ( FLMB + WIDMO )
+      ZMMOA = Z
+      CALL GSPOS('MMOA',1,'MUEA',X,Y,Z,0,'ONLY')
+C
+C       Find the minimum and the maximum radius for inner and outer
+C       layers as well as widest width --- B side
+C
+C
+      RMNOU = ALRMAX
+      WDSIN = 0.
+C
+      MMIO = ITABL(JMMSG,19,JMMSID)
+      DO 60 I=1,NMMIN
+          IMMRW = MMIO + I
+          IF( I .EQ. IMMBT )GOTO 60
+          INDVL = ITABL(JMMSG,IMMRW,JMMSK2)
+          WIDTH = RTABL(JMMTG,INDVL,JMMTZB)
+          WDSIN = MAX( WIDTH, WDSIN )
+   60 CONTINUE
+C
+      MMIOI = ITABL(JMMSG,29,JMMSID)
+      DO 70 I=1,9
+         IMMRW = MMIOI + I
+         RC = RTABL(JMMSG,IMMRW,JMMSRC)
+         IF(I.GE.2.AND.I.LE.6) THEN
+           RIN = RC - Z0PLAN
+         ELSE
+           RIN = RC + PLANDS + Z0PLAN - THCKM
+         ENDIF
+          RMNOU = MIN( RIN, RMNOU )
+   70 CONTINUE
+      RMINB = RMNOU
+C
+      PTAB(1) = AGLIMR(8)
+      PTAB(2) = RMNOU
+      PTAB(3) = 0.5*WDSIN
+      PTAB(4) = ANGM1
+      PTAB(5) = ANGM2
+      CALL GSVOLU('MMIB','TUBS',IMDIN,PTAB,5,IVOL)
+      X = 0.
+      Y = 0.
+      Z = 0.5 * ( FLMB + WDSIN )
+      ZMMIB = Z
+      CALL GSPOS('MMIB',1,'MUEB',X,Y,Z,0,'ONLY')
+      PTAB(1) = RMNOU
+      PTAB(2) = ALRMAX
+      PTAB(3) = 0.5*WIDMO
+      PTAB(4) = ANGM1
+      PTAB(5) = ANGM2
+      CALL GSVOLU('MMOB','TUBS',IMDIN,PTAB,5,IVOL)
+      X = 0.
+      Y = 0.
+      Z = 0.5 * ( FLMB + WIDMO )
+      ZMMOB = Z
+      CALL GSPOS('MMOB',1,'MUEB',X,Y,Z,0,'ONLY')
+C
+C       Rotation matrices for middle angle modules
+C       different from barrels', because the tube
+C       orientations are not the same.
+C
+      IAGMU = IAGROT + 1
+      PHI = 0.
+C
+      DO 80 I=1,12
+         IAGROT = IAGROT +1
+         PHID = PHI * RADEG
+         CALL GSROTM(IAGROT,0.,0.,D90,PHID-D90,D90,PHID)
+         PHI = PHI + PIBY6
+   80 CONTINUE
+C
+C       Define sensitive volume MUM1  for inner middle angle modules
+C
+      IF (IAGSLV.GE.LSENV) GOTO 998
+      IAGSLV = IAGSLV + 1
+      IAGSEN(IAGSLV,1) = JHOCHA('MUM1')
+      IAGSEN(IAGSLV,2) = 5
+      CALL GSVOLU('MUM1','BOX ',IAGMED,PTAB,0,IVOL)
+C
+C       Define sensitive volume MUM2  for outer middle angle modules
+C
+      IF (IAGSLV.GE.LSENV) GOTO 998
+      IAGSLV = IAGSLV + 1
+      IAGSEN(IAGSLV,1) = JHOCHA('MUM2')
+      IAGSEN(IAGSLV,2) = 5
+      CALL GSVOLU('MUM2','BOX ',IAGMED,PTAB,0,IVOL)
+C
+C       Inner layer module at +Z side -- 'MMIA'
+C
+      NPAR = 3
+      PTAB(3) = 0.5 * THCKM
+      DO 90 I=1,NMMIN
+         NSLOT = ITABL(JMMSG,I,JMMSVO)
+         PHI = (NSLOT-1)*PIBY6
+         RC = RTABL(JMMSG,I,JMMSRC)
+         IF(I.GE.2.AND.I.LE.6) THEN
+           RIN = RC - Z0PLAN
+         ELSE
+           RIN = RC + PLANDS + Z0PLAN - THCKM
+         ENDIF
+         RIN = RIN + PTAB(3)
+         DELTA = RTABL(JMMSG,I,JMMSDE)
+         COSP = COS( PHI )
+         SINP = SIN( PHI )
+         X = RIN*COSP - DELTA*SINP
+         Y = RIN*SINP + DELTA*COSP
+         IDVOL = ITABL(JMMSG,I,JMMSK2)
+         PTAB(1) = 0.5*RTABL(JMMTG,IDVOL,JMMTZB)
+         PTAB(2) = 0.5*RTABL(JMMTG,IDVOL,JMMTRB)
+         ZIN = RTABL(JMMSG,I,JMMSZC)
+         Z = ZIN - ZMMIA
+         NR = PHI/PIBY6 + 1.5
+         IF( I .NE. IMMBT )THEN
+            IR = IAGMU + NSLOT - 1
+            CALL GSPOSP('MUM1',NSLOT,'MMIA',X,Y,Z,IR,'ONLY',PTAB,NPAR)
+         ENDIF
+   90 CONTINUE
+C
+C       Bottom module at +Z side as the 9th one of the inner layer
+C
+      PTAB(3) = 0.5*THCK10
+      ZIN = RTABL(JMMSG,IMMBT,JMMSZC)
+      NSLOT = ITABL(JMMSG,IMMBT,JMMSVO)
+      PHI = (NSLOT-1)*PIBY6
+      RMMBA = RTABL(JMMSG,IMMBT,JMMSRC) + PLANDS + Z10PLA - THCK10
+      RIN = RMMBA + PTAB(3)
+      DELTA = RTABL(JMMSG,IMMBT,JMMSDE)
+      COSP = COS( PHI )
+      SINP = SIN( PHI )
+      X = RIN*COSP - DELTA*SINP
+      Y = RIN*SINP + DELTA*COSP
+      IDVOL = ITABL(JMMSG,IMMBT,JMMSK2)
+      PTAB(1) = 0.5 * RTABL(JMMTG,IDVOL,JMMTZB)
+      PTAB(2) = 0.5 * RTABL(JMMTG,IDVOL,JMMTRB)
+      Z = ZIN
+      CALL GSVOLU('MMBA','BOX ',IMDIN,PTAB,3,IVOL)
+      IR = IAGMU + NSLOT - 1
+      CALL GSPOS('MMBA',1,'MUEA',X,Y,Z,IR,'ONLY')
+      X = 0.
+      Y = 0.
+      Z = 0.
+      CALL GSPOSP('MUM1',NSLOT,'MMBA',X,Y,Z,0,'ONLY', PTAB,NPAR)
+C
+C       Outer layer modules at +Z side -- 'MMOA'
+C
+      PTAB(3) = 0.5*THCKM
+      DO 100 I=1,NMMOU
+         IMMRW = MMIN+I
+         NSLOT = ITABL(JMMSG,IMMRW,JMMSVO)
+         PHI = (NSLOT-1)*PIBY6
+         RC = RTABL(JMMSG,IMMRW,JMMSRC)
+         IF(I.GE.2.AND.I.LE.6) THEN
+           RIN = RC - Z0PLAN
+         ELSE
+           RIN = RC + PLANDS + Z0PLAN - THCKM
+         ENDIF
+         RIN = RIN + PTAB(3)
+         DELTA = RTABL(JMMSG,IMMRW,JMMSDE)
+         COSP = COS( PHI )
+         SINP = SIN( PHI )
+         X = RIN*COSP - DELTA*SINP
+         Y = RIN*SINP + DELTA*COSP
+         IDVOL = ITABL(JMMSG,IMMRW,JMMSK2)
+         PTAB(1) = 0.5*RTABL(JMMTG,IDVOL,JMMTZB)
+         PTAB(2) = 0.5*RTABL(JMMTG,IDVOL,JMMTRB)
+         ZIN = RTABL(JMMSG,IMMRW,JMMSZC)
+         Z = ZIN - ZMMOA
+         IR = IAGMU + NSLOT - 1
+         CALL GSPOSP('MUM2',NSLOT,'MMOA',X,Y,Z,IR,'ONLY', PTAB,NPAR)
+  100 CONTINUE
+C
+C       Inner layer module at -Z side -- 'MMIB'
+C       Notice that for B side, the phi position of the module
+C       in MUEB is different from what NSLOT defines
+C
+      DO 110 I=1,NMMIN
+         IMMRW = MMIO + I
+         NSLOT = ITABL(JMMSG,IMMRW,JMMSVO)
+         NPHI =  8- NSLOT + (NSLOT/8)*12
+         PHI = (NPHI-1)*PIBY6
+         RC = RTABL(JMMSG,IMMRW,JMMSRC)
+         IF(I.GE.2.AND.I.LE.6) THEN
+           RIN = RC - Z0PLAN
+         ELSE
+           RIN = RC + PLANDS + Z0PLAN - THCKM
+         ENDIF
+         RIN = RIN + PTAB(3)
+         DELTA = -RTABL(JMMSG,IMMRW,JMMSDE)
+         COSP = COS( PHI )
+         SINP = SIN( PHI )
+         X = RIN*COSP - DELTA*SINP
+         Y = RIN*SINP + DELTA*COSP
+         IDVOL = ITABL(JMMSG,IMMRW,JMMSK2)
+         PTAB(1) = 0.5*RTABL(JMMTG,IDVOL,JMMTZB)
+         PTAB(2) = 0.5*RTABL(JMMTG,IDVOL,JMMTRB)
+         ZIN = RTABL(JMMSG,IMMRW,JMMSZC)
+         Z = -ZIN  - ZMMIB
+         IF( I .NE. IMMBT )THEN
+           IR = IAGMU + NPHI - 1
+           CALL GSPOSP('MUM1',NSLOT,'MMIB',X,Y,Z,IR,'ONLY', PTAB,NPAR)
+         ENDIF
+  110 CONTINUE
+C
+C       Bottom module at -Z side as the 9th one in the inner layer
+C
+      IMMRW = ITABL(JMMSG,28,JMMSID)
+      PTAB(3) = 0.5*THCK10
+      ZIN = RTABL(JMMSG,IMMRW,JMMSZC)
+      NSLOT = ITABL(JMMSG,IMMRW,JMMSVO)
+      NPHI = 8 - NSLOT + (NSLOT/8)*12
+      PHI = (NPHI-1)*PIBY6
+      RMMBB = RTABL(JMMSG,IMMRW,JMMSRC) + PLANDS + Z10PLA - THCK10
+      RIN = RMMBB + PTAB(3)
+      DELTA = -RTABL(JMMSG,IMMRW,JMMSDE)
+      COSP = COS( PHI )
+      SINP = SIN( PHI )
+      X = RIN*COSP - DELTA*SINP
+      Y = RIN*SINP + DELTA*COSP
+      IDVOL = ITABL(JMMSG,IMMRW,JMMSK2)
+      PTAB(1) = 0.5 * RTABL(JMMTG,IDVOL,JMMTZB)
+      PTAB(2) = 0.5 * RTABL(JMMTG,IDVOL,JMMTRB)
+      Z = -ZIN
+      CALL GSVOLU('MMBB','BOX ',IMDIN,PTAB,3,IVOL)
+      IR = IAGMU + NPHI - 1
+      CALL GSPOS('MMBB',1,'MUEB',X,Y,Z,IR,'ONLY')
+      X = 0.
+      Y = 0.
+      Z = 0.
+      CALL GSPOSP('MUM1',NSLOT,'MMBB',X,Y,Z,0,'ONLY', PTAB,NPAR)
+C
+C       Outer layer modules at -Z side -- 'MMOB'
+C
+      PTAB(3) = 0.5*THCKM
+      DO 120 I=1, NMMOU
+         IMMRW = MMIOI + I
+         NSLOT = ITABL(JMMSG,IMMRW,JMMSVO)
+         NPHI =  8- NSLOT + (NSLOT/8)*12
+         PHI = (NPHI-1)*PIBY6
+         RC = RTABL(JMMSG,IMMRW,JMMSRC)
+         IF(I.GE.2.AND.I.LE.6) THEN
+           RIN = RC - Z0PLAN
+         ELSE
+           RIN = RC + PLANDS + Z0PLAN - THCKM
+         ENDIF
+         RIN = RIN + PTAB(3)
+         DELTA = -RTABL(JMMSG,IMMRW,JMMSDE)
+         COSP = COS( PHI )
+         SINP = SIN( PHI )
+         X = RIN*COSP - DELTA*SINP
+         Y = RIN*SINP + DELTA*COSP
+         IDVOL = ITABL(JMMSG,IMMRW,JMMSK2)
+         PTAB(1) = 0.5*RTABL(JMMTG,IDVOL,JMMTZB)
+         PTAB(2) = 0.5*RTABL(JMMTG,IDVOL,JMMTRB)
+         ZIN = RTABL(JMMSG,IMMRW,JMMSZC)
+         Z = - ZIN  - ZMMOB
+         IR = IAGMU + NPHI - 1
+         CALL GSPOSP('MUM2',NSLOT,'MMOB',X,Y,Z,IR,'ONLY', PTAB,NPAR)
+  120 CONTINUE
+C
+C       The end cap modules
+C
+       THCKC = RTABL(JMECG,1,JMECTH)
+C
+C       Fake volume MCIA containing 4 inner endcap modules at +Z side
+C
+      ZEO = RTABL(JMESG,5,JMESZC)-RTABL(JMECG,1,JMECZE)
+C
+      PTAB(1) = RMINA
+      PTAB(2) = 0.5 * ( RMINA + RMMBA )
+      WDCIA = ZEO - AGLIMZ(4)
+      PTAB(3) = 0.5 * WDCIA
+      CALL GSVOLU('MCIA','BOX ',IMDIN,PTAB,3,IVOL)
+      X = 0.
+      Y = 0.5 * ( RMINA - RMMBA )
+      Z = AGLIMZ(4) + 0.5 * WDCIA
+      XMCIA = X
+      YMCIA = Y
+      ZMCIA = Z
+      IR = 0
+      CALL GSPOS('MCIA',1,'MUEA',X,Y,Z,IR,'MANY')
+C
+C       Fake volume MCOA containing 4 outer endcap modules at +Z side
+C
+      PTAB(1) = ALRMAX
+      PTAB(2) = 0.5 * ( ALRMAX + RMMBA )
+      WDCOA = ALZMAX - ZEO
+      PTAB(3) = 0.5 * WDCOA
+C
+      CALL GSVOLU('MCOA','BOX ',IMDIN,PTAB,3,IVOL)
+      X = 0.
+      Y = 0.5 * ( ALRMAX - RMMBA )
+      Z = ZEO + 0.5*WDCOA
+      XMCOA = X
+      YMCOA = Y
+      ZMCOA = Z
+      IR = 0
+      CALL GSPOS('MCOA',1,'MUEA',X,Y,Z,IR,'ONLY')
+C
+C       Fake volume MCIB containing 4 inner endcap modules at -Z side
+C
+      PTAB(1) = RMINB
+      PTAB(2) = 0.5 * ( RMINB + RMMBB )
+      WDCIB = WDCIA
+      PTAB(3) = 0.5 * WDCIA
+      CALL GSVOLU('MCIB','BOX ',IMDIN,PTAB,3,IVOL)
+      ZEI = RTABL(JMESG,1,JMESZC)-RTABL(JMECG,1,JMECZI)
+      X = 0.
+      Y = 0.5 * ( RMINB - RMMBB )
+      Z = ZEI + 0.5*WDCIB
+      XMCIB = X
+      YMCIB = Y
+      ZMCIB = Z
+      IR = 0
+      CALL GSPOS('MCIB',1,'MUEB',X,Y,Z,IR,'MANY')
+C
+C       Fake volume MCOB containing 4 outer endcap modules at -Z side
+C
+      PTAB(1) = ALRMAX
+      PTAB(2) = 0.5 * ( ALRMAX + RMMBB )
+      WDCOB = WDCOA
+      PTAB(3) = 0.5 * WDCOB
+      CALL GSVOLU('MCOB','BOX ',IMDIN,PTAB,3,IVOL)
+      X = 0.
+      Y = 0.5 * ( ALRMAX - RMMBB )
+      Z = ZEO + 0.5*WDCOB
+      XMCOB = X
+      YMCOB = Y
+      ZMCOB = Z
+      IR = 0
+      CALL GSPOS('MCOB',1,'MUEB',X,Y,Z,IR,'ONLY')
+C
+C       The rotation matrices needed by endcap
+C       different from matrix #1 and #2 because
+C       all tubes on endcap modules are horrizontal
+C
+      IAGROT = IAGROT + 1
+      IRMC1 = IAGROT
+      CALL GSROTM(IAGROT,D90,D90,D90,D180,0.,0.)
+      IAGROT = IAGROT + 1
+      IRMC2 = IAGROT
+      CALL GSROTM(IAGROT,D90,D270,D90,0.,0.,0.)
+C
+C       Define sensitive volume MUC1 for inner endcap modules
+C
+      IF (IAGSLV.GE.LSENV) GOTO 998
+      IAGSLV = IAGSLV + 1
+      IAGSEN(IAGSLV,1) = JHOCHA('MUC1')
+      IAGSEN(IAGSLV,2) = 5
+      CALL GSVOLU('MUC1','BOX ',IAGMED,PTAB,0,IVOL)
+C
+C       Define sensitive volume MUC2 for outer endcap modules
+C
+      IF (IAGSLV.GE.LSENV) GOTO 998
+      IAGSLV = IAGSLV + 1
+      IAGSEN(IAGSLV,1) = JHOCHA('MUC2')
+      IAGSEN(IAGSLV,2) = 5
+      CALL GSVOLU('MUC2','BOX ',IAGMED,PTAB,0,IVOL)
+C
+C       Inner endcap at +Z side  -- 'MCIA'
+C
+      Z = ZEI + 0.5*THCKC -ZMCIA
+      PTAB(3) = 0.5 * THCKC
+      NPAR = 3
+      DO 130 I=1,NMCIN
+         X = RTABL(JMESG,I,JMESXC)
+         IF( X .LT. 0. )THEN
+            IR = IRMC1
+         ELSE
+            IR = IRMC2
+         ENDIF
+         X = X - XMCIA
+         Y = RTABL(JMESG,I,JMESYC) - YMCIA
+         IDVOL = ITABL(JMESG,I,JMESK2)
+         PTAB(1) = 0.5* RTABL(JMETG,IDVOL,JMETYB)
+         PTAB(2) = 0.5* RTABL(JMETG,IDVOL,JMETXB)
+         NR = I
+         CALL GSPOSP('MUC1',NR,'MCIA',X,Y,Z,IR,'ONLY', PTAB,NPAR)
+  130 CONTINUE
+C
+C       Outer endcap at +Z side  -- 'MCOA'
+C
+      Z = ZEO + 0.5*THCKC - ZMCOA
+      MCIN = ITABL(JMESG,4,JMESID)
+      DO 140 I=1,NMCOU
+         IMCRW = MCIN+I
+         X = RTABL(JMESG,IMCRW,JMESXC)
+         IF( X .LT. 0. )THEN
+            IR = IRMC1
+         ELSE
+            IR = IRMC2
+         ENDIF
+         X = X - XMCOA
+         Y = RTABL(JMESG,IMCRW,JMESYC) - YMCOA
+         IDVOL = ITABL(JMESG,IMCRW,JMESK2)
+         PTAB(1) = 0.5* RTABL(JMETG,IDVOL,JMETYB)
+         PTAB(2) = 0.5* RTABL(JMETG,IDVOL,JMETXB)
+         NR = I
+         CALL GSPOSP('MUC2',NR,'MCOA',X,Y,Z,IR,'ONLY', PTAB,NPAR)
+  140 CONTINUE
+C
+C       Inner endcap at -Z side  -- 'MCIB'
+C
+      Z = ( ZEI + 0.5*THCKC ) - ZMCIB
+      MEIO = ITABL(JMESG,8,JMESID)
+      DO 150 I=1,NMCIN
+         IMCRW = MEIO + I
+         X = RTABL(JMESG,IMCRW,JMESXC)
+         IF( X .GT. 0. )THEN
+            IR = IRMC1
+         ELSE
+            IR = IRMC2
+         ENDIF
+         X = -X - XMCIB
+         Y = RTABL(JMESG,IMCRW,JMESYC) - YMCIB
+         IDVOL = ITABL(JMESG,IMCRW,JMESK2)
+         PTAB(1) = 0.5* RTABL(JMETG,IDVOL,JMETYB)
+         PTAB(2) = 0.5* RTABL(JMETG,IDVOL,JMETXB)
+         NR = I
+         CALL GSPOSP('MUC1',NR,'MCIB',X,Y,Z,IR,'ONLY', PTAB,NPAR)
+  150 CONTINUE
+C
+C       Outer endcap at -Z side  -- 'MCOB'
+C
+      Z = ( ZEO + 0.5*THCKC ) - ZMCOB
+      MEIOI = ITABL(JMESG,12,JMESID)
+      DO 160 I=1,NMCOU
+         IMCRW = MEIOI + I
+         X = RTABL(JMESG,IMCRW,JMESXC)
+         IF( X .GT. 0. )THEN
+            IR = IRMC1
+         ELSE
+            IR = IRMC2
+         ENDIF
+         X = -X - XMCOB
+         Y = RTABL(JMESG,IMCRW,JMESYC) - YMCOB
+         IDVOL = ITABL(JMESG,IMCRW,JMESK2)
+         PTAB(1) = 0.5 * RTABL(JMETG,IDVOL,JMETYB)
+         PTAB(2) = 0.5 * RTABL(JMETG,IDVOL,JMETXB)
+         NR = I
+         CALL GSPOSP('MUC2',NR,'MCOB',X,Y,Z,IR,'ONLY', PTAB,NPAR)
+  160 CONTINUE
+C
+C    Store volume name and level in the geometry tree which define
+C    entrance in detector
+C
+        CALL AGDIMP('MUB1',4,'MUON')
+        CALL AGDIMP('MUM1',5,'MUON')
+        CALL AGDIMP('MUC1',5,'MUON')
+      RETURN
+C
+C - not enough space to save sensitive volume
+C
+ 998  CALL ALTELL('AGMUCH: too many sensitive volumes ',0,'STOP')
+C
+      END
+#endif

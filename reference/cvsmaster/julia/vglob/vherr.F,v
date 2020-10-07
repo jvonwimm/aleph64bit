@@ -1,0 +1,115 @@
+head	1.1;
+access;
+symbols
+	jul313_3:1.1
+	jul313_2:1.1
+	jul313_1:1.1
+	jul313:1.1
+	jul312_1:1.1
+	jul312:1.1
+	jul311:1.1
+	jul310_1:1.1
+	jul310:1.1
+	jul309_1:1.1
+	jul309:1.1
+	jul308_6:1.1
+	jul308_5:1.1
+	jul308_4:1.1
+	jul308_3:1.1
+	jul308_2:1.1
+	jul308_1:1.1
+	jul308:1.1
+	jul307_4:1.1
+	jul307_3:1.1
+	jul307_2:1.1
+	jul307_1:1.1
+	jul307:1.1
+	jul306_3:1.1
+	jul306_2:1.1
+	jul306_1:1.1
+	jul306:1.1
+	jul305_4:1.1
+	jul305_3:1.1
+	jul305_2:1.1
+	jul305_1:1.1
+	jul305:1.1
+	jul304_3:1.1
+	jul304_2:1.1
+	jul304_1:1.1
+	jul304:1.1
+	jul303_7:1.1
+	jul303_6:1.1
+	jul303_5:1.1
+	jul303_4:1.1
+	jul303_3:1.1
+	jul303_2_mc1:1.1
+	jul303_2:1.1
+	jul303_1_mc1:1.1
+	jul303_1:1.1
+	jul303:1.1
+	jul303_v:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	97.05.15.15.45.44;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Add vglob
+@
+text
+@      SUBROUTINE VHERR(IVIEW,PVEC,PH,VERR)
+C ---------------------------------------------------------------------
+C! Compute the VDET hit error, based on a parameterization of the data
+CKEY VGLOB VDET TRACK
+C
+C      D.Brown - 8-9-94
+C
+C  INPUT;  IVIEW   = View flag; 1 = W, 2 = U
+C          PVEC(3) = track momentum vector at wafer in wafer frame
+C          PH      = Pulseheight in normalized units
+C OUTPUT;  VERR    = hit error
+C ------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+C
+C  IO variables
+C
+      INTEGER IVIEW
+      REAL PVEC(3),PH,VERR
+C
+#include "vglbcm.h"
+C
+      REAL SINFAC, PHFAC
+      PARAMETER ( SINFAC = 0.0062 )
+      PARAMETER ( PHFAC = 0.0012 )
+C
+C  Local variables
+C
+      REAL NORM,SINE
+C
+C  Compute the sines
+C
+      IF (IVIEW .EQ. 1) THEN
+        SINE = ABS(PVEC(3)) / SQRT(PVEC(1)**2+PVEC(3)**2)
+      ELSE
+        SINE = ABS(PVEC(2)) / SQRT(PVEC(1)**2+PVEC(2)**2)
+      END IF
+C
+C  Error
+C
+      VERR = MINERR + PHFAC * ABS(PH-1.0) + SINFAC * SINE**3
+
+      RETURN
+      END
+#endif
+@

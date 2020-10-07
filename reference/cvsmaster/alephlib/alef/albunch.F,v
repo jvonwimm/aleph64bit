@@ -1,0 +1,116 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.11.14.10.03.33;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.11.13.15.53.56;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@Remove write statement from albunch, does not compile on SGI
+@
+text
+@      SUBROUTINE ALBUNCH(NBUN)
+C----------------------------------------------------------------------
+C!  - Get number of bunches from LEP information in 1997
+C!
+C!   Author   :- B. Bloch                     25-Oct-1997
+C!
+C?
+C!   get currents in each bunch from LXUN bank
+C!   return number of bunches with non zero current
+C!  Input  : LXUN bank
+C!  Output : NBUN Number of wagons per train with non zero current
+C?
+C!======================================================================
+#ifndef DOC
+#include "lxunjj.h"
+#include "bcs.h"
+      EXTERNAL NAMIND
+      dimension cur(4,2)
+#include "bmacro.h"
+      id = iw(namind('LXUN'))
+      nbun = 0
+      call vzero(cur,8)
+      if ( id.le.0) go to 99
+      do 10 i= 1,lrows(id)
+         itrain = itabl(id,i,jlxutr)
+         iwag   = itabl(id,i,jlxuwa)
+         if (itrain.le.4) then
+           cur(iwag,1) = cur(iwag,1) + rtabl(id,i,jlxuce)
+           cur(iwag,2) = cur(iwag,2) + rtabl(id,i,jlxucp)             
+         endif
+  10  continue
+      do 11 i = 1,4
+        if ( (cur(i,1).gt.0.).and.(cur(i,2).gt.0.) ) nbun = nbun+1
+  11  continue
+C      write(iw(6),999) nbun,((cur(i,1),cur(i,2)),i=1,4)
+  99  return
+  999 format (1x,'albunch',I4,' bunches',
+     $        4(/,1x,'currents e- & e+ in each bunch',2F8.4)) 
+      end
+#endif
+@
+
+
+1.1
+log
+@Add albunch
+@
+text
+@d35 1
+a35 1
+      write(iw(6),999) nbun,((cur(i,1),cur(i,2)),i=1,4)
+@

@@ -1,0 +1,280 @@
+head	1.1;
+access;
+symbols
+	jul313_3:1.1
+	jul313_2:1.1
+	jul313_1:1.1
+	jul313:1.1
+	jul312_1:1.1
+	jul312:1.1
+	jul311:1.1
+	jul310_1:1.1
+	jul310:1.1
+	jul309_1:1.1
+	jul309:1.1
+	jul308_6:1.1
+	jul308_5:1.1
+	jul308_4:1.1
+	jul308_3:1.1
+	jul308_2:1.1
+	jul308_1:1.1
+	jul308:1.1
+	jul307_4:1.1
+	jul307_3:1.1
+	jul307_2:1.1
+	jul307_1:1.1
+	jul307:1.1
+	jul306_3:1.1
+	jul306_2:1.1
+	jul306_1:1.1
+	jul306:1.1
+	jul305_4:1.1
+	jul305_3:1.1
+	jul305_2:1.1
+	jul305_1:1.1
+	jul305:1.1
+	jul304_3:1.1
+	jul304_2:1.1
+	jul304_1:1.1
+	jul304:1.1
+	jul303_7:1.1
+	jul303_6:1.1
+	jul303_5:1.1
+	jul303_4:1.1
+	jul303_3:1.1
+	jul303_2_mc1:1.1
+	jul303_2:1.1
+	jul303_1_mc1:1.1
+	jul303_1:1.1
+	jul303:1.1
+	jul303_v:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	97.05.15.15.45.56;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Add vglob
+@
+text
+@      Subroutine VMUpDt(Trk)
+C-------------------------------------------------------------
+C!Update the VM5C bank by removing rows
+CKEY VDET TRACK
+C
+C  Author      : P. Rensing  16-5-95
+C
+C This routine takes as input the existing VM5C bank for a
+C     track, and removes rows which are no longer valid. Rows can become
+C     invalid because the hits used have already been assigned.
+C
+C  INPUTS:
+C    Trk        = FRFT track row
+C    bank VM5C (num=itrk)
+C 
+C  OUTPUTS:
+C    VM5C bank is changed
+C
+C-------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+C
+C  IO variables
+C
+      INTEGER Trk
+C
+C  Global includes
+C
+#include "bcs.h"
+#include "vglbcm.h"
+C
+#include "vm5cjj.h"
+#include "vdmrjj.h"
+#include "vdgcjj.h"
+#include "vdxyjj.h"
+#include "vdztjj.h"
+C
+      integer NLINK, NBANK, NAMIND, VDYEAR
+      external NLINK, NBANK, NAMIND, VDYEAR
+C
+      integer MAXROWOUT
+      parameter (MAXROWOUT = 200)
+C
+      integer indVM5C
+      integer indVDXZ
+      integer row, col, row2, col2
+      integer layer, grk, grk2
+      integer hit, wafer, bank, view, pckhit
+      integer NAss
+      logical keep(MAXROWOUT)
+      logical blank(NLAYER*NVIEW*NGRK)
+      Character*4 VDHitBnk(NVIEW)
+      Integer nassCol(NVIEW)
+      integer indVDGC, indVDMR, NamVDGC, year
+      integer NAssCl, j
+      SAVE VDHitBnk, nassCol, NamVDGC
+C
+#include "bmacrod.h"
+C
+      DATA VDHitBnk/'VDZT','VDXY'/
+      DATA nassCol/JVDZNA, JVDXNA/
+      data NamVDGC/0/
+C
+C  Inline functions
+C
+#include "bmacro.h"
+C
+      if (NamVDGC .eq. 0) then
+         NamVDGC = NAMIND('VDGC')
+      end if
+C
+      indVM5C = NLink('VM5C', trk)
+      if (indVM5C .le. 0) then
+         call RERROR('VMUPDT', -1, ' Missing VM5C bank')
+         goto 999
+      end if
+      if (LROWS(indVM5C) .gt. MAXROWOUT) then
+         call RERROR('VMUPDT', -2, ' Number of rows is too big')
+         goto 999
+      end if
+C
+      year = VDYEAR()
+      if (year .eq. 95) then
+         indVDGC = IW(NamVDGC)
+         if (indVDGC .eq. 0) then
+            call rerror('VMCLLD', -3, 'Missing VDGC Bank')
+            goto 999
+         end if
+      end if
+C
+      do row = 1, LROWS(indVM5C)
+         keep(row) = .true.
+      end do
+C
+C Loop over the rows and look at each hit. 
+C Try to save NLINK calls when finding the VDXY/VDZT bank.
+C
+      do view = 1, NVIEW
+         indVDXZ = 0
+         do layer = 1, NGRK
+            do row = 1, LROWS(indVM5C)
+               if (.not. keep(row)) goto 20
+               do grk = 1, NGRK
+                  col = (Layer-1)*4 + (grk-1)*2 + (View-1)
+                  pckhit = ITABL(indVM5C,row,JVM5HW+col)
+                  if (pckhit .le. 0) goto 10
+                  call vhuprm(pckhit, view, hit, bank)
+                  if (indVDXZ .le. 0 .or. IW(indVDXZ-2) .ne. bank)
+     $                 then
+                     indVDXZ = NLINK(VDHitBnk(view), bank)
+                  end if
+                  NAss = ITABL(indVDXZ, hit, nassCol(view))
+C
+C For VDET 95, check the number of times the cluster has been
+C     associated.
+C
+                  if (year .eq. 95) then
+                     indVDMR = NLINK('VDMR', bank+view-1)
+                     if (indVDMR .le. 0) then
+                        call RERROR('VMUPDT', -4, ' VDMR bank missing')
+                        goto 999
+                     end if
+                     NAssCl = ITABL(indVDGC, ITABL(indVDMR,hit,JVDMVD),
+     $                    JVDGNA)
+                     j = max(abs(NAss), abs(NAssCl))
+                     if (j .eq. 1 .and. NAss .ne. 1 .and. NAssCl .ne. 1)
+     $                    then
+                        NAss = -1
+                     else
+                        NAss = j
+                     end if
+                  end if
+C
+C if the hit is used once, we can use it again if the normalized pulse
+C     height is large enough.
+C NAss = -1 indicates that the previous assignment DOES allow the hit to
+C     be a double hit.
+C
+                  If (NAss .gt. 0 .or. 
+     $                 (NAss .eq. -1 .and.
+     $                 RTABL(indVM5C,row,JVM5PH+col) .lt. PHTHRN))
+     $                 then
+C
+C This row is no good. Flag it and any other row with the same hit.
+C
+                     keep(row) = .false.
+C
+                     do row2 = row+1, LROWS(indVM5C)
+                        do grk2 = 1, NGRK
+                           col2 = (Layer-1)*4 + (grk2-1)*2 + (View-1)
+                           if (pckhit .eq.
+     $                          ITABL(indVM5C,row2,JVM5HW+col2))
+     $                          keep(row2) = .false.
+                        end do
+                     end do
+                  end if
+
+C end of loop over greek hits                  
+ 10               continue
+               end do
+C end of loop over rows
+ 20            continue
+            end do
+C end of loop over layers
+         end do
+C end of loop over views
+      end do
+C
+C Now, remove all the rows marked as bad.
+C
+      row2 = 0
+      do row = 1, LROWS(indVM5C)
+         if (keep(row)) then
+            row2 = row2 + 1
+            if (row .ne. row2) then
+               call ucopy(IW(KROW(IndVM5C,row)+1),
+     $              IW(KROW(IndVM5C,row2)+1), LVM5CA )
+            end if
+         end if
+      end do
+C
+      if (row2 .ne. LROWS(indVM5C)) then
+         IndVM5C = NBANK('VM5C', Trk, LMHLEN + LVM5CA*row2)
+         IW(IndVM5C + LMHROW) = row2
+C
+C  Reset the blank column flags for the final association
+C
+         DO col = 1, 8
+            BLANK(col) = .TRUE.
+         END DO
+         DO row = 1, row2
+            DO col = 1, 8
+               IF (ITABL(IndVM5C,row,JVM5HW+col-1) .gt. 0)
+     $              BLANK(col) = .FALSE.
+            END DO
+         END DO
+         DO row = 1, row2
+            DO col = 2,4,2
+               IF (BLANK(2*col-1))
+     $              IW(KROW(IndVM5C,row)+JVM5HW+2*col-2) = 0
+               IF (BLANK(2*col))
+     $              IW(KROW(IndVM5C,row)+JVM5HW+2*col-1) = 0
+            END DO
+         END DO
+      end if
+C
+ 999  continue
+      return
+      end
+#endif
+@

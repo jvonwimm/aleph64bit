@@ -1,0 +1,32 @@
+#BSUB -q xu_8nh
+#BSUB -r
+#BSUB -R shift
+#BSUB -J kinagain
+#
+#
+echo KINAGAIN job prepared by /afs/cern.ch/aleph/shared/script/kinagainrun on Mar 22 16:09:34
+#
+echo KINAGAIN job run on `date` in the directory `pwd`
+set echo on
+cd $WORKDIR
+#
+cp /afs/cern.ch/aleph/reference/kin/kinagain.cards kinagain.cards
+# === execute
+/afs/cern.ch/aleph/shared/script/kinagainrun -C kinagain.cards -r kinagain
+#
+# === clean up at jobend
+EndJob:
+if ( -r core) then
+   if (OSF1 == "HP-UX") then
+      set DBX_OS = "xdb"
+   else
+      set DBX_OS = "dbx"
+   endif
+$DBX_OS mybe1 <<EOF
+where
+quit
+EOF
+endif
+echo " Files in the LSF directory  "
+ls -l
+exit

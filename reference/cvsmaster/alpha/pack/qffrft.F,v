@@ -1,0 +1,174 @@
+head	1.2;
+access;
+symbols
+	alpha126_22:1.2
+	alpha122_22:1.2
+	alpha126_21:1.2
+	alpha126_20:1.2
+	alpha126_19:1.2
+	alpha126_18:1.2
+	alpha126_17:1.2
+	alpha126_16:1.2
+	alpha126_15:1.2
+	alpha126_14:1.2
+	alpha126_13:1.2
+	alpha126_12:1.2
+	alpha126_11:1.2
+	alpha126_10:1.2
+	alpha126_09:1.2
+	alpha126_08:1.2
+	alpha126_07:1.2
+	alpha126_06:1.2
+	alpha126_05:1.2
+	alpha126_04:1.2
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1
+	alpha124:1.1
+	alpha123_12:1.1
+	alpha123_11:1.1
+	alpha123_10:1.1
+	alpha123_9:1.1
+	alpha123_8:1.1
+	alpha123_7:1.1
+	alpha123_6:1.1
+	alpha123_5:1.1
+	alpha123_4:1.1
+	alpha123_3:1.1
+	alpha123_2:1.1
+	alpha123:1.1
+	alpha122_48:1.1
+	alpha122_47:1.1
+	alpha122_46:1.1
+	alpha122_45:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	2001.02.06.07.58.23;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.03.02.08.00.57;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE QFFRFT
+CKEY FILL /INTERNAL
+C-----------------------------------------------------------------------
+C! Deal with FRFT banks and FRxy data cards
+C! called from QFILL  
+C!                                                   J.Boucrot  23.02.98
+C-----------------------------------------------------------------------
+#ifndef DOC
+#include "qcdesh.h"
+      INTEGER GTSTUP
+      LOGICAL XFR10,XFR12
+C-----------------------------------------------------------------------
+C If reading a MINI, recreate the PFRF banks:
+      IF (XMINI) CALL MINPFR
+C
+C Drop FRFT, NR=2 when it exists in 1989/1990 data (should not be the default)
+C
+      CALL ABRUEV(IRUN,IEVT)
+      IF (GTSTUP('VD',IRUN).LE.2) KFRFT = NDROP('FRFT',2)
+C
+C   DEAL with FR12 card
+C
+      XFR12=IW(NAMIND('FR12')).NE.0
+      IF (XFR12) THEN
+         IND=NSWAP('FRFT',0,'FRFT',3)
+         IND=NSWAP('FRFT',2,'FRFT',4)
+         IND=NSWAP('FRFT',12,'FRFT',1)
+         GO TO 999
+      ENDIF
+C
+C   DEAL with FR10 card
+C
+      XFR10=IW(NAMIND('FR10')).NE.0
+      IF (XFR10) THEN
+         IND=NSWAP('FRFT',0,'FRFT',3)
+         IND=NSWAP('FRFT',2,'FRFT',4)
+         IND=NSWAP('FRFT',10,'FRFT',1)
+         GO TO 999
+      ENDIF
+C
+C Standard case : no FR12 or FR10 or FRF0 card : 
+C then swap FRFT 0 to FRFT 3 to have 
+C NAFRFT pointing to FRFT , NR=2
+
+      IF (.NOT.XFRF0) IND=NSWAP('FRFT',0,'FRFT',3)
+C
+C The only remaining case is the presence of a FRF0 card: 
+C then NAFRFT points to FTFT , NR=0
+C and nothing has to be changed
+C
+ 999  RETURN          
+C
+      END
+#endif
+@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@d5 1
+a5 1
+C!called from QFILL  
+d13 3
+d17 1
+@
+

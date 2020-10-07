@@ -1,0 +1,67 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  aleph212:1.1.1.1 ALEPH212:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.02.07.11.40.45;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.02.07.11.40.46;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE ABWSEL (LIST)
+C --------------------------------------------------------------
+CKEY ALPHARD WRITE
+C! set write-event flag
+C - F.Ranjard - 930720      from H.Albrecht
+C - Input : LIST / A1 = one character output list
+C           Recommended : 'E' , 'R', 'C'. Forbidden : ' ', 'Z'.
+C           This parameter is ignored if the output is an event
+C           directory which refers to an input file.
+C
+C   ABWSEL sets an output flag. Actual output is done during the next
+C   call to ABRREC. Thus, there is no danger to call it more than once
+C   for one event. For the very last event, ABWEND (see below) has
+C   to be called.
+C
+C ----------------------------------------------------------------
+#ifndef DOC
+      CHARACTER*1 LIST
+#include "bcs.h"
+#include "abrcom.h"
+#include "bitconst.h"
+C --------------------------------------------------------------
+#ifndef DOC
+      IF (WLIST.NE.' ' .AND. WLIST.NE.LIST) CALL ABWEVE
+      WLIST = LIST
+C
+      END
+#endif
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

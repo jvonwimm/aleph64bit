@@ -1,0 +1,189 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.44.22;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.44.23;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@       SUBROUTINE VINIST
+C-----------------------------------------------------
+CKEY VDETDES INDEX / USER
+C
+C!   initialize electronics channel-strip arrays
+C     use connected electronics channels, bank VUEC, and VSTREG
+C
+C ---------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+C -------------------------------------------------
+#include "vduefc.h"
+#include "velchn.h"
+C -----------------------------
+      INTEGER IVIEW
+      INTEGER NREG, NDIM
+      INTEGER ISRGS(8,3)
+#include "bcs.h"
+#include "bmacrod.h"
+      INTEGER nami, kvuec, nfrstz, nfrstp, IVIEWP, IVIEWZ
+      INTEGER NR, I,j, ireg, IWAF, idisc
+C ----------------------------------------------------------
+      DATA IVIEWP, IVIEWZ /2,1/
+#include "bmacro.h"
+C ----------------------------------------------------------
+
+C Bank VUEC, connected electronics channels,
+       nfrstz = VUECH(1) + VEXCH(1)
+       nfrstp = VUECH(2) + VEXCH(2)
+C --------------------------------------------------------------
+C r-phi view
+      IVIEW = iviewp
+
+C initialize full array to 'disconnected'
+      DO I = 1,7
+        DO IDISC = 1, 1024
+          IELCHP(IDISC,I) = -1
+        ENDDO
+      ENDDO
+
+      CALL VSTREG(IVIEW,NREG,NDIM,ISRGS)
+
+      DO IREG = 1, NREG
+         j = 0
+         DO i = isrgs(1,IREG), isrgs(2,IREG)
+            IELCHP(i+nfrstp-1, ISRGS(3,IREG)) = j + isrgs(4,IREG)
+            IELCHP(i+nfrstp-1, ISRGS(5,IREG)) = j + isrgs(6,IREG)
+            IELCHP(i+nfrstp-1, ISRGS(7,IREG)) = j + isrgs(8,IREG)
+              j =  j + 1
+         ENDDO
+      ENDDO
+C ---------------------------------------------------------------------
+C z view
+      IVIEW = iviewz
+
+C initialize full array to 'disconnected'
+      DO IWAF = 1,7
+        DO IDISC = 1, 1024
+          IELCHZ(IDISC,IWAF) = -1
+        ENDDO
+      ENDDO
+C
+C nominal regions
+      CALL VSTREG(IVIEW,NREG,NDIM,ISRGS)
+C
+      DO IREG = 1, NREG
+         j = 0
+         DO i = isrgs(1,IREG), isrgs(2,IREG)
+            IELCHZ(i+nfrstz-1, ISRGS(3,IREG)) = j + isrgs(4,IREG)
+            IELCHZ(i+nfrstz-1, ISRGS(5,IREG)) = j + isrgs(6,IREG)
+              j =  j + 1
+         ENDDO
+      ENDDO
+C
+ 999  CONTINUE
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

@@ -1,0 +1,102 @@
+KCAR 0 / $TEXT
+POFF
+*---  set up modification
+MSTP   3  /     1         ! take lambda from PARJ(81)                   
+MSTP  11  /     1         ! 1/0 = yes/no initial state radiation        
+MSTP 83   /   200         ! number of MC generatedpoints if MSTP(82)>2  
+*-----------------------------------------------------------           
+PMA1   6  /     174.      ! top mass                                    
+PMA1   7  /     250.      ! next quark b' mass                
+PMA1   8  /     350.      ! next quark t' mass                
+PMA1  23  /     91.182    ! Z mass                                      
+PMA2  23  /     2.484     ! Z width                                     
+PMA1  24  /     80.25     ! W mass                                      
+PMA1  25  /     300.      ! Higgs mass                                  
+PMA1 10221 /    1.0       ! f_0 mass (to avoid infinite loops in LUDECY)
+PMA1 20213 /    1.251     ! a1 mass                                     
+PARU 102  /     .232      ! Sin sqared Theta                            
+PARJ 123  /     91.182    ! M z                                         
+PARJ 124  /     2.484     ! Gamma z                                     
+PMA4 130 /     5.1700E-08 ! K0L mass                                    
+PMA4 310 /     0.8926E-10 ! K0S                                         
+PMA4 411 /     1.0570E-12 ! D+  life time                               
+PMA4 421 /     0.4150E-12 ! D0                                          
+PMA4 431 /     0.4670E-12 ! DS
+*------------------------------Jetset setup------------------           
+MSTU  16  /     2         ! links hadrons to proper end of string       
+MSTJ   1  /     1         ! fragmentation scheme 1=string  2=IF         
+MSTJ  11  /     3         ! heavy flavour fragmentation                 
+MSTJ  12  /     2         ! default pop corn baryon prod scheme 
+MSTJ  24  /     2         ! truncated Breit-Wigner for resonnances (2)  
+MSTJ  41  /     2         ! FSR from quarks and leptons (2)             
+MSTJ  42  /     2         ! coherent (2)                                
+MSTJ  43  /     4         ! z definition (4=global unconstrained)       
+MSTJ  44  /     2         ! alpha_s scale z(1-z)m^2 (2)                 
+MSTJ  46  /     3     ! azimuthal correlations,coherence and gluon pol. 
+MSTJ  47  /     2         ! correction at first branching (qqg) (2)     
+MSTJ 101  /     5         ! parton shower (5)                           
+PARJ   1  /     0.107     ! qq/q                                        
+PARJ   2  /     0.287     ! s/u                                         
+PARJ   3  /     0.68      ! su/du                                       
+PARJ  11  /     0.56      ! V_ud                                        
+PARJ  12  /     0.47      ! V_s                                         
+PARJ  13  /     0.65      ! V_cb                                        
+PARJ  14  /     0.120     ! = PARJ(16)                                  
+PARJ  15  /     0.040     ! = PARJ(17)/5.                               
+PARJ  16  /     0.120     ! = 3.*PARJ(17)/5.                            
+PARJ  17  /     0.20  ! PARJ(14-17) give higher meson nonets (tensor...)
+PARJ  19  /     0.56      ! leading baryon suppression                  
+PARJ  21  /     0.371     ! sigma                                       
+PARJ  26  /     0.27      ! eta-prime suppress.                         
+PARJ  41  /     0.4       ! a                                           
+PARJ  42  /     0.805     ! B                                           
+PARJ  54  /     -0.040    ! epsilon c                                   
+PARJ  55  /     -0.0035   ! epsilon b                                   
+PARJ  81  /     0.291     ! Lambda LLA                                  
+PARJ  82  /     1.52      ! M min
+*                             ------------- 
+RUN  1830  'PYTHIA 6.1 test run'! RUN # , RUN'S TITLE
+TRIG     1  5000 !    FIRST,LAST EVENT TO BE GENERATED
+DEBU 6 / 1  3    !    FIRST,LAST EVENT TO BE debugged
+TIME    10
+*FILO '/aleph/scwork/???/qq183_10k.epio|EPIO'
+*  use RANMAR generator for random numbers
+*  INSEED : first seed (range assigned per institute)
+*  LOSEED : second seed (incremented locally for new runs)
+*     INSEED  LOSEED (1-30000)
+RMAR    183   150
+*       x        y        z    vertex smearing x y z for 98
+SVRT  0.0113   0.0005   0.79
+* IFLAVOR select subprocesses
+* IFLAVOR =  FLAVOR CODE  0= q qbar 6 FLAVOURS,
+*                         1= q qbar 5 FLAVOURS,
+*                         2= T TBAR,
+*                         3= W+W-,
+*                         4= Z0 Z0
+*                         5= GAMMA Z0 ,
+*                         6= GAMMA GAMMA,
+*                         7= GAMMA H0(+), 8=H0 H0 (+)
+*                         9= Z0 H0
+*                        10= NEUTRINO ANTI-NEUTRINO ONLY
+*                        11= LEPTON ANTI-LEPTON ONLY
+*                        12= PHOTOPRODUCTION WITH QCD JETS ONLY
+*                        13= PHOTOPRODUCTION WITH HIGH PT PHOTONS ONLY
+*                        14= GAMMA-GAMMA from Lonnblad's example
+*                        99= choose your own frame using pythia cards MSUB
+* ECMS  Center of mass energy in Gev
+* IPRINT   0=noprintout ,1=PRINTOUT of PART bank , 2= as 1 plus Decay table
+*     IFLAVOR     ECMS     IPRINT
+*GPYT    3        183.0       1   !  WW
+GPYT    99        183.0       1
+MSEL 0
+*MSUB 22 / 1
+MSUB 36 / 1        !  W e nu
+CKIN 43 / 0.2
+CKIN 41 / 0.2
+CKIN 45 / 0.2
+CKIN 47 / 0.2
+PARP 42 / 0.2
+*MSUB 1 / 1
+MSTJ 28 / 0
+*
+END$

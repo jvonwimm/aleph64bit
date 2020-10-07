@@ -1,0 +1,368 @@
+head	1.4;
+access;
+symbols
+	jul313_3:1.4
+	jul313_2:1.4
+	jul313_1:1.4
+	jul313:1.4
+	jul312_1:1.4
+	jul312:1.4
+	jul311:1.4
+	jul310_1:1.4
+	jul310:1.4
+	jul309_1:1.4
+	jul309:1.4
+	jul308_6:1.4
+	jul308_5:1.4
+	jul308_4:1.4
+	jul308_3:1.4
+	jul308_2:1.4
+	jul308_1:1.4
+	jul308:1.4
+	jul307_4:1.4
+	jul307_3:1.4
+	jul307_2:1.4
+	jul307_1:1.4
+	jul307:1.4
+	jul306_3:1.4
+	jul306_2:1.4
+	jul306_1:1.4
+	jul306:1.4
+	jul305_4:1.4
+	jul305_3:1.4
+	jul305_2:1.4
+	jul305_1:1.4
+	jul305:1.4
+	jul304_3:1.4
+	jul304_2:1.4
+	jul304_1:1.4
+	jul304:1.4
+	jul303_7:1.4
+	jul303_6:1.4
+	jul303_5:1.4
+	jul303_4:1.4
+	jul303_3:1.4
+	jul303_2_mc1:1.4
+	jul303_2:1.4
+	jul303_1_mc1:1.4
+	jul303_1:1.4
+	jul303_v:1.4
+	jul303:1.4
+	jul302_6:1.4
+	jul302_5:1.4
+	jul302_4:1.4
+	jul302_3:1.4
+	jul302_2:1.4
+	jul302_1:1.4
+	jul302:1.4
+	jul285_1:1.4
+	jul285:1.4
+	jul284_1:1.4
+	jul284:1.4
+	jul283_1:1.4
+	jul283:1.4
+	jul282_1:1.4
+	jul282:1.4
+	jul281_3:1.4
+	jul281_2:1.4
+	jul281_1:1.4
+	jul281:1.4
+	jul280_1:1.4
+	jul280:1.3
+	jul279:1.2
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.4
+date	96.05.07.14.49.34;	author flr;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.03.12.14.57.10;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.11.29.17.16.19;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.18.01;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.18.02;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@ jul280 corr.file no. 1
+ E4FNEC : Protect against divide by A(1)=0. (D.Pallin, Mar 96)
+ ECGFLW : Protect against bad MonteCarlo data (M.Cattaneo, Mar 96)
+ EPADCL : Protect against bad MonteCarlo data (M.Cattaneo, Mar 96)
+@
+text
+@      SUBROUTINE EPADCL
+C------------------------------------------------------------
+C
+C! Cleans ETDI bank using information from background LCAL triggers
+CKEY ECAL CLEAN  / JULIA   USER
+C  B. Bloch -Devaux  December ,1989
+C  Structure : SUBROUTINE
+C           External references:NAMIND,WBANK,BKTOW,BKFRW,WDROP(BOS77)
+C                               UCOPY,VZERO (CERNLIB)
+C                               EMDTOW      (ALEPHLIB)
+C                               RTRIGF,ENOISE,EITHR,ENSTAT(This Library)
+C           Comdecks references:BCS,BMACRO,ECCAJJ,RCURNT
+C  Input : none
+C  Output : none
+C  Banks  : input  - ETDI
+C
+C           output - JDETDI(10) work bank for ETDI from LCA triggers
+C                    JNETDI     (work bank dropped at the end)
+C                    ETDI after clean up and correction for absolute
+C                         calibration from ECCA bank
+C  Action : builds list of noisy or shifted storeys from LCAL triggers
+C           and update ETDI bank accordingly
+C-----------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "eccajj.h"
+#include "rcurnt.h"
+      LOGICAL TLCAL,TRAND,TPHYS,TSATR,FAIL
+#include "etdipt.h"
+      DIMENSION IFL(3),IMEA(3)
+      CHARACTER*80 MSG
+      INTEGER EITHR
+      EXTERNAL EITHR
+      DATA NR,NCUR / 0,0 /
+      DATA IFIR/0/
+#include "bmacro.h"
+C ---------------------------------------------------------------------
+C
+C
+C - Determine bunch number
+C
+      CALL RQBUNC(IBUN,INBU,NWAG,IQUA)
+      IBUNCH = 1
+      IF ( IBUN.GT.0) IBUNCH = IBUN
+      IF (IFIR.EQ.0) THEN
+        IFIR = 1
+        CALL VZERO(JDETDI ,NEV)
+        JNETDI = 0
+        JNWORK = 0
+        JFWORK = 0
+        NAETDI = NAMIND ('ETDI')
+        NAECCA = NAMIND ('ECCA')
+C     take care of prescan in FALCON
+        LE=0
+        K=0
+        DO 50 J=1,NEV
+          IND=NLINK('EPRS',J)
+          IF(IND.GT.0.AND.IW(IND).GT.0)THEN
+            K=K+1
+            CALL BKTOW(IW,'EPRS',J,IW,JDETDI(K),*51)
+            LE=LE+IW(JDETDI(K))
+            NR=NR+1
+            NCUR=NCUR+1
+          ENDIF
+   50   CONTINUE
+   51   CONTINUE
+      ENDIF
+C
+C?   If Run NOT Initialized RETURN
+C?   this can happen is slowc control record occur before run initializa
+C
+      IF (.NOT.INIRUC) GOTO 999
+C
+C   Look at trigger bits
+      CALL RTRIGF(IRUNRC,TLCAL,TRAND,TPHYS,TSATR,FAIL)
+C   Look at ETDI data
+      JETDI = IW(NAETDI)
+      IF (JETDI.GT.0) THEN
+        IF(IW(JETDI).EQ.0) GO TO 999
+        IF (LROWS(JETDI).EQ.0) GO TO 999
+        INEW = 0
+        NLEN = IW(JETDI)
+C       keep only LCAL-ONLY triggers
+        IF (TLCAL.AND..NOT.TPHYS.AND..NOT.TRAND.AND..NOT.FAIL) THEN
+          NCUR = NCUR+1
+C       Look  if we already have NEV banks
+          IF (NR.EQ.NEV) THEN
+            NR = NR - 1
+C         Drop oldest bank
+            IF ( NCUR.GT.10) NCUR = 1
+            CALL WDROP(IW,JDETDI(NCUR))
+          ENDIF
+          CALL WBANK(IW,JDETDI(NCUR),NLEN,*999)
+          CALL BKTOW(IW,'ETDI',0,IW,JDETDI(NCUR),*999)
+          NR = NR+1
+          INEW = 1
+        ENDIF
+C         Compute averages and sigmas if NEV events stored
+        IF (NR.EQ.NEV) THEN
+          IF ( INEW .EQ. 1) CALL ENOISE
+          CALL WBANK(IW,JNETDI,NLEN,*999)
+          IW(JNETDI+LMHCOL) = LCOLS(JETDI)
+        ENDIF
+        JECCA = IW(NAECCA)
+        DO 10 I = 1,LROWS(JETDI)
+C             Get tower address
+          IAD = ITABL(JETDI,I,1)
+          ITET = IBITS(IAD,16,8)
+          IPHI = IBITS(IAD,2,9)
+          IBAD = IBITS(IAD,0,2)+IBITS(IAD,12,4)+IBITS(IAD,24,8)
+C   Protect against bad raw data - suppress illegal adresses
+C
+          IF(ITET.GT.228.OR.IPHI.GT.384
+     +        .OR.ITET.LT.1.OR.IPHI.LT.1.OR.IBAD.NE.0)THEN
+            IERR=-1
+            CALL RERROR('EPADCL',IERR,'Illegal ECAL tower adr.')
+          ELSE
+C   Get module number for this tower
+            CALL EMDTOW(ITET,IPHI,ISC,IMD,IRG)
+            IMOD = IMD + 12 * (ISC-1)
+C
+C Protect against bad data in MonteCarlo
+            IF( IMOD .LT. 1 .OR. IMOD .GT. 36 ) THEN
+              IERR=-1
+              CALL RERROR('EPADCL',IERR,'Illegal ECAL module no.')
+              GOTO 10
+            ENDIF
+C
+            IMODB = IMOD + (IBUNCH-1) * 36
+            IF (JECCA.LE.0) THEN
+              CAL = 1.
+            ELSE
+              CAL = RTABL(JECCA,IMODB,JECCCP)
+            ENDIF
+            IF(NR.EQ.NEV) CALL ENSTAT(IAD,IFL,IMEA)
+            NST = 0
+            DO 11 IST = 1,3
+              IF ( NR.EQ.NEV ) THEN
+C     Reset channel if noisy ,shift if offset and count how many storeys
+C             are still above threshold EITHR in this tower
+                IF ( IFL(IST).EQ.1) IW(KROW(JETDI,I)+1+IST) =0
+                IF ( IFL(IST).EQ.2) IW(KROW(JETDI,I)+1+IST) =
+     $             IW(KROW(JETDI,I)+1+IST)- IMEA(IST)
+                IF (ITABL(JETDI,I,IST+1).GT.EITHR(ITET,IPHI,IST))
+     $             NST = NST+1
+              ENDIF
+C    apply absolute calibration to the 3 stacks
+              IW(KROW(JETDI,I)+IST+1)=NINT(CAL*ITABL(JETDI,I,IST+1))
+   11       CONTINUE
+            IF ( NR.EQ.NEV .AND. NST.GT.0) THEN
+C        add that line to JNETDI bank
+              KETDI = KROW(JETDI,I)
+              KWORK = KNEXT(JNETDI)
+              CALL UCOPY(IW(KETDI+1),IW(KWORK+1),LCOLS(JETDI))
+              IW(JNETDI+LMHROW) = IW(JNETDI+LMHROW)+1
+            ENDIF
+          ENDIF
+   10   CONTINUE
+C
+C       compress JNETDI and copy it to ETDI, then drop JNETDI
+        IF (NR.EQ.NEV .AND. LROWS(JNETDI).LT.LROWS(JETDI)) THEN
+          LEN = LROWS(JNETDI)*LCOLS(JNETDI)+LMHLEN
+          CALL WBANK(IW,JNETDI,LEN,*998)
+          CALL BKFRW (IW,'ETDI',0,IW,JNETDI,*998)
+        ENDIF
+  998   CALL WDROP (IW,JNETDI)
+      ENDIF
+C
+  999 RETURN
+      END
+#endif
+@
+
+
+1.3
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+ Modified Files:
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+@
+text
+@d121 8
+@
+
+
+1.2
+log
+@julia version 279
+@
+text
+@a0 1
+*DK epadcl
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d40 6
+d122 1
+d126 1
+a126 1
+              CAL = RTABL(JECCA,IMOD,JECCCP)
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

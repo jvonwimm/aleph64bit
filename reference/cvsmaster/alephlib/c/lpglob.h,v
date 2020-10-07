@@ -1,0 +1,189 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	c300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	96.04.23.15.22.38;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.04.23.15.22.39;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <stdio.h>
+
+/* Globals */
+extern lprec   *Lp; /* extern pointer to active problem */
+extern int     Rows;
+extern int     Columns;
+extern int     Sum;
+extern int     Non_zeros;
+extern int     Level;
+extern matrec  *Mat;
+extern int     *Col_no;
+extern int     *Col_end;
+extern int     *Row_end;
+extern REAL    *Orig_rh;
+extern REAL    *Rh;
+extern REAL    *Rhs;
+extern short   *Must_be_int;
+extern REAL    *Orig_upbo;
+extern REAL    *Orig_lowbo;
+extern REAL    *Upbo;
+extern REAL    *Lowbo;
+extern int     *Bas;
+extern short   *Basis;
+extern short   *Lower;
+extern int     Eta_alloc; 
+extern int     Eta_size;           
+extern int     Num_inv;
+extern REAL    *Eta_value;
+extern int     *Eta_row_nr;
+extern int     *Eta_col_end;
+extern REAL    *Solution;
+extern REAL    *Best_solution;
+extern REAL    Infinite;
+extern REAL    Epsilon;
+extern REAL    Epsb;
+extern REAL    Epsd;
+extern REAL    Epsel;
+
+extern REAL    TREJ;
+extern REAL    TINV;
+
+extern short   Maximise;
+extern short   Floor_first;
+extern REAL    Extrad;
+
+extern int     Warn_count;
+
+extern short just_inverted;
+extern short status;
+extern short do_iter;
+extern short do_invert;
+
+
+/* Globals for parser */
+extern FILE       *yyin;
+extern FILE       *lpfilename;
+extern short      Molve_dual;
+extern short      Maximise;
+extern short      *relat;
+extern int        Verbose;
+extern int        yylineno;
+extern int        yyleng;
+extern int        Lin_term_count;
+extern int        Sign;
+extern constraint_name *First_constraint_name;
+/* I hate #ifdefs, but there seems to be no "standard" way to do this */
+/* #if defined(__hpux) || defined(__apollo) || defined(_AIX) */
+/* for HP and Apollo (and possibly others) */
+extern unsigned char       yytext[];
+/* #else */
+/* For other computers */
+/* extern char    yytext[]; */
+/* #endif */
+
+extern hashelem   *Hash_tab[];
+extern rside      *First_rside;
+extern short      Ignore_decl;
+
+extern tmp_store_struct tmp_store;
+@
+
+
+1.1.1.1
+log
+@move c300 to alephlib/c
+@
+text
+@@

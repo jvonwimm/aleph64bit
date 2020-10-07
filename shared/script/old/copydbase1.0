@@ -1,0 +1,71 @@
+#! /bin/csh
+#==========================================================
+# 9/4/97                                         FLR
+#                        copydbase
+# copydbase file.ext to other local /aleph/dbase/ disks
+# copy adbs216.daf
+# will copy adbs216.daf to other local disks
+#==========================================================
+#
+# set echo on if last arg is "-v"
+set verbflr = ""
+
+set nar = $#argv
+if (nar != 0) then
+  if ($argv[${nar}] == "-v") then
+     set echo on
+     set verbflr =    "-v"
+     set argv[${nar}] = ""
+     @ nar = ${nar} - 1 
+  endif
+endif
+#
+set file = $1
+set hpos = "HPUX9"
+#
+if (${SERVICE} == "SAGA") set local1 = "afal01:${ALEPH}/dbase"
+if (${SERVICE} == "AFAL") set local1 = "shift50:${ALEPH}/dbase"
+if (${SERVICE} == "CSF")  set local1 = "shift9:${ALEPH}/dbase"
+if (${SERVICE} == "SHIFTALEPH") set local1 = "csf:${ALEPH}/dbase"
+
+  cd ${ALEPH}/dbase
+  rcp -p ${file} ${local1}/${file}
+
+  if ( ${SERVICE} == "SHIFTALEPH" || ${SERVICE} == "CSF" ) then
+    rcp -p shift50:${ALEPH}/dbase/${file} afal01:${ALEPH}/dbase/${file}
+  endif
+  if ( ${SERVICE} == "AFAL" || ${SERVICE} == "SAGA" ) then
+    rcp -p shift9:${ALEPH}/dbase/${file} csf:${ALEPH}/dbase/${file}
+  endif
+
+#
+exit:
+unsetenv NORETRY
+exit
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

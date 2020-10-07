@@ -1,0 +1,102 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.07.14.02.05;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.06;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK ehadrn
+      SUBROUTINE EHADRN( ICOND , XGERB )
+C.--------------------------------------------------------------
+C        J.Badier - 17/03/87
+C! Tirage d'une gerbe hadronique.
+C   INPUT   ICOND = 0    Initialisation
+C                   1    Tirage d'un point.
+C   OUTPUT  XGERB        Coordonnees du point tire dans le systeme
+C                        de la gerbe. XGERB(1) en cm selon l'axe.
+C        Call RANNOR , RNDM.
+C   Appele par EHGERBE
+C. --------------------------------------------------------------
+#ifndef DOC
+      SAVE
+      DIMENSION XGERB(3)
+#include "capano.h"
+      IF( ICOND .EQ. 0 ) THEN
+         BABA = 0.
+      ELSE
+         XGERB(1) = 100. * RNDM(BABA)
+         CALL RANNOR( ALEA2 , ALEA3 )
+         XGERB(2) = XGERB(1) * HADRAY * ALEA2
+         XGERB(3) = XGERB(1) * HADRAY * ALEA3
+      ENDIF
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

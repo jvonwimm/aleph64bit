@@ -1,0 +1,48 @@
+#!/bin/csh
+#=============================================================================
+#                             rfstat_clean
+# 20/06/95                                                        F.Blin
+#=============================================================================
+#=============================================================================
+#set echo on
+set TMP = "/aleph/tmp/rfstat_clean_tmp"
+if (-e ${TMP}) \rm -f ${TMP}
+set TMP_MAIL = "/aleph/tmp/rfstat_clean_tmp_mail"
+if (-e ${TMP_MAIL}) \rm -f ${TMP_MAIL}
+#
+set today = `date '+%y %m %d %H %M'`
+#set today_y = `echo ${today} | awk '{print $1}'`
+#set today_m = `echo ${today} | awk '{print $2}'`
+#set today_d = `echo ${today} | awk '{print $3}'`
+set today_H = `echo ${today} | awk '{print $4}'`
+set today_M = `echo ${today} | awk '{print $5}'`
+BEGIN:
+ps -ef | grep rfstat | grep -v rfstat_clean | grep -v grep > ${TMP}
+#TEST ps -ef | grep rfstat | grep -v rfstat_clean  > ${TMP}
+set LOG = /aleph/log/rfstat_clean.log
+####>kill rfstat process with time >= one hour
+@ check_mm = (((${today_H}) * 60) + ${today_M}) - 60
+echo "`date`" >> ${TMP_MAIL}
+if (-z ${TMP}) goto END
+ awk '\
+      BEGIN { check_mm = '$check_mm'; \
+              today_H = '$today_H'} \
+      { mm[NR] = 0; H[NR] = 0;\
+        line[NR] = $0; \
+        process[NR] = $2; \
+        cha[NR] = substr($5,3,1); \
+        if (cha[NR] == ":") \
+           { H[NR] = substr($5,1,2); \
+             M[NR] = substr($5,4,2); \
+             mm[NR] = (H[NR] * 60) + M[NR] }\
+        if (mm[NR] <= check_mm || H[NR] > today_H) kill -9 process[NR]}' ${TMP} >> ${TMP_MAIL}
+END:
+\rm -f ${TMP}
+set n_tmp_mail = `wc -l ${TMP_MAIL} | awk '{print $1}'`
+if (${n_tmp_mail} > 1) then
+   cat ${TMP_MAIL} | Mail -s "rfstat_clean" fblxu@aloha.cern.ch,hagxu@cernvm.cern.ch,system@aloha.cern.ch
+endif
+if !(-z ${TMP_MAIL}) cat ${TMP_MAIL} >> ${LOG}
+\rm -f ${TMP_MAIL}
+exit
+

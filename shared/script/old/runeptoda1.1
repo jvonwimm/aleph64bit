@@ -1,0 +1,70 @@
+#!/bin/csh
+# ======================> runeptoda procedure =====================
+#
+# F.Blin 12/01/93 add new parameter for DAFB value
+# F.Ranjard 28/01/93 get parameters from dbase_run
+#                    remove fort.7 at the end
+# runeptoda1.1                                   FLR
+# 28/09/93 - increase default size of data base to 420 blocks
+#
+# ===================================================================
+#
+#
+if ($#argv < 1) then
+	echo "usage: runeptoda <version number> [<NREC value>] [<NDIR value>]"
+	echo "   to create a direct access database file adbs<version_number>.daf"
+        echo "   with NREC records and NDIR directory records"
+        echo "   by default NREC=420 and NDIR=7"
+	echo "   from an EPIO file with block length 3600 adbs<version_number>.epio"
+	echo "   the latter can be created on ALWS, VXCERN or copied from IBM."
+        echo "   See help daf epiofmt on the VAX."
+	exit(1)
+else
+#set echo on
+	set VERSION = $1
+	set dafb_rec = 420
+	set dafb_dir = 7
+        if ($#argv >= 2) set dafb_rec = $2
+	if ($#argv >= 3) set dafb_dir = $3
+endif
+
+echo " "
+echo " be patient... creation of adbs${VERSION}.daf"
+echo " with ${dafb_rec} records and ${dafb_dir} directory records"
+echo " will take a while..."
+echo " output is written onto eptoda.out"
+echo " "  
+if (-e adbs${VERSION}.daf) then
+   echo " rename existing adbs${VERSION}.daf as adbs${VERSION}.dafold" 
+   mv -f adbs${VERSION}.daf adbs${VERSION}.dafold 
+endif
+
+cat >fort.7 <<EOF
+FEPI 'adbs${VERSION}.epio | EPIO'
+FDAF 'adbs${VERSION}.daf | DAF'
+DAFB ${dafb_rec} ${dafb_dir}
+NDOT
+ENDQ
+EOF
+
+if (-e eptoda.out) rm -f eptoda.out 
+/aleph/bin/eptoda > eptoda.out
+
+if (-e adbs${VERSION}.daf) then
+   echo " remove adbs${VERSION}.dafold and fort.7 if there"
+   if (-e adbs${VERSION}.dafold) rm -f adbs${VERSION}.dafold
+   rm -f fort.7
+else
+   if (-e adbs${VERSION}.dafold) mv -f adbs${VERSION}.dafold adbs${VERSION}.daf
+endif   
+echo " "  
+exit(0)
+ 
+
+
+
+
+
+
+
+

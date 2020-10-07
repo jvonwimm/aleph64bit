@@ -1,0 +1,146 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  qfndip_1:1.1.1.1 OSF1:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.08.20.13.56.15;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.08.20.13.56.16;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@C*DK,JETCLU
+      SUBROUTINE JETCLU( CNAM,NJET,JETS,TRKJ )
+C
+C  New version of jet clustering routine;  Use standard (ENFLW) energy
+C  flow, jet algorithm (QJMMCL, E=ELEP), ycut (.02).  This will
+C  use DJET banks if they exist, otherwise raw ENFLW objects.  Note that
+C  a cut is used to define the jets so that THE LIST OF JETS IS NOT
+C  COMPLETE.  The jets returned are useful (high momentum) jets for
+C  many applicateions.
+C                                               Dave Brown, 29,1,93
+C
+C     INPUT:
+C        CNAM     :   Name of output ALPHA jet objects
+C     OUTPUT:
+C        NJET     :   Number of jets found
+C                      (momentum ordered, P>cut)
+C        JETS     :   3-Momentum of the jets (unitized)   i=1,njet
+C        TRKJ     :   ALPHA track # of jet with number i
+C
+C    CALLS :
+C      CALL SORTZV
+C      CALL QJOPTR
+C      CALL QJMMCL
+C
+      IMPLICIT NONE
+      SAVE
+C
+C  Global includes
+C
+#include "qdecl.h"
+#include "qcde.h"
+#include "maxtrk.inc"
+C
+C  Output parameters
+C
+      INTEGER NJET,TRKJ(MAXJET)
+      REAL JETS(3,MAXJET)
+C
+C  Local variables
+C
+      INTEGER MJET,IJET,JTRK,KJET(MAXJET),ISORT(MAXJET)
+      REAL PJET(MAXJET),JMOM
+C
+C  Functions
+C
+      INTEGER KPDIR
+C
+C  Jet clustering parameters; these are all default now!!!
+C
+      REAL YCUT,PCUT
+      CHARACTER*8 CNAM
+      DATA YCUT/.02/,PCUT/10./
+C
+C  Inline functions
+C
+#include "qmacro.h"
+C
+C  First try to find the DJET objects; if not present, use ENFL objects
+C
+      IF(KNJET.GT.0)THEN
+        CALL QJOPTR('EJ',' ')
+      ELSE
+        CALL QJOPTR('EF',' ')
+      END IF
+C
+C  Cluster
+C
+      CALL QJMMCL(MJET,CNAM,KRECO,YCUT,QELEP)
+C
+C  Get the ALPHA pointers to these new objects
+C
+      JTRK=KPDIR(CNAM,KRECO)
+      DO IJET = 1 , MJET
+        PJET(IJET)  = QP(JTRK)
+        KJET(IJET) = JTRK
+        JTRK = KFOLLO(JTRK)
+      ENDDO
+C
+C  Sort the array of the jet momenta in descending order :
+C
+      IF(MJET.GT.0)CALL SORTZV ( PJET,ISORT,MJET,1,1,0 )
+C
+C  Fill array with 3-momenta of the jets : cut on the momentum
+C
+      NJET = 0
+      DO IJET = 1 , MJET
+        IF(PJET(ISORT(IJET)).GE.PCUT)THEN
+          NJET = NJET + 1
+          TRKJ(NJET) = KJET(ISORT(IJET))
+          JTRK = TRKJ(IJET)
+          JETS(1,NJET) = QX(JTRK)/QP(JTRK)
+          JETS(2,NJET) = QY(JTRK)/QP(JTRK)
+          JETS(3,NJET) = QZ(JTRK)/QP(JTRK)
+        ENDIF
+      END DO
+C
+      RETURN
+      END
+
+
+
+
+
+
+
+
+
+
+@
+
+
+1.1.1.1
+log
+@import 
+@
+text
+@@

@@ -1,0 +1,60 @@
+KCAR 0 / $TEXT
+POFF
+*     RUN #             RUN'S TITLE                                             
+RUN   1714  'BHABHA:BHWIDE, 188.6 GEV, RUN 1714'                   
+*     FIRST EVENT    LAST EVENT    TO BE GENERATED                              
+TRIG     1            25000        
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG                                 
+DEBU  6     /      1          5
+* requested time left at the end of job (in sec)                                
+TIME 120                                                                        
+*    to save event file (EPIO format)                                           
+FILO 'bhwi04_188p6.epio|EPIO'
+*    to save histograms                                                         
+*               x        y        z  vertex smearing  98 values       
+SVRT          0.0113  0.0005   0.79                        
+*               x        y        z  mean vertex position
+XVRT          0.017  0.045 -0.135
+RMAR   27   1
+* GBHP CARD
+* CMSENE    : centre of mass energy (in GeV);
+* THMINP    : detector range ThetaMin [deg] for positrons
+* THMAXP    : detector range ThetaMax [deg] for positrons
+* THMINE    : detector range ThetaMin [deg] for electrons
+* THMAXE    : detector range ThetaMax [deg] for electrons
+* ENMINP    : Energy minimum [GeV] for detected positrons
+* ENMINE    : Energy minimum [GeV] for detected electrons
+* ACOLLI    : Maximum acollinearity [deg] of final e+e-
+* EPSCMS    : Dimensionless infrared cut on CMS energy of soft
+*             photons, ( E_phot > CMSENE*EPSCMS/2 )
+* WTMAX     : Maximum Weight for rejection
+*   CMSENE THMINP THMAXP THMINE THMAXE ENMINP ENMINE ACOLLI EPSCMS  
+GBHP 188.60 10.00 170.00 10.00  170.00 0.180  0.180 180.00 0.00001
+*
+* WTMAX
+   10.0
+* GBSM CARD
+* AMAZ   =  91.1882 ! Z mass
+* GAMMZ  =  2.4952  ! Z width (may be recalculated by EW library)
+* SINW2  =  0.22225 ! sin^2(theta_W) (may be recalculated by EW library)   
+* AMTOP  = 174.3    ! top quark mass
+* AMHIG  = 115.0    ! Higgs mass 
+*       AMAZ    GAMMZ   SINW2    AMTOP   AMHIG
+GBSM    91.1882 2.4952  0.22225  174.3   125.0
+
+* GBHK CARD
+* KEYWGT =  0   ! unweighted (WT=1) events, for detector simulation
+*        =  1   ! weighted events
+* KEYRND =  1   ! RANMAR random numbers
+* KEYCHA =  0   ! Channel choice: all/s-only/t-only: =0/1/2
+* KEYZOF =  0   ! Z-contribution ON/OFF: =0/1
+* KEYEWC =  0   ! QED corrections only 
+*        =  1   ! Total O(alpha) ElectroWeak corr. included
+* KEYLIB =  1   ! ElectroWeak corrections from BABAMC (obsolete!)
+*        =  2   ! ElectroWeak corrections from ALIBABA
+* KEYMOD =  1   ! Hard bremsstr. matrix element from MODEL1
+*        =  2   ! Hard bremsstr. matrix alement from MODEL2
+* KEYPIA =  3   ! Vacuum polarization option (0/1/2/3)
+*     KEYWGT  KEYRND  KEYCHA  KEYZOF KEYEWC  KEYLIB  KEYMOD  KEYPIA
+GBHK    0       1       0       0      1       2       1       3
+END$                                                                           

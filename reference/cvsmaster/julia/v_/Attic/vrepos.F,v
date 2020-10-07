@@ -1,0 +1,209 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  v300:1.1.1.1 flr:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     94.12.07.14.20.37;  author aljul;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     94.12.07.14.20.38;  author aljul;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK vrepos
+      SUBROUTINE VREPOS(NSTRP,FSTRP,IPULS,IFLAG,SCENT,
+     &  ISUM,POSIT,PITCH,IWIDT)
+C----------------------------------------------------------------------
+C!  - Compute the local position of a final cluster
+C!
+C
+C  Cluster position calculuation
+C
+C?
+C!======================================================================
+#ifndef DOC
+#include "implicit.h"
+#include "vdimpl.h"
+C
+C  Global includes
+C
+#include "vdflgs.h"
+#include "vrecon.h"
+C
+C  Input parameters
+C
+      INTEGER NSTRP,FSTRP,IFLAG(*)
+      INTEGER IPULS(*)
+      REAL SCENT
+C
+C  Output parameters
+C
+      REAL POSIT,PITCH
+      INTEGER ISUM,IWIDT
+C
+C  Local parameters
+C
+      REAL POINT,POS,POS2,PSUM,PSUM2,PULSE
+      INTEGER ISTRP,JSTRP,IMAX(2),MXPUL
+C
+C  Inline functions
+C
+      LOGICAL PL50,MN50,OFSET
+      LOGICAL S200U,S100U
+      INTEGER IFLG
+      S200U(IFLG) = IAND(IFLG,VB200U).EQ.VB200U
+      S100U(IFLG) = IAND(IFLG,VB100U).EQ.VB100U
+      PL50(IFLG) = IAND(IFLG,VBPL50).EQ.VBPL50
+      MN50(IFLG) = IAND(IFLG,VBMN50).EQ.VBMN50
+      OFSET(IFLG) = PL50(IFLG) .OR. MN50(IFLG)
+C
+C  Find the highest ph, and the strip next to it with the
+C  highest PH.  These are used to compute the position via
+C  the '2-highest strips' method.
+C
+      MXPUL = 0
+      DO 101 ISTRP=1,NSTRP
+        IF(IPULS(ISTRP) .GT. MXPUL)THEN
+          IMAX(1) = ISTRP
+          MXPUL = IPULS(ISTRP)
+        END IF
+  101 CONTINUE
+      IF(IMAX(1) .GT. 1 .AND. IMAX(1) .LT. NSTRP)THEN
+        IF(IPULS(IMAX(1)-1).GT.IPULS(IMAX(1)+1))THEN
+          IMAX(2) = IMAX(1)-1
+        ELSE
+          IMAX(2) = IMAX(1)+1
+        END IF
+      ELSE IF(IMAX(1) .GT. 1)THEN
+        IMAX(2) = IMAX(1)-1
+      ELSE IF(IMAX(1) .LT. NSTRP)THEN
+        IMAX(2) = IMAX(1)+1
+      ELSE
+C
+C  No second-highest strip exists; set the pointer to 0
+C
+        IMAX(2) = 0
+      END IF
+C
+C  Check that the second strip is positive.
+C
+      IF(IMAX(2).GT.0 .AND. IPULS(IMAX(2)).LT.0)IMAX(2)=0
+C
+C  Zero the sums
+C
+      ISUM = 0
+      PSUM = 0.
+      PSUM2 = 0.
+      POS = 0.
+      POS2 = 0.
+      IWIDT = 0
+C
+C  Loop over the strips, to compute the sums
+C
+      DO 20 ISTRP=1,NSTRP
+C
+C  Check for +- 50 micron bonding
+C
+        IF(.NOT. OFSET(IFLAG(ISTRP)))THEN
+          POINT = FSTRP+ISTRP-1.
+        ELSE IF(PL50(IFLAG(ISTRP)))THEN
+          POINT = FSTRP+ISTRP-1.+.5
+        ELSE IF(MN50(IFLAG(ISTRP)))THEN
+          POINT = FSTRP+ISTRP-1.-.5
+        END IF
+C
+C  correct for the signal decay time.  This only applies to 100micron
+C  bonded channels
+C
+        IF(ISTRP.NE.1 .AND. S100U(IFLAG(ISTRP)))THEN
+          PULSE = IPULS(ISTRP)-DECFAC*IPULS(ISTRP-1)
+        ELSE
+          PULSE = IPULS(ISTRP)
+        END IF
+        ISUM = ISUM + IPULS(ISTRP)
+C
+C Calculate sums for the weighted average position
+C
+        IF(PULSE.GE.MNPULS)THEN
+          IWIDT = IWIDT + 1
+          PSUM = PSUM + PULSE
+          POS = POS + POINT*PULSE
+        END IF
+C
+C  Check if the current strip is used in the '2-highest' method.
+C  If so, add the appropriate sums
+C
+        DO 21 JSTRP=1,2
+          IF(ISTRP .EQ. IMAX(JSTRP))THEN
+            PSUM2 = PSUM2 + PULSE
+            POS2 = POS2 + POINT*PULSE
+          END IF
+   21 CONTINUE
+   20 CONTINUE
+C
+C  between 2 and 5 strips is considered normal OK for the
+C  weighted average.
+C
+      IF(IWIDT .GE. 2 .AND. IWIDT .LE. 5)THEN
+        POSIT = POS/PSUM
+      ELSE IF(IWIDT .LT. 1)THEN
+C
+C  If there are <1 strips, this is an error.  Return as a position
+C  the center of the highest strip
+C
+        CALL RERROR('VREPOS',1,' No strips above threshold')
+        POSIT = FSTRP+IMAX(1)-1
+      ELSE IF(IWIDT .LT. 2)THEN
+C
+C  If there's only 1 strip, use the position from the 2 highest method.
+C
+        POSIT = POS2/PSUM2
+      ELSE IF(IWIDT .GT. 5)THEN
+C
+C  This cluster is too wide; call it an error, but take the position
+C  in the normal way.
+C
+        CALL RERROR('VREPOS',2,' Cluster too wide')
+        POSIT = POS/PSUM
+      END IF
+C
+C  Shift position to module center, correct for 200 micron pitch,
+C  translate to centimeters, etc.
+C
+      IF(.NOT. S200U(IFLAG(1)))THEN
+        POSIT = (POSIT-SCENT)/100.
+        PITCH = .001
+      ELSE
+        POSIT = (POSIT-SCENT)/50.
+        PITCH = .002
+      END IF
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

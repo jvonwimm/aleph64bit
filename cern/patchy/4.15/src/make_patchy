@@ -1,0 +1,130 @@
+#!/bin/csh
+unalias rm
+unalias mv
+unalias cp
+# * PATCHY SHELL v1.06                                                 *
+# *                                                                    *
+# * Patchy Install driver                                              *
+# *                                                                    *
+# * Author: M.Marquina 90/08/24                                        *
+# *                                                                    *
+# * Mods       Date   Commments                                        *
+# * MARQUINA 91/04/29 Define automatically the path needed by p4boot.sh*
+# *                   Improve report messages                          *
+# *          92/03/25 Prompt to fill environment variables             *
+# *                   Take PATCHY suite from current directory,not HOME*
+# *          92/04/05 place executables in /cern/patchy/ver/bin        *
+# *          93/07/22 link to ASIS repository if sources are not local *
+# *          93/11/18 hardcode /cern in ASIS directory                 *
+# *                                                                    *
+# **********************************************************************
+  if ( $?PATCHY_VERSION == 0 ) set PATCHY_VERSION=4.15
+
+  if ( $?CERNLIB_KERNLIB == 0 ) then
+    echo "-------------------------------------------------------"
+    echo "The environment variable CERNLIB_KERNLIB has to be set "
+    echo "e.g. /cern/pro/lib/libkernlib.a                        "
+    echo "-------------------------------------------------------"
+    exit
+  endif
+
+  if ( $?FC == 0 ) then
+    echo "------------------------------------------"
+    echo "The environment variable FC has to be set "
+    echo "e.g. g77 or gfortran or ...."
+    echo "------------------------------------------"
+    exit
+  endif
+  set CERN="$PWD"
+
+  set PAT0="$CERN/patchy"
+  set P4TOP="$PAT0/$PATCHY_VERSION"
+  set P4SRC="$P4TOP/src"
+
+  if ( ! -d $PAT0  ) mkdir $PAT0
+  if ( ! -d $P4TOP ) mkdir $P4TOP
+  if ( ! -d $P4SRC ) mkdir $P4SRC
+#
+ if ( $cwd != $P4SRC ) then
+  echo "-------------------------------------------------"
+  echo "Patchy step 0: copying Patchy files into $P4SRC  "
+  echo "-------------------------------------------------"
+     cp -p ./make_patchy $P4SRC
+  if ( -f rceta.sh ) then
+     cp -p ./rceta.sh    $P4SRC
+     cp -p ./p4boot.sh0  $P4SRC
+     cp -p ./p4inceta    $P4SRC
+     cd $P4SRC
+     mv p4boot.sh0 p4boot.sh0gfort
+     chmod +x rceta.sh
+  else
+     cd $P4SRC
+     if ( $?ASIS == 0 ) set ASIS="/asis"
+     set PLIUWC=`/bin/sh -c ". $ASIS/share/cern/mgr/cernsys;echo $PLIUWC"`
+     set Msys=`grep "^$PLIUWC" $ASIS/share/cern/bin/transarctab | awk '{ print $2 }'`
+     set ASISSRC="$ASIS/specific/$Msys/cern/patchy/$PATCHY_VERSION/src"
+
+     ln -s $ASISSRC/rceta.sh   rceta.sh
+     ln -s $ASISSRC/p4boot.sh0 p4boot.sh0
+     ln -s $ASISSRC/p4inceta   p4inceta
+  endif
+ endif
+# The current and parent directories must be available to
+# the Patchy installation shells
+  set path=(. .. $path)
+  echo "---------------------------------------------------"
+  echo "Patchy step 1: running rceta.sh...                 "
+  echo "---------------------------------------------------"
+  ./rceta.sh
+  if ( ! -f p4comp.fca ) then
+    tee <<+
+# rceta.sh did not succeed to read the p4inceta file
+# Please check that:
+#   - name+options of the compiler are right
+#   - the compiler is available in the path
+#   - the program rceta.f compiles
+#
++
+    exit
+  endif
+  echo "the following files are now present:"
+  ls -l
+# === Now cleaning up
+  rm rceta.f rceta
+  echo "---------------------------------------------------"
+  echo "Patchy step 2: verifying extraction...             "
+  echo "---------------------------------------------------"
+# === Now modify fcasplit.f for the compiler used
+  sed "s/f77/$FC/g" fcasplit.f > fcasplit.ft
+  mv fcasplit.ft fcasplit.f
+  sed 's/-O2 -Nx800 -Nc200/-O/g' fcasplit.f > fcasplit.ft
+  mv fcasplit.ft fcasplit.f
+  sed 's/cc   /gcc  /g' fcasplit.f > fcasplit.ft
+  mv fcasplit.ft fcasplit.f
+  sed 's/-c -O2 -posix/-c -O/g' fcasplit.f > fcasplit.ft
+  mv fcasplit.ft fcasplit.f
+  echo "---------------------------------------------------"
+  echo "Patchy step 3: running p4boot.sh                   "
+  echo "---------------------------------------------------"
+  cp  p4boot.sh0gfort p4boot.sh
+  chmod a+x p4boot.sh
+  ./p4boot.sh 0
+  if ( ! -f ypatchy ) then
+    tee <<+
+# p4boot.sh did not succeed to install Patchy utilities.
+# Please check that:
+#   - name+options of the compiler are right
+#   - the compiler is available in the path
+#   - ". .." are in the path
+#   - the program fcasplit.f compiles
+#
++
+  endif
+  rm y*.o y.lis
+  echo "---------------------------------------------------"
+  echo "Patchy step 4: placing executables in $P4TOP/bin"
+  echo "---------------------------------------------------"
+  if ( ! -d ../bin ) mkdir ../bin
+  mv y*       ../bin
+  mv fcasplit ../bin
+

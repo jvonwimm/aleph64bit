@@ -1,0 +1,31 @@
+ *---   First section : steering
+NREF 9702       ! loads setup 9700 and 9702 (Z0 Z0,GAMMA Z0,WW) from Data Base
+*FDBA '/aleph/dbase/adbs222.daf | DAF'
+*                             ------------- 
+* PLEASE, LOOK AT INSTRUCTIONS TO SET UP PROPERLY NEXT CARD
+RUN    1380 'ZNNB01 RUNNING Znn PRODUCTION' ! RUN # , RUN'S TITLE
+TRIG     1  1000 !    FIRST,LAST EVENT TO BE GENERATED
+DEBU 6 / 1  4    !    FIRST,LAST EVENT TO BE debugged
+TIME    10
+*FILO '/shift/shift9/data14/knering/kin/97/znn183_1380_1k.epio|EPIO'
+*  use RANMAR generator for random numbers
+*  INSEED : first seed (range assigned per institute)
+*  LOSEED : second seed (incremented locally for new runs)
+*     INSEED  LOSEED (1-30000)
+RMAR    12    34
+ENDQ
+*---   second section : modifications to Data Base setup
+KCAR 0 / $TEXT
+POFF
+* smearing of the vertex x y z for 97 according to 96 data values
+SVRT 0.0150 0.0005 0.66
+*XVRT 0.01 0.0 0.1 0. 0. 0.  ! offset and spread of vertex position
+* Generator parameters                                                  
+*    ECM     :  center-of-mass energy (GeV)                             
+*    MZ      :  Z mass  (GeV)                                           
+*    GZ      :  Z width (GeV)                                           
+*    SW2     :  sin**2(theta_w)                                         
+*     ECM      MZ      GZ    SW2                                        
+GENE  200.   91.189  2.497  0.2317                                      
+*
+END$

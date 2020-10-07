@@ -1,0 +1,182 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.44.44;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.44.45;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE VDHERR(IWAFA,PV,PU,PW,SIGNU,SIGNW,UERR,WERR)
+C
+C! Compute the VDET hit error given wafer information and track direction
+CKEY VDET JULIA
+C
+C  This uses a simple theoretical model to compute the hit errors
+C  given the signal/noise, and other parameters (see VDET ALIGNMENT
+C  ALEPHNOTE of 1991).  Dave Brown, 7-2-91
+C
+C  INPUT;  IWAFA =  Decimal wafer address
+C          PV,PU,PW = track momentum vector at wafer in wafer frame
+C          SIGNU,SIGNW = Signal/noise on U,W side
+C OUTPUT;  UERR,WERR = hit errors in U,W direction
+C
+#ifndef DOC
+      SAVE
+#include "vdgeos.h"
+      INTEGER IWAFA,ILAY,IWAF,IPHI,IVIEW,ITYPE
+      REAL RPITU,FPITU,RPITW,FPITW,PV,PU,PW
+      REAL SIGNU,SIGNW,UERR,WERR
+      REAL COSW, SINW, COSU, SINU
+      REAL UERRP,UERRN,WERRP,WERRN
+C
+C  Shower spread factor- this should be computed from the pulseheight,
+C  but for now we take a nominal value.  We also need sqrt(12).
+C
+      REAL SPRED,ROT12
+      DATA SPRED/1.5/
+      DATA ROT12/3.46410/
+C
+C  Unpack the wafer address, and find the wafer type
+C
+      CALL VADEWA(IWAFA,ILAY,IWAF,IPHI,IVIEW)
+      ITYPE = NSLOGM(IPHI,ILAY)
+C
+C  Get the readout and floating strip pitches, U and W direction
+C
+      RPITU = VDPPIT(ITYPE)
+      RPITW = VDZPIT(ITYPE)
+      FPITU = VDSTPH(ITYPE)
+      FPITW = VDSTZE(ITYPE)
+C
+C  Compute the cosine/sines
+C
+      COSW = SQRT( MAX(1./(1.+ (PW/PV)**2),0.0) )
+      SINW = SQRT( MAX(1. - COSW**2,0.0) )
+      COSU = SQRT( MAX(1./(1.+ (PU/PV)**2),0.0) )
+      SINU = SQRT( MAX(1. - COSU**2,0.0) )
+C
+C  Resolution due to strip pitch
+C
+      UERRP = FPITU*COSU/ROT12
+      WERRP = FPITW*COSW/ROT12
+C
+C  Resolution due to noise
+C
+      UERRN = (RPITU/SIGNU)*
+     &  ( (1.0 + SPRED*SINU)/SQRT(1.+SINU**2 + SINW**2) )
+      WERRN = (RPITW/SIGNW)*
+     &  ( (1.0 + SPRED*SINW)/SQRT(1.+SINU**2 + SINW**2) )
+C
+C  Resolution due to alignment (NOT YET IMPLEMENTED)
+C
+C
+C  Add in quadrature
+C
+      UERR = SQRT( UERRP**2 + UERRN**2)
+      WERR = SQRT( WERRP**2 + WERRN**2)
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

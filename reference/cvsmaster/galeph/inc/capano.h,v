@@ -1,0 +1,112 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	94.12.07.14.01.21;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.22;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*CD capano
+      PARAMETER(LTYPEL=48, LTYPME=49, LTYPBA=50, LTYPAN=51, LTYPGA=52)
+      COMMON / CAPANO / NATGER,METHCO,TOTNRJ,TINOX0,TINOL0,EMGNRJ,
+     + EMALFA,EMBETA,EMALM1,EMAEXP,EMFACT,EMUDP0,EMUDP2, HADNRJ,HALPHA,
+     + HABETA,HADRAY,HAPUIS,HGAMMA,SMAXLR,SMAXLA
+       COMMON / CANAME / EMNAME
+       CHARACTER*4 EMNAME
+C
+#if defined(DOC)
+        LTYPEL : geantino electron particle #
+        LTYPME : geantino meson particle #
+        LTYPBA : geantino baryon particle #
+        LTYPAN : geantino antibaryon particle #
+        LTYPGA : geantino photon particle #
+        NATGER : Nature de la gerbe (elec=1, phot=2, had=3)
+        METHCO : No param. = 1 , param. = 2
+        TOTNRJ : Energie totale.
+        TINOX0 : total rad length seen by the current geantino
+        TINOL0 : total abs. length seen by the current geantino
+        EMGNRJ : Fraction e.m.
+        EMALFA : Alpha e.m. parameter.
+        EMBETA : Beta e.m. parameter.
+        EMALM1 : Alpha - 1.
+        EMAEXP : Radial e.m. parameter = 1. / ( n - 2 )
+        EMFACT : R0 / Z
+        EMUDP0 : Depth shower size dependance,constant term.
+        EMUDP2 : Depth shower size dependance, z**2  term.
+        HADNRJ : Fraction hadronique.
+        HALPHA : Alpha parameter of hadronic shower
+        HABETA : Beta parameter of hdronic shower
+        HADRAY : Radius of hadronic shower
+        HAPUIS : Transversal dependance of hadronic shower
+        HGAMMA : Free parameter
+        SMAXLR : Radiation length tracked so far
+        SMAXLA : Absorption length tracked so far
+        EMNAME : Last volume name
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

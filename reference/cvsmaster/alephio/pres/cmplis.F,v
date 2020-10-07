@@ -1,0 +1,180 @@
+head	1.2;
+access;
+symbols
+	alio83:1.2
+	alio82:1.2
+	alio81:1.2
+	alio80:1.2
+	alio74:1.2
+	alio73:1.2
+	alio72:1.2
+	alio71:1.2
+	alio70:1.2
+	alio68:1.2
+	alio69:1.2
+	alio67:1.2
+	alio66:1.2
+	alio65:1.2
+	alio64:1.2
+	alio63:1.2
+	alio62:1.2
+	alio61:1.2
+	alio60:1.2
+	alephio53:1.2
+	v4:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.01.18.13.52.34;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.52.41;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.52.42;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@ Modified Files:
+	acdarg.F afilin.F afilou.F ainqui.F amount.F aoptap.F astage.F
+	awrtap.F
+ Modified Files:
+	cmphost.h ctolow.h gtchdecl.h version.h
+ Removed Files:
+	albitw.h
+ Modified Files:
+ 	altell.F babend.F jalrec.F noibm.F opensq.F sdrsx.F sibsdr.F
+	sxsdr.F
+ Modified Files:
+	ardnews.h news.h
+ Modified Files:
+	cfrvax.F cmpban.F cmpdro.F cmpin2.F cmpini.F cmplis.F cmpsum.F
+	cmptoi.F cotest.F detest.F dmpban.F dmpchr.F dmpfmt.F udmper.F
+@
+text
+@      SUBROUTINE CMPLIS(LIST,NB)
+C-----------------------------------------------------------------------
+C!    Compress banks contained in list LIST
+CKEY PRESS CMPLIS COMPRESS /USER
+C!
+C!    Author : D.Harvatis    APR 89
+C!
+C!    INPUT:
+C!          - LIST  : (CHARACTER*1) list of banks to be compressed.
+C!                    After the compression, the original names of the
+C!                    banks that were compressed are removed from the
+C!                    list, and the modified names are added.
+C!                    The modified names are the same as the original
+C!                    ones, only the first character is in lower case.
+C!
+C!    OUTPUT:
+C!          - NB    : number of banks that were compressed
+C!
+C!    Calls : CMPBAN, NLIST, BLIST, BKFMT
+C!
+C!    Description :
+C!
+C!    This subroutine loops through all bank names contained
+C!    in list LIST. The bank compression function CMPBAN is
+C!    called for every bank found.
+C-----------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+      INTEGER      CMPBAN
+      CHARACTER*1    LIST
+      CHARACTER*4    BNAM2,BNAME,NAME,NLIST,CHAINT
+      EQUIVALENCE    (BNAM2,IBNA2)
+      EQUIVALENCE    (BNAME,IBNAM)
+      EQUIVALENCE    (NAME,INAM)
+#include "bcs.h"
+#include "cmpinf.h"
+C     If TOLOWER is added to an integer equivalent with a CHARACTER*4
+C     variable, the first character of this variable is turned to lower
+C     case (if it was in upper case before the addition). If TOLOWER is
+C     substracted, and the first character was in lower case, it is
+C     turned to upper case. TOLOWER depends on the character set (ASCII
+C     or EBCDIC) and on the position that the 1st character occupies in
+C     the 32-bit word (on VAX it is the LSB, on IBM and UNIX it is the
+C     MSB).
+C-----------------------------------------------------------------------
+      NB=0
+C     if NUMBNK <= 0 then, no compression
+      IF (NUMBNK.LE.0) RETURN
+      LIPOS=0
+   10 LIPOS=LIPOS+1
+          BNAME=NLIST(IW,LIPOS,LIST)
+          IF (BNAME.EQ.' ') RETURN
+          IF (LGE(BNAME(1:1),'a')) GO TO 10
+C         find index of BNAME in INDEXW array
+C         binary search
+          IST=(NUMBNK+2)/2
+          IB=IST
+  100     INAM=IW(INDEXW(IRANKB(IB))-3)
+          IF (IBNAM.NE.INAM) THEN
+              IF (IST.EQ.1) GO TO 10
+              IST=(IST+1)/2
+              IF (LGT(BNAME,NAME))THEN
+                  IB=IB+IST
+                  IF (IB.GT.NUMBNK) IB=NUMBNK
+              ELSE
+                  IB=IB-IST
+                  IF (IB.LT.1) IB=1
+              END IF
+              GO TO 100
+          END IF
+C         calculate information block size
+C         find Number of Compressible Columns
+          IB=IRANKB(IB)
+          NCOL=IW(INDEXW(IB))/2
+          INFS=3
+          NCC=0
+          DO 20 IC=1,2*NCOL-1,2
+              IF (IW(INDEXW(IB)+IC).GT.2) NCC=NCC+1
+   20         INFS=INFS+INFSIZ(IW(INDEXW(IB)+IC))
+          IF (NCC.EQ.0) GO TO 10
+C         CMPBAN is negative if no banks were compressed,
+C                 zero if some banks were compressed
+C                 and possitive if all banks were compressed.
+          IF (CMPBAN(IB,INFS,NCC)) 91,92,93
+   93     CALL BLIST(IW,LIST//'-',BNAME)
+          LIPOS=LIPOS-1
+   92     IBNA2=TOLOWER+IBNAM
+          CALL BLIST(IW,LIST//'+',BNAM2)
+          NB=NB+1
+   91     GOTO 10
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK cmplis
+@
+
+
+1.1.1.1
+log
+@import alephio 4
+@
+text
+@@

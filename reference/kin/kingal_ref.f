@@ -1,0 +1,857 @@
+      PROGRAM KINGAL
+C--------------------------------------------------------------------
+C - B. Bloch-Devaux sept. 87                     F.Ranjard - 871116
+C - B. Bloch-Devaux june  88
+C - B. Bloch-Devaux feb.  89
+C - B. Bloch-Devaux april 89   NEW cards TIME and HSTO
+C - B. Bloch-Devaux May   91   NEW cards GSCL,GSCE
+C - B. Bloch-Devaux Decem.91   Third number on TRIG card for number of
+C                              accepted triggers ( optionnal)
+C - B. Bloch-Devaux January 92 Maximum run number set to 1999
+C - B. Bloch-Devaux March   92 No Cumul option for histos in Escan
+C - B. Bloch-Devaux August  92 Cross-section Histos in the scan mode
+C - B. Bloch-Devaux Septemb 92 NEW KINIT to get bank KREF from Data Base
+C                              and handle user's extra cards
+C - B. Bloch-Devaux March   98 create banks KRAN and KMAR to keep track of
+C                              several RANMAR sequences
+C - B. Bloch-Devaux Decem   98 UGTSEC (creates KSEC bank) called  before last 
+C                              generated event
+C                              KWGT bank printed for debugged events if exists
+C - B. Bloch-Devaux Novem   99 remove code related to old option SAVE to avoid
+C                              crashes on Linux
+C                              few code changes to please linux compiler
+C - B. Bloch-Devaux January 01 add a printout every N event to keep user 
+C                              informed, card FREQ can be used to set it up
+C! Main program to run KINGAL in a stand alone mode
+C
+C   The program calls 3 interface routines to be provided by the user
+C     -ASKUSI    at initialisation step
+C     -ASKUSE    at event process step
+C     -USCJOB    at end of job step
+C   The program calls eventually 2 more interface routines to be
+C    provided by the user  in case of Energy scan option used
+C    those are XKSECT function to return Cross-section in nb
+C              USKRIN to reinitialize generator
+C
+C--------------------------------------------------------------------
+      PARAMETER (LMHLEN=2, LMHROW=2, LMHCOL=1)
+      PARAMETER (LBCS=100000,LCHAR=4)
+      COMMON/BCS/ IW(LBCS)
+      REAL RW(LBCS)
+      EQUIVALENCE (RW(1),IW(1))
+C
+      PARAMETER (LHB=3000000)
+      COMMON /PAWC/ HB(LHB)
+      CHARACTER*80 FNAME,ATYPE,DTYPE,FFNAM
+      EXTERNAL KMRUNH,KMKRUN,NAMIND,NLINK,IUCOMP,ALRLEP,AMARSET,ALKMAR
+      INTEGER KMRUNH,KMKRUN ,NAMIND,NLINK,IUCOMP,ALRLEP,ALKMAR,ALKRAN
+      PARAMETER ( IGEN = 10)
+      DIMENSION LSTRN(3),LSTRN2(3),LISTL(IGEN),LISTE(IGEN) 
+C   NMXMC : MAXIMUM Run # for MC, NRINC : increment for run # in E scan
+      PARAMETER ( NMXMC=1999 , NRINC = 10 )
+      DIMENSION IS(4)     !   Random seeds at start of job
+C
+C  INITIALIZATION            *********************
+C
+C 1. General facilities initialization
+C
+C   LBASE = data base logical unit # ( 4 is the default DAF unit )
+C   LCARD = data card logical unit # (= 0 means "no data card")
+C                                       7 is default
+C   LOUT  = printout logical unit # ( = 0 means "no printout")
+C                                       6 is default
+C   LWRT  = BOS write logical unit # ( = 0 means "no file written")
+C                                       0 is default
+C   FMT   = BOS write format ('EPIO' means "EPIO format")
+C                            ( ' '  means NATIVE format )
+C
+      PARAMETER (LCTIT=48, LWTIT=LCTIT/4)
+      CHARACTER*48 NTIT
+      CHARACTER*22 NTIT2
+      CHARACTER*4 FMT,CHAINT,CNAME,DMODE,FDEVI
+C*CA KIPARA
+      PARAMETER (LHKIN=3, LPKIN=5, LKVX=2, LHVER=3, LPVER=5, LVKI=50)
+      PARAMETER (LGDCA=32)
+      PARAMETER (LRPART=200, LCKLIN=1)
+      PARAMETER (LRECL=0, LRUN=1, LEXP=1001, LRTYP=1000)
+      CHARACTER*60 LTITL
+      PARAMETER (LUCOD=0, LNOTRK=100, LTITL='KINGAL run')
+      PARAMETER (LUTRK=350)
+      PARAMETER (BFIEL=15., CFIEL=BFIEL*3.E-4)
+C*IF DOC
+C*CC KIPARA
+      PARAMETER ( BIG = 10000.)
+      DATA IDPR,WEIT /0,1./
+      DATA LBASE,LCARD,LOUT,LWRT /4,7,6,0/
+      DATA FMT /' '/
+      DATA LSTRN,LSTRN2/3*0,3*0/
+      DATA CNAME/'HSTO'/
+      DATA DTYPE / 'HIS       '/, DMODE / 'A   '/
+C  Here are the codes of the generators which support the GSCL option
+      DATA LISTL/1000,
+     $           2000,
+     $           3000,
+     $           4000,
+     $           5011,5014,
+     $           6000,
+     $           7006,7015,
+     $           8000
+     $ /
+C ----------------------------------------------------------------------
+C  Here are the codes of the generators which support the GSCE option
+      DATA LISTE/1000,
+     $           2000,
+     $           3000,
+     $           4000,
+     $           5011,5014,
+     $           6000,
+     $           7006,7015,
+     $           8000
+     $ /
+      TLIM=5.*3600.
+      TLIM=999999.
+      CALL TIMeST(TLIM)
+      CALL TIMeX(TIME1)
+C   First call to KINIT   : Steering cards are then available
+      CALL KINIT (LBCS,LBASE,LCARD,LOUT,LWRT,FMT)
+C
+C   Initialise Hbook Package
+C
+      CALL HLIMIT(LHB)
+C
+C 2. Run's specific parameters initialization
+C
+C   BANK RUNH and KRUN
+C   NRUN = run #
+C   NEXP = experiment # (mandatory 1001 for monte carlo)
+C   NRTP = run type (10000 - 99999 for user needs)
+C   IGCOD = generator code (has to be the same as the generator code
+C                          number given in the library)
+C   NOTR  = notracking marking word (the default value has to be taken)
+C   NTIT  = run title
+C
+C      suggested RUN card ( as GALEPH ) RUN  NRUN  'TITLE'
+C
+      NRUN = LRUN
+      NEXP = LEXP
+      NOTR = LNOTRK
+      NTIT = LTITL
+      IGCOD = LUCOD
+      JRUN = NLINK('RUN ',0)
+      IF(JRUN.NE.0) THEN
+         NRUN = IW(JRUN+1)
+         NKAR = IW(JRUN)-1
+         J=1
+         NKMAX = MIN(LWTIT,NKAR)
+         DO 10 I=1,NKMAX
+            NTIT(J:J+3) = CHAINT(IW(JRUN+1+I))
+            J=J+4
+   10    CONTINUE
+      ENDIF
+C  TRIG        n1    n2    n3
+C    Suggested data card ( n1 First trigger# , n2 last , n3 optionnal)
+C
+      IEV1 = 1
+      IEV2 = 100
+      NEV3 = 0
+      JTRIG = NLINK('TRIG',0)
+      IF(JTRIG.NE.0) THEN
+         IEV1 = IW(JTRIG+1)
+         IEV2 = IW(JTRIG+2)
+         IF ( IW(JTRIG).GE.3) NEV3 = IW(JTRIG+3)
+      ENDIF
+      IEV3 = NEV3
+C  DEBUG lout / ndeb1  ndeb2
+      IDB1 = 0
+      IDB2 = 0
+      NADEB = NAMIND('DEBU')
+      JDEBU = IW(NADEB)
+      IF(JDEBU.NE.0) THEN
+         IDB1 = IW(JDEBU+1)
+         IDB2 = IW(JDEBU+2)
+         LOUT = IW(JDEBU-2)
+      ENDIF
+C FREQ  nfreq
+C    1 line is printed out after every nfreq event
+C    when nfreq events are generated, nfreq is multiplied by 10 and so on
+      NFREQ = 1
+      NAFRE = NAMIND('FREQ')
+      JFREQ = IW(NAFRE)
+      IF(JFREQ.NE.0) NFREQ = IW(JFREQ+1)
+C  TIME      timleft
+      TIMLFT = 20.
+      NATIM = NAMIND('TIME')
+      JTIME = IW(NATIM)
+      IF(JTIME.NE.0) THEN
+         TIMLFT=IW(JTIME+1)
+         IF (TIMLFT.LT.1.) TIMLFT = RW(JTIME+1)
+      ENDIF
+C  SAVE lwrt / fmt          is now obsolete
+C      NASAV = NAMIND('SAVE')
+C      JSAVE = IW(NASAV)
+C      IF(JSAVE.NE.0) THEN
+C         LWRT = IW(JSAVE-2)
+C         FMT = CHAINT(IW(JSAVE+1))
+C      ENDIF
+C  suggested HSTO card to store Histos on a disk file
+C       HSTO  'file name specifications '
+      IER = 0
+      JHSTO= NLINK('HSTO',0)
+      IF(JHSTO.NE.0 ) THEN
+         CALL ACDARG(CNAME,DTYPE,DMODE,FNAME,ATYPE,FDEVI,IER)
+         FFNAM(1:3) = 'E01'
+         FFNAM(4:80) = FNAME(4:80)
+      ENDIF
+C  suggested HNOC card to store Histos on a disk file and print them
+C  out after each energy run of the scan HNOC
+      JHNOC= NLINK('HNOC',0)
+C
+C  If data cards have been read, recall KINIT
+C   It will load generator specific cards ( PRODUCTION mode)or nothing
+      IF(LCARD.GT.0) CALL KINIT (LBCS,LBASE,LCARD,LOUT,LWRT,FMT)
+C
+C  RNDM  inrn      Initialise random number RNDM
+C  the standard init will use RMAR ( or RINI) card
+         INRN = 12345
+         CALL RDMIN(INRN)
+C
+C  GSCE   E1  frac1   E2  frac2........En fracn
+      NASCE = NAMIND('GSCE')
+      JGSCE = IW(NASCE)
+C  GSCL   E1  lum1    E2  lum2 ........En lumn
+      NASCA = NAMIND('GSCL')
+      JGSCA = IW(NASCA)
+      IF (JGSCE.GT.0 .AND. JGSCA.GT.0) THEN
+         WRITE(IW(6),1002)
+         WRITE(IW(6),'(''   PLEASE , CHOOSE YOUR ENERGY SCAN OPTION :
+     $   LUMINOSITY ( GSCL) OR FRACTION OF EVENTS ( GSCE)   '')')
+         WRITE(IW(6),1002)
+         CALL EXIT
+      ENDIF
+      IF(JGSCA.GT.0 .OR. JGSCE.GT.0 ) THEN
+         WRITE(IW(6),1002)
+         IF(JGSCA.GT.0 ) THEN
+            NSCA = IW(JGSCA)/2
+            EMIN = BIG
+            EMAX = 0.
+            DO 2 JE = 1,NSCA
+               EI   = RW(JGSCA+(JE-1)*2+1)
+               IF ( EI.GT.EMAX) EMAX = EI
+               IF ( EI.LT.EMIN) EMIN = EI
+ 2          CONTINUE
+            EMIN = MAX( 0.,EMIN-1.)
+            EMAX = MAX( 0.,EMAX+1.)
+            CALL HBOOK1(9000,'Cross-section vs Energy ( Gev)',2*NSCA,
+     $      EMIN,EMAX,0.)
+            CALL HBOOK1(9001,'Generated Luminosity vs Energy ( Gev)',
+     $      2*NSCA,EMIN,EMAX,0.)
+         ELSEIF(JGSCE.GT.0 ) THEN
+            NSCA = IW(JGSCE)/2
+            NTOTE = IEV2-IEV1+1
+            EMIN = BIG
+            EMAX = 0.
+            DO 3 JE = 1,NSCA
+               EI   = RW(JGSCE+(JE-1)*2+1)
+               IF ( EI.GT.EMAX) EMAX = EI
+               IF ( EI.LT.EMIN) EMIN = EI
+ 3          CONTINUE
+            EMIN = MAX( 0.,EMIN-1.)
+            EMAX = MAX( 0.,EMAX+1.)
+         ENDIF
+         CALL HBOOK1(9002,'Generated events vs Energy ( Gev)',2*NSCA,
+     $   EMIN,EMAX,0.)
+         IF ( NEV3.GT.0)
+     $   CALL HBOOK1(9003,'Accepted  events vs Energy ( Gev)',2*NSCA,
+     $   EMIN,EMAX,0.)
+         CALL HIDOPT(0,'STAR')
+         WRITE(IW(6),'(''   KINGAL  SCAN requested for'',I10,'' energy
+     $   points'')') NSCA
+         WRITE(IW(6),1002)
+         NTIT2(1:20) = 'ENERGY SCAN POINT # '
+         NRUNO = NRUN
+         IF (NRUNO+NRINC*(NSCA-1).GT.NMXMC) THEN
+            NRUNO = NMXMC- NRINC*(NSCA-1)
+            WRITE(IW(6),1001) NRUN,NRUNO
+         ENDIF
+      ELSE
+         NSCA = 1
+         NTIT2 = ' '
+         IF (NRUN.GT.NMXMC) THEN
+            WRITE(IW(6),1001) NRUN,NMXMC
+            NRUN = MIN ( NRUN , NMXMC)
+         ENDIF
+      ENDIF
+C
+C 3. Generator initialization
+C
+      JKREF  = IW(NAMIND('KREF'))
+      NREF = 0
+      IF ( JKREF.GT.0) NREF = IW(JKREF-2)
+      CALL ASKUSI(IGCOD)
+      NRTP = IGCOD+10000
+      IGCOD = IGCOD + 10000*NREF
+C
+C    Check that this generator supports the E scan option
+C
+      ISCAN = 1
+      IF(JGSCA.GT.0 .AND. IUCOMP(IGCOD,LISTL,IGEN).LE.0) THEN
+         ISCAN = 0
+      ENDIF
+      IF(JGSCE.GT.0 .AND. IUCOMP(IGCOD,LISTE,IGEN).LE.0) THEN
+         ISCAN = 0
+      ENDIF
+      IF ( ISCAN .EQ. 0) THEN
+         WRITE(IW(6),1002)
+         WRITE(IW(6),'(''   THIS GENERATOR IS NOT SUPPORTING THE ENERGY
+     $   SCAN OPTION YET !!!!!!  CONTACT B.BLOCH TO VOLUNTEER'')')
+         WRITE(IW(6),1002)
+         CALL EXIT
+      ENDIF
+C
+C 4. LOOP on energy scan points if needed
+C
+      DO 11 ISC = 1,NSCA
+      JGSCA = IW(NASCA)
+      JGSCE = IW(NASCE)
+      IF(JGSCA+JGSCE.GT.0 ) THEN
+         WRITE(IW(6),1002)
+         IF(JGSCA.GT.0 ) THEN
+            EI   = RW(JGSCA+(ISC-1)*2+1)
+            ULMI = RW(JGSCA+(ISC-1)*2+2)
+            XSECT = XKSECT(EI)
+            IF ( XSECT.GT.0.) IEV2 = NINT(ULMI*XSECT)+IEV1-1
+            IF ( XSECT.GT.0. .AND. NEV3.GT.0) IEV3 = NINT(ULMI*XSECT)
+            WRITE(IW(6),'('' KINGAL  ENERGY SCAN  : POINT # '',I5,F10.3,
+     $  '' Gev '','' X-SECTION '',E10.3,'' Luminosity '',E10.3,''nb-1 ''
+     $ ,'' Events to be generated from'',I8,'' to'',I8,'' accepted'',I8)
+     $ ') ISC,EI,XSECT,ULMI,IEV1,IEV2,IEV3
+         ELSEIF(JGSCE.GT.0 ) THEN
+            EI   = RW(JGSCE+(ISC-1)*2+1)
+            FRAC = RW(JGSCE+(ISC-1)*2+2)
+            IEV2 = NINT(NTOTE*FRAC)+IEV1-1
+            IF ( NEV3.GT.0) IEV3 = NINT(NEV3*FRAC)
+            WRITE(IW(6),'('' KINGAL  ENERGY SCAN  : POINT # '',I5,F10.3,
+     $    '' Gev '','' FRACTION  '',E10.3,
+     $    '' Events to be generated from'',I8,'' to'',I8,'' accepted'',
+     $    I8)')ISC,EI,FRAC,IEV1,IEV2,IEV3
+         ENDIF
+         WRITE(IW(6),1002)
+         WRITE(NTIT2(21:22),'(I2)') ISC
+         IF ( JHNOC.GT.0) CALL HRESET(0,' ')
+         NRUN = NRUNO+NRINC*(ISC-1)
+         NTIT = NTIT2
+         WRITE(IW(6),'(A50,'' RUN # '',I8)') NTIT,NRUN
+C Restore header banks list , update RLEP
+         CALL BLIST(IW,'C=','RUNRRUNHKRUNKRANKJOBPARTKLINRLEPKLUN')
+         IEBEAM = NINT(EI*500.)
+         JRLEP= ALRLEP(IEBEAM,'    ',0,0,0)
+         CALL PRTABL('RLEP',0)
+C
+C 4.1 Generator initialization with specific energy
+C
+         CALL USKRIN(EI)
+      ENDIF
+C
+C  REDEFINE SOME RUNH AND KRUN PARAMETERS
+C
+      AMAR = AMARSET(0)
+      NBK = KMRUNH (NRUN,NEXP,NRTP)
+      NBK = KMKRUN (IGCOD,NOTR,NTIT)
+      call alseed(irgen,iseed1,iseed2)
+      AMAR = AMARSET(1)
+      call alseed(irgen,iseed3,iseed4) 
+      nseq = 2
+C      WRITE (IW(6),'(/1X,'' seeds for KRAN '',4i10)') 
+C     $                             iseed1,iseed2,iseed3,iseed4
+      is(1) = iseed1
+      is(2) = iseed2
+      is(3) = iseed3
+      is(4) = iseed4
+      JKRAN = ALKRAN(nseq,is)
+      IF (JKRAN .LE. 0) THEN
+C     error in filling KRAN bank - STOP
+        WRITE (IW(6),'(/1X,''not enough space for KRAN - STOP'')')
+        CALL EXIT
+      ENDIF
+C
+C  PERFORM GARBAGE COLLECTION
+C
+      CALL BGARB(IW)
+      CALL TIMeX(TIME2)
+C
+C 4.2 EVENT GENERATION          *********************
+C
+      NGEN = IEV2-IEV1+1
+      MGEN = 0
+      IACC = 0
+      IEVT = IEV1 -1
+C     DO 20 IEVT = IEV1,IEV2
+ 18   CONTINUE
+      IF ( NEV3.GT.0) THEN
+         IF ( IACC.GE.IEV3) GO TO 20
+         IF (IACC.EQ.IEV3-1) CALL UGTSEC
+      ELSE IF ( NEV3.LE.0) THEN
+         IF ( MGEN.GE.NGEN) GO TO 20
+         IF ( MGEN.EQ.NGEN-1) CALL UGTSEC
+      ENDIF
+C     current trigger number
+         IEVT = IEVT +1
+         IEV2 = IEVT
+         CALL TIMeL(TIM)
+         IF (TIM.LT.TIMLFT) GO TO 55
+C    first ranmar sequence at begin of event
+         amar = amarset(0)
+C    write 1 line at begin of event 
+      IF (MOD(IACC+1,nfreq).eq.0) WRITE (LOUT,'(/,1X,'' Kingal start'',
+     $ '' event'',I10)') IACC+1
+      IF (IACC.GE.10*NFREQ) NFREQ = 10*NFREQ
+      CALL ASKUSE (IDPR,ISTA,NTRK,NVRT,ECMS,WEIT)
+      MGEN = MGEN + 1
+C
+C  if DEBUG required
+      IF(IEVT.GE.IDB1 .AND. IEVT.LE. IDB2) THEN
+            WRITE(IW(6),'(/1X,''IEVT,IDPR,ISTA,NTRK,NVRT,ECMS,WEIT'',
+     +       5I10,F10.4,3X,E12.5)') IEVT,IDPR,ISTA,NTRK,NVRT,ECMS,WEIT
+      IF (ISTA.EQ.0 ) THEN
+            CALL PRKINE
+            JKPOL = NLINK ('KPOL',0)
+            IF ( JKPOL.GT.0) CALL PRTABL('KPOL',0)
+            JKHIS = NLINK ('KHIS',0)
+            IF (JKHIS.GT.0) THEN
+             WRITE (LOUT,'(/1X,''+++KINGAL+++ KHIS bank print out'')')
+             NROW = IW(JKHIS+LMHROW)
+             M1 = 1
+ 19          M2 = MIN (M1+9,NROW)
+             WRITE (LOUT,'(/1X,10I10)') (LLL,LLL=M1,M2)
+             WRITE (LOUT,'(1X ,10I10)') (IW(JKHIS+LMHLEN+LLL),LLL=M1,M2)
+             M1 = M1+10
+             IF (M1.LE.NROW) GOTO 19
+            ENDIF
+            JKZFR = NLINK ('KZFR',0)
+            IF (JKZFR.GT.0) THEN
+             WRITE (LOUT,'(/1X,''+++KINGAL+++ KZFR bank print out'')')
+             NROW = IW(JKZFR+LMHROW)
+             M1 = 1
+ 21          M2 = MIN (M1+9,NROW)
+             WRITE (LOUT,'(/1X,10I10)') (LLL,LLL=M1,M2)
+           WRITE (LOUT,'(1X ,10F10.3)') (RW(JKZFR+LMHLEN+LLL),LLL=M1,M2)
+             M1 = M1+10
+             IF (M1.LE.NROW) GOTO 21
+            ENDIF
+            JKXME = NLINK ('KXME',0)
+            IF (JKXME.GT.0) CALL PRTABL('KXME',0)
+            JKWTK = NLINK ('KWTK',0)
+            IF (JKWTK.GT.0) CALL PRTABL('KWTK',0)
+            JKWGT = NLINK ('KWGT',0)
+            IF (JKWGT.GT.0) CALL PRTABL('KWGT',0)
+            JKSHO = NLINK ('KSHO',0)
+            IF (JKSHO.GT.0) CALL PRTABL('KSHO',0)
+         ENDIF
+      ENDIF
+C       creates KMAR bank with initial seeds of the 2 sequences
+         amar = amarset(1)
+         call rdmout(lstrn2)
+         amar = amarset(0)
+         call rdmout(lstrn)
+         nseq = 2
+         jkmar = alkmar(nseq,lstrn,lstrn2 ) 
+         if ( jkmar.le.0) ista = 10
+C
+         MSTAT = 0
+         IF(ISTA.EQ.0) THEN
+            MSTAT = 1
+            IACC = IACC +1
+         ENDIF
+         CALL KEEVT(IEVT,MSTAT,NVRT,NTRK,WEIT,IDPR,ECMS,LWRT)
+         GO TO 18
+C
+   20 CONTINUE
+C
+C 4.3  END OF GENERATION         *********************
+C
+      ITLIM = 0
+      GO TO 56
+ 55   IEV2 = IEVT-1
+      WRITE (LOUT,'(/,1X,''********END RUN BY TIME LIMIT AFTER EVENT #
+     $ '',I10)') IEV2
+      ITLIM = 1
+ 56   CONTINUE
+      amar = amarset(1)
+      CALL RDMOUT(LSTRN2)
+      amar = amarset(0)
+      CALL RDMOUT(LSTRN)
+      CALL TIMeX(TIME3)
+      CALL USCJOB
+      IF(JGSCA+JGSCE.GT.0 ) THEN
+         CALL HFILL(9002,EI,DUM,FLOAT(MGEN))
+         IF ( NEV3.GT.0) CALL HFILL(9003,EI,DUM,FLOAT(IACC))
+         IF(JGSCA.GT.0 ) THEN
+            CALL HFILL(9000,EI,DUM,XSECT)
+            CALL HFILL(9001,EI,DUM,ULMI)
+         ENDIF
+      ENDIF
+C     printout histos if non cumulative option
+      IF ( JHNOC.GT.0) THEN
+         CALL HPHST(0)
+         IF (JHSTO.GT.0 .AND. IER.EQ.0) THEN
+            WRITE(FFNAM(2:3),'(I2)') ISC
+            IF ( FFNAM(2:2).EQ.' ') FFNAM(2:2) = '0'
+            CALL HRPUT(0,FFNAM,'N')
+            WRITE(LOUT,'(/,1X,''******** HISTOGRAMS WRITTEN TO DISK FILE
+     $ '',A80)') FFNAM
+         ENDIF
+      ENDIF
+C
+C  4.5 KINGAL END OF JOB
+C
+      NEVT = IEV2 - IEV1 + 1
+      IF ( ISC.EQ.NSCA) CALL KEJOB(LWRT,NEVT)
+      CALL ACLOSE(0,IER)
+      CALL TIMeX(TIME4)
+      WRITE(IW(6),1000) (TIME2-TIME1),NEVT,(TIME3-TIME2)/NEVT,
+     $                                IACC,(TIME3-TIME2)/IACC,
+     $                  (TIME4-TIME3),(TIME4-TIME1),LSTRN,LSTRN2
+ 1000 FORMAT (1X,'**************RUNNING TIME STATISTICS****************'
+     &,/,1X,'*  INIT Time spend           :   ',F10.3,
+     & /,1X,'*  Number of generated events:   ',I10  ,
+     & /,1X,'*  Time per generated event  :   ',F10.3,
+     & /,1X,'*  Number of accepted  events:   ',I10  ,
+     & /,1X,'*  Time per accepted  event  :   ',F10.3,
+     & /,1X,'*  END OF JOB Time spend     :   ',F10.3,
+     & /,1X,'*  TOTAL Time spend          :   ',F10.3,
+     & /,1X,'*  LAST RANDOM NUMBER USED #1:  ',3I20  ,
+     & /,1X,'*  LAST RANDOM NUMBER USED #2:  ',3I20  ,
+     & /,1X,'*****************************************************')
+C
+      IF ( ITLIM.EQ.1 ) GO TO  30
+  11  CONTINUE
+  30  CONTINUE
+C If CUMUL required , printout ( and store) histos at the end
+      IF ( JHNOC.LE.0) THEN
+         CALL HPHST(0)
+         IF (JHSTO.GT.0 .AND. IER.EQ.0) THEN
+            CALL HRPUT(0,FNAME,'N')
+            WRITE(LOUT,'(/,1X,''********HISTOGRAMS WRITTEN TO DISK FILE
+     $ '',A80)') FNAME
+         ENDIF
+      ENDIF
+C
+ 1001 FORMAT ('   ++++++++++++++++++++++++++++++++++++ ',/,
+     $        '   ++++++++++++++++++++++++++++++++++++ ',/,
+     $        '   KINGAL  requested  with too large MC run #' ,I10,
+     $        ' will be set to ',I10,/,
+     $        '   ++++++++++++++++++++++++++++++++++++ ',/,
+     $        '   ++++++++++++++++++++++++++++++++++++ ',/)
+ 1002 FORMAT ('   ++++++++++++++++++++++++++++++++++++ ',/,
+     $        '   ++++++++++++++++++++++++++++++++++++ ',/)
+      STOP
+      END
+C*DK KINIT
+      SUBROUTINE KINIT (LBCS,LBASE,LCARD,LOUT,LWRT,FMT)
+C -----------------------------------------------------------------
+C - F.Ranjard - 870504    modified 870924 B.Bloch for Data Base
+C - Modified JULY88 B.Bloch for Data Base access and KJOB Bank
+C - Modified Sept92 B.Bloch for Data Base access of KREF bank and
+C                           handling of user's extra cards
+C! Initialize event interface package
+CKEY KINE KINGAL INIT  /   INTERNAL
+C  called by KINGAL   AT LEAST once per job
+C  can be called a 2nd times if the user has modified some parameters
+C  by data cards.
+C  if 1st entry then
+C     initialize the BOS array with LBCS words
+C     define formats and output lists
+C     if LCARD.ne.0 then read data cards ,
+C     read the data base from LBASE unit to get PART bank
+C     stop if no PART bank
+C     loads default input set KREF from Dbase
+C     if LOUT.ne.0 then set BOS output unit = LOUT
+C     if LWRT.ne.0 then initialize BOS writing unit LWRT  ( SAVE and
+C        FILO cards)
+C     book and fill RUNH and KRUN banks with default values
+C     expand KREF  bank and swap input from KREF to temporary banks
+C  endif
+C  if 2nd entry and KREF was read in then
+C     read USER's extra cards
+C     supersede defaults from KREF by user input
+C  endif
+C  if 3rd entry then STOP
+C
+C - structure: SUBROUTINE subprogram
+C              User Entry Name: KINIT
+C              External References: BOS/BKFMT/BLIST/BREADC/BUNIT(BOS77)
+C                                   ACDARG/AFILOU/AOPDBS/AOPEN/AOPENW/
+C                                   ADBVER/JUNIDB/
+C                                   BKINJB/
+C                                   ALRUNH/ALKRUN/ALKJOB(ALEPHLIB)
+C              Comdecks referenced: BCS, KIPARA,BMACRO
+C
+C - usage  : CALL KINIT (LBCS,LBASE,LCARD,LOUT,LWRT,FMT)
+C - Input  : LBCS   = BOS array length (at least 10000 words)
+C            LBASE  = data base logical unit (not used)
+C            LCARD  = data card log. unit ( 0 means no data card)
+C            LOUT   = print out unit      ( 0 means no printout)
+C            LWRT   = output file unit    ( 0 means no output file)
+C            FMT    = output file format    ( 'EPIO' or ' '='NATI')
+C            LOUT, LWRT, FMT could be overwritten by data card
+C
+C*IF .NOT.DOC  -----------------------------------------------------
+      SAVE
+      DIMENSION LSTRN(2) 
+      CHARACTER*(*) FMT
+      CHARACTER FNAME*120
+      CHARACTER*60  TITLE
+      CHARACTER     TFNAM*60,TATYP*60,TDEVI*60
+      CHARACTER*4 CHAINT
+      INTEGER ALKJOB,ALRUNH,ALKRUN,ALRUNR
+      INTEGER ALGTDB
+      EXTERNAL ALGTDB,AMARSET
+      PARAMETER ( LNAM= 500)
+C*CA BCS
+      INTEGER LMHLEN, LMHCOL, LMHROW
+      PARAMETER (LMHLEN=2, LMHCOL=1, LMHROW=2)
+C
+      COMMON/BCS/ IW(100000)
+      INTEGER IW
+      REAL RW(100000)
+      EQUIVALENCE (RW(1),IW(1))
+C
+C*CC BCS
+C*CA KIPARA
+CKEY KINE KINGAL DEFAULT
+      PARAMETER (LHKIN=3, LPKIN=5, LKVX=2, LHVER=3, LPVER=5, LVKI=50)
+      PARAMETER (LGDCA=32)
+      PARAMETER (LRPART=200, LCKLIN=1)
+      PARAMETER (LRECL=16020, LRUN=1, LEXP=1001, LRTYP=1000)
+      CHARACTER*60 LTITL
+      PARAMETER (LUCOD=0, LNOTRK=100, LTITL='KINGAL run')
+      PARAMETER (LUTRK=350)
+      PARAMETER (BFIEL=15., CFIEL=BFIEL*3.E-4)
+C*IF DOC
+C*CC KIPARA
+      PARAMETER ( IRMX = 1999)
+      DATA IFI /0/
+C*CA BMACRO
+C!    set of intrinsic functions to handle BOS banks
+C - # of words/row in bank with index ID
+      LCOLS(ID) = IW(ID+1)
+C - # of rows in bank with index ID
+      LROWS(ID) = IW(ID+2)
+C - index of next row in the bank with index ID
+      KNEXT(ID) = ID + LMHLEN + IW(ID+1)*IW(ID+2)
+C - index of row # NRBOS in the bank with index ID
+      KROW(ID,NRBOS) = ID + LMHLEN + IW(ID+1)*(NRBOS-1)
+C - # of free words in the bank with index ID
+      LFRWRD(ID) = ID + IW(ID) - KNEXT(ID)
+C - # of free rows in the bank with index ID
+      LFRROW(ID) = LFRWRD(ID) / LCOLS(ID)
+C - Lth integer element of the NRBOSth row of the bank with index ID
+      ITABL(ID,NRBOS,L) = IW(ID+LMHLEN+(NRBOS-1)*IW(ID+1)+L)
+C - Lth real element of the NRBOSth row of the bank with index ID
+      RTABL(ID,NRBOS,L) = RW(ID+LMHLEN+(NRBOS-1)*IW(ID+1)+L)
+C
+C*IF1 ETA
+C*CC BMACRO
+C -------------------------------------------------------------------
+      IFI = IFI + 1
+      IF (IFI-2) 1,2,3
+    1 CONTINUE
+C - BOS initialization
+C
+      CALL BNAMES (LNAM)
+      CALL BOS (IW,LBCS)
+      IF (LCARD .GT. 0) IW(5) = LCARD
+C
+C - Read DATA CARD
+C
+      FNAME = ' '
+      CALL GETENVF ('KINGALCARDS',FNAME)
+      IF (FNAME.NE.' ') CALL AOPEN(LCARD,FNAME,'CARD','DISK',IER)
+C
+      CALL BKFMT ('VERT','3I,4F,(I)')
+      CALL BKFMT ('KINE','3I,4F,(I)')
+C
+      CALL BLIST (IW,'C=','RUNRRUNHKRUNKRANKJOBPARTKCARRLEPKLUN')
+      CALL BLIST (IW,'E=','EVEHKEVHKMARVERTKINE')
+C
+C - Get ALEPHLIB version #
+      CALL ALVERS (ALEFV)
+C
+C - Initialize default values
+C
+      IRUN = LRUN
+      IEXP = LEXP
+      IRTYP = LRTYP
+      IUCOD = LUCOD
+      NOTRK = LNOTRK
+      TITLE = LTITL
+C
+C - Read data cards if required
+C
+      IF (LCARD .GT.0) THEN
+        CALL BREADC
+      ENDIF
+C  Look if Production mode ( NREF card ) or not ( no NREF card)
+      JREF  = IW(NAMIND('NREF'))
+      NREF = IRMX
+      IF(JREF .NE.0) NREF = IW(JREF+1 )
+C  look if multiple read necessary
+      IF ( NREF.GE.96 .and. NREF.lt.200) NREF = NREF*100
+      IF ( JREF.EQ.0 ) THEN
+C   Expand KCAR bank if defined
+         CALL BCALLC(IW,'KCAR',0)
+      ENDIF
+C
+C - Read the data base to get the 'PART' bank
+C
+      LBAS = JUNIDB(0)
+C
+C   Open DAF once for all
+      CALL AOPDBS ('   ',IRETD)
+      IF (IRETD.NE.0) THEN
+         WRITE (IW(6),'(/1X,''KINIT: NO data base (AOPDBS) - STOP'')')
+         CALL EXIT
+      ENDIF
+C   Get ADBSCONS DAF version # and date of last change
+      CALL ADBVER (IVERS,IDATE)
+C
+C   Get PART bank from the DAF
+      IREDB=MDARD(IW,LBAS,'PART',0)
+      IF (IREDB.LE.0) GO TO 998
+      IF (LCOLS(IREDB).EQ.8) THEN
+         CALL BKFMT('PART','2I,(I,3A,I,3F)')
+      ELSEIF (LCOLS(IREDB).EQ.10) THEN
+         CALL BKFMT ('PART','2I,(I,3A,I,4F,I)')
+      ENDIF
+C   Get KREF bank from the DAF ,print it if requested  by NREF
+      NREF0 = 0
+      NREF1 = 0
+      IF ( JREF.GT.0 ) THEN
+         WRITE (IW(6),100) NREF
+         if ( NREF.GE.9600) NREF1 = MOD(NREF,100)
+         NREF0 = 100*(NREF/100)
+         IF ( NREF1.NE .0 ) then
+            WRITE ( IW(6),*) ' Accessing NREF  ',NREF0
+C            IREDB=ALGTDB(LBAS,'KREF',NREF0)
+            IREDB=MDARD(IW,LBAS,'KREF',NREF0)
+            IF (IREDB.EQ.0) GO TO 998
+C           IF (IREDB.LE.0) GO TO 998
+            WRITE ( IW(6),*) ' Accessing NREF  ',NREF0, '   success '
+            call bcallc(iw,'KREF',NREF0)
+         ENDIF
+         IF ( NREF.ne.0 )  then
+            WRITE ( IW(6),*) ' Accessing NREF  ',NREF
+C            IREDB=ALGTDB(LBAS,'KREF',NREF)
+C            IF (IREDB.EQ.0) GO TO 998
+            IREDB=MDARD(IW,LBAS,'KREF',NREF)
+            IF (IREDB.EQ.0) GO TO 998
+            WRITE ( IW(6),*) ' Accessing NREF  ',NREF, '   success '
+         ENDIF
+C         JKREF = IW(NAMIND('KREF'))
+C         NREF = IW(JKREF-2)
+         IF (IW(NAMIND('PREF')).NE.0) THEN
+            IF ( NREF1.NE .0 ) IND = NPRNT('KREF',NREF0)
+            IND = NPRNT('KREF',NREF)
+         ENDIF
+      ENDIF
+C
+      JDEBU = IW(NAMIND('DEBU'))
+      IF(JDEBU.NE.0) LOUT = IW(JDEBU-2)
+C      JSAVE = IW(NAMIND('SAVE'))     ! obsolete
+C      IF(JSAVE.NE.0) THEN
+C         LWRT = IW(JSAVE-2)
+C         FMT = CHAINT(IW(JSAVE+1))
+C      ENDIF
+C
+C - Set logical units according to data cards if any
+C
+      IF (LOUT  .GT. 0) IW(6) = LOUT
+C
+C - Initialize output file LWRT
+      JFILO = IW(NAMIND('FILO'))
+      IF (JFILO .NE. 0) THEN
+        CALL AFILOU (TFNAM,TATYP,TDEVI,IRET)
+        IF (IRET.NE.0) THEN
+           WRITE (IW(6),'(/1X,''KINIT: wrong output file name'',
+     &      '' (AFILOU) - STOP'',I4)') IRET
+           CALL EXIT
+        ENDIF
+        IF (LWRT .EQ. 0) LWRT = 2
+C
+C Open the output file :
+        CALL AOPENW (LWRT,TFNAM,TATYP,TDEVI,IRET)
+        IF (IRET.NE.0) THEN
+           WRITE (IW(6),'(/1X,''KINIT: cannot open output file'',
+     &        '' (AFILOU) - STOP'',I4)') IRET
+           CALL EXIT
+        ENDIF
+C      ELSE      ! obsolete SAVE card
+C        LREC = LRECL
+C        IF (FMT .NE. 'EPIO') LREC = LRECL/2
+C        CALL BUNIT (LWRT,FMT,LREC)
+      ENDIF
+C
+C - Fill RUNR, RUNH and KRUN banks with default values
+C
+      IRUNR = ALRUNR (IEXP,IRUN)
+      IF (IRUNR .LE. 0) THEN
+C     error in filling RUNR bank - STOP
+        WRITE (IW(6),'(/1X,''not enough space for RUNR - STOP'')')
+        CALL EXIT
+      ENDIF
+      IRUNH = ALRUNH (IRUN,IEXP,IRTYP)
+      IF (IRUNH .LE. 0) THEN
+C     error in filling RUNH bank - STOP
+        WRITE (IW(6),'(/1X,''not enough space for RUNH - STOP'')')
+        CALL EXIT
+      ENDIF
+      AMAR = AMARSET(0)
+      IKRUN = ALKRUN (IUCOD,NOTRK,TITLE)
+      IF (IKRUN .LE. 0) THEN
+C     error in filling KRUN bank - STOP
+        WRITE (IW(6),'(/1X,''not enough space for KRUN - STOP'')')
+        CALL EXIT
+      ENDIF
+      IKJOB = ALKJOB (IVERS,IDATE)
+      IF (IKJOB .LE. 0) THEN
+C     error in filling KJOB bank - STOP
+        WRITE (IW(6),'(/1X,''not enough space for KJOB - STOP'')')
+        CALL EXIT
+      ENDIF
+C  Expand content of data card KREF if any
+      IF ( JREF.GT.0 ) THEN
+C         IF ( NREF1.NE. 0 ) CALL BCALLC(IW,'KREF',NREF0)
+         CALL BCALLC(IW,'KREF',NREF)
+         CALL KSWAP
+      ENDIF
+      GO TO 999
+ 2    CONTINUE
+      JREF  = IW(NAMIND('NREF'))
+      IF ( JREF.GT.0 ) THEN
+C  Read now user's data cards for generator IN PRODUCTION Mode
+C  otherwise nothing
+         CALL BREADC
+C  Expand content of data card KCAR if any
+         CALL BCALLC(IW,'KCAR',0)
+C  Clean up banks overwritten by user's cards
+         CALL KCLEAN(IOK)
+         IF (IOK.NE.0 ) GO TO 997
+      ENDIF
+      GOTO 999
+C
+    3 CONTINUE
+      WRITE (IW(6),'(/1X,''too many entries in KINIT - STOP'')')
+      CALL EXIT
+C
+ 997     WRITE (IW(6),'(/1X,''error superseding reference set by user in
+     $put...STOP'',I3)') IOK
+         CALL EXIT
+C     error in reading data base - STOP
+ 998     WRITE (IW(6),'(/1X,''error in reading data base - STOP'',
+     &                      I3)') IREDB
+         CALL EXIT
+  999 RETURN
+ 100  FORMAT (/1X,'KINIT - accessing Data Base for KREF NR = ',I5)
+      END
+C#endif
+

@@ -1,0 +1,445 @@
+head	1.4;
+access;
+symbols
+	jul313_3:1.4
+	jul313_2:1.4
+	jul313_1:1.4
+	jul313:1.4
+	jul312_1:1.4
+	jul312:1.4
+	jul311:1.4
+	jul310_1:1.4
+	jul310:1.4
+	jul309_1:1.4
+	jul309:1.4
+	jul308_6:1.4
+	jul308_5:1.4
+	jul308_4:1.4
+	jul308_3:1.4
+	jul308_2:1.4
+	jul308_1:1.4
+	jul308:1.4
+	jul307_4:1.4
+	jul307_3:1.4
+	jul307_2:1.4
+	jul307_1:1.4
+	jul307:1.4
+	jul306_3:1.4
+	jul306_2:1.4
+	jul306_1:1.4
+	jul306:1.4
+	jul305_4:1.4
+	jul305_3:1.4
+	jul305_2:1.4
+	jul305_1:1.4
+	jul305:1.4
+	jul304_3:1.4
+	jul304_2:1.4
+	jul304_1:1.4
+	jul304:1.3
+	jul303_7:1.3
+	jul303_6:1.3
+	jul303_5:1.3
+	jul303_4:1.3
+	jul303_3:1.3
+	jul303_2_mc1:1.3
+	jul303_2:1.3
+	jul303_1_mc1:1.3
+	jul303_1:1.3
+	jul303_v:1.3
+	jul303:1.3
+	jul302_6:1.3
+	jul302_5:1.3
+	jul302_4:1.3
+	jul302_3:1.3
+	jul302_2:1.3
+	jul302_1:1.3
+	jul302:1.3
+	jul285_1:1.3
+	jul285:1.3
+	jul284_1:1.3
+	jul284:1.3
+	jul283_1:1.3
+	jul283:1.3
+	jul282_1:1.3
+	jul282:1.3
+	jul281_3:1.3
+	jul281_2:1.3
+	jul281_1:1.3
+	jul281:1.3
+	jul280_1:1.3
+	jul280:1.3
+	jul279:1.2
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.4
+date	97.10.01.07.09.19;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.03.12.15.00.44;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.11.29.17.16.53;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.18.10;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.18.11;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@Fixes for Linux
+@
+text
+@      SUBROUTINE FREFIT(IRET)
+C
+C----------------------------------------------------------------------
+C! Refit existing tracks (for DST-->DST reprocessing in JULIA)
+C!
+C!   Author   :- Robert P. Johnson     17-OCT-1990
+C!
+C!   Inputs:  Banks FRFT, FRTL, FTCL, FICL, FVCL  with NR=0
+C!            (Note, the above banks are dropped on output)
+C!            Bank TPCO with NR=0
+C!            Banks ICCO, VDCO coordinate banks
+C!
+C!   Outputs: Banks FRFT, FRTL, FTCL, FICL, FVCL  with NR=1
+C!            (These banks contain the newly fitted tracks)
+C!            Bank TPCO with NR=1 with errors recalculated
+C!            IRET       /I      Return code
+C!                               0= everything OK
+C!                               1= input banks not found
+C!                               2= no room in BOS for output banks
+C!                               3= input banks are not consistant
+C!
+C!   Libraries required: ALEPHLIB
+C!
+C!   Description
+C!   ===========
+C!   Tracks are fit to coordinates in TPCO, ICCO and VDCO using the
+C!   coordinate lists in FTCL, FICL, and FVCL (NR=0).  The helix
+C!   parameters in FRFT NR=0 are used as starting points for the fit.
+C!   The results are place in FRFT NR=1.  Likewise, the new coordinate
+C!   lists (which for now at least are the same as the old) are output
+C!   in banks with NR=1.  If a track fails the fit, then the old fit
+C!   values simply are copied to the output banks.
+C!   Modified :- E. Lancon             26-AUG-1992
+C!        Set number of VDET points to 0 in FRTL
+C?
+C!======================================================================
+#ifndef DOC
+C
+#include "bcs.h"
+#include "frftjj.h"
+#include "frtljj.h"
+#include "itcojj.h"
+#include "vdcojj.h"
+#include "rconds.h"
+C
+      INTEGER UFTTRA,IRET2
+      LOGICAL LGARB,FIRST
+      DIMENSION HP(6),COV(21),EE0(21)
+      DATA FIRST/.TRUE./
+C
+C------------------ Statement Function Definitions ---------------------
+C
+#include "bmacro.h"
+C
+C-----------------------------------------------------------------------
+C
+      IF (FIRST) THEN
+        FIRST=.FALSE.
+        NTPCO=NAMIND('TPCO')
+        NICCO=NAMIND('ICCO')
+        NVDCO=NAMIND('VDCO')
+        NITCO=NAMIND('ITCO')
+      ENDIF
+C
+C++   Check whether the input banks exist
+C
+      IFRFT=NLINK('FRFT',0)
+      IFRTL=NLINK('FRTL',0)
+      IFTCL=NLINK('FTCL',0)
+      IFICL=NLINK('FICL',0)
+      IF (IFRFT.EQ.0 .OR. IFRTL.EQ.0
+     &            .OR. (IFTCL.EQ.0.AND.IFICL.EQ.0)) THEN
+        IRET=1
+        GO TO 999
+      ENDIF
+C
+C++   Recalculate the coordinate errors
+C
+      CALL FTPCER(IER)
+C
+C++   Drop the output banks if they already exist
+C
+      KFRFT=NLINK('FRFT',1)
+      IF (KFRFT.NE.0) KFRFT=NDROP('FRFT',1)
+      KFRTL=NLINK('FRTL',1)
+      IF (KFRTL.NE.0) KFRTL=NDROP('FRTL',1)
+      KFTCL=NLINK('FTCL',1)
+      IF (KFTCL.NE.0) KFTCL=NDROP('FTCL',1)
+      KFICL=NLINK('FICL',1)
+      IF (KFICL.NE.0) KFICL=NDROP('FICL',1)
+      KFVCL=NLINK('FVCL',1)
+      IF (KFVCL.NE.0) KFVCL=NDROP('FVCL',1)
+C
+C++   Create the output bank for the new fit
+C
+      IW(1)=1
+      LEN= LROWS(IFRFT)*LCOLS(IFRFT)+LMHLEN
+      CALL AUBOS('FRFT',1,LEN,KFRFT,IGARB)
+      IF (IGARB.EQ.2) THEN
+        IRET=2
+        CALL RERROR('FREFIT',1,'No room to create the FRFT bank.')
+        GO TO 999
+      ENDIF
+      IW(KFRFT+LMHCOL)=LCOLS(IFRFT)
+      IW(KFRFT+LMHROW)=LROWS(IFRFT)
+      IF (IGARB.NE.0) THEN
+        IFRFT=NLINK('FRFT',0)
+        IFRTL=NLINK('FRTL',0)
+        IFTCL=NLINK('FTCL',0)
+        IFICL=NLINK('FICL',0)
+      ENDIF
+      IFVCL=NLINK('FVCL',0)
+      KTPCO=IW(NTPCO)
+      KICCO=IW(NICCO)
+      KITCO=IW(NITCO)
+      KVDCO=IW(NVDCO)
+C
+C++   Loop over all the existing tracks
+C
+      DO 700 ITK=1,LROWS(IFRFT)
+C
+C?   Here one produces FRFT banks without VDET points so one should drop
+C?   any VDET information from previous processing.
+C
+        IW (KROW(IFRTL,ITK)+JFRTIV) = 0
+        IW (KROW(IFRTL,ITK)+JFRTNV) = 0
+
+C
+C++     Get the number of coordinates in each detector and check if
+C++     the correspond coordinate list bank is available.
+C
+        NTPC=ITABL(IFRTL,ITK,JFRTNT)
+        IF (NTPC.GT.0 .AND. (IFTCL.EQ.0.OR.KTPCO.EQ.0)) THEN
+          CALL RERROR('FREFIT',3,'The FTCL or TPCO bank is missing.')
+          IRET=3
+          GO TO 999
+        ENDIF
+        NITC=ITABL(IFRTL,ITK,JFRTNI)
+        IF (NITC.GT.0
+     &        .AND. (IFICL.EQ.0.OR.KICCO.EQ.0.OR.KITCO.EQ.0)) THEN
+          CALL RERROR('FREFIT',4,
+     *         'The FICL or ICCO or ITCO bank is missing.')
+          IRET=3
+          GO TO 999
+        ENDIF
+        NVDT=ITABL(IFRTL,ITK,JFRTNV)
+        IF (NVDT.GT.0 .AND. (IFVCL.EQ.0.OR.KVDCO.EQ.0)) THEN
+          CALL RERROR('FREFIT',5,'The FVCL or VDCO bank is missing.')
+          IRET=3
+          GO TO 999
+        ENDIF
+        IOITC=ITABL(IFRTL,ITK,JFRTII)
+        IOTPC=ITABL(IFRTL,ITK,JFRTIT)
+        IOVDT=ITABL(IFRTL,ITK,JFRTIV)
+C
+C++     Call the Kalman filter fit if TPC points are present
+C
+        IF (NTPC.GT.0) THEN
+          IOPT=9
+          NMULT=0
+          IRET2 = UFTTRA(ITK,FIELRC,RW(KROW(IFRFT,ITK)+JFRFIR),
+     &                RW(KROW(IFRFT,ITK)+JFRFC2),
+     &                NTPC,NITC,NVDT,IW(IFTCL+LMHLEN+IOTPC+1),
+     &                IW(IFICL+LMHLEN+IOITC+1),IW(IFVCL+LMHLEN+IOVDT+1),
+     &                HP,COV,CHI2,NDOF)
+          IF (CHI2.GT.1.0E10) THEN
+            IERR=4
+          ELSE
+            IERR=0
+          ENDIF
+        ELSEIF (NITC.GT.0) THEN
+C
+C++       Use the circle fit if there are no TPC points
+C
+          IOPT=2
+          NMULT=0
+          CALL UFITMS(NTPC,NITC,NVDT,IW(IFTCL+LMHLEN+IOTPC+1),
+     &         IW(IFICL+LMHLEN+IOITC+1),IW(IFVCL+LMHLEN+IOVDT+1),
+     &         IOPT,NMULT,29.6,0.027,HP,EE0,COV,CHI2,IERR)
+C
+C++       Calculate the number of degrees of freedom of this fit
+C
+          NNOIT=0
+          DO 86 I=1,NITC
+            IC=IABS(IW(IFICL+LMHLEN+IOITC+I))
+            IF (RTABL(KITCO,IC,JITCSZ).GT.900.) NNOIT=NNOIT+1
+   86     CONTINUE
+          NNOVD=0
+          DO 87 I=1,NVDT
+            IC=IW(IFVCL+LMHLEN+IOVDT+I)
+            IF (RTABL(KVDCO,IC,JVDCSZ).GT.4.) NNOVD=NNOVD+1
+            IF (RTABL(KVDCO,IC,JVDCSR).GT.4.) NNOVD=NNOVD+1
+   87     CONTINUE
+          IF (NVDT.LT.2) THEN
+            NSOFF=3
+          ELSE
+            NSOFF=5
+          ENDIF
+          NDOF=2*(NITC+NVDT)-NSOFF - NNOIT - NNOVD
+          IF (NDOF.LE.1) IERR=9
+        ELSE
+          IERR=9
+        ENDIF
+        IF (IERR.GE.4) THEN
+C
+C++       The fit failed.  Copy the old fit values to the new FRFT bank
+C
+          DO 367 I=1,LCOLS(IFRFT)
+            IW(KROW(KFRFT,ITK)+I)=ITABL(IFRFT,ITK,I)
+  367     CONTINUE
+        ELSE
+C
+C++       Successful fit, copy results into the new FRFT bank
+C
+          DO 60 I=1,6
+            RW(KROW(KFRFT,ITK)+JFRFIR-1+I)=HP(I)
+   60     CONTINUE
+          DO 70 I=1,21
+            RW(KROW(KFRFT,ITK)+JFRFEM-1+I)=COV(I)
+   70     CONTINUE
+          RW(KROW(KFRFT,ITK)+JFRFC2)=CHI2
+          IW(KROW(KFRFT,ITK)+JFRFDF)=NDOF
+          IW(KROW(KFRFT,ITK)+JFRFNO)=NMULT*100+IOPT*10+IERR
+        ENDIF
+  700 CONTINUE
+      IRET=0
+C
+C++   Drop the old fit bank
+C
+      IFRFT=NDROP('FRFT',0)
+C
+C++   Change the NRs of the old pointer banks, so they become the output
+C
+C      KFRTL=MSWAP(IW,'FRTL',0,'FRTL',1)
+C      IF (IFTCL.NE.0) KFTCL=MSWAP(IW,'FTCL',0,'FTCL',1)
+C      IF (IFICL.NE.0) KFICL=MSWAP(IW,'FICL',0,'FICL',1)
+C      IF (IFVCL.NE.0) KFVCL=MSWAP(IW,'FVCL',0,'FVCL',1)
+C
+  999 CONTINUE
+C
+C++   Drop all the banks if a fatal error has occured
+C
+      IF (IRET.GT.1) THEN
+        CALL BDROP(IW,'FRFTFRTLFTCLFICLFVCL')
+        CALL RERROR('FREFIT',6,'Fatal error: dropping all track banks.')
+      ENDIF
+      END
+#endif
+@
+
+
+1.3
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+@
+text
+@d46 1
+d161 1
+a161 1
+          CALL UFTTRA(ITK,FIELRC,RW(KROW(IFRFT,ITK)+JFRFIR),
+@
+
+
+1.2
+log
+@julia version 279
+@
+text
+@a0 1
+*DK frefit
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d161 1
+a161 1
+          CALL UFTTRK(FIELRC,RW(KROW(IFRFT,ITK)+JFRFIR),
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

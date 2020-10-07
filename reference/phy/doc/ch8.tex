@@ -1,0 +1,635 @@
+\chapter{\label{sec-TVA}ALPHA Track and Vertex Attributes}
+\par
+Not all of the attributes listed in this chapter are available
+when using the Mini-DST.  See Appendix \ref{sec-miniapp}, as well as
+the
+Mini-DST User's Guide, for a list of variables which are filled
+from the MINI.
+\par
+The units used throughout
+ALPHA are cm, sec, GeV, GeV/c, GeV/c$^2$, kG.
+\par
+\section{\label{sec-TVATA}``Track'' attributes.}
+\par
+These quantities are defined for all ALPHA ``tracks'' (e.g., charged
+tracks, cal.
+objects, MC truth, etc.) ``I'' always refers to the ALPHA ``track''
+number.
+ 
+\subsection{\label{sec-TVABA}Basic attributes}
+\par
+\begin{indentlist}{ 2.00cm}{ 2.25cm}
+\indentitem{QP (I)}P = momentum of vector I.
+\indentitem{QX (I)}$x$ momentum component
+\indentitem{QY (I)}$y$ momentum component
+\indentitem{QZ (I)}$z$ momentum component
+\indentitem{QE (I)}Energy
+\indentitem{QM (I)}Mass (use QMASV0 for V0 mass; see below)
+\indentitem{QCH (I)}CHarge
+\indentitem{KCH (I)}NINT (QCH(I)) (be careful with quarks)
+\end{indentlist}
+For charged tracks, the pion mass is assumed; the mass can be changed
+with QVSETM (see \ref{sec-QVM}).
+For angles and more kinematics quantities, see \ref{sec-MK}.
+ 
+\subsection{\label{sec-TVAV0M}V0 Mass}
+\par
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{QMASV0 (I,'name')}Mass of V0 with hypothesis `name'
+\end{indentlist}
+The function QMASV0(I,'name') provides the mass for a given V0
+hypothesis, where `name' is the name from the ALPHA particle table
+or the abbreviation listed here:
+\begin{itemize}
+\item 'K0S' or  `K0'
+\item 'Lam0' or `LA'
+\item 'Lam\#0' or `AL'
+\item 'GAMMA' or `GA'.
+\end{itemize}
+This function can be used only for KFV0T $
+\leq
+$ I $
+\leq
+$ KLV0T.
+See also QIDV0, Sec. \ref{sec-QIDV0}.
+\par
+ The argument 'name' in QMASV0 can be given in lower or upper case .
+\subsection{\label{sec-TVATM}Track error covariance matrix}
+\par
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{XSIG (I)}{\bf .TRUE.} if covariance matrix available
+\indentitem{QSIG (I,N,M)}element (N,M) of the covariance matrix
+N,M = 1,2,3,4 in the order QX,QY,QZ,QE
+\indentitem{QSIGEE (I)}Error$^2$ on energy
+\indentitem{QSIGE (I)}Error on energy
+\indentitem{QSIGPP (I)}Error$^2$ on momentum
+\indentitem{QSIGP (I)}Error on momentum
+\indentitem{QSIGMM (I)}Error$^2$ on mass
+\indentitem{QSIGM (I)}Error on mass
+The mass error is not defined for particles with mass = 0.
+\end{indentlist}
+QSIG (I,1,1) is set to  $-1$
+if the matrix is not available.
+ 
+\subsection{\label{sec-TVAD}Distance to the beam position:}
+\par
+Available for charged reconstructed tracks.
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{QDB (I)}distance of closest approach to beam axis
+\indentitem{QDBS2 (I)}error$^2$ on QDB
+\indentitem{QZB (I)}z coordinate of track point where QDB is measured
+\indentitem{QZBS2 (I)}error$^2$ on QZB
+\indentitem{QBC2 (I)}$\chi^2$ due to QDB and QZB.
+\end{indentlist}
+The coordinates of the beam position used to compute these
+values are QVTXBP(I)  (see~\ref{sec-CHUNKINF} on p. ~\pageref{sec-CHUNKINF}).
+
+\par
+For more geometrical track attributes, see sections \ref{sec-TVAFRFT}
+and \ref{sec-MK}.
+ 
+\subsection{\label{sec-TVASC}Stability code}
+\par
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{KSTABC (I)}Stability code
+\end{indentlist}
+The stability code is designed to avoid double counting when making
+loops over Monte Carlo particles. The possible values of KSTABC are:
+\begin{indentlist}{ 1.25cm}{ 1.50cm}
+\indentitem{ 1}Particle does not decay.
+\indentitem{ 2}Neutral particle that decays in the calorimeter volume.
+Charged particle that decays in the TPC or calorimeter volume. Here,
+TPC and calorimeter volumes are full cylinders (including the beam
+pipe region).
+\indentitem{ 3}One of the ancestors of this stable particle has
+interacted with matter. Energy and momentum are NOT conserved.
+\indentitem{ 0}Decay products of ``stable'' particles including all
+garbage in the calorimeter.
+\indentitem{$-$1}Particle decays immediately (resonance etc.).
+\indentitem{$-$2}Particle decays with finite decay length but before
+reaching
+the detector volume (see above).
+\indentitem{$-$3}Particle interacts with matter before reaching
+the detector volume.
+The decay products do not conserve energy and momentum.
+\end{indentlist}
+ 
+A loop over all MC particles with  KSTABC $>$ 0
+selects the generation of decay
+particles which
+will probably be visible in the detector -- energy is never counted
+twice.
+The energy sum of these particles gives the total generated
+energy only if
+no particle interacted with
+matter inside the detector volume.
+A loop over MC particles with KSTABC = 1, 2, and $-$3
+is similar, but it always gives the generated total energy.
+\par
+ 
+\subsection{\label{sec-TVATPN}Test a particle's name}
+\par
+\begin{indentlist}{ 5.75cm}{ 6.00cm}
+\indentitem{XPEQU (I,'part$-$name')}
+{\bf = .TRUE.} if track I is a particle with the name
+`part$-$name'.
+\indentitem{XPEQOR (I,'part$-$name')}
+ 
+{\bf = .TRUE.} if track I is a particle with the name
+`part$-$name' or if it is the corresponding antiparticle.
+\indentitem{XPEQAN (I,'part$-$name',IANTI)}
+ 
+{\bf = .TRUE.} if track I is a particle with the name
+`part$-$name' and if IANTI = 0.
+{\bf = .TRUE.} if track I is the antiparticle corresponding to
+`part$-$name' and if IANTI is not equal to 0.
+\end{indentlist}
+ {\bf Important remark :}  These functions MUST  be called
+ with 'part$-$name' being a member of the official list of ALPHA particle names given in Appendix E.
+  They are CASE-SENSITIVE and do not work if you supply the wrong
+ particle name .
+\par
+The same functions exist for
+integer particle codes IPC = KPART ('part$-$name') instead of
+the particle names (see \ref{sec-ADT}):
+\begin{verbatim}
+        XCEQU (I, IPC)
+        XCEQOR (I, IPC)
+        XCEQAN (I, IPC, IANTI)
+\end{verbatim}
+ 
+\subsection{\label{sec-TVATPSO}Test if particles are based on the
+same object}
+\par
+\begin{indentlist}{ 3.25cm}{ 3.50cm}
+\indentitem{XSAME (I,J)}{\bf = .TRUE.}
+if tracks I and J or one of their daughters,
+granddaughters, etc. are based on the same object (see
+\ref{sec-AS}) or, in other words, belong to the same family (see
+\ref{sec-QLO}). I and J must both be reconstructed tracks or
+MC particles; they may, however, belong to different
+Lorentz frames. XSAME uses the same bit masks as the
+lock algorithm.
+XSAME(IJET,ITK)
+can be used for testing whether a track ITK belongs to
+a given jet (see \ref{sec-QJA}).
+An example how to use XSAME in reconstructing decay chains
+is given in \ref{sec-ADS}, example 2.
+\end{indentlist}
+\subsection{\label{sec-TVAFP}Flags, pointers, etc.}
+\par
+Pointers to other tracks and to vertices: see ch. \ref{sec-A}.
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{KTN (I)}GALEPH/ JULIA/ ENFLW  track number.
+                    This means:
+\begin{itemize}
+\item for MCarlo ``truth'' particles (I=KFREV to KLREV) KTN(I) is the row number of ALPHA track I in the
+                    FKIN bank;
+\item  for reconstructed tracks (I=KFCHT to KLCHT) KTN(I) is the row number in the FRFT bank;
+\item                     for CAL Objects it is the row number in the PECO or PHCO banks; 
+\item    for ENFLW objects it is the row number in the
+                    EFOL bank.
+\end{itemize}
+
+\indentitem{KCLASS(I)}
+Track class:
+\begin{itemize}
+\item  $-$1 (= KRECO) for reconstructed tracks
+\item  $-$2 (= KMONTE) for MC truth
+\item = 0: track attributes = 0
+\item $>$ 0: Lorentz frame. See \ref{sec-AD}.
+\end{itemize}
+\indentitem{KTPCOD (I)}track's Particle Code
+\indentitem{CQTPN (I)}track's particle name (12 char.).
+= ` ' if particle code = 0
+\indentitem{KLUNDS (I)}LUND status code (MC particles only!); defined only if the event generator is JETSET or is interfaced
+ with JETSET.
+\indentitem{XMC (I)}{\bf .TRUE.} if MC particle
+\indentitem{KRDFL (I,IFLAG) }Integer value of user flag IFLAG (IFLAG=1$-$18).
+Flag is set to IVAL with CALL QSTFLI(I,IFLAG,IVAL); see
+\ref{sec-USFL}.
+\indentitem{QRDFL (I,IFLAG) }Floating$-$point value of user flag
+IFLAG (IFLAG=1$-$18).
+Flag is set to VAL with CALL QSTFLR(I,IFLAG,VAL); see
+\ref{sec-USFL}.
+\end{indentlist}
+ 
+\section{\label{sec-TVATRD}``Track'' related detector data}
+\par
+These mnemonic symbols give access to information in BOS banks
+corresponding to an ALPHA ``track''.
+These symbols return the integer or floating
+point value 0 if detector data are not available for a track.
+The names of these mnemonic
+symbols follow the same convention as the HAC parameters.
+ 
+\subsection{\label{sec-TVAFRFT}Global geometrical track fit: Bank
+FRFT}
+\par
+\par If the FRF0 card is present in the ALPHA cards file, the NR=0
+version of the FRFT bank (track parameters determined without vertex
+detector coordinates) will be used.  Otherwise, the NR=2 version
+of FRFT (TPC + ITC + VDET tracks) will be used.
+\par
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{XFRF (I)}{\bf .TRUE.} if track fit data are available
+for track I
+\indentitem{QFRFIR (I)}Inverse radius of curvature in x$-$y projection
+Signed positive if track bends counterclockwise, negative
+if track bends clockwise
+\indentitem{QFRFTL (I)}Tangent of dip angle
+\indentitem{QFRFP0 (I)}Phi at closest approach to the z axis
+\indentitem{QFRFD0 (I)}Distance of closest approach to z axis
+\indentitem{QFRFZ0 (I)}z coordinate of track point where QFRFD0 is
+measured
+Note: QDB and QZB (see \ref{sec-TVAD})
+correspond to the closest approach to the beam axis.
+\indentitem{QFRFAL (I)}Multiple scattering angle between TPC and ITC
+\indentitem{QFRFEM (I,N,M)}
+ 
+Element N,M of the error covariance matrix
+N,M = 1 to 6 in the order IR,TL,PH,D0,Z0,AL.
+Note that for data processed before April 1993 the error matrix is valid at the innermost
+point used in the track fit, and therefore does not include
+multiple scattering in material before the tracking chambers.
+For data processed - or reprocessed - after April 1993 the error matrix is valid at the interaction point
+and therefore includes the effect of multiple scattering .
+\indentitem{QFRFC2 (I)}$\chi^2$ of helix fit
+\indentitem{KFRFDF (I)}Number of degrees of freedom
+\indentitem{KFRFNO (I)}Option flag for track fit
+\end{indentlist}
+ 
+\subsection{\label{sec-TVAFRTL}Number of coordinates used for the
+global fit: Bank FRTL}
+\par
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{KFRTNV (I)}Number of coordinates in Vdet
+\indentitem{KFRTNI (I)}Number of coordinates in ITC
+\indentitem{KFRTNE (I)}Number of coordinates in ITC in following spirals
+\indentitem{KFRTNT (I)}Number of coordinates in TPC
+\indentitem{KFRTNR (I)}Number of coordinates in TPC in following spirals
+\end{indentlist}
+\subsection{\label{sec-TVAFRID}Charged$-$particle identification:
+Bank FRID}
+\par
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{KFRIBP (I)}Bit pattern for tracking devices
+\indentitem{KFRIDZ (I)}Dead zone pattern for tracking devices. To be used with care: the TPC bits were
+not filled properly until JULIA 281 (July 1996) and the VDET bits are always 0 for all datasets since Summer 1995.
+\indentitem{KFRIBC (I)}Bit pattern for calorimeters
+\indentitem{KFRIDC (I)}Dead zone pattern for calorimeters
+\indentitem{QFRIPE (I)}Electron probability
+\indentitem{QFRIPM (I)}Muon probability
+\indentitem{QFRIPI (I)}Pion probability
+\indentitem{QFRIPK (I)}Kaon probability
+\indentitem{QFRIPP (I)}Proton probability
+\indentitem{QFRINK (I)}No Kink probability
+\indentitem{KFRIQF (I)}Track Quality Flag from UFITQL
+\indentitem{XFRIQF (I)}{\bf .TRUE.} if KFRIQF(I) = 1 or 3
+\end{indentlist}
+ 
+\subsection{\label{sec-TVATEXS}dE/dx data: Bank TEXS}
+\par
+Note: These functions return uncalibrated numbers. In general,
+dE/dx information should be accessed with subroutines QDEDX and
+QDEDXM (see \ref{sec-OARDEDX}).
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{XTEX (I)}{\bf .TRUE.} if dE/dx is available for track
+I
+\indentitem{KNTEX (I)}Number of TPC sectors on track I
+\end{indentlist}
+In the following, N is
+the loop index of: {\it DO 10 N = 1, KNTEX(I)}
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{KTEXSI (I,N)}Sector slot number
+\indentitem{QTEXTM (I,N)}Truncated Mean of dE/dx measurements
+\indentitem{QTEXTL (I,N)}Useful Track Length for dE/dx
+\indentitem{KTEXNS (I,N)}Number of Samples used for dE/dx
+\indentitem{QTEXAD (I,N)}Average Drift length of samples
+\end{indentlist}
+ 
+\subsection{\label{sec-TVAEIDT}Electron identification: Bank EIDT}
+\par
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{XEID (I)}{\bf .TRUE.}
+if electron identification is available for track I
+\indentitem{KEIDIF (I)}Quality flag
+\indentitem{QEIDRI (I,N)}R(N) estimator, N = 1 ... 7.
+N = 1: Energy balance; N = 2: compactness;
+N = 3,4: long. profile; N = 5: dE/dx; N = 6: Dtheta barycenter;
+N = 7: Dphi barycenter.
+\indentitem{QEIDEC (I)}Corrected energy with electron hypothesis
+\indentitem{KEIDIP (I)}Particle hypothesis (= 1 if electron)
+\indentitem{QEIDEI (I,N)}Energy in centered storeys stack N
+\end{indentlist}
+ 
+\subsection{\label{sec-TVAHMAD}Muon $-$ HCAL association: Bank HMAD}
+\par
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{XHMA (I)}{\bf .TRUE.} if HCAL data are available for track
+I
+\indentitem{KHMANF (I)}Number of Fired planes
+\indentitem{KHMANE (I)}Number of Expected fired planes
+\indentitem{KHMANL (I)}Number of Fired planes within Last ten planes
+\indentitem{KHMAMH (I)}Mult Hits: number of clusters in last ten planes
+\indentitem{KHMAIG (I)}IGeomflag: flag of possible dead zone
+\indentitem{QHMAED (I)}Energy Deposit in corresponding HCAL storey
+\indentitem{QHMACS (I)}$\chi^2$
+\indentitem{KHMAND (I)}Number of Degrees of freedom
+\indentitem{KHMAIE (I)}Expected bit map
+\indentitem{KHMAIT (I)}True bit map
+\indentitem{KHMAIF (I)}Preliminary identification flag
+\end{indentlist}
+\subsection{\label{sec-TVAMCAD}Muon chamber data: Bank MCAD}
+\par
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{XMCA (I)}{\bf .TRUE.}
+if muon chamber data are available for track I
+ 
+N = 1,2: Int/Ext chambers
+\indentitem{KMCANH (I,N)}Number of associated hits
+\indentitem{QMCADH (I,N)}Minimum distance hit$-$track
+\indentitem{QMCADC (I,N)}Cutoff on hit$-$track distance
+\indentitem{QMCAAM (I)}Min. angle between extrapolated
+and measured (in
+muon ch.) track
+\indentitem{QMCAAC (I)}cutoff on minimum angle
+\end{indentlist}
+\subsection{\label{sec-TVAMUID}QMUIDO Muon Identification: Bank MUID}
+\par
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{XMUI (I)}{\bf .TRUE.}
+if QMUIDO information is available for track I
+\indentitem{KMUIIF (I)}Identification Flag
+\indentitem{QMUISR (I)}Sum of HCAL residuals
+\indentitem{QMUIDM (I)}Distance between track and closest muon chamber hit.
+\indentitem{KMUIST (I)}FRFT track number of shadowing track
+\end{indentlist}
+\subsection{\label{sec-TVAPECO}ECAL objects: Bank PECO}
+\par
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{XPEC (I)}{\bf .TRUE.} if ECAL data (PECO) are available
+for calorimeter object ``track'' I
+\indentitem{QPECER (I)}Raw energy.
+\indentitem{QPECE1 (I)}Fraction of energy in stack 1
+\indentitem{QPECE2 (I)}Fraction of energy in stack 2
+\indentitem{QPECTH (I)}Theta
+\indentitem{QPECPH (I)}Phi
+\indentitem{QPECEC (I)}Energy corrected for geometrical effects
+\indentitem{KPECKD (I)}Region code $-$ see ALEPH 88$-$134
+\indentitem{KPECCC (I)}Correction code $-$ see bank description
+\indentitem{KPECRB (I)}Relation bits $-$ see bank description
+\indentitem{KPECPC (I)}PCOB number of associated cal. object
+\end{indentlist}
+\subsection{\label{sec-TVAPEPT}ECAL objects: Bank PEPT}
+\par
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{XPEP (I)}{\bf .TRUE.} if ECAL data (PEPT) are available
+for calorimeter object ``track'' I
+\indentitem{QPEPT1 (I)}Theta in stacks 1 and 2
+\indentitem{QPEPP1 (I)}Phi in stacks 1 and 2
+\indentitem{QPEPT3 (I)}Theta in stack 3
+\indentitem{QPEPP3 (I)}Phi in stack 3
+\end{indentlist}
+\subsection{\label{sec-TVAPHCO}HCAL objects: Bank PHCO}
+\par
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{XPHC (I)}{\bf .TRUE.} if HCAL data (PHCO) are available
+for calorimeter object ``track'' I
+\indentitem{QPHCER (I)}Raw energy
+\indentitem{QPHCTH (I)}Theta
+\indentitem{QPHCPH (I)}Phi
+\indentitem{QPHCEC (I)}Energy corrected for geometrical effects
+\indentitem{KPHCKD (I)}Region code $-$ see ALEPH 88$-$134
+\indentitem{KPHCCC (I)}Correction code $-$ see bank description
+\indentitem{KPHCRB (I)}Relation bits $-$ see bank description
+\indentitem{KPHCPC (I)}PCOB number of associated cal. object
+\end{indentlist}
+\subsection{\label{sec-TVAYV0V}Reconstructed V0s: Bank YV0V}
+\par
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{XYV0 (I)}{\bf .TRUE.} if V0 data are available for track I
+\indentitem{KYV0K1 (I)}JULIA/FRFT track number of positive track from V0 ( NOT the ALPHA track number ! )
+\indentitem{KYV0K2 (I)}JULIA/FRFT track number of negative track from V0 ( NOT the ALPHA track number ! )
+\indentitem{QYV0VX (I)}V0 x coordinate
+\indentitem{QYV0VY (I)}V0 y coordinate
+\indentitem{QYV0VZ (I)}V0 z coordinate
+\indentitem{QYV0X1 (I)}First constraint on V0 mass (r in ALEPH 88$-$46)
+\indentitem{QYV0X2 (I)}Second constraint on V0 mass (b in ALEPH 88$-$46)
+\indentitem{QYV0C2 (I)}$\chi^2$ of V0 vertex fit
+\indentitem{KYV0IC (I)}Fit hypothesis (see YV0V bank description)
+\indentitem{QYV0DM (I)}Minimum distance between helices
+\indentitem{QYV0S1 (I)}Psi angle for $+$ track from V0
+\indentitem{QYV0S2 (I)}Psi angle for $-$ track from V0
+\end{indentlist}
+ 
+ 
+\subsection{\label{sec-TVAEFOL}Energy Flow: Bank EFOL}
+\par
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{XEFO (I)}{\bf .TRUE.} if energy flow (EFOL)
+data are available for ``track'' I ( of the EFT section )
+\indentitem{KEFOTY (I)}Type of energy flow object (see Sec.~\ref{sec-EFLWM})
+\indentitem{KEFOLE (I)}PECO number of associated ECAL object
+\indentitem{KEFOLT (I)}FRFT number of associated charged track
+\indentitem{KEFOLH (I)}PHCO number of associated HCAL object
+\indentitem{KEFOLC (I)}PCOB number of associated calorimeter object
+\indentitem{KEFOLJ (I)}EJET number of associated jet
+\end{indentlist}
+\subsection{\label{sec-TVAPCQA}Neutral objects from PCPA: Bank PCQA}
+\par
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{XPCQ (I)}{\bf .TRUE.} if PCQA data are available for track I
+\indentitem{KPCQNA (I)}NAture of neutral object (see Sec.~\ref{sec-EFLWP})
+\end{indentlist}
+ 
+\section{\label{sec-GAMPHO} Photon attributes}
+\par
+    The photon-finding package has been introduced in 1992 in the ALEPHLIB and has been deeply
+  modified many times, getting each time a new name and giving
+  different output banks.
+ 
+\par
+   The GAMPEK photon algorithm is described in the reports ALEPH 93$-107$  and ALEPH 94$-057$.
+\par
+       Users who want to study only $\pi^0$ production may use directly the QPI0DO algorithm described in
+     \ref{sec-OARQPI0} , page ~\pageref{sec-OARQPI0}.
+ 
+\par
+  In the descriptions below , the index I refers to the ``tracks''  of the GAT section and
+  runs from KFGAT to KLGAT.
+ 
+ 
+\subsection{\label{sec-TVAEGPC}Photons from GAMPEC: Output bank EGPC (Obsolete since July 1993)}
+\par
+ This bank was written on POTs, DSTs and MINIs before July 1993 
+ (JULIA versions 264 and before, MINI version 8 and before). It should not be used any more.
+  Please refer to previous ALPHA manuals for the description of the related variables.
+ 
+\subsection{\label{sec-TVAPGPC}Photons from GAMPEX: Output bank PGPC (Obsolete since December 1994)}
+\par
+ This bank was written on POTs , DSTs and MINIs between July 1993 and  December 1994 by
+ JULIA versions 265 to 271 or MINI 9.
+  Please refer to previous ALPHA manuals for the description of the related variables.
+     
+\subsection{\label{sec-TVAPGAC}Photons from GAMPECK: Output bank PGAC}
+\par
+ This bank is written on POTs , DSTs and MINIs since December 1994
+ by JULIA version 272 and after, or MINI version 10 and after.
+ 
+ On these datasets, the photons from the old GAMPEC package (bank EGPC, see above) or GAMPEX (bank PGPC, see above),
+ are no more available.
+\par
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{XPGAC (I)}{\bf .TRUE.} if GAMPECK data are available for ``track'' I of the GAT section
+\indentitem{QX (I)}Momentum of photon , x component
+\indentitem{QY (I)}Momentum of photon , y component
+\indentitem{QZ (I)}Momentum of photon , z component
+\indentitem{QE (I)}Energy  of photon
+\indentitem{QPGPR1 (I)}Energy fraction in stack 1
+\indentitem{QPGPR2 (I)}Energy fraction in stack 2
+\indentitem{QPGPF4 (I)}Energy fraction in 4 central towers
+\indentitem{QPGPDM (I)}Distance to the closest track (cm)
+\indentitem{KPGAST (I)} NST1$+100*$NST2+$10000*$NST3, NSTi=number of storeys in stack i
+\indentitem{KPGPQU(I)} QUality flag
+\begin{itemize}
+\item CRCK + 10*DST1 + 100*DST2 + 1000*DST3
+\item DSTi = 1 if dead storey(s) in stack i
+\item CRCK = 1 if photon in crack region
+\end{itemize}
+\indentitem{QPGPQ1 (I)}Quality estimator 1 for photon
+\indentitem{QPGPQ2 (I)}Quality estimator 2 for photon
+\indentitem{QPGPM1 (I)}1st moment from CLMOMS analysis
+\indentitem{QPGPM2 (I)}2nd moment from CLMOMS analysis
+\indentitem{QPGPMA (I)}Pi0 mass estimated from CLMOMS analysis
+\indentitem{QPGPER (I)}Raw energy of photon
+\indentitem{QPGPTR (I)}Raw Theta  of photon
+\indentitem{QPGPPR (I)}Raw Phi    of photon
+\indentitem{QPGAEF (I)}Expected fraction in 4 towers
+\indentitem{QPGAEF (I)}Geometrical correction
+\indentitem{QPGAZS (I)}Zero suppression
+\indentitem{QPGAPL (I)}Probability to be a fake photon of electromagnetic origin
+\indentitem{QPGAPH (I)}Probability to be a fake photon of hadronic origin
+\indentitem{KPGAPN (I)}Row number , in PGAC , of parent giving a fake photon
+\indentitem{KPGAFA (I)}Flag for fake discrimination
+\indentitem{KPGAPE (I)}Row number of corresponding PECO cluster
+\end{indentlist}
+ 
+\section{\label{sec-TVAVA}Vertex attributes}
+\par
+The following attributes are
+all vertices.
+The argument (IVX) always refers to vertex IVX.
+\par
+ 
+{\bf Warning : JULIA or QFNDIP Main vertex ?}
+ 
+For the Main vertex (IVX = KFREV and KVTYPE(IVX) = 1, see below) the quantities described below may have been
+obtained either from the JULIA vertexing or from the QFNDIP package if you asked
+for it through the data card QFND ( sec \ref{sec-DCQFND}). See the entry QVCHIF below to know which
+package was used to give the Main vertex positions .
+
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{QVX (IVX)}x position
+\indentitem{QVY (IVX)}y position
+\indentitem{QVZ (IVX)}z position
+\indentitem{KVN (IVX)}JULIA/GALEPH vertex number
+\indentitem{KVTYPE(IVX)}vertex type 
+
+\begin{itemize}
+
+\item  = 1 for the Main vertex; 
+ 
+\item  = 0 for standard reconstructed V0s from YV0V
+
+ (IVX = KFREV,KLREV) 
+
+     or for MC ``truth'' vertices (IVX = KFMCV,KLMCV)
+
+\item  = 2 for a secondary vertex fitted by any of the KVFITx routines, see sec \ref{sec-QFIT} on p.~\pageref{sec-QFIT}.
+
+\item  = 3 for a ``Long V0'' vertex from the new tracking
+
+\item  = 4 for a Nuclear Interaction vertex from the new tracking
+
+\item  = 5 for a Kink vertex from the new tracking
+
+\end{itemize}
+
+ Vertex types 3,4,5 are defined only for datasets produced with JULIA version 302 and after.
+
+
+\indentitem{QVCHIF(IVX)}Chisquare of the vertex fit.
+
+ Special meaning for the Main vertex:
+
+ Always 0 if the Main vertex was found by JULIA.
+
+ If the Main vertex was found by QFNDIP, this chisquare is positive.
+
+ If QFNDIP was called and was unable to find a Main vertex, this Chisquare is set
+ to a huge negative value.
+\indentitem{QVEM (IVX,N,M)}element (N,M) of the covariance matrix
+N,M = 1,2,3 in the following order: QVX,QVY,QVZ. 
+
+QVEM (IVX,1,1) is set to $-1.$
+if the error matrix is not available.
+\end{indentlist}
+ 
+See Section \ref{sec-AV} for pointers between ALPHA tracks and
+vertices.
+
+
+\section{\label{sec-TVKINK}Special attributes for a Kink Vertex}
+\par
+
+\par
+\fbox{CALL QVKINK(IVX,PKINK,PTOUT,PLOUT,IHYPK,IER)}
+\par
+This routine allows to get special attributes defined only for Kink vertices
+produced by JULIA version 302 and after. These quantities are available from POTs, DSTs and MINIs.
+\par
+{\bf Input arguments:}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{IVX}ALPHA vertex number of a kink vertex (IVX must be between KFKIV and KLKIV, see sec \ref{sec-alvert}).
+\end{indentlist}
+\par
+{\bf Output arguments:}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{IER} = 0 if IVX is really a kink vertex, = 1 if not.           
+\indentitem{PKINK} Momentum of parent track at the kink position
+\indentitem{PTOUT} Pt of outgoing charged particle relative to parent
+\indentitem{PLOUT} Pl of outgoing charged particle relative to parent
+\indentitem{IHYPK} Hypothesis of mass cuts satisfied by this decay:  
+\begin{itemize}
+\item = 1  $\pi        \rightarrow  \mu \nu$
+\item = 2  $K          \rightarrow  \mu \nu$
+\item = 3  $K          \rightarrow  \pi \pi^{0}$
+\item = 4  $\Sigma^{+} \rightarrow  p \pi^{0}$
+\item = 5  $\Sigma^{+} \rightarrow  n \pi^{+} $
+\item = 6  $\Sigma^{-} \rightarrow  n \pi^{-} $
+\item = 7  $\Xi^{-}    \rightarrow  \Lambda \pi^{-}$
+\item = 8  $\Omega^{-} \rightarrow  \Lambda K^{-}$
+\item = 9  $\Omega^{-} \rightarrow  \Xi^{0} \pi^{-}$
+\item = 10 $\Omega^{-} \rightarrow  \Xi^{-} \pi^{0}$
+\item = 0  if none of the above hypotheses are satisfied
+\end{itemize}
+
+\end{indentlist}
+
+
+\par
+\fbox{CALL QKINKT(NKINKS,LISTKINKS)}
+\par
+This routine allows to get the number and list of charged tracks ending in Kink vertices
+produced by JULIA version 302 and after. 
+
+\par
+{\bf Output arguments:}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{NKINKS} = number of kink vertices in the event.
+\indentitem{LISTKINKS(I)} = list of charged tracks ending in the I=1,NKINKS kink vertices; must be dimensioned
+                            to 50 in the calling routine.
+\end{indentlist}
+
+

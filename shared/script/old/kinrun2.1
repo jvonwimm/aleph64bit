@@ -1,0 +1,828 @@
+#!/bin/csh
+#-----------------------------------------------------------------------
+# Script : kinrun
+# Devel. : Joel Closier
+# Date   : 15 Oct 1994
+# Goals  : Script to make a KINGAL exec 
+# Usage  : 
+# Modify :
+#        : 2.0 15/10/95 JC
+#        : 2.1 18/12/95 JC
+#              remove lund questions
+#-----------------------------------------------------------------------
+#set echo on
+#  Setup variables ...
+
+onintr END 2
+set VER="2.1"
+set me = `id | cut -f2 -d"(" | cut -f1 -d")"`
+set DATE=`date`
+set LOGFILE="$ALEPH/log/kinrun.log"
+set NODE=`uname -n`
+set KINDIR="$ALEPH/kin"
+set kinmk = "kinrun "
+set run = "y"
+set VERBOSE="y"
+set FILEOPT     = "$cwd/kinparam.opt"
+set FILEOUT = "$cwd/kinrun.out"
+
+# Initialisation
+set craddle = " "
+set datac = "$KINGALCARDS"
+set program = " "
+set debugf = "n"
+set machine = "saga"
+set cputim = "10000"
+set keepfl = "Kept"
+set indev = "none"
+set aver = "lib"
+set kine = ""
+set kinad = "n"
+set kinra = "n"
+set usobj = " "
+set kino = ".o"
+set kino_d = "_dbx.o"
+set generator = " "
+
+echo "     *************************************************"
+echo "     ***********      KINGAL JOB    $VER  ************"
+echo "     *************************************************"
+echo ""
+
+#  test if you can write where you are
+if !(-w $cwd) then
+   echo "you can't write in the current directory $cwd"
+   exit 0
+endif
+
+#  test which model will be used
+switch ($#argv)
+        case 0: 
+                goto VAX
+                breaksw
+        case 1:
+                if ("$argv[1]" == "-help") goto usage
+                if ("$argv[1]" == "-h") goto usage
+                set generator = $argv[1]
+                goto VAX
+                breaksw       
+endsw
+
+
+#  Check options
+set MODE="UNIX"
+#   parse the options and put the right values
+#  -x : debug mode
+#  -v 
+#  -s : submit option
+#  -r : to execute you binary
+#  -g : use the debug libraries
+#  -h : give the help to use kinrun
+#  -a : use RANMAR generator routines
+#  -k : 
+#  -d : use modified LUND routines
+# Options with an argument
+#  -m machine : machine where you will submit your batch job
+#  -l library : give library that you will use
+#  -f file : give fortran file that you want to use
+#  -c number : CPU time that you want to use for your batch job
+#  -o object file : give the object file that you will use
+#  -C cards : give the CARD file that you will use
+#  -F filename : to read a file with some default option
+#  -G generator : to precise which generator you will use
+#
+set argv=`getopt xsvrghakdm:l:f:c:o:C:F:G: $*`
+if ($status != 0) goto usage
+
+while ($#argv > 0)
+        switch ($argv[1])
+                case -x:
+                        set echo on
+                        breaksw
+                case -v:
+                        set VERBOSE="n"
+                        breaksw
+                case -s:
+                        set batch="y"
+                        set run="y"
+                        breaksw
+		case -F:
+			set FILEOPT = $argv[2]
+			goto FILE
+			breaksw
+		case -G:
+			set generator = $argv[2]
+			breaksw
+                case -h:
+                        goto usage
+                        breaksw
+		case -g:
+			set debugf = "y"
+			breaksw
+		case -m:
+			set machine = $argv[2]
+                        shift
+			breaksw
+		case -c:
+			set cputim = $argv[2]
+                        shift
+			breaksw
+		case -r:
+			set run = "y"
+			breaksw
+		case -a:
+			set kinra = "y"
+			breaksw
+		case -d:
+			set kinad = "y"
+			breaksw
+		case -o:
+			set usobj = "$usobj $argv[2]"
+			shift
+			breaksw
+		case -l:
+			set kine = "$kine $argv[2]"
+			shift 
+			breaksw
+		case -k:
+			set keepfl = "y"
+			breaksw
+		case -C:
+			set datac = $argv[2]
+                        shift
+			breaksw
+		case -f:
+			set craddle = "$craddle $argv[2]"
+			shift
+			breaksw
+                case --:
+                        breaksw
+                case *:
+                        set program = $argv[1]
+                        breaksw
+        endsw
+        shift
+end
+
+#######################################################################
+#      Create the makefile kingal.mk
+#######################################################################
+MAKEF:
+if ("$debugf" == "y" || "$debugf" == "Y") then
+   set debug_opt = "_dbx"
+else
+   set debug_opt = ""
+endif
+
+# check if the executable already exist
+if (-x $program && "$ENVIRONMENT" == "INTERACTIVE") then
+   echo -n "This program already exist. Do you want to use it (y/n)? "
+   set bak=$<
+   if ($bak == "n" || $bak == "N") then
+     mv $program $program.BAK
+   else
+     goto RUN
+   endif
+endif
+
+set param = `egrep "kingal" $ALEPH/kin/f77${debug_opt}_options | awk '{print substr($0,15)}'`
+set use_obj = "$ALEPH/kin/kingal.o"
+if ($kinad == "y" || $kinad == "Y") set use_obj = "$use_obj $ALEPH/kin/lunmod.o"
+if ($kinra == "y" || $kinra == "Y") set use_obj = "$use_obj $ALEPH/kin/kinmar.o"
+set usobj = "$use_obj $usobj"
+
+### Create the file kingal.mk  ####
+cat >$cwd/$program.mk <<END-OF-MAKE
+NAME    = $program 
+CFILES  =  
+CFLAGS  = 
+FFILES  = $craddle
+FFLAGS = $param
+LDFLAGS = 
+CERNLIB = \`cernlib mathlib packlib shift\`
+
+LIBS    = \\
+END-OF-MAKE
+if ("$usobj" != " ") then
+cat >>$cwd/$program.mk <<END-OF-MAKE
+     		$usobj \\
+END-OF-MAKE
+endif
+cat >>$cwd/$program.mk <<END-OF-MAKE
+		$KINDIR/lib${generator}.a \\
+END-OF-MAKE
+if ("$kine" != " ") then
+cat >>$cwd/$program.mk <<END-OF-MAKE
+     		$kine \\
+END-OF-MAKE
+endif
+cat >>$cwd/$program.mk <<END-OF-MAKE
+		$ALEPH/kin/libkinextra.a \\
+		$ALEPH/lib/libalephlib.a \\
+		$ALEPH/lib/libbos77.a \\
+		\$(CERNLIB)
+
+
+# Rules...
+
+SRCFILES = \$(CFILES) \$(FFILES)
+OBJFILES = \$(CFILES:.c=.o) \$(FFILES:.f=.o)
+
+\$(NAME): \$(OBJFILES) 
+END-OF-MAKE
+endif
+if ("$generator" == "hrwg09" && "$OS" == "OSF1") then
+cat >>$cwd/$program.mk <<END-OF-MAKE
+	f77 -ncr -o \$@  \$(OBJFILES) \$(LIBS) \$(LDFLAGS)
+END-OF-MAKE
+else
+cat >>$cwd/$program.mk <<END-OF-MAKE
+	f77 -o \$@  \$(OBJFILES) \$(LIBS) \$(LDFLAGS)
+END-OF-MAKE
+endif
+
+if ($run != "y" || $run != "Y") then
+  if ( "$ENVIRONMENT" == "INTERACTIVE" ) then
+   echo -n " Do you want to create the binary and run it with these options (y/n)? : "
+   set run=$<
+  endif
+   if ($run == "y" || $run == "Y") then
+     echo ""
+     echo "   **************************************************************"
+     echo "   ***    Compilation  and creation of the makefile $program.mk"
+     echo "   **************************************************************"
+     ### Compile the job  #####
+     make -f $cwd/$program.mk
+     goto RUN
+   else
+     echo -n " Do you want to create the binary  with these options (y/n)? : "
+     set bin=$<
+     if ($bin == "y" || $bin == "Y") then
+        echo ""
+        echo "   **************************************************************"
+        echo "   ***    Compilation  and creation of the makefile $program.mk"
+        echo "   **************************************************************"
+        ### Compile the job  #####
+        make -f $cwd/$program.mk
+        goto END
+     else 
+        exit 0
+     endif
+   endif
+endif
+
+
+RUN:
+setenv KINGALCARDS $datac
+
+chmod +x $program
+if ($run == "y" || $run == "Y") then
+  echo ""
+  echo "   ********************"
+  echo "   ***  Execution   ***"
+  echo "   ********************"
+  ### Run the job  ####
+  if ( "$ENVIRONMENT" == "INTERACTIVE" ) then
+     echo "   * The output is saved in $FILEOUT "
+     echo " "
+     echo " Please wait the end of the execution ......"
+     $program > $FILEOUT
+  else
+     $program
+  endif
+  echo ""
+endif
+if ( "$ENVIRONMENT" == "INTERACTIVE" ) then
+  echo -n "Do you want to keep the executable $program (y/n)? : "
+  set rep=$<
+  if ($rep == "n" || $rep == "N") then
+     if (-x $program) rm $program
+  endif
+endif
+
+END:
+# Finish kinrun
+if (-r $cwd/test.def) rm $cwd/test.def
+echo "$DATE $me $MODE $VER $NODE $generator" >> $LOGFILE
+exit 0
+
+#######################################################################
+#      Read the file for the option -F
+#######################################################################
+FILE:
+set MODE="FILE"
+
+##  test if the file FILEOPT exist   ##
+if !(-r $FILEOPT) then 
+   echo the file $FILEOPT does not exist
+   exit 0
+endif
+
+#  Read value from the file of option
+set craddle=`awk '{if ((NR == 1) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set datac=`awk '{if ((NR == 2) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set program=`awk '{if ((NR == 3) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set debugf=`awk '{if ((NR == 4) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set machine=`awk '{if ((NR == 5) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set cputim=`awk '{if ((NR == 6) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set keepfl=`awk '{if ((NR == 7) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set kine=`awk '{if ((NR == 8) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set usobj=`awk '{if ((NR == 9) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set kinad=`awk '{if ((NR == 10) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set kinra=`awk '{if ((NR == 11) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set generator=`awk '{if ((NR == 12) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+
+# if the option batch is activate you don't read the valuein the file
+if (! $?batch) set batch=`awk '{if ((NR == 13) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+
+if ($VERBOSE == "y") then
+  echo ""
+  echo "you run KINRUN with these options (stored in $FILEOPT):"
+  echo ""
+  echo "Generator used = $generator "
+  echo "Historian directives = $craddle "
+  echo "KINGAL data cards = $datac "
+  echo "Program name = $program "
+  echo "Debud mode = $debugf "
+  if ($batch == "y" || $batch == "Y") then
+     echo "CPU time limit = $cputim "
+     echo "submitted on machine = $machine "
+  endif
+  echo "Extra event generator library = $kine "
+  echo "list of extra .o files = $usobj "
+  echo "do you use modified LUND ? = $kinad "
+  echo "do you use RANMAR generator ? = $kinra "
+endif
+
+SUBMIT:
+if ($batch == "y" || $batch == "Y") then
+#######################################################################
+#      submit the kingal job
+#######################################################################
+set MODE="SUBMIT"
+
+set exec=$program
+
+cat >${cwd}/${program}.job <<END-OF-JOB
+#@\$-s /bin/csh
+#@\$-eo
+#@\$-lt $cputim
+#@\$-r $program
+#@\$-mu $me
+#@\$-me
+#
+date
+#
+END-OF-JOB
+set j=1
+set ocraddle=""
+if ("$craddle" != "") then
+    while ($j <= $#craddle)
+      set te=`echo $craddle[$j] | grep '/'`
+      if ($status == 1) then
+         set craddle[$j] = "$PWD/$craddle[$j]"
+      endif
+      set realcraddle=`echo $craddle[$j] | awk -F/ '{if (i = NF) print $i}'`
+cat >>${cwd}/${exec}.job << END-OF-JOB
+sfetch ${realcraddle}o -t ${node}:${craddle[$j]} -u ${me}
+sed -e "/^[ ]* INCLUDE*./s/[ ]* INC[ ]*[ \*]*[ ]*'/.INC'/g" ${realcraddle}o > $realcraddle
+END-OF-JOB
+      set ocraddle="$ocraddle -f ${realcraddle}"
+      @ j++
+    end
+endif
+
+set j=1
+set okine=""
+if ("$kine" != "") then
+    while ($j <= $#kine)
+      set te=`echo $kine[$j] | grep '/'`
+      if ($status == 1) then
+         set kine[$j] = "$PWD/$kine[$j]"
+      endif
+      set find_path=`echo $kine[$j] | grep '$ALEPH/kin'`
+      if ($find_path != "") then
+          set realkine=$kine[$j]
+      else 
+          set find_path=`echo $kine[$j] | grep '/cern/pro/lib'`
+          if ($find_path != "") then
+             set realkine=$kine[$j]
+          else 
+             set realkine=`echo $kine[$j] | awk -F/ '{if (i = NF) print $i}'`
+cat >>${cwd}/${exec}.job << END-OF-JOB
+sfetch ${realkine} -t ${node}:${kine[$j]} -u ${me}
+END-OF-JOB
+          endif
+      endif
+      set okine="$okine -l ${realkine}"
+      @ j++
+    end
+endif
+
+set j=1
+set ousobj=""
+if ("$usobj" != "") then
+    while ($j <= $#usobj)
+      set te=`echo $usobj[$j] | grep '/'`
+      if ($status == 1) then
+         set usobj[$j] = "$PWD/$usobj[$j]"
+      endif
+      set find_path=`echo $usobj[$j] | grep '$ALEPH/kin'`
+      if ($find_path != "") then
+          set realusobj=$usobj[$j]
+      else 
+          set find_path=`echo $usobj[$j] | grep '/cern/pro/lib'`
+          if ($find_path != "") then
+             set realusobj=$usobj[$j]
+          else 
+             set realusobj=`echo $usobj[$j] | awk -F/ '{if (i = NF) print $i}'`
+cat >>${cwd}/${exec}.job << END-OF-JOB
+sfetch ${realusobj} -t ${node}:${usobj[$j]} -u ${me}
+END-OF-JOB
+          endif
+      endif
+      set ousobj="$ousobj -o ${realusobj}"
+      @ j++
+    end
+endif
+
+if ($kinad == "y" || $kinad == "Y") set kinmk = "$kinmk -d"
+if ($kinra == "y" || $kinra == "Y") set kinmk = "$kinmk -a"
+
+set realdatac=`echo $datac | awk -F/ '{if (i = NF) print $i}'`
+#if (-r ./$realdatac) then 
+#   set datac = $PWD/$datac
+#endif
+set kinmk = "$kinmk -C $realdatac"
+set kinmk = "$kinmk $ocraddle $okine $ousobj -G $generator -r $program"
+
+cat >> ${cwd}/${program}.job <<END-OF-JOB
+sfetch ${realdatac} -t ${node}:${datac} -u ${me}
+$kinmk
+# check for user-initiated hist file transfers
+set u_dispose = \`grep HSTO ${realdatac} | grep -i dispose\`
+if ("\$status" == "0") goto EndJob
+# do HSTO file transfer for user
+set hist_fil = \`grep HSTO ${realdatac} | cut -f2 -d"'"\`
+if ("\$hist_fil" == "") goto EndJob
+rcp \${hist_fil} '${node}:$PWD/'\${hist_fil}
+EndJob:
+if !(-r core) rm -f * ; cd ; rmdir \$nqs_tmpdir
+exit
+END-OF-JOB
+echo "Submitting to $machine via NQS++ the job ${cwd}/${exec}.job"
+qtell -c qsub -h $machine ${cwd}/${exec}.job
+echo " "
+echo " The ${cwd}/${exec}.job has been kept and you can use it for the next time"
+  goto END
+  exit
+endif
+goto MAKEF
+
+
+#######################################################################
+#      KINRUN as on VAX
+#######################################################################
+VAX:
+unset noclobber
+set run_exec = "y"
+set batch="y"
+set MODE="VAX"
+
+if ( $generator != "" ) then
+ if (-r $KINDIR/${generator}.opt ) then
+   set craddle=`awk '{if ((NR == 1) && ($1 != "\n")) printf "%s\n",$0 }' $KINDIR/${generator}.opt`
+   set datac=`awk '{if ((NR == 2) && ($1 != "\n")) printf "%s\n",$0 }' $KINDIR/${generator}.opt`
+   set program=`awk '{if ((NR == 3) && ($1 != "\n")) printf "%s\n",$0 }' $KINDIR/${generator}.opt`
+   set debugf=`awk '{if ((NR == 4) && ($1 != "\n")) printf "%s\n",$0 }' $KINDIR/${generator}.opt`
+   set machine=`awk '{if ((NR == 5) && ($1 != "\n")) printf "%s\n",$0 }' $KINDIR/${generator}.opt`
+   set cputim=`awk '{if ((NR == 6) && ($1 != "\n")) printf "%s\n",$0 }' $KINDIR/${generator}.opt`
+   set keepfl=`awk '{if ((NR == 7) && ($1 != "\n")) printf "%s\n",$0 }' $KINDIR/${generator}.opt`
+   set kine=`awk '{if ((NR == 8) && ($1 != "\n")) printf "%s\n",$0 }' $KINDIR/${generator}.opt`
+   set usobj=`awk '{if ((NR == 9) && ($1 != "\n")) printf "%s\n",$0 }' $KINDIR/${generator}.opt`
+   set kinad=`awk '{if ((NR == 10) && ($1 != "\n")) printf "%s\n",$0 }' $KINDIR/${generator}.opt`
+   set kinra=`awk '{if ((NR == 11) && ($1 != "\n")) printf "%s\n",$0 }' $KINDIR/${generator}.opt`
+   set generator=`awk '{if ((NR == 12) && ($1 != "\n")) printf "%s\n",$0 }' $KINDIR/${generator}.opt`
+   set batch=`awk '{if ((NR == 13) && ($1 != "\n")) printf "%s\n",$0 }' $KINDIR/${generator}.opt`
+ endif
+endif
+
+if (-r $FILEOPT) then 
+   cp $FILEOPT $cwd/test.def
+   mv $FILEOPT $FILEOPT.BAK
+else
+   echo "$craddle" >> $cwd/test.def
+   echo "$datac" >> $cwd/test.def
+   echo "$program" >> $cwd/test.def
+   echo "$debugf" >> $cwd/test.def
+   echo "$machine" >> $cwd/test.def
+   echo "$cputim" >> $cwd/test.def
+   echo "$keepfl" >> $cwd/test.def
+   echo "$kine" >> $cwd/test.def
+   echo "$usobj" >> $cwd/test.def
+   echo "$kinad" >> $cwd/test.def
+   echo "$kinra" >> $cwd/test.def
+   echo "$generator" >> $cwd/test.def
+   echo "$batch" >> $cwd/test.def
+endif
+ 
+set rep="n"
+###  Entry for the data    ###
+while ($rep != "y" && $rep != "Y") 
+  set exist = "no"
+  set generator=`awk '{if ((NR == 12) && ($1 != "\n")) printf "%s\n",$1 }' $cwd/test.def`
+  while ($exist == "no")
+    echo "Which generator do you want to use ?  [CR = $generator]"
+    echo -n "(e.g. : /users/username/myexec)  : "
+    set buf=$<
+    if ("$buf" != "") then
+      if ( -r $KINDIR/lib${buf}.a ) then
+          set generator=$buf
+          set exist = "yes"
+      else
+         echo "This generator does not exist. Please use an other one"
+      endif
+    else
+          set exist = "yes"
+    endif
+  end
+  echo ""
+
+  set program=`awk '{if ((NR == 3) && ($1 != "\n")) printf "%s\n",$1 }' $cwd/test.def`
+  set exist = "no"
+  while ($exist == "no")
+    echo "Enter the name for the executable that you will create [CR = $program]"
+    echo -n "(e.g. : /users/username/myexec)  : "
+    set buf=$<
+    if ("$buf" != "") then
+       set program=$buf
+       set exist = "yes"
+    else
+       set exist = "yes"
+    endif
+  end
+  echo ""
+
+  set craddle=`awk '{if ((NR == 1) && ($1 != "\n")) printf "%s\n",$0 }' $cwd/test.def`
+  set ok="n"
+  while ($ok == "n" || $ok == "N")
+    echo "Enter the name of your input  [CR = $craddle, SPACE = nothing]"
+    echo -n "(e.g. : /users/username/myinput.input or /users/username/myinput.f)  : "
+    set buf=$<
+    if ("$buf" != "") then
+       set craddle=($buf)
+    endif
+    set i=1
+    if ($#craddle == 0) then 
+      set ok="y"
+    endif
+    while ($i <= $#craddle)
+      if !(-f $craddle[$i]) then
+          echo file does not exist
+          set ok="n"
+      else set ok="y"
+      endif
+      @ i++
+    end
+  end
+  echo ""
+
+  set datac=`awk '{if ((NR == 2) && ($1 != "\n")) printf "%s\n",$1 }' $cwd/test.def`
+  if ($datac == "") then
+    set datac=$KINGALCARDS
+  endif 
+  echo ""
+  echo "       *****************************************"
+  echo "       ***  Cards in the current directory   ***"
+  echo "       *****************************************"
+  set files = `ls *.cards`
+  if ($status == 1) then
+    echo no cards found in the current directory
+  else 
+    foreach i (${files})
+      echo $i
+    end
+  endif
+  echo ""
+  set ok="n"
+  while ($ok == "n" || $ok == "N")
+    echo -n " Enter the name of the KINGAL steering cards [CR = $datac]: "
+    set buf=$<
+    if ("$buf" !="") then
+       if !(-f "$buf") then
+         echo file does not exist
+       else 
+         set ok="y"
+	 set datac=$buf
+       endif
+    else 
+       set ok="y"
+    endif
+  end
+  echo ""
+
+  set kine=`awk '{if ((NR == 8) && ($1 != "\n")) printf "%s\n",$0 }' $cwd/test.def`
+  set ok="n"
+  while ($ok == "n" || $ok == "N")
+    echo "Give the list of extra event generator file or LUND if"
+    echo "you want to use also the LUND generator  [CR = $kine, SPACE = nothing]"
+    echo -n "(e.g. : /users/username/mygenerator.a)  : "
+    set buf=$<
+    if ("$buf" != "") then
+       set kine=($buf)
+    endif
+    set i=1
+    if ($#kine == 0) then 
+      set ok="y"
+    endif
+    while ($i <= $#kine)
+      if !(-f $kine[$i]) then
+          echo file does not exist
+          set ok="n"
+      else set ok="y"
+      endif
+      @ i++
+    end
+  end
+  echo ""
+
+  set usobj=`awk '{if ((NR == 9) && ($1 != "\n")) printf "%s\n",$0 }' $cwd/test.def`
+  set ok="n"
+  while ($ok == "n" || $ok == "N")
+    echo "Give the list of extra object files you want to be linked in front of the KINGAL.o  [CR = $usobj, SPACE = nothing]"
+    echo -n "(e.g. : /users/username/myobj.o)  : "
+    set buf=$<
+    if ("$buf" != "") then
+       set usobj=($buf)
+    endif
+    set i=1
+    if ($#usobj == 0) then 
+      set ok="y"
+    endif
+    while ($i <= $#usobj)
+      if !(-f $usobj[$i]) then
+          echo file does not exist
+          set ok="n"
+      else set ok="y"
+      endif
+      @ i++
+    end
+  end
+  echo ""
+
+  set kinad="n"
+#  echo -n " Do you want to use the modified Lund 6.3 routines (y/n) [CR = $kinad] : "
+#  set buf=$<
+#  if ($buf != "") then
+#	if ($buf == "y" || $buf == "Y") then
+#            set kinad=$buf
+#	else
+#	    set kinad="0"
+#	endif
+#  endif 
+  echo ""
+
+  set kinra="y"
+  echo ""
+
+  set debugf=n
+  echo " Do you want to use the debug mode (y/n)? [CR = $debugf]"
+  echo "(only your fortran and the kingal package will be in the debug mode)"
+  echo -n "(e.g. : n)  : "
+  set buf=$<
+  if ($buf != "") set debugf=$buf
+  echo ""
+
+  echo " Do you want to submit your job (y/n)? [CR = $batch]"
+  echo -n "(e.g. : n)  : "
+  set batch=$<
+  if ($batch == "y" || $batch == "Y") then
+    echo ""
+    set cputim=`awk '{if ((NR == 6) && ($1 != "\n")) printf "%s\n",$1 }' $cwd/test.def`
+    set ok="n"
+    while ($ok == "n" || $ok == "N")
+      echo -n " Enter the time limit [CR = $cputim]: "
+      set buf=$<
+      if ("$buf" != "") then
+         set cputim=($buf)
+      endif
+      set ok="y"
+    end
+
+#   name of the machine where you want to submit
+    echo ""
+    set machine=`awk '{if ((NR == 5) && ($1 != "\n")) printf "%s\n",$1 }' $cwd/test.def`
+    set ok="n"
+    while ($ok == "n" || $ok == "N")
+      echo -n " Enter the machine where you want to submit [CR = $machine]: "
+      echo -n " Your choice : shift9 saga or afal01: "
+      set buf=$<
+      if ("$buf" != "") then
+         set machine=($buf)
+      endif
+      set ok="y"
+    end
+  endif
+  echo ""
+
+echo "Generator used = $generator "
+echo "Historian directives = $craddle "
+echo "KINGAL data cards = $datac "
+echo "Program name = $program "
+echo "Debud mode = $debugf "
+echo "Extra event generator library = $kine "
+echo "list of extra .o files = $usobj "
+echo "do you use modified LUND ? = $kinad "
+echo "do you use RANMAR generator ? = $kinra "
+if ($batch == "y" || $batch == "Y") then
+  echo "CPU time limit = $cputim "
+  echo "submitted on machine = $machine "
+endif
+cat >$cwd/test.def <<END-OF-CAT
+$craddle
+$datac
+$program
+$debugf
+$machine
+$cputim
+$keepfl
+$kine
+$usobj
+$kinad
+$kinra
+$generator
+$batch
+END-OF-CAT
+  echo ""
+  echo -n " Are these options correct (y/n)? : "
+  set rep=$<
+end
+
+set FILEOPT     = "$cwd/$program.opt"
+echo ""
+set ok="n"
+while ($ok == "n" || $ok == "N")
+  echo "Save these options in [CR = $FILEOPT]"
+  echo -n "(e.g. : /users/username/my_kingal.opt) : "
+  set buf=$<
+  if ($buf != "") then
+     set FILEOPT=($buf)
+  endif
+  set ok="y"
+end
+echo ""
+
+
+cat >$FILEOPT <<END-OF-CAT
+$craddle
+$datac
+$program
+$debugf
+$machine
+$cputim
+$keepfl
+$kine
+$usobj
+$kinad
+$kinra
+$generator
+$batch
+END-OF-CAT
+
+if ($batch == "y" || $batch == "Y") then
+   goto SUBMIT
+else
+   goto MAKEF
+endif
+
+
+#######################################################################
+#     Description for the use of KINRUN
+#######################################################################
+usage:
+echo " Usage : -help"
+echo "       : [-f fortran_file] [-C card_file] [-k] [-h] [-o object_file]"
+echo "         [-l library] [-d] [-a] [-c time_limit] [-m machine] [-g]"
+echo "         [-G generator] [-s]"
+echo "       : -F filename "
+echo "       : generator_name"
+echo " " 
+echo "Where: "
+echo "     -help                   get this help"
+echo "     -h                      get this help"
+echo "     -(f)<string>            expected fortran file  (my_fortran.f)"
+echo "     -(o)<string>            expected object file  (my_objfile.o)"
+echo "     -(C)ards<string>        expected card file  (my_cards.cards)"
+echo "     -(d)                    use modified LUND routines"
+echo "     -(a)                    use RANMAR generator routines"
+echo "     -(l)<string>            extra event generator"
+echo "     -debu(g)                the debug options are used to compile"
+echo "     -(m)achine<string>      machine where you submit your job"
+echo "     -(c)putim<string>       time limit for the job in batch"
+echo "     -(G)enerator<string>    generator used"
+echo "     -(s)ubmit               submit in batch"
+echo "     -(F)ile<string>         expected filename which contains kingal options"
+exit
+
+
+

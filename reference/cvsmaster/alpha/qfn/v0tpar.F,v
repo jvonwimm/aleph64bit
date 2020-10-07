@@ -1,0 +1,343 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	alpha126_22:1.1.1.1
+	alpha126_21:1.1.1.1
+	alpha126_20:1.1.1.1
+	alpha126_19:1.1.1.1
+	alpha126_18:1.1.1.1
+	alpha126_17:1.1.1.1
+	alpha126_16:1.1.1.1
+	alpha126_15:1.1.1.1
+	alpha126_14:1.1.1.1
+	alpha126_13:1.1.1.1
+	alpha126_12:1.1.1.1
+	alpha126_11:1.1.1.1
+	alpha126_10:1.1.1.1
+	alpha126_09:1.1.1.1
+	alpha126_08:1.1.1.1
+	alpha126_07:1.1.1.1
+	alpha126_06:1.1.1.1
+	alpha126_05:1.1.1.1
+	alpha126_04:1.1.1.1
+	alpha126_03:1.1.1.1
+	alpha126_02:1.1.1.1
+	alpha126_1:1.1.1.1
+	alpha125_17:1.1.1.1
+	alpha125_16:1.1.1.1
+	alpha125_15:1.1.1.1
+	alpha125_14:1.1.1.1
+	alpha125_13:1.1.1.1
+	alpha125_12:1.1.1.1
+	alpha125_11:1.1.1.1
+	alpha125_10:1.1.1.1
+	alpha125_09:1.1.1.1
+	alpha125_08:1.1.1.1
+	alpha125_07:1.1.1.1
+	alpha125_06:1.1.1.1
+	alpha125_05:1.1.1.1
+	alpha125_04:1.1.1.1
+	alpha125_03:1.1.1.1
+	alpha125_02:1.1.1.1
+	alpha125_01:1.1.1.1
+	alpha124_19:1.1.1.1
+	alpha125:1.1.1.1
+	alpha124_18:1.1.1.1
+	alpha124_17:1.1.1.1
+	alpha124_16:1.1.1.1
+	alpha124_15:1.1.1.1
+	alpha124_14:1.1.1.1
+	alpha124_13:1.1.1.1
+	alpha124_12:1.1.1.1
+	alpha124_11:1.1.1.1
+	alpha124_10:1.1.1.1
+	alpha124_09:1.1.1.1
+	alpha124_08:1.1.1.1
+	alpha124_07:1.1.1.1
+	alpha124_7:1.1.1.1
+	alpha124_06:1.1.1.1
+	alpha124_05:1.1.1.1
+	alpha124_04:1.1.1.1
+	alpha124_03:1.1.1.1
+	alpha124_02:1.1.1.1
+	alpha124_01:1.1.1.1
+	alpha124:1.1.1.1
+	alpha123_12:1.1.1.1
+	alpha123_11:1.1.1.1
+	alpha123_10:1.1.1.1
+	alpha123_9:1.1.1.1
+	alpha123_8:1.1.1.1
+	alpha123_7:1.1.1.1
+	alpha123_6:1.1.1.1
+	alpha123_5:1.1.1.1
+	alpha123_4:1.1.1.1
+	alpha123_3:1.1.1.1
+	alpha123_2:1.1.1.1
+	alpha123:1.1.1.1
+	alpha122_48:1.1.1.1
+	alpha122_47:1.1.1.1
+	alpha122_46:1.1.1.1
+	alpha122_45:1.1.1.1
+	alpha122_44:1.1.1.1
+	alpha122_43:1.1.1.1
+	alpha122_42:1.1.1.1
+	alpha122_41:1.1.1.1
+	alpha122_40:1.1.1.1
+	alpha122_39:1.1.1.1
+	alpha122_38:1.1.1.1
+	alpha122_37:1.1.1.1
+	alpha122_36:1.1.1.1
+	alpha122_35:1.1.1.1
+	alpha122_34:1.1.1.1
+	alpha122_33:1.1.1.1
+	alpha122_32:1.1.1.1
+	alpha122_31:1.1.1.1
+	alpha122_30:1.1.1.1
+	alpha122_29:1.1.1.1
+	alpha122_28:1.1.1.1
+	alpha122_27:1.1.1.1
+	alpha122_26:1.1.1.1
+	alpha122_25:1.1.1.1
+	alpha122_24:1.1.1.1
+	alpha122_23:1.1.1.1
+	alpha122_22:1.1.1.1
+	alpha122_21:1.1.1.1
+	alpha122_20:1.1.1.1
+	alpha122_19:1.1.1.1
+	alpha122_18:1.1.1.1
+	alpha122_17:1.1.1.1
+	alpha122_16:1.1.1.1
+	alpha122_15:1.1.1.1
+	alpha122_14:1.1.1.1
+	alpha122_13:1.1.1.1
+	alpha122_12:1.1.1.1
+	alpha122_11:1.1.1.1
+	alpha122_10:1.1.1.1
+	alpha122_9:1.1.1.1
+	alpha122_8:1.1.1.1
+	alpha122_6:1.1.1.1
+	alpha122_5:1.1.1.1
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.03.14.12.42.38;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.42.39;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE V0TPAR(D,DERR,TMOM,RADIUS,TERR,V0PAR,V0ERR)
+CKEY   QIPBTAG / INTERNAL
+C ------------------------------------------------------------------------------
+C! Calculate the track parameters for a V0 candidate.
+C  Called from QFNDV0
+C  Author                                                D. Brown 9-9-93
+C ------------------------------------------------------------------------------
+C ------------------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+C
+C  Inputs; The V0 decay point, error matrix of that point,
+C  Tracks and their upper-corner error matrix.
+C
+      REAL D(3),DERR(3,3),P(3),TMOM(3,2),RADIUS(2)
+      REAL TERR(3,3,2)
+C
+C  Outputs; 5 track parameters and error matrix
+C
+      REAL V0PAR(5),V0ERR(5,5)
+C
+C  Local variables
+C
+      INTEGER ITRK,ICOR,JCOR
+      INTEGER IPAR,JPAR,KPAR,LPAR
+      REAL PT,VP,V0MOM(3),VPT,SINP,COSP,TANL
+      REAL PERR(3,3)
+      REAL TDERR(3,3,2),PDERR(3,3),DDERR(3,4:5),UDERR(3,4:5)
+C ------------------------------------------------------------------------------
+C  First, construct the momentum vector error matrix.  This requires
+C  a few derivatives
+C
+      DO ITRK=1,2
+        PT = SQRT(TMOM(1,ITRK)**2+TMOM(2,ITRK)**2)
+C
+C  Inverse radius derrivatives
+C
+        DO ICOR=1,3
+          TDERR(ICOR,1,ITRK) = -TMOM(ICOR,ITRK)*RADIUS(ITRK)
+        END DO
+C
+C  TANL derrivatives
+C
+        TDERR(1,2,ITRK) = 0.0
+        TDERR(2,2,ITRK) = 0.0
+        TDERR(3,2,ITRK) = PT
+C
+C  PHI0 derrivatives
+C
+        TDERR(1,3,ITRK) = -TMOM(2,ITRK)
+        TDERR(2,3,ITRK) =  TMOM(1,ITRK)
+        TDERR(3,3,ITRK) =  0.0
+      END DO
+C
+C  Build the matrix
+C
+      DO ICOR=1,3
+        DO JCOR=1,3
+          PERR(ICOR,JCOR) = 0.0
+          DO ITRK=1,2
+            DO IPAR=1,3
+              DO JPAR=1,3
+                PERR(ICOR,JCOR) = PERR(ICOR,JCOR) +
+     &                TERR(IPAR,JPAR,ITRK)*
+     &              TDERR(ICOR,IPAR,ITRK)*TDERR(JCOR,JPAR,ITRK)
+              END DO
+            END DO
+          END DO
+        END DO
+      END DO
+C
+C  From this, we can make the upper corner of the final matrix
+C  First, build the parameters
+C
+      VP = 0.0
+      DO ICOR=1,3
+        V0MOM(ICOR) = TMOM(ICOR,1)+TMOM(ICOR,2)
+        VP = VP + V0MOM(ICOR)**2
+      END DO
+      VPT = SQRT(V0MOM(1)**2+V0MOM(2)**2)
+      VP = SQRT(VP)
+      TANL = V0MOM(3)/VPT
+      COSP = V0MOM(1)/VPT
+      SINP = V0MOM(2)/VPT
+      V0PAR(1) = VP
+      V0PAR(2) = TANL
+      V0PAR(3) = ATAN2(SINP,COSP)
+C
+C  Now derrivatives, in terms of the V0 momentum components
+C  First, V0 momentum derrivatives
+C
+      DO ICOR=1,3
+        PDERR(ICOR,1) = V0MOM(ICOR)/VP
+      END DO
+C
+C  V0 TANL derrivatives
+C
+      PDERR(1,2) = -TANL*COSP/VPT
+      PDERR(2,2) = -TANL*SINP/VPT
+      PDERR(3,2) = 1./VPT
+C
+C  V0 phi0 derrivatives
+C
+      PDERR(1,3) = -SINP/VPT
+      PDERR(2,3) =  COSP/VPT
+      PDERR(3,3) = 0.0
+C
+C  Construct the upper corner of the matrix
+C
+      DO IPAR=1,3
+        DO JPAR=1,3
+          V0ERR(IPAR,JPAR) = 0.0
+          DO ICOR=1,3
+            DO JCOR=1,3
+              V0ERR(IPAR,JPAR) = V0ERR(IPAR,JPAR) +
+     &              PERR(ICOR,JCOR)*PDERR(ICOR,IPAR)*PDERR(JCOR,JPAR)
+            END DO
+          END DO
+        END DO
+      END DO
+C
+C  Now we bootstrap from these elements to get the lower corner
+C  (impact parameters).  First, compute the values
+C
+      V0PAR(4) = D(1)*SINP-D(2)*COSP
+      V0PAR(5) = D(3)-TANL*(D(1)*COSP+D(2)*SINP)
+C
+C  Now some derrivatives; this time in terms of the decay
+C  point and the phi0,tanl terms already in the matrix.  First,
+C  point derrivatives
+C
+C  D0
+C
+      DDERR(1,4) =  SINP
+      DDERR(2,4) = -COSP
+      DDERR(3,4) = 0.0
+C
+C  Z0
+C
+      DDERR(1,5) = -TANL*COSP
+      DDERR(2,5) = -TANL*SINP
+      DDERR(3,5) = 1.0
+C
+C  Now upper corner terms
+C
+      UDERR(1,4) = 0.0
+      UDERR(2,4) = 0.0
+      UDERR(3,4) = D(1)*COSP + D(2)*SINP
+C
+      UDERR(1,5) = 0.0
+      UDERR(2,5) = -D(1)*COSP-D(2)*SINP
+      UDERR(3,5) = TANL*(D(1)*SINP-D(2)*COSP)
+C
+C  Fill in the remaining parts of the matrix
+C
+      DO IPAR=4,5
+        DO JPAR=4,5
+          V0ERR(IPAR,JPAR) = 0.0
+          DO ICOR=1,3
+            DO JCOR=1,3
+              V0ERR(IPAR,JPAR) = V0ERR(IPAR,JPAR) +
+     &              DERR(ICOR,JCOR)*DDERR(ICOR,IPAR)*DDERR(JCOR,JPAR)
+            END DO
+          END DO
+          DO KPAR=1,3
+            DO LPAR=1,3
+              V0ERR(IPAR,JPAR) = V0ERR(IPAR,JPAR) +
+     &              V0ERR(KPAR,LPAR)*UDERR(KPAR,IPAR)*UDERR(LPAR,JPAR)
+            END DO
+          END DO
+        END DO
+C
+C  Also build up the correlation terms
+C
+        DO JPAR=1,3
+          V0ERR(IPAR,JPAR) = UDERR(JPAR,IPAR)*V0ERR(JPAR,JPAR)
+          V0ERR(JPAR,IPAR) = V0ERR(IPAR,JPAR)
+        END DO
+      END DO
+C
+C  Done
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

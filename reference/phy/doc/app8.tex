@@ -1,0 +1,158 @@
+\chapter{\label{sec-cextalp}C- and $\mathrm{C^{++}}$ Extended ALPHA}
+\par
+In this appendix, a brief introduction to the use of
+ALPHA from a C or $\mathrm{C^{++}}$ program on UNIX machines is given.
+
+\par  
+\section{\label{sec-ALPHAPL} $\mathrm{ALPHA^{++}}$:}
+
+
+The $\mathrm{ALPHA^{++}}$ project has been started in 1998 with the following
+goals:
+
+\begin{itemize}
+\item convert the ALEPH data (preferably LEP2 data) from the BOS bank style into
+persistent objects and write them to an Objectivity/Db database. 
+
+\item
+ rewrite a miniversion of ALPHA in an object oriented
+     computing language ($\mathrm{C^{++}}$), based on the Objectivity database. 
+          
+\end{itemize}
+
+The project is still in progress. 
+
+All relevant informations can be found on the $\mathrm{ALPHA^{++}}$  webpage:
+ 
+         http://alephwww.cern.ch/~disserto/objty
+
+\par
+
+\section{\label{sec-ALPHACE} C-extended ALPHA:}
+ 
+
+  This C-Extended ALPHA package was set up by 
+Bob Jacobsen, who is not any more a member of ALEPH.
+
+No modifications have been done to the preliminary version below since May 1997.
+It is not considered as standard ALEPH software, therefore many features may be
+unreliable, obsolete or incomplete  now.
+
+\par
+\begin{verbatim}
+ 
+"C Extended ALPHA" allows you to use all the facilities of ALPHA
+from a C or C++ program.  It is available on UNIX OSF1
+ machines.
+ 
+There are three new types defined from integers:  AlphaTrack,
+AlphaVertex and AlphaPartNum.  These are used as indices into
+the existing ALPHA banks.  Except for two exceptions
+defined below, the syntax is as described in the ALPHA manual.
+Note that everything is upper case only.
+ 
+An example:
+ 
+  AlphaTrack i,j;
+  for (i=KFCHT; i<=KLCHT-1; i++)
+    for (j=i+1; j<=KLCHT; j++)
+      printf(" %d and %d have mass %f\n",i,j,QM2(i,j));
+ 
+The exceptions are:
+1) CQTPN returns a character string, which is complicated
+   and error prone in C.  Instead, the C version
+   takes the result string as an additional argument:
+ 
+      char name[80];
+      CQTPN(KFMCT,name);
+ 
+2) 'Output arguments' are passed as references. For example,
+   QDEDXM is declared:
+ 
+     void QDEDXM(AlphaTrack,
+            int numHypotheses,
+            float hypMass[],
+            float hypCharge[],
+            float *measuredIonization,
+            int *numSamples,
+            float *length,
+            float expectedIonizationForHypothesis[],
+            float expectedIonizationSigma[],
+            int *error);
+ 
+   and should be called with:
+ 
+      QDEDXM(i,2,MassArray,ChargeArray,&MeasIon,&NumSamp,
+          &Length,ExpectArray,SigmaArray,&error);
+ 
+The function prototypes in the header file serve as the
+exact documentation for the argument types.
+ 
+ALPHA expects to call FORTRAN versions of QUEVNT, etc.
+The linker sees these as 'quevnt_' (i.e. FORTRAN
+routines are moved to lower case and have an appended
+underscore).
+ 
+There are three approaches for your code:
+1) Provide these routines in FORTRAN, and have them
+   call whatever C routines you want to add.
+2) Provide C routines called quevnt_, etc, which
+   will be directly called from ALPHA.
+3) Provide C++ routines of the form
+        extern "C" void quevnt_(...)
+ 
+ 
+The include file "$ALEPH/cxa/include/cxa.h" defines
+all the necessary wrapper functions and macros, and should
+be included at the start of your program. When
+used with C++, some of the wrapper macros are redefined
+as inline functions to reduce the number of procedure calls.
+ 
+The library "$ALEPH/cxa/lib/libcxa.a" should be included
+before the ALPHA and system libraries.  If you include C++
+code, linking is complicated by the need to use the C++ linker
+(to resolve static constructors) and still get the correct
+FORTRAN system libraries linked.  The following Makefile fragment
+will do this:
+ 
+$(NAME): $(OBJFILES) $(LFILES)
+   $(LD)  -o $(NAME) $(OBJFILES) $(LFILES) $(LDFLAGS) $(LIBS) $(FORLIBS))
+ 
+where the symbols LD and FORLIBS have previously been set
+to machine specific values, perhaps by lines in the .cshrc
+of the form:
+ 
+    switch (${OS})
+         case OSF1:
+                setenv CCC cxx
+                setenv FORLIBS '-lfor -lUfor -lots -lutil -lm -lFutil'
+                breaksw
+         case IRIX5:
+         default:
+                setenv CCC CC
+                setenv FORLIBS '/usr/lib/libftn.so /usr/lib/libc.so -lm '
+                breaksw
+          case ULTRIX:
+                setenv CCC g++
+                setenv FORLIBS '-lfor -lUfor -lots -lutil -li -lm'
+                breaksw
+ 
+ 
+Known problems and deficiencies:
+ 
+   No HPUX version yet.
+ 
+   Many more inline functions should be coded in C++.
+ 
+   Some of the C wrappers may be missing (please let
+   me know - I can't actually believe some of these
+   are being used, but will be happy to add them)
+ 
+   It would make a LOT more sense if the C++ types
+   AlphaTrack, AlphaVertex, AlphaPartNum where
+   inheritable classes.  Unfortunately, I have not
+   found a compatible way to do this - ideas are
+   welcome.
+ 
+\end{verbatim}
+\newpage

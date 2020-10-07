@@ -1,0 +1,80 @@
+   GAL:GAL303.HLB, .CORR, _.FOR, _B.FOR, .OLB, _D.OLB, .INPUT,                  
+                   .NEWS/                                                       
+   GAL:GCOR303.FOR, .OBJ(in debug mode)                                         
+   GAL:IFINTER.FOR , .OBJ must be linked with when running                      
+                          interactively                                         
+                                                                                
+   GAL303 OLDLIB GAL, TXTLIB, CORR, NEWS, GEO                                   
+   GCOR303 FORTRAN GAL, TEXT GAL                                                
+                                                                                
+   GAL303 UFOR MAXI09                                                           
+                                                                                
+   on UNIX :  source on /al/reference/gal/srcgal303                             
+                        /al/reference/gal/ifinter.f                             
+              library   /aleph/gal/libgal303.a                                  
+                        /aleph/gal/libgal303_dbx.a                              
+                        /aleph/gal/ifinter.o                                    
+              link      /aleph/lib/libgaleph.a                                  
+                        /aleph/lib/libgaleph_dbx.a                              
+                        /aleph/src/galeph                                       
+ -----------------------------------------------------------------------        
+   BECAREFUL : because of the changes in VDET                                   
+               GALEPH 30.2 should NOT be used with ADBSCONS > 200 to            
+               simulate DATE > 93.                                              
+               To simulate DATE => 94 with all VDET improvments:                
+               USE GALEPH 30.3 with ADBSCONS => 201.                            
+                                                                                
+ ! 950821 - GALEPH 30.3                                                         
+ * corr no.1                                                                    
+   corrections to adapt to cvs (FLR302A)                                        
+   VDCLU  - Stop clustering when the wafer boundary is reached                  
+            (for VDET92, z-view)                                                
+   VDPRTE - create electron clouds only if the track element is                 
+            in the active region                                                
+ * corr no.2                                                                    
+   VDFOOB -remove an old bug (Manoj)                                            
+                                                                                
+        In *CD -> SKELNEWS
+   CATINO - store Geantino vertex position in GPOS
+            (mandatory for GEANT321)
+
+        In *CD -> GUSENEWS                                                         
+   GUSTEP - call VDHITE at end of track in VDET.                                
+   GDRAY  - GEANT modified version.                                             
+                                                                                
+        In *CD -> GEOMNEWS                                                      
+   AGVDET - set name of sensitive volume.                                       
+            VDET91 and VDET92 are the same.                                     
+   AGTPCH - adapt TPC gas mixture to Geneva conditions.                         
+                                                                                
+        In *CD -> HCALNEWS                                                      
+   HCFITU - add some protections                                                
+                                                                                
+        In *CD -> ITCNEWS                                                       
+   ITDTGO - add some protections                                                
+                                                                                
+        In *CD -> VDETNEWS                                                      
+   VDHIT,VDHITE,VDASIG,VDMKLO,VDMKTE -                                          
+                                                                                
+     1. NEW improved treatment of DELTA RAY production.                         
+        Delta rays are important since they generate                            
+        on average a nearby 3-D hit for 5% of the real hits.                    
+     2. Let GEANT treat the Landau fluctuations in the energy                   
+        deposition within the silicon.                                          
+                                                                                
+     Induced by changes in the above routines and the                           
+     database banks VTME,VVOL,VDEP,VGPA,VVOL,VPOS and VMAT                      
+     which are made for setup code 6 onwards.                                   
+     Thus these changes will only take effect for Monte Carlo                   
+     simulations of data from DATE 94 onwards.                                  
+     (Easy to change if needed.)                                                
+     The routine GDRAY is a copy of a GEANT routine in which                    
+     the energy of each delta ray produced in the VDET region                   
+     is multiplied by a FACTOR (1.4), which effectively give                    
+     a cross-section increase of the same amount. This factor is                
+     used to give optimal agreement between data and monte carlo.               
+                                                                                
+   - VDLAND,VDMKLA                                                              
+      No longer used could be droped                                            
+                                                                                
+ ----------------------------------------------------------                     

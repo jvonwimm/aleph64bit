@@ -1,0 +1,5 @@
+C! Location of data files for SBANK
+      CHARACTER ALDOCC*80
+      INTEGER   ILDOCC
+      COMMON /SBKLOC/ALDOCC
+      COMMON /SBKLOI/ILDOCC

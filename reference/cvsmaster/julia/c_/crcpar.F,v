@@ -1,0 +1,406 @@
+head	1.2;
+access;
+symbols
+	jul313_3:1.2
+	jul313_2:1.2
+	jul313_1:1.2
+	jul313:1.2
+	jul312_1:1.2
+	jul312:1.2
+	jul311:1.2
+	jul310_1:1.2
+	jul310:1.2
+	jul309_1:1.2
+	jul309:1.2
+	jul308_6:1.2
+	jul308_5:1.2
+	jul308_4:1.2
+	jul308_3:1.2
+	jul308_2:1.2
+	jul308_1:1.2
+	jul308:1.2
+	jul307_4:1.2
+	jul307_3:1.2
+	jul307_2:1.2
+	jul307_1:1.2
+	jul307:1.2
+	jul306_3:1.2
+	jul306_2:1.2
+	jul306_1:1.2
+	jul306:1.2
+	jul305_4:1.2
+	jul305_3:1.2
+	jul305_2:1.2
+	jul305_1:1.2
+	jul305:1.2
+	jul304_3:1.2
+	jul304_2:1.2
+	jul304_1:1.2
+	jul304:1.2
+	jul303_7:1.2
+	jul303_6:1.2
+	jul303_5:1.2
+	jul303_4:1.2
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2
+	jul280_1:1.2
+	jul280:1.2
+	jul279:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.12.14.41.55;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.17.30;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.17.31;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+ Modified Files:
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+@
+text
+@      SUBROUTINE CRCPAR
+C***********************************************************************
+C! Create and fill cpar bank                                           *
+C!                                                                     *
+C!  AUTHOR   : A. BONISSENT  881216                                    *
+C!  MODIFIED : A. BONISSENT  901206                                    *
+C!                                                                     *
+C!                                                                     *
+C!  BANKS :                                                            *
+C!    INPUT   : CALO                                                   *
+C!    OUTPUT  : CPAR (via cparad)                                      *
+C!    CREATED : CPAR (via cinpar)                                      *
+C!                                                                     *
+C?
+C!======================================================================
+#ifndef DOC
+#include "bcs.h"
+#include "ccnamc.h"
+#include "ecnamc.h"
+#include "hcnamc.h"
+#include "hclujj.h"
+#include "eclujj.h"
+#include "chrljj.h"
+#include "ecobjj.h"
+#include "chypjj.h"
+#include "etp1jj.h"
+#include "alcons.h"
+#include "rlunit.h"
+      COMMON/CWLOC/IWRELL(2)
+      PARAMETER (MXOBJ=50)
+      DIMENSION MHCLU(MXOBJ),MECOB(MXOBJ),MTRAK(MXOBJ)
+      DIMENSION ERES(4),ECALO(4),ETRA(4),ETRL(4)
+      LOGICAL FIRST
+      DATA FIRST/.TRUE./
+      DATA NATNE/18/,NATCH/19/
+#include "bmacro.h"
+      IF(FIRST)THEN
+          FIRST=.FALSE.
+          IWRELL(1)=0
+          IWRELL(2)=0
+      ENDIF
+      KCALO=NLINK('CALO',0)
+      NCALO=LROWS(KCALO)
+      CALL CINPAR(IER)
+      KCHRL=IW(NACHRL)
+      IF(KCHRL.EQ.0)GO TO 995
+      IF(IER.NE.0)GO TO 997
+C
+C   CREATE INVERSE RELATION BANKS FROM CALO TO CHRL
+C
+      CALL UINDXS(KCHRL,JCHRCA,IWRELL,IFL)
+      IF(IFL.EQ.-2)GOTO 999
+      IF(IFL.NE.0)GO TO 998
+C
+C?  Create CHYP bank
+C
+      CALL AUBOS('CHYP',0,NCALO*LCHYPA+LMHLEN,KCHYP,IGARB)
+      IF(IGARB.EQ.2)GO TO 996
+C
+C?  Fill miniheader
+C
+      IW(KCHYP+LMHROW)=0
+      IW(KCHYP+LMHCOL)=LCHYPA
+      NWRL=LROWS(IWRELL(1))
+C
+C? Put bank in list
+C
+      CALL BLIST(IW,'T+','CHYP')
+C
+C?   Loop on calobjects
+C
+      DO 100 ICALO=1,NCALO
+      DO 101 IL=1,4
+      ETRA(IL)=0.
+  101 ECALO(IL)=0.
+      NTRAK=0
+      IRESC=0
+      NHCLU=0
+      NECOB=0
+      RBARY=0.
+      IWRL1=1
+      KCHYP=IW(NACHYP)
+      NCHYP=LROWS(KCHYP)+1
+      IWTO=ITABL(IWRELL(1),IWRL1,1)
+  123 IF(IWTO-ICALO)124,122,100
+  124    IWRL1=IWRL1+1
+C
+C?  If relation bank is exhausted, terminate
+         IF(IWRL1.GT.NWRL)GO TO 100
+C
+C?  else, get next relation
+C
+         IWTO=ITABL(IWRELL(1),IWRL1,1)
+         GO TO 123
+  122    CONTINUE
+      NREL=ITABL(IWRELL(1),IWRL1,2)
+      IF(NREL.NE.0)THEN
+         IOFFS=ITABL(IWRELL(1),IWRL1,3)
+         DO 110 IREL=1,NREL
+         IRO=IREL+IOFFS
+         ICHRL=ITABL(IWRELL(2),IRO,1)
+         KCHRL=IW(NACHRL)
+         IECOB=ITABL(KCHRL,ICHRL,JCHREC)
+         IF(IECOB.EQ.0)GO TO 410
+         DO 400 I=1,NECOB
+         IF(IECOB.EQ.MECOB(I))GO TO 410
+  400    CONTINUE
+         NECOB=NECOB+1
+         IF(NECOB.GT.MXOBJ)THEN
+            CALL RERROR('CRCPAR',4,' too many ecob in a calobject')
+            GO TO 100
+         ENDIF
+         MECOB(NECOB)=IECOB
+         KECOB=IW(NAECOB)
+         ICH=ITABL(KECOB,IECOB,JECONT)
+C
+C?  ires=0 no residual energy
+C
+         IF(ICH.NE.0)THEN
+            CALL CENCCH(IECOB,NCHYP,ERES,IRES,IER)
+            IF(IER.NE.0)GO TO 997
+         ELSE
+            CALL CENCNE(IECOB,NCHYP,ERES,IRES,IER)
+            IF(IER.NE.0)GO TO 997
+         ENDIF
+         IRESC=IRESC+IRES
+C
+C? Add the residual energy if there was any
+C
+         IF(IRES.NE.0)THEN
+            DO 411 IL=1,4
+            ECALO(IL)=ECALO(IL)+ERES(IL)
+  411       CONTINUE
+            KECLU=IW(NAECLU)
+C
+C? Compute barycenter contribution
+C
+            RBARY=RBARY+RTABL(KECLU,IECOB,JECLR4)*ERES(4)
+         ENDIF
+  410    CONTINUE
+         KCHRL=IW(NACHRL)
+         IHCLU=ITABL(KCHRL,ICHRL,JCHRHC)
+         IF(IHCLU.EQ.0)GO TO 510
+         DO 500 I=1,NHCLU
+         IF(IHCLU.EQ.MHCLU(I))GO TO 510
+  500    CONTINUE
+         NHCLU=NHCLU+1
+         IF(NHCLU.GT.MXOBJ)THEN
+            CALL RERROR('CRCPAR',5,' too many HCLU in a calobject')
+            GO TO 100
+         ENDIF
+         MHCLU(NHCLU)=IHCLU
+         CALL CHCLU(IHCLU,NCHYP,ERES,IRES,IER)
+         IRESC=IRESC+IRES
+C
+C? Add the residual energy if there was any
+C
+         IF(IRES.NE.0)THEN
+            IF(IER.NE.0)GO TO 997
+            DO 511 IL=1,4
+            ECALO(IL)=ECALO(IL)+ERES(IL)
+  511       CONTINUE
+            KHCLU=IW(NAHCLU)
+C
+C? Compute barycenter contribution
+C
+            RBARY=RBARY+RTABL(KHCLU,IHCLU,JHCLRC)*ERES(4)
+         ENDIF
+  510    CONTINUE
+  110    CONTINUE
+C
+C? Normalise calobject barycenter (if residual energy )
+C
+         IF(IRESC.NE.0)RBARY=RBARY/ECALO(4)
+C
+         DO 210 IREL=1,NREL
+         IRO=IREL+IOFFS
+         ICHRL=ITABL(IWRELL(2),IRO,1)
+         KCHRL=IW(NACHRL)
+         ITRAK=ITABL(KCHRL,ICHRL,JCHRFR)
+         IF(ITRAK.EQ.0)GO TO 610
+         KETP1=IW(NAETP1)
+         DO 600 I=1,NTRAK
+         IF(ITRAK.EQ.MTRAK(I))GO TO 610
+  600    CONTINUE
+         NTRAK=NTRAK+1
+         IF(NTRAK.GT.MXOBJ)THEN
+            CALL RERROR('CRCPAR',4,' too many tracks for a calobject')
+            GO TO 100
+         ENDIF
+         MTRAK(NTRAK)=ITRAK
+C
+C? Call routine CTRPAR to find the expected contribution
+C?       of the track to the calobject
+C
+         CALL CTRPAR(ITRAK,RBARY,ETRL)
+         DO 612 IL=1,4
+  612    ETRA(IL)=ETRA(IL)+ETRL(IL)
+  611    CONTINUE
+  610    CONTINUE
+  210    CONTINUE
+      ENDIF
+C
+C?  Fill chyp
+      KCHYP=IW(NACHYP)
+      IF(NHCLU.EQ.0) ITYP=1
+      IF(NECOB.EQ.0) ITYP=2
+      IF(NECOB.NE.0.AND.NHCLU.NE.0)ITYP=3
+      IW(KROW(KCHYP,NCHYP)+JCHYKT)=ITYP
+      IW(KROW(KCHYP,NCHYP)+JCHYCA)=ICALO
+      IW(KCHYP+LMHROW)=NCHYP
+C
+C?  Create (abs) neutral imbalance particle iF necessary
+C
+      IF(IRESC.NE.0)THEN
+         DO 700 IL=1,4
+  700    ECALO(IL)=ECALO(IL)-ETRA(IL)
+         RXY=SQRT(ECALO(1)**2+ECALO(2)**2)
+         TH=ATAN2(RXY,ECALO(3))
+         IF(TH.LT.0.)TH=TH+TWOPI
+         FI=ATAN2(ECALO(2),ECALO(1))
+         IF(FI.LT.0.)FI=FI+TWOPI
+         IF(NTRAK.EQ.0)THEN
+            NATUR=NATNE
+         ELSE
+            NATUR=NATCH
+            IF(NHCLU.NE.0)NATUR=NATCH+1
+         ENDIF
+C
+C? Put the total momentum of associated tracks and energy of the
+C?  residual particle in words R1 and R2 of CPAR.
+C
+         PRES=SQRT(ECALO(1)**2+ECALO(2)**2+ECALO(3)**2)
+         CALL CPARAD(NCHYP,0,0,0,NATUR,ECALO(4),TH,FI,PRES,ETRA(4),IER)
+         IF(IER.NE.0)GO TO 997
+      ENDIF
+  100 CONTINUE
+C
+C?  Close CPAR, CHYP  and CHPR
+C
+      KCPAR=IW(NACPAR)
+      NCPAR=LROWS(KCPAR)
+      NCOLS=LCOLS(KCPAR)
+      NDATA=NCPAR*NCOLS+LMHLEN
+      CALL AUBOS('CPAR',0,NDATA,KCPAR,IGARB)
+      KCHYP=IW(NACHYP)
+      NCHYP=LROWS(KCHYP)
+      NCOLS=LCOLS(KCHYP)
+      NDATA=NCHYP*NCOLS+LMHLEN
+      CALL AUBOS('CHYP',0,NDATA,KCHYP,IGARB)
+      KCHPR=IW(NACHPR)
+      NCHPR=LROWS(KCHPR)
+      NCOLS=LCOLS(KCHPR)
+      NDATA=NCHPR*NCOLS+LMHLEN
+      CALL AUBOS('CHPR',0,NDATA,KCHPR,IGARB)
+      GOTO 999
+  998 CONTINUE
+      CALL RERROR('CRCPAR',1,' Error in uindxs')
+      GOTO 999
+  995 CONTINUE
+      CALL RERROR('CRCPAR',2,' Bank chrl missing, cpar not created')
+      GOTO 999
+  996 CONTINUE
+      CALL RERROR('CRCPAR',3,' Too little space to book bank CHYP')
+  997 CONTINUE
+  999 CALL WDROP(IW,IWRELL(1))
+      CALL WDROP(IW,IWRELL(2))
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK crcpar
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

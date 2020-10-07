@@ -1,0 +1,1237 @@
+head	1.2;
+access;
+symbols
+	uphy1-0:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.09.30.08.24.09;	author alib;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.08.16.13.38.25;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.08.16.13.38.26;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@update
+@
+text
+@************************************************************************
+
+      SUBROUTINE QFITWW(EVTYP,IOPT,MASTOL,ITKS,IFTKS,COV,CHISQ,ISTAT)
+*     ------------------------------------------------------------------
+      PARAMETER    (MAXPRM=26, MAXINT=4)
+      CHARACTER*4   EVTYP
+      INTEGER       IOPT
+      INTEGER       ITKS(4), IFTKS(7), IERR
+      REAL          COV( MAXPRM/2, MAXPRM/2 ), CHISQ
+      REAL          MASTOL,x
+      INTEGER       FITERR
+*     ------------------------------
+*     Minuit parameters are double precision
+      EXTERNAL    CHISQR, KIN, FOURJT, TWOJTL
+      DOUBLE PRECISION      PARAM(MAXPRM),STPSIZ(MAXPRM),ARG(10),ZERO
+      DOUBLE PRECISION      P1(4), P2(4), P3(4), P4(4)
+      DOUBLE PRECISION      P5(4), P6(4), P7(4)
+      DOUBLE PRECISION      EMAT( MAXPRM/2, MAXPRM/2 ), RDCSTR
+      DOUBLE PRECISION      FMIN, FEDM, ERRDEF
+      LOGICAL     ISINIT, ISPHYS
+      CHARACTER*6 PNAMES(MAXPRM)
+      DATA STPSIZ  /MAXPRM*0.0/
+      DATA ZERO /0.0/
+*     ------------------------------
+      COMMON /FP/ FIT(MAXPRM)
+      DOUBLE PRECISION FIT
+      COMMON /CS/  CCHISQ
+      DOUBLE PRECISION CCHISQ
+      COMMON /VP/ COPT
+      INTEGER COPT
+      COMMON /TK/ CITKS
+      INTEGER CITKS(4)
+      COMMON /J4/ IS4JET
+      LOGICAL IS4JET
+      COMMON /MT/ DM
+      DOUBLE PRECISION  DM
+      COMMON /M4/ D4M
+      DOUBLE PRECISION  D4M
+      
+#include "qcde.h"
+#include "qmacro.h"
+*     ------------------------------
+      ISTAT = 0
+      ARG(1) = -1.0
+      CALL MNEXCM( CHISQR, 'SET PRINT',ARG, 1,      IERR, KIN )  
+c start
+      IF( IOPT.eq.0.and.EVTYP.eq.'4jet' ) THEN
+         IOPT = 8175  ! Set Default Value
+      ELSE IF( IOPT.eq.0 ) THEN
+         IOPT = 3     ! Set Default Value
+      ENDIF
+      IF( IOPT.gt.8191.and.EVTYP.eq.'4jet' ) ISTAT = -2 ! illegal input
+      IF( IOPT.gt.1023.and.EVTYP.ne.'4jet' ) ISTAT = -2 ! illegal input
+      IF( ISTAT.ne.-2 ) THEN 
+C end
+         COPT = IOPT  ! set global variable
+         IF( MASTOL .eq. 0.0 ) MASTOL = 3.0 ! Set Default Value
+         DM = DBLE(MASTOL)
+         DO i = 1, 4
+            CITKS(i) = ITKS(i)  ! Assign ITKS numbers to global variable
+         ENDDO
+         IF( EVTYP .eq. '4jet' ) THEN
+            CALL FJTPAR( ITKS,PARAM,STPSIZ ) ! Init PARAM array for 4jet
+            IS4JET = .TRUE.
+         ELSE
+            CALL TJTPAR( ITKS,PARAM,STPSIZ ) ! Init PARAM array for 2jlv
+            IS4JET = .FALSE.
+         ENDIF
+         ISINIT = .TRUE.  ! Init PARAM and store measured values in MINUIT
+         CALL STOPRM( ISINIT, PARAM ,STPSIZ, MAXPRM ) 
+         ISINIT = .FALSE. ! Init done, dont change measured values anymore
+         CALL RELPAR( COPT )  ! all PARAMs are fixed--release the vars
+         ARG(1) = 0.0                         ! Skip initialization...
+         IF(MASTOL.lt.100.0) DM  = 100.0
+         D4M = 100.0  ! GeV         
+         DO WHILE( DM.gt.DBLE(MASTOL).or.D4M.gt.0.001 )  
+            IF( IS4JET ) THEN       
+               CALL MNEXCM( CHISQR, 'MIGRAD', ARG, 0, IERR, FOURJT )
+            ELSE
+               CALL MNEXCM( CHISQR, 'MIGRAD', ARG, 0, IERR, TWOJTL )
+            ENDIF
+            IF( IERR.eq.0 ) THEN             ! if the fit was succesful, then
+               DO i = 1, MAXPRM/2            ! replace the last starting values
+                  PARAM(i) = FIT(i)          ! with the newly fitted parameters.
+               ENDDO                         ! Otherwise, the last starting
+            ENDIF                            ! values are used again.  
+            CALL MNEXCM( CHISQR, 'RESTORE', ARG, 0, ITEMP, KIN )
+            CALL STOPRM( ISINIT, PARAM, STPSIZ, MAXPRM )
+            CALL RELPAR( COPT )
+            DM  = RDCSTR( DM, MASTOL )
+            D4M = RDCSTR( D4M, 0.001 )
+         ENDDO         
+         DM = DBLE(MASTOL)
+         D4M = 0.050
+         IF( IS4JET ) THEN
+            CALL MNEXCM( CHISQR, 'MIGRAD', ARG, 0, IERR, FOURJT )         
+         ELSE
+            CALL MNEXCM( CHISQR, 'MIGRAD', ARG, 0, IERR, TWOJTL )
+         ENDIF
+         CALL MNEMAT( EMAT, MAXPRM/2 ) ! Get error matrix from MINUIT 
+         CALL MNSTAT( FMIN, FEDM, ERRDEF, NPARI, NPARX, ISTAT )
+         CALL MNEXCM( CHISQR, 'RESTORE', ARG, 0, ITEMP, KIN )
+         CALL VCTOTR( CITKS, FIT, IFTKS, IS4JET, ISPHYS )
+C start
+         IF( .not.ISPHYS ) ISTAT = -1
+C end      
+         CHISQ = SNGL( CCHISQ )
+         DO i = 1, MAXPRM/2
+               DO j = 1, MAXPRM/2
+                     COV(i,j) = SNGL( EMAT(i,j) ) ! RETURN single precison
+               ENDDO                              ! error matrix
+         ENDDO
+         CALL TKERMT( IS4JET, ITKS, IFTKS, FIT, COV )
+         CALL QVADD2( IFTKS(5), IFTKS(1), IFTKS(2) )
+         CALL QVADD2( IFTKS(6), IFTKS(3), IFTKS(4) )
+C start
+      ENDIF
+C end
+*     ------------------------------------------------------------------      
+      RETURN
+      END
+
+************************************************************************
+
+      DOUBLE PRECISION FUNCTION RDCSTR( CONSTR, LIMIT )
+*     ------------------------------------------------------------------
+      DOUBLE PRECISION CONSTR
+      REAL   LIMIT
+*     ------------------------------
+      IF(CONSTR.gt.DBLE( LIMIT )) THEN
+         RDCSTR  = CONSTR  / 2.0
+      ELSE
+         RDCSTR  = DBLE( LIMIT )
+      ENDIF
+      IF( CONSTR.lt.DBLE( LIMIT ) ) CONSTR = DBLE( LIMIT )
+*     ------------------------------------------------------------------
+      RETURN
+      END
+
+************************************************************************
+
+      SUBROUTINE RELPAR( COPT )
+*     ------------------------------------------------------------------
+      INTEGER MAXPRM
+      PARAMETER( MAXPRM = 26 )
+      INTEGER COPT, JBIT, ERROR, i
+      DOUBLE PRECISION  ARG(10)
+      EXTERNAL CHISQR, KIN
+#include "qcde.h"
+#include "qmacro.h"
+*     ------------------------------
+      DO i = 1, MAXPRM/2
+         IF( JBIT( COPT, i ) .eq. 1 ) THEN
+            ARG(1) = FLOAT(i)
+            CALL MNEXCM(CHISQR,'RELEASE',ARG,1,ERROR,KIN)
+         ENDIF
+      ENDDO
+*     ------------------------------------------------------------------
+      RETURN
+      END
+
+************************************************************************
+
+      SUBROUTINE FJTPAR( ITKS, PARAM, STPSIZ )
+*     ------------------------------------------------------------------
+      INTEGER ITKS(4), JET1, JET2, JET3, JET4, MAXINT
+      INTEGER MAXPRM
+      REAL    MASTOL
+      PARAMETER( MAXPRM = 26 )
+      DOUBLE PRECISION PARAM(*), STPSIZ(*), ISRPZ
+#include "qcde.h"
+#include "qmacro.h"
+*     ------------------------------
+      JET1    = ITKS(1)
+      JET2    = ITKS(2)
+      JET3    = ITKS(3)
+      JET4    = ITKS(4)
+      ISRPZ = 0.0     
+*   PARAMETERs which may be fitted
+      PARAM(1)  = QE( JET1 )
+      PARAM(2)  = QE( JET2 )
+      PARAM(3)  = QE( JET3 )
+      PARAM(4)  = QE( JET4 )
+      PARAM(5)  = ISRPZ
+      PARAM(6)  = QQPIH - ACOS( QCT(JET1) )
+      PARAM(7)  = QQPIH - ACOS( QCT(JET2) )
+      PARAM(8)  = QQPIH - ACOS( QCT(JET3) )
+      PARAM(9)  = QQPIH - ACOS( QCT(JET4) )
+      PARAM(10) = QPH( JET1 )
+      PARAM(11) = QPH( JET2 )
+      PARAM(12) = QPH( JET3 )
+      PARAM(13) = QPH( JET4 )     
+*   ERRORs for PARAMETERs 1-13
+      PARAM(14) = SQRT( QE(JET1) )
+      PARAM(15) = SQRT( QE(JET2) )
+      PARAM(16) = SQRT( QE(JET3) )
+      PARAM(17) = SQRT( QE(JET4) )
+C start
+*      PARAM(14) = ( 0.6*SQRT( QE(JET1) ) + 0.6 ) * ( 1 + QCT(JET1)**2 )
+*      PARAM(15) = ( 0.6*SQRT( QE(JET2) ) + 0.6 ) * ( 1 + QCT(JET2)**2 )
+*      PARAM(16) = ( 0.6*SQRT( QE(JET3) ) + 0.6 ) * ( 1 + QCT(JET3)**2 )
+*      PARAM(17) = ( 0.6*SQRT( QE(JET4) ) + 0.6 ) * ( 1 + QCT(JET4)**2 )
+C end
+      PARAM(18) = 1.5                          ! Average initial state
+      IF(QELEP.gt.180.) PARAM(18) = 2.0        ! radiated photon energy
+      PARAM(19) = 10.0 / ( QQRADP*SQRT(QP(JET1)) ) ! jet axis ERRORs, 
+      PARAM(20) = 10.0 / ( QQRADP*SQRT(QP(JET2)) ) ! 10 degrees/root(P)
+      PARAM(21) = 10.0 / ( QQRADP*SQRT(QP(JET3)) )
+      PARAM(22) = 10.0 / ( QQRADP*SQRT(QP(JET4)) )
+      PARAM(23) = 10.0 / ( QQRADP*SQRT(QP(JET1)) )
+      PARAM(24) = 10.0 / ( QQRADP*SQRT(QP(JET2)) )
+      PARAM(25) = 10.0 / ( QQRADP*SQRT(QP(JET3)) )
+      PARAM(26) = 10.0 / ( QQRADP*SQRT(QP(JET4)) )
+*   Set initial step size for those internal PARAMs which may be fitted
+      DO i = 1, MAXPRM/2              
+            STPSIZ(i) = PARAM( i + MAXPRM/2 )
+      ENDDO
+*     ------------------------------------------------------------------      
+      RETURN
+      END
+      
+
+************************************************************************
+
+      SUBROUTINE TJTPAR( ITKS, PARAM, STPSIZ )
+*     ------------------------------------------------------------------
+      INTEGER ITKS(4), JET1, JET2, LEPTON, MaxInt
+      INTEGER MAXPRM
+      REAL MASTOL
+      PARAMETER( MAXPRM = 26 )
+      DOUBLE PRECISION LPTENG, PARAM(*), STPSIZ(*), ISRPZ
+      LOGICAL ISELEC, ISMUON       
+#include "qcde.h"
+#include "qmacro.h"
+*     ------------------------------
+      JET1   = ITKS(1)
+      JET2   = ITKS(2)
+      LEPTON = ITKS(3)
+      LPTENG = QE( LEPTON )
+      ISELEC = KEFOTY( LEPTON ).eq.1
+      ISMUON = KEFOTY( LEPTON ).eq.2
+      ISRPZ  = 0.0
+*   PARAMETERs which may be fitted
+      PARAM(1)  = QE( JET1 )
+      PARAM(2)  = QE( JET2 )
+      PARAM(3)  = LPTENG
+      PARAM(4)  = ISRPZ
+      PARAM(5)  = QQPIH - ACOS( QCT( JET1 ) )
+      PARAM(6)  = QQPIH - ACOS( QCT( JET2 ) )
+      PARAM(7)  = QQPIH - ACOS( QCT(LEPTON) )
+      PARAM(8)  = QPH( JET1 )
+      PARAM(9)  = QPH( JET2 )
+      PARAM(10) = QPH(LEPTON)
+      PARAM(11) = 0.0  ! dummy
+      PARAM(12) = 0.0  ! dummy
+      PARAM(13) = 0.0  ! dummy      
+*   CALCulate ERRORs for PARAMETERs 1-13
+      PARAM(14) = SQRT( QE(JET1) )
+      PARAM(15) = SQRT( QE(JET2) )
+C start
+*      PARAM(14) = ( 0.6*SQRT( QE(JET1) ) + 0.6 ) * ( 1 + QCT(JET1)**2 )
+*      PARAM(15) = ( 0.6*SQRT( QE(JET2) ) + 0.6 ) * ( 1 + QCT(JET2)**2 )
+C end
+      IF( ISELEC ) THEN                             !  18%/root(E) for e-
+         PARAM(16) = 0.18 * SQRT(LPTENG)
+      ELSEIF( ISMUON ) THEN                             !  0.1%*Pt for mu-
+         PARAM(16) =0.001*SQRT(QX(LEPTON)**2+QY(LEPTON)**2)
+      ENDIF         !  superceded later by ITKS FRFT ERROR matrix IF available
+      PARAM(17) = 1.5          !  Average initial state radiated photon energy
+      IF(QELEP.gt.180.) PARAM(17) = 2.0
+      PARAM(18) = 10.0 / ( QQRADP*SQRT(QP(JET1)) ) ! 10 degrees/root(P)
+      PARAM(19) = 10.0 / ( QQRADP*SQRT(QP(JET2)) ) ! jet axis ERRORs, 
+      PARAM(20) = 0.01
+      PARAM(21) = 10.0 / ( QQRADP*SQRT(QP(JET1)) )
+      PARAM(22) = 10.0 / ( QQRADP*SQRT(QP(JET2)) )
+      PARAM(23) = 0.0005
+      IF( XFRF(LEPTON) ) THEN
+         PARAM(20) = SQRT( QFRFEM( LEPTON, 2, 2) )
+         PARAM(23) = SQRT( QFRFEM( LEPTON, 3, 3) )
+         IF( ISMUON ) THEN
+            PARAM(16) = QFRFEM(LEPTON,1,1)
+            PARAM(16) = SQRT(PARAM(16)) / ABS(QFRFIR(LEPTON)) * LPTENG
+         ENDIF
+      ENDIF
+      PARAM(24)= 1.0  ! dummy
+      PARAM(25)= 1.0  ! dummy
+      PARAM(26)= 1.0  ! dummy      
+*   Set initial step size for those internal PARAMs which may be fitted
+
+      DO i = 1, MAXPRM/2              
+         STPSIZ(i) = PARAM( i + MAXPRM/2 )
+      ENDDO
+*     ------------------------------------------------------------------      
+      RETURN
+      END
+      
+************************************************************************
+
+      SUBROUTINE STOPRM( ISINIT, PARAM, STPSIZ, MAXPRM)
+*     ------------------------------------------------------------------
+      DOUBLE PRECISION  ZERO
+      LOGICAL ISINIT
+      PARAMETER( ZERO = 0.0 )
+      CHARACTER*6  PNAME
+      DOUBLE PRECISION  PARAM(*), STPSIZ(*)
+      DOUBLE PRECISION  ARG(10)
+      INTEGER MAXPRM, ERROR, i
+      EXTERNAL CHISQR, KIN      
+#include "qcde.h"
+#include "qmacro.h"
+*     ------------------------------
+      DO i = 1, MAXPRM
+         CALL MNPARM( i, PNAME, PARAM(i), STPSIZ(i), ZERO, ZERO, ERROR )
+         IF(ERROR.ne.0) PRINT *,' problem defining PARAMETER ', i
+      ENDDO      
+      IF( ISINIT ) THEN
+         ARG(1) = 1.0      ! store measured PARAMETERs in CHISQR:
+         CALL MNEXCM( CHISQR, 'CALL FCN', ARG, 1, ERROR, KIN )
+      ENDIF      
+      DO i = 1, MAXPRM/2        ! fix all PARAMETERs
+         ARG(1)=i
+         CALL MNEXCM( CHISQR, 'FIX', ARG, 1, ERROR, KIN )
+      ENDDO
+*     ------------------------------------------------------------------
+      RETURN
+      END
+
+************************************************************************
+
+      SUBROUTINE CHISQR( NUMPAR, GRAD, CHISQU, PARAM, ARG, CALC )
+*     ------------------------------------------------------------------
+      PARAMETER( MAXPRM=26, MAXFIT=MAXPRM/2 )      
+      COMMON /FP/ FIT(MAXPRM)
+      DOUBLE PRECISION   FIT
+      COMMON /CS/  CCHISQ
+      DOUBLE PRECISION   CCHISQ
+      COMMON /VP/ COPT
+      INTEGER  COPT
+      COMMON /TK/ CITKS
+      INTEGER  CITKS(4)
+      COMMON /J4/ IS4JET
+      LOGICAL IS4JET
+      COMMON /MT/ DM
+      DOUBLE PRECISION   DM
+      COMMON /M4/ D4M
+      DOUBLE PRECISION  D4M      
+      EXTERNAL CALC
+      INTEGER NUMPAR, ARG, x, y, z
+      DOUBLE PRECISION PARAM(MAXPRM), GRAD(MAXPRM), MEASUR(MAXPRM)
+      DOUBLE PRECISION WMASS1, WMASS2, EBAL, CHISQU, SIGMA(MAXPRM)
+      DOUBLE PRECISION MASTOL, TERM, P1(4), P2(4), P3(4), P4(4)
+      DOUBLE PRECISION W1(4), W2(4)
+      DOUBLE PRECISION ISRPHT(4), RSTMAS      
+#include "qcde.h"
+#include "qmacro.h"
+*     ------------------------------
+      X = 1
+      Y = 2
+      Z = 3
+      IF( ARG .eq. 1.0 ) THEN  ! init, store MEASUR PARAMs and SIGMAs
+         DO i = 1, MAXPRM
+            MEASUR(i) = PARAM(i)
+         ENDDO
+         DO i = 1, MAXFIT
+            SIGMA(i) = MEASUR( MAXFIT+i )
+         ENDDO
+         MASTOL = PARAM( MAXPRM )
+      ELSE      
+         CHISQU = 0.0
+         CALL CALC( CITKS,PARAM,P1,P2,P3,P4,W1,W2,ISRPHT )
+         WMASS1 = RSTMAS( W1 )
+         WMASS2 = RSTMAS( W2 )
+      
+         DO i = 1, MAXPRM/2
+            IF( JBIT( COPT, i ) .eq. 1 ) THEN
+               TERM = ( PARAM(i) - MEASUR(i) ) / SIGMA(i)
+               CHISQU = CHISQU + TERM**2
+            ENDIF
+         ENDDO
+         EBAL   = QELEP - ISRPHT(4) - W1(4) - W2(4)
+         TERM = EBAL / D4M
+         CHISQU = CHISQU + TERM**2                  
+         IF( IS4JET ) THEN ! 3-momentum balance for 4 jet events
+            TERM = 0 - P1(X) - P2(X) - P3(X) - P4(X)
+            TERM = TERM / D4M
+            CHISQU = CHISQU + TERM**2
+            TERM = 0 - P1(Y) - P2(Y) - P3(Y) - P4(Y)
+            TERM = TERM / D4M
+            CHISQU = CHISQU + TERM**2
+            TERM = 0 - P1(Z) - P2(Z) - P3(Z) - P4(Z) - ISRPHT(Z)
+            TERM = TERM / D4M
+            CHISQU = CHISQU + TERM**2
+         ENDIF
+         IF( DM .lt. 100.0 ) THEN                ! constrain W masses
+            TERM = ( WMASS1 - WMASS2) / DM       ! equal within 
+            CHISQU = CHISQU + TERM**2            ! certain tolarence
+         ENDIF
+         DO i = 1, MAXPRM
+            FIT(i) = PARAM(i)
+         ENDDO      
+         CCHISQ = CHISQU
+      ENDIF
+*     ------------------------------------------------------------------
+      RETURN
+      END
+
+************************************************************************
+
+
+*     CALCulate 4 vectors, masses, E balance from fit PARAMETERs
+
+      SUBROUTINE FOURJT( JET, PARAM, JET1, JET2, JET3, JET4, W1, W2,
+     +                                                          ISRPHT )
+*     ------------------------------------------------------------------
+      PARAMETER( MAXPRM = 26 )
+      DOUBLE PRECISION PARAM(MAXPRM)
+      DOUBLE PRECISION JET1(4),JET2(4),JET3(4),JET4(4), ISRPHT(4)
+      DOUBLE PRECISION W1(4),W2(4)
+      INTEGER JET(*)            
+#include "qcde.h"
+#include "qmacro.h"
+*     ------------------------------
+      JET1(1) = PARAM(1) *QBETA(JET(1))* COS(PARAM(6)) * COS(PARAM(10))
+      JET1(2) = PARAM(1) *QBETA(JET(1))* COS(PARAM(6)) * SIN(PARAM(10))
+      JET1(3) = PARAM(1) *QBETA(JET(1))* SIN(PARAM(6))
+      JET1(4) = PARAM(1)
+      JET2(1) = PARAM(2) *QBETA(JET(2))* COS(PARAM(7)) * COS(PARAM(11))
+      JET2(2) = PARAM(2) *QBETA(JET(2))* COS(PARAM(7)) * SIN(PARAM(11))
+      JET2(3) = PARAM(2) *QBETA(JET(2))* SIN(PARAM(7))
+      JET2(4) = PARAM(2)
+      JET3(1) = PARAM(3) *QBETA(JET(3))* COS(PARAM(8)) * COS(PARAM(12))
+      JET3(2) = PARAM(3) *QBETA(JET(3))* COS(PARAM(8)) * SIN(PARAM(12))
+      JET3(3) = PARAM(3) *QBETA(JET(3))* SIN(PARAM(8))
+      JET3(4) = PARAM(3)
+      JET4(1) = PARAM(4) *QBETA(JET(4))* COS(PARAM(9)) * COS(PARAM(13))
+      JET4(2) = PARAM(4) *QBETA(JET(4))* COS(PARAM(9)) * SIN(PARAM(13))
+      JET4(3) = PARAM(4) *QBETA(JET(4))* SIN(PARAM(9))
+      JET4(4) = PARAM(4)
+      DO I = 1,4
+           W1(I) = JET1(I) + JET2(I)
+      ENDDO
+      DO I = 1,4
+           W2(I) = JET3(I) + JET4(I)
+      ENDDO      
+      ISRPHT(1) = 0.0
+      ISRPHT(2) = 0.0
+      ISRPHT(3) = PARAM(5)
+      ISRPHT(4) = ABS(PARAM(5))
+*     ------------------------------------------------------------------      
+      RETURN
+      END
+
+***********************************************************************
+
+*     CALCulate 4 vectors, masses, E balance from fit PARAMETERs
+
+      SUBROUTINE TWOJTL( JET, PARAM, JET1, JET2, LEPTON, NUTRNO, 
+     +                    WHADRN, WLEPTN, ISRPHT )
+*     ------------------------------------------------------------------
+      DOUBLE PRECISION PARAM(*)
+      DOUBLE PRECISION JET1(4),JET2(4),LEPTON(4),NUTRNO(4), ISRPHT(4)
+      DOUBLE PRECISION WHADRN(4),WLEPTN(4)
+      INTEGER JET(*)      
+#include "qcde.h"
+#include "qmacro.h"
+*     ------------------------------
+      JET1(1) = PARAM(1) *QBETA(JET(1))* COS(PARAM(5)) * COS(PARAM(8))
+      JET1(2) = PARAM(1) *QBETA(JET(1))* COS(PARAM(5)) * SIN(PARAM(8))
+      JET1(3) = PARAM(1) *QBETA(JET(1))* SIN(PARAM(5))
+      JET1(4) = PARAM(1)
+      JET2(1) = PARAM(2) *QBETA(JET(2))* COS(PARAM(6)) * COS(PARAM(9))
+      JET2(2) = PARAM(2) *QBETA(JET(2))* COS(PARAM(6)) * SIN(PARAM(9))
+      JET2(3) = PARAM(2) *QBETA(JET(2))* SIN(PARAM(6))
+      JET2(4) = PARAM(2)
+      LEPTON(1) = PARAM(3)             * COS(PARAM(7)) * COS(PARAM(10))
+      LEPTON(2) = PARAM(3)             * COS(PARAM(7)) * SIN(PARAM(10))
+      LEPTON(3) = PARAM(3)             * SIN(PARAM(7))
+      LEPTON(4) = PARAM(3)
+      DO I = 1,4
+           WHADRN(I) = JET1(I) + JET2(I)
+      ENDDO
+      DO I = 1,3
+           NUTRNO(I) = - ( WHADRN(I) + LEPTON(I) )
+      ENDDO
+      NUTRNO(3) = NUTRNO(3) - PARAM(4)
+      NUTRNO(4) = SQRT( NUTRNO(1)**2+NUTRNO(2)**2+NUTRNO(3)**2 )
+      DO I = 1,4
+           WLEPTN(I) = LEPTON(I) + NUTRNO(I)
+      ENDDO      
+      ISRPHT(1) = 0.0
+      ISRPHT(2) = 0.0
+      ISRPHT(3) = PARAM(4)
+      ISRPHT(4) = ABS( PARAM(4) )
+*     ------------------------------------------------------------------      
+      RETURN
+      END
+
+***********************************************************************
+
+*     CALCulate 4 vectors, masses, E balance from fit PARAMETERs
+
+      SUBROUTINE KIN( PARAM,JET1,JET2,JET3,JET4,W1,W2,ISRPHT )
+*     ------------------------------------------------------------------
+      DOUBLE PRECISION PARAM(*)
+      DOUBLE PRECISION JET1(4),JET2(4),JET3(4),JET4(4), ISRPHT(4)
+      DOUBLE PRECISION W1(4),W2(4)
+*     ------------------------------  why EBAL?
+*     ------------------------------------------------------------------      
+      RETURN
+      END
+
+***********************************************************************
+
+      DOUBLE PRECISION FUNCTION RSTMAS(VECTOR)
+
+*     ------------------------------------------------------------------ 
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+      DIMENSION VECTOR(4)
+*     ------------------------------
+      RSTMAS = VECTOR(4)**2 - (VECTOR(1)**2+VECTOR(2)**2+VECTOR(3)**2)
+      RSTMAS = SIGN( SQRT(ABS(RSTMAS)), RSTMAS)
+*     ------------------------------------------------------------------ 
+      RETURN
+      END
+
+************************************************************************
+
+      SUBROUTINE VCTOTR( ITKS, FIT, IFTKS, ISFOURJT, ISPHYS )
+
+*     ------------------------------------------------------------------
+      INTEGER NULL
+      PARAMETER( NULL = 0 ) 
+      DOUBLE PRECISION FIT(*)
+      INTEGER IFTKS(7)
+      DOUBLE PRECISION P1(4), P2(4), P3(4), P4(4), P5(4), P6(4), P7(4)
+      DOUBLE PRECISION RSTMAS
+      LOGICAL ISFOURJT, ISNENG, ISPHYS
+      REAL VECTOR(4)
+      INTEGER FLAG, ITKS(4)
+#include "qcde.h"
+#include "qmacro.h"
+*     ------------------------------
+      DO i = 1, 7
+            IF( IFTKS(i) .eq. NULL ) THEN
+                  IFTKS(i) = KVNEW( dummy )
+            ELSE
+                  CALL VZERO( VECTOR, 4 )
+                  CALL QVSET4( IFTKS(i), VECTOR )
+            ENDIF
+      ENDDO      
+      IF( ISFOURJT ) THEN
+            CALL FOURJT( ITKS, FIT, P1, P2, P3, P4, P5, P6, P7)
+      ELSE
+            CALL TWOJTL( ITKS, FIT, P1, P2, P3, P4, P5, P6, P7)
+      ENDIF      
+      ISNENG = P1(4).lt.0.0.or.P2(4).lt.0.0.or.P3(4).lt.0.0.or.
+     +         P4(4).lt.0.0.or.P5(4).lt.0.0.or.P6(4).lt.0.0.or.
+     +         P7(4).lt.0.0
+      ISPHYS = .not.ISNENG
+      IF( ISPHYS ) THEN      
+            DO i = 1, 4
+                  VECTOR(i) = SNGL( P1(i) )
+            ENDDO    
+            CALL QVSET4( IFTKS(1), VECTOR )
+            DO i = 1, 4
+                  VECTOR(i) = SNGL( P2(i) )
+            ENDDO    
+            CALL QVSET4( IFTKS(2), VECTOR )
+            DO i = 1, 4
+                  VECTOR(i) = SNGL( P3(i) )
+            ENDDO    
+            CALL QVSET4( IFTKS(3), VECTOR )
+            DO i = 1, 4
+                  VECTOR(i) = SNGL( P4(i) )
+            ENDDO    
+            CALL QVSET4( IFTKS(4), VECTOR )            
+            DO i = 1, 4
+                  VECTOR(i) = SNGL( P5(i) )
+            ENDDO    
+            CALL QVSET4( IFTKS(5), VECTOR )
+            DO i = 1, 4
+                  VECTOR(i) = SNGL( P6(i) )
+            ENDDO    
+            CALL QVSET4( IFTKS(6), VECTOR )
+            DO i = 1, 4
+                  VECTOR(i) = SNGL( P7(i) )
+            ENDDO    
+            CALL QVSET4( IFTKS(7), VECTOR )
+      ENDIF
+*     ------------------------------------------------------------------      
+      RETURN
+      END
+
+***********************************************************************
+
+      SUBROUTINE TKERMT( IS4JET, ITKS, IFTKS, PARAM, ERRMAT )
+
+*     ------------------------------------------------------------------
+      LOGICAL IS4JET 
+      INTEGER ITKS(4), IFTKS(7)
+      DOUBLE PRECISION  PARAM(26)
+      REAL    P(26), ERRMAT(13,13), VOLD(17,17), VNEW(17,17), M(17,17)
+      REAL    BETA(4), V1(4,4), V2(4,4), V3(4,4), V4(4,4)
+      REAL    X(4), V1OLD(4,4), V2OLD(4,4), V3OLD(4,4), V4OLD(4,4)
+      REAL    V1NEW(4,4), V2NEW(4,4), V3NEW(4,4), V4NEW(4,4)
+      REAL    M1(4,4), M2(4,4), M3(4,4), M4(4,4)
+      REAL    DPXDE,     DPYDE,     DPZDE,     DEDE
+      REAL    DPXDTH, DPYDTH, DPZDTH, DEDTH
+      REAL    DPXDPH,   DPYDPH,   DPZDPH,   DEDPH
+      REAL    DPXDBT,  DPYDBT,  DPZDBT,  DEDBT
+#include "qcde.h"
+#include "qmacro.h"
+*     ------------------------------
+      DO I = 1, 26
+        P(I) = SNGL( PARAM(I) )
+      ENDDO      
+      DO I = 1, 4
+        DO J = 1, 4
+          V1(I,J) = 0.0  ! initialize matricies
+          V2(I,J) = 0.0
+          V3(I,J) = 0.0
+          V4(I,J) = 0.0
+        ENDDO
+      ENDDO
+      DO I = 1, 17
+        DO J = 1, 17
+          VOLD(I,J) = 0.0  ! initialize matricies
+          VNEW(I,J) = 0.0
+          M(I,J) = 0.0
+        ENDDO
+      ENDDO      
+      DO I = 1, 13
+        DO J = 1, 13
+          VOLD(I,J) = ERRMAT(I,J)  ! increase size of old error matrix
+        ENDDO
+      ENDDO      
+      IF( IS4JET ) THEN
+        DO I = 1, 4
+          BETA(I) = SNGL( QBETA( ITKS(I) ) )
+        ENDDO        
+        DO I = 1, 4   ! fill transformation matrix
+          M(I,I)       =  DPXDE( P(I), BETA(I), P(I+5), P(I+9) )
+          M(I,I+4)     =  DPYDE( P(I), BETA(I), P(I+5), P(I+9) )
+          M(I,I+8)     =  DPZDE( P(I), BETA(I), P(I+5), P(I+9) )
+          M(I,I+12)    =   DEDE( P(I), BETA(I), P(I+5), P(I+9) )          
+          M(5,17)      = 1.0
+          M(I+5,I)     = DPXDTH( P(I), BETA(I), P(I+5), P(I+9) )
+          M(I+5,I+4)   = DPYDTH( P(I), BETA(I), P(I+5), P(I+9) )
+          M(I+5,I+8)   = DPZDTH( P(I), BETA(I), P(I+5), P(I+9) )
+          M(I+5,I+12)  =  DEDTH( P(I), BETA(I), P(I+5), P(I+9) )          
+          M(I+9,I)     = DPXDPH( P(I), BETA(I), P(I+5), P(I+9) )
+          M(I+9,I+4)   = DPYDPH( P(I), BETA(I), P(I+5), P(I+9) )
+          M(I+9,I+8)   = DPZDPH( P(I), BETA(I), P(I+5), P(I+9) )
+          M(I+9,I+12)  =  DEDPH( P(I), BETA(I), P(I+5), P(I+9) )
+        ENDDO        
+      ELSE      
+        DO I = 1, 2
+          BETA(I) = SNGL( QBETA( ITKS(I) ) )
+        ENDDO
+        BETA(3) = 1.0  !  lepton is assumed massless in the high e limit
+        BETA(4) = 1.0  !  neutrino is assumed massless        
+        DO I = 1, 3   ! fill transformation matrix
+          M(I,I)      =  DPXDE( P(I), BETA(I), P(I+4), P(I+7) )
+          M(I,I+4)    =  DPYDE( P(I), BETA(I), P(I+4), P(I+7) )
+          M(I,I+8)    =  DPZDE( P(I), BETA(I), P(I+4), P(I+7) )
+          M(I,I+12)   =   DEDE( P(I), BETA(I), P(I+4), P(I+7) )          
+          M(4,17)     = 1.0
+          M(I+4,I)    = DPXDTH( P(I), BETA(I), P(I+4), P(I+7) )
+          M(I+4,I+4)  = DPYDTH( P(I), BETA(I), P(I+4), P(I+7) )
+          M(I+4,I+8)  = DPZDTH( P(I), BETA(I), P(I+4), P(I+7) )
+          M(I+4,I+12) =  DEDTH( P(I), BETA(I), P(I+4), P(I+7) )          
+          M(I+7,I)    = DPXDPH( P(I), BETA(I), P(I+4), P(I+7) )
+          M(I+7,I+4)  = DPYDPH( P(I), BETA(I), P(I+4), P(I+7) )
+          M(I+7,I+8)  = DPZDPH( P(I), BETA(I), P(I+4), P(I+7) )
+          M(I+7,I+12) =  DEDPH( P(I), BETA(I), P(I+4), P(I+7) )
+          M(I,4)      = M(I,I)
+          M(I,8)      = M(I,I+4)
+          M(I,12)     = M(I,I+8)
+          M(I,16)     = M(I,I+12)          
+          M(I+4,4)    = M(I+4,I)
+          M(I+4,8)    = M(I+4,I+4)
+          M(I+4,12)   = M(I+4,I+8)
+          M(I+4,16)   = M(I+4,I+12)          
+          M(I+7,4)    = M(I+7,I)
+          M(I+7,8)    = M(I+7,I+4)
+          M(I+7,12)   = M(I+7,I+8)
+          M(I+7,16)   = M(I+7,I+12)
+        ENDDO
+      ENDIF      
+      DO J = 1, 17  !  Perform transformation to Vnew
+        DO K = 1, 17
+          DO I = 1, 17
+            DO L = 1, 17
+              VNEW(J,K) = VNEW(J,K) + M(I,J) * VOLD(I,L) * M(L,K)
+            ENDDO                     ! note: transpose
+          ENDDO
+        ENDDO
+      ENDDO                    
+      DO I = 0, 3  ! fill individual ERROR matrices from Vnew
+        DO J = 0, 3          
+          V1(I+1,J+1) = VNEW( 4*I+1, 4*J+1 )
+          V2(I+1,J+1) = VNEW( 4*I+2, 4*J+2 )
+          V3(I+1,J+1) = VNEW( 4*I+3, 4*J+3 )
+          V4(I+1,J+1) = VNEW( 4*I+4, 4*J+4 )
+        ENDDO
+      ENDDO
+      CALL QVSETS( IFTKS(1), V1 )
+      CALL QVSETS( IFTKS(2), V2 )
+      CALL QVSETS( IFTKS(3), V3 )
+      CALL QVSETS( IFTKS(4), V4 )
+*     ------------------------------------------------------------------ 
+      RETURN
+      END
+
+************************************************************************
+
+***********************************************************************
+
+      REAL FUNCTION DPXDE( E, BETA, THETA, PHI  )
+
+*     ------------------------------------------------------------------
+      REAL E, BETA, THETA, PHI
+*     ------------------------------
+      DPXDE = BETA * COS( THETA ) * COS( PHI )
+*     ------------------------------------------------------------------ 
+      RETURN
+      END
+
+************************************************************************
+
+      REAL FUNCTION DPXDTH( E, BETA, THETA, PHI )
+
+*     ------------------------------------------------------------------
+      REAL E, BETA, THETA, PHI
+*     ------------------------------
+      DPXDTH = - ( E * BETA * SIN(THETA) * COS(PHI) )
+*     ------------------------------------------------------------------ 
+      RETURN
+      END
+
+************************************************************************
+
+      REAL FUNCTION DPXDPH( E, BETA, THETA, PHI )
+
+*     ------------------------------------------------------------------
+      REAL E, BETA, THETA, PHI
+*     ------------------------------
+      DPXDPH = - ( E * BETA * COS(THETA) * SIN(PHI) )
+*     ------------------------------------------------------------------ 
+      RETURN
+      END
+
+************************************************************************
+
+      REAL FUNCTION DPYDE( E, BETA, THETA, PHI )
+
+*     ------------------------------------------------------------------
+      REAL E, BETA, THETA, PHI
+*     ------------------------------
+      DPYDE = BETA * COS(THETA) * SIN(PHI)
+*     ------------------------------------------------------------------ 
+      RETURN
+      END
+
+************************************************************************
+
+      REAL FUNCTION DPYDTH( E, BETA, THETA, PHI )
+
+*     ------------------------------------------------------------------
+      REAL E, BETA, THETA, PHI
+*     ------------------------------
+      DPYDTH = - (E * BETA * SIN(THETA) * SIN(PHI) )
+*     ------------------------------------------------------------------ 
+      RETURN
+      END
+
+************************************************************************
+
+      REAL FUNCTION DPYDPH( E, BETA, THETA, PHI )
+
+*     ------------------------------------------------------------------
+      REAL E, BETA, THETA, PHI
+*     ------------------------------
+      DPYDPH = E * BETA * COS(THETA) * COS(PHI)
+*     ------------------------------------------------------------------ 
+      RETURN
+      END
+
+************************************************************************
+
+      REAL FUNCTION DPZDE( E, BETA, THETA, PHI )
+
+*     ------------------------------------------------------------------
+      REAL E, BETA, THETA, PHI
+*     ------------------------------
+      DPZDE = BETA * SIN(THETA)
+*     ------------------------------------------------------------------ 
+      RETURN
+      END
+
+************************************************************************
+
+      REAL FUNCTION DPZDTH( E, BETA, THETA, PHI )
+
+*     ------------------------------------------------------------------
+      REAL E, BETA, THETA, PHI
+*     ------------------------------
+      DPZDTH = E * COS(THETA)
+*     ------------------------------------------------------------------ 
+      RETURN
+      END
+
+************************************************************************
+
+      REAL FUNCTION DPZDPH( E, BETA, THETA, PHI )
+
+*     ------------------------------------------------------------------
+      REAL E, BETA, THETA, PHI
+*     ------------------------------
+      DPZDPH = 0.0
+*     ------------------------------------------------------------------ 
+      RETURN
+      END
+
+************************************************************************
+
+      REAL FUNCTION DEDE( E, BETA, THETA, PHI )
+
+*     ------------------------------------------------------------------
+      REAL E, BETA, THETA, PHI
+*     ------------------------------
+      DEDE = 1.0
+*     ------------------------------------------------------------------ 
+      RETURN
+      END
+
+************************************************************************
+
+      REAL FUNCTION DEDTH( E, BETA, THETA, PHI )
+
+*     ------------------------------------------------------------------
+      REAL E, BETA, THETA, PHI
+*     ------------------------------
+      DEDTH = 0.0
+*     ------------------------------------------------------------------ 
+      RETURN
+      END
+
+************************************************************************
+
+      REAL FUNCTION DEDPH( E, BETA, THETA, PHI )
+
+*     ------------------------------------------------------------------
+      REAL E, BETA, THETA, PHI
+*     ------------------------------
+      DEDPH = 0.0
+*     ------------------------------------------------------------------ 
+      RETURN
+      END
+
+************************************************************************
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 2
+d15 5
+a19 4
+      DOUBLE PRECISION PARAM(MAXPRM),STPSIZ(MAXPRM),ARG(10),ZERO
+      DOUBLE PRECISION P1(4), P2(4), P3(4), P4(4), P5(4), P6(4), P7(4)
+      DOUBLE PRECISION EMAT( MAXPRM/2, MAXPRM/2 ), RDCSTR
+      DOUBLE PRECISION FMIN, FEDM, ERRDEF
+d39 1
+a39 1
+
+d43 1
+d45 6
+a50 14
+      CALL MNEXCM( CHISQR, 'SET PRINT',ARG, 1,      IERR, KIN )
+      IF( IOPT.eq.0 ) IOPT = 3  ! Set Default Value and global variable
+      COPT = IOPT
+      IF( MASTOL .eq. 0.0 ) MASTOL = 3.0 ! Set Default Value
+      DM = DBLE(MASTOL)
+      DO i = 1, 4
+         CITKS(i) = ITKS(i)  ! Assign ITKS numbers to global variable
+      ENDDO
+      IF( EVTYP .eq. '4jet' ) THEN
+         CALL FJTPAR( ITKS,PARAM,STPSIZ ) ! Init PARAM array for 4jet
+         IS4JET = .TRUE.
+      ELSE
+         CALL TJTPAR( ITKS,PARAM,STPSIZ ) ! Init PARAM array for 2jlv
+         IS4JET = .FALSE.
+d52 43
+a94 8
+      ISINIT = .TRUE.  ! Init PARAM and store measured values in MINUIT
+      CALL STOPRM( ISINIT, PARAM ,STPSIZ, MAXPRM )
+      ISINIT = .FALSE. ! Init DOne, DOn't change measured values anymore
+      CALL RELPAR( COPT )  ! all PARAMs are fixed--release the vars
+      ARG(1) = 0.0                         ! Skip initialization...
+      IF(MASTOL.lt.100.0) DM  = 100.0
+      D4M = 100.0  ! GeV
+      DO WHILE( DM.gt.DBLE(MASTOL).or.D4M.gt.0.001 )
+d96 1
+a96 1
+            CALL MNEXCM( CHISQR, 'MIGRAD', ARG, 0, IERR, FOURJT )
+d100 2
+a101 5
+         IF( IERR.eq.0 ) THEN              ! IF the fit was succesful, THEN
+            DO i = 1, MAXPRM/2             ! replace the last starting values
+               PARAM(i) = FIT(i)           ! with the newly fitted PARAMETERs.
+            ENDDO                          ! Otherwise, the last starting
+         ENDIF                             ! values are used again.
+d103 14
+a116 11
+         CALL STOPRM( ISINIT, PARAM, STPSIZ, MAXPRM )
+         CALL RELPAR( COPT )
+         DM  = RDCSTR( DM, MASTOL )
+         D4M = RDCSTR( D4M, 0.001 )
+      ENDDO
+      DM = DBLE(MASTOL)
+      D4M = 0.050
+      IF( IS4JET ) THEN
+         CALL MNEXCM( CHISQR, 'MIGRAD', ARG, 0, IERR, FOURJT )
+      ELSE
+         CALL MNEXCM( CHISQR, 'MIGRAD', ARG, 0, IERR, TWOJTL )
+d118 2
+a119 16
+      CALL MNEMAT( EMAT, MAXPRM/2 ) ! Get error matrix from MINUIT
+      CALL MNSTAT( FMIN, FEDM, ERRDEF, NPARI, NPARX, ISTAT )
+      CALL MNEXCM( CHISQR, 'RESTORE', ARG, 0, ITEMP, KIN )
+      CALL VCTOTR( CITKS, FIT, IFTKS, IS4JET, ISPHYS )
+      IF( .not.ISPHYS ) IERR = -1
+
+      CHISQ = SNGL( CCHISQ )
+      DO i = 1, MAXPRM/2
+            DO j = 1, MAXPRM/2
+                  COV(i,j) = SNGL( EMAT(i,j) ) ! RETURN single precison
+            ENDDO                              ! error matrix
+      ENDDO
+      CALL TKERMT( IS4JET, ITKS, IFTKS, FIT, COV )
+      CALL QVADD2( IFTKS(5), IFTKS(1), IFTKS(2) )
+      CALL QVADD2( IFTKS(6), IFTKS(3), IFTKS(4) )
+*     ------------------------------------------------------------------
+d178 1
+a178 1
+      ISRPZ = 0.0
+d192 1
+a192 1
+      PARAM(13) = QPH( JET4 )
+d194 10
+a203 4
+      PARAM(14) = SQRT( QE(JET1) )             ! 100%/root(E)  for jets
+      PARAM(15) = SQRT( QE(JET2) )             ! 100%/root(E)  for jets
+      PARAM(16) = SQRT( QE(JET3) )             ! 100%/root(E)  for jets
+      PARAM(17) = SQRT( QE(JET4) )             ! 100%/root(E)  for jets
+d206 1
+a206 1
+      PARAM(19) = 10.0 / ( QQRADP*SQRT(QP(JET1)) ) ! jet axis ERRORs,
+d214 2
+a215 2
+*   Set initial step size for those "internal PARAM's which may be fitted
+      DO i = 1, MAXPRM/2
+d218 1
+a218 1
+*     ------------------------------------------------------------------
+d221 1
+a221 1
+
+d232 1
+a232 1
+      LOGICAL ISELEC, ISMUON
+d256 1
+a256 1
+      PARAM(13) = 0.0  ! dummy
+d258 6
+a263 2
+      PARAM(14) = SQRT( QE(JET1) )  ! 100%/root(E)  for jets
+      PARAM(15) = SQRT( QE(JET2) )  ! 100%/root(E)  for jets
+d272 1
+a272 1
+      PARAM(19) = 10.0 / ( QQRADP*SQRT(QP(JET2)) ) ! jet axis ERRORs,
+d287 2
+a288 2
+      PARAM(26)= 1.0  ! dummy
+*   Set initial step size for those "internal PARAM's which may be fitted
+d290 1
+a290 1
+      DO i = 1, MAXPRM/2
+d293 1
+a293 1
+*     ------------------------------------------------------------------
+d296 1
+a296 1
+
+d308 1
+a308 1
+      EXTERNAL CHISQR, KIN
+d315 1
+a315 1
+      ENDDO
+d319 1
+a319 1
+      ENDIF
+d332 1
+a332 1
+      PARAMETER( MAXPRM=26, MAXFIT=MAXPRM/2 )
+d346 1
+a346 1
+      DOUBLE PRECISION  D4M
+d351 3
+a353 2
+      DOUBLE PRECISION MASTOL,TERM,P1(4),P2(4),P3(4),P4(4),W1(4),W2(4)
+      DOUBLE PRECISION ISRPHT(4), RSTMAS
+d360 1
+a360 1
+      IF( ARG .eq. 1.0 ) THEN  ! init, store MEASUR PARAM's and SIGMAs
+d368 1
+a368 1
+      ELSE
+d373 1
+a373 1
+
+d382 1
+a382 1
+         CHISQU = CHISQU + TERM**2
+d395 1
+a395 1
+            TERM = ( WMASS1 - WMASS2) / DM       ! equal within
+d400 1
+a400 1
+         ENDDO
+d419 1
+a419 1
+      INTEGER JET(*)
+d444 1
+a444 1
+      ENDDO
+d449 1
+a449 1
+*     ------------------------------------------------------------------
+d457 1
+a457 1
+      SUBROUTINE TWOJTL( JET, PARAM, JET1, JET2, LEPTON, NUTRNO,
+d463 1
+a463 1
+      INTEGER JET(*)
+d489 1
+a489 1
+      ENDDO
+d494 1
+a494 1
+*     ------------------------------------------------------------------
+d508 1
+a508 1
+*     ------------------------------------------------------------------
+d516 1
+a516 1
+*     ------------------------------------------------------------------
+d522 1
+a522 1
+*     ------------------------------------------------------------------
+d532 1
+a532 1
+      PARAMETER( NULL = 0 )
+d535 2
+a536 1
+      DOUBLE PRECISION P1(4),P2(4),P3(4),P4(4),P5(4),P6(4),P7(4),RSTMAS
+d550 1
+a550 1
+      ENDDO
+d555 1
+a555 1
+      ENDIF
+d560 1
+a560 1
+      IF( ISPHYS ) THEN
+d563 1
+a563 1
+            ENDDO
+d567 1
+a567 1
+            ENDDO
+d571 1
+a571 1
+            ENDDO
+d575 2
+a576 2
+            ENDDO
+            CALL QVSET4( IFTKS(4), VECTOR )
+d579 1
+a579 1
+            ENDDO
+d583 1
+a583 1
+            ENDDO
+d587 1
+a587 1
+            ENDDO
+d590 1
+a590 1
+*     ------------------------------------------------------------------
+d599 1
+a599 1
+      LOGICAL IS4JET
+d616 1
+a616 1
+      ENDDO
+d631 1
+a631 1
+      ENDDO
+d636 1
+a636 1
+      ENDDO
+d640 1
+a640 1
+        ENDDO
+d645 1
+a645 1
+          M(I,I+12)    =   DEDE( P(I), BETA(I), P(I+5), P(I+9) )
+d650 1
+a650 1
+          M(I+5,I+12)  =  DEDTH( P(I), BETA(I), P(I+5), P(I+9) )
+d655 2
+a656 2
+        ENDDO
+      ELSE
+d661 1
+a661 1
+        BETA(4) = 1.0  !  neutrino is assumed massless
+d666 1
+a666 1
+          M(I,I+12)   =   DEDE( P(I), BETA(I), P(I+4), P(I+7) )
+d671 1
+a671 1
+          M(I+4,I+12) =  DEDTH( P(I), BETA(I), P(I+4), P(I+7) )
+d679 1
+a679 1
+          M(I,16)     = M(I,I+12)
+d683 1
+a683 1
+          M(I+4,16)   = M(I+4,I+12)
+d689 1
+a689 1
+      ENDIF
+d698 1
+a698 1
+      ENDDO
+d700 1
+a700 1
+        DO J = 0, 3
+d711 1
+a711 1
+*     ------------------------------------------------------------------
+d725 1
+a725 1
+*     ------------------------------------------------------------------
+d737 1
+a737 1
+*     ------------------------------------------------------------------
+d749 1
+a749 1
+*     ------------------------------------------------------------------
+d761 1
+a761 1
+*     ------------------------------------------------------------------
+d773 1
+a773 1
+*     ------------------------------------------------------------------
+d785 1
+a785 1
+*     ------------------------------------------------------------------
+d797 1
+a797 1
+*     ------------------------------------------------------------------
+d809 1
+a809 1
+*     ------------------------------------------------------------------
+d821 1
+a821 1
+*     ------------------------------------------------------------------
+d833 1
+a833 1
+*     ------------------------------------------------------------------
+d845 1
+a845 1
+*     ------------------------------------------------------------------
+d857 1
+a857 1
+*     ------------------------------------------------------------------
+@
+
+
+1.1.1.1
+log
+@2nd try to import uphy
+@
+text
+@@

@@ -1,0 +1,130 @@
+head	1.1;
+access;
+symbols
+	alpha126_22:1.1
+	alpha122_22:1.1
+	alpha126_21:1.1
+	alpha126_20:1.1
+	alpha126_19:1.1
+	alpha126_18:1.1
+	alpha126_17:1.1
+	alpha126_16:1.1
+	alpha126_15:1.1
+	alpha126_14:1.1
+	alpha126_13:1.1
+	alpha126_12:1.1
+	alpha126_11:1.1
+	alpha126_10:1.1
+	alpha126_09:1.1
+	alpha126_08:1.1
+	alpha126_07:1.1
+	alpha126_06:1.1
+	alpha126_05:1.1
+	alpha126_04:1.1
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	99.03.22.14.07.08;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@      FUNCTION MINHIT(IH,IDET)
+C
+CKEY MDST /USER
+C-----------------------------------------------------------------------
+C! Find number of hits in MVD, ITC or TPC from DTRA bank.
+C
+C     Author: Stephen Haywood      22-Jan-90
+C
+C     Input  : IH     = hit pattern from DTRA bank
+C              IDET   = 1, 2 or 3 for MVD, ITC or TPC
+C     Output : MINHIT = number of hits observed in specified detector
+C
+C     The routine counts the number of bits in the part of the hit
+C     pattern word (word-part) corresponding to the specified detector.
+C     For reasons of speed, it uses the word-part (or 8-bit sub-parts)
+C     as indices to an array K which contains the bit sums
+C     corresponding to the addressing byte.
+C     This is a factor 4 faster than doing the bit sums dirrectly, and
+C     a factor 6 faster than using a logical bit test.
+C     This method was suggested to me by David Asbury of DD.
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+      COMMON / MINLOC / K(0:255)
+      LOGICAL FIRST
+      SAVE FIRST
+      DATA FIRST / .TRUE. /
+C-----------------------------------------------------------------------
+C
+      IF(FIRST) THEN
+        DO 100 I=0,255
+ 100    K(I) = JBIT(I,1) + JBIT(I,2) + JBIT(I,3) + JBIT(I,4) +
+     &         JBIT(I,5) + JBIT(I,6) + JBIT(I,7) + JBIT(I,8)
+        FIRST = .FALSE.
+      ENDIF
+C
+      GOTO (1,2,3), IDET
+   1  MINHIT = K(JBYT(IH, 1,2))
+      RETURN
+   2  MINHIT = K(JBYT(IH, 3,8))
+      RETURN
+   3  MINHIT = K(JBYT(IH,11,8)) + K(JBYT(IH,19,8)) + K(JBYT(IH,27,5))
+      RETURN
+C
+      END
+#endif
+@

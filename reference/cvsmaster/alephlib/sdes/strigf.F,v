@@ -1,0 +1,168 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.2
+	aleph304_5:1.2
+	aleph304_4:1.2
+	aleph304_3:1.2
+	aleph304_2:1.2
+	aleph304_1:1.2
+	aleph304:1.2
+	aleph303_3:1.2
+	aleph303_2:1.2
+	aleph303_1_mc1:1.2
+	aleph303_1:1.2
+	aleph303:1.2
+	aleph302_9:1.2
+	aleph302_8:1.2
+	aleph302_7:1.2
+	aleph302_6:1.2
+	aleph302_5:1.2
+	aleph302_4:1.2
+	aleph302_3:1.2
+	aleph302_2:1.2
+	aleph302_1:1.2
+	aleph302:1.2
+	aleph216:1.2
+	aleph215_3:1.2
+	aleph215_2:1.2
+	aleph215:1.2
+	aleph214:1.2
+	aleph213:1.2;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.05.21.07.35.50;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.05.20.16.11.33;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@Alephlib 213: Add CKEY line to stmask.F, strigf.F
+@
+text
+@      SUBROUTINE STRIGF(IRUN,TLCAL,TRAND,TPHYS,TSCAL,FAIL)
+C.-------------------------------------------------------------
+CKEY SCALDES TRIGGER TYPE
+C!  - Return trigger type for current event
+C!
+C!    Author B.Bloch-Devaux may 92
+C!                      Use ALTRIG to access Trigger bits
+C!    Input:  IRUN
+C!    Output: TLCAL    - Trigger is any LCAL trigger
+C!            TRAND    - Trigger is random   trigger
+C!            TPHYS    - Trigger is any physics trigger
+C!            TSCAL(4) - Trigger is any SICAL  trigger
+C!            FAIL     - no trigger info
+C?
+C!======================================================================
+#ifndef DOC
+      SAVE
+#include "bcs.h"
+      LOGICAL TLCAL,TRAND,TPHYS,TSCAL(4),FAIL
+      DIMENSION MASK(3)
+      INTEGER ALTRIG
+      EXTERNAL ALTRIG, NAMIND
+      DATA LRUN/-99999/
+C-----------------------------------------------------------------
+      FAIL = .TRUE.
+      NTRBIT=0
+C
+C     set up trigger masks if new run
+C
+      IF(LRUN.NE.IRUN)THEN
+          CALL STMASK(IRUN,MASKL,MASKR,MASKP,MASKS,MASK)
+          LRUN=IRUN
+      ENDIF
+C
+C?      Get Trigger Bit Pattern
+C
+      IF( ALTRIG(IT1,IT2,IL2).GT.0 )THEN
+        FAIL=.FALSE.
+        NTRBIT=IL2
+      ELSE
+        JKEVEH = IW(NAMIND('EVEH'))
+        IF ( JKEVEH.GT.0) THEN
+           FAIL=.FALSE.
+           NTRBIT = IW(JKEVEH+7)
+        ENDIF
+      ENDIF
+C
+      TLCAL=IAND(NTRBIT,MASKL).NE.0
+      TRAND=IAND(NTRBIT,MASKR).NE.0
+      TPHYS=IAND(NTRBIT,MASKP).NE.0
+      TSCAL(1)=IAND(NTRBIT,MASKS).NE.0
+      TSCAL(2)=IAND(NTRBIT,MASK(1)).NE.0
+      TSCAL(3)=IAND(NTRBIT,MASK(2)).NE.0
+      TSCAL(4)=IAND(NTRBIT,MASK(3)).NE.0
+C     IF (TSCAL(1)) PRINT * , NTRBIT,TSCAL
+C
+  999 RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@     new routine STRIGF ( B.Bloch ) to identify trigger type
+     new routine STMASK ( B.Bloch ) to build trigger masks
+@
+text
+@d2 2
+a3 1
+C-------------------------------------------------------------
+@

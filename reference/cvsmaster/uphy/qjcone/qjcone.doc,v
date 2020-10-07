@@ -1,0 +1,71 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  qjcone_1:1.1.1.1 newtonw:1.1.1;
+locks    ; strict;
+comment  @# @;
+
+
+1.1
+date     96.07.16.08.21.23;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.07.16.08.21.24;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@QJCONE IS A JET FINDING PACKAGE BASED ON A CONE ALGORITHM. 
+
+WRITTEN BY WARRICK NEWTON OF SHEFFIELD UNIVERSITY.
+
+FOR FURTHER INFORMATION VIEW QJCONE.PS (ALSO AVAILABLE AS AN INTERNAL ALEPH NOTE
+SUBMITTED IN JULY 1996:  ALEPH 96-094 anD PHYSIC 96-086).
+
+RUNNING THE ALGORITHM REQUIRES A LINE OF THE FOLLOWING FORMAT:
+
+
+        CALL QJCONE (NJETS,'name',ICLASS, R, ECUT, ITYPE, IMIN) 
+
+
+WHERE THE ARGUMENTS ARE:
+
+INPUT
+
+ICLASS standard definition found in ALPHA user's guide
+R      cone size or half-angle in radians.  RECOMMEND R=0.7 
+ECUT   minimum energy of a jet in GeV.  RECOMMEND ECUT=7.0
+TYPE   Type of cone to be used. ITYPE = 1, 2, 3 RECOMMEND TYPE=3
+IMIN   minimum number of tracks in a jet. RECOMMEND IMIN=2
+
+RETURNED
+
+NJETS  number of jets found.
+       GREATER THAN OR EQUAL TO ZERO = number of jets found.
+       LESS THAN ZERO 0 = too many jets found.  One-track jets removed.
+                        Value is negative of number of jets found. 
+       -100 = still too many jets found. Ten most energetic jets returned.
+'name' vector containing the jet 4-momenta.
+
+
+@
+
+
+1.1.1.1
+log
+@1st version of QJCONE
+@
+text
+@@

@@ -1,0 +1,340 @@
+head	1.2;
+access;
+symbols
+	alio83:1.2
+	alio82:1.2
+	alio81:1.2
+	alio80:1.2
+	alio74:1.2
+	alio73:1.2
+	alio72:1.2
+	alio71:1.2
+	alio70:1.2
+	alio68:1.2
+	alio69:1.2
+	alio67:1.2
+	alio66:1.2
+	alio65:1.2
+	alio64:1.2
+	alio63:1.2
+	alio62:1.2
+	alio61:1.2
+	alio60:1.2
+	alephio53:1.2
+	v4:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.01.18.13.52.31;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.52.42;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.52.43;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@ Modified Files:
+	acdarg.F afilin.F afilou.F ainqui.F amount.F aoptap.F astage.F
+	awrtap.F
+ Modified Files:
+	cmphost.h ctolow.h gtchdecl.h version.h
+ Removed Files:
+	albitw.h
+ Modified Files:
+ 	altell.F babend.F jalrec.F noibm.F opensq.F sdrsx.F sibsdr.F
+	sxsdr.F
+ Modified Files:
+	ardnews.h news.h
+ Modified Files:
+	cfrvax.F cmpban.F cmpdro.F cmpin2.F cmpini.F cmplis.F cmpsum.F
+	cmptoi.F cotest.F detest.F dmpban.F dmpchr.F dmpfmt.F udmper.F
+@
+text
+@      SUBROUTINE CMPINI(LIST,IER)
+C-----------------------------------------------------------------------
+C!    Initialisation, read data cards, get bank format from the database
+CKEY PRESS CMPINI COMPRESS /USER
+C!
+C!    AUTHOR: D.Harvatis    MAR 89
+C!
+C!    INPUT :
+C!           - LIST  : list of banks.
+C!                     Information is read from the database only for
+C!                     the banks contained in list LIST.
+C!                     If the list is empty, information is read for
+C!                     every bank in the TAB2 bank of the database.
+C!
+C!    OUTPUT:
+C!           - IER   : 0 Successful completion.
+C!                    -1 COL2 or TAB2 bank not loaded from DAF file.
+C!                       Compression will be possible only for banks
+C!                       whose format is given through a CFMT data card.
+C!                    >0 Information was read for only IER banks.
+C!                       This could be either because the MAXBNK limit
+C!                       was reached, or because the creation of a work
+C!                       bank failed.
+C!
+C!    Data Cards :
+C!      COMP :    COMP 'NONE'  ! no compression if this card is found
+C!                               if bank names follow 'NONE' only these
+C!                               have not to be compressed.
+C!                COMP 'INTE'  ! integer only compression (default)
+C!                COMP 'FLOA'  ! integer and floating point compression
+C!                COMP 'CHEC'  ! checksum option ON
+C!                COMP 'NOCH'  ! checksum option OFF (default)
+C!                COMP 'NOFM'  ! use default (I) format bank
+C!                COMP new_MINGAI ! -1 < new_MINGAI < 2001
+C!                Only one COMP card is read, so, all desired options
+C!                should be in one COMP card.
+C!                The NONE option, not followed by any bank name, is not
+C!                compatible with any other option. Also, no checksum
+C!                is done if floating compression is ON.
+C!
+C!      CFMT :    CFMT bank_name number_of_columns format_string
+C!                for example, the following card
+C!                     CFMT 'NAME' 6 '2I,A,F2,2F'
+C!                means that bank NAME has 6 columns, the first 2 are
+C!                integers, the 3rd is a character*4, the 4th is a real
+C!                with precision of 2 decimal places, and the last 2
+C!                are reals with no precision specified (reals are not
+C!                compressed if no precision is specified)
+C!
+C!    Calls : CMPTOI, AOPEN
+C!            NAMIND, NDANR, MDARD, NLIST, CHAINT, INTCHA, WBANK, NDROP
+C-----------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+      CHARACTER*(*)   LIST
+      LOGICAL         RALL,INLIST,LOADC,LOADT,CMPTOI,SWITCH,DUMMY,FLCPRO
+#include "bcs.h"
+      CHARACTER*4     BNAME,BNAM2,NLIST,TYP,CHAINT,SNAME,SNAM2
+      CHARACTER*8     FMT
+      CHARACTER*80    FMTS,FDONAM
+      CHARACTER*1     F1
+#include "cmpinf.h"
+C----------------------------------------------------------------------
+#include "bmacro.h"
+      LEFM=LEN(FMTS)
+      LBNKS=' '
+      NBNKS=' '
+      IER=0
+      RALL=.FALSE.
+      INFSIZ(1)=1
+      INFSIZ(2)=1
+      INFSIZ(3)=4
+      INFSIZ(4)=3
+      RATMAX=0.7
+      IB=1
+      JNONE = 0
+      CALL WBANK (IW,JNONE,10,*11)
+      IW(JNONE+LMHCOL) = 1
+      IW(JNONE-3) = INTCHA('NONE')
+      IW(JNONE+LMHLEN+1) = INTCHA('PIDI')
+      IW(JNONE+LMHLEN+2) = INTCHA('XTRB')
+      IW(JNONE+LMHROW) = 2
+#include "ctolow.h"
+C     default values
+      CHECKS=.FALSE.
+      FLCPRO=.FALSE.
+      MINGAI=0
+      NOFLO=.TRUE.
+      LOADC=.FALSE.
+      LOADT=.FALSE.
+      FMTFL=.TRUE.
+C     read card COMP
+      INDC=IW(NAMIND('COMP'))
+      IF (INDC.NE.0) THEN
+          DO 14 I=1,IW(INDC)
+              IF (IW(INDC+I).EQ.INTCHA('CHEC')) THEN
+                  CHECKS=.TRUE.
+              ELSE IF (IW(INDC+I).EQ.INTCHA('CPRO')) THEN
+                  FLCPRO=.TRUE.
+              ELSE IF (IW(INDC+I).EQ.INTCHA('NOCH')) THEN
+                  CHECKS=.FALSE.
+              ELSE IF (IW(INDC+I).EQ.INTCHA('FLOA')) THEN
+                  NOFLO=.FALSE.
+              ELSE IF (IW(INDC+I).EQ.INTCHA('NOFM')) THEN
+                  FMTFL=.FALSE.
+              ELSE IF ((IW(INDC+I).LE.2000).AND.(IW(INDC+I).GE.0)) THEN
+                  MINGAI=IW(INDC+I)
+              ELSE IF (IW(INDC+I).EQ.INTCHA('NONE')) THEN
+C                 no compression
+                  IF (IW(INDC).EQ.1) THEN
+                     NUMBNK=0
+                     RETURN
+                  ELSE
+                     IF (LFRROW(JNONE).LT.IW(INDC)-1) THEN
+                        ND = LMHLEN+LCOLS(JNONE)*
+     &                        (LROWS(JNONE)+IW(INDC)-1)
+                        CALL WBANK (IW,JNONE,ND,*11)
+                     ENDIF
+                     DO 1 J=2,IW(INDC)
+                        KNONE=KNEXT(JNONE)
+                        IW(KNONE+1) = IW(INDC+J)
+                        IW(JNONE+LMHROW) = LROWS(JNONE)+1
+  1                  CONTINUE
+                  ENDIF
+              END IF
+   14     CONTINUE
+          IF (CHECKS.AND.(.NOT.NOFLO)) CHECKS=.FALSE.
+      END IF
+C     read CFMT cards
+      INDF=IW(NAMIND('CFMT'))
+   17 IF (INDF.NE.0) THEN
+          BNAME=CHAINT(IW(INDF+1))
+C         NBNKS contains the names of the banks whose format is read
+C         from a CFMT card.
+          NBNKS(IB*4-3:IB*4)=BNAME
+          NCOL=IW(INDF+2)
+C         format compressed bank as B32
+          BNAM2=CHAINT(INTCHA(BNAME)+TOLOWER)
+          IF (FMTFL) CALL BKFMT(BNAM2,'B32')
+          IRANKB(IB)=IB
+C         create work bank
+          INDEXW(IB)=0
+          CALL WBANK(IW,INDEXW(IB),2*NCOL,*11)
+          IW(INDEXW(IB)-3)=INTCHA(BNAME)
+          I=1
+          FMTS=' '
+  170     IF (I+1.LT.IW(INDF)) THEN
+              IF (4*I.GT.LEFM) GO TO 25
+              FMTS(I*4-3:I*4)=CHAINT(IW(INDF+2+I))
+              I=I+1
+              GO TO 170
+          END IF
+          IC=1
+          JC=1
+  171         DUMMY=CMPTOI(FMTS(JC:LEFM),J)
+              IF (J.LE.0) THEN
+                  J=0
+              ELSE
+                  J=J-1
+              END IF
+  172         IF (LLE(FMTS(JC:JC),'9').AND.LGE(FMTS(JC:JC),'0')) THEN
+                  JC=JC+1
+                  GO TO 172
+              END IF
+              F1=FMTS(JC:JC)
+              JC=JC+1
+              NIC=IC+J
+              IF (NIC.GT.NCOL) NIC=NCOL
+  173         IF (IC.LE.NIC) THEN
+                  IF ((F1.EQ.'A').OR.(F1.EQ.'a')) THEN
+                      IW(INDEXW(IB)+2*IC-1)=1
+                      RW(INDEXW(IB)+2*IC)=0.0
+                  ELSE IF ((F1.EQ.'I').OR.(F1.EQ.'i')) THEN
+                      IW(INDEXW(IB)+2*IC-1)=4
+                      RW(INDEXW(IB)+2*IC)=0.0
+                  ELSE IF ((F1.EQ.'F').OR.(F1.EQ.'f')) THEN
+                      DUMMY=CMPTOI(FMTS(JC:LEFM),IDIG)
+                      IF ((IDIG.LE.0).OR.(IDIG.GT.10)) THEN
+                          IW(INDEXW(IB)+2*IC-1)=2
+                          RW(INDEXW(IB)+2*IC)=0.0
+                      ELSE
+                          IW(INDEXW(IB)+2*IC-1)=3
+                          RW(INDEXW(IB)+2*IC)=10.0**IDIG
+                      END IF
+                  ELSE
+                      GO TO 25
+                  END IF
+                  IC=IC+1
+                  GO TO 173
+              END IF
+              IF (IC.GT.NCOL) GO TO 26
+  174         IF (FMTS(JC:JC).NE.',') THEN
+                  JC=JC+1
+                  GO TO 174
+              END IF
+              JC=JC+1
+              GO TO 171
+C         error in this CFMT data card : discard it
+   25     CALL WDROP(IW,INDEXW(IB))
+          IB=IB-1
+C         reading this CFMT card finished. Go for the next one
+   26     IB=IB+1
+          IF (IB.GT.MAXBNK) GO TO 13
+          INDF=IW(INDF-1)
+          GO TO 17
+      END IF
+      I=1
+      BNAME=NLIST(IW,I,LIST)
+      IF (BNAME.NE.' ') THEN
+C     read only banks contained in list LIST
+          LBNKS(I*4-3:I*4)=BNAME
+   15         I=I+1
+              IF (I.GT.MAXBNK) GO TO 16
+              LBNKS(I*4-3:I*4)=NLIST(IW,I,LIST)
+          IF (LBNKS(I*4-3:I*4).NE.' ') GO TO 15
+      END IF
+   16 CONTINUE
+C ============================================================
+C     read the CPRO bank from the data base to get more formats
+      NUMBNK = IB
+      LDBUN = JUNIDB(0)
+      CALL CMPIN2 (LDBUN,LIST,IER)
+      IF (IER.EQ.-1) NUMBNK = 0
+ 1000 IF (NUMBNK.LE.1) RETURN
+C ===========================================================
+C     sort IRANKB array - Bubble Sort
+   20 IB=1
+      SWITCH=.FALSE.
+  200 IL1=IRANKB(IB)
+      IL2=IRANKB(IB+1)
+      SNAME=CHAINT(IW(INDEXW(IL1)-3))
+      SNAM2=CHAINT(IW(INDEXW(IL2)-3))
+      IF (LGT(SNAME,SNAM2)) THEN
+          SWITCH=.TRUE.
+          IRANKB(IB)=IL2
+          IRANKB(IB+1)=IL1
+      END IF
+      IB=IB+1
+      IF (IB.LT.NUMBNK) GO TO 200
+      IF (SWITCH) GO TO 20
+      RETURN
+C     creation of work bank failed, don't read any more banks,
+C     set error code
+   11 NUMBNK=IB-1
+      IER=NUMBNK
+      GO TO 1000
+C     MAXBNK number exeeded
+   13 NUMBNK=MAXBNK
+      IER=NUMBNK
+      GO TO 1000
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK cmpini
+@
+
+
+1.1.1.1
+log
+@import alephio 4
+@
+text
+@@

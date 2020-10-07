@@ -1,0 +1,331 @@
+#! /bin/csh
+#
+#============================================================================
+#                             newlib
+#                                                       F.Ranjard
+#============================================================================
+# procedure to compile a new ALEPH source library on various UNIX machines
+#
+#============================================================================
+#
+# the /aleph/ directory of an ALEPH library is found in ${alib_dir}/pub/progl
+# the last version number installed is taken from ${prog_dir}/alib.log
+# if it exists.
+# at the end ${prog_dir}/alib.log is updated with the new version number.
+#
+# All parameters for f77 on file without debug -> ${prog_dir}/f77_options
+# All parameters for f77 on file with debug -> ${prog_dir}/f77_dbx_options
+# Call "f77_compile -> to run f77 foreach routine
+#
+# source files are assumed to be stored on ${ref_dir/src${prog_name}${cycle}
+# compilation is done on ${ref_dir/src${prog_name}${cycle}/{OS} 
+# special fortran files are stored on ${ref_dir}
+# object files and library files are stored on ${lib_dir}
+# usually ${prog_dir} and {lib_dir} are identical
+#
+#============================================================================
+# P1 -> prog_name eg: alephlib
+# P2 -> cycle     eg: 154
+# P3 -> "pwd"     to store libraries and obj.files in the current directory
+#                 (default= store in official directory)
+#============================================================================
+# newlib1.1
+# 940922 - use $ALEPH instead of /aleph
+# newlib1.2
+# 950214 - remove guser, jmuid, lkmain references
+#          get main program from lib.a
+#          store them as gmain{cycle}.o, jmain{cycle}.o, lmain{cycle}.o
+#          qmain.o stays as it is
+#          build a module if make file exists
+# newlib1.1
+# 951128 - use $ALEPH_ROOT instead of /al
+#============================================================================
+# flag = OK .. always GOOD
+#===========================================================================
+#include "~/flr/bin/verbflr.h"
+#
+set verbflr = ""
+set exec_name = "newlib1.3"
+set nar = $#argv
+if (${nar} != 0) then
+  if ($argv[${nar}] == "-v") then
+     echo "${exec_name}"
+     set verbflr = "-v" 
+     set echo on
+     set argv[${nar}] = ""
+  endif
+endif
+#
+#*******>
+set UNAME = `uname`
+#*******<
+unset noclobber
+set alib_dir = "${ALEPH}/alib"
+set cycle_new = ""
+set cycle_old = ""
+set mnemonic = ""
+set file_type = ""
+set prog_aleph = "OK"
+set file_name_c = "alc"
+set file_type_c = "c"
+set flag = "OK"
+ 
+#===> first parameter
+if ($1 == "") then
+  echo -n "Enter Aleph program name [eg:alephlib <CR>=exit]-> "
+   set prog_name = $<
+   if (${prog_name} == "") goto exec_end
+else
+   set prog_name = $1
+endif
+#
+# =============================================================================
+#                  set idir, prog_dir and lib_dir and cycle number
+#
+set idir = `egrep ^" ${prog_name} " ${alib_dir}/pub/progl | awk '{print $2}'`
+set mnemonic = `egrep ^" ${prog_name} " ${alib_dir}/pub/progl | awk '{print $4}'`
+#
+set prog_dir = "${ALEPH_ROOT}/${OS}/${idir}"
+#
+set lib_dir = `pwd`
+if (${idir} == "") then
+   set prog_aleph = "NO"
+   set mnemonic = "${prog_name}"
+else
+   if ($3 != "pwd") then
+      set lib_dir = "${prog_dir}"
+   endif
+   if (-e ${prog_dir}/alib.log) then
+      set cycle_old = `egrep ^" ${prog_name} " ${prog_dir}/alib.log | awk '{print $3}'`
+      set dmy_old = `egrep ^" ${prog_name} " ${prog_dir}/alib.log | awk '{print $4}'`
+      set tim_old = `egrep ^" ${prog_name} " ${prog_dir}/alib.log | awk '{print $5}'`
+   endif
+   if (${cycle_old} != "") then
+      @ cycle_new =  ${cycle_old} + 1
+      if (${mnemonic} == "bos") then
+         @ cycle_new = (((${cycle_old} / 100) + 1) * 100) + 89
+      endif
+   endif
+endif
+# ===============================================================================
+#
+#===> second parameter
+if ($2 == "") then
+   if (${cycle_new} == "") then
+      set string_cr = "<CR>=exit"
+   else
+      set string_cr = "<CR>=${cycle_new}"
+   endif
+   echo -n "Enter version number[${string_cr}]-> "
+   set cycle = $<
+   if (${cycle} == "") then
+      if (${cycle_new} == "") then
+         goto exec_end
+      else
+         set cycle = ${cycle_new}
+      endif
+   endif
+else
+   set cycle = $2
+endif
+# 
+# =====================================================================
+# 
+set file_name = ${mnemonic}${cycle}
+#
+set file_type = `egrep ^" ${prog_name} " ${prog_dir}/f77_options | awk '{print $2}'`
+if (${file_type} == "") then
+   flag = "no file_type: look at f77_options" 
+   goto spy
+endif
+#
+# 
+# =====================================================================
+#                set src_dir and obj_dir
+# source reside on the MASTER machine
+# if it is a machine dependant program ( alephio or bos77 ) then
+#    if it is on SERVICE=CSF or SAGA or AFAL  then
+#        source files reside on ${prog_dir}
+#    endif    
+# endif
+
+set ref_dir = "${ALEPH_ROOT}/${MASTER}/${idir}"
+if ( ${prog_name} == "alephio" || ${prog_name} == "bos77") then
+      set ref_dir = "${prog_dir}"
+endif
+set src_dir = ${ref_dir}/src${file_name}
+#
+set obj_dir = "${src_dir}/${OS}"
+#
+echo `date` "=== START ${exec_name} ${OS} ${prog_name} ${cycle} =======" >> ${prog_dir}/spy
+echo "${exec_name} ${user} lib=${lib_dir} src=${src_dir} obj=${obj_dir}" >> ${prog_dir}/spy
+ 
+# ======================= check existence of src_dir  ==============
+# if src_dir does not exist then STOP
+ 
+if ! (-d ${src_dir}) then
+   set flag =  "FATAL directory -> ${src_dir} does not exist "
+   goto spy
+endif
+ 
+# ===================================================================
+
+cd ${prog_dir}
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> begin_compile
+begin_compile:
+ 
+set file_para = "${prog_dir}/f77_options"
+set all_para = `egrep ^" ${prog_name} " ${file_para} | awk '{print substr($0,15)}'`
+ 
+if (-d ${obj_dir}) then
+   cd ${obj_dir}
+   rm *
+   cd ${src_dir}
+else
+   mkdir ${obj_dir}
+endif
+ 
+if (${prog_name} == "alephlib") then
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> alephlib
+ 
+#  ************> library C
+   if !(-e ${src_dir}/${file_name_c}.${file_type_c}) then
+      set flag = "ERROR:no ${file_name_c}.${file_type_c}"
+      goto spy
+   endif
+#
+   cd ${obj_dir}
+   echo `date`" -> cc -c -w ${src_dir}/*.c onto ${obj_dir}" >> ${prog_dir}/spy
+   cc -c -w ${src_dir}/*.c | & tee fc.log
+#
+   grep -n 'Error' fc.log > fc_Error.log
+   if !(-z fc_Error.log) then
+      set flag = "ERROR in C compilation: look at ${obj_dir}/*.log"
+      goto spy
+   endif
+#  ************< library C
+endif
+ 
+# ====================== compile and make a library========================
+compile:
+
+#******> remove existing library if any 
+if (-e ${lib_dir}/lib${file_name}.a) rm ${lib_dir}/lib${file_name}.a
+if (-e ${lib_dir}/lib${file_name}_dbx.a) rm ${lib_dir}/lib${file_name}_dbx.a
+
+#*******> f77_compile with optimization
+echo `date`" -> Call f77_compile with optimization" >> ${prog_dir}/spy
+#
+cd ${src_dir}
+f77_compile ${prog_name} ${verbflr}
+#
+if !(-z ${obj_dir}/${prog_name}.Error) then
+   set flag = "FATAL:compilation errors"
+   goto spy
+endif
+ 
+#*******> ar with optimization
+cd ${obj_dir}
+echo `date`" -> ar rsl ${lib_dir}/lib${file_name}.a *.o" >> ${prog_dir}/spy
+ar rsl ${lib_dir}/lib${file_name}.a *.o | & tee ar.log
+grep -n 'Error' ar.log > ar.Error
+ if !(-z ar.Error) then
+    set flag =  "FATAL ***> archive problems"
+    goto spy
+ endif
+#*************> remove all object files 
+rm *.o 
+ 
+#*******> f77_compile with debug
+echo `date`" -> Call f77_compile with dbx" >> ${prog_dir}/spy
+#
+cd ${src_dir}
+f77_compile ${prog_name} dbx ${verbflr}
+#
+set dbxlog = "${prog_name}_dbx"
+if !(-z ${obj_dir}/${dbxlog}.Error) then
+   set flag = "FATAL:compilation_dbx errors"
+   goto spy
+endif
+#*******> ar with debug
+#                        ar = archive
+#  parameters used :      r = replace
+#                         s = sort
+#                         l = place temporary files in the local directory
+cd ${obj_dir}
+echo `date`" -> ar rsl ${lib_dir}/lib${file_name}_dbx.a *.o" >> ${prog_dir}/spy
+ar rsl ${lib_dir}/lib${file_name}_dbx.a *.o | & tee ar_dbx.log
+grep -n 'Error' ar_dbx.log > ar_dbx.Error
+ if !(-z ar_dbx.Error) then
+    set flag = "FATAL ***> archive_dbx problems"
+    goto spy
+ endif
+#*************> remove all object files 
+rm *.o
+# 
+if (${prog_aleph} == "NO") goto spy
+# 
+# ========================= get main program ====================# 
+
+if (${prog_name} == "galeph") then
+   set main = "galeph"
+   set ini = "g"
+else if (${prog_name} == "julia") then
+   set main = "aamain"
+   set ini = "j"
+else if (${prog_name} == "alpha") then
+   set main = "qmain"
+   set ini = "q"
+else if (${prog_name} == "look") then
+   set main = "lkmain"
+   set ini = "l"
+else
+   set main = ""
+endif
+if (${main} != "") then
+   cd ${lib_dir}
+   ar x lib${file_name}.a ${main}.o
+   if (${main} != "qmain") mv ${main}.o ${ini}main${cycle}.o
+endif
+
+# 
+# ====================== update ${prog_dir}/alib.log =============
+cd ${prog_dir}
+set dmyh = `date '+%d-%h-19%y %T'`
+echo `date`" -> update ${prog_dir}/alib.log" >> ${prog_dir}/spy
+if !(-e alib.log) then
+   echo " ${prog_name} newver ${cycle} ${dmyh}">>alib.log
+else
+   set pname = ""
+   set pname = `egrep ^" ${prog_name} " alib.log | awk '{print $1}'`
+   if (${pname} == "") then
+      echo " ${prog_name} newver ${cycle} ${dmyh}">>alib.log
+   else
+      set sold = " ${prog_name} newver ${cycle_old} ${dmy_old} ${tim_old}"
+      set snew = " ${prog_name} newver ${cycle} ${dmyh}"
+      sed s/"${sold}"/"${snew}"/ alib.log > alib.tmp
+      mv -f alib.tmp alib.log
+   endif
+endif
+ 
+# =================== build a module if make file exists ============
+ 
+if (-e ${ref_dir}/${mnemonic}new.mk) then
+   echo `date`" -> make a new module" >> ${prog_dir}/spy
+   makenew ${prog_name} ${cycle}
+endif
+ 
+# ================================================================================
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> spy
+spy:
+#*******> spy
+echo `date` " END of ${exec_name} ${OS} ${user} ${prog_name} ${cycle} ${flag}" >> ${prog_dir}/spy
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> exec_end
+exec_end:
+ exit
+ 

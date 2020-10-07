@@ -1,0 +1,503 @@
+head	1.7;
+access;
+symbols
+	V0060:1.7
+	V0059:1.6
+	V0058:1.6
+	V0057:1.5
+	V0056:1.5
+	V0055:1.5
+	V0054:1.5
+	V0053:1.5
+	V0052:1.5
+	V0051:1.4
+	V0050:1.4
+	V0049:1.4
+	V0048:1.3
+	V0047:1.3
+	V0046:1.3
+	V0045:1.3
+	V0044:1.3
+	V0043:1.2
+	V0042:1.2
+	V0041:1.2
+	V0040:1.2
+	V0039:1.2
+	V0038:1.1
+	V0037:1.1
+	V0036:1.1
+	V0035:1.1
+	V0034:1.1
+	V0033:1.1
+	V0032:1.1
+	V0031:1.1
+	V0030:1.1
+	V0029:1.1
+	V0028:1.1
+	V0027:1.1
+	V0026:1.1
+	V0025:1.1
+	V0024:1.1
+	V0023:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.7
+date	2003.10.07.13.54.27;	author jacotf;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	2001.09.24.08.34.32;	author jacotf;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	2001.03.06.12.18.00;	author jacotf;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	2001.01.19.12.27.48;	author jacotf;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	2000.11.08.10.09.27;	author jacotf;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	2000.10.09.14.12.42;	author jacotf;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2000.03.27.10.25.12;	author jacotf;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.7
+log
+@update_WWtables.perl
+@
+text
+@#!/usr/local/bin/perl
+#
+# This Perl program will:
+#  - Read a file containing the bad runs defined by B.Bloch
+#  - Via DBI access to Oracle databases devdb and pdb01 
+#    under Brigitte Bloch accounts.
+#    Fill the table WBADRUNS in the 2 Oracle databases.
+#
+#  - Execute a PL/SQL procedure to recreate the table WRUNSEL
+#    on the Oracle databases devdb and pdb01  
+#    from the updated table WBADRUNS.
+#############################################################################
+# Will use DBI to connect to Oracle databases
+use DBI;
+
+# Set the Oracle environment
+&set_oracle_env;
+
+# Store the full name and base name of this Perl program into local variables
+$script_file = $0;
+($script_name = $0) =~ s#.*/(.*)$#$1#;
+
+#*********************************************************************************************
+# If no parameter given a default input file name is used
+$input_file = "/afs/cern.ch/user/b/bbloch/ww2k/wbadrun.list";
+#
+$net_file = $ENV{"HOME"}."/.netrc";
+# 
+#*********************************************************************************************
+
+# Store the date and time into a local variable
+$date_start = " Begin $script_file on : " .`date`;
+
+# Store the table name
+$table = "WBADRUNS";
+
+# Store the Oracle databases in an array
+@@ora_dbase = ("devdb" , "pdb01");
+
+# Verify if an argument has been given
+if ($#ARGV ge 0) { 
+    $input_file = $ARGV[0];
+}
+
+# Open the input file
+&OPEN_FILE("WLIST",$input_file,"read");
+ 
+# List the file and ask for a confirmation to continue
+print "\n";
+print " List of your file $input_file \n";
+print "\n";
+
+$nline = 0;
+
+while (<WLIST>) {
+    $line = $_;
+    print $line;
+
+##    next if(/^\s*\n/);          # Skip empty lines
+    if (/^\s*(\d+)\s+(\d+)\s+(\d+)\s+(.*?)\s*$/) {   # Lines of no interest 
+        $nline++;
+    }
+}
+if ($nline eq 0) {
+    print " No Runs appear in your file - If your table $table is not empty all rows will be deleted \n";
+}
+
+# Close the input file
+close WLIST;
+
+print "\n";
+print " Can we GO ? (answer <yes> or <no> please) "; 
+$answer = <STDIN>;
+chomp($answer);
+$answer =~ tr/A-Z/a-z/;      
+if ($answer ne 'yes' ) {
+    print " You answer $answer -   We ABEND \n";
+    &ABEND;
+} 
+
+print " \n";
+
+$nline = 0;
+$nerr = 0;
+
+# Open the input file
+&OPEN_FILE("WLIST",$input_file,"read");
+
+while (<WLIST>) {
+    next if(/^\s*\n/);          # Skip empty lines
+    $line = $_;
+    $nline++;
+
+    if (/^\s*(\d+)\s+(\d+)\s+(\d+)\s+(.*?)\s*$/) { 
+
+        $firstrun = $1;
+        $lastrun = $2;
+        $energy = $3;
+        $comment = "'" . $4 . "'"; 
+    
+        $sql_line = "INSERT into $table values ( $firstrun , $lastrun , $energy , $comment )\n";
+        push(@@save_line,$sql_line);
+    } else {
+        $nerr++;
+        print " \n*** ERROR found in $input_file on line $nline \n";
+        print $line;
+        next;
+
+    }
+}
+# Close the input file
+close WLIST;
+
+if ($nerr > 0) { &ABEND; } 
+
+# Retrieve the necessary parameters to open the Oracle databases
+foreach $database (@@ora_dbase) {
+    ($user, $passwd) = getpassw($database);
+
+# Connects to database - If cannot connect abend
+    $dbh = db_open($user,$passwd,$database);
+
+# delete rows on table WBADRUNS before inserting
+    $dbh->do('truncate table WBADRUNS');
+
+# Loop on list of sql buffer - For each line do an insert
+    foreach $savlin (@@save_line) {
+        eval {                                      # eval to obtain the return code
+            &insert($dbh,$savlin);
+        };
+        if ($@@) {                                   # something failed
+            print "\n *** Error inserting line : \n $savlin \n";
+            db_close($dbh);
+            die $@@;
+        }
+        else {
+            $dbh->commit;
+        }
+    }
+
+# Execute now the procedure which will write the table WRUNSEL from
+# the table WBADRUNS just written above
+    exec_proc($database);
+
+    db_close($dbh);
+
+# Close the .netrc file
+    close NETFIL;
+}
+
+
+print "\n";
+print " ---- $script_name ended normally ---- \n";
+print "\n";
+
+exit;
+
+
+sub getpassw{
+    my $machine = $_[0];
+    my $login;
+    my $passwd;
+
+#   Open the .netrc file
+    &OPEN_FILE("NETFIL",$net_file,"read"); 
+
+    @@stat = stat ($net_file);
+    $mode = $stat[2];
+    $perm = $mode & 07777;
+    if ($perm != 0600) {
+        print " *** File $net_file has not the correct permissions - Abend \n";
+        close NETFIL;
+        ABEND;
+    }
+
+    while (<NETFIL>) {
+        $line = $_;
+##        if (/^oracle\s+(.*?)\s+login\s+(.*?)\s+password\s+(.*?)\s*$/) {
+        if (/^oracle\s+$machine\s+login\s+(.*?)\s+password\s+(.*?)\s*$/) {
+            ($login, $passwd) = ($1, $2);
+            return ($login, $passwd); 
+        }
+    }
+    die " *** Could not find information on $machine in $net_file \n"; 
+}
+
+
+sub insert {
+    my($dbh,$sql) = @@_;
+    $sth = $dbh->prepare($sql) or die "Can't prepare statement ($sql)";
+    $sth_resul = $sth->execute() or die "Can't execute statement";
+}
+
+
+sub exec_proc{
+    my $dbase = $_[0];
+
+    if ($dbase eq 'devdb') {
+        $csr = $dbh->prepare(q{
+        BEGIN
+            scanbook.scanbook_WWprocedures.Update_WRUNSEL;
+        END;
+        });
+    } else {
+        $csr = $dbh->prepare(q{
+        BEGIN
+            prod_scanbook.scanbook_WWprocedures.Update_WRUNSEL;
+        END;
+        });
+    }
+
+    $csr->execute;
+    if(!defined $csr){
+       die "Execution failed : $DBI::errstr\n";
+    }
+}
+
+
+sub set_oracle_env {
+    $ENV{"ORACLE_HOME"} = '/afs/cern.ch/project/oracle/@@sys/prod';
+    $ENV{"TNS_ADMIN"} = '/afs/cern.ch/project/oracle/admin';
+    $ENV{"LD_LIBRARY_PATH"} = $ENV{"ORACLE_HOME"}."/lib";
+    1;
+}
+
+
+sub db_open {
+    my($user,$passwd,$database) = @@_;
+    my($tmp_dbh);
+    $tmp_dbh = DBI->connect("dbi:Oracle:".$database, $user, $passwd, 
+                        {
+                           PrintError => 1,
+                           AutoCommit => 0,
+                           RaiseError => 1
+                        } 
+                    ) or die " *** Cannot connect to $database";
+    return $tmp_dbh;
+}
+
+
+sub db_close {
+    my($dbh) = @@_;
+
+    # As Oracle automatically commits any outstanding changes
+    # at disconnect time, we ropllback any uncommited transaction
+    $dbh->rollback;  
+    $dbh->disconnect;
+}
+
+
+sub OPEN_FILE {
+# Open a file in read or write or append mode  
+# If an error occurs -> abend 
+#
+my($fhandle,$filname,$mode)= @@_;
+    if ($mode eq "read") {
+        $open_way = $filname;
+    }
+    elsif ($mode eq "write") {
+        $open_way = "> $filname";
+    }
+    elsif ($mode eq "append") {
+        $open_way = ">> $filname";
+    }
+    if (!open($fhandle,$open_way)) {
+       print "       ***** Could not open file $input_file in $mode mode - ABEND \n";
+       &ABEND;
+    }
+}
+
+
+sub ABEND {
+# Abnormal end
+    print " \n";
+    print " ---- Abend ---- \n";
+    exit;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+@
+
+
+1.6
+log
+@maillogdb -> cerndb1
+@
+text
+@d5 1
+a5 1
+#  - Via DBI access to Oracle databases devdb and cerndb1 
+d10 1
+a10 1
+#    on the Oracle databases devdb and cerndb1  
+d38 1
+a38 1
+@@ora_dbase = ("devdb" , "cerndb1");
+@
+
+
+1.5
+log
+@devdb8->devdb
+@
+text
+@d5 1
+a5 1
+#  - Via DBI access to Oracle databases devdb and maillogdb 
+d10 1
+a10 1
+#    on the Oracle databases devdb and maillogdb  
+d38 1
+a38 1
+@@ora_dbase = ("devdb" , "maillogdb");
+d147 2
+a150 2
+# Close the .netrc file
+close NETFIL;
+@
+
+
+1.4
+log
+@Suppress cerndb1
+@
+text
+@d5 1
+a5 1
+#  - Via DBI access to Oracle databases devdb8 and maillogdb 
+d10 1
+a10 1
+#    on the Oracle databases devdb8 and maillogdb  
+d38 1
+a38 1
+@@ora_dbase = ("devdb8" , "maillogdb");
+d198 1
+a198 1
+    if ($dbase eq 'devdb8') {
+@
+
+
+1.3
+log
+@Add oracle database maillogdb
+@
+text
+@d5 1
+a5 1
+#  - Via DBI access to Oracle databases devdb8 cerndb1 and maillogdb 
+d7 1
+a7 1
+#    Fill the table WBADRUNS in the 3 Oracle databases.
+d10 1
+a10 1
+#    on the Oracle databases devdb8, cerndb1 and maillogdb  
+d38 1
+a38 1
+@@ora_dbase = ("devdb8" , "cerndb1", "maillogdb");
+@
+
+
+1.2
+log
+@devdb -> devdb8
+@
+text
+@d5 1
+a5 1
+#  - Via DBI access to Oracle databases devdb8 and cerndb1 
+d7 1
+a7 1
+#    Fill the table WBADRUNS in the 2 Oracle databases.
+d10 1
+a10 1
+#    on the Oracle databases devdb8 and cerndb1 for the scanbook accounts
+d38 1
+a38 1
+@@ora_dbase = ("devdb8" , "cerndb1");
+@
+
+
+1.1
+log
+@add perl program update_WWtables.perl
+@
+text
+@d5 1
+a5 1
+#  - Via DBI access to Oracle databases devdb and cerndb1 
+d10 1
+a10 1
+#    on the Oracle databases devdb and cerndb1 for the scanbook accounts
+d38 1
+a38 1
+@@ora_dbase = ("devdb" , "cerndb1");
+d120 1
+a120 1
+# Connects to devdb database - If cannot connect abend
+d198 1
+a198 1
+    if ($dbase eq 'devdb') {
+@
+

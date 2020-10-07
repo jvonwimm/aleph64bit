@@ -1,0 +1,58 @@
+head	1.1;
+access;
+symbols
+	jul280_1:1.1
+	jul280:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.05.06.15.53.28;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@re-installed jul280 from the historian source because some routines were missing.
+@
+text
+@      SUBROUTINE VDMCEF95(IER)
+C ----------------------------------------------------------------------
+C
+C!  For the moment (October 1995), we simply suppress the hits
+C!  in dummy faces
+C
+C -  Author         Alain Bonissent, 22-October-1995
+CKEY V_DECK VDET
+C
+C  Input :  none
+C
+C  Output :  suppressed VDXY, VDZT
+C
+C ----------------------------------------------------------------------
+#ifndef DOC
+      INTEGER VNTFAC, VNRWAF, VNRMOD, VIFACI, VFACSN
+C       LOGICAL VSLOTF
+      IER=0
+      NFAC = VNTFAC()
+      NWFF = VNRWAF()*VNRMOD()
+      DO JFAC = 1,NFAC
+        IF(VFACSN(JFAC).EQ.0)THEN
+          IRET = VIFACI(JFAC,ILAY,IFAC)
+          DO IWFF = 1,NWFF
+            CALL VAENWA(IBNK,ILAY,IWFF,IFAC,1)
+            CALL NDROP('VDXY',IBNK)
+            CALL NDROP('VDZT',IBNK)
+          ENDDO
+        ENDIF
+      ENDDO
+      RETURN
+      END
+#endif
+@

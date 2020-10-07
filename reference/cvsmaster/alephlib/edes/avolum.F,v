@@ -1,0 +1,183 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.2
+	aleph304_5:1.2
+	aleph304_4:1.2
+	aleph304_3:1.2
+	aleph304_2:1.2
+	aleph304_1:1.2
+	aleph304:1.2
+	aleph303_3:1.2
+	aleph303_2:1.2
+	aleph303_1_mc1:1.2
+	aleph303_1:1.2
+	aleph303:1.2
+	aleph302_9:1.2
+	aleph302_8:1.2
+	aleph302_7:1.2
+	aleph302_6:1.2
+	aleph302_5:1.2
+	aleph302_4:1.2
+	aleph302_3:1.2
+	aleph302_2:1.2
+	aleph302_1:1.2
+	aleph302:1.2
+	aleph216:1.2
+	aleph215_3:1.2
+	aleph215_2:1.2
+	aleph215:1.2
+	aleph214:1.2
+	aleph213:1.2
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.04.30.12.33.55;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.41.03;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.41.04;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@replace #include "implicit.h" by "IMPLICIT NONE"
+Modified Files:
+	aire.F airsct.F avolum.F ealgmk.F ealign.F ealtmk.F ecplst.F
+@
+text
+@      REAL FUNCTION AVOLUM(LEFACE,PLANES,PTRFCE,
+     &     LEPOIN,XFACE,YFACE,ZFACE)
+C.----------------------------------------------------------------------
+CKEY ECALDES VOLUME / USER
+C     H.Videau      creation le 13/02/88
+C! Computes volumes volume
+C  Computes the volume of a convex polyhedron.
+C  The LEPOIN points defining  the contour of the faces in
+C  their LEFACE planes are stored in XFACE,YFACE, ZFACE.
+C  PTRFCE contains LEFACE pointers on these arrays to the
+C  starting point of each face.
+C     This ugly definition is adopted to conform to the fortran binding
+C  of GKS for a fill area set.
+C    The ordering of the corners to build faces is such that the points
+C  go in the trigonometric sense around the normale to the plane.
+C   Input :
+C           LEFACE  number of faces
+C           PLANES  4 coefficients of the planes of the faces
+C           PTRFCE:  pointer
+C           LEPOIN:  number of points
+C           XFACE :  X of the point of the face
+C           YFACE :  Y of the point of the face
+C           ZFACE :  Z of the point of the face
+C   Output:
+C           AVOLUM volume
+C   Calls: none
+C   Called by USER
+C.----------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+      SAVE
+C
+C  Input variables
+      INTEGER LEFACE,LEPOIN,PTRFCE(*)
+      REAL PLANES(4,*),XFACE(*),YFACE(*),ZFACE(*)
+C  Locales
+      INTEGER I,J,K
+      REAL VECT(3),VOLU
+C
+      VOLU = 0
+      DO 3 K=1,LEFACE
+      DO 2 I=1,3
+      VECT(I)=0.
+ 2    CONTINUE
+      DO 1 I=PTRFCE(K),PTRFCE(K+1)-1
+      J=I+1
+      IF(J.EQ.PTRFCE(K+1)) J=PTRFCE(K)
+      VECT(1)=VECT(1)+YFACE(I)*ZFACE(J)-YFACE(J)*ZFACE(I)
+      VECT(2)=VECT(2)+ZFACE(I)*XFACE(J)-ZFACE(J)*XFACE(I)
+      VECT(3)=VECT(3)+XFACE(I)*YFACE(J)-XFACE(J)*YFACE(I)
+ 1    CONTINUE
+      VOLU=VOLU+(VECT(1)*PLANES(1,K)+VECT(2)*PLANES(2,K)+
+     & VECT(3)*PLANES(3,K))*PLANES(4,K)
+ 3    CONTINUE
+      AVOLUM=VOLU/6.
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d30 1
+a30 1
+#include "implicit.h"
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

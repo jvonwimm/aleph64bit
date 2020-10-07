@@ -1,0 +1,215 @@
+			Documentation for KINRUN
+			========================
+
+
+	KINRUN is an executable to run kingal with your own fortran or and 
+your own cards file.
+
+
+
+***************
+* Version 2.0 *
+***************
+With this version, you have three ways to use KINRUN.
+
+KINRUN as on VAX
+------------------
+You run KINRUN without any options, and you answer to the questions.
+You can have several fortran files or C files (you give all the name
+on one line separate by a space).
+
+(e.g. : kinrun
+
+     *************************************************
+     ***********      KINGAL JOB    2.0  ************
+     *************************************************
+
+Which generator do you want to use ?  [CR = ]
+(e.g. : /users/username/myexec)  : lpww02
+
+Enter the name for the executable that you will create [CR = ]
+(e.g. : /users/username/myexec)  : mylpww02
+
+Enter the name of your input  [CR = joel, SPACE = nothing]
+(e.g. : /users/username/myinput.input or /users/username/myinput.f)  :  
+
+
+       *****************************************
+       ***  Cards in the current directory   ***
+       *****************************************
+No match.
+no cards found in the current directory
+
+ Enter the name of the KINGAL steering cards [CR = /aleph/kin/kingal.cards]: /aleph/kin/lpww02.cards
+
+Give the list of extra event generator file or LUND if
+you want to use also the LUND generator  [CR = n, SPACE = nothing]
+(e.g. : /users/username/mygenerator.a)  : /cern/pro/lib/libphotos.a /aleph/kin/libjetset74.a /aleph/kin/ludata74.o
+
+Give the list of extra object files you want to be linked in front of the KINGAL.o  [CR = 121, SPACE = nothing]
+(e.g. : /users/username/myobj.o)  :  
+
+ Do you want to use the modified Lund 6.3 routines (y/n) [CR = n] : 
+
+
+ Do you want to use the debug mode (y/n)? [CR = n]
+(only your fortran and the kingal package will be in the debug mode)
+(e.g. : n)  : 
+
+ Do you want to submit your job (y/n)? [CR = y]
+(e.g. : n)  : 
+
+Generator used = lpww02 
+Historian directives =  
+KINGAL data cards = /aleph/kin/lpww02.cards 
+Program name = mylpww02 
+Debud mode = n 
+Extra event generator library = /cern/pro/lib/libphotos.a /aleph/kin/libjetset74.a /aleph/kin/ludata74.o 
+list of extra .o files =  
+do you use modified LUND ? = n 
+do you use RANMAR generator ? = y 
+
+ Are these options correct (y/n)? : y
+
+Save these options in [CR = /tmp_mnt/u3/xu/closier/dev/mylpww02.opt]
+(e.g. : /users/username/my_kingal.opt) : 
+
+ Do you want to create the binary and run it with these options (y/n)? : n
+ Do you want to create the binary  with these options (y/n)? : y
+
+   **************************************************************
+   ***    Compilation  and creation of the makefile mylpww02.mk
+   **************************************************************
+f77 -o mylpww02    /aleph/kin/kingal.o /aleph/kin/kinmar.o   /aleph/kin/liblpww02.a  /cern/pro/lib/libphotos.a /aleph/kin/libjetset74.a /aleph/kin/ludata74.o  /aleph/kin/libkinextra.a  /aleph/lib/libalephlib.a  /aleph/lib/libbos77.a  `cernlib mathlib packlib shift` 
+
+
+
+
+
+
+KINRUN with UNIX style
+------------------------
+You run KINRUN with some options. These options are -help, -f, -F, -o
+-m, -c, -C, -g, -h, -s, -e, -j, -k, -l, -G, -d, -a and <generator_name>
+
+Description of each option :
+-h : give the way how to use KINRUN
+
+
+-help : give the way how to use KINRUN
+
+(e.g. : kinrun -help
+ Usage : -help
+       : [-f fortran_file] [-C card_file] [-k] [-h] [-o object_file]
+         [-l library] [-e] [-j] [-c time_limit] [-m machine] [-g]
+         [-G generator] [-s] [-d] [-a]
+       : -F filename 
+       : generator_name
+ 
+Where: 
+     -help                   get this help
+     -h                      get this help
+     -(f)<string>            expected fortran file  (my_fortran.f)
+     -(o)<string>            expected object file  (my_objfile.o)
+     -(C)ards<string>        expected card file  (my_cards.cards)
+     -(d)                    use modified LUND routines
+     -(a)                    use RANMAR generator routines
+     -(l)<string>            extra event generator
+     -debu(g)                the debug options are used to compile
+     -(m)achine<string>      machine where you submit your job
+     -(c)putim<string>       time limit for the job in batch
+     -(G)enerator<string>    generator used
+     -(s)ubmit               submit in batch
+     -(F)ile<string>         expected filename which contains kingal options
+
+
+-f : With this option, you must give the name of your fortran file
+     that you want to use.
+     This option can be forgotten.
+     If you want to put two fortran files, you must give two times the
+     option -f with the right file.
+
+(e.g. : kinrun -f my_file1.f -f my_file2.f my_exec
+kinrun will create my_exec with the fortran file my_file.f.)
+
+
+-g : With this option, your own code and the kingal package will be
+     compiled with the debug option.
+
+-o : With this option, you must give the name of your object file that you
+     want to use.
+     This option can be forgotten.
+
+(e.g. : kinrun -o my_obj.o my_exec
+kinrun will create my_exec with the object file my_obj.o.)
+
+
+-C : With this option, you must give the name of your cards file that
+     you want to use.
+     This option can be forgotten and the default is the value of the
+     environment variable KINGALCARDS.
+
+(e.g. : kinrun -C my_cards.cards my_exec)
+
+
+-d : If you specified this option, you will use the modified LUND routines
+
+
+-a : if you specified this option, you will use the RANMAR generator routine
+
+
+-l : With this option, you must give the name of your libraries that you
+     want to use.
+
+
+-m : you must give the machine where you want to submit your job after this 
+     option
+
+
+-s : With this option you precise that you want to run your KINGAL job in batch
+
+
+-c : You must give a number after this option which will be the time limit for 
+     your batch job
+
+-G : After this option, you will give the generator that you want to use in 
+     your kingal job
+
+
+<generator_name> : You give the name of a generator and it will use the default
+                   file of option which is in /aleph/kin/generator_name.opt
+
+(e.g. : kinrun generator_name )
+
+-F : see below 'KINRUN with a file'
+
+
+KINRUN with a file
+--------------------
+
+-F : This option is used with the name of a file which contains the
+     good options.
+     This option is used without any other option.
+
+(e.g. : kinrun -F my_kingal.opt
+kinrun will read all the informations which are in the file
+my_kinagl.opt and runs with them.)
+
+
+The format of the file 'my_kingal.opt' must be :
+
+my_file.f
+/aleph/kin/kingal.cards
+my_exec
+shift50
+100
+Kept
+/cern/pro/lib/libphotos.a
+/aleph/kin/ludata.o
+y
+y
+lpww02
+y
+
+
+

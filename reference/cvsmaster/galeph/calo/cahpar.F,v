@@ -1,0 +1,150 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.07.14.01.59;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.00;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK cahpar
+      SUBROUTINE CAHPAR (ENER,IPART)
+C ----------------------------------------------------------------
+C       J.Badier - 16/03/87
+C   Modified by G.Ganis        16/Jun/89
+C! computes had. shower param.
+C ----- Calcul des parametres de la gerbe hadronique.
+C Input: ENER  Energie du track elem.
+C        IPART  particle #
+C ----- Voir HADCAL.
+C ------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "ehpash.h"
+#include "capano.h"
+C
+      TOTNRJ = ENER
+      ENLOG = ALOG( ENER )
+      IF(IPART.EQ.LTYPEL.OR.IPART.EQ.LTYPGA) THEN
+C ----- Electron geantino/ photon geantino
+         EMGNRJ = ENER
+         NATGER = 1
+         HADNRJ = 0.
+         IF (IPART .EQ. LTYPGA) NATGER = 2
+      ELSE
+C ----- Hadronic geantino.
+C ----- Fraction e.m.
+C ----- Je tire la queue.
+         IF(TOTNRJ .GT. CNRJDA ) THEN
+            CDAN = C1PRDA
+         ELSE
+            CDAN = C2PRDA + C3PRDA * TOTNRJ
+         ENDIF
+         ALEA = 2. * RNDM(ALEA) / CDAN
+         XMIN = PIMADA / TOTNRJ
+         SUIL = ( 1. - XMIN ) ** 2
+         IF( ALEA .LT. SUIL ) THEN
+            FRAC = 1. - SQRT( SUIL - ALEA )
+         ELSE
+C ----- Je tire la langue.
+            IF( TOTNRJ .GT. ANRJDA ) THEN
+               ADAN = A1PRDA + A2PRDA * TOTNRJ
+            ELSE
+               IF( TOTNRJ .GT. AMRJDA ) THEN
+                  ADAN = A3PRDA
+               ELSE
+                  ADAN = A4PRDA + A5PRDA * TOTNRJ
+               ENDIF
+            ENDIF
+            ADAN = ADAN - CDAN
+            BADA = ( 2. - CDAN * SUIL ) / ADAN
+            BADA = XMIN + SQRT(BADA)
+            ALEA = RNDM(ALEA)
+            ALEA = SQRT(ALEA)
+            FRAC = BADA - ALEA * ( BADA - XMIN )
+         ENDIF
+         EMGNRJ = FRAC * TOTNRJ
+C ----- Fraction hadronique.
+         HADNRJ = ENER - EMGNRJ
+C ----- Parametres longitudinaux.
+         HALPHA = ALPHA0 + ALPHA1 * ENLOG
+         HABETA = BETAH0 + BETAH1 * ENLOG
+C ----- Parametres transversaux.
+         HADRAY = RAYHA0 + RAYHA1 * ENER
+         HAPUIS = 1. / ( PUISH0 - 2. )
+         HADRAY = HAPUIS / HADRAY
+C ----- Nature de la fraction e.m.
+         NATGER = 5
+      ENDIF
+      SMAXLR = -99.
+      SMAXLA = -99.
+      EMNAME = '    '
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

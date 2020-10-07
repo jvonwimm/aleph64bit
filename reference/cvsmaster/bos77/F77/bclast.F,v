@@ -1,0 +1,87 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.47.23;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.08;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.09;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE BCLAST(LUN)
+*     write the final bank on unit LUN ...
+#include "boscom.h"
+      LUNA=LUN
+    5 IND=NAMIND('$PTS')+1
+   10 IND=IW(IND-1)
+      IF(IND.EQ.0) GOTO 100
+      LUNB=IW(IND-2)
+      IF(LUNB.EQ.LUNSEL) GOTO 10
+      IF(LUNA.NE.0.AND.LUNA.NE.LUNB) GOTO 10
+C     CALL BOSDP(IW)
+      ISW=NSWAP('$PTS',LUNB,'$PTS',0)
+C     CALL BOSDP(IW)
+      IF(ISW.EQ.0) GOTO 5
+      IV=IW(IND+IW(IND))
+      ISW=NBANK('$PTS',0,IV)
+      IF(ISW.NE.0) CALL BWRSB(IW,LUNB,'$PTS',0)
+      CALL BWRITE(IW,LUNB,'0')
+      ISW=NDROP('$PTS',0)
+      GOTO  5
+  100 RETURN
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK bclast
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

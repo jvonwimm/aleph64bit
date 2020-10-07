@@ -1,0 +1,80 @@
+KCAR 0 / $TEXT                                                          
+POFF                                                                    
+*   RUN #                     RUN'S TITLE                               
+RUN  101         'Karlen ... ee gamma gamma generator'                  
+*     FIRST EVENT   LAST EVENT TO BE GENERATED                          
+TRIG       1           1000                                             
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG                         
+DEBU    6   /      1            10                                      
+*    UNIT # / FORMAT                                                    
+* SAVE   2  / 'EPIO'                                                    
+*======================                                                 
+*  INPUT PARAMETERS                                                     
+*======================                                                 
+*       sigma-x   sigma-y  sigma-z  (cm)                                
+SVRT     0.018    0.0010    1.00                                        
+GENE                                                                    
+* EBEAM  = Beam energy (in GeV);                                        
+* MRADCO = 1   generate e+ e- gamma gamma;                              
+*        = 2   e+ e- gamma(with soft brem and virtual corrections);     
+*        = 3   e+ e- gamma(according to lowest order diagrams only);    
+* MCONFI = 11  then generate according to e-gamma configuration;        
+*        = 12  then generate according to single electron config.;      
+*        = 13  then generate according to single gamma config.;         
+*        = 14  then generate accrdng to sngl gamma/soft e config.;      
+* MATRIX = 21  then use Berends & Kleiss matrix element;                
+*        = 22  then use    "        "      "    " with m**2/t term;     
+*        = 23  then use t channel only matrix element (/w m term);      
+*        = 24  then use matrix element from EPA (for testing);          
+* MTRXGG = 31  then use EPA with double compton (MRADCO=HARD only);     
+*        = 32  then use Berends et al. e-e-g-g  (MRADCO=HARD only);     
+*        = 33  then use Martinez/Miquel e-e-g-g (MRADCO=HARD only);     
+*        = 34  then use EPA for low Q**2, BEEGG otherwise ("   " );     
+*                                                                       
+*   EBEAM    MRADCO       MCONFI        MATRIX        MTRXGG            
+     45.6       3           11            22             31             
+* CUTOFF = CM cutoff energy for radiative correction (in GeV);          
+* WGHT1M = maximum weight for generation of QP0 & cos(theta QP);        
+* WGHTMX = maximum weight of the trial events;                          
+* EPS    = arbitrary small parameter, used to stabilize weights. It     
+*          determines the relative sampling of ks^pbc vs. ks^0; if      
+*          large weights occur due to very hard 2nd photon, decrease    
+*          EPS;                                                         
+* ISEED  = initial seed;                                                
+* LNWGHT =  variable, specifies if unweighted events are required;      
+*        = 1   Then events are unweighted (each event weight=1);        
+*        = 0   Then events are weighted(event weight given by WGHT);    
+*                                                                       
+*        CUTOFF    WGHT1M    WGHTMX    ISEED     EPS       LNWGHT       
+          0.25     1.001       .5    123456789   0.01        1          
+*                                                                       
+GCUT                                                                    
+* TEVETO = maximum theta of 'missing' e's in final state (in radians);  
+* TEMIN  = minimum angle between the 'seen' electron and beam line;     
+*          (used for e-gamma & etron configurations)     (in radians)   
+* TGVETO = maximum angle between the 'missing' 1st gamma & beam line;   
+*          (only used for etron configuration)           (in radians)   
+*          (also used in for the gamma configuration to veto 2nd g)     
+* TGMIN  = minimum angle between the 1st gamma and the beam line ;      
+*          (used for the e-gamma & gamma configurations) (in radians)   
+* PHVETO = separation of two particles in phi reqd. to act as a veto;   
+*          (used for e-g separation in etron config. and g-gs separ.    
+*           in gamma config... all for hard rod. correction only)       
+* PEGMIN = minimum separation of e and gamma in phi (in radians);       
+*          (used for egamma configuration with hard rad. correction)    
+*                                                                       
+*        TEVETO    TEMIN     TGVETO    TGMIN     PHVETO    PEGMIN       
+         30.E-03   0.2618    50.E-03   0.2618    0.7854    0.7854       
+*                                                                       
+* EEMIN  = minimum energy of the 'observed' electron (in GeV);          
+*          (used for the e-gamma & electron configurations)             
+* EGMIN  = minimum energy of the 'observed' 1st photon (in GeV);        
+*          (used for the e-gamma & gamma configurations)                
+* EEVETO = energy of electron required to act as a veto (in GeV);       
+*          (used for gamma configuration with hard rad. correction)     
+* EGVETO = energy of gamma required to act as a veto (in GeV);          
+*          (used for etron&gamma configs with hard rad. correction)     
+*                                                                       
+*        EEMIN     EGMIN     EEVETO    EGVETO                           
+           5.        5.        0.0       0.0                            
+ENDQ

@@ -1,0 +1,127 @@
+head	1.1;
+access;
+symbols
+	alpha126_22:1.1
+	alpha122_22:1.1
+	alpha126_21:1.1
+	alpha126_20:1.1
+	alpha126_19:1.1
+	alpha126_18:1.1
+	alpha126_17:1.1
+	alpha126_16:1.1
+	alpha126_15:1.1
+	alpha126_14:1.1
+	alpha126_13:1.1
+	alpha126_12:1.1
+	alpha126_11:1.1
+	alpha126_10:1.1
+	alpha126_09:1.1
+	alpha126_08:1.1
+	alpha126_07:1.1
+	alpha126_06:1.1
+	alpha126_05:1.1
+	alpha126_04:1.1
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1
+	alpha124:1.1
+	alpha123_12:1.1
+	alpha123_11:1.1
+	alpha123_10:1.1
+	alpha123_9:1.1
+	alpha123_8:1.1
+	alpha123_7:1.1
+	alpha123_6:1.1
+	alpha123_5:1.1
+	alpha123_4:1.1
+	alpha123_3:1.1
+	alpha123_2:1.1
+	alpha123:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	98.10.01.15.05.37;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE QFMCSX (ISETUP, SIGMAX)
+C-----------------------------------------------------------------------
+CKEY FILL BEAMSPOT / INTERNAL
+C
+C   Author  S. Wasserbaech  2-5-95
+C 
+C   Returns the BE setup code (row index in ALRP) used in the previous
+C   call to QFGET_BP, and the generated sigma_x (width of the luminous
+C   region) for that call.  The outputs are -1 if the previous call to
+C   QFGET_BP was unsuccessful, or if real data is being analyzed, or
+C   if a BSIZ card is in use.
+C
+C - Input:
+C   None.
+C
+C - Output:
+C   ISETUP  / I  Selected/generated BE setup code
+C   SIGMAX  / R  Generated sigma_x (cm)
+C-----------------------------------------------------------------------
+#ifndef DOC
+      COMMON / GETBPCO / IFRUN0, IFEVT0, ILRUN0, ILEVT0,
+     >                   ISETUP0, SIGMAX0
+C-----------------------------------------------------------------------
+      ISETUP = ISETUP0
+      SIGMAX = SIGMAX0
+C
+      RETURN
+      END
+#endif
+
+@

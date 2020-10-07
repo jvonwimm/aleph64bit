@@ -1,0 +1,133 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.1
+	aleph304_5:1.1
+	aleph304_4:1.1
+	aleph304_3:1.1
+	aleph304_2:1.1
+	aleph304_1:1.1
+	aleph304:1.1
+	aleph303_3:1.1
+	aleph303_2:1.1
+	aleph303_1_mc1:1.1
+	aleph303_1:1.1
+	aleph303:1.1
+	aleph302_9:1.1
+	aleph302_8:1.1
+	aleph302_7:1.1
+	aleph302_6:1.1
+	aleph302_5:1.1
+	aleph302_4:1.1
+	aleph302_3:1.1
+	aleph302_2:1.1
+	aleph302_1:1.1
+	aleph302:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.09.15.07.58.47;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.03.06.11.59.17;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@modifs to /kalm
+@
+text
+@      SUBROUTINE UFGAIN(V, C, DET, W, GAIN)
+C!  Calculate Kalman gain matrix
+#ifndef DOC
+      DOUBLE PRECISION V(2,2), C(5,5), DET, W(2,2), GAIN(5,2)
+
+      W(2,2) = V(1,1) + C(1,1)
+      W(1,2) =-V(1,2) - C(1,2)
+      W(1,1) = V(2,2) + C(2,2)
+      DET = ( W(2,2)*W(1,1) - W(1,2)**2 )
+      IF (DET.EQ.0.D0) THEN
+        CALL DVZERO(W,4)
+        CALL DVZERO(GAIN,10)
+        RETURN
+      ENDIF
+      W(1,1) = W(1,1) / DET
+      W(2,2) = W(2,2) / DET
+      W(1,2) = W(1,2) / DET
+      W(2,1) = W(1,2)
+      DET = W(1,1) * W(2,2) - W(1,2)**2
+      DO J = 1, 2
+        DO I = 1, 5
+          GAIN(I,J) = C(I,1)*W(1,J) + C(I,2)*W(2,J)
+        ENDDO
+      ENDDO
+
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@1st test version aleph302
+@
+text
+@d9 9
+a17 4
+      DET = 1.D0/( W(2,2)*W(1,1) - W(1,2)**2 )
+      W(1,1) = W(1,1) * DET
+      W(2,2) = W(2,2) * DET
+      W(1,2) = W(1,2) * DET
+@

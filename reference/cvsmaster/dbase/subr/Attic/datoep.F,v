@@ -1,0 +1,152 @@
+head	1.2;
+access;
+symbols
+	dbase01:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.02.13.10.50.26;	author flr;	state dead;
+branches;
+next	1.1;
+
+1.1
+date	97.02.12.10.06.05;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.02.12.10.06.05;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release dbase02
+@
+text
+@      SUBROUTINE DATOEP(LUNDA,LUNEP,IFLAG)
+C ---------------------------------------------------------------------
+C.
+C! - SCAN tables content on d/a files -Write EPIO file on LUNEP
+C.
+C. - from A.Putzer (routine UTDBPR)
+C. - Modified by M.Rumpf
+C.
+C.   Input    : -  LUNDA   / I  = DAF logical unit
+C.              -  LUNEP   / I  = EPIO logical unit
+C.   Output   : -  IFLAG   / I  = Error flag  = 0 ok
+C.                                            -1 No format info on d/a
+C.                                            -2 No info for this table
+C.                                            -3 Table not on this d/a
+C.                                            -4 Table empty
+C.
+C ---------------------------------------------------------------------
+#ifndef DOC
+C - Column numbers in the .TAB table for
+C           Table ID, Table name
+#include "tab2jj.h"
+#include "tdocjj.h"
+      CHARACTER*4 NAME,CHAINT
+C
+#include "bcs.h"
+#include "bmacro.h"
+C ----------------------------------------------------------------------
+C
+      IFLAG = 0
+      LUNPR = IW(6)
+C
+C - get documentation tables
+C
+      CALL GETDOC (LUNDA,IGET)
+C
+C - try to get the format from TADB,CADB or TPRO,CPRO
+C
+      IFMT = 0
+      IF (IGET.LT.100) THEN
+          CALL BKFMT ('CPRO','2I,(5A,I,2A)')
+          CALL BKFMT ('TPRO','2I,(A,I)')
+          CALL BKFMT ('CADB','2I,(5A,I,2A)')
+          CALL BKFMT ('TADB','2I,(A,I)')
+          CALL CRTFMT (0,'CADB','TADB')
+          CALL CRTFMT (0,'CPRO','TPRO')
+          IFMT = 1
+      ENDIF
+C
+C ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+C
+C - Loop over all banks present on the DAF
+C   search the format into TDOC
+C   IF not there THEN
+C      search the format information into .TAB and .COL
+C   IF not there THEN print a warning
+C   ELSE write the bank on EPIO file
+C
+  200 JNAME = MDARS (IW,LUNDA)
+      IF (IW(2) .NE. 0) GOTO 210
+C
+      IF (JNAME .EQ. 0) THEN
+         WRITE (LUNPR,*) ' not enough space for the bank, skip it '
+         GOTO 200
+      ENDIF
+      NAME = CHAINT (IW(JNAME-3))
+      NR = IW(JNAME-2)
+      WRITE (LUNPR,*) 'bank read from DAF ',NAME,NR,
+     &                (IW(JNAME+MM),MM=0,2)
+C
+C ====================== BOS format finding ======================
+C
+C     IF CPRO and CADB are there formats have been built THEN
+C        skip format finding
+C
+      IF (IFMT.EQ.0) CALL FNDFMT (JNAME,NAME,IER)
+C
+C ================== end of format finding =========================
+C
+C     write the bank NAME,NR onto EPIO file
+ 205  CALL BEPWS (IW,LUNEP,NAME,NR)
+      CALL BLIST (IW,'S+',NAME)
+      NWRDS = NWRDS + IW(JNAME)
+      IF(NAME.NE.'TAB2' .AND. NAME.NE.'COL2' .AND. NAME.NE.'TDOC') THEN
+         JNAME = NDROP(NAME,NR)
+      ENDIF
+      IF ((IW(16)-IW(15)).LT.5000) CALL BGARB(IW)
+      GOTO 200
+C
+ 210  CONTINUE
+C
+C
+C Just for control
+C
+       CALL AUBLIS ('S')
+       CALL BOSFM
+       WRITE (LUNPR,*) ' DATOEP NWRDS = ', NWRDS
+C
+ 999  RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@@
+
+
+1.1.1.1
+log
+@1st release of dbase library
+@
+text
+@@

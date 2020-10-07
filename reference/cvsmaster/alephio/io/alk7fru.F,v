@@ -1,0 +1,137 @@
+head	1.1;
+access;
+symbols
+	alio83:1.1
+	alio82:1.1
+	alio81:1.1
+	alio80:1.1
+	alio74:1.1
+	alio73:1.1
+	alio72:1.1
+	alio71:1.1
+	alio70:1.1
+	alio68:1.1
+	alio69:1.1
+	alio67:1.1
+	alio66:1.1
+	alio65:1.1
+	alio64:1.1
+	alio63:1.1
+	alio62:1.1
+	alio61:1.1
+	alio60:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.04.23.09.59.41;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@move alph, dbas, a part of alef and a part of c to alephio
+Modified Files:
+ 	version.h
+ Added Files:
+ 	adbrow.F adbrpn.F adbrun.F adbswp.F adbver.F agetdb.F agtfil.F
+	albos.F aldawr.F aldtyp.F aleveh.F alfind.F alfmt.F algtbk.F
+ 	algtdb.F algtlu.F algtro.F algtyp.F alinst.F alk7fil.F
+ 	alk7fru.F alk7op.F alk7tru.F alredb.F alrune.F alrunh.F
+ 	alrunr.F alseed.F alstho.F alstin.F alstri.F altabl.F alvsn.F
+ 	aopdbs.F aublis.F aubos.F aubprs.F bkcari.F bkinca.F bkrhab.F
+ 	bkrhal.F bkrhaw.F bktobk.F cafiht.F chahol.F dafrds.F gtdbas.F
+ 	gtstup.F igtfmt.F jhocha.F julrec.F junial.F junidb.F
+ 	kbytrec.F loctab.F nameru.F ubpack.F uclean.F uindxs.F usbos.F
+ 	usgtdb.F utcblk.F utccop.F utcofo.F utwocl.F utwoex.F
+Removed Files:
+	noibm.F
+@
+text
+@      INTEGER FUNCTION ALK7FRU (LURUK7,IRUN,TYPE,TAPE)
+C --------------------------------------------------------
+C - F.Ranjard - 900627
+C! get cartridge number for a given type of a given run
+CKEY ALEF TAPE  RUN / USER
+C
+C - Input     : LURUK7  / INTE  = open RUK7FILE.UPDATE on unit LURUK7
+C               IRUN    / INTE  = run number
+C               TYPE    / A     = data type
+C                                 'RAW'/'POT'/'DST'/'MINI/NANO'
+C
+C - Output    : TAPE     / A      = tape number i.e. AS1234_98
+C               ALK7FRU   / INTE  = error code
+C                                 = 0  OK
+C                                 = 1  cannot open RUK7FILE
+C                                 = 2  file is empty
+C                                 = 3  too many runs, increase K7COM
+C                                 = 13 wrong data type
+C                                 = 14 run does not exist
+C - open RUNCARTSLIST which contains for each run the number
+C   of the CERN cartridges in the order : RAW/POT/DST/MINI/NANO
+C   on unit LURUK7
+C   IF IRUN is in the list THEN
+C      return in TAPE the cartridge number corresponding to
+C      the data type wanted
+C   ENDIF
+C ---------------------------------------------------------
+#ifndef DOC
+      CHARACTER*(*) TYPE,TAPE
+      CHARACTER CHAINT*4
+      CHARACTER*80 RUK7NAM
+      INTEGER ALK7OP
+#include "alk7com.h"
+      DATA IFIR / 0/
+C
+C ------------------------------------------------------------------
+C
+C - at 1st entry :
+C
+       IF (IFIR.EQ.0) THEN
+          IFIR = 1
+          IER = ALK7OP(LURUK7)
+          IF (IER.NE.0) GOTO 999
+       ENDIF
+C
+C - next entry:
+C
+ 10    CONTINUE
+C    check data type
+       ITYP = INDEX (K7TYPE,TYPE(1:1))
+       IF (ITYP.EQ.0) THEN
+          IER = 13
+          GOTO 999
+       ENDIF
+C
+C    get row # which contains run# IRUN
+       DO 1 ISEG=1,K7SEG
+          MSEG = ISEG
+          JPOS = LOCATI (K7LRUN(1,ISEG),K7LINE(ISEG),IRUN)
+          IF (JPOS.GT.0) THEN
+             GOTO 20
+          ELSEIF (JPOS.EQ.0) THEN
+             GOTO 2
+          ENDIF
+ 1     CONTINUE
+C      The run is not there
+ 2     IER = 14
+       GOTO 999
+C
+C    get tape #
+ 20    CONTINUE
+       IC = (JPOS-1)*LK7+1
+       TAPE = K7CART(ITYP,MSEG)(IC:IC+LK7-1)
+       IER = 0
+C
+ 999   CONTINUE
+       ALK7FRU = IER
+C
+       END
+#endif
+@

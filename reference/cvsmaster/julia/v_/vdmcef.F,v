@@ -1,0 +1,607 @@
+head	1.6;
+access;
+symbols
+	jul313_3:1.6
+	jul313_2:1.6
+	jul313_1:1.6
+	jul313:1.6
+	jul312_1:1.6
+	jul312:1.6
+	jul311:1.6
+	jul310_1:1.6
+	jul310:1.6
+	jul309_1:1.6
+	jul309:1.6
+	jul308_6:1.6
+	jul308_5:1.6
+	jul308_4:1.6
+	jul308_3:1.6
+	jul308_2:1.6
+	jul308_1:1.6
+	jul308:1.6
+	jul307_4:1.5
+	jul307_3:1.5
+	jul307_2:1.5
+	jul307_1:1.5
+	jul307:1.5
+	jul306_3:1.5
+	jul306_2:1.5
+	jul306_1:1.5
+	jul306:1.5
+	jul305_4:1.5
+	jul305_3:1.5
+	jul305_2:1.5
+	jul305_1:1.5
+	jul305:1.5
+	jul304_3:1.5
+	jul304_2:1.5
+	jul304_1:1.5
+	jul304:1.5
+	jul303_7:1.5
+	jul303_6:1.5
+	jul303_5:1.5
+	jul303_4:1.5
+	jul303_3:1.5
+	jul303_2_mc1:1.5
+	jul303_2:1.5
+	jul303_1_mc1:1.5
+	jul303_1:1.5
+	jul303_v:1.5
+	jul303:1.5
+	jul302_6:1.5
+	jul302_5:1.5
+	jul302_4:1.5
+	jul302_3:1.5
+	jul302_2:1.5
+	jul302_1:1.5
+	jul302:1.5
+	jul285_1:1.5
+	jul285:1.5
+	jul284_1:1.5
+	jul284:1.5
+	jul283_1:1.5
+	jul283:1.5
+	jul282_1:1.5
+	jul282:1.5
+	jul281_3:1.5
+	jul281_2:1.5
+	jul281_1:1.4
+	jul281:1.4
+	jul280_1:1.3
+	jul280:1.3
+	jul279:1.2
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.6
+date	98.08.25.12.45.59;	author cattanem;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.06.26.07.07.01;	author cattanem;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.06.03.10.29.02;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.03.12.15.48.22;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.11.29.17.21.08;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.20.33;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.20.34;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.6
+log
+@julia 308
+@
+text
+@      SUBROUTINE VDMCEF(IER)
+C----------------------------------------------------------------------
+C! sets quality flag for hits in VDXY,VDZT banks according to dead line
+C! - J.Carr - 16-9-91
+CKEY VDET
+C! - Output IER =0 OK ,
+C!              =-1 problem with banks
+C!              = 1 routine will do nothing
+C!
+C! - Input banks : VDXY, VDZT, VDEM
+C! - Output banks: VDXY, VDZT only the word(quality flag)
+C!
+C!      Modified 27-8-93 to include hit position smearing      D. Brown
+C!      This uses the VDSM bank.
+C
+C       Modified 10-nov-94  to take out the position smearing.
+C       This will be organized as a separate subroutine.
+C
+C       Modified 20-May-96  to tread the new VDET, it takes the first
+C       element in the VDEM bank and applies that efficiency to all
+C       the hits in both views.  Ad-hoc correction.
+C                     Manoj Thulasidas
+C
+C       Modified 24-June-96, to move the treatment of the new VDET to 
+C       VDKLCP.  The multiplexed hits can not be taken care of in the
+C       the framework of VDMCEF
+C                     Manoj Thulasidas
+C
+C       Modified 8-July-1998, to move the VDKLCP section before the 
+C       test on NOTDO.  VDKLCP has been modified to handle low 
+C       efficiency chips / modules properly with new database banks
+C       VDPR and VDCM
+C                     Manoj Thulasidas
+C
+C!======================================================================
+#ifndef DOC
+C
+#include "bcs.h"
+#include "vdxyjj.h"
+#include "vdztjj.h"
+#include "vdemjj.h"
+C
+       SAVE
+       INTEGER IER
+C  Functions
+       INTEGER VDYEAR
+       EXTERNAL VDYEAR
+C  Local variables
+C
+       REAL EFFCUT
+       PARAMETER ( EFFCUT = 0.5 )
+       INTEGER IVDEM,IVDXY,IVDZT,IVNEX
+       INTEGER KVDEM,KVDXY,KVDZT,KEVEH
+       INTEGER NVDXY,NVDZT
+       INTEGER MVDXY,MVDZT,MVDEM,NEVEH
+       INTEGER NHXY,NHZT,IHXY,IHZT,JL,NKILL
+       REAL UW
+       INTEGER NPERI,IPERI,NCOUN
+       LOGICAL FIRST, NOTDO
+C - bit 30 (IMCNEF=536870912) is set in VDXY and VDZT quality flag
+C   to indicate a MC inefficiency rejected hit.
+C   bit 29 now means that smearing has been added to a cluster
+      INTEGER IMCNEF,IMCSMR
+      PARAMETER (IMCNEF=536870912)
+      PARAMETER (IMCSMR=268435456)
+C
+C  BOS functions
+C
+      INTEGER NAMIND
+      EXTERNAL NAMIND
+C
+C  Variables for inline functions
+C
+      INTEGER I,J
+      INTEGER ISEED,IDICE
+      REAL RNVEC(100)
+C
+C  Inline functions
+C
+      INTEGER VDMJLN,IOR
+C
+C  Define variables used in BMACRO
+C
+#include "bmacrod.h"
+C
+      DATA FIRST/.TRUE./,NOTDO/.FALSE./ 
+#include "bmacro.h"
+C -------------------------------------------------------------
+C  initialization
+C
+      IER=1
+      IF(FIRST) THEN
+        FIRST=.FALSE.
+        MVDXY = NAMIND('VDXY')
+        MVDZT = NAMIND('VDZT')
+        MVDEM = NAMIND('VDEM')
+        NEVEH = NAMIND('EVEH')
+
+C       check-up on the efficiency map VDEM banks,
+        IVDEM=IW(MVDEM)
+        IF(IVDEM.LE.0) THEN
+            NOTDO=.TRUE.
+            IER=-1
+            RETURN
+        ENDIF
+C       write out some stuff to check on VDEM bank
+        NPERI=LROWS(IVDEM)
+        IF(NPERI.GT.0) THEN
+           DO 100 I=1,NPERI
+              KVDEM=KROW(IVDEM,I)
+              NKILL=0
+              DO 101 J=1,288
+                 IF(RW(KVDEM+JVDEEF-1+J).LT.EFFCUT) NKILL=NKILL+1
+  101         CONTINUE
+  100      CONTINUE
+        ELSE
+           NOTDO=.TRUE.
+           RETURN
+        ENDIF
+C       set index to start on efficiency map for highest period
+        IPERI=NPERI
+        KVDEM=KROW(IVDEM,IPERI)
+        NCOUN=0
+      ENDIF
+C  suppress the dummy faces for the new VDET 
+C  also do the effiency
+      IF (VDYEAR().EQ.95) THEN
+        CALL VDFSUP
+C  for the new VDET, do the chip efficiency map from the banks
+C  VDPR and VDCM
+        CALL VDKLCP(IER)
+        RETURN
+      ENDIF
+C
+C     If we had an error in initialization just return
+C
+      IF(NOTDO) RETURN
+      IER=0
+C
+C     Normal operation start
+C
+C     choose period
+C
+      IVDEM=IW(MVDEM)
+      KVDEM=KROW(IVDEM,IPERI)
+      NCOUN=NCOUN+1
+      IF(NCOUN.GT.IW(KVDEM+JVDEPR)) THEN
+         IPERI=IPERI+1
+         IF(IPERI.GT.NPERI) IPERI=1
+         KVDEM=KROW(IVDEM,IPERI)
+         NCOUN=1
+      ENDIF
+C  set seed for random number 1000*run no + event no + 107
+      KEVEH = IW(NEVEH)
+      ISEED=1000*IW(KEVEH+2)+IW(KEVEH+6)+107
+      CALL RMARIN(ISEED,0,0)
+      CALL RANMAR(RNVEC,100)
+      IDICE=1
+C
+C  Loop over all VDXY banks and flag hits
+C
+      IVDXY  = IW(MVDXY)
+      IF(IVDXY .LE. 0) GO TO 3
+  2   CONTINUE
+C  loop over all the hits of the VDXY bank
+      NHXY  = LROWS(IVDXY)
+      NVDXY = IW(IVDXY-2)
+      IVNEX = IW(IVDXY-1)
+      DO 20 IHXY=1,NHXY
+           KVDXY=KROW(IVDXY,IHXY)
+           UW=RW(KVDXY+JVDXUC)
+           JL=VDMJLN(UW,NVDXY,2)
+C          flag hit if efficiency set low
+           IF(RW(KVDEM+JVDEEF-1+JL).LT.EFFCUT) THEN
+               IW(KVDXY+JVDXQF)=IOR(IW(KVDXY+JVDXQF),IMCNEF)
+           ELSE
+C          kill a few random clusters to simulate inefficiency
+               IDICE=IDICE+1
+               IF(IDICE.GT.100) THEN
+                  CALL RANMAR(RNVEC,100)
+                  IDICE=1
+               ENDIF
+               IF(RW(KVDEM+JVDEEF-1+JL).LT.RNVEC(IDICE)) THEN
+                   IW(KVDXY+JVDXQF)=IOR(IW(KVDXY+JVDXQF),IMCNEF)
+               ENDIF
+           ENDIF
+C
+  20  CONTINUE
+C  Update pointer, and return for next bank
+      IVDXY=IVNEX
+      IF(IVDXY .GT. 0) GO TO 2
+C
+C  all done with VDXY, now do VDZT
+C
+3     CONTINUE
+C
+C  Now loop over all VDZT banks and flag hits
+C
+      IVDZT = IW(MVDZT)
+      IF(IVDZT .LE. 0) RETURN
+C  Loop over all VDZT banks
+  5   CONTINUE
+C  loop over all the hits of the VDZT bank
+      NHZT  = LROWS(IVDZT)
+      NVDZT = IW(IVDZT-2)
+      IVNEX = IW(IVDZT-1)
+      DO 50 IHZT=1,NHZT
+           KVDZT=KROW(IVDZT,IHZT)
+           UW=RW(KVDZT+JVDZWC)
+           JL=VDMJLN(UW,NVDZT,1)
+C          flag hit if efficiency set low
+           IF(RW(KVDEM+JVDEEF-1+JL).LT.EFFCUT) THEN
+               IW(KVDZT+JVDZQF)=IOR(IW(KVDZT+JVDZQF),IMCNEF)
+           ELSE
+C          kill a few random clusters to simulate inefficiency
+               IDICE=IDICE+1
+               IF(IDICE.GT.100) THEN
+                  CALL RANMAR(RNVEC,100)
+                  IDICE=1
+               ENDIF
+               IF(RW(KVDEM+JVDEEF-1+JL).LT.RNVEC(IDICE)) THEN
+                  IW(KVDZT+JVDZQF)=IOR(IW(KVDZT+JVDZQF),IMCNEF)
+               ENDIF
+           ENDIF
+  50  CONTINUE
+C  Update pointer, and return for next bank
+      IVDZT = IVNEX
+      IF(IVDZT .GT. 0) GO TO 5
+C
+      RETURN
+C
+      END
+#endif
+@
+
+
+1.5
+log
+@Corrections from Manoj to jul281.1
+@
+text
+@d29 6
+d125 9
+a141 9
+C  suppress the dummy faces for the new VDET 
+C  also do the effiency
+      IF (VDYEAR().EQ.95) THEN
+        CALL VDFSUP
+C  for the new VDET, get a constant efficiency from the first
+C  element of the VDEM bank, it should read 0.98 or 0.99
+        CALL VDKLCP(IER)
+        RETURN
+      ENDIF
+@
+
+
+1.4
+log
+@Mods for julia 281 release. See news for details
+@
+text
+@d24 5
+d78 1
+a78 3
+      INTEGER ID,NRBOS, L
+      INTEGER LCOLS,LROWS,KNEXT,KROW,LFRWRD,LFRROW,ITABL
+      REAL RTABL
+d127 9
+a135 2
+C  suppress the dummy faces for the new VDET
+      IF (VDYEAR().EQ.95) CALL VDFSUP
+d166 1
+a166 7
+C  for the new VDET, get a constant efficiency from the first
+C  element of the VDEM bank, it should read 0.98 or 0.99
+           IF (VDYEAR().EQ.95) THEN
+             JL = 1
+           ELSE
+             JL=VDMJLN(UW,NVDXY,2)
+           ENDIF
+d204 1
+a204 7
+C  for the new VDET, get a constant efficiency from the first
+C  element of the VDEM bank, it should read 0.98 or 0.99
+           IF (VDYEAR().EQ.95) THEN
+             JL = 1
+           ELSE
+             JL=VDMJLN(UW,NVDZT,1)
+           ENDIF
+@
+
+
+1.3
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+ 	gambnk.F gapeco.F gasteer.F
+ 	hcalib.F hcalrd.F hcatow.F hcbhis.F hcfclu.F hchist.F hclcra.F
+ 	hcltst.F hclufi.F hcos.F hcsimm.F hdgdeb.F hdgfil.F hdgpot.F
+ 	hdgsum.F hdprec.F hdspre.F hflnoi.F hinijo.F hiniru.F hmener.F
+ 	hmfind.F hmroad.F hnoise.F hnoisy.F hpatco.F hphnoi.F hplink.F
+ 	hprana.F hpranp.F hprdig.F hpreda.F hprpot.F hprsum.F hprunc.F
+ 	hrcomp.F hrcpat.F hrdcal.F hroad.F hslink.F hslowc.F hspare.F
+ 	hsptre.F hstofi.F htrack.F htubfi.F htwcr.F
+ 	iasign.F iattma.F ibnkin.F icaswt.F icftoi.F iclimb.F icrcco.F
+ 	ideadw.F idigpr.F ienang.F ifind1.F ifind2.F ifitp.F iftrak.F
+ 	igetti.F igettp.F igicha.F iheler.F iinijo.F iiniru.F iintrk.F
+ 	imatch.F inigap.F insect.F intrak.F ipakdi.F ipdsti.F iphcor.F
+ 	ipreda.F iprsum.F ipstat.F irefin.F ireopd.F isave.F ishuff.F
+ 	ishufl.F islowc.F isrch.F itbook.F itccut.F itcopr.F itcrec.F
+ 	itcrep.F itctpc.F itctrk.F itcxng.F iterr.F itextn.F ithist.F
+ 	itidy1.F itidy2.F itlnk1.F itlnk2.F itpcan.F itrak.F itrecf.F
+ 	itreci.F itree.F itrkci.F itrkeq.F itrkzr.F itrmca.F
+@
+text
+@d19 5
+d31 2
+a32 1
+
+d34 3
+d59 1
+d77 1
+a77 1
+       DATA FIRST/.TRUE./,NOTDO/.FALSE./
+d111 1
+a111 1
+C       set index to start on efficiency map for hishest period
+d124 2
+d156 7
+a162 1
+           JL=VDMJLN(UW,NVDXY,2)
+d200 7
+a206 1
+           JL=VDMJLN(UW,NVDZT,1)
+@
+
+
+1.2
+log
+@julia version 279
+@
+text
+@a0 1
+*DK vdmcef
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d16 4
+a19 1
+C?
+d22 1
+a26 1
+#include "vdsmjj.h"
+a36 1
+       INTEGER IVDSM,MVDSM
+a38 1
+       REAL DU,DW,SIGU,SIGW,VUW(3),XYZ(3)
+a47 3
+C      DATA SIGU/0.00088/,SIGW/0.00097/
+C
+C
+d54 1
+a54 1
+      INTEGER I,J,K,IDUM
+a78 1
+        MVDSM = NAMIND('VDSM')
+a105 8
+        IVDSM = IW(MVDSM)
+        IF(IVDSM.GT.0)THEN
+          SIGU = RTABL(IVDSM,1,JVDSUS)
+          SIGW = RTABL(IVDSM,1,JVDSWS)
+        ELSE
+          SIGU = 0.0
+          SIGW = 0.0
+        END IF
+a132 4
+C  Set seed for position smearing random number
+C
+      CALL NORRIN(FLOAT(IW(KEVEH+2)),FLOAT(IW(KEVEH+6)))
+C
+a160 24
+C  Add smearing on the U position, but ONLY if it hasn't already been
+C  done before
+C
+           IF(SIGU.GT.0.0.AND.IAND(IW(KVDXY+JVDXQF),IMCSMR).EQ.0)THEN
+             CALL RANNOR (DU,DU1)
+             RW(KVDXY+JVDXUC) = UW + DU*SIGU
+C
+C  Update the global position
+C
+             VUW(1) = 0.0
+             VUW(2) = UW + DU*SIGU
+             VUW(3) = 0.0
+C
+C-- Call to VDWFXY changed to VGWFXY, because the correction
+C-- to read-out direction should not be applied twice.
+             CALL VGWFXY(NVDXY,VUW,XYZ)
+             RW(KVDXY+JVDXXC) = XYZ(1)
+             RW(KVDXY+JVDXYC) = XYZ(2)
+C
+C  Flag the hit
+C
+             IW(KVDXY+JVDXQF)=IOR(IW(KVDXY+JVDXQF),IMCSMR)
+           END IF
+C
+a197 23
+C
+C  Add smearing on the W position
+C
+           IF(SIGW.GT.0.0.AND.IAND(IW(KVDZT+JVDZQF),IMCSMR).EQ.0)THEN
+             CALL RANNOR (DW,DW1)
+             RW(KVDZT+JVDZWC) = UW + DW*SIGW
+C
+C  Update the global position
+C
+             VUW(1) = 0.0
+             VUW(2) = 0.0
+             VUW(3) = UW + DW*SIGW
+C
+C-- Call to VDWFXY changed to VGWFXY, because the correction
+C-- to read-out direction should not be applied twice.
+             CALL VGWFXY(NVDZT,VUW,XYZ)
+             RW(KVDZT+JVDZZC) = XYZ(3)
+C
+C  Flag the hit
+C
+             IW(KVDZT+JVDZQF)=IOR(IW(KVDZT+JVDZQF),IMCSMR)
+           END IF
+
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

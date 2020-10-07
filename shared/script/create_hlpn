@@ -1,0 +1,506 @@
+#!/usr/local/bin/perl 
+require "complete.pl"; 
+require "ctime.pl";
+###############################################################################
+#                              CREATE_HLPN
+# 19/08/96                                                            F.Blin   
+###############################################################################
+# to create $DIRDOC/${PROG}${CYCLE}.hlpn 
+# step = 0 all [create_FOR_DK, floppy, flow create_treedk create_hlpn]
+# step = 1 to begin floppy
+# step = 2 to begin flow
+# step = 3 to begin create_treedk
+# step = 4 to begin -> create file hlpn
+#
+# parameters : program cycle step [any order]
+# eg: for all steps : create_hlpn julia 305  [default step = 0]
+#                     $DIRDOC/jul305.treedk + output cpp > $DIRDOC/jul305.hlpn
+# 
+#     begin step == 2 [flow] : create_hlpn julia 305 2
+###############################################################################
+$step = 0;
+$PROG_name = "";
+$CYCLE = "";
+
+foreach $i (0.. $#ARGV){
+   $new_PAR = shift(@ARGV);
+   &help if ($new_PAR eq "-h");
+   $PROG_name = $new_PAR if ($new_PAR=~ /^[a-zA-Z]+$/);
+   $CYCLE = $new_PAR if ($new_PAR=~ /^(\d+)$/ && $new_PAR > 5);
+   $step = $new_PAR if ($new_PAR=~ /^(\d+)$/ && $new_PAR < 5);
+}
+
+&help if ($PROG_name eq "");
+
+$GROUP = $ENV{'GROUP'};
+$FC = $ENV{'FC'};
+$FCOPT = $ENV{'FCOPT'};
+$AUTHSTATE = $ENV{'AUTHSTATE'};
+$ALINC = $ENV{'ALINC'};
+
+$PRO = "";
+$PROG = "";
+if ($GROUP eq "z5") {
+   $ROOT = $ENV{'LHCBROOT'};
+   $PROG = $PROG_name ;
+   if ($CYCLE eq "") {
+      $PRO = $ENV{'LHCBPRO'};
+      $CYCLE = substr($PRO,length($PRO)-3);
+   }
+   $PRO = "$ROOT/v${CYCLE}" if ($CYCLE ne "");
+   $DIRDOC = $ENV{'LHCBDOC'};
+   $DIRTMP = "";
+#   $DIRDOC = "/afs/cern.ch/user/f/fblz5/doc/";
+}
+if ($GROUP eq "xu") {
+   exit if ($PROG_name eq "bos77");
+   $ROOT = $ENV{'ALROOT'};
+   $PROG_name = "alephlib" if ($PROG_name eq "aleph");
+   $PROG = $PROG_name if ($PROG_name eq "alephio");
+   $PROG = $PROG_name if ($PROG_name eq "alpha");
+   $PROG = $PROG_name if ($PROG_name eq "alook");
+   $PROG = $PROG_name if ($PROG_name eq "mini"); 
+
+   $PROG = substr($PROG_name,0,5) if ($PROG_name eq "alephlib");
+   $PROG = substr($PROG_name,0,3) if ($PROG_name eq "julia" || $PROG_name eq "galeph" || $PROG_name eq "tpcsim");
+   $DIRDOC = $ENV{'ALDOC'};
+   $DIRTMP = "/tmp/";
+}
+
+&help if ($PROG eq "");
+
+$dir_prog = "$PRO/$PROG" if ($GROUP eq "z5");
+$file_out = "${PROG}${CYCLE}";
+
+if ($GROUP eq "xu"){
+   $dir_prog = "${ROOT}/${PROG}${CYCLE}"; 
+   $dir_prog = "${ROOT}/${PROG}" if ($PROG_name eq "alephio");
+}
+print "step=$step PROG_name=$PROG_name cycle=$CYCLE PRO=$PRO file_out=$file_out \n";
+
+if(-e "$DIRDOC/$file_out.hlpn"){
+  print "Please check : file ${DIRDOC}/${file_out}.hlpn exist !...\n";
+  exit;
+}
+
+print "Directory -> $dir_prog \n";
+if(!-e "$dir_prog"){
+  print "Please check : Directory: ${dir_prog} does not exist !...\n";
+  exit;
+}
+$l_dir_prog = length($dir_prog) ;
+
+@all_sets = `ls -F $dir_prog | grep "/" | grep -v [[:upper:]] | grep -v "^c/" | grep -v "^inc/"` ;
+
+@all_sets = "F77/\n" if ($#all_sets == 0);
+
+&create_FOR_DK if ($step == 0);
+
+if ($step == 1) {
+   &exit_problem("${DIRTMP}${file_out}.FOR") if(!-e "${DIRTMP}${file_out}.FOR");
+   &exit_problem("${DIRTMP}${file_out}.FOR") if(-z "${DIRTMP}${file_out}.FOR");
+   print "\n <> Now run /afs/cern.ch/aleph/shared/script/floppy_doc \n";
+   #output file ${DIRTMP}${file_out}.FOR.floptre;
+   system("/afs/cern.ch/aleph/shared/script/floppy_doc ${DIRTMP}${file_out}");
+   $step = $step + 1;
+}
+if ($step == 2) {
+   &exit_problem("$${DIRTMP}{file_out}.FOR.floptre") if(!-e "${DIRTMP}${file_out}.FOR.floptre");
+   &exit_problem("${DIRTMP}${file_out}.DK_flow") if(!-e "${DIRTMP}${file_out}.DK_flow");
+   print "\n <> Now run flow -q ${DIRTMP}${file_out}.FOR.floptre < ${DIRTMP}${file_out}.DK_flow > ${DIRTMP}${file_out}.treedk_flow \n";
+   system("flow -q ${DIRTMP}${file_out}.FOR.floptre < ${DIRTMP}${file_out}.DK_flow > ${DIRTMP}${file_out}.treedk_flow");
+   $step = $step + 1;
+}
+if ($step == 3){
+   &exit_problem("${DIRTMP}${file_out}.treedk_flow") if(-z "${DIRTMP}${file_out}.treedk_flow");
+   print "\n <> Now create $DIRDOC/${file_out}.treedk\n";
+   @tree_out = ();
+   @OUT_TREE = ();
+   &create_treedk;
+   $step = $step + 1;
+}
+
+exit if ($step != 4);
+system("rm -f ${DIRTMP}${file_out}.FOR");
+system("rm -f ${DIRTMP}${file_out}.FOR.floptre");
+system("rm -f ${DIRTMP}${file_out}.FOR.flopold");
+system("rm -f ${DIRTMP}${file_out}.output_floppy");
+system("rm -f ${DIRTMP}${file_out}.treedk_flow");
+system("rm -f ${DIRTMP}${file_out}.DK_flow");
+
+print "\n <> Now create file -> $DIRDOC/${file_out}.hlpn \n";
+
+$l_begin = $l_dir_prog + 1;
+$PROG_name =~ tr/a-z/A-Z/;
+
+$ij = 0;
+$niveau_set = "0";
+$niveau_sub = "2";
+
+$niveau_set = "2" if ($#all_sets >0);
+$niveau_sub = "3" if ($#all_sets >0);
+@tree = ();
+if(-e "$DIRDOC/${file_out}.treedk"){
+    @tree = `cat $DIRDOC/${file_out}.treedk`;
+    $flag_tree = 1;
+}
+else{
+    print "Not found file $DIRDOC/${file_out}.treedk !...\n";
+    $flag_tree = 0;
+}
+ 
+open(OUT_DOC,">> $DIRDOC/${file_out}.hlpn");
+print OUT_DOC "1 $PROG_name\n\n";
+@buffer = `cpp -P -DDOC $dir_prog/news/news.h 2>&1`;
+@buffer = `cat $dir_prog/news/news.h` if($?);
+
+print "WARNING not found file news.h \n" if ($#buffer == 0);
+foreach $i (1 ..$#buffer){
+    next if (index($buffer[$i],"*CD") == 0);
+    $line = $buffer[$i];
+    $line =~ s/^\s+//;
+    next if ($line eq "");
+    print OUT_DOC " $buffer[$i]"
+}
+
+foreach $i (0 .. $#all_sets){
+    @C_comments = ();
+    $n_C_comments = 0;
+    @OUT_set = ();
+    $all_sets[$i] =~ s/\s+$//;
+    next if ($all_sets[$i] eq "news/");
+    $set_name = substr($all_sets[$i],0,index($all_sets[$i],"/"));
+    $set_name =~ tr/a-z/A-Z/;
+    @all_files = `ls $dir_prog/$all_sets[$i]*.F`;
+    next if ($#all_files < 0);
+    print "===> set $set_name\n";
+    $CKEY = 0;
+    @news = ();
+    $set_news = substr($all_sets[$i],0,length($all_sets[$i])-1);
+    @news = `cpp -P -DDOC $dir_prog/news/${set_news}news.h`;
+    print "WARNING not found file news.h for the set $all_sets[$i]\n" if ($#news < 0);
+    print OUT_DOC "\n$niveau_set $set_name\n\n" if ($niveau_set == 2); 
+    print OUT_DOC "  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
+    @temp =();
+    foreach $i (0 ..$#news){
+        next if (index($news[$i],"*CD") == 0);
+        if (!$CKEY && index($news[$i],"CKEY ") > -1 && index($news[$i],"CKEY ") < 2){
+           push(@OUT_DOC,"    $news[$i]\n");
+           $CKEY = 1;
+           next;
+        } 
+        $line = $news[$i];
+        $line =~ s/^[C!]*//; 
+        push(@temp,"$line");
+    }
+    print OUT_DOC "    CKEY \n" if (!$CKEY);
+    foreach $ij (0 ..$#temp){
+	print OUT_DOC "    $temp[$ij]";
+    }
+    print OUT_DOC "  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n";  
+
+    $l_begin = $l_dir_prog + length($set_name) + 2;
+    &cpp_DOC($l_begin,@all_files);
+    if ($#C_comments > 0){
+       print OUT_DOC "@C_comments";  
+       print OUT_DOC "@OUT_set";
+    }
+}
+
+exit;
+###############################################################################
+sub cpp_DOC{
+    
+    @buf = ();
+    $sub_name = "";
+    local(@all_f) = ();
+    $l_begin,@all_f = @_ ;
+
+#    print "ALINC=$ALINC and ${dir_prog}/inc\n";
+    for ($ii=1 ; $ii<=$#all_f; $ii++){ 
+        $sub_name = substr($all_f[$ii],$l_begin,index($all_f[$ii],".F") - $l_begin);
+        $sub_name =~ tr/a-z/A-Z/;
+#       print "$all_f[$ii] $sub_name \n";
+
+        $n_sub = `wc -l $all_f[$ii]`; 
+        $n_sub =~ s/^\s+//;
+        $n_sub = substr($n_sub,0,index($n_sub," "));
+
+        &search_DOC($all_f[$ii]);
+        
+        @buf = `cpp -I${ALINC} -I${dir_prog}/inc -P -DDOC $all_f[$ii]`;
+#        print "1$sub_name n_ndef=$n_ndef n-buf=$#buf n_sub=$n_sub\n";
+        if ($#buf < 2 && $n_ndef > 0){
+	    $first_line = `head -1 $all_f[$ii]`;
+	    $first_line = `head -2 $all_f[$ii]` if (substr($first_line,0,1) ne "#");
+            print "***Warning look-at $all_f[$ii]" if (index($first_line,"if define") < 1);
+            if (index($first_line,"if define") > 0){
+		$n_open = index($first_line,"(");
+		$n_close = index($first_line,")");
+                $new = substr($first_line,$n_open+1,$n_close-($n_open+1)); 
+                @buf = `cpp -I${ALINC} -I${dir_prog}/inc -P -DDOC -D$new $all_f[$ii]`;
+#                print "New cpp for $sub_name new-D=$new n_ndef=$n_ndef n-buf=$#buf n_sub=$n_sub\n";
+                print "New cpp for $sub_name new-D=$new\n";
+	    }
+        }   
+        &create_input_DOC;
+    }
+return
+}
+###############################################################################
+sub create_input_DOC {
+
+    local($str_30) = "------------------------------";
+    local($str1_30) = "==============================";
+    local($str) = "------------------------------------------------------------------------------";
+#    local($str_tree) = "Caller(s)  Node        Calls                               Description";
+    local($flag_first,$flag_CKEY,$flag_C,$flag_Cs) = 0;
+    local($j) = 0;
+    local(@temp,@temp_sub) = ();
+
+    push(@temp_sub,"\n$niveau_sub $sub_name\n");
+    $flag_CKEY = 0;
+    for ($i=0 ; $i<=$#buf; $i++){
+	$line = $buf[$i];
+        $line =~ s/\s+$//;
+        $line =~ s/\*$//;
+        $line =~ s/ C$//;
+        $line =~ s/\s+$//;
+        next if ($line eq "C");
+        next if ($line eq "C?");
+        next if (index($line,"*DK") > -1);
+        next if (index($line,"$str_30") > 0 || index($line,"$str1_30") > 0);
+        $flag_Cs = 1 if (substr($line,1,1) eq "!" && $flag_C && !$flag_Cs);
+        if (substr($line,1,1) eq "!" && !$flag_C) {
+           $rest_line = substr($line,2); 
+           $rest_line =~ s/^\s+//;
+           $rest_line =~ s/^[*]+//;
+           $rest_line =~ s/^\s+//;
+           $rest_line = substr($rest_line,1) if (substr($rest_line,0,1) eq "-"); 
+           $rest_line =~ s/^\s+//;
+           next if ($rest_line eq "");
+           $first_character = substr($rest_line,0,1);
+           $first_character =~ tr/a-z/A-Z/;
+           $rest_line = substr($rest_line,1);
+           $rest_line =~ tr/A-Z/a-z/;
+           $line = "${first_character}${rest_line}";
+           $sub = sprintf ("%-10s", $sub_name);
+           $n_C_comments++ ;
+           $C_comments[$n_C_comments] = "    $sub $line\n";
+           $flag_C = 1;
+#           print "$C_comments[$n_C_comments]";
+           push(@temp_sub,"  $line\n") if ($flag_CKEY);
+           push(@temp,"  $line\n") if (!$flag_CKEY);
+           next;
+        }  
+        if (index($line,"CKEY ") > -1 && index($line,"CKEY ") < 2){ 
+           push(@temp_sub, " $str\n");
+           push(@temp_sub, "   $line\n");
+           push(@temp_sub, " $str\n");
+           push(@temp_sub, "@temp") if ($#temp > -1);
+           $flag_CKEY = 1;
+           $j = $i;
+           next;
+        } 
+        if (index($line,"C ") > -1 && index($line,"C ") < 4){ 
+           $line = substr($line,index($line,"C ")+2);
+        }
+        $line =~ s/^[C!|C-|C.|C?|C:|*]+//;
+        if (!$flag_first){
+           push (@temp_sub,"  $line\n");   
+           $flag_first = 1;
+           next; 
+        }
+        if ($flag_CKEY){
+	    push(@temp_sub,"  $line\n");
+            next;
+        }
+        push(@temp,"  $line\n");
+    }
+    if (!$flag_CKEY){
+       push(@temp_sub, "  $str\n");
+       push(@temp_sub, "    CKEY\n");
+       push(@temp_sub, "  $str\n");
+       push(@temp_sub,"@temp") if ($#temp > 0);
+    }
+#    print "***several lines C! in $all_f[$ii]" if ($flag_Cs);
+    if (!$flag_C){ 
+       print "***Warning missing line C! in $all_f[$ii]"; 
+       $n_C_comments++ ;
+       $C_comments[$n_C_comments] = "    $sub_name \n";
+    }
+    if ($flag_tree){
+       $n_line = 0;
+       $line = `grep -n "==> $sub_name " $DIRDOC/${file_out}.treedk`;
+       $n_line = substr($line,0,index($line,":")) if (length($line) > 5);
+#       print "$sub_name $n_line\n";
+       if ($n_line > 0){
+          push(@temp_sub, "  $str\n");
+          @temp_tree = ();
+          for ($n=$n_line + 1; $n<=$#tree; $n++){ 
+             last if (substr($tree[$n],0,4) eq " ==>");
+             $flag_same = 0;
+             foreach  $z (0 ..$#temp_tree){
+	         if ($temp_tree[$z] eq " $tree[$n]"){
+	            $flag_same = 1;
+                    last;
+	         }
+             }
+             push(@temp_tree," $tree[$n]") if (!$flag_same);
+          }
+          push(@temp_sub,@temp_tree);
+      }
+    }
+    push(@OUT_set,@temp_sub);
+    return;
+}
+###############################################################################
+sub help {
+    print "Syntax     : create_hlpn  program_name [- cycle]\n";
+   
+    print "examples : create_hlpn alephio \n";
+    print "           create_hlpn alephib 214  \n";
+    print "           create_hlpn julia 281 \n";
+    exit;
+}
+###############################################################################
+sub search_DOC {
+
+    $n_ndef = 0;
+    local($line) = "";
+
+    $line = `grep -n "#ifndef DOC" $_[0]`;
+    $line = `grep -n "#if defined DOC" $_[0]` if (index($line,":") < 1);
+    $line = `grep -n "#if defined(DOC)" $_[0]` if (index($line,":") < 1);
+    $line =~ s/^\s+//;
+    $n_ndef = substr($line,0,index($line,":")) if (index($line,":") > 0);
+    print "***Warning DOC ??? in $_[0]" if ($n_ndef eq 0); 
+
+    return($n_ndef);
+}
+###############################################################################
+sub exit_problem {
+
+    print "***WARNING not found file $_[0] !... \n";
+    exit;
+}
+
+###############################################################################
+sub create_FOR_DK {
+
+    local($i,$ii,$ij) = 0;
+    local(@all_FOR, @DK_flow )= ();
+
+    system ("rm -f ${DIRTMP}${file_out}.FOR") if (-e "${DIRTMP}${file_out}.FOR");
+    system ("rm -f ${DIRTMP}${file_out}.DK_flow") if (-e "${DIRTMP}${file_out}.DK_flow");
+
+    $par_P = "-P";
+    $begin_letter = "";
+    $f_t = "i";
+    $sub_begin = 0;
+
+    if ($AUTHSTATE eq "AFS"){
+	$par_P = "-d";
+	$begin_letter = "F";
+	$f_t = "f";
+	$sub_begin = 1;
+    }
+    open(all_FOR,">>${DIRTMP}${file_out}.FOR");
+    foreach $i (0 .. $#all_sets){
+	system("rm ${begin_letter}*.$f_t");
+	system("rm *.o") if ($GROUP eq "z5");
+	$set_name = substr($all_sets[$i],0,index($all_sets[$i],"/"));
+#       print "set_name=$set_name \n";
+	$l_begin = $l_dir_prog + length($set_name) + 2;
+
+# to create fortran source programs name.i or Fname.f
+#       system("f77 -w -O -static -DUNIX -DALEPH_DEC -I$dir_prog/inc -I$ALINC -P $dir_prog/$set_name/*.F");
+#>>> with -c in $FCOPT
+#error  fort: Info: Interprocedural optimization between source files is not possible with -c
+#<<<
+	print "$FC $FCOPT -I$dir_prog/inc  $par_P $dir_prog/$set_name/*.F \n";
+	system("$FC $FCOPT -I$dir_prog/inc $par_P $dir_prog/$set_name/*.F");
+	@files_if = `ls ${begin_letter}*.${f_t}`;
+	for ($ii=0 ; $ii<=$#files_if; $ii++){
+	    $name = substr($files_if[$ii],$sub_begin,index($files_if[$ii],".${f_t}")-$sub_begin);
+	    $name =~ tr/a-z/A-Z/;
+	    $ij = $ij + 1;
+#input flow>>>
+	    $name =~ s/^\s+//;
+#	    print "name=$name \n";
+	    $DK_flow[$ij] = "$name\n";
+#<<<
+	    @temp = `cat ${files_if[$ii]}`;
+	    print all_FOR "@temp";
+	}
+    }
+    close(all_FOR);
+    system("rm *.i") if ($GROUP eq "xu");
+    system("rm *.o") if ($GROUP eq "z5");
+    system("rm F*.f") if ($GROUP eq "z5");
+
+    open(DK_flow,">>${DIRTMP}${file_out}.DK_flow");
+    print DK_flow @DK_flow;
+    print DK_flow "q\n";
+    close(DK_flow);
+
+    $step = $step + 1;
+    return;
+}
+##########################################################################
+sub create_treedk {
+
+    local(@tree_in) = ();
+    local($i,$ii,$n_first) = 0;
+
+    $input_tree = "${DIRTMP}${file_out}.treedk_flow";
+    $output_tree = "$DIRDOC/${file_out}.treedk";
+    @tree_in = `cat $input_tree` if(-e "$input_tree");
+    system("rm -f $output_tree") if (-e "$output_tree"); 
+    open(OUT_TREE,">> $output_tree");
+
+    foreach $i (1 ..$#tree_in){
+#       print "$flag i=$i -> $tree_in[$i]";
+       next if (substr($tree_in[$i],1,7) eq"PROQRY ");
+       next if (index($tree_in[$i],"is not in the source !") > 1);
+       next if (index($tree_in[$i],"Show list of routines ?") > 0);
+       if (substr($tree_in[$i],1,5) eq "What " || substr($tree_in[$i],1,6) eq "Which "){
+           $n_first = ($i+4);
+           if ($ii>0){
+              &write_tree;
+              $ii = 0;
+              @tree_out = ();
+              $subname = "";
+              $subtemp = "";
+           }
+           next;
+       }
+       if (substr($tree_in[$i],12,3) ne "   " && $i > $n_first && $subname eq ""){
+          $subname = substr($tree_in[$i],12);
+#         print "$n_first $i subname=$subname end\n"
+       }
+#         $subname = substr($tree_in[$i],12) if (substr($tree_in[$i],6,6) eq "|---- ");
+       $line = $tree_in[$i];
+       $line =~ s/^\s+//;
+       next if ($line eq "");
+       $ii++ ;
+       $tree_out[$ii] = $tree_in[$i];
+   }
+   &write_tree if ($ii>0);
+   close(OUT_TREE);
+   &exit_problem("$DIRDOC/${file_out}.treedk") if (!-e "$DIRDOC/${file_out}.treedk");
+   return;
+}
+############################################################################
+sub write_tree {
+
+   $subname =~ s/\.//;
+   $subname =~ s/^\s+//;
+   $subname =~ s/\s+$//;
+#  print "subname=$subname end\n";
+   print OUT_TREE " ==> $subname \n";
+   print OUT_TREE @tree_out;           
+   print OUT_TREE " \n";
+   return;
+}
+###############################################################################

@@ -1,0 +1,375 @@
+head	1.4;
+access;
+symbols
+	dbase22:1.4
+	dbase21:1.4
+	dbase20:1.2
+	dbase19:1.1.1.1
+	dbase18:1.1.1.1
+	dbase17:1.1.1.1
+	dbase04:1.1.1.1
+	dbase03:1.1.1.1
+	dbase02:1.1.1.1
+	dbase01:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.4
+date	99.03.04.10.04.32;	author flr;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	99.03.03.10.02.44;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.12.03.08.19.01;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.02.12.10.06.05;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.02.12.10.06.05;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@remove references to ADA32 or ADA31
+@
+text
+@      PROGRAM UPDDAF
+C----------------------------------------------------------------------
+C! update ADBSCONS.DAF
+C!
+C!   Author   :-    F.RANJARD                   12-APRIL-1990
+C!
+C!   data cards:
+C!
+C!        ******* update ADBSCONS with new ADAMO tables ********
+C!        ******* write new table onto it **********************
+C!        ******* write new BOS format file ********************
+C!        * open/write data base file
+C!        FDBA  'MY.DAF | DAF'
+C!        * open/read file containing ADAMO tables TAB and COL
+C!        FBS   'DBASE:ADBSCONS.BS123 | DAF'
+C!        * read '.TAB' and '.COL' create and fill 'CADB'
+C!        BBS   '.TAB'  '.COL'  'CADB'
+C!        FBS   'DBASE:RUNBANK.BS123 |DAF'
+C!        BBS   '.TAB'  '.COL'  'CPRO'
+C!        * open/write BANKAL.FMT
+C!        FFMT  'DBS:BANKAL.FMT | CARD'
+C!        ENDQ
+C!        ******* read current ADBSCONS ************************
+C!        ******* open/write new DAF and EPIO version***********
+C!        ******* write new CPRO,TPRO,CADB,TADB onto new DAF ***
+C!        ******* write new BOS format file ********************
+C!        ******* copy all tables except ADAMO ones ************
+C!        * open/read data base file
+C!        FDBA  'DBASE:ADBSCONS.DAF'
+C!        * open/read file containing ADAMO tables TAB and COL
+C!        FBS   'DBASE:ADBSCONS.BS123 | DAF'
+C!        * read '.TAB' and '.COL' create and fill 'CADB'
+C!        BBS   '.TAB'  '.COL'  'CADB'
+C!        FBS   'DBASE:RUNBANK.BS123 |DAF'
+C!        BBS   '.TAB'  '.COL'  'CPRO'
+C!        * open/write NEW ADBSCONS.DAF
+C!        FOUT  'DBS:NEWADBS.DAF125 | DAF'
+C!        * number of block and directory blocks on NEWADBS
+C!        OUTB  370    7
+C!        * open/write BANKAL.FMT
+C!        FFMT  'DBS:BANKAL.FMT | CARD'
+C!        * copy all banks from FDBA to FOUT
+C!        COPY
+C!        * open/write NEW ADBSCONS.EPIO
+C!        FEPI  'DBS:NEWADBS.EPIO125 | EPIO'
+C!        ENDQ
+C!
+C!   Libraries required: ALEPHLIB, BOS77, CERNLIB
+C!
+C!   Description
+C!   ===========
+C!  read a file containing ADAMO tables TAB and COL,
+C!  build from them new tables TOU, OUT
+C!  drop TAB and COL if it is required
+C!  write OUT onto a new file FOUT or onto FDBA
+C!  copy banks from FDBA to FOUT if required skipping old ADAMO and
+C!  the old CPRO/TPRO or/and CADB/TADB banks.
+c!  tables.
+C!  2 input files can be read in sequence with 2 different sets of
+C!  TAB and COL tables
+C!  write the BOS formats onto file FFMT
+C?
+C!======================================================================
+#ifndef DOC
+      CHARACTER*80 TFIL,FTYP,FDEV,TOUT,TFULL
+      CHARACTER*4 CHAINT,OUT,TOU,TAB,COL,NAME,PASSW
+      CHARACTER*120 MSG,MSGE,MSGB
+      CHARACTER*8 SUBR
+      LOGICAL FCPRO,FCADB
+#include "lbos.h"
+      DATA PASSW/'ADAM'/
+      DATA FCPRO/.FALSE./, FCADB/.FALSE./
+#include "bmacro.h"
+C
+C ------------------------------------------------------------------
+C
+       SUBR = ' UPDDAF '
+C - Initialize BOS
+       CALL BNAMES (NAMAX)
+       CALL BOS (IW,LBOS)
+       IW(5) = 7
+       IW(7) = 100000
+       CALL BOSTA
+C
+C - Read data card file
+       CALL GETENVF ('UPDDAFCARDS',TFIL)
+       IF (TFIL.NE.' ') CALL AOPEN(IW(5),TFIL,'CARD','DISK',IER)
+       CALL BREADC
+C
+C - Open data base EPIO file  on LUEPI=25
+         LUEPI = 25
+         CALL ACDARG('FEPI','EPIO','*',TFIL,FTYP,FDEV,IER)
+         IF (IER.EQ.-1) THEN
+            LUEPI = 0
+         ELSEIF(IER.NE.0) THEN
+            WRITE (IW(6),*) ' problem with FEPI card - EXIT'
+            CALL EXIT
+         ELSE
+            LDUM = NALREC(3600)
+         ENDIF
+#include "erase.h"
+         IF (LUEPI.GT.0) THEN
+            CALL AOPENW(LUEPI,TFIL,FTYP,FDEV,IER)
+            IF (IER.NE.0) THEN
+               CALL AWERRC (IW(6),'UPDDAF',TFIL,IER)
+               CALL EXIT
+            ENDIF
+         ENDIF
+C
+C - open new OUT.DAF in write mode
+C
+C     OUTfile name
+      LUOUT = 22
+      CALL ACDARG ('FOUT','DAF','*',TOUT,FTYP,FDEV,IER)
+      IF (IER.EQ.-1) THEN
+         LUOUT = 0
+      ELSEIF(IER.GT.0) THEN
+         CALL AWERRC (IW(6),'UPDDAF',TOUT,IER)
+      ENDIF
+C
+C Create OUT DAF on unit LUOUT=22
+C
+      IF (LUOUT .NE. 0) THEN
+         LUN  = LUOUT
+         TFIL = TOUT
+         IRECL=JULREC(FTYP,FDEV)
+C     number of blocks for OUT file
+#include "gtnrec.h"
+C     erase existing file on IBM
+#include "erase.h"
+C     open new daf in write mode
+#include "owdaf.h"
+      ENDIF
+C     do you want to COPY tables onto OUT
+      JCOPY = NLINK ('COPY',0)
+C
+C - open current data base ADBSCONS.DAF
+C   in read mode if FOUT is defined (LUOUT>0)
+C   in write mode if FOUT is not defined (LUOUT=0)
+C
+      TFULL = '    '
+      LUFUL = NUNIDB(15)
+      LUFUL = JUNIDB(0)
+      IRECL = JULREC('DAF','DISK')
+      IF (LUOUT.GT.0) THEN
+C      open/read
+         CALL AOPDBS (TFULL,IER)
+         IF (IER.NE.0) THEN
+           CALL AWERRC(IW(6),'UPDDAF',TFULL,IER)
+         ENDIF
+      ELSE
+C      open/write
+         CALL ACDARG ('FDBA','DAF','*',TFULL,FTYP,FDEV,IER)
+         IF (IER.NE.0) THEN
+           CALL AWERRC(IW(6),'UPDDAF',TFULL,IER)
+         ENDIF
+         IRECL=JULREC(FTYP,FDEV)
+         LUN = LUFUL
+         TFIL = TFULL
+#include "owodf.h"
+C
+         IW(1)=2
+         CALL BDABF(LUFUL,IRECL,'    ',PASSW)
+         IBF = NLINK ('+BUF',LUFUL)
+         IF (IBF.EQ.0) THEN
+           WRITE(IW(6),*) ' Programming error: bank +BUF does not exist'
+           GOTO 98
+         ENDIF
+         CALL BDAPR(LUFUL,'    ')
+         LUOUT = LUFUL
+      ENDIF
+C
+C - open the ASCII file to fill bank formats
+C
+       LUFMT = 18
+       CALL AGTFIL ('FFMT','WRIT',LUFMT,IER)
+       IF (IER.EQ.-1) THEN
+          LUFMT = 0
+       ELSEIF (IER.GT.0) THEN
+          CALL EXIT
+       ENDIF
+C
+C - define formats
+       CALL BKFMT ('.COL','2I,(I,11A,I)')
+       CALL BKFMT ('.TAB','2I,(I,4A)')
+       CALL BKFMT ('TAB2','2I,(I,4A)')
+       CALL BKFMT ('COL2','2I,(I,7A,I)')
+C
+C - Open and read .BS files, write OUT bank
+       NRBS = -1
+ 10    NRBS = NRBS+1
+       JBBS = NLINK('BBS ',NRBS)
+       IF (JBBS.EQ.0) THEN
+          WRITE(IW(6),*) ' ***no more data card*** BBS nr= ',NRBS
+       ELSE
+          TAB = CHAINT(IW(JBBS+1))
+          COL = CHAINT(IW(JBBS+2))
+          OUT = CHAINT(IW(JBBS+3))
+          TOU = 'T'//OUT(2:4)
+
+          LUBS= 1
+          CALL READBS ('FBS ',LUBS,TAB,COL,OUT)
+C
+C         write OUT onto OUT.DAF if required
+          IF (LUOUT.GT.0) THEN
+             IF (OUT.EQ.'CPRO') FCPRO = .TRUE.
+             IF (OUT.EQ.'CADB') FCADB = .TRUE.
+             CALL BDAWR(IW,LUOUT,OUT,0)
+             CALL BDAWR(IW,LUOUT,TOU,0)
+          ENDIF
+C
+C         create and fill FMT file
+          CALL CRTFMT (LUFMT,OUT,TOU)
+C
+C         write OUT onto OUT.EPIO if required
+          IF (LUEPI.GT.0) THEN
+             CALL BEPWS(IW,LUEPI,OUT,0)
+             CALL BEPWS(IW,LUEPI,TOU,0)
+          ENDIF
+          CALL BDROP(IW,TAB)
+          CALL BDROP(IW,COL)
+          CALL BGARB(IW)
+C
+          GOTO 10
+       ENDIF
+C
+C - copy all banks except ADAMO tables
+C
+          IF ((LUOUT.GT.0.OR.LUEPI.GT.0).AND.JCOPY.GT.0) THEN
+  200        CONTINUE
+             JNAME = MDARS (IW,LUFUL)
+             IF (IW(2) .NE. 0) GOTO 997
+             IF (JNAME .EQ. 0) THEN
+                WRITE (IW(6),*) ' not enough space, skip it '
+                GOTO 200
+             ENDIF
+             NAME = CHAINT (IW(JNAME-3))
+             NR = IW(JNAME-2)
+             IF (NAME(1:1).EQ.'.' .OR.
+     &            NAME.EQ.'TAB2'  .OR.
+     &            NAME.EQ.'COL2'  .OR.
+     &            (FCPRO .AND. NAME(2:4).EQ.'PRO') .OR.
+     &            (FCADB .AND. NAME(2:4).EQ.'ADB')
+     &           ) THEN
+             ELSE
+                IF (LUOUT.GT.0) CALL BDAWR(IW,LUOUT,NAME,NR)
+                IF (LUEPI.GT.0) CALL BEPWS (IW,LUEPI,NAME,NR)
+             ENDIF
+             IDRP = MDROP (IW,NAME,NR)
+             IF ((IW(16)-IW(15)).LT.5000) CALL BGARB(IW)
+             GOTO 200
+          ENDIF
+C
+ 997   CONTINUE
+       IF (LUOUT.GT.0) CALL BDAPR(LUOUT,'    ')
+       IF (LUEPI.GT.0) CALL BWRITE(IW,LUEPI,'0')
+
+       CALL BOSIO
+       CALL BOSTA
+       CALL ACLOSE (0,IER)
+       STOP
+C
+C - error in opening file
+C
+ 90   CONTINUE
+ 98   CONTINUE
+      STOP
+      END
+#endif
+@
+
+
+1.3
+log
+@dbase21: make ADA32 the default
+@
+text
+@a183 6
+#if defined(ADA31)
+       CALL BKFMT ('.Tab','2I,(I,4A,I)')
+       CALL BKFMT ('.Col','2I,(I,7A,3I)')
+       CALL BKFMT ('.TAB','2I,(I,4A)')
+       CALL BKFMT ('.COL','2I,(I,7A,I)')
+#else
+a185 1
+#endif
+@
+
+
+1.2
+log
+@dbase 20 increase filename length
+@
+text
+@d184 1
+a184 4
+#if defined(ADA32)
+       CALL BKFMT ('.COL','2I,(I,11A,I)')
+       CALL BKFMT ('.TAB','2I,(I,4A)')
+#else
+d189 3
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d65 1
+a65 1
+      CHARACTER*40 TFIL,FTYP,FDEV,TOUT,TFULL
+@
+
+
+1.1.1.1
+log
+@1st release of dbase library
+@
+text
+@@

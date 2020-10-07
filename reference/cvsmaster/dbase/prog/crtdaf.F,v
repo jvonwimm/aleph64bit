@@ -1,0 +1,182 @@
+head	1.2;
+access;
+symbols
+	dbase22:1.2
+	dbase21:1.2
+	dbase20:1.2
+	dbase19:1.1.1.1
+	dbase18:1.1.1.1
+	dbase17:1.1.1.1
+	dbase04:1.1.1.1
+	dbase03:1.1.1.1
+	dbase02:1.1.1.1
+	dbase01:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	98.12.03.08.18.59;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.02.12.10.06.03;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.02.12.10.06.03;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@dbase 20 increase filename length
+@
+text
+@      PROGRAM CRTDAF
+C ---------------------------------------------------------
+C - F.Ranjard - 900312
+C! Create a BOS-DAF file from BOS data cards
+C
+C - data cards:
+C    * open/write filename.ftype | DAF
+C    FDAF  'RDS$ROOT:[STDENIS.VERIFY.DEV.DATA]RUNQCUTS.DAF'
+C    * number of records  [and directory records] on FDAF
+C    DAFB  50
+C    * open/read datacard filename.ftype | CARD'
+C    FBNK  'O_VER$CARDS:CUTS.CARDS'
+C    * suppress BOS printout
+C    POFF
+C    * mandatory
+C    ENDQ
+C    * logical unit number of the data card file FBNK
+C    UNIT 8
+C ----------------------------------------------------------
+#ifndef DOC
+#include "lbos.h"
+C
+      CHARACTER*8   SUBR
+      CHARACTER*4   NAME,PASSW,NAMB
+      CHARACTER*4   CHAINT, NLIST
+      CHARACTER*80  TDAF,FTYP,FDEV,TFIL
+      CHARACTER*120 MSG,MSGE,MSGB
+      DATA PASSW/'ADAM'/
+#include "bmacro.h"
+C ---------------------------------------------------------------
+      SUBR   = ' CRTDAF '
+      CALL BNAMES(NAMAX)
+      CALL BOS(IW,LBOS)
+C
+C***     PRINTOUT ON FILE   *****
+C
+      IW(5) = 7
+      IW(7) = 10000
+      IW(8) = 10000
+      LCARD = IW(5)
+      LBNK  = 8
+      LTERM  = 6
+      LUNEW = 23
+      CALL BOSTA
+C
+C     get data card file
+C
+      CALL GETENVF ('CRTDAFCARDS',TFIL)
+      IF (TFIL.NE.' ') CALL AOPEN (LCARD,TFIL,'CARD','DISK',IER)
+      CALL BREADC
+C
+C     DAFfile name
+C
+      CALL ACDARG ('FDAF','DAF','*',TDAF,FTYP,FDEV,IER)
+      IF (IER.EQ.-1) THEN
+         TDAF = 'CRTDAF.DAF'
+      ELSEIF(IER.GT.0) THEN
+         CALL AWERRC (IW(6),'CRTDAF',TDAF,IER)
+         CALL EXIT
+      ENDIF
+      IRECL = 1024
+C
+C     number of blocks for DAF file: NBREC, NDREC, NREC
+#include "gtnrec.h"
+C
+C     open the DAF in write mode
+C
+      IF (LUNEW .NE. 0) THEN
+         LUN  = LUNEW
+         TFIL = TDAF
+#include "erase.h"
+#include "owdaf.h"
+      ENDIF
+C
+C - open the bank file
+C
+      CALL AGTFIL ('FBNK','READ',LBNK,IER)
+      IF (IER.NE.0) THEN
+         WRITE (IW(6),*) ' NO bank file - EXIT'
+         CALL EXIT
+      ENDIF
+C
+C - Read data card file, one at a time and copy it onto
+C   the data base
+C
+      NBKW =0
+      NWRDS = 0
+  300 CONTINUE
+      IND=MREADC(IW)
+      IF(IND.NE.0) THEN
+         NAME=CHAINT(IW(IND-3))
+         NR=IW(IND-2)
+C
+C        copy the bank from data cards to NEWDAF
+         CALL BDAWR (IW,LUNEW,NAME,NR)
+C
+         NWRDS = NWRDS + IW(IND)
+         NBKW  = NBKW + 1
+         GOTO 300
+      ENDIF
+C
+      WRITE (IW(6),*) ' total NEWDAF ', NWRDS,NBKW
+      CALL BDAPR(LUNEW,'    ')
+C
+ 800  CONTINUE
+      WRITE(IW(6),'(//A)')
+     +          ' ------ DATABASE STATUS AFTER CARDAF ------ '
+      CALL BOSIO
+      CALL ACLOSE (0,IER)
+C
+  999 STOP
+C
+C - Error opening new DAF
+ 90   WRITE (IW(6),*) ' error - IOP = ', IOP, ' opening ', TDAF
+      STOP
+C
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d26 1
+a26 1
+      CHARACTER*60  TDAF,FTYP,FDEV,TFIL
+@
+
+
+1.1.1.1
+log
+@1st release of dbase library
+@
+text
+@@

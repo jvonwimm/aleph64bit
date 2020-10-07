@@ -1,0 +1,146 @@
+head	1.1;
+access;
+symbols
+	alpha126_22:1.1
+	alpha122_22:1.1
+	alpha126_21:1.1
+	alpha126_20:1.1
+	alpha126_19:1.1
+	alpha126_18:1.1
+	alpha126_17:1.1
+	alpha126_16:1.1
+	alpha126_15:1.1
+	alpha126_14:1.1
+	alpha126_13:1.1
+	alpha126_12:1.1
+	alpha126_11:1.1
+	alpha126_10:1.1
+	alpha126_09:1.1
+	alpha126_08:1.1
+	alpha126_07:1.1
+	alpha126_06:1.1
+	alpha126_05:1.1
+	alpha126_04:1.1
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	99.03.22.14.06.54;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE MINECO
+C
+CKEY MDST /INTERNAL
+C-----------------------------------------------------------------------
+C! Fill Ecal calorimeter bank DECO for Mini-DST.
+C
+C     Author: Stephen Haywood      22-Jan-90
+C
+C     Input  : PECO bank
+C     Output : DECO bank
+C
+C     Called by MINDST
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+#include "minfac.h"
+#include "pecojj.h"
+#include "decojj.h"
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+C++   Pick up PECO bank.
+C
+      KPECO = NLINK('PECO',1)
+      IF (KPECO.LE.0) KPECO = IW(NAMIND('PECO'))
+      IF (KPECO.LE.0) RETURN
+      NPECO = LROWS(KPECO)
+      IF (NPECO.LE.0) RETURN
+      NR = IW(KPECO-2)
+C
+C++   Create DECO bank.
+C
+      NDECO = NPECO
+      LEN = LMHLEN + LDECOA * NDECO
+      CALL AUBOS('DECO',NR,LEN, KDECO,IGARB)
+      IF(IGARB.GE.2) THEN
+         WRITE(IW(6),'('' MINECO: Cannot create DECO bank'')')
+         RETURN
+      ELSE IF(IGARB.NE.0) THEN
+         KPECO = NLINK('PECO',NR)
+      ENDIF
+      IW(KDECO+LMHCOL) = LDECOA
+      IW(KDECO+LMHROW) = NDECO
+C
+C++   Loop over PECO storing information in DECO.
+C
+      DO 100 I=1,NPECO
+         IW(KROW(KDECO,I)+JDECE0) = NINT(EFACTM * RTABL(KPECO,I,JPECEC))
+         IW(KROW(KDECO,I)+JDECTH) = NINT(AFACTM * RTABL(KPECO,I,JPECTH))
+         IW(KROW(KDECO,I)+JDECPH) = NINT(AFACTM * RTABL(KPECO,I,JPECPH))
+         IW(KROW(KDECO,I)+JDECEF+0) = NINT(1000.* RTABL(KPECO,I,JPECE1))
+         IW(KROW(KDECO,I)+JDECEF+1) = NINT(1000.* RTABL(KPECO,I,JPECE2))
+         IW(KROW(KDECO,I)+JDECCC) = ITABL(KPECO,I,JPECCC)
+  100 CONTINUE
+C
+C++   Add the bank to the Mini list.
+C
+      CALL MINLIS('DECO')
+C
+      RETURN
+      END
+#endif
+@

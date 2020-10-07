@@ -1,0 +1,247 @@
+      SUBROUTINE E4OVRL(ICLE,IT,NTR,R3ES,R4ES,IOFL)
+C----------------------------------------------------------------------
+C!  - CALCULATE ENERGY CORRECTION IN OVERLAP
+C!
+C!    AUTHOR  : D. PALLIN   07/07/90
+C!    MODIFIED:
+C!
+C?
+C!======================================================================
+#ifndef DOC
+#include "esdajj.h"
+#include "eclujj.h"
+#include "bcs.h"
+#include "ecnamc.h"
+#include "e4com1.h"
+#include "e4par0.h"
+#include "eiflag.h"
+#include "etpinf.h"
+#include "rlunit.h"
+#include "eibpr2.h"
+      DIMENSION INDX(3,100),EST(100),EVLP(5),ITVLP(5),KVLP(5)
+     &,ITO(4),RADX(6),DX(3),ECT(35),ETO(5)
+      COMMON/TAGG/TETI,ECLEAK,EBAR,EEND,COC0,EREAR
+      COMMON/EDEP/E(3),D(3),EP(3),SOM(3),SMOY(3),S2MOY(3)
+      CHARACTER*23 WRONG
+C
+C
+      DATA ECT
+     1 /      216.,       66.,       31.,       17.,       11.,
+     2          7.,        5.,        4.,        3.,       2.6,
+     3         2.2,      1.97,      1.76,      1.61,      1.49,
+     4        1.40,      1.33,      1.27,      1.22,      1.18,
+     5        1.15,      1.12,      1.10,      1.08,      1.06,
+     6        1.05,      1.04,      1.03,      1.03,      1.02,
+     7        1.02,      1.02,      1.01,      1.01,      1.01 /
+C
+#include "bmacro.h"
+C DEFINE OVERLAP
+C     PARAMETER(ICOV11=45,ICOV12=50,ICOV13=51,ICOV14=56)
+C     PARAMETER(ICOV21=173,ICOV22=178,ICOV23=179,ICOV24=184)
+      IOFL=0
+      TETA1=ICOV11-1
+      TETA2=ICOV14+1
+      TETA3=ICOV21-1
+      TETA4=ICOV24+1
+      TETI=TETIFL
+          EREAR=0
+          ECLEAK=0
+      IF(TETIFL.GT.ICOV12.AND.TETIFL.LT.ICOV23)THEN
+          EBAR=E4CLU(IT)
+          EEND=0.
+          COC0=0.
+      ELSE
+          EEND=E4CLU(IT)
+          EBAR=0.
+          COC0=0.
+      ENDIF
+      IF(TETIFL.LT.TETA1.OR.TETIFL.GT.TETA4)RETURN
+      IF(TETIFL.GT.TETA2.AND.TETIFL.LT.TETA3)RETURN
+      ETOT=0.
+      IOFL=1
+C
+C LOSSES IN DEAD REGION
+C
+      DO 12 IST=1,NBE4ST(IT)
+      INDX(1,IST)=ISTO(IT,IST)
+      INDX(2,IST)=JSTO(IT,IST)
+      INDX(3,IST)=KSTO(IT,IST)
+      ETOT=ESTO(IT,IST)+ETOT
+      EST(IST)=ESTO(IT,IST)
+ 12   CONTINUE
+      CALL E4RADC(COEFF)
+      CALL E4LEA1(NBE4ST(IT),INDX,EST,ITVLP,EVLP,IVLP,COEFF)
+      ECLEAK=0.
+      IF(IVLP.EQ.0)GOTO 7
+      E4CLU(IT)=0.
+      DO 9 IST=1,NBE4ST(IT)
+ 9    E4CLU(IT)=E4CLU(IT)+ESTO(IT,IST)
+      DO 2 IV=1,5
+ 2    ECLEAK=ECLEAK+EVLP(IV)
+      E4CLU(IT)=E4CLU(IT)+ECLEAK
+ 7    CONTINUE
+
+C
+C LEAKAGE THROUGH THE REAR ! (INTERDIT DE RIGOLER)
+C
+C     ESTIMATION OF TOTAL THICKNESS IN X0
+      X0=XTOW(IT,1,1)
+      Y0=XTOW(IT,1,2)
+      Z0=XTOW(IT,1,3)
+      ZT=SQRT(X0**2+Y0**2)
+      TER=ATAN2(ZT,Z0)
+      PHR=ATAN2(Y0,X0)
+      CALL EBSLIM(TER,PHR,RADX,IERO)
+      DX(1)=X0
+      DX(2)=Y0
+      DX(3)=Z0
+      CALL EFNCRS(DX,ROW,COL,ST,WRONG)
+C     COMPUTE TAU VARIABLE
+      IF(E4CLU(IT).LT.0.05)GOTO 11
+      TAU=(RADX(6)*COEFF)/(1.08*LOG(20.*E4CLU(IT)))
+C     EXTRACT CL COEFF (MAROTTE COEFF)
+      IF(TAU.LT.0.05)GOTO 11
+C     ENERGY CORRECTION FOR DEAD REGION
+      JTAU=INT(0.5001+10.*TAU)
+      PTAU=0.5+10.*TAU
+      IF(JTAU.LT.35)THEN
+         CORCL=((ECT(JTAU+1)-ECT(JTAU))*(PTAU-FLOAT(JTAU)))+ECT(JTAU)
+      ELSE
+         CORCL=1.
+      ENDIF
+C
+C     PUT REAR CORRECTION IN E4CLU
+C     THIS CORRECTION IS USED ONLY FOR R2 ESTIMATION (NOT R3,R4,R6,R7)
+C
+      EREAR=E4CLU(IT)*(CORCL-1.)
+      E4CLU(IT)=E4CLU(IT)*CORCL
+C
+C  ET MAINTENANT PLUS QU'A FAIRE THE LONGITUDINAL PROFILE
+C
+      R3ES=1000.
+      R4ES=1000.
+      CALL VZERO(E,3)
+      IF(IERO.EQ.-1.OR.IERO.EQ.-2)THEN
+        DO 100 IPR=1,NBE4ST(IT)
+        II=ISTO(IT,IPR)
+        IF(II.GE.51.AND.II.LE.178)E(1)=E(1)+ESTO(IT,IPR)
+        IF(II.LT.51.OR.II.GT.178)E(KSTO(IT,IPR))=E(KSTO(IT,IPR))
+     *  +ESTO(IT,IPR)
+ 100    CONTINUE
+        E(1)=E(1)+ECLEAK
+        E(3)=E(3)+EREAR
+        ELSE IF(IERO.EQ.-3.OR.IERO.EQ.-4)THEN
+          DO 101 IPR=1,NBE4ST(IT)
+          II=ISTO(IT,IPR)
+          IF(II.GE.51.AND.II.LE.178)E(1)=E(1)+ESTO(IT,IPR)
+          IF(II.LT.51.OR.II.GT.178)THEN
+            IF(KSTO(IT,IPR).EQ.1)E(2)=E(2)+ESTO(IT,IPR)
+            IF(KSTO(IT,IPR).GT.1)E(3)=E(3)+ESTO(IT,IPR)
+          ENDIF
+ 101      CONTINUE
+          E(2)=E(2)+ECLEAK
+          E(3)=E(3)+EREAR
+          ELSEIF (IERO.LT.-4) THEN
+            DO 102 IPR=1,NBE4ST(IT)
+            II=ISTO(IT,IPR)
+            IF(II.GE.51.AND.II.LE.178)THEN
+              IF (KSTO(IT,IPR).EQ.1)E(1)=E(1)+ESTO(IT,IPR)
+              IF (KSTO(IT,IPR).GT.1)E(2)=E(2)+ESTO(IT,IPR)
+            ENDIF
+            IF(II.LT.51.OR.II.GT.178)E(3)=E(3)+ESTO(IT,IPR)
+ 102        CONTINUE
+            E(3)=E(3)+ECLEAK+EREAR
+C         ENDIF
+C       ENDIF
+      ENDIF
+C
+C  ONE COMPUTE NOW THE THICKNESS OF EACH PSEUDO-STACKS
+C
+      CALL VZERO(D,3)
+      CALL VZERO(EP,3)
+      IF(IERO.EQ.-1.OR.IERO.EQ.-2)THEN
+        D(1)=RADX(1)*COEFF
+        EP(1)=(RADX(2)-RADX(1))*COEFF
+        D(2)=RADX(3)*COEFF
+        EP(2)=(RADX(4)-RADX(3))*COEFF
+        D(3)=RADX(5)*COEFF
+        EP(3)=20.
+        ELSEIF(IERO.EQ.-3.OR.IERO.EQ.-4)THEN
+          D(1)=RADX(1)*COEFF
+          EP(1)=(RADX(2)-RADX(1))*COEFF
+C
+C  THE BEGINNING OF STACK 2 IN THE OVERLAP IS THE END
+C  OF STACK 1
+C
+          D(2)=RADX(2)*COEFF
+          EP(2)=(RADX(4)-RADX(2))*COEFF
+          D(3)=RADX(5)*COEFF
+          EP(3)=20.
+          ELSEIF (IERO.LT.-4)THEN
+            D(1)=RADX(1)*COEFF
+            EP(1)=(RADX(2)-RADX(1))*COEFF
+            D(2)=RADX(3)*COEFF
+            EP(2)=(RADX(4)-RADX(3))*COEFF
+C
+C  SI SI C'EST BIEN RADX(4) ET PAS RADX(5)!!
+C
+            D(3)=RADX(4)*COEFF
+            EP(3)=20.
+C         ENDIF
+C       ENDIF
+      ENDIF
+      P=PTTP
+      BSASTA=0.182+0.0188*ALOG(1./P)
+      USASTA=0.316+0.0328*ALOG(1./P)
+      B=0.0184/P
+      ALPHA=1./USASTA
+      BETA=BSASTA/USASTA
+      ALPHA0=ALPHA
+      BETA0=BETA
+      NITERA=3
+      ESTOT=0.
+      DO 106 I=1,3
+      ESTOT=ESTOT+E(I)
+ 106  CONTINUE
+      DO 103 I=1,NITERA
+      CALL VZERO (SOM,3)
+      CALL VZERO (SMOY,3)
+      CALL VZERO (S2MOY,3)
+      SMOYS=0.
+      S2MOYS=0.
+      DO 104 J=1,3
+      NSTEP=30
+      DX0=EP(J)/NSTEP
+      DO 105 K=1,NSTEP
+      ECPL=D(J)+DX0/2.+(K-1)*DX0
+      IF(ALPHA.GT.57.OR.ALPHA.LT.0.)GOTO 11
+      FI=PROLOT(ECPL,ALPHA,BETA,B)
+      SOM(J)=SOM(J)+FI
+      SMOY(J)=SMOY(J)+FI*ECPL
+      S2MOY(J)=S2MOY(J)+FI*ECPL**2
+ 105  CONTINUE
+      IF(SMOY(J).EQ.0.)GOTO 11
+      SMOY(J)=SMOY(J)/SOM(J)
+      S2MOY(J)=S2MOY(J)/SOM(J)
+      SMOYS=SMOYS+SMOY(J)*E(J)
+      S2MOYS=S2MOYS+S2MOY(J)*E(J)
+ 104  CONTINUE
+      SMOYS=SMOYS/ESTOT
+      S2MOYS=S2MOYS/ESTOT
+      BSASTA=1./SMOYS
+      USASTA=(S2MOYS-SMOYS**2)/SMOYS**2
+      IF(USASTA.EQ.0.) GOTO 11
+      ALPHA=1./USASTA
+      BETA=BSASTA/USASTA
+      IF(ALPHA.GT.2.*ALPHA0.OR.BETA.GT.2.*BETA0)GOTO 11
+ 103  CONTINUE
+      BSAST0=FBSA00+SBSA00*ALOG(1./PTTP)+C1BSA0*(ALOG(PTTP))**2
+      USAST0=FUSA00+SUSA00*ALOG(1./PTTP)+C1USA0+C2USA0*PTTP
+      SIGBSA=FSBSA0+SSBSA0*ALOG(1./PTTP)+C1SBSA*(ALOG(PTTP))**2
+      SIGUSA=USAST0*SQRT(FSUSA0+SSUSA0/PTTP)+C1SUSA+C2SUSA*PTTP
+          R3ES=(BSASTA-BSAST0)/SIGBSA
+          R4ES=(USASTA-USAST0)/SIGUSA
+ 11   CONTINUE
+      RETURN
+      END
+#endif

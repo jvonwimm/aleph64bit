@@ -1,0 +1,177 @@
+head	1.1;
+access;
+symbols
+	alpha126_22:1.1
+	alpha122_22:1.1
+	alpha126_21:1.1
+	alpha126_20:1.1
+	alpha126_19:1.1
+	alpha126_18:1.1
+	alpha126_17:1.1
+	alpha126_16:1.1
+	alpha126_15:1.1
+	alpha126_14:1.1
+	alpha126_13:1.1
+	alpha126_12:1.1
+	alpha126_11:1.1
+	alpha126_10:1.1
+	alpha126_09:1.1
+	alpha126_08:1.1
+	alpha126_07:1.1
+	alpha126_06:1.1
+	alpha126_05:1.1
+	alpha126_04:1.1
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1
+	alpha124:1.1
+	alpha123_12:1.1
+	alpha123_11:1.1
+	alpha123_10:1.1
+	alpha123_9:1.1
+	alpha123_8:1.1
+	alpha123_7:1.1
+	alpha123_6:1.1
+	alpha123_5:1.1
+	alpha123_4:1.1
+	alpha123_3:1.1
+	alpha123_2:1.1
+	alpha123:1.1
+	alpha122_48:1.1
+	alpha122_47:1.1
+	alpha122_46:1.1
+	alpha122_45:1.1
+	alpha122_44:1.1
+	alpha122_43:1.1
+	alpha122_42:1.1
+	alpha122_41:1.1
+	alpha122_40:1.1
+	alpha122_39:1.1
+	alpha122_38:1.1
+	alpha122_37:1.1
+	alpha122_36:1.1
+	alpha122_35:1.1
+	alpha122_34:1.1
+	alpha122_33:1.1
+	alpha122_32:1.1
+	alpha122_31:1.1
+	alpha122_30:1.1
+	alpha122_29:1.1
+	alpha122_28:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	97.05.05.13.18.44;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE QFKINK
+CKEY FILL VERTEX   /INTERNAL
+C----------------------------------------------------------------------
+C!  - Fill parameters of Kink vertices from new tracking
+C!  - bank YKNK
+C!
+C!   Author   :  J. Boucrot                    21-Apr-1997
+C!   Calls QNVSTO
+C!   Output :
+C!        - new vertex in QVRT is created.
+C?
+C!======================================================================
+#ifndef DOC
+#include "qcde.h"
+#include "yknkjj.h"
+      PARAMETER ( ITYVR = 5 )
+      INTEGER LISTO(2)
+      REAL XYZ(3)
+#include "qmacro.h"
+C----------------------------------------------------------------------
+      JQVRT(I,N) = KOQVRT + I * KCQVRT + N
+C----------------------------------------------------------------------
+C--- Check if bank of kinks is present :
+C
+      JKNKI=IW(NAMIND('YKNK'))
+      IF (JKNKI.LE.0) GO TO 999
+C
+C Loop on kink vertices (usually only 1) :
+C
+      DO 600 IVV=1,LROWS(JKNKI)
+         KKNKI=KROW(JKNKI,IVV)
+         CALL VZERO(LISTO,2)
+C
+C--- Store new vertex
+C
+         XYZ(1)=RW(KKNKI+JYKNVX)
+         XYZ(2)=RW(KKNKI+JYKNVX+1)
+         XYZ(3)=RW(KKNKI+JYKNVX+2)
+         INTR  =IW(KKNKI+JYKNIT)+KFCHT-1
+         IFLAG =ITYVR
+         CHI2  =RW(KKNKI+JYKNC2)
+         NOUT  =1
+         LISTO(NOUT) = IW(KKNKI+JYKNOT)+KFCHT-1
+         CALL QNVSTO(IFLAG,IVV,INTR,NOUT,LISTO,XYZ,CHI2,IVOU)
+         IF (IVOU.LE.KFREV) GO TO 600
+C Store some important kink parameters in the vertex user's words:
+         RW(JQVRT(IVOU,JQVRET+ 9))=RW(KKNKI+JYKNPK)
+         RW(JQVRT(IVOU,JQVRET+10))=RW(KKNKI+JYKNPT)
+         RW(JQVRT(IVOU,JQVRET+11))=RW(KKNKI+JYKNPL)
+         IW(JQVRT(IVOU,JQVRET+12))=IW(KKNKI+JYKNBH)
+C Store the error matrix:
+         DO 500 IEM=1,6
+            RW(JQVRT(IVOU,JQVREM+IEM-1))=RW(KKNKI+JYKNVC+IEM-1)
+  500    CONTINUE
+  600 CONTINUE
+C
+  999 RETURN
+      END
+#endif
+@

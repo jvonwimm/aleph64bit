@@ -1,0 +1,71 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	tpc300_1:1.1.1.1
+	tpc300:1.1.1.1
+	tpc218:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.09.14.30.07;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.09.14.30.08;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK ttfmt
+      SUBROUTINE TTFMT(KEND,ISECT,JCHN,IBIN1,NLEN,NHITS,IERR)
+C--------------------------------------------------------------------
+C!  Format MC Trigger Pad data to emulate trigger readout
+C
+C  Called from:  TSRESP
+C  Calls:        AUBOS, BLIST, BKFMT
+C
+C  Inputs:   PASSED:      --KEND,   "compress banks" flag
+C                         --ISECT,  sector number
+C                         --JCHN,   channel number
+C                         --IBIN1,  first time bin of this signal
+C                         --NLEN,   number of bins in this signal
+C                         --NHITS,  hit number or number of hits
+C                         --NDI,    number of bins in dig bank
+C            TPCBOS.INC:  --DIGNAM, names of hl and dig banks
+C                         --NDIDEF, default lengths of hl and dig banks
+C                         --NDIEXT, default extensions
+C                         --ITMADC, id for single digitized pulse
+C  Output:   IERR:        -- 0 for normal completion, 1 if insufficient
+C                            space to increase work bank length
+C--------------------------------------------------------------------
+C  Format not known yet
+      DATA NDI/0/
+      IERR = 0
+      RETURN
+      END
+@
+
+
+1.1.1.1
+log
+@import tpcsim 300
+@
+text
+@@

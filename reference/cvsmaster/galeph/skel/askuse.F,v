@@ -1,0 +1,88 @@
+head	1.3;
+access;
+symbols
+	gal309_3:1.3
+	gal309_2:1.3
+	gal309_1:1.3
+	gal309:1.3
+	gal308_2:1.3
+	gal308_1:1.3
+	gal308:1.3
+	gal307_2:1.3
+	gal307_1:1.3
+	gal307:1.3
+	gal306_3:1.3
+	gal306_2:1.3
+	gal306_1:1.3
+	gal306:1.3
+	gal305_3:1.3
+	gal305_2:1.3
+	gal305_1:1.3
+	gal305:1.3
+	gal304_11:1.3;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	96.11.15.09.26.32;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.11.14.12.54.09;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.11.14.12.22.55;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@gal304_11 correction in askusi, askuse
+@
+text
+@      SUBROUTINE ASKUSE (IDEV,ISTA,NITR,NIVX,ECMS,WEIT)
+C ----------------------------------------------------------------------
+C! calls the user event generator
+C
+C - Output arguments:
+C          IDEV     = event process identification
+C          ISTA     = event status word  ( 0 means OK )
+C          NITR     = # of generated tracks
+C          NIVX     = # of generated vertices
+C          ECMS     = beam energy
+C          WEIT     = event weight
+C ---------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+      RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@gal304_11 add #endif at end of askusi and askuse
+@
+text
+@a0 1
+*DK asdummy
+@
+
+
+1.1
+log
+@release of gal304.11
+@
+text
+@d18 1
+@

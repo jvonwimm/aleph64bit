@@ -1,0 +1,171 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.43.50;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.43.51;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE VDWFXY (NWAF,VUW,XYZ)
+C ----------------------------------------------------------------------
+CKEY VDETDES ALIGN / USER
+C!  Converts wafer point into local and absolute coordinates
+C - Dave Brown, 21 February 1991
+C - Modified to use new geometry package, S. Wasserbaech, January 1995
+C
+C   This routine flips the local coordinates u and w according to the
+C   "readout sign," then calls VGWFXY.  Ugh!
+C
+C - Input:
+C   NWAF   / I  Encoded wafer address (a la VAENWA)
+C   VUW(3) / R  Coordinates in wafer system (cm), but not really--
+C               the "readout sign" is multiplied onto u and w.
+C
+C - Output:
+C   VUW(3) / R  Coordinates in wafer system (cm), really!
+C   XYZ(3) / R  Coordinates in ALEPH system (cm)
+C ----------------------------------------------------------------------
+#ifndef DOC
+C     IMPLICIT NONE
+#include "vglobl.h"
+#include "vgpaal.h"
+C
+C     Arguments:
+C
+      INTEGER NWAF
+      REAL VUW(3), XYZ(3)
+C
+C     Local variables
+C
+      INTEGER ILAY, IWFF, IFAC, IVIEW, JWAF, IRET
+      REAL ABC(3)
+C
+C     External references:
+C
+      INTEGER VJWFFW, VVUWAB, VNRDIR
+C
+C ----------------------------------------------------------------------
+C
+C     Decode the wafer identifier into the local indices:
+C
+      CALL VADEWA(NWAF,ILAY,IWFF,IFAC,IVIEW)
+C
+C     Get the global wafer index:
+C
+      IRET = VJWFFW(ILAY,IFAC,IWFF,JWAF)
+C
+C     Convert (v,u,w) -> (a,b,c) to get the readout sign information:
+C
+      IRET = VVUWAB(VUW,JWAF,ABC)
+      VUW(2) = ABC(2) * FLOAT(VNRDIR(VVIEWP))
+      VUW(3) = ABC(1) * FLOAT(VNRDIR(VVIEWZ))
+C
+C     Apply the complete transformation matrix:
+C
+      CALL VGWFXY(NWAF,VUW,XYZ)
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

@@ -1,0 +1,184 @@
+NREF 9711
+*----------------------------------------------------------------------
+*     RUN #    RUN'S TITLE
+RUN   1121  'KORALW121 WW with 4f bkg, 189GEV MW=80.35 ARIADNE no cr'
+*     FIRST EVENT    LAST EVENT    TO BE GENERATED
+TRIG     1          100
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG
+DEBU  6     /      1          8
+* requested time left at the end of job (in sec)
+TIME 100
+* event file (EPIO format)
+*FILO '/aleph/scwork/valassi/run1121.epio | EPIO'
+* histogram file
+*HSTO '/aleph/scwork/valassi/run1121.his'
+* Ranmar initialization
+RMAR   1  2            3   4
+* specify database if not the current one
+*FDBA 'DBASE:ADBSTEST.DAF | DAF'   ! VMS syntax
+*----------------------------------------------------------------------
+ENDQ
+KCAR 0 / $TEXT
+POFF
+*-----modify here if wanted--------------------------------------------
+*SVRT   0.0140  0.0005   0.79 ! vertex smearing x y z 97 values
+XVRT   0.02    0.00    0.1  ! vertex offset   an example ...
+*----------------------------------------------------------------------
+* GKRW CARD.
+* KeyRad = 1000*KeyCul+100*KeyNLL+10*KeyFSR+KeyISR
+*     KeyISR=0  Initial State Radiation OFF,
+* =>  KeyISR=1  Initial State Radiation ON.
+* =>  KeyFSR=0  Final State Radiation switch, INACTIVE
+*     KeyNLL=0  sets Next-to Leading alpha/pi terms to zero
+* =>  KeyNLL=1  alpha/pi in YFS formfactor is kept
+*     KeyCul=0  Coulomb correction OFF
+* =>  KeyCul=1  Coulomb correction ON as in DTP/95/64 (routine culmc)
+* KeyPhy = 100000*KeyWu+10000*KeyRed+1000*KeySpn+100*KeyZet+10*KeyMas+KeyBra
+*     KeyBra= 0 Born branching ratios, no mixing
+* =>  KeyBra= 1 Branching ratios with mixing and QCD
+*     KeyMas= 0 Massles kinematics for W decay products
+* =>  KeyMas= 1 Massive kinematics for W decay products
+*     KeyZet= 0 Z width in Z propagator: s/M_Z *GAMM_Z
+* =>  KeyZet= 1 Z width in Z propagator:   M_Z *GAMM_Z
+*     KeyZet= 2 no (0) Z width in Z propagator.
+*     KeySpn= 0 spin effects in W decays OFF
+* =>  KeySpn= 1 spin effects in W decays ON
+*     KeyRed= Reduction of massive FS to massles Matr.El.
+* =>  KeyRed= 0 fine
+*     KeyRed= 1 crude, 4-mom. non conserving
+*     KeyWu = 0 W width in W propagator: s/M_W *GAMM_W
+* =>  KeyWu = 1 W width in W propagator:   M_W *GAMM_W 
+*     KeyWu = 2 no (0) W width in W propagator.
+* KeyTek= 100*KeySmp+10*KeyRnd+KeyWgt
+* =>  KeyWgt= 0, WTMOD=1 useful for apparatus Monte Carlo.(UNWEIGHTED EVENTS!)
+*     KeyWgt= 1, WTMOD varying, option faster and safer   (weighted events)
+*     KeyWgt= 2, WTMOD=1 for internal CC3 matrix element  ("unweighted CC3")
+*                        AND varying for external Matrix element 
+*     KeyRnd= Random number generator???????????
+* =>  KeyRnd= 1, default for using RANMAR
+*     KeySmp =0 Presampler set as in KORALW versions 1.02 to 1.20
+* =>  KeySmp =1 New option, useful for unweighted 4f events far from WW peaks
+* KeyMis= 100*KeyAcc +10*Key4f +KeyMix
+*     KeyMix= miscelaneus auxiliary key for tests
+* =>  KeyMix= 0 causes sinw2 to be according to LEP2 prescription
+*     KeyMix= 1 prowides sinw2 as in 1.00 version
+*     KeyMix= 2 defines sinw2=1-MZ**2/MW**2.
+*     Key4f = 0 external matrix el. OFF
+* =>  Key4f = 1 external matrix el. ON
+* =>  KeyAcc= 0 anomalous WWV couplings in internal matr. el. OFF
+*     KeyAcc= 1 anomalous WWV couplings in internal matr. el. ON
+* KeyDwm  decay channel of W-
+* KeyDwp  decay channel of W+
+*         0:all chann. according to br. ratios
+*         1:ud, 2:cd, 3:us, 4:cs, 5:ub, 6:cb, 7:e, 8:mu, 9:tau
+* CMSENE : CMS energy [GeV]
+* GFERMI : Fermi constant
+* ALFWIN : alpha QED at WW treshold scale (inverse)
+* AMAZ   : Z mass [GeV]
+* GAMMZ  : Z width [GeV]
+* AMAW   : W mass [GeV]
+* GAMMW  : W width [GeV], For GAMMW < 0 RE-CALCULATED inside program
+*          [If KeyBra=1, it is corrected for alphaQCD, otherwise not]
+* VVMIN  : Photon spectrum parameter (dummy IR cut)
+* VVMAX  : Photon spectrum parameter (max generated v, v = 1-sprim/s)
+* WTMAX  : max wt used for rejection in unweighted mode (<0 reset to default)
+* IPSHO  : hadronisation 1=JETSET, 2=ARIADNE (then switch on Ariadne tuning)
+*      KEYRAD  KEYPHY  KEYTEK  KEYMIS  KEYDWM  KEYDWP  
+GKRW     1101    1011     110      10       0       0
+*      CMSENE      GFERMI   ALFWIN
+         189.  1.16639E-5   127.89 
+*        AMAZ    GAMZ    AMAW    GAMW   VVMIN   VVMAX   WTMAX  IPSHO
+      91.1888  2.4974   80.35    -2.03  1.E-6    0.99   30.E6   2
+*----------------------------------------------------------------------
+* GKAC CARD.
+* Anomalous couplings (MUST SET KEYACC=1 TO ACTIVATE THEM!!!!!!!!!!) 
+* Definition follows Hagiwara et al., Nucl. Phys. B282 (1987) 253.
+*   WWgamma vertex Real part 
+*      g1   kappa  lambda   g4     g5  kappa-tilde lambda-tilde
+GKAC  1.0    1.0    0.0    0.0    0.0      0.0          0.0
+*   WWgamma vertex Imaginary part 
+*      g1   kappa  lambda   g4     g5  kappa-tilde lambda-tilde
+      0.0    0.0    0.0    0.0    0.0      0.0          0.0
+*   WWZ vertex Real part 
+*      g1   kappa  lambda   g4     g5  kappa-tilde lambda-tilde
+      1.0    1.0    0.0    0.0    0.0      0.0          0.0
+*   WWZ vertex Imaginary part 
+*      g1   kappa  lambda   g4     g5  kappa-tilde lambda-tilde
+      0.0    0.0    0.0    0.0    0.0      0.0          0.0
+*----------------------------------------------------------------------
+* GCE1 CARD
+* Cuts on events with at least 1 electron or 1 positron
+* CMAXEM: maximum cos(theta) of e-
+* CMINEM: minimum cos(theta) of e-
+* CMAXEP: maximum cos(theta) of e+
+* CMINEP: minimum cos(theta) of e+
+*        CMAXEM   CMINEM   CMAXEP   CMINEP
+GCE1     0.998    -0.998   0.998    -0.998
+*----------------------------------------------------------------------
+* GCE2 CARD
+* Cuts on e-nu-e-nu events
+* ENEMEE: minimum energy of e-
+* ENEPEE: minimum energy of e+
+* SCUTEE: minimum invariant mass of e+ and e-
+* PTSMEE: minimum sum of |pT(e+)| and |pT(e-)|
+*        ENEMEE   ENEPEE   SCUTEE   PTSMEE
+GCE2         0.       0.       2.       2.
+*----------------------------------------------------------------------
+* GCUU CARD
+* Cuts on u-d-u-d events
+* SPCTUU: minimum sqrt(s') in udud events
+* SCUTUU: minimum invariant mass of uu or dd systems
+*        SPCTUU   SCUTUU
+GCUU         0.    0.270
+*----------------------------------------------------------------------
+* Possibility to modify branching ratios; if br to electron is not 1,
+* then br's are renormalised to it.
+* Fraction (a1 to charged) (K0 to Ks) (K0bar to Ks) ( K* to K0 pi-)
+*GKBR              0.5           0.5         0.5           0.6667
+* Next are br's of tau. First is electron. If not 1, they are renorm.
+* Look at documentation for decay modes definition
+*1.     0.9732  0.6217  1.4221  1.0180
+*0.0405 0.0781  0.2414  0.0601  0.0281
+*0.0045 0.0010  0.0062  0.0096  0.0169
+*0.0056 0.0045  0.0219  0.0180  0.0096
+*0.0088 0.0146
+*---Activate ( remove *) this section when using ARIADNE ---
+*----------------------------------------------------------------------
+*  standard modification to Ariadne  parameters
+*  published  best fit ARIADNE4 parameters  commom part
+MSTA 20 / 1           ! SWITCH ON FSR IN ARIADNE
+MSTJ  41 / 0          ! FSR is done by Ariadne
+PARJ  41 / 0.40       ! A
+PARJ  54 / -0.040     ! eps_c
+PARJ  55 / -0.0035    ! eps_b
+PARJ  11 / 0.5716     ! V_u,d
+PARJ  12 / 0.4648     ! V_s
+PARJ  13 / 0.65       ! V_c,b
+PARJ  17 / 0.20       ! JP=2+ L=1
+PARJ  16 / 0.12       ! JP=1+
+PARJ  15 / 0.04       ! JP=0+
+PARJ  14 / 0.12       ! JP=1+
+PARJ  26 / 0.2884     ! eta' suppress.
+PARJ  1  / 0.1154     ! qq/q
+PARJ  2  / 0.2863     ! s/d
+PARJ  3  / 0.6507     ! su/du
+PARJ  19 / 0.52       ! 1st rank baryon suppress.
+*    Ariadne without color reconnection   from GR sept 23, 1998
+*----------Activate also this section if NO Color reco in ARIADNE ---
+*----------------------------------------------------------------------
+MSTA  35 / 0          ! color reconnection mode (off)
+PARA  1  / 0.2297     ! Lambda_QCD
+PARA  3  / 0.7907     ! ptmin cut
+PARJ  21 / 0.3577     ! sigma
+PARJ  42 / 0.823      ! B
+*----------Instead Activate this section if Color reco in ARIADNE ---
+*----------------------------------------------------------------------
+*    Ariadne with color reconnection   from GR sept 23, 1998
+*MSTA  35  /  2      ! within AND between W's
+*PARA  28  /  2.0    ! E_gluon cut
+*PARA  1  /  0.231   ! Lambda_QCD
+*PARA  3  /  0.781   ! ptmin
+*PARJ 21  /  0.352   ! sigma
+*PARJ 42  /  0.762   ! B
+*
+END$

@@ -1,0 +1,34 @@
+#!/bin/csh
+###############################################################################
+#                          sycheck_rsh
+# 19/06/96                                                         F.Blin
+###############################################################################
+# set echo on
+ set node_search = $1
+ set TT = $2
+ set DT = $3
+# echo $node_search ${DT}/${TT}
+ if (${node_search} == "shift9") exit
+
+ if (${node_search} == "afal10") then
+    if (-e ${DT}/error_saga01.rsh) rm -f ${DT}/error_saga01.rsh
+    if (-e ${DT}/error_shift9.rsh) rm -f ${DT}/error_shift9.rsh
+    if (-e ${DT}/error_shift50.rsh) rm -f ${DT}/error_shift50.rsh
+    if (-e ${DT}/error_csf.rsh) rm -f ${DT}/error_csf.rsh
+    qtell -c qstat -b -h saga01 > ${DT}/error_saga01.rsh
+    qtell -c qstat -b -h shift9 > ${DT}/error_shift9.rsh
+    qtell -c qstat -b -h shift50 > ${DT}/error_shift50.rsh
+    qtell -c qstat -b -h csf > ${DT}/error_csf.rsh
+ endif
+ 
+
+ if (-e ${DT}/${TT}_df_${node_search}) rm -f ${DT}/${TT}_df_${node_search}
+ if (-e ${DT}/${TT}_ps_${node_search}} ) rm -f ${DT}/${TT}_ps_${node_search}
+
+# if ("${node_search}" == "saga08") goto RUN_PS
+ df -k /usr > ${DT}/${TT}_df_${node_search}
+
+ RUN_PS:
+ ps axw > ${DT}/${TT}_ps_${node_search} 
+
+ exit

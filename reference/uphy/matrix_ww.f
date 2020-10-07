@@ -1,0 +1,194 @@
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+      SUBROUTINE ELEMAT2(MWW2)
+C----------------------------------------------------------------------
+C!  -
+C!
+C!   Author   :- Manel Martinez         17-MAR-1995
+C!
+C!   Inputs: 4-momenta corresponding to each of the 6 fermions.
+C!          ( Convention follows EXCALIBUR.
+C!            If needed, apply relabeling in the data statement)
+C!
+C!        e+(i1) + e-(i2) --> W-                    + W+
+C!
+C!                            --> e-(i3) + nub(i4)    --> nu(i5) + e+(i6)
+C!
+C!   Momentum components: 1-px 2-py 3-pz 4-E
+C!
+C!   Outputs: squared amplitude
+C!        -
+C!
+C!   Libraries required: NONE
+C!
+C!   Description: Evaluation of the squared amplitude of the process
+C!   ===========  e+ e- --> W+ W- --> 4 fermions
+C!                 Inspired in:
+C!        "Lepton correlation in gauge-boson pair production and decay",
+C!             J.F.Gunion & Z.Kunszt, Phys. Rev. D33 665 (1986).
+C!        "All electroweak four fermion processes in electron-positron
+C!         collisions", INLO-PUB-1/94, NIKHEF-H/94-08
+C!
+C!======================================================================
+C
+      IMPLICIT REAL*8(A-H,L,M,O-Z)
+      DIMENSION PK12(1:4),PK34(1:4),PK56(1:4),PK156(1:4)
+      COMPLEX*16 c0,c1,ci,crp(6)
+      COMPLEX*16 ZPR,ZGL,ZGR,FAC,ANL,AZGL,AZGR,AWWL,AWWR,F2
+      COMPLEX*16 SM(1:6,1:6),SP(1:6,1:6)
+C
+      COMMON/MOMENTA/PK(6,4)
+C
+      COMMON/SPINORPROD/SM,SP
+      DIMENSION b(6)
+C
+      data c0/(0.d0,0.d0)/,c1/(1.d0,0.d0)/,ci/(0.d0,1.d0)/
+      data i1,i2,i3,i4,i5,i6/1,2,3,4,5,6/
+CMMR-KORAKW      data i1,i2,i3,i4,i5,i6/2,1,3,4,5,6/
+      data b/-1.d0,-1.d0,1.d0,1.d0,1.d0,1.d0/
+C
+C**********************************************
+C Constants
+      PI = 3.1415926535897932D0
+      GF = 1.16637D-5
+C (Factor to convert into pb)
+      HBARC2 = 389379.66D3
+      ALFINV = 137.0359895D0
+C
+C Boson masses and widths
+      MW = 80.22D0
+      MZ = 91.173D0
+      GZ = 2.4971D0
+      GW = 2.033D0
+C
+C For the initial state electron
+      T3F = -0.5d0
+      QF = -1.D0
+C
+C Effective parameters
+      ieff = 1
+      SEFE = 0.2325D0
+      ALMZ1 = 127.29D0
+C.......................................
+      IF(IEFF.EQ.0)THEN
+        SIN2TW = 1.D0 - MW**2/MZ**2
+        E2 = 4.D0*PI/ALFINV
+        SG2 = E2/SIN2TW
+C BORN Width
+        GW = SG2/(4.D0*PI) * MW
+      ELSE
+        SIN2TW = SEFE
+        E2 = 4.D0*PI/ALMZ1
+        SG2 = SQRT(2.D0)*4.D0*GF*MW**2
+      ENDIF
+C**********************************************
+C
+C================================================================
+C
+C Change 4-momenta to transform all particles into outgoing
+      do I =1,6
+        do J =1,4
+          pk(i,j) = b(i)*pk(i,j)
+        enddo
+      enddo
+C
+C Evaluate spinor products 
+C (standard definition for positive energy vectors
+C  + Gunion-Kunszt prescription for negative energy vectors)
+C --Normalization
+      do i=1,6
+       crp(i)= sqrt(c1*b(i)*(pk(i,4)-pk(i,2)))
+      enddo
+C
+      do 135 i=1,6
+        do 135 j= i+1,6
+          SM(i,j)= ( (b(i)+b(j))/2.d0 + dabs(b(i)-b(j))*ci/2.d0 ) *
+     &             ( crp(i)/crp(j)*b(j)*(c1*pk(j,3)-ci*pk(j,1))
+     &              -crp(j)/crp(i)*b(i)*(c1*pk(i,3)-ci*pk(i,1)) )
+C
+          SP(I,J) = b(i)*b(j)*dconjg(SM(I,J))
+C
+          SM(j,i)=-SM(i,j)
+          SP(j,i)=-SP(i,j)
+  135 continue
+C
+C Construct sums of 4-momenta
+      DO I=1,4
+        PK12(I) = PK(i1,I) + PK(i2,I)
+        PK34(I) = PK(i3,I) + PK(i4,I)
+        PK56(I) = PK(i5,I) + PK(i6,I)
+        PK156(I) = PK(i1,I) + PK(i5,I) + PK(i6,I)
+      ENDDO
+C
+C Evaluate relevant scalar products
+      S12 = P2M(PK12,PK12)
+      S34 = P2M(PK34,PK34)
+      S56 = P2M(PK56,PK56)
+C
+C Evaluate factors
+C   ---  Some constants  ---
+      QE = DSQRT(E2)
+      XW = SIN2TW
+C
+      L1 = 2.D0*T3F - 2.D0*QF*XW
+      R1 = - 2.D0*QF*XW
+C The CKM matrix elements
+      U34 = 1.D0
+      U56 = 1.D0
+C   ------------------------
+C
+      XNPR = P2M(PK156,PK156)
+      ZPR = 1.D0/CMPLX(S12-MZ**2,S12*GZ/MZ)
+      ZGL = -L1*ZPR-2.D0*QF*XW/S12
+      ZGR = -R1*ZPR-2.D0*QF*XW/S12
+      FAC = U34*U56*QE**4/(4.D0*XW**2)*
+     ;      1.D0/CMPLX(S34-MW**2,S34*GW/MW)*
+     ;      1.D0/CMPLX(S56-MW**2,S56*GW/MW)
+C
+C Evaluate the complex amplitudes
+C (-) left helicity (all diagrams contribute)
+C
+C     t-channel neutrino
+      ANL = -f2(i1,i2,i5,i6,i3,i4)
+C
+C     s-channel photon and Z
+cmmr      AZGL = f2(i1,i2,i3,i4,i5,i6) - f2(i1,i2,i5,i6,i3,i4)
+      AZGL = f2(i1,i2,i3,i4,i5,i6) + anl
+       AWWL = FAC * ( ANL/XNPR + AZGL*ZGL )
+C (+) right helicity (only non-abelian diagrams contribute)
+      AZGR = f2(i2,i1,i5,i6,i3,i4) - f2(i2,i1,i3,i4,i5,i6)
+       AWWR = FAC * AZGR*ZGR
+C
+C Evaluate matrix element squared
+       M2L = AWWL*CONJG(AWWL)
+       M2R = AWWR*CONJG(AWWR)
+C
+C Sum and average over initial spin configurations
+      MWW2 = (M2L + M2R)/4.D0
+      RETURN
+      END
+C----------------------------------------------------------------------
+      FUNCTION P2M(P,Q)
+C----------------------------------------------------------------------
+C
+      IMPLICIT REAL*8(A-H,L,M,O-Z)
+      DIMENSION P(1:4),Q(1:4)
+C
+      P2M = P(4)*Q(4)-P(1)*Q(1)-P(2)*Q(2)-P(3)*Q(3)
+      RETURN
+      END
+C
+C---------------------------------------------------------------------
+      FUNCTION F2(IF1,IF2,IF3,IF4,IF5,IF6)
+C----------------------------------------------------------------------
+C F = A(---)
+C
+      COMPLEX*16 F2
+      COMPLEX*16 SM(1:6,1:6),SP(1:6,1:6)
+      COMMON/SPINORPROD/SM,SP
+C
+      F2 = 4.D0*SM(IF1,IF3)*SP(IF2,IF6)*(SM(IF1,IF5)*SP(IF1,IF4)+
+     &    SM(IF3,IF5)*SP(IF3,IF4))
+      RETURN
+      END
+C
+C---------------------------------------------------------------------

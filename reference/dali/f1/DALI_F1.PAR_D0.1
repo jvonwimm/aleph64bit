@@ -1,0 +1,871 @@
+     Comments:
+     ------------------------------------------------------------------------
+     S-- = start of group
+          10 = # of group
+              6 = format: output starts here
+                CH Help file: chapter
+                  S         : section
+                    PW = main group for processor
+                      PR = processor name
+     S--  10  6 CHS PWPR projection parameters
+     ------------------------------------------------------------------------
+     --E = end of group
+          11 = group
+     __E  11
+     ------------------------------------------------------------------------
+     FCP = parameter name
+         32 = format: start writing. If #>50 last line is printed, #-50 is used.
+           12 = number of memnonic set for printing
+             4 = # of digits for printing
+                 -1. = lower limit
+                            1. = current value
+                                       3 = upper limit
+                                           0. = not used, 1.=on, -1.=of
+                                              CP = command name
+                                                  CF| ... = comment
+     FCP 32124   -1.        1.         3.  0. CP  CF! charged particle function
+     ------------------------------------------------------------------------
+     __N = mnemonics
+              4 = # of mnemonics
+                CN NT MD = commands
+     __N      4 CN NT MD
+     ------------------------------------------------------------------------
+
+ S__   1  6 *** PWWI parameters/window                                       1 
+ S__  10  6 *** PWPR projection parameters                                   1 
+
+ S__  11  6 *** PWBA basic parameters                                        1 
+ PFX     5    0.00      0.00     360. -1. FX  YX.. Future: Phi of XY,FR,FZ,FT
+ PFY     5    0.00      0.00     360. -1. FY  YZ: FI OF ROTATION
+ PFI     5 -360.00     43.27     720.  0. FI  FI=phi all projections
+ PDF     5    0.10     14.25     300.  0. DF  delta phi all projections
+ PCF     5    0.00      0.00     359. -1. CF  CF cut phi  all projection
+ PTE     5    0.00    125.08     180.  1. TE  TE=theta all projections
+ PDT     5    0.10     30.24     300.  0. DT  delta theta all projections
+ PCT     5    0.00      0.00     179. -1. CT  CT cut theta  all projection
+ PDD     5    0.10     53.00     300.  0. DD  DF and DT all projections
+ PCC     5    0.00      0.00     179. -1. CC  CF and CT all projection
+ PL1     5    0.00      0.00       0.  0.         plane 1
+ PL2     5    0.00     17.00       0. 17.         plane 2
+ PIT     5    0.00      1.         1. -1. IT  RZ: ITCO on/off
+
+ S__  18  6 *** PWOPFT FR TO GROUP for DOPER                                14 
+ PLA     5    0.00   1004.00       0.  0. LA  TF : layer (plane)
+ PP1     5    0.00   1001.00       0.  0. FR  TF : from layer (plane)
+ PP2     5    0.00   1004.00       0.  0. TO  TF : to   layer (plane)
+ PFR     5 -999.00      0.00     999.  0. FR  AP : from inner radius[cm]
+ PTO     5   -9.00    538.00    9999.  0. TO  AP:  to outer radius[cm]
+ __E  18 
+
+ PMI     5 -999.00      0.00     999.  0. MI  AP : from inner radius[cm]
+ PMA     5    0.00    538.00     999.  0. MA  AP:  to outer radius[cm]
+ PAS     5    0.01      4.00     999.  0. AS  AP: assymmtrie parameter
+ PDS     5    0.10      2.00      99. -1. DS  XY,RZ : deformation scale factor
+ PFF     5    0.0       0.00       0. -1.     DO_BAR_USE: needed for ATLANTIS
+ PBM     5    0.00      3.00       0.  0.     RB : rubber band mode
+ 
+ PBR     5    0.00      2.00       0.  0.     RB : rubber band mode RO
+ PBX     5    0.00      2.00       0.  0.     RB : rubber band mode XY
+ PBY     5    0.00      2.00       0.  0.     RB : rubber band mode YZ
+ PBZ     5    0.00      2.00       0.  0.     RB : rubber band mode RZ
+ PX0     5 -999.00      0.00     999. -1. X0  RB : rubber band X0
+ PY0     5 -999.00      0.00     999.  0. Y0  RB : rubber band Y0
+ PZ0     5 -999.00      0.00     999. -1. Z0  RB : rubber band Z0
+ PR0     5 -999.00      0.00     999.  0. R0  RB : rubber band rho 0
+
+ PBP     5    0.00      0.00       0. -1.     RB : PICTUR NUMBER
+ PB1     5    0.00      0.00       0.  0.     RB : HU(1),VU(1)
+ PB2     5    0.00      0.00       0.  0.     RB : HU(2),VU(2)
+ PB3     5    0.00      0.00       0.  0.     RB : HU(3),VU(3) b3 rubber band
+ PPT     5  -99.00     10.00      99. -1. PT  FR: 2D SKEW=PT 
+ __E  11
+
+ S__  12  6 *** PWSC scale parameters                                       29 
+ PSE     5    0.01      6.49      99. -1. SE  HF,HZ,YX Ecal scale
+ PSH     5    0.01      2.70      99. -1. SH  HF,HZ,YX Hcal scale
+ PSL     5    0.01      0.00      99. -1. SL  HF,HZ:   Lcal scale
+ PNB     5    1.00      1.00       5. -1. NB  # of histogram bins to add
+ PSW     5  -99.00      2.17      99. -1. SW  YX: scale of Ecal wires
+ PBW     2    1.00      1.00       9.  0. BW  YX: Bin width
+ PMW     5    0.00      2.00      99. -1. MW  YX: minimum wire energy
+ PHM     5    0.00      2.00       0.  1. HM  YX: histogram mode
+ PMF     5    0.00      0.00       0.  0.     HF: histogram mode
+ PDH     5   -1.00      0.00       2.  1. HD  RZ: distance of HCAL histo.
+ __E  12
+
+ S__  13  6 *** PWTF TF parameters                                          39 
+ PRF     5    1.00     14.00      99. -1. RF  TF: FR side picture
+ PRT     5    1.00      7.00      99. -1. RT  TF: TR side picture
+ PPU     5  -99.00      2.00      99.  1. PU  TF: pull ~ epsilon
+ VSK     5  -99.00      0.00      99. -1. VS  TF: vertical B skew
+ PSK     5  -99.00     11.00      99. -1. SK  TF,EC: skew for lego plot
+ PHI     5    0.01      1.00      99.  0. HI  TF: hight of ecal objects
+ __E  13
+
+ S__  14  6 *** PWOT other parameters                                       45 
+ PLM     5    0.00      1.00       9.  0. LM  XY: muon det-layers to draw
+ PLY     5    0.00      1.00       0.  3.     EC: layer 1 to 3
+ PAB     5    0.00      0.00       0.  0.     EC: endcap selection
+ PTH     5    1.      100.     99999.  1. TH  EC: DECPL: cut for LC-crack 
+ PPR     5   10.00     50.00      90.  0. PR  HZ: % OF PICTURE FOR TPC
+ PGA     5    0.00      0.00      90. -1. AL  YZ: CHANGE YZ TO RZ
+ PT0     5   -9.00      0.00       9. -1. T0  YZ: T0 correction of TPC
+ __E  14
+
+ S__  15  6 *** PWRO RO parameters                                          50 
+ RAL     5 -360.00     10.00     720.  0. AL  RO : rotation angle alpha
+ RDA     5  -99.00     10.00      99.  0. DA  RO: delta alpha
+ RSV     5    0.00      0.00      99. -1. SV  RO: SPEED VECTOR ON OF
+ RRM     5    0.00      6.00       0.  0.     RO: detector drawing mode
+ RDY     5 -999.00      0.00     999.  1. DY  RO: dy
+ RES     5 -999.00     50.00    9999. -1. ES  RO: EYE TO SCREEN
+ REY     5 -999.00      3.00    9999. -1. EY  RO: EYE TO NOSE
+ RDF     5    0.01      0.2        9. -1. DF  RO| DF of rotation segment   
+ RXX     5    0.00      0.00       0.  0. XX  RO: FIXED ROTATION POINT
+ RYY     5    0.00      0.00       0.  0. YY  RO:
+ RZZ     5    0.00      0.00       0.  0. ZZ  RO:
+ RSP     5    0.00     22.00      99.  0. SP  RO: momentum scale
+ RVS     5    0.01      0.20      99.  0. VS  TC| vertical scale (=Hight)  
+ RRC     5    0.01      1.00      99. -1. RC  TC| rho cut around axis
+ RCA     5    0.        7.00      99. -1. CA  TC| color of axis (of/on)
+ RST     5    0.        1.00      99. -1. ST  TC| selected track    
+ __E  15
+ S__  16  6 *** PWFZ FZ for VDET                                            66 
+ FLA     5    0.00      0.00       3.  0.     FZ: 0=TPC, 1=V1, 2=V2
+ FFA     5    1.00      1.00      15.  0. FA  FZ: Face
+ FWA     5    1.00     1.00        6. -1. WA  FZ: wafer
+ FTO     3    1.00     10.5       11.  0.     FZ: TO: OLD VDET
+ FTN     3    1.00     21.        21.  0.     FZ: TO: NEW VDET
+ FEL     5    0.00      1.00      99.  1. EL  FZ: sigma of track ellipse
+ FDL     5    0.00      0.50       2.  1. DL  FZ: separating distance
+ FSC     5    0.01     10.00     999.  1. SC  FZ: scale Hits=Scale Histogram/HH
+ FHS     5    0.01     15.00     999.  1. HS  FZ: scale vdet histogram
+ FHW     5    5.00     20.00      50. -1. HW  FZ: histogram width
+ __E  16
+
+ S__  17  6 *** PWWL YX wide lines                                          76 
+ XZH     5 -999.00     70.00     999.  1. ZH  YX: hight of crossing histo.
+ XZW     5    0.00      1.00     999. -1. ZW  YX: Z-width factor
+ XZF     5    0.00     43.27     999.  0. ZF  YX: FI of z-plane
+ XZT     5    1.00    125.08     179.  0. ZT  YX: TE of z-plane
+ XZD     5    1.00      0.00       3.  0.     YX: 1=DZ 2=dD0 3=dZ0 4=line
+ XZM     5    0.00     15.00     999.  1. ZM  YX: maximum width
+ XZP     5    0.00     10.00     100.  1. ZP  YX: no | near zp% to vertex
+ XZS     5 -999.00      3.00     999.  1. ZS  YX: scale histogram_flags
+ XZC     5    0.00      1.00     100.  0. ZC  YX: cut hist. at this hight
+ XZI     5    0.00      1.00      10.  0. ZI  YX: Increment phi along line
+ __E  17 
+
+ S__  19  6 *** PWPH  Physics processor                                     86 
+ RST     5    1.00      0.00      99.  0.     PH: selected track
+ __E  19
+
+ __E  10
+
+      =====================================================================
+
+ S__  20  6 *** PWDD DD parameters                                          87 
+ HIN     5    0.00 115222.00       0.  0.     = IHTRDO() data def. packed
+ HV0     5    0.0       1.         1.  0.     DD: draw V0 tracks from YLV0 
+ HLI     5    0.00      5.00       0.  0.     DD: track limit
+ HTB     5    0.00      2.00       9.  1. TB  DD: # of frft bank
+ HCA     5    0.00      0.00       0.  0.     DD: cut imposed on hits
+ HEO     5    0.00      1.00       0. -1.     DD: EO DRAW NO DRAW
+ HVD     5    0.00      2.00       0.  1.     DD: 2,4 USED VDET: HITS, COORD.
+ HMV     5    0.00      1.0        0.  1.     DD: if on:clean MC vdet hits
+ HP0     5    0.00   9999.00    9999. -1. P0  DD: NEUTRAL TRACKS FOR SPECIAL.
+ HSE     5    0.00      0.00       0. -1.     DD: sector of pads
+
+ S__  21  6 *** PWDDCT DD cut parameters                                    97 
+ HNI     5    0.00     99.00      99. -1. NI  DD: # of ITC hits
+ HNT     5    0.00      4.00      99. -1. NT  DD: # of TPC hits
+ HCM     5  -99.00      0.00      99. -1. CM  DD: cut momentum
+ HZ0     5 -999.00      0.00     999. -1. Z0  DD: cut z0
+ HD0     5 -999.00      0.00     999. -1. D0  DD: cut d0
+ HF1     5 -999.00      0.00     999. -1. F1  DD: cut fi1
+ HF2     5 -999.00    360.00     999. -1. F2  DD: cut fi2
+ HT1     5 -999.00      0.00     999. -1. T1  DD: cut te1
+ HT2     5 -999.00    180.00     999. -1. T2  DD: cut te2
+ HZZ     5   -1.00      0.00       1. -1. ZZ  DD: cut forward backward
+ HST     5 -999.00     -1.00     999. -1. ST  DD: single track
+ HSH     5    1.00      1.00     999. -1. SH  DD: single hit
+ HDE     5    0.00      3.00       0.  0.     DD: of detector
+ HCN     5  -99.00      0.00      99. -1. CN  DD: cut energy of neutral objects
+ HCQ     5   -1.00      0.00       1. -1. CQ  DD: cut charge
+ HCE     5  -99.00      0.10     999. -1. CE  DD: cut energy
+ HCL     5 -999.00      0.00     999. -1. CL  DD: cut cluster #
+ __E  21
+ __E  20
+
+ S__  31  6 *** PWRS residual parameters                                   114 
+ STC     5    0.00      0.00       0.  0.     RS: 2:track#   4:colour
+ SDF     5 -999.00      1.00    9999. -1. DF  RS: scale rho phi
+ SDZ     5 -999.00      1.00    9999. -1. DZ  RS: scale z
+ SVD     5    0.01      1.00     999.  0. VD  RS: IT scale factor
+ SIT     5    0.01      1.00     999.  0. IT  RS: Vd scale factor
+ __E  31
+
+ S__  32  6 *** PWEF energy flow parameters                                119 
+ EFI     5    0.00    180.00     360. -1. FI  EF: fi
+ ESK     5  -99.00     10.00      99.  0  SK: EF: Skew
+ ETY     5    0.00      0.00 7777777. -1. TY  EF: TYpe selected
+ ENB     5    8.00     24.00      40.  1. NB  EF: # of Bins  ,4: # of bosbank
+ END     5    2.00      3.00       5.  5. ND  EF: # of Digits, 4: # of symbol
+ ESZ     5    0.00      1.00      99. -1. SZ  EF: SiZe of symbol
+ EDF     5    0.00      1.00       9.  0. DF  EF: scale DF, 4: #0 = invert
+ EDT     5    0.00      1.00       9.  0. DT  EF: scale DT
+ __E  32
+
+ S__  33  6 *** PWDL Display list parameters                               127 
+ LLI     5    0.00      1.00       0.  0. --  DL : selected list
+ LNS     5    1.00      1.00      36.  0. NS  DL,WZ: sector number
+ LRG     5    0.00      0.00       0.  0. --  DL: rad or grad
+ __E  33
+
+ S__  34  6 *** PWLT Laser tracks                                          130 
+ LDS     5    0.00      0.00      99.  0. DS  LT: ds
+ LDL     5    0.00      0.00      99.  0. DL  LT: dl
+ LNT     5    1.00      0.00      99.  0. NT  LT: track #
+ LDI     5    0.00      0.00       0.  0.     LT: ?
+ LFI     5    0.00      0.00       0.  0.     LT: ?
+ __E  34
+
+ S__  35  6 *** PWAP all projections                                       135 
+ AHM     5 -999.00      0.00    9999.  0. HM  AP: H MIDDLE
+ ADH     5    0.00      1.00    9999.  0. DH  AP: H2-H1
+ AVM     5 -999.00      0.00    9999.  0. VM  AP: V MIDDLE
+ ADV     5    0.00      1.00    9999. -1. DV  AP: V2-V1
+ AAL     5  -90.00      0.00     360.  0. AL  AP: alpha
+ AVV     5   -8.00      2.00       8.  0. VV  AP: vertical  variable
+ AHV     5   -8.00      1.00       8.  0. HV  AP: horizontal variable
+ ATH     5 -999.00      0.00     999. -1. TH  AP: theta factor
+ ATV     5 -999.00      0.00     999. -1. TV  AP: theta factor
+ __E  35
+
+ S__  38  6 *** PWSI BCAL parameters                                       144 
+ BPR     5    0.00      1.00       0.  0.     projection
+ BSI     5    0.00      1.00       0. -1.     Side 
+ BDR     5    0.00      4.70       5. -1. DR  Horizontal shift
+ BSE     5    0.01      1.00     999.  0. SE  Scale of energy
+ BCE     5    0.00      0.01    9999. -1. CE  Cut of energy
+ __E  38
+
+ S__  39  6 *** PWAL ALPHA parameters                                      147 
+ ALI     1    0.        5.         9.  1.     LIST NUMBER
+ AAC     1    0.        0.         1.  1.     2: 1=US  4: 1= + interaction list
+ ALG     1    0.        1.         1.  0. LG  1=logarithmic scale
+ AFM     5 -360.00     43.       720.  0. FM  FI=phi
+ ATE     5    0.00     63.       180.  0. TE  TE=theta
+ AAL     5 -360.00      0.       720.  0. AL  AL=alpha
+ AFR     5  -99.00     20.        99.  0. FR  FR
+ ATO     5    0.00     20.        99. -1. TO  TO
+ AAS     5    0.00      4.        99. -1. AS  AS
+ ADS     5    0.00      1.3       99. -1. DS  Distortion <1 = log
+ ASK     4  -33.00      0.        33.  1. SK  Skew
+ ASL     3    0.01     10.        99. -1. SL  Scale of lego
+ APR     3   -3.        3.         4.  0. **  -3 to 4: TF,FT,**,RO,AC,UT,TU,DL
+ AWI     1    0.        2.         9.  0. WI  lego width
+ ASS     3    0.01      2.        99. -1. SS  Scale of symbol
+ ASY     5    3.       12.        24.  1. SY  shape of symbol 
+ ATM     1   -1.        1.         1.  0. **  ML:-1 tower ML=1 circle
+ __E  39 
+
+ S__  40  6 *** PWSI SICAL parameters                                      164 
+ CFO     5    0.00      4.00       9. -1. FO  SX: fi ofset of ro histogram
+ CFL     5    1.00      1.00      12. -1. FL  YX: from layer
+ CTL     5    1.00     12.00      12. -1. TL  YX: to layer
+ CSX     5    0.00     10.00      50. -1. SC  SC: scale of xy
+ CSR     5    0.01     10.00      50. -1. SR  SC: scale of rz
+ CSH     5    0.01     10.00      50. -1. SH  SC: scale of histogram
+ CSF     5    0.01     10.00      50. -1. SF  SC: scale of fz
+ CFH     5    0.00     30.00     100.  1. FH  SC: fraction of histogram
+ CFM     5    0.00     90.00     720. -1. FM  SC: fi max
+ CR1     5  -15.00      0.00      15. -1. R1  SC: fi max
+ CE1     5    0.00      0.03      99.  1. E1  SC: en min
+ CE2     5    0.00     99.00      99. -1. E2  SC: en max
+ CCN     5    0.00      1.00      20. -1. CN  SC: CLUSTER #
+ CNR     5    1.00      1.00      16. -1. NR  SC: fz,PU: nr
+ CNP     5    1.00      2.00      16.  0. NP  SC: # OF PADS FOR ZZ
+ CMC     5    1.00      6.00      99. -1. MC  SC: SIZE OF MC FKINE
+ CCG     5    0.00      7.00      15. -1. CG  SC: color of total grid
+ CCH     5    0.00      8.00      15. -1. CH  SC: constant colour of squares
+ CPR     5    0.00      1.00       0.  0.     SC: Sical projection
+ CSY     5    0.00      1.00       0.  0.     SC: Sical SYMBOL MODE
+ CZZ     5    0.00      0.00       0.  0.     SC: ZZ ZOOM OF PUZZLE
+ __E  40
+
+ __E   1
+
+        ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+ S__  43  6 *** CURO current ro                                            185 
+ RVN     7    1.00      1.00       9.  0. VN  RO| rotate around this vertex
+ RTN     2    0.00      1.00      99. -1. TN  RO| rotate around this track
+ RJN     1    0.00      1.00       0. -1. JN  RO| # of jet in ro
+ RYC     3    0.00      0.20      99.  1. YC  RO| YCUT FOR CLUSTERING OF JETS
+ RCP     2    0.        8.00      99.  1. CP  TC| Color of points
+ RWV     1    1.        4.00       4. -1. WV  RO| Wireframe of VDET
+ RWE     1    1.        3.00       3. -1. WE  RO| Wireframe of ECAL
+ RWH     1    1.        3.00       3. -1. WH  RO| Wireframe of HCAL
+ __E  43
+             0  1  2  3  4  5  6  7  8  9  0  1  2  3  4  5  6  7  8  9
+ __N      1 BG BK C2 C3 C4 C5 C6 GY WH GN YE BR RD MA CY BL
+ __N      2 ** CN LE ** NU SQ
+ __N      3 ** PO HL XX HL VL RE CF AR
+ __N      4 CN NT MO CU
+ __N      5 CN PC MD 
+ __N      6 CN PC
+ __N      7 CN PC TE
+ __N      8 CN EN CU
+ __N      9 CN EN CU KK
+ __N     10 CN
+ __N     11 CN EN CU NO
+ __N     12 ** LE SQ
+
+ S__  70  1 CF0 CF1G color functions                                       193 
+ FTR    60    0.        1.         2.  0. TR  CF! function of track image
+ FVD 10050    0.        1.         2.  0. VD  CF| vdet strip function
+ FVC 19060    0.        1.         1.  0. VC  CF| vdet coordinate function 
+ FIT 28060    0.        1.         1.  0. IT 
+ FTP 37070    0.        1.         2.  0. TP 
+
+ FCP 51040    0.        1.         3.  0. CP  CF! charged particle function
+ FFC 10004    0.        0.250      9.  0. FC  CF! Momentum scale factors
+ FCC     4    0.        1.        99.  0. CC  CF! high low separation by mom.
+
+ FLC 51100    0.        0.         0.  0. LC  CF! Lcal function
+ FFL 10004    0.        0.025      0.  0. 
+ FCL     4    0.        1.         0.  0.     SC! high low sep. by energy
+ FEC 26090    0.        1.         2.  0. EC
+ FFE 35004    0.        0.025      9.  0. FE
+ FCE     4    0.        1.        99.  0. CE
+
+ FHC 51080    0.        1.         2.  0. HC
+ FFH 10004    0.        0.1        9.  0. FH
+ FCH     4    0.        1.        99.  0. CH
+ FEO 26110    0.        0.         3.  0. EO
+ FFO 35004    0.        0.1        9.  0. FO
+ FCO     4    0.        1.        99.  0. CO
+
+ __E  70
+
+ S__  46  6 *** CSCD col priority by hue difference                        213 
+ CC1    10    0.       12.        31.  0. C1  color 1
+ CC*    10    0.        9.        31.  0. C2  color 2
+ CC*    10    0.       15.        31.  0. C3  color 3
+ CC*    10    0.       11.        31.  0. C4  color 4
+ CC* 56010    0.       14.        31.  0. C5  color 5
+ CC*    10    0.       13.        31.  0. C7  color 6
+ CC*    10    0.       10.        31.  0. C8  color 7
+ CNU 46001    1.        7.         7.  0. NU  # of colors used  
+ __E  46
+
+ S__  47  6 *** CSCQ color priority by quantity                            221 
+ CC1    10    0.       15.        15.  0. C1  color 1
+ CC*    10    0.       12.        15.  0. C2  color 2
+ CC*    10    0.       13.        15.  0. C3  color 3
+ CC*    10    0.       11.        15.  0. C4  color 4
+ CC* 56010    0.        9.        15.  0. C5  color 5
+ CC*    10    0.       14.        15.  0. C6  color 6
+ CC*    10    0.       10.        15.  0. C7  color 7
+ CC*    10    0.        8.        15.  0. C8  color 8
+ CNU 46001    1.        8.         7.  0. NU  # of colors used  
+ __E  47
+
+ S__  49  6 CCX CCVX constant colors of vertices                           230 
+ CMC    10    0.        8.        15.  0. MC  monte carlo vertex
+ __E  49
+
+ S__  50  6 CCV CCVD constant colors of VDET                               231 
+ CHI    10    0.        8.        15.  0. HI  hits      
+ CUH    10    0.        8.        15.  0. UH  unconnected hits      
+ CCO    10    0.        8.        15.  0. CO  coordinates
+ CFR    10    0.        1.        15.  1. FR  coordinate frame
+ CPH    10    0.        1.        15.  1. PH  FZ Pulsehight histogram area 
+ CPF    10    0.        8.        15.  1. PF  FZ Pulsehight histogram frame
+ CAT    10    0.        8.        31.  0. AT  hit color for ambig. tracks
+ CEF    10    0.        1.        31.  0. EF  frame color in FZ of tr. extr.
+ __E  50      
+
+ S__  51  6 CCI CCIT constant colors of ITC                                239 
+ CCN    10    0.        8.        15.  0. CN  constant hits      
+ CUC    10    0.        8.        15.  1. UC  unconn. hits
+ __E  51      
+
+ S__  52  6 CCT CCTP constant colors of TPC                                241 
+ CCN    10    0.        8.        15.  0. CN  constant hits      
+ CBC    10    0.        9.        15.  0. BC  bad coordinates
+ CPA    10    0.        9.        15.  0. PA  pads
+ CNF    10    0.        7.        15.  1. NF  unused hits for fits      
+ CUC    10    0.        8.        15.  0. UC  unassociated cordinates
+ CFR    10    0.        1.        15. -1. FR  frames
+ CDT     2    0.1       1.        99. -1. DT  delta theta for theta colors
+ __E  52      
+
+ S__  53  6 CCE CCEC constant colors of ECAL                               248 
+ CCN    10    0.        8.        15.  0. CN  constant hit color      
+ CL1    10    0.       12.        15.  0. L1  hits layer 1      
+ CL*    10    0.        9.        15.  0. L2  hits layer 2      
+ CL*    10    0.       10.        15.  0. L3  hits layer 3      
+ CEO    10    0.        8.        15.  0. EO  objects
+ CHA    10    0.       10.        15.  0.     histogram area
+ CHL    10    0.        1.        15.  1.     histogram lines
+ CWI    10    0.        8.        15.  0.     barrel wires
+ CWA    10    0.        8.        15.  0.     endcap A wires
+ CWB    10    0.        8.        15.  0.     endcap B wires
+ CFR    10    0.        1.        15. -1. FR  frames
+ CE1    10    0.       12.        15.  0. E1  color below cut energy
+ CE*    10    0.       10.        15.  0. E2  color above cut energy
+ __E  53
+      
+ S__  54  6 CCH CCHC constant colors of HCAL                               261 
+ CHI    10    0.        8.        15.  0. HI  hits      
+ CBA    10    0.        8.        15.  0.     barrel tubes      
+ CF1    10    0.        8.        15.  0.     F1 endcap tubes
+ CF2    10    0.        8.        15.  0.     F2 endcap tubes
+ CF3    10    0.        8.        15.  0.     F3 endcap tubes
+ CHA    10    0.        6.        15.  0.     histogram area
+ CHL    10    0.        1.        15.  1.     histogram lines
+ CFR    10    0.        1.        15. -1.     frames
+ CE1    10    0.       14.        15.  0. E1  color below cut energy
+ CE2    10    0.       10.        15.  0. E2  color above cut energy
+ __E  54
+      
+ S__  55  6 CCM CCMD constant colors of MDET                               271 
+ CHI    10    0.        8.        15.  0. HI  hits      
+ CFR    10    0.        1.        15.  1. FR  frames
+ __E  55
+
+ S__  56  6 CCL CCLC constant colors of LCAL                               273 
+ CCN    10    0.       10.        15.  0.     constant hit color      
+ CL1    10    0.        8.        15.  0.     hits layer 1      
+ CL2    10    0.        8.        15.  0.     hits layer 2      
+ CL3    10    0.        8.        15.  0.     hits layer 3      
+ CFR    10    0.        1.        15. -1.     frames
+ CE1    10    0.       14.        15.  0. E1  color below cut energy
+ CE2    10    0.       10.        15.  0. E2  color above cut energy
+ CLC    10    0.        8.        31.  1. LC  color of LCAL crack counter
+ __E  56
+
+ S__  57  6 CCS CCSI constant colors of SICAL                              280 
+ CHA    10    0.       10.        15. -1.     CH! color of SICAL
+ CHL    10    0.        1.        15. -1.     CH! color of SICAL
+ CFA    10    0.        1.        15. -1.     CH! color of SICAL
+ CFL    10    0.        7.        15. -1.     CH! color of SICAL
+ CSS    10    0.        8.        15.  0.     CH! color of SICAL
+ CSD    10    0.        1.        15.  0.     CH! color of SICAL
+ __E  57
+
+ S__  58  6 CCR CCTR constant colors of tracks                             286 
+ CCN    10    0.        8.        15.  0. CN  track image color
+ CFR    10    0.        1.        15. -1. FR  frame
+ CKA    10    0.        8.        15. -1. KA  Kalman extrapolation tracK
+ CKP    10    0.        8.        15. -1. KP  Kalman extrapolation points
+ CKF    10    0.        1.        15. -1. KF  Kalman extrapolation frame     
+ CMA     1    1.        6.         6.  0. AM  m-carlo color amplitude
+ CMO 46001    0.        0.         9.  0. MO  m-carlo color offset
+ CV0    10    0.        8.        31.  1. V0  color of V0 tracks
+ __E  58
+
+ S__  59  6 CCP CCCP constant colors of charged particles                  294 
+ CCN    10    0.        8.        15.  0. CN  track color
+ CCT    10    0.        8.        15.  0. CT  track color
+ CIO    10    0.        7.        15.  0. IO  Itc only tracks
+ CC1    10    0.       14.        15.  0. C1  color below cut momentum
+ CC2    10    0.       10.        15.  0. C2  color above cut momentum
+ __E  59
+
+ S__  48  6 CCO CCOC other colors                                          299 
+ CCN    10    0.        8.        15. -1. CN  overall constant data color
+ CLE    10    0.       10.        15. -1. LE  left  eye stereo color
+ __E  48
+
+
+ S__  60  6 SYV SYVD symbols of VDET                                       301 
+ SSC    30    1.        8.         8.  0. SC  symbol of VDET coordinates 
+ SSY    30    1.        8.         8.  0. SY  symbol of VDET hits
+ SSZ     1    1.        3.        99.  0. SZ  symbol size
+ SFR     1    1.        1.         9.  0. FR  width of frame
+ SWI     1    1.        1.         3.  1. WI  width hit lines
+ STE     2    1.        8.         9.  0. TE  track extrapolation symbol
+ STS     2    1.        3.        99.  0. TS  track extrapolation size
+ STF     2    1.        4.        99.  0. TF  frame of track extr. points
+ SWE     2    1.        2.        99.  0. WE  width of ellips
+ SEF     2    1.        2.        99.  0. EF  frame of ellips
+ SEL     4    0.1       2.56     999.  1. EL  DFZVEL: cut for overlapping el.
+ __E  60
+
+ S__  61 13 SYI SYIT symbols of ITC                                        312 
+ SSY    30    1.        8.         8.  1. SY  symbol of ITC
+ SSZ     1    1.        3.        99.  0. SZ  symbol size
+ SFR     1    1.        1.         9.  0. FR  width of frame
+ SWI     1    1.        1.         3.  1. WI  width of connecting lines
+ __E  61
+
+ S__  62 13 SYT SYTP symbols of TPC                                        316 
+ SSY    30    1.        8.         8.  0. SY  symbol of TPC
+ SSZ     1    1.        3.        99.  0. SZ  symbol size
+ SVP     1    1.        3.        99.  0. VP  symbol size in the V-Plot
+ SFR     1    1.        1.         9.  0. FR  width of frame
+ __E  62
+
+ S__  63  6 SYE SYEC symbols of ECAL                                       320 
+ SVS    20    1.        5.         5.  0. VS  variable symbol
+ SSY    30    1.        8.        11.  0. SY  constant symbol
+ SSZ     1    1.        3.        99.  0. SZ  symbol size
+ SFR     1    1.        2.         9.  0. FR  width of frame
+ SSS     2    0.1       3.        99.  0. SS  square size
+ SWI     1    1.        1.         9.  0. WI  Lego width
+ SHI     2    0.1       3.        99.  0. HI  Lego hight
+ SHL     1    1.        3.         9.  0. HL  histogram separating lines
+ __E  63
+
+ S__  69  6 SYO SYEO symbols of ECAL objects                               328 
+ SVS   120    1.        1.         5.  0. VS  variable symbol
+ SSZ     1    1.        3.        99.  0. SZ  DAPEO DRSTP ?
+ SSS     2    1.        1.         9.  0. SS  square size
+ SLI     1    0.01      1.         5.  0. LI  'track' width    
+ SWI     1    0.01      1.         9.  0. WI  chimney width    
+ __E  69    
+
+ S__  64  6 SYH SYHC symbols of HCAL                                       333 
+ SVS    20    1.        5.         5.  0. VS  variable symbol pads
+ SSY    30    1.        8.        11.  0. SY  constant symbol tubes
+ SSZ     1    1.        3.        99.  0. SZ  symbol size tubes
+ SFR     1    1.        2.         9.  0. FR  width of frame
+ SSS     2    1.        3.        99.  0. SS  square size pads
+ SWI     1    1.        1.         9.  0. WI  Lego width pads
+ SHI     2    1.        3.        99.  0. HI  Lego size pads
+ SHL     1    1.        3.         9.  0. HL  histogram separating lines
+ __E  64
+
+ S__  65 13 SYM SYMD symbols MDET                                          341 
+ SSY    30    1.        8.         8.  0. SY  constant MDET symbol
+ SSZ     1    1.        3.        99.  0. SZ  symbol size
+ SFR     1    1.        2.         9.  0. FR  width of frame
+ __E  65
+
+ S__  66  6 SYL SYLC symbols LCAL                                          344 
+ SVS    20    1.        5.         5.  0. VS  variable symbol
+ SSY    30    1.        8.        11.  0. SY  constant symbol
+ SSZ     1    1.        3.        99.  0. SZ  symbol size
+ SFR     1    1.        2.         9.  0. FR  width of frame
+ SSS     2    1.        3.        99.  0. SS  square size
+ SWI     1    1.        1.         9.  0. WI  Lego width
+ SHI     2    1.        3.        99.  0. HI  Lego hight
+ __E  66
+
+ S__  67 13 SYX SYVX vertex                                                351 
+ SSY    30    1.        3.        11.  0. SY  symbol
+ SSZ     3    1.        1.        99.  0. SZ  symbol size
+ __E  67
+
+ S__  68 13 SYF SYEF energy flow                                           353 
+ SBW     3    1.        1.         5.  0. BW  box line width
+ SDW     3    1.        1.         5.  0. BW  Width of degree lines
+ SLI     1    0.01      1.         5.  0. LI  'track' width    
+ SWI     1    0.01      1.         9.  0. WI  chimney width    
+ __E  68
+
+ S__  87  6 SYR SYTR track width                                           357 
+ SDW     3    1.        1.         3. -1. DW  data width
+ SSY    30    1.        8.         0.  1. SK  symbol of kalman point
+ SSZ     1    1.        3.        99.  0. SZ  symbol size
+ SFR     1    1.        1.         9.  0. FR  frame width
+ STR     1    1.        1.         5.  0. TR  track width
+ STF     1    1.        1.         5.  0. TF  line width of TF
+ __E  87
+
+ S__  71  6 *** SYOT other symbols                                         363 
+ SLW     1    1.        1.         5.  0. LW line width of HL and VL
+ __E  71
+
+ S__  90  6 *** C.DA colors of subdetector areas                           364 
+ CAL    12    0.        8.        15. -1. AL all
+ CBP    12    0.        5.        15.  1. BP beam pipe
+ CVD    12    0.        1.        15.  1. VD
+ CIT    12    0.        3.        15.  1. IT
+ CTP    12    0.        2.        15.  1. TP
+ CEC    12    0.        4.        15.  1. EC
+ CMC    12    0.        6.        15.  1. MC magnetic coil
+ CHC    12    0.        5.        15.  1. HC
+ CMD    12    0.        3.        15.  1. MD
+ CSI    12    0.        5.        15.  1. SI
+ CLC    12    0.        4.        15.  1. LC
+ __E  90
+
+ S__  91  6 *** C.DL colors of subdetector lines                           375 
+ CAL    12    0.        7.        15. -1. AL all
+ CBP    12    0.        7.        15.  1. BP beam pipe
+ CVD    12    0.        7.        15.  1. VD
+ CIT    12    0.        7.        15.  1. IT
+ CTP    12    0.        7.        15.  1. TP
+ CMC    12    0.        7.        15.  1. MC magnetic coil
+ CEC    12    0.        7.        15.  1. EC
+ CHC    12    0.        7.        15.  1. HC
+ CHZ    12    0.        8.        15.  1. HZ Hcal barrel line color in YZ
+ CMD    12    0.        7.        15.  1. MD
+ CSI    12    0.        7.        15.  1. SI
+ CLC    12    0.        7.        15.  1. LC
+ __E  91
+
+ S__  92  6 *** C.RC cuts by radius                                        386 
+ CRA     0    0.        0.,      999. -1. RA ???
+ __E  92
+
+ S__  93  6 *** C.WI window colors                                         387 
+ CBG    12    0.        0.       15.   0. BG background
+ CFR    12    0.        0.       15.   1. FR frames
+ CRB    12    0.        8.       15.   0. FE display of rubber band
+ CTX    12    0.        0.       15.   1. TX text
+ CFE    12    0.        0.       15.   1. FE text OF "FISH-EYE"
+ CHB    12    0.        1.       31.   0. HB Help menu background 
+ CHF    12    0.       28.       31.   0. HF Help menu forground 
+ __E  93
+
+ S__  94  6 *** C.HD header colors                                         394 
+ CBG    12    0.        0.       15.   0. BG header background
+ CAL    12    0.       12.       15.   1. AL ALEPH sign
+ CTA    12    0.        8.       15.   1. TH aleph text
+ CDA    12    0.        8.       15.   1. DA text of header DALI
+ CVS    12    0.        8.       15.   1. VS text of header DALI version
+ CPH    12    0.        8.       15.   1. PH text of physics information
+ CTI    12    0.        8.       15.   1. TI text of header time
+ CRE    12    0.        8.       15.   1. RE text of header run,event
+ __E  94
+
+ S__  95  6 *** C.SC scale colors                                          402 
+ CBG    12    0.        8.       15.   0. BG scale area
+ CEC    12    0.        8.       15.  -1. EC ECAL scale bars
+ CHC    12    0.        8.       15.  -1. HC HCAL scale bars
+ CLC    12    0.        8.       15.  -1. LC LCAL scale bars
+ CPR    12    0.        8.       15.  -1. PR projection scale bars
+ CWI    12    0.        8.       15.  -1. WI ECAL wire scale bars
+ CTM    12    0.        8.       15.   1. TM tick marks
+ CVA    12    0.        8.       15.   1. VA text of variables
+ CTP    12    0.        8.       15.   1. TP text of projection
+ CCU    12    0.        8.       15.   1. CU text of cuts
+ CFI    10    0.        8.       31.  -1. FI text: FISH-EYE
+ __E  95
+
+ S__  96  6 *** STLI style of lines                                        413 
+ SDT     1    1.        1.         3.  0. DT  detector width
+ SRB     2    1.        1.         3.  0. RB  rubber band width
+ __E  96
+
+ S__  81  6 *** PAPP PERSONAL parameters                                   415 
+ BOS     8    9.       20.         0. -1. **| x If on, CALL BOS(IW,100000*x)
+ USL     1    0.        5.         7. 99. UL| user level 99: maximum installed
+ BST     1    0.        0.         0.  1. ST| store DALI.STAT per month
+ JDB     2   11.       93.        99. -1. DB! debug dalbj flag
+ OVD     1    0.        1.         1.  0. VD! 0=old 1=new VDET code
+ IW6     2    6.       90.        99.  0. I6! IW(6)
+ RLK     1    0.        1.         1.  0. LK! read EPIO(EDIR)  1=look 0=DALI
+ RSQ     1   -1.       -1.         1.  0. SQ! (non) sequential EDIR
+ EFZ     1    0.        1.         1.  0. FZ| if = 0, no track ellipses
+ __E  81
+
+ S__  82  6 *** PAAG ALEPH geometry                                        424 
+ RBP     3    0.       5.41      999. -1. BP! imposed beam pipe radius      
+ MRO     3    0.      120.       999.  0. MR! Muon distance from HCAL YX
+ MZZ     3    0.      999.       999.  0. MZ! Muon distance from HCAL RZ
+ QXY     5    0.1       0.974      9.  0. D1| DAPPE: QXY, xy and fr 
+ QD*     5    0.1       0.966      9.  0. D2| DAPPE 
+ QD*     5    0.1       0.968      9.  0. D3| DAPPE
+ QU*     5    0.1       1.052      9.  0. U1| DAPPE
+ QU*     5    0.1       1.068      9.  0. U2| DAPPE
+ QU*     5    0.1       1.074      9.  0. U3| DAPPE
+ QYZ     5    0.1       0.480      9.  0. D1| DAPPE: QYZ yz
+ TVO     3    1.00     10.5       11.  0. VO| FZ: TO: OLD VDET nominal
+ TVN     3    1.00     21.        21.  0. VN| FZ: TO: NEW VDET nominal
+ TFZ     3   30.      225.       999.  0. FZ| FZ: TO: tpc layer
+ __E  82
+
+ S__  83  6 *** PANU NUMBERS                                               437 
+ ONK     2    1.        8.        99.  0. NK| # of lines for kalman extr.
+ VNV     2    6.       25.        99.  0. NV! DAPPV: # of vdet lines in FT
+ __E  83
+
+ S__  84  6 *** PAOT others                                                439 
+ PMO     3    1.        2.         6.  0. MO| Pick: module number
+ PNU     3    1.        1.     99999.  0. NU| Pick: object number
+ PLA     3  -99.        1.       999.  0. LA| Pick: label
+ PPI     3    1.        7.         8.  0. PI| pick pattern
+ PSZ     3    1.        4.         6. -1. SZ| pick label size
+ OBE     1    0.        1.         1.  0. WR| # of bells
+ OM3     1    1.        2.         2.  1. M3| DM3D cross hair / radial marker
+ ONC     2    1.       32.        64.  0. nc| DSETUP # of colors excl.:RB ...
+ OCI     2    0.1      55.        90.  0. CI| DW_INV_CO green cut inver. col.
+ OZS     1    0.        1.         1.  0. ZS| DGRBSC: ZB scale 0:0...s, 1:-s..s
+ OHD     5  100.      880.       999.  0. HD| DWS small dislay size horizontal 
+ OVD     5  100.      587.       999.  0. VD| DWS small dislay size vertical
+ OBA     4    1.       56.        99.  1. BA| DO_BAR hight of bar
+ OWZ     3    1.        1.        99.  0. WZ| DWIZ #of wizard   
+ OHL     2    0.        0.         2.  0. HL| DQHLT 0=OFF 1=name
+ OGX     3    0.        1.         1.  0. GX| DWC inversed green on dark
+ ORX     3    0.        0.         1.  0. RX| DWC inversed  red  on dark
+ OBX     3    0.        1.         1.  0. BX| DWC inversed  blue on dark
+ OGZ     3    0.        0.         1.  0. GZ| DWC inversed green on light
+ ORZ     3    0.        0.         1.  0. RZ| DWC inversed  red  on light
+ OBZ     3    0.        0.         1.  0. BZ| DWC inversed  blue on light
+ OH2     3    1.     1300.      9999.  1. H2| hori. position of window 2
+ OV2     3    1.       10.      9999.  0. V2| vert. position of window 2
+ OH3     3    1.      600.      9999.  1. H3| hori. position of window 3
+ OV3     3    1.      120.      9999.  0. V3| vert. position of window 3
+ __E  84
+
+ S__  85  6 *** PASC scale factors                                         454 
+ OEH     5    0.        1.       999.  1. EH| scal ecal histogram
+ __E  85
+      
+ S__  86  6 *** PPRO artificial cube parameters                            455 
+ RFA     5 -360.00      0.00     720. -1. FA  RO| artificail cube angle phi
+ RTA     5 -360.00     15.00     720. -1. TA  RO| artificail cube angle theta
+ RGA     5 -360.00    345.00     720. -1. GA  RO| artificail cube angle alpha
+ RBA     5 -360.00     20.00     720. -1. BA  RO| artificail cube angle beta
+ RCB    10     .0       7.        15.  0. CB  RO| color # of background      
+ RCS    10     .0      29.        15.  0. CS  RO| color # of side face      
+ RCT    10     .0      30.        15.  0. CT  RO| color # of top face      
+ RCF    10     .0      31.        15.  0. CF  RO| color of front face 
+ RFS     3     .0       1.         1. -1. FS  RO| color fraction of side face
+ RFT     3     .0       0.35       1.  1. FT  RO| color fraction of top face   
+ RFF     3     .0       0.4        1.  1. FF  RO| color fraction of front face
+ RLL    10     .0       9.        15.  0. LL  RO| color of left lines     
+ RRL    10     .0      10.        15.  0. RL  RO| color of right lines 
+ RL1    10     .0      13.        15.  0. L1  RO| color of line 1     
+ RL2    10     .0      14.        15.  0. L2  RO| color of line 2     
+ RL3    10     .0      12.        15.  0. L3  RO| color of line 3     
+ RL4    10     .0       8.        15.  0. L4  RO| color of line 4
+ RSC     3     .01      0.02       1.  0. SC  RO| size of end cross
+ RQC     2     .0       0.3        9.  1. QC  RO| cross size change with depth
+ RD1     2    1.        1.         5.  0. D1  RO| width of thin cube lines
+ RD2     2    1.        3.         5.  0. D2  RO| width of thick cube lines
+ RDC     2    1.        2.         5.  0. DC  RO| width of end crosses
+ RDT     2    1.        2.         5.  0. DT  RO| width of tracks
+ RET     2    1.        1.         5.  0. ET  AL| width of extr. tracks
+ RCE    10     .0       7.        15.  1. CE  AL| color of extr. tracks     
+ RLE     2    2.       20.        99. -1. LE  AL| distance of dashing of ex.tr.
+ RXS    10     .0       9.        15.  0. XS  RO| color of side face cross     
+ RXT    10     .0      10.        15.  0. XT  RO| color of top face cross     
+ RXF    10     .0       8.        15.  0. XT  RO| color of front face cross     
+ RNP     2    5.       30.        99. 30. NP  RO| number of points
+ RWP     2    1.        4.        99.  0. WP  RO| width of points
+ RSH    10    0.        8.        15. -1. SH  RO| color of shadow
+ RDS     2    1.        2.         5.  0. DS  RO| width of shadow tracks
+ __E  86
+
+ S__  97  6 *** PADD picture frame sizes                                   488 
+ DFZ     2    0.        0.14       99.  0. FZ  FZ| wafer frame in cm DADVD
+ __E  97
+
+ S__  88  6 *** PAEC phi/theta color mode                                  489 
+         For SUBROUTINE DSCELM
+         example     1234. 1:NZ,K1=K2 2:ZO,K1=K2 3:NZ,K1#KE 4:ZO,K1#K2  
+         only once stored if EM2(4)=-1. : if EM1=OF
+         else also debug output
+
+ EM1     6    1.     1111.      5555. -1. CC  CC| MODE: col=cn sy=cn
+ EM*     6    1.     1155.      5555.  0. CL  CL| MODE: col=cn sy=le
+ EM*     6    1.      105.      5555.  0. CN  CN| MODE: col=cn sy=nu
+ EM*     6    1.     1155.      5555.  0. CS  CS| MODE: col=cn sy=sq
+ EM* 56006    1.     3233.      5555.  0. EC  EC| MODE: col=en sy=cn
+ EM*     6    1.     3355.      5555.  0. EL  EL| MODE: col=en sy=le
+ EM*     6    1.      205.      5555.  0. EN  EN| MODE: col=en sy=nu
+ EM*     6    1.     4245.      5555.  0. ES  ES| MODE: col=en sy=sq
+
+ EM*     6    1.     2211.      5555.  0. KC  KC| MODE: col=kk sy=cn
+ EM*     6    1.     2255.      5555.  0. KL  KL| MODE: col=kk sy=le
+ EM*     6    1.      205.      5555.  0. KN  KN| MODE: col=kk sy=nu
+ EM*     6    1.     2255.      5555.  0. KS  KS| MODE: col=kk sy=sq
+ __E  88
+
+ S__  89  6 *** PPMM moving markers                                        501 
+ MWI     6    1.        2.         5.  0. WI  dm_fix_markers: line width
+ MCO     6    0.        8.        15.  0. CO  dm_fix_markers: line color
+ __E  89
+
+ S__  98  6 *** PPUT UT parameters                                         503 
+ APP     1    0.        2.         9.  0. PP  pointer pattern
+ UNT     2    0.        5.        99.  0. NT  DEFB2,ALPHA_UT: #OF VERT. LINES
+ UT1     4    0.       12.       180.  0. T1    "    "   VERTICAL LINE 1
+ UT*     4    0.       42.       180.  0. T2    "    "   VERTICAL LINE 2
+ UT*     4    0.       90.       180.  0. T3    "    "   VERTICAL LINE 3
+ UT*     4    0.      138.       180.  0. T4    "    "   VERTICAL LINE 4
+ UT*     4    0.      168.       180.  0. T5    "    "   VERTICAL LINE 5
+ UDF     3   10.       90.       360.  0. DF    "    "   FI lines distance
+ ULS     3    0.01     30.        99.  0. LS  D_ALPHA_UT lego scale
+ URC     3    0.01     10.        99.  0. RC  axis circle radius
+ FRM     3    1.       20.        99. -1. RM  circle radius if miss.V. in FT
+ UWF     2    1.        2.         5.  0. WF  width of circle frame
+ UCA    10    1.        1.        15.  0. CA  color of circle area
+ UCF    10    1.        8.        15.  0. CF  color of circle frames for dir.
+ UNP     5    3.       12.        24.  0. NP  # of points of momentum circle
+ UNA     5    3.        5.        24.  0. NP  # of points of axis circle
+ ASP    10    1.        6.        15.  0. SP  color of sphericity
+ ATH    10    1.        5.        15.  0. TH  color of thrust
+ AJD    10    1.        4.        15.  0. JD  color of Durham jet
+ AJJ    10    1.        3.        15.  0. JJ  color of Durham jet
+ AV4    10    1.        7.        15.  0. V4  color of 4 vector
+ AMI    10    1.        8.        15.  0. MI  color of missing vector
+ ACF    10   -1.       -1.         1.  0.     color mode for list ch
+ AJ1    10   -1.       12.        15.  0. J1  track color for jet 1        
+ AJ2    10   -1.       10.        15.  0. J2  track color for jet 2        
+ AJ3    10   -1.       14.        15.  0. J3  track color for jet 3        
+ AJ4    10   -1.        9.        15.  0. J4  track color for jet 4        
+ AJ5    10   -1.        8.        15.  0. J5  track color for jet 5        
+ AJ6    10   -1.       13.        15.  0. J6  track color for jet 6        
+ ANA    10   -1.        8.        15.  0. NA  FRFT color for non ass. tracks
+ AIV    10    0.        7.        15.  0. IV  color of invisible objects
+ VNP     1    0.        2.         9.  0. NI  # of hits before V0 to delet V0
+ CEA    10    0.        2.        15.  0. EA  egg area
+ CEL    10    0.        8.        15.  0. EL  egg lines
+ MMW     1    1.        1.         5.  0. MW  line width of great circle
+ MMC    10    0.       14.        31.  0. MC  color of great circle
+ MMS     1    0.        2.         9.  0. MS  half size of tick marks of g.c.
+ CSC    10    0.        8.        31.  1. SC  color of UT scale
+ CCI    10    0.        8.        31.  1. CI  color of UT scale circle
+ __E  98
+
+ S__  99  6 *** FRAN ALpha parameters                                  533 542 
+ FNS     5  - 1.00     20.00      99.  0. NS  FR: 2D step number
+ FDP     5  -99.00      2.00      99.  0. DP  FR: 2D step size
+ FDW     5   10.00     55.00      90.  0. DW  FR: 2D window size
+ FDS     5    1.00      3.00       9.  0. DS  FR: 2D window size
+ __E  99
+
+ S__ 100  6 *** ALCA Alpha parameters                                  537 546 
+ AHC     3   -1.        0.         1.  0. HC  Hemisphere COSCUT of QJHEMI 10.9
+ AYJ     3    0.        0.02       1.  0. YJ  YCUT   of QJMMCL 10.11.1
+ AYD     3    0.       0.008       1.  0. YD  YCUT   of QDMMCL 10.11.1
+ AEV     5    0.        0.       999.  0. EV  EVIS   of Q?MMCL 10.11.1
+ AHW     3  331.      381.       495.  0. HW  horizontal width of ALPHA window
+ AV1     1   -1.       11.         0.  0. **  H1 of second window
+ AH1     1   -1.      117.         0.  0. **  V1 of second window
+ __E 100
+
+ S__ 101  6 *** PPUS used supplementary windows                            553 
+ UX1     3   10.       10.       999.  0. X1  screen position of window 1 
+ UX2     3   10.       63.       999.  0. X2  screen position of window 2
+ UX3     3   10.       93.       999.  0. X3  screen position of window 3
+ UX4     3   10.      123.       999.  0. X4  screen position of window 4
+ UY1     3   10.      152.       999.  0. Y1
+ UY2     3   10.       97.       999.  0. Y2
+ UY3     3   10.      127.       999.  0. Y3
+ UY4     3   10.      157.       999.  0. Y4
+ __E 101
+
+ S__ 102  6 *** BCAL colors and width         
+ BBC     5    0.        5.        31.  1. BC color of BCAL
+ BLI     5    0.        7.        31.  0. LI color of lines
+ BLW     3    0.        1.         5.  0. LW width of lines
+ BHI     5    0.        8.        31.  0. HI color of hits
+ BOV     5    0.       10.        31.  0. OV color of overflow
+ BTX     5    0.        8.        31.  1. TX color of text
+ BCC     5    0.        1.        31.  1. CC color of centroid
+ BWC     5    1.        2.         5.  1. WC line width of centroid
+ BSC     5    1.       12.        99.  1. SC size of centroid
+ BTR     5    1.        8.        99.  1. TR color of RZ track
+ __E 102
+
+

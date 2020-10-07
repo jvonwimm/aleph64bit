@@ -1,0 +1,405 @@
+      SUBROUTINE QUTPCH(ier)
+C-----------------------------------------------------------------------
+C! Select "good" charged particle tracks in the TPC
+C
+C  G.Ganis  21 Mar 1991
+C
+C     Input : -- /PARCUT/ n0,d0,z0 : track quality criteria
+C     Output: -- /BCS/    PSFR bank, toi be used later
+C             -- ier,     0 if OK
+C                         2 if not enough charged tracks
+C                           or not enough charged energy
+C
+C  Modifications :
+C     o Patrick Janot -- 26 Oct 1993
+C         -- Simulation of the d0/z0/#hits cuts
+C         -- Store the track information in PSFR
+C     o Patrick Janot -- 24 nov 1993
+C         -- Implement a 98% reconstruction efficiency
+C     o Marumi  Kado  -- 18 May 1998 Calibration for
+C                                    charged tracks 
+C-----------------------------------------------------------------------
+#include "qcde.h"
+#include "qhac.h"
+#include "resolu.h"
+#include "calib.h"
+#include "parcut.h"
+#include "fsimid.h"
+#include "psfrjj.h"
+      PARAMETER( pimass= .1395675 )
+      REAL vtp(4)
+      REAL helix(6),pmom(3),xve1(3),xve2(3),xc(2)
+#include "ftrig.h"
+#include "coddat.h"
+#include "qmacro.h"
+#include "psfrfu.h"
+      DATA IFI /0/
+      DATA EPS /.0000001/
+C
+      IF ( ifi .EQ. 0 ) THEN
+C
+        igale = NLINK('GALE',0)
+C
+        proba = RNDM(itk)
+        prob11 = .96
+        prob22 = prob11**2
+        prob12 = prob22 + 2.*(1.-prob11)*prob11
+        prob11 = prob11 * 0.98
+        prob22 = prob22 * 0.98
+        prob12 = prob12 * 0.98
+C
+        ifi = 1
+      ENDIF
+C
+      gdmult = 0.
+      chatot = 0.
+      chapo  = 0.
+      chane  = 0.
+      ipsfr = 0
+      nch = 0
+      ech = 0.
+C
+C Loop over "stable" charged particles only to store the good tracks.
+C
+
+      DO 6 l0 = 1, istch
+C
+        itk = kpdir(PARNA(l0),kmonte)
+    7   IF ( itk .EQ. 0) GOTO 6
+C
+C Check that it is stable
+C
+
+        IF ( kstabc(itk) .LT. 1 ) GOTO 8
+C
+C and that it is charged !
+C
+        IF(ABS(qch(itk)) .LT. 1.E-3 ) THEN
+           WRITE(6,*) '+++ QUFSIM +++ ',l1,cqtpn(l1),
+     .               'should have been a charged particle !'
+          GOTO 8
+        ENDIF
+C
+C Compute all the parameters of the track and store it if it is good
+C
+        pol = ACOS(qct(itk)) * 180. / qqpi
+        IF( pol .GT. 90. ) pol = 180. - pol
+        tch = QPT(itk) 
+        IF ( tch .LT. eps ) GOTO 8
+C
+        IF ( inotp .LE. 0 ) THEN
+C
+C -- Flip charge sign
+C
+          fps = 1.
+          IF ( resol .LE. 0. ) fps = -1.
+C
+        ELSE
+          fps = 1.
+          resol = 1.
+        ENDIF
+C
+C Find the origin/end vertices of the track and compute d0/z0
+C
+        iv1 = KORIV(itk)
+        iv2 = KENDV(itk)
+C... ld add protection (crash on DEC/AXP)
+        xve1(1) = sign(max(abs(qvx(iv1)),1.e-9),qvx(iv1))
+        xve1(2) = sign(max(abs(qvy(iv1)),1.e-9),qvy(iv1))
+        xve1(3) = sign(max(abs(qvz(iv1)),1.e-9),qvz(iv1))
+        IF ( iv2 .GT. 0 ) THEN
+          xve2(1) = qvx(iv2)
+          xve2(2) = qvy(iv2)
+          xve2(3) = qvz(iv2)
+
+        ELSE
+          xve2(1) = 1E9
+          xve2(2) = 1E9
+          xve2(3) = 1E9
+        ENDIF
+
+C
+C Store the charged track first to compute number of hits
+C
+        qqq = fps * qch(itk)
+        pmom(1) = qx(itk)
+        pmom(2) = qy(itk)
+        pmom(3) = qz(itk)
+        amom    = qp(itk)
+        tmom    = qpt(itk)
+C
+        CALL tnrhpa(pmom,xve1,qqq,bfield,helix,xc,s)
+C
+        px0 = tmom * COS(helix(3))
+        py0 = tmom * SIN(helix(3))
+        pz0 = pmom(3)
+
+
+C
+C Number of hits in the TPC
+C
+
+
+        IF ( idbg .GE. 15 ) THEN
+          WRITE(6,*) '------------------------------------'
+          WRITE(6,*) 'Track  : ',itk,amom,qqq
+          WRITE(6,*) 'Origin : ',xve1
+          WRITE(6,*) 'End    : ',xve2
+        ENDIF
+C
+        IF ( inotp .LE. 0 ) THEN
+          nhits = KNTPCH(xve1,xve2,pmom,helix,xc,qqq,jer)
+        ELSE
+          nhits = 0
+          dd  = helix(4)
+          zz  = helix(5)
+          GOTO 9
+        ENDIF
+        IF ( idbg .GE. 15 ) WRITE(6,*) 'Nhits,ier : ',nhits,jer
+
+
+C
+C Hits in the VDET and the ITC
+C
+        ray  = SQRT( xve1(1)**2 + xve1(2)**2 )
+        ray2 = SQRT( xve2(1)**2 + xve2(2)**2 )
+        zed = ABS ( xve1(3)                 )
+        IF ( ABS(qct(itk)) .NE. 0. ) THEN
+          ttt = SQRT(1.-qct(itk)**2) / ABS(qct(itk))
+        ELSE
+          ttt = 1E5
+        ENDIF
+        tat = sign(max(ttt,1.e-6),qct(itk))
+C
+        nvdh = 0
+        IF ( ray .gt. rdime(3) .or. ray2 .lt. rdime(2) ) then
+          nvdh = 0
+        ELSEIF ( ray .LE. rdime(2) ) THEN
+          IF ( ttt .GT. rdime(3)/zdime(3) ) THEN
+            IF ( proba .LT. prob22 ) THEN
+              nvdh = 2
+            ELSEIF ( proba .LT. prob12 ) THEN
+              nvdh = 1
+            ELSE
+              nvdh = 0
+            ENDIF
+          ELSEIF ( ttt .GT. rdime(2)/zdime(2) ) THEN
+            IF ( proba .LT. prob11 ) THEN
+              nvdh = 1
+            ELSE
+              nvdh = 0
+            ENDIF
+          ELSE
+            nvdh = 0
+          ENDIF
+        ENDIF
+        IF ( idbg .GE. 15 ) WRITE(6,*) 'NVDET : ',nvdh
+C
+        nith = 0
+        IF ( ray .gt. rdime(5) .or. ray2 .lt. rdime(4) ) then
+          nith = 0
+        ELSEIF ( ray .LE. rdime(4) ) THEN
+
+C
+C Resolution factor dependent on the number of TPC Hits
+C
+          IF (nhits .lt. 16) THEN
+            ftpc = 1.3
+          ELSEIF (nhits .ge. 16) THEN
+            ftpc = 2.6-0.076*nhits
+          ENDIF
+
+C
+C -- Gaussian fluctuation
+C
+          CALL rannor(alea,dumdum)
+C
+C -- Resolution depends on POL and AZI
+C
+          resol = 1.+ftpc*flutpc*tch*alea*cosfac(pol)
+          IF ( resol .EQ. 0. ) resol = 0.001
+          resol = 1./resol
+          IF ( tch*ABS(resol) .LT. tpccut) GOTO 8
+
+        qqq = fps * qch(itk)
+        pmom(1) = qx(itk) * ABS(resol)
+        pmom(2) = qy(itk) * ABS(resol)
+        pmom(3) = qz(itk) * ABS(resol)
+        amom    = qp(itk) * ABS(resol)
+        tmom    = qpt(itk)* ABS(resol)
+C
+        CALL tnrhpa(pmom,xve1,qqq,bfield,helix,xc,s)
+C
+        px0 = tmom * COS(helix(3))
+        py0 = tmom * SIN(helix(3))
+        pz0 = pmom(3)
+
+
+
+C... Z of intersection with R = R_ITC
+          zinn = (rdime(4)-ray)/tat+xve1(3)
+          zout = (rdime(5)-ray)/tat+xve1(3)
+          if ( abs(zout) .lt. zdime(5) ) then
+            nith = 8
+          elseif ( abs(zinn) .gt. zdime(4) ) then
+            nith = 0
+          else
+            nith = NINT(8.*abs(tat)*(zdime(4)-abs(zinn))/
+     &                              (rdime(5)-rdime(4)))
+          endif
+
+        ELSE
+          nith = NINT(8.*(sign(zdime(4),tat)-xve1(3))*tat/
+     &                   (rdime(5)-rdime(4)))
+        ENDIF
+        IF ( idbg .GE. 15 ) WRITE(6,*) 'NITC : ',nith
+
+C
+C
+C FTRIG : fired ITC segments if track as enough ITC hits
+C
+        if ( nith .ge. MinITCHits ) then
+          call setITCseg(itk)
+        endif
+
+C
+C d0 and z0 are in a boat
+C
+        ktp = ktpcod(itk)
+        sth = SQRT(1.-qct(itk)**2)
+        IF ( nhits .GT. 0 ) THEN
+          sig = 0.0025 + 0.0095 / tmom
+          CALL rannor(a,b)
+          IF ( RNDM(nhits) .GT. 0.99-0.03/sth .AND. ! Interaction
+     .         igale .LE. 0                   .AND. ! Not if GALEPHed
+     .         ktp .NE. 2 .AND. ktp .NE. 3    .AND. ! No electrons
+     .         ktp .NE. 5 .AND. ktp .NE. 6 ) THEN   ! No muons
+            dd = -10. + 20.*RNDM(dd)
+            zz = -20. + 40.*RNDM(zz)
+            nhits = -nhits
+          ELSEIF ( nvdh .EQ. 2 ) THEN
+            dd = helix(4) + a * sig
+            zz = helix(5) + b * sig
+          ELSEIF ( nvdh .EQ. 1 ) THEN
+            dd = helix(4) + a * sig * 2.
+            zz = helix(5) + b * sig * 5.
+          ELSE
+            dd = helix(4) + a * sig * (12.-FLOAT(nith))
+            zz = helix(5) + b * sig * 30.
+          ENDIF
+C... ld temporary fix for tracks below the TPC
+        ELSE
+          dd = qdb(itk)
+          zz = qzb(itk)
+        ENDIF
+C
+C Create/Enlarge and then update PSFR bank
+C
+
+    9   IF ( ipsfr .GT. 0 ) nch=IW(ipsfr+lmhlen)
+        IF ( nch/200*200 .EQ. nch ) THEN
+          ipsfr = NBANK('PSFR',0,lmhlen+(nch+200)*lpsfra)
+          IF ( ipsfr .LE. 0 ) THEN
+            WRITE(6,*) 'Not enough space for bank PSFR. STOP '
+            ier = 0
+            GOTO 999
+          ELSEIF ( nch .EQ. 0 ) THEN
+            IW(ipsfr+1) = lpsfra
+            IW(ipsfr+2) = 0
+          ELSE
+            WRITE(6,*) '+++ QUTPCH +++ PSFR enlarged'
+          ENDIF
+        ENDIF
+C
+        nch = nch + 1
+        IW(ipsfr + lmhlen) = nch
+        RW(ipsfr + lmhlen + (nch-1)*lpsfra + jpsfir) = helix(1)
+        RW(ipsfr + lmhlen + (nch-1)*lpsfra + jpsftl) = helix(2)
+        RW(ipsfr + lmhlen + (nch-1)*lpsfra + jpsfp0) = helix(3)
+        RW(ipsfr + lmhlen + (nch-1)*lpsfra + jpsfd0) = dd
+        RW(ipsfr + lmhlen + (nch-1)*lpsfra + jpsfz0) = zz
+        IW(ipsfr + lmhlen + (nch-1)*lpsfra + jpsfn0) = nhits
+        RW(ipsfr + lmhlen + (nch-1)*lpsfra + jpsfqx) = px0
+        RW(ipsfr + lmhlen + (nch-1)*lpsfra + jpsfqy) = py0
+        RW(ipsfr + lmhlen + (nch-1)*lpsfra + jpsfqz) = pz0
+        RW(ipsfr + lmhlen + (nch-1)*lpsfra + jpsfxv) = xve1(1)
+        RW(ipsfr + lmhlen + (nch-1)*lpsfra + jpsfyv) = xve1(2)
+        RW(ipsfr + lmhlen + (nch-1)*lpsfra + jpsfzv) = xve1(3)
+        RW(ipsfr + lmhlen + (nch-1)*lpsfra + jpsfpx) = pmom(1)
+        RW(ipsfr + lmhlen + (nch-1)*lpsfra + jpsfpy) = pmom(2)
+        RW(ipsfr + lmhlen + (nch-1)*lpsfra + jpsfpz) = pmom(3)
+        IW(ipsfr + lmhlen + (nch-1)*lpsfra + jpsfal) = itk
+        IW(koqvec+itk*kcqvec+jqvetn)                 = nch
+
+
+C
+C -- Check track quality ...
+C
+
+        IF ( nhits .GE. n0   .AND.
+     .       ABS(dd) .LE. d0 .AND.
+     .       ABS(zz) .LE. z0 ) THEN
+C
+C -- Fill the good charged track section, and lock the corresponding
+C    track in the MCT section
+C
+          vtp(1)= px0
+          vtp(2)= py0
+          vtp(3)= pz0
+          vtp(4)= amom
+          vtp(4)= sqrt(vtp(4)*vtp(4)+pimass*pimass)
+          CALL addve1(vtp,1)
+          nchtot = nchtot+1
+          imotch(nchtot)=itk
+          RW(koqvec+isave*kcqvec+jqvech) = fps*QCH(itk)
+          IW(koqvec+isave*kcqvec+jqvesc) = 1
+          IW(koqvec+isave*kcqvec+jqvepa) = ktpcod(itk)
+          IW(koqvec+isave*kcqvec+jqvetn) = nch
+          RW(koqvec+isave*kcqvec+jqvedb) = dd
+          RW(koqvec+isave*kcqvec+jqvezb) = zz
+          CALL qltrk(itk)
+
+C
+C -- Fill /PARCUT/
+C
+          gdmult= gdmult+1.
+          chatot= chatot+fps*qch(itk)
+          IF ( qch(itk) .GT. 0. ) chapo = chapo+fps*qch(itk)
+          IF ( qch(itk) .LE. 0. ) chane = chane+fps*qch(itk)
+          ich = NINT(gdmult)
+          kan(ich) = itk
+        ELSE
+        ENDIF
+
+C
+    8   itk = KFOLLO(itk)
+        GOTO 7
+    6 CONTINUE
+C
+C Close PSFR bank
+C
+      length = 2+IW(ipsfr+1)*IW(ipsfr+2)
+      ipsfr = NBANK('PSFR',0,length)
+      IF ( ipsfr .LE. 0 ) THEN
+        WRITE(6,*) 'Not enough space for bank PSFR. STOP '
+        ier = 1
+        GOTO 999
+      ENDIF
+      npsfr = IW(ipsfr+2)
+      IF ( idbg .GE. 5 ) CALL prtabl('PSFR',0)
+
+C
+C -- Preselection, as required in card 'FSIM'
+C
+
+      ier = 0
+C
+      IF ( NINT(gdmult) .LT. ntrack .OR.
+     .     NINT(gdmult) .GT. mtrack ) ier = 2
+C
+      IF ( qe(lch) .LT. echmin .OR.
+     .     qe(lch) .GT. echmax ) ier= 2
+C
+
+  999 RETURN
+      END

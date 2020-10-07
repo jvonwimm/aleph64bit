@@ -1,0 +1,79 @@
+      SUBROUTINE E4R1R2(ROWJ,COLI,JROW1,JROW3,JROW4,ICOL1,ICOL2,
+     &ICOL3,ICOL4,IFLAG)
+C----------------------------------------------------------------------
+C!  - R2 ESTIMATOR GIVE IJK FOR STOREYS IN R1 R2 OVERLAPING REGION OF EN
+C!
+C!    AUTHOR  : D. PALLIN
+C!    MODIFIED:
+C!
+C?
+C!======================================================================
+#ifndef DOC
+#include "e4par0.h"
+C RD RATIO NUMBER OF PADS IN A ROW REGION 2/NBER IN A ROW REGION 1
+      PARAMETER(RD=2.)
+      DUMMY=999
+C  R1-R2
+      IF( (COLI.GT.COR211.AND. COLI.LT.COR212)
+     &.OR.(COLI.GE.COR222.AND. COLI.LT.COR223))THEN
+            IFLAG=2
+      RJ01=1.-1./(2.*RD)
+      JROW3=INT((ROWJ-RJ01)*RD)
+            JROW4=JROW3+1
+            IF (COLI.GT.COR211.AND. COLI.LT.COR212)THEN
+               ICOL3=ICOL1
+               ICOL4=ICOL2
+               ENDIF
+            IF (COLI.GE.COR222.AND. COLI.LT.COR223)THEN
+               ICOL3=ICOL2
+               ICOL4=ICOL1
+               ENDIF
+         ENDIF
+C R2-R1
+      IF( (COLI.GT.COR212.AND. COLI.LT.COR213)
+     &.OR.(COLI.GE.COR221.AND. COLI.LT.COR222))THEN
+            IFLAG=2
+      RJ02=1.-RD/2.
+      JROW3=INT((ROWJ-RJ02)/RD)
+            JROW4=JROW3+1
+            IF (COLI.GT.COR212.AND. COLI.LT.COR213)THEN
+               ICOL3=ICOL2
+               ICOL4=ICOL1
+               ENDIF
+            IF (COLI.GE.COR221.AND. COLI.LT.COR222)THEN
+               ICOL3=ICOL1
+               ICOL4=ICOL2
+               ENDIF
+C MODIF POUR MODU=1
+CXX         JROW3 ICOL4  => 1T
+CXX         JROW1 JROW2 JROW4 ICOL3 => 3T
+            MODU=MOD(JROW1,2)
+            DELTAJ=ROWJ-FLOAT(JROW1)
+            IF(MODU.NE.0.AND.DELTAJ.LE.1)THEN
+            IFLAG=3
+            JROW3=JROW3+1
+            JROW4=JROW1-1
+            ENDIF
+            IF(MODU.NE.0.AND.DELTAJ.GT.1)THEN
+            IFLAG=3
+            JROW4=JROW1+2
+            ENDIF
+         ENDIF
+CXX PHI REDEF SI NECESSAIRE
+      IF(ICOL4.EQ.ICR211.OR.ICOL4.EQ.ICR221)THEN
+         IF(JROW3.LT.JECMIN)JROW3=JR2MAX
+         IF(IFLAG.EQ.2.AND.JROW4.GT.JR2MAX)JROW4=JECMIN
+C        SI I4=9 I3=8, I4=220 I3=221   !! DONC:
+         IF(IFLAG.EQ.3.AND.JROW4.GT.JR1MAX)JROW4=JECMIN
+         IF(IFLAG.EQ.3.AND.JROW4.LT.JECMIN)JROW4=JR1MAX
+         ENDIF
+      IF(ICOL4.EQ.(ICR211-1).OR.ICOL4.EQ.(ICR221+1))THEN
+         IF(JROW3.LT.JECMIN)JROW3=JR1MAX
+         IF(IFLAG.EQ.2.AND.JROW4.GT.JR1MAX)JROW4=JECMIN
+C        SI I4=8 I3=9, I4=221 I3=220 !!  DONC:
+         IF(IFLAG.EQ.3.AND.JROW4.GT.JR2MAX)JROW4=JECMIN
+         IF(IFLAG.EQ.3.AND.JROW4.LT.JECMIN)JROW4=JR2MAX
+         ENDIF
+      RETURN
+      END
+#endif

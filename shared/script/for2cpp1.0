@@ -1,0 +1,161 @@
+#! /bin/csh
+#============================================================================
+#                             for2cpp
+#                                                       F.Ranjard
+#============================================================================
+# procedure to create *.F from fortran files containing INCLUDE statments
+#
+#============================================================================
+# examine directory given as 1st arg.
+# make a list of */*.f
+# create */*.F, if a */*.F exist already it is renamed as */*.Fold
+#============================================================================
+# P1 -> directory name or file name .f
+# last arg -> -v  for verbose
+#============================================================================
+# for2cpp1.0
+# 960814 - 1st version
+#============================================================================
+#
+set exec_name = "for2cvs1.0"
+set nar = $#argv
+if (nar != 0) then
+  if ($argv[${nar}] == "-v") then
+     set echo on
+     set argv[${nar}] = ""
+  endif
+endif
+#
+#*******>
+if ($1 == "-h") then
+   echo ""
+   echo "usage:"
+   echo " for2cpp <inp_dir> [<out_dir>]"
+   echo " for2cpp <file_name.f> [<out_dir>]"
+   echo ""
+   echo " give the directory name which contains *.f files to be modified"
+   echo " all *.f files belonging to this directory and sub-directories"
+   echo " will be modified to create *.F files with same names in the "
+   echo " same directory or subdirectory"
+   echo "or"
+   echo " give a file_name with .f type - only this file will be translated"
+   echo " if a *.F file already exists it will be renamed to *.Fold"
+   echo ""
+   echo " if out_dir is given *.F files are written in this directory" 
+   echo ""
+   echo "an example:"
+   echo " > for2cpp ALPHA"
+   echo " will translate *.f  and */*.f to *.F and */*.F files"
+   echo ""  
+   echo " > for2cpp /afs/cern.ch/user/j/janot/ALPHA /afs/cern.ch/user/f/flr/janot "
+   echo " will translate ~janot/ALPHA/*.f into ~flr/janot/*.F"
+   echo " and ~janot/ALPHA/*/*.f into ~flr/janot/*.F"
+   echo ""
+   echo " > for2cpp ha161.f"
+   echo " will translate ha161.f into ha161.F in the current directory"
+   echo "" 
+   exit(1)
+endif 
+#*******<
+#unset noclobber
+#
+#
+# MYBIN points to the module getfor which translates fortran include statment
+# to cpp include statment.
+set MYBIN  = "$ALEPH/bin"
+#
+set flag = "OK"
+set inp_dir = $1
+if (${nar} > 1) then
+   set out_dir = $2
+else
+   set out_dir = ${inp_dir}
+endif 
+#
+# =========================================================================
+
+# if inp_dir does not exists then EXIT
+if !(-d ${inp_dir}) then
+   if !(-e ${inp_dir}) then
+     echo "${inp_dir} does not exist, cannot be updated: EXIT"
+     set flag = "ERROR"
+     goto exec_end
+   else
+     set listf = `ls ${inp_dir}`
+     set Dir = `dirname ${inp_dir}`
+     set inp_dir = ${Dir}
+     if (${nar} == 1) set out_dir = ${inp_dir}
+     goto loop
+   endif 
+endif
+# if out_dir does not exists then EXIT
+if !(-d ${out_dir}) then
+   echo "${out_dir} does not exist: EXIT"
+   goto exec_end
+endif
+
+# ============================================================================
+# ---> make a list of .f files
+#
+set listf  = `ls ${inp_dir}/*.f ${inp_dir}/*/*.f`
+if ( "${listf}" == "" ) then
+   echo " no .f file in ${inp_dir} : EXIT"
+   goto exec_end
+endif
+#
+#  ---> run for2cpp to translate fortran include to cpp include staments <--
+# 
+loop:
+#
+foreach file ( $listf[*] )
+   set bFile = `basename ${file} .f`
+   set Dir  = `dirname ${file}`
+   if (${inp_dir} == ${out_dir}) then
+      set File = "${Dir}/${bFile}.F"
+   else
+      set File = "${out_dir}/${bFile}.F"
+   endif	
+   if (-e ${File}) then
+      mv ${File} ${File}"old"
+   endif
+   ln -fs ${file} fort.1
+   ln -fs ${File} fort.2
+   ${MYBIN}/getfor	
+   echo ${file} ${File}
+   if (${inp_dir} == ${out_dir}) then
+      if (-e ${File}) mv ${file} ${Dir}/${bFile}.forincl
+   endif
+end
+#
+# ---> end
+#
+echo ""
+echo " input list of .f files"
+echo ${listf}
+echo ""
+echo " output list of .F files"
+ls ${out_dir}/*.F ${out_dir}/*/*.F
+echo ""
+echo " list of .Fold files"
+ls ${out_dir}/*.Fold ${out_dir}/*/*.Fold
+echo ""
+if (${inp_dir} == ${out_dir}) then
+   echo "input *.f files have been renamed as *.forincl"
+   echo " list of .forincl files"
+   ls ${inp_dir}/*.forincl ${inp_dir}/*/*.forincl
+   echo ""
+endif
+
+# 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> exec_end
+exec_end:
+ exit
+ 
+
+
+
+
+
+
+
+

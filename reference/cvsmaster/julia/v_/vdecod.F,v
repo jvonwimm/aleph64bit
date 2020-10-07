@@ -1,0 +1,1465 @@
+head	1.12;
+access;
+symbols
+	jul313_3:1.12
+	jul313_2:1.12
+	jul313_1:1.12
+	jul313:1.12
+	jul312_1:1.12
+	jul312:1.12
+	jul311:1.12
+	jul310_1:1.12
+	jul310:1.12
+	jul309_1:1.12
+	jul309:1.12
+	jul308_6:1.12
+	jul308_5:1.12
+	jul308_4:1.12
+	jul308_3:1.12
+	jul308_2:1.12
+	jul308_1:1.12
+	jul308:1.12
+	jul307_4:1.12
+	jul307_3:1.12
+	jul307_2:1.12
+	jul307_1:1.12
+	jul307:1.12
+	jul306_3:1.12
+	jul306_2:1.9
+	jul306_1:1.9
+	jul306:1.9
+	jul305_4:1.9
+	jul305_3:1.9
+	jul305_2:1.9
+	jul305_1:1.9
+	jul305:1.9
+	jul304_3:1.8
+	jul304_2:1.8
+	jul304_1:1.8
+	jul304:1.7
+	jul303_7:1.5
+	jul303_6:1.5
+	jul303_5:1.5
+	jul303_4:1.5
+	jul303_3:1.5
+	jul303_2_mc1:1.5
+	jul303_2:1.5
+	jul303_1_mc1:1.5
+	jul303_1:1.5
+	jul303_v:1.5
+	jul303:1.5
+	jul302_6:1.5
+	jul302_5:1.5
+	jul302_4:1.5
+	jul302_3:1.5
+	jul302_2:1.5
+	jul302_1:1.5
+	jul302:1.5
+	jul285_1:1.5
+	jul285:1.5
+	jul284_1:1.5
+	jul284:1.4
+	jul283_1:1.4
+	jul283:1.4
+	jul282_1:1.4
+	jul282:1.4
+	jul281_3:1.4
+	jul281_2:1.4
+	jul281_1:1.4
+	jul281:1.4
+	jul280_1:1.3
+	jul280:1.3
+	jul279:1.2
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.12
+date	98.04.17.14.19.02;	author cattanem;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	98.04.17.13.46.03;	author cattanem;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	98.04.17.11.45.48;	author cattanem;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	97.11.07.11.19.45;	author cattanem;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	97.10.01.07.09.37;	author cattanem;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	97.09.08.13.18.52;	author cattanem;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	97.08.19.15.02.58;	author cattanem;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.11.28.15.20.14;	author cattanem;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.06.03.10.28.31;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.03.12.15.48.11;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.11.29.17.21.04;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.20.32;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.20.33;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.12
+log
+@Missing include in VDECOD fix
+@
+text
+@      SUBROUTINE VDECOD
+C----------------------------------------------------------------------
+C!  - Main VDET hit reconstruction routine
+C!
+C!
+C!  This is the micro-vertex silicon detector internal co-ordinate
+C!  reconstruction routine.  This takes as input the raw detector
+C!  data (VHLS and VPLH), plus maps of the detector bonding
+C!  taken from the ALEPH database, and produces final hit banks.
+C!
+C!  12-1-93  Rewrite for 95 VDET compatibility  D. Brown
+C!  Modified March 1995 A. Bonissent, M. Thulasidas
+C!                 reorganise and debug
+C!           Nov   1995 P. Bright-Thomas
+C!                 Rewrite fix for cabling errors using new bank VCAB
+C!
+C!           Aug   1997 A. Bonissent
+C!                 Protect against corrupted raw data
+C!           Apr   1998 A. Bonissent
+C!                 Protect against corrupted raw data
+C!
+C?
+C!======================================================================
+#ifndef DOC
+C      IMPLICIT NONE
+       SAVE FIRST, NAVCSG, NAVPLH, NAVTRS, NAVPHN, NAVCAB
+C
+C
+C  Global includes
+C
+#include "rcurnt.h"
+#include "vcsgjj.h"
+#include "vprtnc.h"
+#include "vrecon.h"
+#include "vdflgs.h"
+C      INTEGER JVFPPH,LVFPHA
+#include "vfphjj.h"
+C      INTEGER JVFLFG,LVFLGA
+#include "vflgjj.h"
+C      INTEGER JVFHHA,LVFHLA
+#include "vfhljj.h"
+C      INTEGER JVCOCM,LVCOMA
+#include "vcomjj.h"
+#include "vhlsjj.h"
+#include "vplhjj.h"
+#include "vcabjj.h"
+#include "vphnjj.h"
+C
+C  Function calls
+C
+      INTEGER  NLINK, NDROP, NSWAP, NBANK, NAMIND
+      INTEGER  VDYEAR, VNSCRM, VNELRM, VJWFFW
+
+      EXTERNAL NLINK, NDROP, NSWAP, NBANK, NAMIND
+      EXTERNAL VDYEAR, VNSCRM, VNELRM, VJWFFW
+C
+C  Local variables
+C
+      INTEGER NAVCSG,NAVPLH,NAVTRS,NAVFPH,NAVPHN,NAVCAB
+      INTEGER IGARB,IRET
+      INTEGER IRW,ICT
+      INTEGER KVHLS,KVPLH,KVCSG,KVTRS
+      INTEGER KVCAB,NVCAB,IVCAB
+      INTEGER JWAF,JWNX,KWAF,LWAF
+      INTEGER JLAY,JFAC,JWFF,JVIEW
+      INTEGER KLAY,KFAC,KWFF,KVIEW,LLAY,LFAC,LWFF,LVIEW
+      INTEGER NVHLS,NVPLH,NVFHL,NVFPH,NVTRS,NVTRSN
+      INTEGER NCHAN,MCHNX,NDATA,NSTRI,NDATP
+      INTEGER JCHAN,KCHAN,MCHAN,ICHAN,ICHNM
+      INTEGER IVHLS,JCLU,KCLU,LCLU,MCLU
+      INTEGER IADDR,ILAY,IWFF,IFAC,IVIEW
+      INTEGER KVFHL,KVFPH,KVFLG,KVCOM,KVTRSN,KVPHN
+      INTEGER IFLAG,NGOOD
+      INTEGER NR,NROMD,NRONX,DECMD,KLINE
+      INTEGER KRWPH,KMPPH,KRWFL,KMPFL,KCMMD
+      LOGICAL GOOD,FIRST
+      REAL PH
+C
+C  Variables for inline functions
+C
+      INTEGER I,J,PULH,FLAG
+      INTEGER SHFT1(0:1)
+      INTEGER IAND,ISHFT,IDUM
+      INTEGER ODD
+#include "bcs.h"
+C
+C  Inline functions
+C
+      LOGICAL IHIS1,IHIS8
+C
+C  Data
+C
+      DATA SHFT1/16,0/
+      DATA FIRST /.TRUE./
+C      INTEGER LCOLS,LROWS,ID,KNEXT,KROW,NRBOS,LFRWRD,LFRROW,ITABL,L
+C      REAL RTABL
+#include "bmacro.h"
+C
+C  Inlines to unpack the raw VPLH digitized data and flag bits
+C
+      ODD(J) = IAND(J,1)
+      PULH(I,J) = IAND(ISHFT(IW(I+LMHLEN+1+J/2),
+     &  -SHFT1(ODD(J))),OBPULH) - IPHOFF
+      FLAG(I,J) = IAND(ISHFT(IW(I+LMHLEN+1+J/2),
+     &  -SHFT1(ODD(J))),OBFBIT) + 1
+      IHIS1(I) = IAND(I,1) .EQ. 1
+      IHIS8(I) = IAND(I,8) .EQ. 8
+
+
+      IF(FIRST)THEN
+         FIRST=.FALSE.
+         NAVCSG=NAMIND('VCSG')
+         NAVPLH=NAMIND('VPLH')
+         NAVTRS=NAMIND('VTRS')
+         NAVPHN=NAMIND('VPHN')
+         NAVCAB=NAMIND('VCAB')
+      ENDIF
+C
+C For VDet95, we need a larger VTRS bank, 3 times longer,
+C which we create here with NR=100
+C
+      KVTRS=IW(NAVTRS)
+      IF(KVTRS.NE.0)THEN
+         NVTRS=LROWS(KVTRS)
+         NDATA=(IW(KVTRS)-LMHLEN)*3+LMHLEN
+         CALL AUBOS('VTRS',100,NDATA,KVTRSN,IGARB)
+         IF(IGARB.EQ.2)GO TO 300
+         IW(KVTRSN+LMHCOL)=IW(KVTRS+LMHCOL)
+         IW(KVTRSN+LMHROW)=0
+      ENDIF
+C
+C  Drop the old final banks.
+C
+      CALL BDROP(IW,'VFHLVFPHVFLGVCOM')
+      NEVNTS = NEVNTS + 1
+C
+C  See if a wafer swap bank exists (do not use for MC).
+C
+      KVCAB = IW(NAVCAB)
+      IF( .NOT.MCEVNT .AND. KVCAB.GT.0)THEN
+        NVCAB = LROWS(KVCAB)
+      ELSE
+        NVCAB = 0
+      END IF
+C
+C Make max. number of channels in Z view, useful for wraparound cluster
+C Different for MC and data
+C
+        IF(MCEVNT)THEN
+          ICHNM = VNSCRM(1)
+        ELSE
+          ICHNM = VNELRM(1)
+        ENDIF
+C
+C  Find the first raw data bank
+C
+      KVPLH = IW(NAVPLH)
+C
+C  If any banks exist, create the banks to be used for the full
+C  strip mapping
+C
+      IF(KVPLH.GT.0)THEN
+        NDATA = NRCHAN*LVCSGA+LMHLEN
+        CALL AUBOS('VCSG',0,NDATA,KVCSG,IGARB)
+        IF(IGARB.EQ.2)GOTO 300
+        IW(KVCSG+LMHROW)=NRCHAN
+        IW(KVCSG+LMHCOL)=LVCSGA
+C
+C Create also the bank for pulseheight in N strips
+C
+        KVPHN=0
+        IF(VDYEAR().EQ.95)THEN
+          NDATP = NRCHAN*LVPHNA+LMHLEN
+          CALL AUBOS('VPHN',0,NDATP,KVPHN,IGARB)
+          IF(IGARB.EQ.2)GOTO 300
+          IW(KVPHN+LMHROW)=NRCHAN
+          IW(KVPHN+LMHCOL)=LVPHNA
+          KVCSG=IW(NAVCSG)
+        ENDIF
+        KVPLH = IW(NAVPLH)
+      ELSE
+C
+C  Nothing to do here
+C
+        GOTO 999
+      END IF
+C
+C  Loop over input VPLH banks
+C
+C  Do While accepted in JULIA as now works on all compilers
+C                                               (P. Comas, May 1995)
+      DO WHILE(KVPLH.GT.0)
+C
+C  Find the corresponding VHLS bank
+C
+        NR = IW(KVPLH-2)
+        KVHLS = NLINK('VHLS',NR)
+        IF(KVHLS.LE.0)THEN
+          CALL RERROR('VDECOD',2,'Missing VHLS bank')
+          GOTO 999
+        END IF
+C
+C get number of raw data clusters and channels
+C
+        NVHLS=LROWS(KVHLS)
+        NVPLH=LROWS(KVPLH)
+C
+C Check for consistency
+C
+        IF((IW(KVHLS).NE.NVHLS*LVHLSA+LMHLEN).OR.
+     >     (IW(KVPLH).NE.NVPLH*LVPLHA+LMHLEN))THEN
+          CALL RERROR('VDECOD',-3,'Corrupted Vdet raw data')
+          GOTO 201
+        ENDIF           
+C
+C The raw data are packed 2 readout channels per row
+C
+        NSTRI=NVPLH*2
+C
+C  Build the output name banks- maximum possible size of 1 cluster/strip
+C  For VDET95, number of strips is 3*number of el. channels
+C
+        IF(VDYEAR().EQ.95)NSTRI=NSTRI*3
+C
+C  Plus maximum number of final strips being twice the number of strips.
+C  Initialize their mini-headers
+C
+        KVFHL = NBANK('VFHL',NR,LMHLEN+NSTRI)
+        KVCOM = NBANK('VCOM',NR,LMHLEN+NSTRI)
+        KVFPH = NBANK('VFPH',NR,LMHLEN+LVFPHA*NSTRI*2)
+        KVFLG = NBANK('VFLG',NR,LMHLEN+LVFLGA*NSTRI*2)
+        IF(KVFHL.LE.0 .OR. KVCOM.LE.0 .OR. KVFPH.LE.0 .OR.
+     &       KVFLG.LE.0 )GOTO 300
+C
+C Reaccess
+C
+        KVCSG=IW(NAVCSG)
+        KVPLH=NLINK('VPLH',NR)
+        KVFHL=NLINK('VFHL',NR)
+        KVCOM=NLINK('VCOM',NR)
+        KVFPH=NLINK('VFPH',NR)
+        KVFLG=NLINK('VFLG',NR)
+C
+        IW(KVFHL+LMHCOL)=LVFHLA
+        IW(KVFHL+LMHROW)=0
+        IW(KVCOM+LMHCOL)=LVCOMA
+        IW(KVCOM+LMHROW)=0
+        IW(KVFPH+LMHCOL)=LVFPHA
+        IW(KVFPH+LMHROW)=0
+        IW(KVFLG+LMHCOL)=LVFLGA
+        IW(KVFLG+LMHROW)=0
+C
+C  Uncode the wafer address of the first cluster
+C
+        IADDR = ITABL(KVHLS,1,JVHLHC)
+        CALL VUNADD(IADDR,MCHAN,ILAY,IWFF,IFAC,IVIEW,JCHAN)
+        CALL VAENWA(NROMD,ILAY,IWFF,IFAC,IVIEW)
+        IRET = VJWFFW(ILAY,IFAC,IWFF,JWAF)
+C
+C  Keep the (uncoded) wafer address of this cluster
+C
+        JLAY = ILAY
+        JFAC = IFAC
+        JWFF = IWFF
+        JVIEW = IVIEW
+C
+C  Loop over clusters in this bank
+C
+        ICT=0
+        DO IVHLS=1,NVHLS
+C
+C  Histograms
+C
+          IF(IHIS1(HISTLV))THEN
+            CALL HFILL(HISOFF+15,FLOAT(MCHAN),0.0,1.0)
+          END IF
+C
+C  Increment counter for run summary
+C
+          NRAWHT(IVIEW) = NRAWHT(IVIEW) + 1
+C
+C  Loop over the channels readout in this cluster
+C
+          DO KCHAN=1,MCHAN
+C
+C  Row in VPLH banks
+C
+            IRW = ICT+KCHAN-1
+C
+C  Channel number for this channel, including offset
+C
+            ICHAN = JCHAN+KCHAN-1
+C
+C  For Vdet 95 there can be a cluster which wraps around the end
+C
+            IF(VDYEAR().EQ.95.AND.IVIEW.EQ.1)THEN
+              IF(ICHAN.GT.ICHNM)ICHAN=ICHAN-ICHNM
+            ENDIF
+C
+C   Now we transform the MC data into the on-line convention :
+C   there are CHNOFF unused readout channels at the beginning
+C
+            ICHAN = ICHAN+CHNOFF(IVIEW)
+C
+C Protect against the channel 0 which should never contain any data
+C
+            IF(ICHAN.LE.0)GO TO 101
+C
+C Protect against corrupted data, channel number should be 
+C contained in bank size (typically 1024)
+C
+            IF(ICHAN.GT.NRCHAN) THEN
+              CALL RERROR('VDECOD',-1,'Corrupted raw data')
+              GO TO 101
+            ENDIF
+C
+            KLINE = KROW(KVCSG,ICHAN)
+C
+C  Unpack the pulseheights and flags into the appropriate raw columns
+C
+            IW(KLINE+JVCSRP) = PULH(KVPLH,IRW)
+            IW(KLINE+JVCSRF) = FLAG(KVPLH,IRW)
+C
+C  Histograms
+C
+            IF(IHIS1(HISTLV))THEN
+              PH = FLOAT(ITABL(KVCSG,ICHAN,JVCSRP))
+              IFLAG = ITABL(KVCSG,ICHAN,JVCSRF)
+              IF(IAND(IFLAG,OBFBIT).EQ.0)THEN
+                CALL HFILL(HISOFF+10,PH,0.0,1.0)
+              ELSE IF(IAND(IFLAG,OBSUPP).EQ.OBSUPP)THEN
+                CALL HFILL(HISOFF+11,PH,0.0,1.0)
+              ELSE
+                CALL HFILL(HISOFF+12,PH,0.0,1.0)
+              END IF
+              CALL HFILL(HISOFF+50+IVIEW,FLOAT(JWAF),
+     &             FLOAT(ISHFT(IFLAG,-14)),1.0)
+            END IF
+            IF(IHIS8(HISTLV).AND. PH .GT.MNPULS)THEN
+              IF(IVIEW .EQ. 1)THEN
+                CALL HFILL(HISOFF+300+JWAF,FLOAT(ICHAN),0.0,1.0)
+              ELSE
+                CALL HFILL(HISOFF+500+JWAF,FLOAT(ICHAN),0.0,1.0)
+              END IF
+            END IF
+  101     CONTINUE
+          END DO
+          IF(IVHLS.LT.NVHLS)THEN
+C
+C  Uncode the wafer address of the next cluster
+C
+            IADDR = ITABL(KVHLS,IVHLS+1,JVHLHC)
+            CALL VUNADD(IADDR,MCHNX,ILAY,IWFF,IFAC,IVIEW,JCHAN)
+            CALL VAENWA(NRONX,ILAY,IWFF,IFAC,IVIEW)
+            IRET = VJWFFW(ILAY,IFAC,IWFF,JWNX)
+          ENDIF
+C
+C  If next readout module is different, or end of bank,
+C  one readout module has been finished, process it
+C
+          IF(NRONX.NE.NROMD.OR.IVHLS.EQ.NVHLS)THEN
+             DECMD = NROMD
+C
+C  Fix cabling errors if needed (require NVCAB.gt.0 before executing)
+C
+            IF( NVCAB.GT.0 ) THEN
+              DO IVCAB=1,NVCAB
+C
+C  Get the apparent (wrong) wafer.
+C
+                LLAY = ITABL(KVCAB,IVCAB,JVCAAL)
+                LFAC = ITABL(KVCAB,IVCAB,JVCAAF)
+                LWFF = ITABL(KVCAB,IVCAB,JVCAAW)
+                LVIEW= ITABL(KVCAB,IVCAB,JVCAAV)
+C
+C  If the apparent wafer is wrong, replace it with the true wafer.
+C
+                IF( JLAY.EQ.LLAY .AND. JFAC.EQ.LFAC .AND.
+     +              JWFF.EQ.LWFF .AND. JVIEW.EQ.LVIEW )THEN
+                  KLAY = ITABL(KVCAB,IVCAB,JVCATL)
+                  KFAC = ITABL(KVCAB,IVCAB,JVCATF)
+                  KWFF = ITABL(KVCAB,IVCAB,JVCATW)
+                  KVIEW= ITABL(KVCAB,IVCAB,JVCATV)
+                  CALL VAENWA(DECMD,KLAY,KWFF,KFAC,KVIEW)
+                  CALL RERROR('VDECOD',9,' Cable swap fix.')
+                END IF
+              END DO
+            ENDIF
+C
+C  Map the channels onto strips.
+C
+
+
+C  There is a different treatment for old and new Vdet :
+C  -  Different versions of the EC to strips mapping
+C  -  for new Vdet, common mode subtraction is done on-line
+C
+            IF(VDYEAR().EQ.91)THEN
+C
+C  Map the channels onto strips.
+C  This also suppresses hot channels and strips
+C
+              CALL VDSMAP(DECMD,GOOD)
+C
+C treatment of pinholes in the Monte Carlo
+C
+              IF(MCEVNT) CALL VDPINH(DECMD)
+C
+C
+C  Subtract common mode
+C  For new Vdet, will be done on-line
+C
+              CALL VCALCM
+            ELSE
+              CALL VDSM95(DECMD)
+            ENDIF
+C
+C  Final reclustering
+C
+            CALL VRECLU(DECMD,NR)
+C
+C  Zero the mapping bank for the new wafer
+C
+            CALL VZERO(IW(KVCSG+LMHLEN+1),NDATA-LMHLEN)
+            IF(KVPHN.NE.0)CALL VZERO(IW(KVPHN+LMHLEN+1),NDATP-LMHLEN)
+          ENDIF
+C
+C Move along the VPLH bank, by the length of the cluster
+C
+          ICT=ICT+MCHAN
+C
+C  Reset variables
+C
+          NROMD=NRONX
+          JWAF=JWNX
+          JLAY=ILAY
+          JFAC=IFAC
+          JWFF=IWFF
+          JVIEW=IVIEW
+          MCHAN=MCHNX
+        ENDDO
+C
+C  Remake the named banks to size, if there are at least 1 cluster
+C
+        CALL AUBPRS('VFHLVCOMVFPHVFLG')
+C
+C  Move to the next VPLH bank
+C
+  201   CONTINUE
+        KVPLH = IW(KVPLH-1)
+      END DO
+C
+C  Drop the strip mapping bank, and clean up
+C
+      CALL BDROP(IW,'VCSGVPHN')
+      CALL BGARB(IW)
+C
+C Now some bookkeeping of VTRS banks
+C
+      KVTRSN=NLINK('VTRS',100)
+      IF(KVTRSN.NE.0)THEN
+        NVTRSN=LROWS(KVTRSN)
+        IF(NVTRSN.GT.0)THEN
+          IRET=NSWAP('VTRS',0,'VTRS',100)
+          IRET=NDROP('VTRS',100)
+          CALL AUBPRS('VTRS')
+        ENDIF
+      ENDIF
+      GOTO 999
+C
+C  Insufficient BOS space return
+C
+  300 CONTINUE
+      CALL RERROR('VDECOD',1,'Out of BOS space- event rejected')
+      CALL BDROP(IW,'VFHLVCOMVFPHVFLGVCSGVTRSVCAB')
+      CALL BGARB(IW)
+  999 RETURN
+      END
+#endif
+@
+
+
+1.11
+log
+@Brackets problem in VDECOD fix
+@
+text
+@d45 1
+@
+
+
+1.10
+log
+@Mod for julia 306.3
+@
+text
+@d209 4
+a212 4
+        IF(IW(KVHLS).NE.NVHLS*LVHLSA+LMHLEN.OR.
+     >     IW(KVPLH).NE.NVPLH*LVPLHA+LMHLEN)THEN
+           CALL RERROR('VDECOD',-3,'Corrupted Vdet raw data')
+           GOTO 201
+@
+
+
+1.9
+log
+@Prepare Julia 305
+@
+text
+@d19 2
+d207 8
+d448 1
+@
+
+
+1.8
+log
+@Fixes for Linux
+@
+text
+@d65 1
+a65 1
+      INTEGER NCHAN,MCHNX,NSTRP,NDATA,NSTRI,NDATP
+d402 1
+a402 1
+              CALL VCALCM(NSTRP)
+@
+
+
+1.7
+log
+@bug fix to VDECOD protection
+@
+text
+@d49 1
+a49 1
+      INTEGER  VDYEAR, VNSCRM, VNELRM
+d52 1
+a52 1
+      EXTERNAL VDYEAR, VNSCRM, VNELRM
+d247 1
+a247 1
+        CALL VJWFFW(ILAY,IFAC,IWFF,JWAF)
+d344 1
+a344 1
+            CALL VJWFFW(ILAY,IFAC,IWFF,JWNX)
+@
+
+
+1.6
+log
+@modifs for julia 304
+@
+text
+@d301 1
+a301 1
+            IF(ICHAN.GT.ICHNM) THEN
+@
+
+
+1.5
+log
+@PBT change in VDECOD
+@
+text
+@d17 3
+d48 5
+a52 3
+      INTEGER NLINK
+      INTEGER VDYEAR
+      INTEGER NDROP, VNSCRM, VNELRM, NSWAP
+a58 1
+      INTEGER NAMIND,NBANK
+d297 8
+@
+
+
+1.4
+log
+@Mods for julia 281 release. See news for details
+@
+text
+@d130 1
+a130 1
+C  See if a wafer swap bank exists
+d133 1
+a133 1
+      IF(KVCAB.GT.0)THEN
+d339 1
+d341 1
+a341 1
+C  Fix cabling errors if needed
+d343 2
+a344 2
+            DECMD = NROMD
+            DO IVCAB=1,NVCAB
+d348 4
+a351 4
+              LLAY = ITABL(KVCAB,IVCAB,JVCAAL)
+              LFAC = ITABL(KVCAB,IVCAB,JVCAAF)
+              LWFF = ITABL(KVCAB,IVCAB,JVCAAW)
+              LVIEW= ITABL(KVCAB,IVCAB,JVCAAV)
+d355 11
+a365 10
+              IF( JLAY.EQ.LLAY .AND. JFAC.EQ.LFAC .AND.
+     +            JWFF.EQ.LWFF .AND. JVIEW.EQ.LVIEW )THEN
+                KLAY = ITABL(KVCAB,IVCAB,JVCATL)
+                KFAC = ITABL(KVCAB,IVCAB,JVCATF)
+                KWFF = ITABL(KVCAB,IVCAB,JVCATW)
+                KVIEW= ITABL(KVCAB,IVCAB,JVCATV)
+                CALL VAENWA(DECMD,KLAY,KWFF,KFAC,KVIEW)
+                CALL RERROR('VDECOD',9,' Cable swap fix.')
+              END IF
+            END DO
+@
+
+
+1.3
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+ 	gambnk.F gapeco.F gasteer.F
+ 	hcalib.F hcalrd.F hcatow.F hcbhis.F hcfclu.F hchist.F hclcra.F
+ 	hcltst.F hclufi.F hcos.F hcsimm.F hdgdeb.F hdgfil.F hdgpot.F
+ 	hdgsum.F hdprec.F hdspre.F hflnoi.F hinijo.F hiniru.F hmener.F
+ 	hmfind.F hmroad.F hnoise.F hnoisy.F hpatco.F hphnoi.F hplink.F
+ 	hprana.F hpranp.F hprdig.F hpreda.F hprpot.F hprsum.F hprunc.F
+ 	hrcomp.F hrcpat.F hrdcal.F hroad.F hslink.F hslowc.F hspare.F
+ 	hsptre.F hstofi.F htrack.F htubfi.F htwcr.F
+ 	iasign.F iattma.F ibnkin.F icaswt.F icftoi.F iclimb.F icrcco.F
+ 	ideadw.F idigpr.F ienang.F ifind1.F ifind2.F ifitp.F iftrak.F
+ 	igetti.F igettp.F igicha.F iheler.F iinijo.F iiniru.F iintrk.F
+ 	imatch.F inigap.F insect.F intrak.F ipakdi.F ipdsti.F iphcor.F
+ 	ipreda.F iprsum.F ipstat.F irefin.F ireopd.F isave.F ishuff.F
+ 	ishufl.F islowc.F isrch.F itbook.F itccut.F itcopr.F itcrec.F
+ 	itcrep.F itctpc.F itctrk.F itcxng.F iterr.F itextn.F ithist.F
+ 	itidy1.F itidy2.F itlnk1.F itlnk2.F itpcan.F itrak.F itrecf.F
+ 	itreci.F itree.F itrkci.F itrkeq.F itrkzr.F itrmca.F
+@
+text
+@d14 2
+d21 1
+a21 1
+      SAVE FIRST, NAVCSG, NAVPLH, NAVTRS, NAVPHN
+d40 1
+a40 1
+#include "vswpjj.h"
+d49 1
+a49 1
+C  Local variablse
+d51 1
+a51 1
+      INTEGER NAVCSG,NAVPLH,NAVTRS,NAVFPH,NAVPHN
+d56 1
+a56 1
+      INTEGER KVSWP,NVSWP,IVSWP,FRUN,LRUN
+d58 2
+d109 1
+d132 3
+a134 3
+      KVSWP = NLINK('VSWP',1)
+      IF(KVSWP.GT.0)THEN
+        NVSWP = LROWS(KVSWP)
+d136 1
+a136 1
+        NVSWP = 0
+d245 7
+d343 19
+a361 12
+            DO IVSWP=1,NVSWP
+              LWAF = ITABL(KVSWP,IVSWP,JVSWCA)
+              FRUN = ITABL(KVSWP,IVSWP,JVSWFR)
+              LRUN = ITABL(KVSWP,IVSWP,JVSWLR)
+              IF(IRUNRC.GE.FRUN .AND. IRUNRC.LE.LRUN.AND.
+     &             JWAF.EQ.LWAF)THEN
+C
+C  Overwrite the address
+C
+                  KWAF = ITABL(KVSWP,IVSWP,JVSWRA)
+                  CALL VFWAFI(KWAF,ILAY,IFAC,IWFF)
+                  CALL VAENWA(DECMD,ILAY,IWFF,IFAC,IVIEW)
+a363 1
+
+d411 4
+d449 1
+a449 1
+      CALL BDROP(IW,'VFHLVCOMVFPHVFLGVCSGVTRS')
+@
+
+
+1.2
+log
+@julia version 279
+@
+text
+@a0 1
+*DK vdecod
+d18 3
+d29 1
+d31 1
+d33 1
+d35 1
+d39 1
+d45 1
+a45 1
+      INTEGER NDROP, VNSCRM, VNELRM
+d49 2
+a50 2
+      INTEGER NAVCSG,NAVPLH
+      INTEGER IGARB
+d53 1
+a53 1
+      INTEGER KVHLS,KVPLH,KVCSG
+d56 2
+a57 2
+      INTEGER NVHLS,NVPLH,NVFHL,NVFPH
+      INTEGER NCHAN,MCHNX,NSTRP,NDATA,NSTRI
+d61 1
+a61 1
+      INTEGER KVFHL,KVFPH,KVFLG,KVCOM
+d84 2
+d104 1
+d156 12
+d382 1
+d407 1
+a407 1
+      CALL BDROP(IW,'VCSG')
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d6 10
+a15 6
+C
+C  This is the micro-vertex silicon detector internal co-ordinate
+C  reconstruction routine.  This takes as input the raw detector
+C  data (VHLS and VPLH), plus maps of the detector bonding
+C  taken from the ALEPH database, and produces final hit banks.
+C
+a18 2
+#include "implicit.h"
+#include "vdimpl.h"
+d22 4
+a25 2
+#include "bcs.h"
+#include "vdnamc.h"
+d27 6
+a32 4
+#include "vrecon.h"
+#include "vdmods.h"
+#include "vprtnc.h"
+#include "vindex.h"
+d36 3
+a38 3
+      INTEGER NBANK,NLINK
+      EXTERNAL NDROP
+      INTEGER NDROP
+d42 18
+a59 15
+      INTEGER NVHLS,NVPLH
+      INTEGER NCLU,NSTRP,NWORD
+      INTEGER ISTRP,JSTRP,KSTRP,MSTRP,ICAM
+      INTEGER ICLU,JCLU,KCLU,LCLU,MCLU
+      INTEGER ILAY,IWAF,IPHI,IVIEW
+      INTEGER IADDR, JADDR
+      INTEGER IMONW, IMONC
+      INTEGER IVFHL,IVFPH,IVFLG,IVCOM
+      INTEGER ISTRT,ISTOP
+      INTEGER IFLAG
+      INTEGER IBNUM
+      LOGICAL IGOOD
+      INTEGER IRWPH(NSTPWF),IMPPH(NSTPWF),IRWFL(NSTPWF)
+      INTEGER IMPFL(NSTPWF),ICMMD(NSTPWF)
+      REAL DUMMY
+d63 2
+a64 2
+      INTEGER INSTP,ISSTP,UNPK90,I,J,K,UNPK91,FLAG91
+      INTEGER SHFT1(0:1),SHFT2(0:1)
+d66 2
+a67 4
+      LOGICAL SAMWF,IHIS1,IHIS8
+      INTEGER OVRWT
+      INTEGER ODD,NEG
+#include "vdbmcr.h"
+d69 1
+a69 1
+C  Data
+d71 1
+a71 1
+      DATA SHFT1/16,0/, SHFT2/31,15/
+d73 1
+a73 1
+C  Inline functions
+d75 2
+a77 6
+      INSTP(I) = IAND(ISHFT(I,-VSNSTR),VMNSTR)
+      ISSTP(I) = IAND(ISHFT(I,-VSSTRP),VMSTRP)
+      SAMWF(J,K) = IAND(J,VMADDR).EQ.IAND(K,VMADDR)
+      OVRWT(I,J) = IOR(IAND(I,NOT(VMADDR)),IAND(J,VMADDR))
+      IHIS1(I) = IAND(I,1) .EQ. 1
+      IHIS8(I) = IAND(I,8) .EQ. 8
+d79 1
+a79 4
+C  Now some brutal inline functions to translate I*2 databanks written
+C  by the 1990 event builder (using 2s complement arithmatic!!) into I*4
+C  numbers USING ONLY BIT SHIFT/MASK FUNCTIONS!!  Sorry this is such a
+C  mess, but there's no other way.
+d82 1
+a82 9
+      NEG(I,J) = IAND(ISHFT(IW(I+LMHLEN+1+J/2),-SHFT2(ODD(J))),1)
+      UNPK90(I,J) = -NEG(I,J)*65536
+     &  + IAND(ISHFT(IW(I+LMHLEN+1+J/2),-SHFT1(ODD(J))),65535)
+C
+C  1991 data unpack- this is simpler, as it doesn't use 2s complement,
+C  just a simple offset.  This is ALSO used by the MC for both 1990 and
+C  1991
+C
+      UNPK91(I,J) = IAND(ISHFT(IW(I+LMHLEN+1+J/2),
+d84 12
+d97 2
+a98 3
+C  Unpack the flag bits from the 1991 data.  The 1 is added to make
+C  sure the flag word is never zero (which would indicate a channel
+C  suppressed by the online zero suppression).
+d100 9
+a108 2
+      FLAG91(I,J) = IAND(ISHFT(IW(I+LMHLEN+1+J/2),
+     &  -SHFT1(ODD(J))),OBFBIT) + 1
+d110 1
+a110 1
+C  Find raw data banks
+d112 1
+a112 5
+      NVHLS = IW(NAVHLS)
+      NVPLH = IW(NAVPLH)
+      IF(NVPLH.LE.0 .OR. NVHLS.LE.0) THEN
+        GOTO 999
+      ENDIF
+d115 11
+a125 1
+C  Drop the old final banks.
+d127 5
+a131 1
+        CALL BDROP(IW,'VFHLVFPHVFLGVCOM')
+d133 1
+a133 14
+C  Loop over input banks; this is a DO WHILE for stupid compilers
+C  Notice that the loop is driven by the VPLH bank, which is only
+C  present if there are data from the scirocco.  The VHLS bank is always
+C  present, regardless, so I ignore it.
+C
+  900   CONTINUE
+C
+C  Zero their pointers, to serve as  a flag if no banks get created.
+C
+        IVFHL = 0
+        IVFPH = 0
+        IVFLG = 0
+        IVCOM = 0
+      IF(NVPLH .GT. 0)THEN
+d135 1
+a135 1
+C  Find the corresponding VHLS bank
+d137 11
+a147 2
+        IBNUM = IW(NVPLH-2)
+        NVHLS = NLINK('VHLS',IBNUM)
+d149 1
+a149 1
+C get number of raw data clusters
+d151 2
+a152 3
+        NCLU=IW(NVHLS+LMHLEN)
+        NSTRP=IW(NVPLH+LMHLEN)
+        NWORD=IW(NVPLH)-LMHLEN
+d154 1
+a154 1
+C  Empty pulseheight banks were returned in 1990 during TPD overflow
+d156 3
+a158 5
+        IF(NSTRP .LE. 0 .AND. NCLU .GT. 0)THEN
+          IF(NSTRP .EQ. 0)CALL RERROR('VDECOD',3,
+     &  ' Inconsistant VPLH bank- rejected')
+          GOTO 901
+        END IF
+d160 1
+a160 1
+C  Loop over the clusters to check for bank inconsistancies
+d162 6
+a167 9
+        ISTRP = 0
+        IADDR = -1
+        JADDR = -1
+        DO 20 ICLU=1,NCLU
+          IF(INSTP(ITABL(NVHLS,ICLU,1)) .GT. NSTPWF)THEN
+            CALL RERROR('VDECOD',4,
+     &    'Unphysical cluster length- banks rejected')
+            GOTO 901
+          END IF
+d169 1
+a169 1
+C  Count up the total number of strips
+d171 2
+a172 1
+          ISTRP = ISTRP + INSTP(ITABL(NVHLS,ICLU,1))
+d174 1
+a174 1
+C  Count up the number of wafers
+d176 1
+a176 1
+          IF(.NOT.SAMWF(IADDR,ITABL(NVHLS,ICLU,1)))THEN
+d178 2
+a179 3
+C  Check back one wafer to see if there is corruption
+C  (the same wafer should never appear in two different non-contiguous
+C  regions of the bank).
+d181 1
+a181 2
+            IF(SAMWF(JADDR,ITABL(NVHLS,ICLU,1)))THEN
+              CALL RERROR('VDECOD',6,'Corrupt address in VHLS')
+d183 2
+a184 1
+C  Try to recover the data by overwriting the corrupt addresses
+d186 31
+a216 7
+              JCLU = ICLU - 1
+  200         CONTINUE
+              IF(JCLU .GE. 1 .AND. SAMWF(IADDR,ITABL(NVHLS,JCLU,1)))THEN
+                IW(NVHLS+LMHLEN+JCLU) = OVRWT(ITABL(NVHLS,JCLU,1),JADDR)
+                JCLU = JCLU - 1
+                GOTO 200
+              END IF
+d218 1
+a218 1
+C  Correct the bookkeeping for the phony wafer
+d220 2
+a221 3
+              IADDR = JADDR
+              JADDR = -1
+            ELSE
+d223 1
+a223 1
+C  New wafer
+d225 2
+a226 3
+              JADDR = IADDR
+              IADDR = ITABL(NVHLS,ICLU,1)
+            END IF
+a227 2
+   20   CONTINUE
+        IF(LR1990)THEN
+d229 1
+a229 10
+C  For the 1990 data, The VPLH mini-header stored the number of
+C  STRIPS, not the number of I*4 words in the bank.  Therefore,
+C  require an exact match.
+C
+          IF(ISTRP.NE.NSTRP)THEN
+            CALL RERROR('VDECOD',5,
+     &    'VHLS-VPLH strip number inconsistancy-banks rejected')
+            GOTO 901
+          END IF
+        ELSE
+d231 1
+a231 2
+C  For MC data and data after 1990, the mini-header was fixed.
+C  This provides less information than the 1990 version, but is 'correct'.
+d233 1
+a233 7
+          IF(ISTRP .NE. 2*NWORD .AND. ISTRP .NE. 2*NWORD-1)THEN
+            CALL RERROR('VDECOD',5,
+     &    'VHLS-VPLH strip number inconsistancy-banks rejected')
+            GOTO 901
+          END IF
+          NSTRP = ISTRP
+        END IF
+d235 1
+a235 2
+C  Now the main loop over the clusters, Broken down into wafers.
+C  First, zero the arrays
+d237 1
+a237 5
+        CALL UZERO(IRWPH,1,NSTPWF)
+        CALL UZERO(IMPPH,1,NSTPWF)
+        CALL UZERO(IRWFL,1,NSTPWF)
+        CALL UZERO(IMPFL,1,NSTPWF)
+        CALL UZERO(ICMMD,1,NSTPWF)
+d239 1
+a239 2
+C  Build the name banks- maximum possible size of 1 cluster/strip
+C  Plus maximum number of final strips being twice the number of strips.
+d241 1
+a241 30
+        IVFHL = NBANK('VFHL',IBNUM,LMHLEN+NSTRP)
+        IF(IVFHL .EQ. 0)GOTO 300
+        IVCOM = NBANK('VCOM',IBNUM,LMHLEN+NSTRP)
+        IF(IVCOM .EQ. 0)GOTO 300
+        IVFPH = NBANK('VFPH',IBNUM,LMHLEN+2*NSTRP)
+        IF(IVFPH .EQ. 0)GOTO 300
+        IVFLG = NBANK('VFLG',IBNUM,LMHLEN+2*NSTRP)
+        IF(IVFLG .EQ. 0)GOTO 300
+        IW(IVFHL+LMHCOL)=1
+        IW(IVFHL+LMHROW)=0
+        IW(IVCOM+LMHCOL)=1
+        IW(IVCOM+LMHROW)=0
+        IW(IVFPH+LMHCOL)=1
+        IW(IVFPH+LMHROW)=0
+        IW(IVFLG+LMHCOL)=1
+        IW(IVFLG+LMHROW)=0
+C
+C  Preset some counters
+C
+        IADDR = ITABL(NVHLS,1,1)
+        CALL VADDUN(IADDR,MSTRP,ILAY,IWAF,IPHI,IVIEW,JSTRP)
+        ISTRP = 0
+        DO 21 ICLU=1,NCLU
+          IF(.NOT.SAMWF(IADDR,ITABL(NVHLS,ICLU,1)))THEN
+C
+C  Here we have a new wafer.  First finish off the old wafer before
+C  starting the new.  First, mapp the CAMEX channels onto physical
+C  strips
+C
+            CALL VDSMAP(IADDR,IRWPH,IRWFL,IMPPH,IMPFL,IGOOD)
+d243 1
+a243 1
+C  If this wafer is ok, procede
+d245 1
+a245 1
+            IF(IGOOD)THEN
+d247 3
+a249 1
+C  Flag the hot channels
+d251 2
+a252 1
+              CALL VHOTOF(IADDR,IMPFL)
+d254 1
+a254 1
+C  Subtract common mode
+d256 1
+a256 1
+              CALL VCALCM(IMPPH,IMPFL,IRWFL,ICMMD)
+d258 1
+a258 1
+C  Final reclustering- this produces named banks
+d260 1
+a260 3
+              CALL VRECLU(IADDR,IMPPH,IMPFL,ICMMD,
+     &        IVFHL,IVFPH,IVFLG,IVCOM)
+            END IF
+d262 1
+a262 1
+C  Clean things up for the next wafer
+d264 2
+a265 5
+            CALL UZERO(IRWPH,1,NSTPWF)
+            CALL UZERO(IMPPH,1,NSTPWF)
+            CALL UZERO(IRWFL,1,NSTPWF)
+            CALL UZERO(IMPFL,1,NSTPWF)
+            CALL UZERO(ICMMD,1,NSTPWF)
+d267 1
+a267 1
+C  Update address
+d269 57
+a325 3
+            IADDR = ITABL(NVHLS,ICLU,1)
+            CALL VADDUN(IADDR,MSTRP,ILAY,IWAF,IPHI,IVIEW,JSTRP)
+          END IF
+d327 5
+a331 1
+C  Increment counter for run summary
+d333 1
+a333 1
+          NRAWHT(IVIEW) = NRAWHT(IVIEW) + 1
+d335 2
+a336 1
+C  Add this cluster pulseheights to the raw,unmapped work bank.
+d338 1
+a338 11
+          MSTRP = INSTP(ITABL(NVHLS,ICLU,1))
+          JSTRP = ISSTP(ITABL(NVHLS,ICLU,1))
+          IF(LR1990)THEN
+C
+C  Trim off the unphysical strips for 1990
+C
+            CALL VSTRIM(JSTRP,MSTRP,ISTRT,ISTOP)
+          ELSE
+            ISTRT = 0
+            ISTOP = MSTRP-1
+          END IF
+d340 1
+a340 1
+C  Histograms
+d342 1
+a342 3
+          IF(IHIS1(HISTLV))THEN
+            CALL HFILL(HISOFF+15,FLOAT(MSTRP),DUMMY,1.0)
+          END IF
+a343 1
+C  Loop over the physically valid CAMEX channels
+d345 2
+a346 1
+          DO 210 KSTRP=ISTRT,ISTOP
+d348 4
+a351 53
+C  CAMEX channel number- correct for shift here, either from the
+C  the ONLINE bugs of 1990, or as well for the normal difference
+C  between MC and real data.  Check that after the shift the channel
+C  number is still in the physical range.
+            ICAM = JSTRP+KSTRP+CHNOFF
+            IF(ICAM.GT.0.AND.ICAM.LE.NSTPWF)THEN
+C
+C  Pack the pulseheight into the work bank- this goes from I*2 of the
+C  raw data to I*4.  1990 data is packed differently from 1991 or MC
+C
+              IF(LR1990)THEN
+                IRWPH(ICAM) = UNPK90(NVPLH,ISTRP+KSTRP)
+C
+C  Check for online flagged conditions, and record them in the flag array
+C  This was done in a clumsy way for 1990, starting only late in the run
+C
+                IF(IRWPH(ICAM) .LT. MAXPH)THEN
+C  Normal channel
+                  IRWFL(ICAM) = 1
+                ELSE
+                  IF(LPHNEW)THEN
+                    IF(IRWPH(ICAM) .GT. OVRPH .AND.
+     &                 IRWPH(ICAM) .LT. MAXPH+SUPPH)THEN
+C  This indicates a TPD suppressed channel.  Subtract an offset from the
+C  pulseheight, and set the corresponding flag bit
+                      IRWPH(ICAM)=IRWPH(ICAM)-SUPPH
+                      IRWFL(ICAM) = OBSUPP
+                    ELSE IF(IRWPH(ICAM).EQ.OVRPH)THEN
+C  This indicates a hadware overflow condition.  Set the corresponding
+C  VFLG bank flag, and zero the pulseheight (PH information is discarded
+C  online in this case).
+                      IRWPH(ICAM) = 0
+                      IRWFL(ICAM) = OBOVER
+                    ELSE IF(IRWPH(ICAM) .EQ. OVRPH+SUPPH)THEN
+C  This is the case if the channel is both suppressed and saturated
+                      IRWPH(ICAM) = 0
+                      IRWFL(ICAM) = OBSUPP+OBOVER
+                    ELSE
+C  Anything else is an error- flag the channel as 'unuseable'
+                      IRWPH(ICAM) = 0
+                      IRWFL(ICAM) = OBEROR
+                      CALL RERROR('VDSMAP',1,
+     &                'Unphysical pulseheight- zeroed')
+                    END IF
+                  ELSE
+C  In old data, PH out of range means digital 'noise'
+                    IRWPH(ICAM)= 0
+                    IRWFL(ICAM) = OBEROR
+                    CALL RERROR('VDSMAP',1,
+     &              'Unphysical pulseheight- zeroed')
+                  END IF
+                END IF
+              ELSE
+d353 1
+a353 2
+C  91 data and MC are stored in the same, logical way.  Pulseheights
+C  are stored in the lower bits, flag conditions in the upper.
+d355 1
+a355 3
+                IRWPH(ICAM) = UNPK91(NVPLH,ISTRP+KSTRP)
+                IRWFL(ICAM) = FLAG91(NVPLH,ISTRP+KSTRP)
+              END IF
+d357 1
+a357 1
+C  Histograms
+d359 2
+a360 22
+              IF(IHIS1(HISTLV))THEN
+                IF(IAND(IRWFL(ICAM),OBFBIT).EQ.0)THEN
+                  CALL HFILL(HISOFF+10,FLOAT(IRWPH(ICAM)),DUMMY,1.0)
+                ELSE IF(IAND(IRWFL(ICAM),OBSUPP).EQ.OBSUPP)THEN
+                  CALL HFILL(HISOFF+11,FLOAT(IRWPH(ICAM)),DUMMY,1.0)
+                ELSE
+                  CALL HFILL(HISOFF+12,FLOAT(IRWPH(ICAM)),DUMMY,1.0)
+                END IF
+                CALL HFILL(HISOFF+50,FLOAT(IINDEX(ILAY,IWAF,IPHI)),
+     &          FLOAT(ISHFT(IRWFL(ICAM),-14)),1.0)
+              END IF
+              IF(IHIS8(HISTLV).AND. IRWPH(ICAM).GT.MNPULS)THEN
+                IF(IVIEW .EQ. 1)THEN
+                  CALL HFILL(HISOFF+300+IINDEX(ILAY,IWAF,IPHI),
+     &            FLOAT(ICAM-1),DUMMY,1.0)
+                ELSE
+                  CALL HFILL(HISOFF+500+IINDEX(ILAY,IWAF,IPHI),
+     &            FLOAT(ICAM-1),DUMMY,1.0)
+                END IF
+              END IF
+            END IF
+  210     CONTINUE
+d362 1
+a362 1
+C  Advance the pointer into the VPLH bank
+d364 1
+a364 2
+          ISTRP = ISTRP + INSTP(ITABL(NVHLS,ICLU,1))
+   21   CONTINUE
+d366 1
+a366 1
+C  Finish mapping the last wafer for these banks
+d368 4
+a371 8
+        CALL VDSMAP(IADDR,IRWPH,IRWFL,IMPPH,IMPFL,IGOOD)
+        IF(IGOOD)THEN
+          CALL VHOTOF(IADDR,IMPFL)
+          CALL VCALCM(IMPPH,IMPFL,IRWFL,ICMMD)
+          CALL VRECLU(IADDR,IMPPH,IMPFL,ICMMD,
+     &  IVFHL,IVFPH,IVFLG,IVCOM)
+        END IF
+ 901    CONTINUE
+d373 1
+a373 1
+C  Remake named banks to size
+d375 1
+a375 22
+        IF(IVFHL .GT. 0 .AND. IVFPH .GT. 0 .AND.
+     &   IVFLG .GT. 0 .AND. IVCOM .GT. 0)THEN
+          NCLU = LROWS(IVFHL)
+          NSTRP = LROWS(IVFPH)
+          IF(NCLU .GT. 0)THEN
+C
+C  Remake only of there are clusters- otherwise...
+C
+            IVFHL = NBANK('VFHL',IBNUM,LMHLEN+NCLU)
+            IVCOM = NBANK('VCOM',IBNUM,LMHLEN+NCLU)
+            IVFPH = NBANK('VFPH',IBNUM,LMHLEN+NSTRP)
+            IVFLG = NBANK('VFLG',IBNUM,LMHLEN+NSTRP)
+          ELSE
+C
+C  drop-em
+C
+            IDUM= NDROP('VFHL',IBNUM)
+            IDUM= NDROP('VCOM',IBNUM)
+            IDUM= NDROP('VFPH',IBNUM)
+            IDUM= NDROP('VFLG',IBNUM)
+          END IF
+        END IF
+d377 1
+a377 1
+C  Get the next banks pointers and go back to unpack loop
+d379 2
+a380 3
+        NVPLH = IW(NVPLH-1)
+        GOTO 900
+      END IF
+d382 1
+a382 1
+C  Done
+d384 1
+d386 12
+d403 2
+a404 2
+      CALL RERROR('VDECOD',7,'Out of BOS space- event rejected')
+      CALL BDROP(IW,'VFHLVCOMVFPHVFLG')
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

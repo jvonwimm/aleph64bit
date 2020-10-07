@@ -1,0 +1,57 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  aleph212:1.1.1.1 ALEPH212:1.1.1;
+locks    ; strict;
+comment  @ * @;
+
+
+1.1
+date     96.02.07.11.40.06;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.02.07.11.40.07;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@C! get ADBR bank from data base
+      IF (NADBR.EQ.0) THEN
+         NADBR = NAMIND('ADBR')
+         LDBAS = JUNIDB(0)
+         JADBR = MDARD (IW,LDBAS,'ADBR',0)
+         IF (JADBR.EQ.0) GOTO 998
+      ENDIF
+C
+C - next entry
+      JADBR = IW(NADBR)
+      IF (JADBR .EQ. 0) GOTO 998
+      LADBR = LROWS(JADBR)
+      IDET = INDEX (DLIST,DET)
+      IF (IDET.EQ.0) THEN
+         JDETJJ = 0
+      ELSE
+         JDETJJ = JADBFR+IDET/2+1
+      ENDIF
+C
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

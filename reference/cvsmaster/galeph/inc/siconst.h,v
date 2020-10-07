@@ -1,0 +1,153 @@
+head	1.4;
+access;
+symbols
+	gal309_3:1.4
+	gal309_2:1.4
+	gal309_1:1.4
+	gal309:1.4
+	gal308_2:1.4
+	gal308_1:1.4
+	gal308:1.4
+	gal307_2:1.4
+	gal307_1:1.4
+	gal307:1.4
+	gal306_3:1.4
+	gal306_2:1.4
+	gal306_1:1.4
+	gal306:1.4
+	gal305_3:1.4
+	gal305_2:1.4
+	gal305_1:1.4
+	gal305:1.4
+	gal304_11:1.4
+	gal304_10:1.4
+	gal304_9:1.4
+	gal304_8:1.4
+	gal304_7:1.4
+	gal304_6:1.4
+	gal304_5:1.4
+	gal304_4:1.4
+	gal304_3:1.4
+	gal304_2:1.4
+	gal304_1:1.4
+	gal304:1.4
+	gal303_3:1.4
+	gal303_2:1.4
+	gal303_1:1.4
+	v-303:1.4
+	gal302_2:1.4
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.4
+date	95.07.04.09.03.02;	author algal;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.07.04.07.45.53;	author algal;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.06.30.07.05.18;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.01.32;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.33;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@update gal302 corr file no.1
+@
+text
+@*CD siconst
+      COMMON/SICONST/ISIFCT,ISIZCT,SIMPCT,SIPGEV
+#if defined(DOC)
+C Following parameters are filled from Data Base banks SFTH,SZTH,SRCO
+C ISIFCT  : Zero suppression threshold on SIFO data   ( ADC count )
+C ISIZCT  : Zero suppression threshold on SIDI data   ( Mev       )
+C SIMPCT  : Conversion factor from signal to SIFO ADC ( Mev/ADC count )
+C SIPGEV  : enegy deposit per GEV for tracking in Silicium( Gev-1)
+#endif
+@
+
+
+1.3
+log
+@gal302 correction file no.1
+ Modified Files:
+ ijjpar.h siconst.h
+@
+text
+@d3 1
+a3 1
+#if DOC
+@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ cahtra.h gmacro.h lccomc.h lcnamc.h ljjpar.h siconst.h
+ sigeco.h version.h
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+ xtrcom.h
+@
+text
+@d3 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 5
+a7 6
+#if defined(DOC)
+C! Following parameters are filled from Data Base banks SFTH,SZTH,SRCO
+ ISIFCT  : Zero suppression threshold on SIFO data   ( ADC count )
+ ISIZCT  : Zero suppression threshold on SIDI data   ( Mev       )
+ SIMPCT  : Conversion factor from signal to SIFO ADC ( Mev/ADC count )
+ SIPGEV  : enegy deposit per GEV for tracking in Silicium( Gev-1)
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

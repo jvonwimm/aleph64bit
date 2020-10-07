@@ -1,0 +1,428 @@
+head	1.8;
+access;
+symbols
+	jul313_3:1.8
+	jul313_2:1.8
+	jul313_1:1.8
+	jul313:1.8
+	jul312_1:1.8
+	jul312:1.8
+	jul311:1.8
+	jul310_1:1.8
+	jul310:1.8
+	jul309_1:1.7
+	jul309:1.7
+	jul308_6:1.7
+	jul308_5:1.7
+	jul308_4:1.7
+	jul308_3:1.7
+	jul308_2:1.7
+	jul308_1:1.7
+	jul308:1.7
+	jul307_4:1.7
+	jul307_3:1.7
+	jul307_2:1.7
+	jul307_1:1.6
+	jul307:1.6
+	jul306_3:1.6
+	jul306_2:1.6
+	jul306_1:1.6
+	jul306:1.6
+	jul305_4:1.6
+	jul305_3:1.6
+	jul305_2:1.6
+	jul305_1:1.5
+	jul305:1.5
+	jul304_3:1.4
+	jul304_2:1.4
+	jul304_1:1.4
+	jul304:1.4
+	jul303_7:1.3
+	jul303_6:1.3
+	jul303_5:1.3
+	jul303_4:1.3
+	jul303_3:1.3
+	jul303_2_mc1:1.3
+	jul303_2:1.3
+	jul303_1_mc1:1.3
+	jul303_1:1.3
+	jul303_v:1.3
+	jul303:1.3
+	jul302_6:1.3
+	jul302_5:1.3
+	jul302_4:1.3
+	jul302_3:1.3
+	jul302_2:1.3
+	jul302_1:1.3
+	jul302:1.3
+	jul285_1:1.3
+	jul285:1.3
+	jul284_1:1.3
+	jul284:1.3
+	jul283_1:1.3
+	jul283:1.3
+	jul282_1:1.3
+	jul282:1.3
+	jul281_3:1.3
+	jul281_2:1.3
+	jul281_1:1.3
+	jul281:1.3
+	jul280_1:1.3
+	jul280:1.3
+	jul279:1.2
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.8
+date	99.10.27.12.27.27;	author cattanem;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	98.06.05.12.45.59;	author cattanem;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	97.12.09.11.30.23;	author cattanem;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	97.11.13.16.15.40;	author cattanem;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	97.09.09.12.18.44;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.03.12.15.34.52;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.11.29.17.19.16;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.19.29;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.19.30;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.8
+log
+@For julia 310
+@
+text
+@      SUBROUTINE SIINIRU
+C----------------------------------------------------------------------
+C!  - SICAL Run Initialisation
+C!
+C!   Author   : B. Bloch-Devaux 911029
+C!              Modified for Bunch train mode October 1994
+C!              Modified for Bunch train mode in SCAN 95 October 1995
+C!              Move booking of SSTA to siinijo. M.Cattaneo September 1997
+C!              Modified to load SECT bank . B.Bloch November 1997
+C!              Modified to load SNOI bank . B.Bloch June 1998
+C!              Suppress error message for SECT when setup<7 M.Cattaneo 12/97
+C!              Load SCBP instead of SCPH when runnning in HE mode (shifted 
+C!               timing ) B.Bloch 10/99
+C!   Input    : none
+C!   Output   :
+C!              SREC bank (constants used in cluster reconstruction)
+C!              SCOR bank (constants for cluster position corrections)
+C!              SDCO bank (constants for dead pad energy correction)
+C!              SBHA bank (Cuts for Bhabha event selection)
+C!              SECA bank (Scal energy calibration)
+C!              SECT bank (Scal bunch dependent gain corrections ) 
+C!              SMPD bank (Scal missing pad list)
+C!              SNOI bank (definition of electronic noise cluster )
+C!              SCAX bank ]
+C!              SCGA bank ] Scal Calibration constants
+C!              SCPH bank ]
+C!              SCFD bank ]
+C!              SIBX bank (constants to define in-time events in SCAN95)
+C!              SECB bank (bunch energy calibration)
+C!              SHLD bank (Hold timing curve parameters)
+C!
+C!   Description :
+C!   ===========
+C?   Read geometry and constant banks from DAF
+C?   Reset lumi statistics bank SLUM
+C?
+C!======================================================================
+#ifndef DOC
+#include "sinamc.h"
+#include "rcurnt.h"
+#include "rparac.h"
+#include "bcs.h"
+#include "rlunit.h"
+#include "rflags.h"
+      INTEGER ALGTDB,ALGTWA,GTSTUP
+      EXTERNAL ALGTDB,NDROP,ALGTWA,GTSTUP
+#include "slumjj.h"
+#include "bmacro.h"
+C----------------------------------------------------------------------
+C Get geometry
+      CALL SIRDAF(LRGEOM,IRUNRC,IOK)
+      IF(IOK.NE.0) THEN
+        CALL RERROR ('SIINIRU', -1, 'Missing SCAL banks on DAF')
+      ENDIF
+C Get reconstruction constants
+      NR = ALGTDB(LRGEOM,'SBHASRECSCORSDCOSECASNOI',IRUNRC)
+
+C Get constants to define in-time events in SCAN 1995 and Bunch calibration
+      IF ( GTSTUP('SI',IRUNRC).GE.4) THEN
+         NS=ALGTDB(LRGEOM,'SIBXSECBSHLD',IRUNRC)
+      ELSE
+         NS = 1
+      ENDIF
+
+      IF ( GTSTUP('SI',IRUNRC).GE.7) THEN
+         NT=ALGTDB(LRGEOM,'SECT',IRUNRC)
+      ELSE
+         NT = 1
+      ENDIF
+
+      IF(NR*NS*NT.EQ.0) THEN
+        CALL RERROR ('SIINIRU', 1, 'Missing SCAL recons banks on DAF')
+      ENDIF
+C Get dead pad list
+C  Build SMPD ( mising pad list) from SDPD and SKPD if any
+      CALL SIGTDP
+C Get calibration constants if required  ( only Data )
+        IF ( .NOT.FMCRUN ) THEN
+         IF ( GTSTUP('SI',IRUNRC).LT.7) THEN
+          NR = ALGTDB(LRGEOM,'SCGASCAXSCPHSCFD',IRUNRC)
+         else
+          NR = ALGTDB(LRGEOM,'SCGASCAXSCBPSCFD',IRUNRC)
+         endif
+          IF(NR.EQ.0) THEN
+            CALL RERROR ('SIINIRU', 1,
+     &        'Missing calib SCAL banks on DAF')
+          ENDIF
+        ENDIF
+C Print out geometry if needed
+      IF(JDBDRF(JULSI).GE.1) CALL SIPRGO
+C Reset Lumi statistics bank
+      KSBHA = IW(NASBHA)
+      IF ( KSBHA.GT.0) THEN
+          CALL BDROP (IW,'SLUM')
+          NWAG = ALGTWA(IRUNRC)
+C The first rows are the total for method 1 and 2 ,then idem for each wg
+          NWAG = NWAG+1
+          LEN = NWAG*LSLUMA*LROWS(KSBHA)+2
+          CALL AUBOS('SLUM',IRUNRC,LEN,KSLUM,IGARB)
+          IW(KSLUM+1) = LSLUMA
+          IW(KSLUM+2) = NWAG*LROWS(KSBHA)
+      ENDIF
+C
+  999 CONTINUE
+      END
+#endif
+@
+
+
+1.7
+log
+@Mods for julia 307.2
+@
+text
+@d12 2
+d79 1
+d81 3
+@
+
+
+1.6
+log
+@suppress fake error message in siiniru
+@
+text
+@d10 1
+d21 1
+d54 1
+a54 1
+      NR = ALGTDB(LRGEOM,'SBHASRECSCORSDCOSECA',IRUNRC)
+@
+
+
+1.5
+log
+@Sical fixes for 1997 timing
+@
+text
+@d10 1
+d53 1
+a54 1
+      NS = 1
+d57 2
+d60 1
+d63 2
+d66 1
+@
+
+
+1.4
+log
+@modifs to siiniru, siinijo
+@
+text
+@d9 1
+d17 1
+d24 2
+d57 4
+a60 1
+      IF(NR*NS.EQ.0) THEN
+@
+
+
+1.3
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+ 	gambnk.F gapeco.F gasteer.F
+ 	hcalib.F hcalrd.F hcatow.F hcbhis.F hcfclu.F hchist.F hclcra.F
+ 	hcltst.F hclufi.F hcos.F hcsimm.F hdgdeb.F hdgfil.F hdgpot.F
+ 	hdgsum.F hdprec.F hdspre.F hflnoi.F hinijo.F hiniru.F hmener.F
+ 	hmfind.F hmroad.F hnoise.F hnoisy.F hpatco.F hphnoi.F hplink.F
+ 	hprana.F hpranp.F hprdig.F hpreda.F hprpot.F hprsum.F hprunc.F
+ 	hrcomp.F hrcpat.F hrdcal.F hroad.F hslink.F hslowc.F hspare.F
+ 	hsptre.F hstofi.F htrack.F htubfi.F htwcr.F
+ 	iasign.F iattma.F ibnkin.F icaswt.F icftoi.F iclimb.F icrcco.F
+ 	ideadw.F idigpr.F ienang.F ifind1.F ifind2.F ifitp.F iftrak.F
+ 	igetti.F igettp.F igicha.F iheler.F iinijo.F iiniru.F iintrk.F
+ 	imatch.F inigap.F insect.F intrak.F ipakdi.F ipdsti.F iphcor.F
+ 	ipreda.F iprsum.F ipstat.F irefin.F ireopd.F isave.F ishuff.F
+ 	ishufl.F islowc.F isrch.F itbook.F itccut.F itcopr.F itcrec.F
+ 	itcrep.F itctpc.F itctrk.F itcxng.F iterr.F itextn.F ithist.F
+ 	itidy1.F itidy2.F itlnk1.F itlnk2.F itpcan.F itrak.F itrecf.F
+ 	itreci.F itree.F itrkci.F itrkeq.F itrkzr.F itrmca.F
+@
+text
+@d8 1
+a36 1
+      PARAMETER ( LSSTA=9 )
+a68 9
+C  Reset reconstruction statistics
+      IF ( IW(NASSTA).GT.0) GO TO 997
+      NWAG = ALGTWA(IRUNRC)
+      LEN = NWAG*LSSTA+LMHLEN
+      CALL AUBOS('SSTA',0,LEN,KSSTA,IGARB)
+      IF ( IGARB.EQ.2) GO TO 998
+      IW(KSSTA+1) = LSSTA
+      IW(KSSTA+2) = NWAG
+  997 CONTINUE
+d70 2
+a71 2
+        KSBHA = IW(NASBHA)
+        IF ( KSBHA.GT.0) THEN
+d80 1
+a80 3
+        ENDIF
+C
+      GOTO 999
+a81 1
+  998 CALL RERROR ('SIINIRU',-1,'Unable to create SSTA')
+@
+
+
+1.2
+log
+@julia version 279
+@
+text
+@a0 1
+*DK siiniru
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d7 2
+d21 1
+d36 3
+a38 2
+      INTEGER ALGTDB
+      EXTERNAL ALGTDB,NDROP
+d49 6
+a54 1
+      IF(NR.EQ.0) THEN
+d70 9
+d83 4
+a86 1
+          LEN = LSLUMA*LROWS(KSBHA)+2
+d89 1
+a89 1
+          IW(KSLUM+2) = LROWS(KSBHA)
+d94 1
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

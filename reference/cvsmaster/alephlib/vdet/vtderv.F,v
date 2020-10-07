@@ -1,0 +1,355 @@
+head	1.3;
+access;
+symbols
+	aleph316_2:1.3
+	aleph316_1:1.3
+	aleph316:1.3
+	aleph315_7:1.3
+	aleph315_6:1.3
+	aleph315_5:1.3
+	aleph315_4:1.3
+	aleph315_3:1.3
+	aleph315_2:1.3
+	aleph315_1:1.3
+	aleph315:1.3
+	aleph314_2:1.3
+	aleph314_1:1.3
+	aleph314:1.3
+	aleph313_1:1.3
+	aleph313:1.3
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	99.10.26.09.32.54;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.10.17.10.38.26;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.44.48;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.44.49;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@for Alephlib 313
+@
+text
+@      SUBROUTINE VTDERV(TPAR,RCW,VHAT,RERRP)
+C----------------------------------------------------------------------
+C!  Compute the derivatives of local position wrt. track parameters
+CKEY VDET TRACK
+C!
+C!   Author   :- Jochen A. Lauber      23-MAY-1990
+C!   Modified :  David Brown  16-10-90
+C!   Modified :  G. Redlinger 26-10-90
+C!                 Fixed some derivative calculations and declared
+C!                  RSXY to be REAL*8 rather than REAL*4.
+C!   Modified :  G. Redlinger 30-01-91
+C!                 Re-fixed some derivatives according to the
+C!                  correct calculations of T. Lohse.  This time
+C!                  it's really correct!
+C!   Modified :  A. Bonissent 14-Oct. 1997 :
+C!                  Improve the protection against rounding errors,
+C!                  replace 1. by 0.99999 so that cos is never 0.
+C!   Modified :  D.Smith  991025  Double precision fixes for Linux
+C!
+C!   Inputs: TPAR(5)  = track parameters as in FRFT bank
+C!           RCW(2)   = ALEPH coordinate of wafer center in XY plane
+C!                      PASSED IN DOUBLE PRECISION.
+C!           VHAT(2)  = X and Y coordinates of the vector
+C!                        perpendicular to the intersected wafer.
+C!                        PASSED IN DOUBLE PRECISION
+C!
+C!   Outputs: RERRP = derivatives of U,W wrt track parameters
+C!
+C!   Libraries required: None
+C!
+C!   Description
+C!   ===========
+C?   This routine computes the derivatives of the track extrapolation
+C?   point (in local coordinates) with respect to the track parameters.
+C?   For simplicity, it is assumed that the phi strips are parallel to
+C?   the z-axis (i.e. w = z).
+C!
+C!======================================================================
+#ifndef DOC
+      SAVE
+C
+C  Inputs
+C
+      DOUBLE PRECISION RCW(2),VHAT(2)
+      REAL TPAR(5)
+C
+C  Outputs
+C
+      REAL RERRP(5,2)
+C
+C  LOCAL VARIABLES
+C
+      DOUBLE PRECISION RTRK,OMEGA,TL,PHI0,D0,D0MR
+      DOUBLE PRECISION KAPPA,ADOTV,SXY
+      DOUBLE PRECISION DSDO,DSDD,DSDP
+      DOUBLE PRECISION PK,WS,WSP,WSPK
+      DOUBLE PRECISION CPK,SPK,CWS,SWS,CWSP,SWSP,CWSPK,SWSPK
+      DOUBLE PRECISION BIG,PI,TWOPI
+      DOUBLE PRECISION NORM,VVHAT(2)
+      DOUBLE PRECISION THING
+C
+      PARAMETER (BIG=1.D20)
+      PARAMETER(PI=3.141592653589D0)
+      PARAMETER(TWOPI=2.0D0*PI)
+C
+C
+C   Get the track parameters
+C
+      OMEGA  = TPAR(1)
+      IF(TPAR(1).NE.0.0) THEN
+        RTRK  = 1D0/OMEGA
+      ELSE
+        RTRK = SIGN(BIG,OMEGA)
+      ENDIF
+      TL     = TPAR(2)
+      PHI0   = TPAR(3)
+      D0     = TPAR(4)
+C
+C  Compute the angle that the wafer normal (ignoring the z-component)
+C  makes with respect to the x-axis.
+C
+      KAPPA = DATAN2(VHAT(2),VHAT(1))
+      IF(KAPPA.LT.0D0) KAPPA = KAPPA+TWOPI
+C
+C  Normalize VHAT
+C
+      NORM = SQRT(VHAT(1)**2+VHAT(2)**2)
+      VVHAT(1) = VHAT(1)/NORM
+      VVHAT(2) = VHAT(2)/NORM
+C
+C  Calculate the transverse path length to the intersection point in
+C  the approximation that the phi strips are parallel to the z-axis.
+C  Note: although we have calculated the exact value of the transverse
+C  path length elsewhere, we use the approximate path length here for
+C  consistency with the assumptions in our calculations of the
+C  derivatives.
+C
+      D0MR = D0 - RTRK
+      ADOTV = RCW(1)*VVHAT(1) + RCW(2)*VVHAT(2)
+C
+      PK = PHI0 - KAPPA
+      SPK = SIN(PK)
+      CPK = COS(PK)
+C
+      THING = OMEGA*(ADOTV-D0MR*SPK)
+      IF(ABS(THING).GT.0.99999D0) THEN
+        THING = SIGN(0.99999D0,THING)
+      ENDIF
+      WS = -PK + ASIN( THING )
+C
+C  Make sure WS is between -pi and pi
+C
+10    IF(WS.LT.-PI) THEN
+        WS = WS+TWOPI
+        GO TO 10
+      ELSEIF(WS.GT.PI) THEN
+        WS = WS-TWOPI
+        GO TO 10
+      ENDIF
+      SXY = WS/OMEGA
+C
+C  Now some other useful angles, their sines and cosines
+C
+      WSP = WS + PHI0
+      WSPK = WSP - KAPPA
+C
+      CWS = COS(WS)
+      SWS = SIN(WS)
+      CWSP = COS(WSP)
+      SWSP = SIN(WSP)
+      CWSPK = COS(WSPK)
+      SWSPK = SIN(WSPK)
+C
+C  Derivatives of the path length
+C
+C  ds/d(omega)
+C
+      DSDO = -RTRK*SXY + (RTRK**2)*(SWSPK-SPK)/CWSPK
+C
+C  ds/d(D0)
+C
+      DSDD = -SPK/CWSPK
+C
+C  ds/d(phi0)
+C
+      DSDP = -RTRK - D0MR*CPK/CWSPK
+C
+C  Now the derivatives for w
+C  dw/d(omega) = dw/ds * ds/d(omega)
+C  But dw/ds is just tan(lambda) for wafers parallel to the z-axis,
+C    so we get....
+C
+      RERRP(1,2) = TL*DSDO
+C
+C  dw/d(tanl) = dz/d(tanl) = s
+C
+      RERRP(2,2) = SXY
+C
+C  dw/d(phi0) = dw/ds * ds/d(phi0)
+C
+      RERRP(3,2) = TL*DSDP
+C
+C  dw/d(D0) = dw/ds * ds/d(D0)
+C
+      RERRP(4,2) = TL*DSDD
+C
+C  Finally, dw/d(Z0) is 1 in the approximation that w=z+const.
+C
+      RERRP(5,2) = 1.0
+C
+C  Now we do the derivatives for u
+C
+C  du/d(omega)
+C
+      RERRP(1,1) = (RTRK**2) * (1D0-CWS)/CWSPK
+C
+C  du/d(phi0)
+C
+      RERRP(3,1) = -D0MR*SWS/CWSPK
+C
+C   du/d(D0)
+C
+      RERRP(4,1) = -CWS/CWSPK
+C
+C  The partial derivative of u doesn't depend on TL,Z0, assuming
+C   w is parallel to the z-axis
+C
+      RERRP(2,1) = 0.
+      RERRP(5,1) = 0.
+C
+C  That's all folks!
+C
+  999 RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@corrections for alephlib 305.3
+@
+text
+@d7 2
+a8 2
+C!               modified by David Brown 16-10-90
+C!               Remodified by G. Redlinger 26-10-90
+d11 1
+a11 1
+C!               Re-remodified by G. Redlinger 30-1-91
+d15 1
+a15 1
+C!               Modif A. Bonissent 14-Oct. 1997 :
+d18 1
+d71 1
+a71 1
+        RTRK  = 1.0/OMEGA
+d82 2
+a83 2
+      KAPPA = ATAN2(VHAT(2),VHAT(1))
+      IF(KAPPA.LT.0.) KAPPA = KAPPA+TWOPI
+d175 1
+a175 1
+      RERRP(1,1) = (RTRK**2) * (1.0-CWS)/CWSPK
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d15 3
+d105 2
+a106 2
+      IF(ABS(THING).GT.1.0D0) THEN
+        THING = SIGN(1.0D0,THING)
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

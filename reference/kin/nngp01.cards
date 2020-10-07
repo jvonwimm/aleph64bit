@@ -1,0 +1,36 @@
+KCAR 0 / $TEXT
+POFF
+RUN  18  'NNGP01 test run'! RUN # , RUN'S TITLE
+TRIG     1  500    !    FIRST,LAST EVENT TO BE GENERATED
+DEBU 6 / 1  5     !    FIRST,LAST EVENT TO BE debugged
+TIME    10
+*  use RANMAR generator for random numbers
+*  INSEED : first seed (range assigned per institute)
+*  LOSEED : second seed (incremented locally for new runs)
+*     INSEED  LOSEED (1-30000)
+RMAR    0     5
+*       x        y        z    vertex smearing x y z for 98
+SVRT  0.0113   0.0005   0.79
+* ECMS     Center of mass energy
+* NFL =  FLAVOR CODE     10= all neutrinos
+*                        12= ve only
+*                        14= vm only
+*                        16= vt only
+* NPHO number of detected photons
+* IQED   1= QED, 0= TREE LEVEL
+* IPT    1= ISR WITH P_T; 0= COLLINEAR ISR
+*     ECMS  nfl NPHO   IQED  IPT   1/alpha(mz) Nstep(integ)   
+GNNG  195.5  10.  1.    1.    1.     128.87    100000.
+* input masses and widthes
+*     M_W   width_w  M_Z    width_Z M_Higgs width_H  M_top
+GMSP 80.35  2.094    91.1887 2.497   150.     1.      175.
+* photon acceptance cuts
+*       THMIN(deg)     EGMIN EGMAX
+GGAM     10.           2.   150.
+* anomalous coupligs TGC
+*       xg     yg
+*GAGC    0.     0.
+* anomalous coupligs QGC
+*       lambda   a0w   acw    a0z   acz
+*GQGC    80.35       0.    0.     0.    0.
+END$

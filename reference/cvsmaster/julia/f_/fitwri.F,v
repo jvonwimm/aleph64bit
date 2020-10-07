@@ -1,0 +1,365 @@
+head	1.3;
+access;
+symbols
+	jul313_3:1.3
+	jul313_2:1.3
+	jul313_1:1.3
+	jul313:1.3
+	jul312_1:1.3
+	jul312:1.3
+	jul311:1.3
+	jul310_1:1.3
+	jul310:1.3
+	jul309_1:1.3
+	jul309:1.3
+	jul308_6:1.3
+	jul308_5:1.3
+	jul308_4:1.3
+	jul308_3:1.3
+	jul308_2:1.3
+	jul308_1:1.3
+	jul308:1.3
+	jul307_4:1.3
+	jul307_3:1.3
+	jul307_2:1.3
+	jul307_1:1.3
+	jul307:1.3
+	jul306_3:1.3
+	jul306_2:1.3
+	jul306_1:1.3
+	jul306:1.3
+	jul305_4:1.3
+	jul305_3:1.3
+	jul305_2:1.3
+	jul305_1:1.3
+	jul305:1.3
+	jul304_3:1.3
+	jul304_2:1.3
+	jul304_1:1.3
+	jul304:1.3
+	jul303_7:1.3
+	jul303_6:1.3
+	jul303_5:1.3
+	jul303_4:1.3
+	jul303_3:1.3
+	jul303_2_mc1:1.3
+	jul303_2:1.3
+	jul303_1_mc1:1.3
+	jul303_1:1.3
+	jul303_v:1.3
+	jul303:1.3
+	jul302_6:1.3
+	jul302_5:1.3
+	jul302_4:1.3
+	jul302_3:1.3
+	jul302_2:1.3
+	jul302_1:1.3
+	jul302:1.3
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2
+	jul280_1:1.2
+	jul280:1.2
+	jul279:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	97.03.06.09.54.45;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.03.12.15.00.03;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.18.08;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.18.09;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@Tracking upgrade
+@
+text
+@      SUBROUTINE FITWRI
+C-----------------------------------------------------------------------
+C! Creation of pot banks PFRF PFRT PFXT from Julia banks FRFT FRTL FXTR
+C
+C   Author         L. Garrido    10-may-1988
+C   Modified       R. Johnson    25-oct-1990
+C   Modified       R. Johnson    21-jan-1991 to handle more than one
+C                                FRFT bank (with different NR)
+C   Modified       R. Johnson    06-aug-1991 to call FPKCM
+C   Modified       D. Casper     01-dec-1995 pack FXTR -> PFXT
+C
+C?
+C!======================================================================
+#ifndef DOC
+#include "bcs.h"
+#include "zpfrjj.h"
+#include "pfrfjj.h"
+#include "pfrtjj.h"
+#include "frftjj.h"
+#include "frtljj.h"
+#include "fxtrjj.h"
+#include "pfxtjj.h"
+C
+      LOGICAL FIRST
+      DIMENSION CMPK(15)
+      DATA FIRST/.TRUE./
+C
+#include "bmacro.h"
+C
+      IF (FIRST) THEN
+        FIRST=.FALSE.
+        NFRFT=NAMIND('FRFT')
+        NPFRF=NAMIND('PFRF')
+        NPFRT=NAMIND('PFRT')
+        NZPFR=NAMIND('ZPFR')
+        NFRTL=NAMIND('FRTL')
+        NFXTR=NAMIND('FXTR')
+        NPFXT=NAMIND('PFXT')
+      ENDIF
+C
+      IF (IW(NPFRF).NE.0) CALL BDROP(IW,'PFRF')
+      IF (IW(NPFRT).NE.0) CALL BDROP(IW,'PFRT')
+      IF (IW(NPFXT).NE.0) CALL BDROP(IW,'PFXT')
+C
+      KFRFT = IW(NFRFT)
+      KFRTL = IW(NFRTL)
+      KFXTR = IW(NFXTR)
+      IF (KFRFT.EQ.0 .OR. KFRTL.EQ.0) RETURN
+      IF (KFXTR.EQ.0) CALL RERROR('FITWRI',4,'FXTR bank missing')
+C
+      NR = LROWS(KFRTL)
+      IF (NR.EQ.0) RETURN
+C
+      KZPFR = IW(NZPFR)
+      IF (KZPFR.EQ.0) THEN
+        CC1=100.
+        CC2=100.
+        CALL RERROR('FITWRI',1,'ZPFR bank not found.  Defaults taken.')
+      ELSE
+        IZPFR=KROW(KZPFR,1)
+        CC1=RW(IZPFR+JZPFC1)
+        CC2=RW(IZPFR+JZPFC2)
+      ENDIF
+C
+C     First do the PFRT pointer bank
+C
+      CALL AUBOS('PFRT',0,LMHLEN+ LPFRTA*NR,KPFRT,IGAR2)
+      IF (IGAR2.EQ.2) GO TO 999
+      KFRTL = IW(NFRTL)
+C
+C     If bank FRTL NR=2 exists, chose it to fill PFRT
+C
+      IF(NLINK('FRTL',2).NE.0) KFRTL = NLINK('FRTL',2)
+C
+      IW(KPFRT+LMHCOL)= LPFRTA
+      IW(KPFRT+LMHROW)= NR
+      DO 32 J=1,NR
+        IPFRT=KROW(KPFRT,J)
+        IFRTL=KROW(KFRTL,J)
+        IW(IPFRT+JPFRNV)=IW(IFRTL+JFRTNV)
+        IW(IPFRT+JPFRNI)=IW(IFRTL+JFRTNI)
+        IW(IPFRT+JPFRNE)=IW(IFRTL+JFRTNE)
+        IW(IPFRT+JPFRNT)=IW(IFRTL+JFRTNT)
+        IW(IPFRT+JPFRNR)=IW(IFRTL+JFRTNR)
+   32 CONTINUE
+C
+C     Now do all of the FRFT banks (NRs 0 and 1)
+C
+      KFRFT=IW(NFRFT)
+   55 IF (KFRFT.EQ.0) GO TO 56
+        NRIN=IW(KFRFT-2)
+        IF (NR.NE.LROWS(KFRFT)) THEN
+          CALL RERROR('FITWRI',3,'Mismatch in length between the '//
+     &                'FRFT and FRTL banks')
+          NR=LROWS(KFRFT)
+        ENDIF
+        CALL AUBOS('PFRF',NRIN,LMHLEN+LPFRFA*NR,KPFRF,IGAR1)
+        IF (IGAR1.EQ.2) GO TO 999
+        IF (IGAR1.NE.0) THEN
+          KFRFT=NLINK('FRFT',NRIN)
+        ENDIF
+        IW(KPFRF+LMHCOL)= LPFRFA
+        IW(KPFRF+LMHROW)= NR
+        DO 1 J=1,NR
+          IFRFT=KROW(KFRFT,J)
+          IPFRF=KROW(KPFRF,J)
+          CALL UCOPY(RW(IFRFT+JFRFIR),RW(IPFRF+JPFRIR),6)
+          CALL FPKCM(RW(IFRFT+JFRFEM),CMPK)
+          RW(IPFRF+JPFREO)=CMPK(1)
+          RW(IPFRF+JPFREO+1)=CMPK(3)
+          RW(IPFRF+JPFREO+2)=CMPK(6)
+          RW(IPFRF+JPFREO+3)=CMPK(10)
+          RW(IPFRF+JPFREO+4)=CMPK(15)
+          RW(IPFRF+JPFREO+5)=RW(IFRFT+JFRFEM+20)
+          IW(IPFRF+JPFREM)=INT(CMPK(2)*CC1+CC2)
+          IW(IPFRF+JPFREM+1)=INT(CMPK(4)*CC1+CC2)
+          IW(IPFRF+JPFREM+2)=INT(CMPK(5)*CC1+CC2)
+          IW(IPFRF+JPFREM+3)=INT(CMPK(7)*CC1+CC2)
+          IW(IPFRF+JPFREM+4)=INT(CMPK(8)*CC1+CC2)
+          IW(IPFRF+JPFREM+5)=INT(CMPK(9)*CC1+CC2)
+          IW(IPFRF+JPFREM+6)=INT(CMPK(11)*CC1+CC2)
+          IW(IPFRF+JPFREM+7)=INT(CMPK(12)*CC1+CC2)
+          IW(IPFRF+JPFREM+8)=INT(CMPK(13)*CC1+CC2)
+          IW(IPFRF+JPFREM+9)=INT(CMPK(14)*CC1+CC2)
+          DO 21 I=10,14
+            IW(IPFRF+JPFREM+I)=0
+   21     CONTINUE
+          CMAX=CC1+CC2
+          IF (RW(IFRFT+JFRFC2).GT.CMAX) THEN
+            IW(IPFRF+JPFRC2)=INT(CMAX)
+          ELSE
+            IW(IPFRF+JPFRC2)=INT(RW(IFRFT+JFRFC2))
+          ENDIF
+          IF (IW(IPFRF+JPFRC2).LT.0) IW(IPFRF+JPFRC2)=0
+C
+C         Add number of degrees of freedom to an anyhow packed word
+C         NDF can no longer be simply derived from the number of coordin
+C         Also add a flag indicating that a new packing method is used.
+C
+          IW(IPFRF+JPFRNO)=100000+IW(IFRFT+JFRFNO)+1000*IW(IFRFT+JFRFDF)
+    1   CONTINUE
+        KFRFT=IW(KFRFT-1)
+        GO TO 55
+   56 CONTINUE
+C
+C   Pack the FXTR bank, suppressing rows with all zeroes in the interesting
+C   places
+C
+      KFXTR = IW(NFXTR)
+      IF (KFXTR.GT.0) THEN
+        NR = LROWS(KFXTR)
+        CALL AUBOS('PFXT',0,LMHLEN+LPFXTA*NR,KPFXT,IGAR1)
+        IF (IGAR1.EQ.2) GO TO 999
+        IF (IGAR1.EQ.1) KFXTR = IW(NFXTR)
+        CALL BLIST(IW,'E+','PFXT')
+        IW(KPFXT+LMHCOL) = LPFXTA
+        IW(KPFXT+LMHROW) = 0
+        DO IR = 1, NR
+            IFXTR = KROW(KFXTR,IR)
+            IF (IW(IFXTR+JFXTV0).NE.0 .OR. IW(IFXTR+JFXTNC).NE.0 .OR.
+     &          IW(IFXTR+JFXTKN).NE.0)THEN
+                IW(KPFXT+LMHROW) = IW(KPFXT+LMHROW) + 1
+                IPFXT = KROW(KPFXT,IW(KPFXT+LMHROW))
+                IW(IPFXT + JPFXTN) = IR
+                IW(IPFXT + JPFXV0) = IW(IFXTR+JFXTV0)
+                IW(IPFXT + JPFXNC) = IW(IFXTR+JFXTNC)
+                IW(IPFXT + JPFXKN) = IW(IFXTR+JFXTKN)
+                IW(IPFXT + JPFXVD) = IW(IFXTR+JFXTVD)
+            ENDIF
+        ENDDO
+        CALL AUBPRS('PFXT')
+      ENDIF
+      RETURN
+  999 CONTINUE
+      CALL RERROR('FITWRI',2,'No room to create POT track banks.')
+      CALL BDROP(IW,'PFRFPFRT')
+      END
+#endif
+@
+
+
+1.2
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+@
+text
+@d3 1
+a3 1
+C! Creation of pot banks: PFRF PFRT, from Julia banks: FRFT FRTL
+d10 1
+d21 2
+d37 2
+d43 1
+d47 1
+d49 1
+d145 28
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK fitwri
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

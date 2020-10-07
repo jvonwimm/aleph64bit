@@ -1,0 +1,124 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	94.12.07.14.01.17;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.18;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*CD agcons
+#include "alcons.h"
+      PARAMETER  (D360=TWOPI*RADEG   ,D180=PI*RADEG   ,D90=0.5*D180)
+      PARAMETER  (D45=0.5*D90   ,D15=D45/3.   ,D210=7.*D90/3.)
+      PARAMETER  (D225=D180+D45   ,D270=D180+D90  ,D7P5=0.5*D15)
+      PARAMETER(LSENV=30)
+      PARAMETER (LIMVOL=17)
+C
+      COMMON/AGCONS/ IAGROT,IAGMAT,IAGMED,IAGFHB,IAGSLV,IAGSEN(LSENV,2)
+     2      , NAGIMP,LAGIMP(3,LIMVOL)
+C
+#if defined(DOC)
+     RADEG = Conversion factor from radians to degrees
+     DEGRA = Conversion factor from degrees to radians
+     D360  =  360. degrees decimal value
+     D180  =  180. degrees
+     D90   =   90. degrees
+     D45   =   45. degrees
+     D15   =   15. degrees
+     D210  =  210. degrees
+     D225  =  225. degrees
+     D270  =  270. degrees
+     D7P5  =   7.5 degrees
+     IAGROT= last rotation matrix number defined
+     IAGMAT= last material  number defined
+     IAGMED= last tracking medium number defined
+     IAGFHB= first rotation matrix number for hcal barrel
+              (to be used later for muon chambers)
+     LSENV = Maximum number of sensitive volumes possibly defined
+      IAGSLV=  last sensitive volume number defined
+      IAGSEN(30,2) =array giving the correlation between the sensitive volume
+        name  and the level in the geometry tree where to find the slot #
+              First index is the name of the sensitive volume
+              Second index is the level in the tree where to find the slot #
+     LIMVOL= Maximun number of items possibly defined for LAGIMP
+      NAGIMP      = number of defined items in LAGIMP
+      LAGIMP(1,*) = name of GEANT3 volume
+      LAGIMP(2,*) = level of this volume in the volume tree
+      LAGIMP(3,*) = detector name, stored in 'IMPA'
+
+#endif
+#include "wrkspc.h"
+      PARAMETER (LPTAB=50)
+      DIMENSION PTAB(LPTAB),JTAB(LPTAB)
+      EQUIVALENCE (PTAB(1),JTAB(1),WSPACE(1))
+C
+#if defined(DOC)
+      PTAB  (LPTAB) = Dummy array used in geometry routines AGXXXX
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

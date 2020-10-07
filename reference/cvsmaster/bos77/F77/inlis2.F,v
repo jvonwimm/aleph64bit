@@ -1,0 +1,108 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.54.05;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.31;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.32;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      FUNCTION INLIS2(K1,K2,LIST,M,N)
+
+*     SEARCH LIST(1...M,1) ... LIST(1...M,N) FOR ENTRY WITH
+*     K1=LIST(1,I) AND K2=LIST(2,I). IF FOUND, INDEX I IS RETURNED.
+*     IF NOT FOUND, RETURN NEGATIVE VALUE OF INDEX, THE ENTRY K1,K2
+*     WOULD GET, IF IT IS ADDED TO THE LIST.
+*     POTENTIAL VALUES OF THE FUNCTION ARE 1...N AND -N-1...-1.
+*     THE LIST HAS TO BE SORTED.
+
+      INTEGER K1,K2,LIST(M,N)
+
+      IF(N.EQ.0.OR.K1.LT.LIST(1,1).
+     +   OR.(K1.EQ.LIST(1,1).AND.K2.LT.LIST(2,1))) THEN
+         I=-1
+      ELSE IF(K1.GT.LIST(1,N).
+     +    OR.(K1.EQ.LIST(1,N).AND.K2.GT.LIST(2,N))) THEN
+         I=-N-1
+      ELSE
+*        ENTER SEARCH LOOP
+         IA=1
+         IB=N
+   10    IF(IB-IA.GT.10) THEN
+*           BINARY SEARCH
+            II=(IA+IB)/2
+            IF (K1.GT.LIST(1,II).
+     +      OR.(K1.EQ.LIST(1,II).AND.K2.GE.LIST(2,II))) THEN
+               IA=II
+            ELSE
+               IB=II
+            END IF
+            GOTO 10
+         ELSE
+*           SEQUENTIAL COMPARISON
+            DO 20 I=IA,IB
+            IF (K1.LT.LIST(1,I).
+     +      OR.(K1.EQ.LIST(1,I).AND.K2.LE.LIST(2,I))) GOTO 30
+   20       CONTINUE
+   30       IF(K1.NE.LIST(1,I).OR.K2.NE.LIST(2,I)) I=-I
+         END IF
+      END IF
+      INLIS2=I
+  100 RETURN
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK inlis2
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

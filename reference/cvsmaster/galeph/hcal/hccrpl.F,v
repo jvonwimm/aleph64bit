@@ -1,0 +1,207 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.29.16.22.02;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.17;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.18;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+@
+text
+@*DK hccrpl
+      SUBROUTINE HCCRPL
+C --------------------------------------------
+C
+C!   Builds the plane hit bank
+CKEY HCAL HVPLANE HIT / INTERNAL
+C!     Author      : G.Catanesi  89/02/03
+C!     Mod. by     : L.Silvestris 24/6/92
+C!
+C!     Input bank  : JDHCSE   McHcTrachSegment
+C!                   JDHCHI   McHcHits
+C!     Output bank : 'HPHT'   McHcPlanes
+C!
+C!         Called by: HCASIG
+C -----------------------------------------
+#ifndef DOC
+      SAVE
+#include "bcs.h"
+#include "jobcom.h"
+#include "iocom.h"
+#include "hcnamc.h"
+#include "hcsejj.h"
+#include "hchijj.h"
+#include "hphtjj.h"
+#include "hccoun.h"
+      INTEGER GTSTUP
+C
+#include "bmacro.h"
+C
+C       Loop on hits
+C
+      NHCHI = LROWS (JDHCHI)
+      IF(NHCHI.EQ.0) RETURN
+      KHCHI = JDHCHI + LMHLEN
+      JHPHT = IW(NAHPHT)
+      NHPHT = 0
+      KHPHT = JHPHT + LMHLEN
+C
+C     decode date period
+C
+      IHC = GTSTUP('HC',IRUN)
+C
+      DO 50 I=1, NHCHI
+         NSEG = IW(KHCHI+1)
+         IPOR = ITABL (JDHCSE,NSEG,4)
+         IMOD = ITABL (JDHCSE,NSEG,3)
+         ILAY = ITABL (JDHCSE,NSEG,2)
+C
+C  decode plane number for different period..
+C  89-90-91 double planes in barrel and endcaps
+C  92       double planes in barrel and single planes in endcaps
+C
+      IF(IHC.GT.2) THEN
+         IF (IPOR .NE. 2.OR. ILAY.EQ.1) THEN
+             NPL = ILAY
+         ELSE
+             NPL = ILAY/2 + 1
+         ENDIF
+      ELSE
+         IF (ILAY.EQ.1) THEN
+             NPL = ILAY
+         ELSE
+             NPL = ILAY/2 + 1
+         ENDIF
+      ENDIF
+C
+         NADR = IPOR*10000 + IMOD*100 + NPL
+C
+C - If it is not the 1st entry sum up energy on identical plane
+         IF(NHPHT.GT.0) THEN
+            DO 10 JROW = 1,NHPHT
+               IF(NADR.EQ.ITABL(JHPHT,JROW,1)) THEN
+                  KJROW = KROW(JHPHT,JROW)
+                  RW(KJROW+2) = RW(KJROW+2) + HCSTEN(IW(KHCHI+4))
+                  GOTO 50
+               ENDIF
+   10       CONTINUE
+         ENDIF
+C
+C - Fill 'HPHT' with new plane
+         NHPHT = NHPHT + 1
+         IW(KHPHT+JHPHPA) = NADR
+         RW(KHPHT+JHPHED) = HCSTEN(IW(KHCHI+4))
+C
+         KHPHT = KHPHT + LHPHTA
+C
+   50 KHCHI = KHCHI + LHCHIA
+      IW(JHPHT+LMHROW) = NHPHT
+C
+      IF (FHCDEB) THEN
+         KHPHT = JHPHT + LMHLEN
+         WRITE (LOUTIO,500) IW(JHPHT+LMHROW)
+         WRITE (LOUTIO,510) (IW(K+1),RW(K+2),K=KHPHT,
+     &                        KHPHT+NHPHT*LHPHTA-1,LHPHTA)
+      ENDIF
+      RETURN
+C
+  500 FORMAT (/1X,'+++HCCRPL+++ HPHT McHcPlanes - ', 5X,I3,' planes'/
+     +4(4X,'PoMdPl' ,'   Energy', 6X))
+  510 FORMAT (4(I10,F10.5,5X))
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d15 1
+a15 1
+C -----------------------------------------------------
+d17 1
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

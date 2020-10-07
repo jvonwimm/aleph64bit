@@ -1,0 +1,93 @@
+      FUNCTION NSWAP(NAME1,NR1,NAME2,NR2)
+*
+*     IF BOTH BANKS EXIST: EXCHANGE NAME,NR AND RETURN INDEX OF
+*        (NEW) BANK (NAME1,NR1)
+*
+*     IF ONLY ONE BANK EXISTS, CHANGE NAME,NR TO THE OTHER NAME AND
+*        NR AND RETURN INDEX OF THIS BANK
+*
+*     IF BOTH BANKS DO NOT EXIST, RETURN 0
+*
+*
+#include "boscom.h"
+#include "param.h"
+      INTEGER    JW(1000)
+      EQUIVALENCE (IW(1),JW(1))
+      CHARACTER*4 NAME1,NAME2
+*     ...
+      IF(JW(ICK).NE.12345) CALL BBNOT(JW,'NSWAP')
+      JW(1)=0
+      JW(2)=0
+*     get INDI1 and INDJ1 for first bank
+      NAMI1=NAMIND(NAME1)
+      INDI1=NAMI1+1
+   10 INDJ1=INDI1
+      INDI1=JW(INDJ1-1)
+      IF(INDI1.NE.0) THEN
+         IF(JW(INDI1-2).LT.NR1) GOTO 10
+         IF(JW(INDI1-2).GT.NR1) INDI1=0
+      END IF
+*     bridge index("dropping"), if bank existing
+      IF(INDI1.NE.0) JW(INDJ1-1)=JW(INDI1-1)
+
+*     get INDI2 and INDJ2 for second bank
+      NAMI2=NAMIND(NAME2)
+      INDI2=NAMI2+1
+   20 INDJ2=INDI2
+      INDI2=JW(INDJ2-1)
+      IF(INDI2.NE.0) THEN
+         IF(JW(INDI2-2).LT.NR2) GOTO 20
+         IF(JW(INDI2-2).GT.NR2) INDI2=0
+      END IF
+*     bridge index("dropping"), if bank existing
+      IF(INDI2.NE.0) JW(INDJ2-1)=JW(INDI2-1)
+
+*     treat (previous) first bank
+      IF(INDI1.NE.0) THEN
+*        insert new bank name and number, ...
+         JW(INDI1-3)=INTCHA(NAME2)
+         JW(INDI1-2)=NR2
+*        ... determine "from_index" INDJ2 again ...
+         INDK2=NAMI2+1
+   30    INDJ2=INDK2
+         INDK2=JW(INDJ2-1)
+         IF(INDK2.NE.0) THEN
+            IF(JW(INDK2-2).LT.NR2) GOTO 30
+         END IF
+*        ... and connect at second place
+         JW(INDI1-1)=JW(INDJ2-1)
+         JW(INDJ2-1)=INDI1
+      END IF
+
+*     treat (previous) second bank
+      IF(INDI2.NE.0) THEN
+*        insert new bank name and number, ...
+         JW(INDI2-3)=INTCHA(NAME1)
+         JW(INDI2-2)=NR1
+*        ... determine "from_index" INDJ1 again ...
+         INDK1=NAMI1+1
+   40    INDJ1=INDK1
+         INDK1=JW(INDJ1-1)
+         IF(INDK1.NE.0) THEN
+            IF(JW(INDK1-2).LT.NR1) GOTO 40
+         END IF
+*        ... and connect at first place
+         JW(INDI2-1)=JW(INDJ1-1)
+         JW(INDJ1-1)=INDI2
+      END IF
+
+      IF(INDI2.NE.0) THEN
+          NSWAP=INDI2
+      ELSE
+          NSWAP=INDI1
+      END IF
+
+C - Reset links
+
+      JND = JW(IDL)+NAMI1-NSYST
+      IF (JW(JND).GT.0) JW(JW(JND)) = 0
+      JND = JW(IDL)+NAMI2-NSYST
+      IF (JW(JND).GT.0) JW(JW(JND)) = 0
+
+ 100  RETURN
+      END

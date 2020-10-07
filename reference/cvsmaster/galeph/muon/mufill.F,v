@@ -1,0 +1,206 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.07.14.02.40;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.41;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK mufill
+      SUBROUTINE MUFILL
+C
+C*******************************************************************************
+C
+C T.Wang -860808
+C
+C! fill histograms for MUON
+C
+C       Called from MUDIGI            in this .HLB
+C       Calls       HFILL             in      HBOOK
+C
+C*******************************************************************************
+C
+#ifndef DOC
+      SAVE
+#include "gcbank.h"
+#include "bcs.h"
+#include "munamc.h"
+#include "mudgpr.h"
+#include "muhtjj.h"
+#include "mudgjj.h"
+      INTEGER IEMD(2,MXEMD),ITRK(2,MXTRK)
+      PARAMETER (NB1=1,NB2=8,NB3=25,NB4=1)
+#include "bmacro.h"
+C
+      JMUDG = IW(NAMUDG)
+      IF( JMUDG .EQ. 0 )GOTO 900
+      NDIGI = LROWS(JMUDG)
+      KMUDG = JMUDG+LMHLEN
+C
+C       # of digits / event
+C
+      X = FLOAT(NDIGI)
+      CALL HFILL(814,X)
+C
+      NEMD = 0
+      DO 20 IDG=1,NDIGI
+C
+      IWORD = IW(KMUDG+IDG)
+      CALL CBYT(IWORD,NB3,IMD,NB1,NB2)
+      CALL CBYT(IWORD,NB4,JCL,NB1,NB2)
+C       Length of clusters
+C
+      X = FLOAT(JCL)
+      CALL HFILL(821,X)
+ 20   CONTINUE
+C
+      KMTD1 = IW(NAMUTD)
+      KMTD2 = IW(KMTD1-1)
+      NTRK = LROWS(KMTD1)
+C
+C       # of tracks that generate MUON digits
+C
+      X = NTRK
+      CALL HFILL(841,X)
+C
+      DO 40 IT=1,NTRK
+C
+C       # of digits / track
+C
+      X = ITABL(KMTD2,IT,1)
+      CALL HFILL(812,X)
+   40 CONTINUE
+C
+       JMUHT = IW(NAMUHT)
+C
+C       # of hits / event
+C
+      NHIT = LROWS( JMUHT)
+      X = NHIT
+      CALL HFILL(813,X)
+C
+      NTRK = 0
+      NEMD = 0
+      DO 70 IH=1,NHIT
+      ITR = ITABL( JMUHT,IH,JMUHTN)
+      IMD = ITABL( JMUHT,IH,JMUHEL)
+      IF(IMD.GT.100.AND.IMD.LT.200) IMD = IMD - 100 + 38
+      IF(IMD.GT.200) IMD = IMD - 200 + 54
+      IF( NTRK .EQ. 0 )THEN
+        NTRK = 1
+        ITRK(1,1) = ITR
+        ITRK(2,1) = 1
+      ELSE
+        DO 50 IT=1,NTRK
+        IF( ITRK(1,IT) .NE. ITR )GOTO 50
+        ITRK(2,IT) = ITRK(2,IT) + 1
+        GOTO 55
+   50   CONTINUE
+        NTRK = NTRK + 1
+        ITRK(1,NTRK) = ITR
+        ITRK(2,NTRK) = 1
+   55   CONTINUE
+      ENDIF
+C
+      IF( NEMD .EQ. 0 )THEN
+         NEMD = 1
+         IEMD(1,1) = IMD
+         IEMD(2,1) = 1
+      ELSE
+         DO 60 IE=1,NEMD
+         IF( IEMD(1,IE) .NE. IMD )GOTO 60
+         IEMD(2,IE) = IEMD(2,IE) + 1
+         GOTO 65
+   60    CONTINUE
+         NEMD = NEMD + 1
+         IEMD(1,NEMD) = IMD
+         IEMD(2,NEMD) = 1
+   65    CONTINUE
+      ENDIF
+   70 CONTINUE
+C
+C       # of hits / track
+C
+      DO 80 IT=1,NTRK
+      X = ITRK(2,IT)
+      CALL HFILL(811,X)
+   80 CONTINUE
+C
+C       # of hits / module
+C
+      DO 90 IE=1,NEMD
+      X = IEMD(1,IE)
+      W = IEMD(2,IE)
+      CALL HFILL(831,X,0.,W)
+   90 CONTINUE
+C
+  900 RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

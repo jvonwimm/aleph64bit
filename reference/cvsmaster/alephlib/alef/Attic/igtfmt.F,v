@@ -1,0 +1,52 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  aleph212:1.1.1.1 ALEPH212:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.02.07.11.40.40;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.02.07.11.40.41;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      INTEGER FUNCTION IGTFMT(NAMJ)
+C --------------------------------------------------
+C - F.Ranjard - 900830
+C! get bank format index
+C   returns the work bank format index for this bank
+C - Input   : - NAMJ / I    = bank name-index
+C --------------------------------------------------
+#ifndef DOC
+#include "boscom.h"
+C -----------------------------------------------------------------
+C     get the format
+      IGTFMT=IW(IDFMT+NAMJ-NSYST)
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

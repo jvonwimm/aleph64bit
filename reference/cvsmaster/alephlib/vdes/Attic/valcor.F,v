@@ -1,0 +1,188 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.43.49;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.43.50;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE VALCOR(KVALC,IRUN)
+C! ----------------------------------------------------------------------
+CKEY VDETDES GEOMETRY
+C!   Correct time dependent bending of the faces of VDET
+C!   Correct the VALC bank
+C! - David Rousseau, Decembre 1995
+C!
+C!  Called by :    VGRDAL
+C!  Calls     :    FUNCTION ALGTDB               from ALEPHLIB
+C!                 VGEXRO, VGCMTR, VGINTR        from ALEPHLIB
+C!
+C! - Input:
+C!   KVALC   / I  VALC bank index
+C!   IRUN    / I  Run number
+C!
+C! ----------------------------------------------------------------------
+C      IMPLICIT NONE
+#ifndef DOC
+#include "bcs.h"
+#include "valcjj.h"
+      INTEGER KVALC,IRUN
+      INTEGER NRUNMAX,NRUNMAX1
+      PARAMETER (NRUNMAX=30)
+      INTEGER RUNLIM(NRUNMAX)
+      INTEGER VALCRUN(NRUNMAX)
+
+C approximate fill by fill division of LEP 1.4 running period
+C 40265-40290 Z peak
+C 40290 - 40399 130 Gev
+C 40399 - 40530 130 Gev
+      DATA RUNLIM  /40265,
+     &              40290,40300,40313, 40327,40331,
+     &              40336,40342,40351, 40356,40364,
+     &              40371,40387,40393, 40399,
+     &              40407,40412,40418, 40423,40432,
+     &              40441,40444,40454, 40476,40485,
+     &              40492,40497,40506, 40512,40517/
+C
+C displacement as measured in microns with 3-layer method in inner layer
+C
+      DATA VALCRUN  /0,
+     &              -1, -4,-26,-36,-37,
+     &             -53,-71,-81,-88,-93,
+     &             -77,-77,-73,-73,
+     &             -57,-46,-46,-46,-40,
+     &             -35,-28,-33,-46,-63,
+     &             -77,-84,-97,-93,-106/
+      INTEGER IRGR
+      REAL DELALI(6,2)
+C
+C conversion factor : average displacement in inner layer -> max bending
+C
+      REAL ZMAX,CONVBEND
+      PARAMETER (ZMAX=16,CONVBEND=-1.8)
+      INTEGER IRET,JWAF,I,IRO,IWFF,ILAY,IFAC,IVIEW,IRUNO,IVALC
+      REAL H0,H1,H2,ROT,VUWMAX(3),Z1,Z2
+      REAL VUW(3),XYZ(3),DIRBEND,BEND
+      DATA VUW/3*0./
+      LOGICAL FIRST
+      DATA FIRST/.TRUE./
+      SAVE FIRST, DELALI, VALCRUN, RUNLIM
+      INTEGER  VJWAFF,VVUWXY,VWADIM
+      EXTERNAL VJWAFF,VVUWXY,VWADIM
+#include "bmacrod.h"
+#include "bmacro.h"
+
+      IF (FIRST) THEN
+        FIRST=.FALSE.
+C
+C calculate V translation and U rotation for a one micron bending
+C
+        IRET=VWADIM(VUWMAX)
+        DO IWFF=1,6
+          IRET=VJWAFF(1,IWFF,JWAF)
+C
+C calculate displacement of ends of wafer
+C
+          VUW(3)=-VUWMAX(3)/2.
+          IRET=VVUWXY(VUW,JWAF,XYZ)
+          Z1=XYZ(3)
+          VUW(3)=VUWMAX(3)/2.
+          IRET=VVUWXY(VUW,JWAF,XYZ)
+          Z2=XYZ(3)
+C
+C parabolic distortion
+C
+          H1=(1-(Z1/ZMAX)**2)*1E-4
+          H2=(1-(Z2/ZMAX)**2)*1E-4
+C
+C displacement of the center of the wafer (along V)
+C
+          H0=(H1+H2)/2.
+C
+C rotation around the center (around U axis)
+C
+          ROT=(H2-H1)/VUWMAX(3)
+          DELALI(IWFF,1)=H0
+          DELALI(IWFF,2)=ROT
+        ENDDO
+      ENDIF
+C
+C get run by run correction
+C
+      IF (IRUN.LT.RUNLIM(1)) GOTO 999
+      IF (IRUN.GT.40530) GOTO 999
+C
+C find run group number
+C
+      IRUNO=0
+      DO IRGR=1,NRUNMAX
+        IF (IRUN.LT.RUNLIM(IRGR).AND.IRUNO.EQ.0) THEN
+          IRUNO=IRGR-1
+        ENDIF
+      ENDDO
+      IF (IRUNO.EQ.0) THEN
+        IRUNO=NRUNMAX
+      ENDIF
+      BEND=VALCRUN(IRUNO)*CONVBEND
+C
+C Correct VALC bank
+C
+      DO IRO=1,LROWS(KVALC)
+C
+C     Decode the wafer index
+C
+        CALL VADEWA(ITABL(KVALC,IRO,JVALWI),ILAY,IWFF,IFAC,IVIEW)
+C
+C direction of the bending
+C
+        IF (ILAY.EQ.1) THEN
+          DIRBEND=-1.
+        ELSE
+          DIRBEND=1.
+        ENDIF
+C
+C correct only v translation and U rotation
+C
+        IVALC=KROW(KVALC,IRO)
+        RW(IVALC+JVALTR)=RW(IVALC+JVALTR)+
+     &                     BEND*DIRBEND*DELALI(IWFF,1)
+        RW(IVALC+JVALRO+1)=RW(IVALC+JVALRO+1)+
+     &                     ATAN(BEND*DIRBEND*DELALI(IWFF,2))
+      ENDDO
+ 999  CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

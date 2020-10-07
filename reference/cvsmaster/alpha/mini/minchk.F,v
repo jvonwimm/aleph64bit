@@ -1,0 +1,141 @@
+head	1.1;
+access;
+symbols
+	alpha126_22:1.1
+	alpha122_22:1.1
+	alpha126_21:1.1
+	alpha126_20:1.1
+	alpha126_19:1.1
+	alpha126_18:1.1
+	alpha126_17:1.1
+	alpha126_16:1.1
+	alpha126_15:1.1
+	alpha126_14:1.1
+	alpha126_13:1.1
+	alpha126_12:1.1
+	alpha126_11:1.1
+	alpha126_10:1.1
+	alpha126_09:1.1
+	alpha126_08:1.1
+	alpha126_07:1.1
+	alpha126_06:1.1
+	alpha126_05:1.1
+	alpha126_04:1.1
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	99.03.22.14.06.52;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE MINCHK(MODE,LRUN,SUMRY)
+C
+CKEY MDST /INTERNAL
+C-----------------------------------------------------------------------
+C! Write run information in file.
+C
+C     Author: Stephen Haywood      08-May-90
+C
+C     Input  : MODE   = -1 for initialisation of job
+C                     = +1 for run termination
+C                     = +2 for run termination and job termination
+C              LRUN   = last run number
+C              SUMRY  = summary array
+C-----------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+      INTEGER MODE, LRUN
+      REAL SUMRY(*)
+#include "bcs.h"
+      CHARACTER*13 FLNAM
+      LOGICAL PRESNT
+      INTEGER IDATE,ITIME,NEV,IUNIT,IOS
+      DATA IUNIT / 70 /
+C ----------------------------------------------------------------------
+C
+C++   Initialisation.
+C
+      IF (MODE.EQ.-1) THEN
+         FLNAM = 'EVMINI.OUTPUT'
+         INQUIRE(FILE=FLNAM,EXIST=PRESNT,IOSTAT=IOS)
+         IF (PRESNT) THEN
+           OPEN (UNIT=IUNIT,FILE=FLNAM,STATUS='old')
+         ELSE
+           OPEN(unit=IUNIT,FILE=FLNAM,STATUS='new')
+         ENDIF
+
+      ELSE
+C
+         IF (LRUN.LE.0) RETURN
+C
+C++   Make entry in file.
+C
+         CALL DATIME(IDATE,ITIME)
+         NEV = NINT(SUMRY(1))
+         WRITE(IUNIT,'(I7,A,I8,I5,I19)') LRUN,'  7 Mini',
+     &                                   IDATE,ITIME,NEV
+C
+C++   Termination.
+C
+         IF (MODE.EQ.+2) CLOSE (unit=IUNIT)
+      ENDIF
+C
+      RETURN
+      END
+#endif
+
+
+@

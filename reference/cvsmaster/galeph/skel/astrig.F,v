@@ -1,0 +1,186 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.30.07.13.53;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.01.48;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.49;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ cahtra.h gmacro.h lccomc.h lcnamc.h ljjpar.h siconst.h
+ sigeco.h version.h
+ itmsk1.F itmsk2.F itnois.F itres.F itxtlk.F
+ lcadc.F lcamp.F lcasig.F lcbhab.F lcbkpr.F lcdigi.F lcfral.F
+ lchit.F lcirun.F lcnami.F lcnois.F lcpad.F lcroc.F lcsamp.F
+ lcsatu.F lcshow.F lcstrt.F lctrak.F lctrdi.F lctrht.F lcwire.F
+ lcwsum.F lcwtri.F
+ muasig.F mubook.F muirun.F muunoi.F muwsum.F
+ trignews.h
+ siasig.F sitrak.F siwsum.F
+ asasig.F asbook.F ascjob.F ascrun.F asctra.F asevst.F asfxxx.F
+ asieve.F asigea.F asijob.F asimod.F asinit.F asipac.F asirun.F
+ askine.F asksin.F asktrk.F aspeve.F asprun.F asread.F asredc.F
+ asreve.F asrkin.F asrtyp.F asrust.F astdeb.F astgea.F astrac.F
+ astrig.F aswkin.F aswrtp.F aswsum.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+ xtrcom.h
+ ecalnews.h geomnews.h lcalnews.h news.h skelnews.h vdetnews.h
+@
+text
+@*DK astrig
+      SUBROUTINE ASTRIG
+C ----------------------------------------------------------------------
+C.
+C. - Author   : A. Putzer  - 86/08/08  FOR GALEPH 13.0
+C. - Modified : A. Putzer  - 95/01/18  FOR GALEPH 300.
+C.
+C! - Apply trigger conditions
+C.
+C? - This routine acts as the steering routine for the application
+C?   of the Level1 and Level2 trigger
+C?
+C? - Level 1        EC, HC, LC , Si and IT are used
+C?
+C? - Level 2        TP is used for Level 1 track triggers
+C.
+C. - Called by      ASPEVE                        from this .HLB
+C.
+C. - Calls          X1TRIG                        from ALEPHLIB
+C. -                X2TRIG                        from ALEPHLIB
+C ------------------------------------------------------------------
+#ifndef DOC
+#include "jobcom.h"
+C ----------------------------------------------------------------------
+C
+C - Level 1
+C
+      CALL X1TRIG
+      IF (FDEBJO .AND. IPRIJO(11).NE.0) CALL X1PRNT
+C
+C - Level 2
+C
+      CALL X2TRIG(IRET)
+      IF (IRET.NE.0) RETURN
+      IF (FDEBJO .AND. IPRIJO(11).NE.0) CALL X2PRIN ('EVEN')
+C
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d6 1
+a6 2
+C. - Modified : A. Putzer  - 87/04/04  FOR GALEPH 17.0
+C. - Modified : F. Ranjard - 89/09/00  FOR GALEPH 23.5
+d11 1
+a11 1
+C?   of the three trigger levels for ALEPH.
+d13 1
+d15 1
+a15 7
+C? - Level 1        EC, HC, LC and IT are used
+C?
+C? - Level 2        TP is used for level 1 track triggers
+C?
+C? - Level 3        Trigger verification and background suppression
+C?                  using information from all detector components.
+C?
+d19 2
+a20 3
+C. - Calls          X1TRIG                        from this .HLB
+C. -                X2TRIG                        from this .HLB
+C. -                X3TRIG                        from this .HLB
+a35 7
+C
+C - Level 3
+C
+      CALL X3TRIG
+C
+C
+      RETURN
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

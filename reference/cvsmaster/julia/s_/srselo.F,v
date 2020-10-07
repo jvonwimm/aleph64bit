@@ -1,0 +1,499 @@
+head	1.3;
+access;
+symbols
+	jul313_3:1.3
+	jul313_2:1.3
+	jul313_1:1.3
+	jul313:1.3
+	jul312_1:1.3
+	jul312:1.3
+	jul311:1.3
+	jul310_1:1.3
+	jul310:1.3
+	jul309_1:1.2
+	jul309:1.2
+	jul308_6:1.2
+	jul308_5:1.2
+	jul308_4:1.2
+	jul308_3:1.2
+	jul308_2:1.2
+	jul308_1:1.2
+	jul308:1.2
+	jul307_4:1.2
+	jul307_3:1.2
+	jul307_2:1.2
+	jul307_1:1.2
+	jul307:1.2
+	jul306_3:1.2
+	jul306_2:1.2
+	jul306_1:1.2
+	jul306:1.2
+	jul305_4:1.2
+	jul305_3:1.2
+	jul305_2:1.2
+	jul305_1:1.2
+	jul305:1.2
+	jul304_3:1.2
+	jul304_2:1.2
+	jul304_1:1.2
+	jul304:1.2
+	jul303_7:1.2
+	jul303_6:1.2
+	jul303_5:1.2
+	jul303_4:1.2
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2
+	jul280_1:1.2
+	jul280:1.2
+	jul279:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	99.10.27.12.27.36;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.03.12.15.37.49;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.19.43;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.19.44;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@For julia 310
+@
+text
+@      SUBROUTINE SRSELO(SOBJ,SOCP,SSOP,DCUT,IER)
+C----------------------------------------------------------------------
+C! Select objects
+C!
+C!    Author:     H. Meinhard       21-Mar-1987
+C!    Modified:   H. Meinhard       03-Jul-1989  (5)
+C!    Modified:   D.Smith    991027 Double precision fixes for Linux
+C!
+C!    Input:      - SOBJ      /C4   name of object bank
+C!                - SOCP      /C4   name of bank pointing from objects
+C!                                  to coordinates
+C!                - SSOP      /C4   name of bank pointing from sides to
+C!                                  objects
+C!                - DCUT      /F    cut on distance measure
+C!    Output:     - IER       /I    error flag: .ne. 0 if error
+C!
+C!    Description
+C!    ===========
+C!    Look for objects (track candidates or patches) lying so close
+C!    together that they must come from one original object; within such
+C!    a group of objects belonging together, get best one (for tracks)
+C!    or mean values (for patches) for the parameters.
+C?    Loop over sides
+C?      Loop over pairs of objects
+C?        Compute distance measure for pair of objects --> SRDTRK
+C?      End of loop over pairs of objects
+C?      Compute minimal spanning tree for object distances
+C?      Loop over edges of MST
+C?        Associate both objects to a group of objects
+C?      End of loop over MST edges
+C?      Loop over groups of objects
+C?        Get mean value of parameters
+C?      End of loop over groups of objects
+C?    End of loop over sides
+C?
+C!======================================================================
+#ifndef DOC
+#include "sparam.h"
+#include "bcs.h"
+#include "rlunit.h"
+#include "sanamc.h"
+#include "sgeomc.h"
+#include "spatjj.h"
+#include "srecpc.h"
+#include "sstpjj.h"
+#include "stcpjj.h"
+#include "strkjj.h"
+#include "sucpjj.h"
+#include "swrkbk.h"
+      CHARACTER*(*) SOBJ,SOCP,SSOP
+      CHARACTER*8 OBOC
+      DOUBLE PRECISION A,X,Y,XX,YY,XY,X1,X2,X3,Y1,Y2,Y3,ATRI,ACUT,
+     +  XTIMY,COVXX,COVYY,COVXY,THM,PHM,COVTT,COVTP,COVPP,
+     +  D2,D3,D6,DPI,D2PI
+      PARAMETER (D2=2D0,D3=3D0,D6=6D0,
+     +           DPI=3.14159274101257324219D0,D2PI=2D0*DPI)
+      INTEGER MST(2,MNOSP), ISET(MNOSP), ISTRT(2), ISTOP(2)
+      REAL    DM(MNOSP,MNOSP)
+#include "bosext.h"
+      EXTERNAL SRDTRK
+C ACUT is the minimal patch area, preliminarily set by DATA statement
+      DATA ACUT/2.D-9/
+#include "bmacro.h"
+C----------------------------------------------------------------------
+C link to objects and pointers
+      KSOBJ = IW(NAMIND(SOBJ))
+      KSOCP = IW(NAMIND(SOCP))
+      KSSOP = IW(NAMIND(SSOP))
+      IF (KSOBJ.EQ.0 .OR. KSOCP.EQ.0 .OR. KSSOP.EQ.0)       GOTO 901
+      IF (SOBJ .EQ. 'SUPA') THEN
+        KSPAT = IW(NASPAT)
+        IF (KSPAT .EQ. 0)                                   GOTO 901
+      ENDIF
+      ISTRT(1) = ITABL(KSSOP,1,JSSTPB)
+      ISTRT(2) = ITABL(KSSOP,2,JSSTPB)
+      ISTOP(1) = ITABL(KSSOP,1,JSSTPE)
+      ISTOP(2) = ITABL(KSSOP,2,JSSTPE)
+C
+C copy objects and pointers to work bank, reset named banks
+      CALL BKTOW(IW,SOBJ,0,IW,KWK1SW,*903)
+      IW(KWK1SW-3) = INTCHA(SOBJ)
+      CALL BKTOW(IW,SOCP,0,IW,KWK2SW,*903)
+      IW(KWK2SW-3) = INTCHA(SOCP)
+      IW(KSOBJ+LMHROW) = 0
+      IW(KSOCP+LMHROW) = 0
+C
+C top of loop over sides
+      DO 410 ISIDE = 1, 2
+        IW(KROW(KSSOP,ISIDE)+JSSTPB) = LROWS(KSOBJ)+1
+C
+C NSET is the number of object sets, NOBJ the number of objects
+        NSET = 0
+        ISTAR = ISTRT(ISIDE)
+        NOBJ  = ISTOP(ISIDE)-ISTAR+1
+C
+C no object on side: no action
+        IF (NOBJ.EQ.0)                                      GOTO 400
+C
+C one object on side: copy to object bank
+        IF (NOBJ.EQ.1) THEN
+          DO 300 I1 = 1, LCOLS(KSOBJ)
+  300     IW(KNEXT(KSOBJ)+I1) = ITABL(KWK1SW,ISTAR,I1)
+          DO 310 I2 = 1, LCOLS(KSOCP)
+  310     IW(KNEXT(KSOCP)+I2) = ITABL(KWK2SW,ISTAR,I2)
+          IW(KSOBJ+LMHROW) = LROWS(KSOBJ)+1
+          IW(KSOCP+LMHROW) = LROWS(KSOCP)+1
+          GOTO 400
+        ENDIF
+C
+C more then one object: start selection procedure
+C calculate distance measures
+        IF (NOBJ.GT.MNOSP) THEN
+          IER = 4
+          CALL RERROR('SRSELO',IER,'Maximum number of nodes exceeded')
+          GOTO 400
+        ENDIF
+        CALL SRDTRK(ISTAR,NOBJ,DM)
+C
+C calculate minimal spanning tree
+        CALL SRMSTR(DM,NOBJ,MST,IMST,CST)
+C
+C clear buffer which contains the object groups (sets)
+        CALL VZERO(ISET,MNOSP)
+C
+C loop over MST edges
+        DO 320 IEDGE = 1, IMST
+          IF (DM(MST(1,IEDGE),MST(2,IEDGE)) .LE. DCUT) THEN
+C MST edge is okay, both objects associated to same set
+            IF (ISET(MST(1,IEDGE)) .NE. 0) THEN
+              ISET(MST(2,IEDGE)) = ISET(MST(1,IEDGE))
+            ELSE IF (ISET(MST(2,IEDGE)) .NE. 0) THEN
+              ISET(MST(1,IEDGE)) = ISET(MST(2,IEDGE))
+            ELSE
+              NSET = NSET + 1
+              ISET(MST(1,IEDGE)) = NSET
+              ISET(MST(2,IEDGE)) = NSET
+            ENDIF
+          ELSE
+C MST edge is too long, objects associated to different sets
+            IF (ISET(MST(1,IEDGE)) .EQ. 0) THEN
+              NSET = NSET + 1
+              ISET(MST(1,IEDGE)) = NSET
+            ENDIF
+            IF (ISET(MST(2,IEDGE)) .EQ. 0) THEN
+              NSET = NSET + 1
+              ISET(MST(2,IEDGE)) = NSET
+            ENDIF
+          ENDIF
+  320   CONTINUE
+C
+C top of loop over sets of objects
+        DO 390 JSET = 1, NSET
+          NT = 0
+C
+C loop over objects
+          NMAX = 0
+          CHMIN = 1000.
+          IMAX = 0
+          DO 330 IOBJ = 1, NOBJ
+            IF (ISET(IOBJ) .EQ. JSET) THEN
+              NT = NT + 1
+              JOBJ = ISTAR + IOBJ - 1
+              NP = ITABL(KWK1SW,JOBJ,JSTRNP)
+              C2 = RTABL(KWK1SW,JOBJ,JSTRC2)
+              IF (NP .GT. NMAX .OR.
+     +          (NP .EQ. NMAX .AND. C2 .LT. CHMIN)) THEN
+                NMAX = NP
+                CHMIN = C2
+                IMAX = JOBJ
+              ENDIF
+            ENDIF
+  330     CONTINUE
+C
+C only one object in set, or best track found: copy object into object
+C bank
+          IF (NT .EQ. 1 .OR. SOBJ .EQ. 'STRK') THEN
+            DO 340 I1 = 1, LCOLS(KSOBJ)
+  340       IW(KNEXT(KSOBJ)+I1) = ITABL(KWK1SW,IMAX,I1)
+            DO 350 I2 = 1, LCOLS(KSOCP)
+  350       IW(KNEXT(KSOCP)+I2) = ITABL(KWK2SW,IMAX,I2)
+            IW(KSOBJ+LMHROW) = LROWS(KSOBJ)+1
+            IW(KSOCP+LMHROW) = LROWS(KSOCP)+1
+          ELSE
+C
+C calculate mean value of parameters for this set
+            A  = 0D0
+            X  = 0D0
+            Y  = 0D0
+            XX = 0D0
+            YY = 0D0
+            XY = 0D0
+C
+C loop over objects
+            DO 360 IOBJ = 1, NOBJ
+              IF (ISET(IOBJ) .EQ. JSET) THEN
+                JOBJ = ISTAR + IOBJ - 1
+                IPAT = ITABL(KWK2SW,JOBJ,JSUCUP)
+                NC = ITABL(KSPAT,IPAT,JSPANC)
+                X1 = DBLE(RTABL(KSPAT,IPAT,JSPAAX))
+                Y1 = DBLE(RTABL(KSPAT,IPAT,JSPAAY))
+C
+C loop over constituent triangles of patch
+                DO 365 ITRI = 1, NC-2
+                  X2 = DBLE(RTABL(KSPAT,IPAT,JSPAAX+ITRI))
+                  Y2 = DBLE(RTABL(KSPAT,IPAT,JSPAAY+ITRI))
+                  X3 = DBLE(RTABL(KSPAT,IPAT,JSPAAX+ITRI+1))
+                  Y3 = DBLE(RTABL(KSPAT,IPAT,JSPAAY+ITRI+1))
+                  ATRI = ABS(X1*Y2+X2*Y3+X3*Y1-X1*Y3-X2*Y1-X3*Y2)/D2
+                  A = A + ATRI
+                  X = X + (X1+X2+X3)*ATRI/D3
+                  Y = Y + (Y1+Y2+Y3)*ATRI/D3
+                  XX = XX +
+     +              (X1**2+X2**2+X3**2+X1*X2+X2*X3+X3*X1)*ATRI/D6
+                  YY = YY +
+     +              (Y1**2+Y2**2+Y3**2+Y1*Y2+Y2*Y3+Y3*Y1)*ATRI/D6
+                  XY = XY + (X1*Y1+X2*Y2+X3*Y3+
+     +              (X1*Y2+X2*Y3+X3*Y1+X1*Y3+X2*Y1+X3*Y2)/D2)*ATRI/D6
+  365           CONTINUE
+              ENDIF
+  360       CONTINUE
+C
+C if patch set area is too small, go to next set of objects
+            IF (A .LT. ACUT)                                GOTO 390
+C
+C get cartesian parameters of patch set
+            X = X / A
+            Y = Y / A
+            X2 = X**2
+            Y2 = Y**2
+            XTIMY = X*Y
+            COVXX = XX / A - X2
+            COVYY = YY / A - Y2
+            COVXY = XY / A - XTIMY
+C
+C kill patch set if covariance is zero
+            IF (COVXX .LT. 1.D-10 .OR. COVYY .LT. 1.D-10)   GOTO 390
+C
+C convert to sperical coordinates
+            THM = ATAN(SQRT(X2+Y2))
+            PHM = MOD(DATAN2(Y,X)+D2PI,D2PI)
+            COVTT = (COVXX*X2 + D2*COVXY*XTIMY + COVYY*Y2) / THM**2
+            COVPP = (COVXX*Y2 - D2*COVXY*XTIMY + COVYY*X2) / THM**4
+            COVTP = (-COVXX*XTIMY + COVXY*(X2-Y2) + COVYY*XTIMY) /
+     +        THM**3
+            IF (ISIDE .EQ. 2) THM = DPI - THM
+C
+C fill mean value in BOS bank
+            IW(KNEXT(KSOBJ)+JSTRNP) = NT*2
+            RW(KNEXT(KSOBJ)+JSTRC2) = 0.
+            RW(KNEXT(KSOBJ)+JSTRTH) = REAL(THM)
+            RW(KNEXT(KSOBJ)+JSTRPH) = REAL(PHM)
+            RW(KNEXT(KSOBJ)+JSTRTT) = REAL(COVTT)
+            RW(KNEXT(KSOBJ)+JSTRTP) = REAL(COVTP)
+            RW(KNEXT(KSOBJ)+JSTRPP) = REAL(COVPP)
+            DO 380 I2 = 1, LCOLS(KSOCP)
+  380       IW(KNEXT(KSOCP)+I2) = 0
+            IW(KSOBJ+LMHROW) = LROWS(KSOBJ)+1
+            IW(KSOCP+LMHROW) = LROWS(KSOCP)+1
+          ENDIF
+C
+C bottom of loop over sets of objects
+  390   CONTINUE
+C
+C bottom of loop over sides
+  400   IW(KROW(KSSOP,ISIDE)+JSSTPE) = LROWS(KSOBJ)
+  410 CONTINUE
+C
+C compress SOBJ and SOCP banks to actual size, drop work banks
+      OBOC = SOBJ//SOCP
+      CALL AUBPRS(OBOC)
+      CALL WDROP(IW,KWK1SW)
+      CALL WDROP(IW,KWK2SW)
+      CALL WGARB(IW)
+C
+      GOTO 999
+C----------------------------------------------------------------------
+  901 IER = 1
+      GOTO 999
+  903 IER = 3
+      CALL RERROR('SRSELO',-IER,'No space for new work banks')
+      CALL WDROP(IW,KWK1SW)
+      CALL WDROP(IW,KWK2SW)
+      CALL WGARB(IW)
+      GOTO 999
+  999 CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+ 	gambnk.F gapeco.F gasteer.F
+ 	hcalib.F hcalrd.F hcatow.F hcbhis.F hcfclu.F hchist.F hclcra.F
+ 	hcltst.F hclufi.F hcos.F hcsimm.F hdgdeb.F hdgfil.F hdgpot.F
+ 	hdgsum.F hdprec.F hdspre.F hflnoi.F hinijo.F hiniru.F hmener.F
+ 	hmfind.F hmroad.F hnoise.F hnoisy.F hpatco.F hphnoi.F hplink.F
+ 	hprana.F hpranp.F hprdig.F hpreda.F hprpot.F hprsum.F hprunc.F
+ 	hrcomp.F hrcpat.F hrdcal.F hroad.F hslink.F hslowc.F hspare.F
+ 	hsptre.F hstofi.F htrack.F htubfi.F htwcr.F
+ 	iasign.F iattma.F ibnkin.F icaswt.F icftoi.F iclimb.F icrcco.F
+ 	ideadw.F idigpr.F ienang.F ifind1.F ifind2.F ifitp.F iftrak.F
+ 	igetti.F igettp.F igicha.F iheler.F iinijo.F iiniru.F iintrk.F
+ 	imatch.F inigap.F insect.F intrak.F ipakdi.F ipdsti.F iphcor.F
+ 	ipreda.F iprsum.F ipstat.F irefin.F ireopd.F isave.F ishuff.F
+ 	ishufl.F islowc.F isrch.F itbook.F itccut.F itcopr.F itcrec.F
+ 	itcrep.F itctpc.F itctrk.F itcxng.F iterr.F itextn.F ithist.F
+ 	itidy1.F itidy2.F itlnk1.F itlnk2.F itpcan.F itrak.F itrecf.F
+ 	itreci.F itree.F itrkci.F itrkeq.F itrkzr.F itrmca.F
+@
+text
+@d7 1
+a37 1
+#include "alcons.h"
+d55 2
+a56 1
+      PARAMETER (D2=2.,D3=3.,D6=6.,DPI=PI,D2PI=TWOPI)
+d186 6
+a191 6
+            A = 0.
+            X = 0.
+            Y = 0.
+            XX = 0.
+            YY = 0.
+            XY = 0.
+d240 1
+a240 1
+            PHM = MOD(ATAN2(Y,X)+D2PI,D2PI)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK srselo
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

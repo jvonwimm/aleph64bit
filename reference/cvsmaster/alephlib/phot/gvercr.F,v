@@ -1,0 +1,193 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.2
+	aleph304_5:1.2
+	aleph304_4:1.2
+	aleph304_3:1.2
+	aleph304_2:1.2
+	aleph304_1:1.2
+	aleph304:1.2
+	aleph303_3:1.2
+	aleph303_2:1.2
+	aleph303_1_mc1:1.2
+	aleph303_1:1.2
+	aleph303:1.2
+	aleph302_9:1.2
+	aleph302_8:1.2
+	aleph302_7:1.2
+	aleph302_6:1.2
+	aleph302_5:1.2
+	aleph302_4:1.2
+	aleph302_3:1.2
+	aleph302_2:1.2
+	aleph302_1:1.2
+	aleph302:1.2
+	aleph216:1.2
+	aleph215_3:1.2
+	aleph215_2:1.2
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.09.03.13.06.03;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.43.11;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.43.12;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@add missing #ifdef DOCs
+@
+text
+@       SUBROUTINE GVERCR(IPECO,RAD,IER)
+C======================================================================
+C! Calculate cluster coordinate
+C! Author   :- MN Minard             27-JAN-1993
+C      Input
+C-     IPECO / I = PECO row number
+C      Output
+C-     RAD   / R = Radius of shower
+C      IER   / I = error code
+C ====================================================================
+#ifndef DOC
+#include "bcs.h"
+#include "pestjj.h"
+#include "etdijj.h"
+       DIMENSION XPOINT(4)
+       DATA NAPEST, NAETDI , NAPYER /3*0/
+#include "bmacro.h"
+       IF (NAPEST.EQ.0) THEN
+         NAPEST = NAMIND('PEST')
+         NAETDI = NAMIND('ETDI')
+         NAPYER = NAMIND('PYER')
+       ENDIF
+       KPEST = IW(NAPEST)
+       NPEST = 0
+       IF (KPEST.NE.0) NPEST = LROWS(KPEST)
+       KETDI = IW(NAETDI)
+       NETDI = 0
+       IF (KETDI.NE.0) NETDI = LROWS(KETDI)
+       KPYER = IW(NAPYER)
+       NCELL = 0
+       E1 = 0.
+       E2 = 0.
+       E3 = 0.
+       ENS = 0.
+       DO IPEST = 1, NPEST
+         IF ( ITABL(KPEST,IPEST,JPESPE).EQ.IPECO)NCELL=NCELL + 1
+         IF ( ITABL(KPEST,IPEST,JPESPE).EQ.IPECO.AND.
+     &        ITABL(KPEST,IPEST,JPESET).GT.0)THEN
+C
+C-       Look if corresponding ETDI has energy
+C
+           JETDI = ITABL(KPEST,IPEST,JPESET)
+           K = ITABL(KPEST,IPEST,JPESKS)
+           EN = FLOAT(ITABL(KETDI,JETDI,K+1))/1000000.
+           IADDS = ITABL(KETDI,JETDI,1)
+           ITET = IBITS(IADDS,16,8)
+           IPHI = IBITS(IADDS,2,9)
+           IF (ITET.GT.0.AND.ITET.LT.229) THEN
+              IF(IPHI.GT.0.AND.IPHI.LT.384) THEN
+                CALL ESRBC('ALEPH',ITET,IPHI,K,XPOINT)
+                E1 = E1 + EN*XPOINT(1)
+                E2 = E2 + EN*XPOINT(2)
+                E3 = E3 + EN*XPOINT(3)
+                ENS = ENS + EN
+              ENDIF
+            ENDIF
+         ENDIF
+       ENDDO
+       IER = 0
+       IF ( ENS.GT.0) THEN
+         EX1 = E1/ENS
+         EX2 = E2/ENS
+         EX3 = E3/ENS
+         RAD = SQRT(EX1**2+EX2**2+EX3**2)
+       ELSE
+        IER = 1
+       ENDIF
+       RETURN
+       END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d11 1
+d70 1
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

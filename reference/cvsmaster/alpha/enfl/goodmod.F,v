@@ -1,0 +1,284 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	alpha126_22:1.1.1.1
+	alpha126_21:1.1.1.1
+	alpha126_20:1.1.1.1
+	alpha126_19:1.1.1.1
+	alpha126_18:1.1.1.1
+	alpha126_17:1.1.1.1
+	alpha126_16:1.1.1.1
+	alpha126_15:1.1.1.1
+	alpha126_14:1.1.1.1
+	alpha126_13:1.1.1.1
+	alpha126_12:1.1.1.1
+	alpha126_11:1.1.1.1
+	alpha126_10:1.1.1.1
+	alpha126_09:1.1.1.1
+	alpha126_08:1.1.1.1
+	alpha126_07:1.1.1.1
+	alpha126_06:1.1.1.1
+	alpha126_05:1.1.1.1
+	alpha126_04:1.1.1.1
+	alpha126_03:1.1.1.1
+	alpha126_02:1.1.1.1
+	alpha126_1:1.1.1.1
+	alpha125_17:1.1.1.1
+	alpha125_16:1.1.1.1
+	alpha125_15:1.1.1.1
+	alpha125_14:1.1.1.1
+	alpha125_13:1.1.1.1
+	alpha125_12:1.1.1.1
+	alpha125_11:1.1.1.1
+	alpha125_10:1.1.1.1
+	alpha125_09:1.1.1.1
+	alpha125_08:1.1.1.1
+	alpha125_07:1.1.1.1
+	alpha125_06:1.1.1.1
+	alpha125_05:1.1.1.1
+	alpha125_04:1.1.1.1
+	alpha125_03:1.1.1.1
+	alpha125_02:1.1.1.1
+	alpha125_01:1.1.1.1
+	alpha124_19:1.1.1.1
+	alpha125:1.1.1.1
+	alpha124_18:1.1.1.1
+	alpha124_17:1.1.1.1
+	alpha124_16:1.1.1.1
+	alpha124_15:1.1.1.1
+	alpha124_14:1.1.1.1
+	alpha124_13:1.1.1.1
+	alpha124_12:1.1.1.1
+	alpha124_11:1.1.1.1
+	alpha124_10:1.1.1.1
+	alpha124_09:1.1.1.1
+	alpha124_08:1.1.1.1
+	alpha124_07:1.1.1.1
+	alpha124_7:1.1.1.1
+	alpha124_06:1.1.1.1
+	alpha124_05:1.1.1.1
+	alpha124_04:1.1.1.1
+	alpha124_03:1.1.1.1
+	alpha124_02:1.1.1.1
+	alpha124_01:1.1.1.1
+	alpha124:1.1.1.1
+	alpha123_12:1.1.1.1
+	alpha123_11:1.1.1.1
+	alpha123_10:1.1.1.1
+	alpha123_9:1.1.1.1
+	alpha123_8:1.1.1.1
+	alpha123_7:1.1.1.1
+	alpha123_6:1.1.1.1
+	alpha123_5:1.1.1.1
+	alpha123_4:1.1.1.1
+	alpha123_3:1.1.1.1
+	alpha123_2:1.1.1.1
+	alpha123:1.1.1.1
+	alpha122_48:1.1.1.1
+	alpha122_47:1.1.1.1
+	alpha122_46:1.1.1.1
+	alpha122_45:1.1.1.1
+	alpha122_44:1.1.1.1
+	alpha122_43:1.1.1.1
+	alpha122_42:1.1.1.1
+	alpha122_41:1.1.1.1
+	alpha122_40:1.1.1.1
+	alpha122_39:1.1.1.1
+	alpha122_38:1.1.1.1
+	alpha122_37:1.1.1.1
+	alpha122_36:1.1.1.1
+	alpha122_35:1.1.1.1
+	alpha122_34:1.1.1.1
+	alpha122_33:1.1.1.1
+	alpha122_32:1.1.1.1
+	alpha122_31:1.1.1.1
+	alpha122_30:1.1.1.1
+	alpha122_29:1.1.1.1
+	alpha122_28:1.1.1.1
+	alpha122_27:1.1.1.1
+	alpha122_26:1.1.1.1
+	alpha122_25:1.1.1.1
+	alpha122_24:1.1.1.1
+	alpha122_23:1.1.1.1
+	alpha122_22:1.1.1.1
+	alpha122_21:1.1.1.1
+	alpha122_20:1.1.1.1
+	alpha122_19:1.1.1.1
+	alpha122_18:1.1.1.1
+	alpha122_17:1.1.1.1
+	alpha122_16:1.1.1.1
+	alpha122_15:1.1.1.1
+	alpha122_14:1.1.1.1
+	alpha122_13:1.1.1.1
+	alpha122_12:1.1.1.1
+	alpha122_11:1.1.1.1
+	alpha122_10:1.1.1.1
+	alpha122_9:1.1.1.1
+	alpha122_8:1.1.1.1
+	alpha122_6:1.1.1.1
+	alpha122_5:1.1.1.1
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.03.14.12.42.28;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.42.29;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE GOODMOD(KEEP)
+C---------------------------------------------------------------------
+C! Compute pad - wire differences in ECAL
+C
+C  Patrick Janot -- 18 Apr 1990
+C---------------------------------------------------------------------
+#ifndef DOC
+#include "parabank.h"
+#include "parcut.h"
+#include "qcde.h"
+      DIMENSION QT(KCQVEC,1), KT(KCQVEC,1), QV(KCQVRT,1), KV(KCQVEC,1)
+#include "qhac.h"
+#include "qmacro.h"
+C---------------------------------------------------------------------
+      keep = 0
+      CALL vzero(epad(1)  ,36)
+      CALL vzero(ewire(1) ,36)
+      CALL vzero(ediff(1) ,36)
+      IF ( iewhe .EQ. 0 ) GOTO 999
+      IF ( ipewi .EQ. 0 ) GOTO 998
+      IF ( ipeco .EQ. 0 ) GOTO 999
+      IF ( ipest .EQ. 0 ) GOTO 998
+      IF ( ietdi .EQ. 0 ) GOTO 998
+      IF ( newhe .NE. 36 ) GOTO 999
+C
+C  Total wire energy (module by module)
+C
+      modbad = 0
+      DO 100 iwir = 1 , newhe
+        modu = itabl(iewhe, iwir, 2)
+        IF ( modu .NE. iwir ) modbad = modbad + 1
+        ewire(iwir) = itabl(iewhe, iwir, 1) * 1E-6 * rpsf
+ 100  CONTINUE
+      IF ( modbad .NE. 0 ) THEN
+        WRITE (IW(6),*) krun,kevt,' : +++ Warning +++ EWHE corrupted !!'
+        WRITE (IW(6),*) 'modbad = ',modbad
+        IF ( idbg .GE. 1 ) CALL looses('EWHECORR',1)
+      ENDIF
+C
+C  Correction factor on the raw pad energy ( due to thresholds )
+C
+      facteur = .08
+      iecns = 0
+      naecns = namind('ECNS')
+      IF ( naecns .GT. 0 ) iecns = iw(naecns)
+      IF ( iecns .GT. 0 ) facteur = rtabl(iecns, 1, 26)
+C
+C  Loop on calobjects of PEST ( LCAL excluded !)
+C  ( iclu = PECO corresponding , modu = module )
+C
+      DO 2 isto = 1 , npest
+        iclu = itabl(ipest, isto, jpespe)
+        IF ( itabl(ipest, isto, jpesed) .NE. 0) GOTO 2
+        IF ( itabl(ipeco, iclu, jpeckd) .EQ. 192 ) GOTO 2
+C
+        eraw = rtabl(ipeco, iclu, jpecer)
+        IF ( eraw .LE. 0. ) CALL bldpeco(iclu,eraw)
+C
+        ntow  = itabl(ipest, isto, jpeset)
+        itlab = itabl(ietdi, ntow, jetdtl)
+        irow  = ibits(itlab, 16, 8)
+        icol  = ibits(itlab, 2, 9)
+C
+C  Check the reliability of Row/Column numbers
+C
+        IF ( invalid(irow,icol) .EQ. 0 ) GOTO 2
+        CALL emdtow(irow, icol, ksbd, kmodu, krg)
+        modu  = kmodu + 12*(ksbd-1)
+        IF ( modu .LT. 1 .OR. modu .GT. 36) GOTO 2
+C
+        corr = 1.
+        IF ( eraw .GT. 0.01) corr = 1. + facteur/sqrt(eraw)
+C
+        efrac = rtabl(ipest, isto, jpeser) * corr
+        epad(modu) = epad(modu) + efrac
+    2 CONTINUE
+C
+C  Determine the most energetic wire plane
+C
+      DO 4 kmodu = 1 , npewi
+        totenw = 0.
+        frcpla = 0.
+        kwirep = 0
+        frcpl0 = 0.
+        kwire0 = 0
+        DO 5 kplan = 2 , 46
+          plafrc = ITABL(ipewi, kmodu, kplan)
+          IF ( plafrc .GT. -10000. ) THEN
+            totenw = totenw + plafrc
+            IF ( plafrc .GT. frcpla ) THEN
+              frcpla = plafrc
+              kwirep = kplan-1
+            ENDIF
+            IF ( plafrc .GT. frcpl0 .AND. plafrc .LT. frcpla ) THEN
+              frcpl0 = plafrc
+              kwire0 = kplan-1
+            ENDIF
+          ENDIF
+    5   CONTINUE
+        IF ( frcpl0 .EQ. 0. ) frcpl0 = frcpla/1000.
+        frcpl0 = frcpla / frcpl0
+        frcpla = frcpla / totenw
+        IF (( frcpla .GT. .9  .AND. totenw .GT. .5E6 ) .OR.
+     .      ( frcpl0 .GT. 20. .AND. totenw .GT. 1.E6 ) .OR.
+     .      ( frcpl0 .GT.  5. .AND. totenw .GT. 5.E6 )) THEN
+          jmodu = ITABL(ipewi,kmodu,jpewmn)
+          ewire(jmodu) = ewire(jmodu) * (1. - frcpla)
+          IF ( idbg .GE. 11 ) WRITE (IW(6),*) 'Wire energy in module ',
+     &         jmodu,' has been rescaled by a factor ',1.-frcpla
+        ENDIF
+    4 CONTINUE
+C
+C  Now the "Good"  modules :
+C  Kill the event if a module has a crazy wire energy value
+C
+      DO 3 modu = 1 , 36
+        IF ( ewire(modu) .GT. 200. ) GOTO 999
+        ediff(modu) = epad(modu) - ewire(modu)
+        IF ( ediff(modu) .LE. 0. ) ediff(modu) = 0.
+   3  CONTINUE
+C
+ 998  keep = 1
+C
+ 999  RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

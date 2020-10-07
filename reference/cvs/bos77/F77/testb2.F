@@ -1,0 +1,32 @@
+      SUBROUTINE TESTB2
+
+*     TEST PROGRAM FOR BOS NR 2
+
+      COMMON/BCS/IW(1000)
+
+*                                   WRITE 25 EVENT-RECORDS***
+                                    CALL WRIT25
+*                                   FOR FOLLOWING TEST ******
+
+*     READ ONE EVENT FROM UNIT 1. LIST 'E' IS SPECIFIED
+
+   10 CALL BREAD(IW,1,'E',*10,*90)
+*     EVENT PROCESSING IS DONE IN MODULS
+
+      CALL MODUL
+
+*     ...
+
+*     WRITE EVENT TO UNIT 2, DROP EVENT BANKS AND MAKE GARBAGE COLL.
+
+      CALL BWRITE(IW,2,'E')
+      CALL BDROP(IW,  'E')
+      CALL BGARB(IW)
+      GOTO 10
+
+*     END-OF-DATA, WRITE BUFFER, STATUS PRINTOUT OF BOS AND STOP
+
+   90 CALL BWRITE(IW,2,'0')
+      CALL BOSTA
+  100 RETURN
+      END

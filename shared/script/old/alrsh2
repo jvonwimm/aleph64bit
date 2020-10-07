@@ -1,0 +1,116 @@
+#!/bin/csh -f
+
+# Paul Rensing, 2-June-1995
+
+# Given a list of hosts in $hostfile, execute an rsh command on some set of
+# those hosts.
+
+# The commands are executed in parallel and the output is echoed when all are
+# finished.
+
+# There is a time out period, default set in $timeout, which is changable
+# with a command option.
+
+# Interrupting the script causes it to print the current output and exit.
+
+set hosts = ''
+set hostfile = /aleph/log/aleph_hosts
+set printname = 1
+set timeout = 120
+
+# turn off file globbing; ie. interpretation of "*", etc. by shell
+set noglob
+
+echo `date` `whoami` `uname -n` >> /al/shared/log/alrsh.log
+
+while ($#argv)
+   switch ($1)
+	case -help:
+	   goto usage
+	case -a:
+	   set hosts = "`cat $hostfile`"
+	   breaksw
+	case -h:
+	   shift
+	   set cluster = "`echo $1 | tr 'A-Z' 'a-z'`"
+	   if ("$cluster" == "aloha") set cluster = 'afal'
+	   set hosts = "$hosts `grep ^$cluster $hostfile`"
+	   breaksw
+	case -n:
+	   set printname = 0
+	   breaksw
+	case -t:
+	   shift
+	   set timeout = $1
+	   breaksw
+	case --:
+	   shift
+	default:
+           break
+   endsw
+   shift
+end
+
+if ( "$hosts" == "" ) then
+   set cluster = `hostname | tr -d '0-9'`
+   set hosts = "$hosts `grep ^$cluster $hostfile`"
+endif
+   
+set command = "$*"
+
+if ( "$command" == "" ) then
+   goto usage
+endif
+
+echo 'Command "'$command'" to execute on hosts:' $hosts
+
+onintr brkout
+
+foreach host ($hosts)
+    rsh $host $command >&! /tmp/$$.$host & 
+end 
+
+# wait for all the processes to finish
+while ( $timeout > 0 )
+   sleep 1
+   jobs >! /tmp/$$.joblist
+   if ( -z /tmp/$$.joblist ) goto print
+   @ timeout = $timeout - 1
+end
+
+echo " "
+echo "**** Timed Out ****"
+echo " "
+
+print:
+
+/bin/rm /tmp/$$.joblist
+foreach host ($hosts)
+    if ($printname) echo "======== $host : rsh $command"
+    cat /tmp/$$.$host
+    /bin/rm /tmp/$$.$host
+end
+
+exit
+
+usage:
+
+echo "Usage: `basename $0` [-a] [-n] [-t timeout] [-h host_expr] [--] command"
+echo "      -a   all hosts"
+echo "      -n   no hostname line"
+echo "      -t   timeout time in seconds [default = $timeout]"
+echo "      -h   regular expression to specify host"
+echo "           (see man grep for the regular expressions)"
+echo "           default is current cluster"
+echo "           specifying >1 -h option causes concatenation of list"
+echo "      --   terminate local option processing"
+
+exit 1
+
+
+brkout:
+
+echo " "
+echo "**** Interrupted ****"
+echo " "
+goto print

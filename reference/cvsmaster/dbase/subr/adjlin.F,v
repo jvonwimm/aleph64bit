@@ -1,0 +1,50 @@
+head	1.1;
+access;
+symbols
+	dbase22:1.1
+	dbase21:1.1
+	dbase20:1.1
+	dbase19:1.1
+	dbase18:1.1
+	dbase17:1.1
+	dbase04:1.1
+	dbase03:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	97.02.14.16.11.43;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@move subroutine in subr andprograms in prog sbk becomes empty
+@
+text
+@      SUBROUTINE ADJLIN(TEXT)
+      CHARACTER TEXT*(*)
+      COMMON /SLATE/ ND,NE,NF,DUMMY(36)
+C     ND = # of characters in the word
+C     NE = position of 1st blank after the word
+C     JX = position of the 1st character of the word
+C
+      LE = LEN(TEXT)
+      ND = 0
+      JN = 0
+ 10   JN = JN+ND+1
+      NX = LNBLNK(TEXT)
+      IF (JN.LE.NX) THEN
+         JX = ICNEXT(TEXT,JN,NX)
+         TEXT(JN:LE) = TEXT(JX:LE)
+         GOTO 10
+      ENDIF
+      RETURN
+      END
+@

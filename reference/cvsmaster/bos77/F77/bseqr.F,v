@@ -1,0 +1,514 @@
+head	1.3;
+access;
+symbols
+	bos3489-1:1.3.0.2
+	bos3589:1.3
+	bos3489:1.3
+	bos3389:1.3
+	bos3289:1.3
+	bos3189:1.3
+	bos3089:1.3
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	96.03.11.12.49.37;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.01.19.16.50.57;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.21;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.22;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE BSEQR(IARG,IARG2)
+
+*     GENERAL INPUT/OUTPUT MODUL
+*
+*     1.) DEFINITION OF PARAMETERS FOR END-CONDITION
+*
+*     CALL BSEQP(LIMSEC,LIMREC)...SELECT OPTION FOR BSEQR
+*
+*        LIMSEC     STOP LIMSEC SECONDS BEFORE TIME OVERFLOW
+*        LIMREC     STOP AFTER LIMREC RECORDS (0 MEANS INFINITY)
+*
+*     NO CALL OF BSEQP IS IDENTICAL TO
+*     CALL BSEQP(2,0)
+*
+*     2.) GENERAL IO SUBPROGRAM
+*
+*        LUNR = POSITIVE= UNIT NUMBER FOR INPUT
+*             = 0   NO INPUT
+*        THIS ARGUMENT IS IGNORED AFTER THE FIRST ENTRY
+*
+*     CALL BSEQR(LUNR,IRET)
+*     IF(IRET.LT.0) GOTO ... (END-OF-DATA)
+*
+*        IRET =  1   RECORD READ
+*             =  0   END-OF-DATA CONDITION
+*             = -1   AFTER END-OF DATA CONDITION
+*
+*     THE TEST AFTER THE CALL MAY BE IRET.LT.0 OR IRET.LE.0
+*
+*     3.) FURTHER OPTIONS
+*
+*     THIS CALL SETS A FLAG. ACTUAL OUTPUT IS DONE AT THE NEXT CALL
+*     OF BSEQR.
+*
+*     CALL BSEQW(LUN)
+*         LUN = UNIT NUMBER
+*         LUN = POSITIVE = WRITE TO UNIT
+*             = NEGATIVE = NO WRITE TO UNIT
+*     THESE CALLS CAN BE IN ANY ORDER FOR UP TO FOUR OUTPUT UNITS;
+*     THE LAST CALL FOR EACH UNIT IS EXECUTED.
+*
+*     USER REQUEST FOR END-OF-DATA CONDITION
+*
+*     CALL BSEQE
+*
+*     DEFINE BANK NAME,NR FOR (FIRST BANK) CONTAINING RUN AND EVT NR
+*
+*     CALL BSEQH(NAMEHA,NR,HA,JRUNA,JEVTA)
+*
+*     RUN AND EVENT SELECTION POSSIBLE WITH DATA CARDS, READ BY BREADC
+*
+*
+*     SKIP CURRENT RUN (REQUIRES DEFINITION OF BANK WITH RUN NUMBER)
+*
+*     CALL BSEQS
+*
+*
+#include "boscom.h"
+      REAL       RW(1000)
+      EQUIVALENCE(RW(1),IW(1))
+      INTEGER LUNW(4),LUNT(4),NCRE(2,100)
+      LOGICAL START,EOD,USTOP,AFTER,SERI,SEVT,SRUN,IRUN,URSKP
+#include "bosmdl.h"
+
+      DATA    LUNR/1/,LUNW/4*0/,LIMSEC/2/,LIMREC/0/,NREC/0/,NLUNW/0/
+      DATA    NCR/0/,LUNT/4*0/
+      DATA    START/.TRUE./,EOD/.FALSE./,USTOP/.FALSE./,AFTER/.FALSE./
+      DATA    SERI/.TRUE./,SEVT/.FALSE./,SRUN/.FALSE./,IRUN/.FALSE./
+      DATA    URSKP/.FALSE./
+*     ...
+      NTIM=0
+      NPTR=0
+      IF(EOD) THEN
+         IF(AFTER) THEN
+            IF(IW(6).NE.0) WRITE(IW(6),101)
+     1      'STOP BECAUSE BSEQR CALLED AFTER REACHING END CONDITION'
+            STOP
+         END IF
+         AFTER=.TRUE.
+         IARG2=-1
+*        PRINT FINAL STATISTIC
+         CALL BOSTA
+         GOTO 100
+      END IF
+
+      IF(START) THEN
+         START=.FALSE.
+         IF(NRE.EQ.0) THEN
+*           default
+            NRE=NRE+1
+            NAMERE(NRE)=INTCHA('HEAD')
+            NUMMRE(NRE)=0
+            IRUNRE(NRE)=2
+            IEVTRE(NRE)=3
+         END IF
+         LUNR=IARG
+         IF(IW(6).NE.0) WRITE(IW(6),102) LUNR,LIMSEC,LIMREC
+         IF(LUNR.LT.0.OR.LUNR.GT.2) THEN
+            IF(IW(6).NE.0) WRITE(IW(6),101) 'ILLEGAL UNIT - STOP'
+            STOP
+         END IF
+*        SET LOGICAL FLAGS FOR STEERING INFORMATION
+         IF(IW(NAMIND('SEVT')).NE.0) THEN
+            SEVT=.TRUE.
+         ELSE IF(IW(NAMIND('SRUN')).NE.0) THEN
+            SRUN=.TRUE.
+         ELSE IF(IW(NAMIND('IRUN')).NE.0) THEN
+            IRUN=.TRUE.
+         ELSE
+            SERI=.FALSE.
+         END IF
+         LCCRUN=0
+         NCCRUN=0
+         NEVENT=0
+         BEGJOB=.TRUE.
+         ENDRUN=.FALSE.
+         BEGRUN=.FALSE.
+         REVENT=.FALSE.
+         ENDJOB=.FALSE.
+         OTHDAT=.FALSE.
+      ELSE
+         BEGJOB=.FALSE.
+         CALL UDBOOK
+*        OUTPUT IF REQUESTED
+         IW(1)=0
+         DO 8 I=1,NLUNW
+         IF(LUNW(I).GT.0) THEN
+            LUNT(I)=LUNW(I)
+            CALL BWRITE(IW,LUNW(I),'E')
+         END IF
+    8    CONTINUE
+*        DROP BANKS
+         CALL BDROP(IW,'E')
+         CALL BLIST(IW,'E=','0')
+*        CHECK USER STOP CONDITION
+         IF(USTOP) THEN
+            IF(IW(6).NE.0) WRITE(IW(6),101) 'USER STOP REQUESTED'
+            GOTO 40
+         END IF
+*        CHECK REMAINING TIME
+         CALL TIMEL(TLEFT)
+         LEFTT=TLEFT
+         IF(LEFTT.LT.LIMSEC) THEN
+            IF(IW(6).NE.0) WRITE(IW(6),101) 'TIME LIMIT REACHED'
+            GOTO 40
+         END IF
+*        CHECK NUMBER OF RECORDS
+         IF(NREC.EQ.LIMREC) THEN
+            IF(IW(6).NE.0) WRITE(IW(6),101) 'RECORD LIMIT REACHED'
+            GOTO 40
+         END IF
+      END IF
+*     TRANSITION TO NEXT RECORD WITH GARBAGE COLLECTION
+      IARG2=1
+   10 CALL BGARB(IW)
+*     INPUT
+      IF(URSKP) GOTO 99
+      IF(.NOT.SERI) GOTO 199
+   99 NTIM=NTIM+1
+      IF(NTIM.EQ.10) THEN
+*        CHECK TIME EVERY 10TH RECORD IN SKIPPING
+         NTIM=0
+         CALL TIMEL(TLEFT)
+         LEFTT=TLEFT
+         IF(LEFTT.LT.LIMSEC) THEN
+            IF(IW(6).NE.0) WRITE(IW(6),101) 'TIME LIMIT REACHED'
+            GOTO 40
+         END IF
+      END IF
+      CALL BREAD(IW,LUNR,' ',*20,*30)
+      NPTR=IW(2)
+      IND=IW(3)
+      NRUN=0
+      NEVT=0
+      DO 71 IRE=1,NRE
+      IF(IW(IND-3).NE.NAMERE(IRE)) GOTO 71
+      IF(IW(IND-2).NE.NUMMRE(IRE)) GOTO 71
+*     CORRECT FIRST BANK FOUND
+      NRUN=IW(IND+IRUNRE(IRE))
+      NEVT=IW(IND+IEVTRE(IRE))
+      GOTO 72
+   71 CONTINUE
+   72 IF(NRUN.NE.0.AND.NEVT.NE.0) THEN
+         IF(URSKP) THEN
+*           RUN SKIP REQUESTED
+            IF(NRUN.EQ.MRUN) GOTO 99
+            URSKP=.FALSE.
+            GOTO 199
+         END IF
+         IF(SEVT) THEN
+            INS=NAMIND('SEVT')+1
+   11       INS=IW(INS-1)
+            IF(INS.NE.0) THEN
+               NW=IW(INS)
+               IF(IW(INS+1).NE.NRUN) GOTO 11
+               DO 12 I=2,IW(INS)
+               IF(IW(INS+I).EQ.NEVT) GOTO 199
+   12          CONTINUE
+               GOTO 11
+            END IF
+            GOTO 99
+         ELSE IF(SRUN) THEN
+            INS=NAMIND('SRUN')+1
+   13       INS=IW(INS-1)
+            IF(INS.NE.0) THEN
+               DO 14 I=1,IW(INS)
+               IF(IW(INS+I).LT.0) GOTO 14
+               IF(I.LT.IW(INS)) THEN
+                  IF(IW(INS+I+1).LT.0) THEN
+            IF(NRUN.GE.IW(INS+I).AND.NRUN.GE.IW(INS+I+1)) GOTO 199
+                  END IF
+               END IF
+
+               IF(IW(INS+I).EQ.NRUN) GOTO 199
+   14          CONTINUE
+               GOTO 13
+            END IF
+            GOTO 99
+         ELSE IF(IRUN) THEN
+            INS=NAMIND('SRUN')+1
+   15       INS=IW(INS-1)
+            IF(INS.NE.0) THEN
+               DO 16 I=1,IW(INS)
+               IF(IW(INS+I).LT.0) GOTO 16
+               IF(I.LT.IW(INS)) THEN
+                  IF(IW(INS+I+1).LT.0) THEN
+                  IF(NRUN.GE.IW(INS+I).AND.NRUN.GE.IW(INS+I+1)) GOTO  99
+                  END IF
+               END IF
+
+               IF(IW(INS+I).EQ.NRUN) GOTO  99
+   16          CONTINUE
+               GOTO 15
+            END IF
+            GOTO 199
+         END IF
+      END IF
+  199 IF(LUNR.NE.0) THEN
+         IW(1)=0
+         CALL BREAD(IW,LUNR,'E',*20,*30)
+         NPTR=IW(2)
+      END IF
+      NREC=NREC+1
+      IND=IW(3)
+      NRUN=0
+      IF(IND.EQ.0) GOTO 82
+      DO 81 IRE=1,NRE
+      IF(IW(IND-3).NE.NAMERE(IRE)) GOTO 81
+      IF(IW(IND-2).NE.NUMMRE(IRE)) GOTO 81
+*     CORRECT FIRST BANK FOUND
+      NRUN=IW(IND+IRUNRE(IRE))
+      NEVT=IW(IND+IEVTRE(IRE))
+      GOTO 82
+   81 CONTINUE
+   82 IF(IND.NE.0.AND.NRUN.NE.0) THEN
+*        CORRECT FIRST BANK FOUND, COUNT EVENTS
+*        RUN STATISTIC
+         IF(NCR.NE.0.AND.NCRE(1,NCR).EQ.NRUN) THEN
+            NCRE(2,NCR)=NCRE(2,NCR)+1
+         ELSE
+            IF(NCR.EQ.100) THEN
+               IF(IW(6).NE.0) WRITE(IW(6),103) NCRE
+               NCR=0
+            END IF
+            NCR=NCR+1
+            NCRE(1,NCR)=NRUN
+            NCRE(2,NCR)=1
+         END IF
+      END IF
+      DO 18 I=1,NLUNW
+   18 LUNW(I)=-IABS(LUNW(I))
+
+C     IND=NLINK(NAMEH,NRHE)
+      IF(IND.EQ.0) THEN
+         ENDRUN=.FALSE.
+         BEGRUN=.FALSE.
+         REVENT=.FALSE.
+         OTHDAT=.TRUE.
+      ELSE
+         ENDRUN=.FALSE.
+         BEGRUN=.FALSE.
+         REVENT=.TRUE.
+         OTHDAT=.FALSE.
+         LCCRUN=NCCRUN
+         NCCRUN=NRUN
+         NEVENT=NEVT
+         IF(LCCRUN.EQ.NCCRUN) THEN
+            BEGRUN=.FALSE.
+            ENDRUN=.FALSE.
+         ELSE
+            BEGRUN=.TRUE.
+            IF(LCCRUN.EQ.0) THEN
+               ENDRUN=.FALSE.
+            ELSE
+               ENDRUN=.TRUE.
+            END IF
+         END IF
+      END IF
+
+      GOTO 100
+*     READ ERROR, TRY NEXT RECORD
+   20 CONTINUE
+      GOTO 10
+*     END-OF-DATA
+   30 IF(IW(6).NE.0) WRITE(IW(6),101)
+     1'EOF ON INPUT UNIT'
+*     END CONDITION
+   40 IARG2=0
+      EOD=.TRUE.
+*     WRITE OUTPUT BUFFERS
+      DO 45 I=1,NLUNW
+      IF(LUNT(I).NE.0) THEN
+         CALL BWRITE(IW,LUNT(I),'0')
+      END IF
+   45 CONTINUE
+*     output buffer for SEL units
+      CALL BCLAST(0)
+*
+      WRITE(IW(6),101) 'END CONDITION REACHED AFTER',NREC,' RECORDS'
+      IF(NCR.NE.0) THEN
+         IF(IW(6).NE.0) WRITE(IW(6),103) ((NCRE(I,J),I=1,2),J=1,NCR)
+         NCR=0
+         CALL PMODUL
+      END IF
+
+      LCCRUN=NCCRUN
+      IF(LCCRUN.EQ.0) THEN
+         ENDRUN=.FALSE.
+      ELSE
+         ENDRUN=.TRUE.
+      END IF
+      BEGRUN=.FALSE.
+      REVENT=.FALSE.
+      OTHDAT=.FALSE.
+      ENDJOB=.TRUE.
+
+      GOTO 100
+
+      ENTRY BSEQP(IARG,IARG2)
+*     SET PARAMETER FOR INPUT
+*     IGNORE CALL AFTER FIRST BSEQR CALL
+      IF(START) THEN
+         LIMSEC=IARG
+         LIMREC=IARG2
+      END IF
+      GOTO 100
+
+      ENTRY BSEQW(IARG)
+*     SET FLAG FOR OUTPUT
+      LUN=IABS(IARG)
+      DO 50 I=1,NLUNW
+      IF(IABS(LUNW(I)).EQ.LUN) THEN
+         LUNW(I)=IARG
+         GOTO 100
+      END IF
+   50 CONTINUE
+      IF(NLUNW.EQ.4) CALL BABEND('MORE THAN 4 OUTPUT UNITS IN BSEQR')
+      NLUNW=NLUNW+1
+      LUNW(NLUNW)=IARG
+      GOTO 100
+
+      ENTRY BSEQS
+*     USER RUN SKIP
+      IF(NRUN.EQ.0) GOTO 100
+      URSKP=.TRUE.
+      MRUN=NRUN
+      GOTO 100
+
+      ENTRY BSEQE
+*     USER STOP REQUEST
+      USTOP=.TRUE.
+      GOTO 100
+
+      ENTRY BSEQUP
+      IF(LUNR.NE.0.OR.ENDJOB) GOTO 100
+      DO 91 IRE=1,NRE
+      IND=NLINK(CHAINT(NAMERE(IRE)),NUMMRE(IRE))
+      IF(IND.EQ.0) GOTO 91
+*     CORRECT FIRST BANK FOUND
+      NRUN=IW(IND+IRUNRE(IRE))
+      NEVT=IW(IND+IEVTRE(IRE))
+      GOTO 92
+   91 CONTINUE
+   92 IF(IND.NE.0) THEN
+*        COUNT EVENTS
+*        RUN STATISTIC
+         IF(NCR.NE.0.AND.NCRE(1,NCR).EQ.NRUN) THEN
+            NCRE(2,NCR)=NCRE(2,NCR)+1
+         ELSE
+            IF(NCR.EQ.100) THEN
+               IF(IW(6).NE.0) WRITE(IW(6),103) NCRE
+               NCR=0
+            END IF
+            NCR=NCR+1
+            NCRE(1,NCR)=NRUN
+            NCRE(2,NCR)=1
+         END IF
+         ENDRUN=.FALSE.
+         BEGRUN=.FALSE.
+         REVENT=.TRUE.
+         OTHDAT=.FALSE.
+         LCCRUN=NCCRUN
+         NCCRUN=NRUN
+         NEVENT=NEVT
+         IF(LCCRUN.EQ.NCCRUN) THEN
+            BEGRUN=.FALSE.
+            ENDRUN=.FALSE.
+         ELSE
+            BEGRUN=.TRUE.
+            IF(LCCRUN.EQ.0) THEN
+               ENDRUN=.FALSE.
+            ELSE
+               ENDRUN=.TRUE.
+            END IF
+         END IF
+      ELSE
+         ENDRUN=.FALSE.
+         BEGRUN=.FALSE.
+         REVENT=.FALSE.
+         OTHDAT=.TRUE.
+      END IF
+
+  100 RETURN
+  101 FORMAT('0BOS--BSEQR-  ',A,I8,A)
+  102 FORMAT('0BOS--BSEQR-  START OF BSEQR ON INPUT UNIT',I2,5X,
+     1       'LIMSEC=',I3,'    LIMREC=',I6)
+  103 FORMAT('0BOS--BSEQR-',5(3X,'RUN-NR...EVTS',2X)/(12X,5(2X,2I7,2X)))
+      END
+@
+
+
+1.2
+log
+@change few print statments to please VAX fpp
+Modified Files:
+ 	bosrpt.F bosta.F bseqr.F pmodul.F
+@
+text
+@a0 1
+*DK bseqr
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d127 1
+a127 1
+         DO 08 I=1,NLUNW
+d132 1
+a132 1
+   08    CONTINUE
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

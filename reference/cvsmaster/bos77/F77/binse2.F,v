@@ -1,0 +1,141 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.48.24;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.13;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.14;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE BINSE2(KRUN,KEVT,IER)
+#include "boscom.h"
+#include "param.h"
+#include "bitconst.h"
+      INTEGER NCLASS(30)
+      LOGICAL BSELEC
+      SAVE IV, IVMAX
+*     get next pointer from sel bank
+*     use MASK
+*
+      IER = 0
+*
+      IND=NLINK('$PTS',LUNSE2)
+*     is there a pointer inside a record-pointer bank
+      IF(IND.NE.0) GOTO 20
+*     read new bank
+      IND=NDROP('$PTS',LUNSE2)
+*     touch unit
+      IBF= NLINK('+BUF',LUNSE2)
+      IW(1)=0
+      IF(IBF.EQ.0) THEN
+         CALL BOSRD(IW,LUNSE2,'Z',*101,*102)
+      ELSE
+      IOAC=MOD(IW(IBF+1),8)
+      IOMD=MOD(IW(IBF+1)/8,8)
+      IOST=MOD(IW(IBF+1)/64,8)
+*        test read
+         IF(IOST.EQ. 2) CALL BABEND('WRONG UNIT IN BREAD')
+         IF(IOMD.EQ. 0) THEN
+            CALL BOSRD(IW,LUNSE2,'Z',*101,*102)
+         ELSE IF(IOMD.EQ.1) THEN
+            CALL BEPRD(IW,LUNSE2,'Z',*101,*102)
+         ELSE IF(IOMD.EQ.2) THEN
+            CALL BTERD(IW,LUNSE2,'Z',*101,*102)
+         ELSE
+            CALL BABEND('WRONG UNIT IN BREAD')
+         END IF
+      END IF
+      IND=NLINK('$PTS',0)
+      IF(IND.EQ.0) CALL BOSBK(IW)
+      IF(IND.EQ.0) CALL BABEND('Wrong select file used')
+      IND=NSWAP('$PTS',LUNSE2,'$PTS',0)
+      IF(IND.EQ.0) CALL BABEND('Error in select file')
+*     number of entries in this bank
+      IVMAX=IW(IND)/4
+      IV=0
+   20 IF(IV.GE.IVMAX) THEN
+        IND=NDROP('$PTS',LUNSE2)
+        GOTO 102
+      ENDIF
+      IV=IV+1
+C
+*     test MASK (reading mask)
+C
+      IF(.NOT.BSELEC(IW(IND+4*IV-2),MASKR))GOTO 20
+*     next run and event number from selct file
+      INRUN=IW(IND+4*IV-1)
+      INEVT=IW(IND+4*IV)
+      LMASK=IW(IND+4*IV-2)
+      IF(INRUN.EQ.0 .AND. INEVT.EQ.0) GOTO 20
+*     test special banks for event/run selection
+      CALL BASEVT(IW,INRUN,INEVT,IRET)
+      IF(IRET.EQ.0) GOTO 20
+      IF(IRET.EQ.1) GOTO 90
+*        not within list of runs to be ignored
+      IF(IRET.GE.7) THEN
+        IND=NDROP('$PTS',LUNSE2)
+        GOTO 102
+      END IF
+   90 KRUN = INRUN
+      KEVT = INEVT
+      RETURN
+  101 CALL BABEND('Read error in select file')
+*     end-of-data flag
+  102 IER=-1
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK binse2
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

@@ -1,0 +1,69 @@
+      subroutine qcale14(e14ec,e14hc)
+C-----------------------------------------------------------------------
+C Computes the energy in a cone 14 degrees around the beam pipe
+C Author G. Taylor Oct 1997
+C New version on 23/10/97 use PECO/PHCO with slightly more
+C stringent definition of energy
+C-----------------------------------------------------------------------
+#include "qcde.h"
+      real eplane(45),estack(3)
+#include "qmacro.h"
+C-----------------------------------------------------------------------
+C PECO
+      e14ec=0.
+      itk=kpdir('ECAL',kreco)
+      do while(itk.ne.0)
+       act=abs(qct(itk))
+       if (act.ge..97) then
+        if (kpeckd(itk).lt.192) then
+C
+C ECAL : Require at least 200 MeV in the ECAL to avoid noise 
+C        require also that there is at least 100 MeV of energy
+C        in the wires (excluding the most energetic wires)
+C
+         iwireok=0
+         do i=1,36
+          e=epad_e14(ktn(itk),i)
+          if (e.gt.0) then
+           call qgetw_e14(i,eplane,estack,esum,t0)
+           emx=0.
+           es=0. 
+           do iplane=1,45
+            if (eplane(iplane).gt.emx) emx=eplane(iplane)
+            es=es+eplane(iplane)
+           enddo
+           if (es-emx.gt..1) iwireok=1
+          endif
+         enddo  
+         if (iwireok.eq.1.and.qe(itk).gt..2) e14ec=e14ec+qe(itk)
+        else if (kpeckd(itk).eq.192) then
+C
+C LCAL : for lcal energy simply require that there is some pad energy
+C        somewhere in the LCAL
+C
+         kplpd=iw(namind('PLPD'))
+         if (kplpd.gt.0.and.lrows(kplpd).gt.0) e14ec=e14ec+qe(itk)
+        else
+C
+C SICAL : always take sical energy
+C
+         e14ec=e14ec+qe(itk)
+        endif
+       endif 
+       itk=kfollo(itk)
+      enddo
+C PHCO
+      e14hc=0.
+      itk=kpdir('HCAL',kreco)
+      do while(itk.ne.0)
+       act=abs(qct(itk))
+C
+C HCAL : require that there always be at least 3 fired digital planes
+C        in the same module as the hcal energy
+C
+       if (act.ge..97.and.ndigh_e14(ktn(itk)).gt.2)
+     &     e14hc=e14hc+qe(itk)
+       itk=kfollo(itk)
+      enddo
+      RETURN
+      END

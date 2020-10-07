@@ -1,0 +1,198 @@
+\chapter{\label{sec-miniapp}Using the Mini-DST with ALPHA}
+\par
+In this appendix, a brief introduction to the use of the Mini-DST
+with ALPHA is given. For more details, consult the current
+ALEPH Mini-DST User's Guide (version 8.0 or later).
+
+Since ALPHA version 124 (May 1999), the MINI code is fully integrated within ALPHA, both
+for reading and for writing MINIs. All MINI routines are now in the ALPHA library.
+
+The source code for all MINI routines can be found in the directory:
+
+\$ALROOT/alphavsn/mini     (vsn: current ALPHA version number, e.g. 124). 
+
+An executable to make MINIs with all standard banks    is available in:
+
+\$ALEPH/phy/miniprod
+
+{\bf Important warning: Do not use old MINI libraries any more. Please use now
+ only the ALPHA library which contains all the necessary MINI features.} 
+
+\par
+\section{\label{sec-rtm}Doing analysis with the Mini}
+\par
+The Mini-DST file(s) to be read (data or event directory) should be
+declared with a standard FILI card.
+ALPHA will convert the Mini-DST banks to POT banks, and the ALPHA
+variables will be filled.
+The logical XMINI will be set to .TRUE..
+\par
+Since the Mini-DST contains many of the basic
+quantities from the POT/DST, most of the ALPHA quantities are available
+from the Mini-DST, and most of the ALPHA code will work.
+Below is a list of quantities which are NOT available on the
+Mini-DST -- there may be others.
+\begin{itemize}
+\item XTCN: all
+\item FRFT: KFRFNO.
+\item FRTL: KFRTNE, KFRTNR.
+\item FRID: KFRIBC, KFRIBC, KFRIPE, KFRIPM, KFRIPI, KFRIPK, KFRIPP, KFRINK.
+\item EIDT: QEIDEC, QEIDRI(I,N=1,4,5).
+\item PECO: QPECEC, KPECKD, KPEPPC.
+\item PEPT: all.
+\item PHCO: QPHCER, KPHCKD, KPHCCC, KPHCRB, KPHCPC.
+\item YV0V: KYV0IC.
+\item EGPC: QEGPR1, QEGPR2, QEGPF4, QEGPDM, KEGPST.  Note that EGPC is obsolete since MINI 9.0 .
+\item EFOL: KEFOLC.
+\item Vertex: QVEM.
+\end{itemize}
+The energy flow stored on the Mini-DST corresponds to the ENFLW
+algorithm;  PCPA was available also until MINI 8.6 .
+\par
+All of ALPHA's event topology routines work with the Mini-DST.  Also,
+the routines
+described in Ch.~\ref{sec-OARD} may be used.
+In particular, QMUIDO, QDEDXM, QPAIRF, QVDHIT, and XVDEOK will work.
+\par
+A few packages cannot run on the MINI, e.g. QEWSUM for datasets written with MINI 10.2 and before, or VDHMATCH for all MINIs.
+
+
+\par
+\section{\label{sec-dbpam}Differences between POT/DST and Mini-DST}
+\par
+In addition to the absence of some information, other differences
+may be
+observed when using the Mini.  The Mini-DST has limited precision,
+so some quantities
+will have slightly different values from those found when reading
+the POT or DST.
+Non-trivial differences are:
+\begin{itemize}
+\item FRFT/0 is generally not available on the Mini-DST.
+\item For ITC tracks, the z$\sb{0}$ error is limited to 25cm, which
+increases QBC2 substantially.
+\item If the total number of vertices is greater than 30, only the main
+vertices and the best V$\sp{0}$ vertices (ordered
+by chi-squared) up to a total of 30 will be available when reading
+the Mini-DST.
+\item Further, the V$\sp{0}$
+quantities available are the result of swimming the tracks,
+and if greater precision is required, a refit must be performed.
+Infrequently, problems arise when the charge of fitted track
+(FRFT/2) is different from that of the original track used (FRFT/0),
+and hence the two V$^0$ tracks appear to have the same charge.
+\item The chi-squared and NDF for the helix fit for charged tracks may not
+be the same as those found for the DST, but the chi-squared per NDF
+should be correct within the foreseen precision.
+\item The values of R2 and R3 are truncated in the range [-10.23,+10.23],
+but where there are indications of problems, the values are set to +1000.
+\item For old MINIs ( 8.6 and before ) with GAMPEK photons, only the presence of dead stories is recorded,
+not information for each storey. Hence DST1,2,3 of the variable KEGPQU are
+all 0 or all 1.
+\end{itemize}
+
+\par
+\section{\label{sec-mlep}Differences between LEP1 and LEP2 MINIs}
+\par
+
+As requested by the Physics Analysis groups, the MINIs for LEP2 datasets (both real data and Monte Carlo)
+ contain several banks in addition to the ones written on LEP1 MINIs: 
+\begin{itemize}
+\item used by EFLOW:\\
+  PHCO,HTUB,PEWI,PWEI,EFOL,EIDT
+\item muon identification:\\
+  MHIT,MCAD,HMAD,MUID,MUEX,MTHR,HPDI,HROA
+\item related to ${\mathrm{BCAL^{++}}}$:\\
+  BCTR,BCSC,BCSL,BCGN,BCHG
+\item HCAL calibration:\\
+  HT0C,HCLB,HCCV
+\item HCAL slow control:\\
+  HSSR,HCNF
+\item ITC coordinates:\\
+  PIDI ($\rightarrow$ ITCO)
+\item LCAL crack PMs :\\
+  LCRA
+\item SiCAL cluster identification:\\
+  SIID
+
+
+\item several specific KINGAL banks:\\
+  KWGT,KWTK,KSEC      
+
+
+\end{itemize}
+ 
+ The MINI-making program recognizes automatically if it reads LEP1 or LEP2 datasets and adds the above banks 
+ if the dataset is a LEP2 one.
+
+\par
+\section{\label{sec-wtm}Writing a Mini-DST}
+\par
+To write a private Mini-DST file from a DST (or POT), two options are possible. You may:
+
+
+{\bf - either use the \$ALEPH/phy/miniprod executable and the MINP data card:}
+
+If you do so you will obtain MINIs with the official ALEPH banks, especially those for LEP2 datasets.
+If you want the correct pad dE/dx for data, you must read input POTs, not DSTs. 
+
+Beware ! Using miniprod, you can't select your output events ({\bf all} input events are written on the 
+output file) and you can't modify the cuts for QSELEP,QIPBTAG, etc.. However, you may add standard ALEPH banks which are
+not foreseen in the official MINIs, using the MINA data card (see below).
+
+{\bf - or write your own customised MINI:} 
+
+In that case you can select your events and  put (almost) all what you want on your MINI. The MINI-making 
+program is an ALPHA job that you can submit with {\bf alpharun}; you have to proceed as follows: 
+
+
+\begin{enumerate}
+
+\item Read a POT (for Monte Carlo) or a DST (preferable and much faster for real data if you don't need the special pad dE/dx bank 
+PTPX), or even a MINI, declared with a standard FILI card.
+\item Declare an output file which will contain your Mini-DST with
+a FILO card.
+
+\item ALPHA must be informed that you wish to create a Mini-DST with the data card:
+
+ MINI 
+
+\item Invoke integer compression with COMP `INTE' to save space (about a factor of
+two) for the output file. 
+ 
+
+\item 
+If you want to write on your MINI some additional banks which are not ALEPH standard, you must define their format.
+
+Banks which are not ALEPH standard are banks which are not described in the documentation file:
+
+ al\$general:[doc.bankdoc]bankal.fmt on ALWS, 
+
+\$ALEPH/dbase/bankal.fmt on UNIX.
+
+To define the bank formats: in QUINIT, call the BOS routine BKFMT, one call per bank, see the BOS documentation.
+
+If you don't do so, these banks will be {\bf irrecoverably unreadable} when you will try to read your private MINI
+ afterwards.
+
+\item
+ you have to {\bf give the list of all your non-standard banks, if any,} to the MINI-making program through a data card:
+
+MINA 'ban1ban2ban3...' where ``bani' are the names (4 letters, as usual) of your private banks.
+
+   MINA may be used also to add to your MINI standard ALEPH banks which are not put in the standard MINIs. 
+
+\item In your QUEVNT subroutine, after your analysis and selections, call QWRITE whenever you wish to output an event
+according to your selection criteria.
+
+\item If you wish to create the ENFLW  information on the MINI file,
+ you must put an EFLJ data card.
+
+\item You may define your own QSELEP cuts with the appropriate set of LSxx data cards (see \ref{sec-QSELCU} on p.
+~\pageref{sec-QSELCU}).
+
+\end{enumerate}
+When you have written a small sample of events, it is worth {\bf checking}
+that these are readable
+before creating many events.
+ 

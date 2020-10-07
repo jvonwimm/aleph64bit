@@ -1,0 +1,64 @@
+head	1.2;
+access;
+symbols
+	aleph302_6:1.1
+	aleph302_5:1.1
+	aleph302_4:1.1
+	aleph302_3:1.1
+	aleph302_2:1.1
+	aleph302_1:1.1
+	aleph302:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.04.16.08.17.55;	author flr;	state dead;
+branches;
+next	1.1;
+
+1.1
+date	97.03.06.16.00.30;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@aleph302_7 : corr in kalm
+@
+text
+@      SUBROUTINE UF2SCA(CORE_FRACT, CORE_SIZE, TAIL_SIZE, IELOSS)
+C!  Load new scattering description into the UFG2 bank
+#ifndef DOC
+#include "ufg2jj.h"
+#include "bcs.h"
+#include "bmacro.h"
+      KUFG2 = IW(NAMIND('UFG2'))
+      IF(KUFG2 .LE. 0)THEN
+        CALL ALTELL('UF2SCA - No UFG2 bank to modify',2,'RETURN')
+        RETURN
+      ENDIF
+      RW(KROW(KUFG2,1)+JUFGCF) = CORE_FRACT
+      RW(KROW(KUFG2,1)+JUFGCW) = CORE_SIZE
+      RW(KROW(KUFG2,1)+JUFGTW) = TAIL_SIZE
+      IW(KROW(KUFG2,1)+JUFGDE) = IELOSS
+
+      CALL UFREIN
+
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@3rd test version of aleph302
+@
+text
+@@

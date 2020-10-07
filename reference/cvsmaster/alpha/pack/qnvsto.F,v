@@ -1,0 +1,218 @@
+head	1.2;
+access;
+symbols
+	alpha126_22:1.2
+	alpha122_22:1.2
+	alpha126_21:1.2
+	alpha126_20:1.2
+	alpha126_19:1.2
+	alpha126_18:1.2
+	alpha126_17:1.2
+	alpha126_16:1.2
+	alpha126_15:1.2
+	alpha126_14:1.2
+	alpha126_13:1.2
+	alpha126_12:1.2
+	alpha126_11:1.2
+	alpha126_10:1.2
+	alpha126_09:1.2
+	alpha126_08:1.2
+	alpha126_07:1.2
+	alpha126_06:1.2
+	alpha126_05:1.2
+	alpha126_04:1.2
+	alpha126_03:1.2
+	alpha126_02:1.2
+	alpha126_1:1.2
+	alpha125_17:1.2
+	alpha125_16:1.2
+	alpha125_15:1.2
+	alpha125_14:1.2
+	alpha125_13:1.2
+	alpha125_12:1.2
+	alpha125_11:1.2
+	alpha125_10:1.2
+	alpha125_09:1.2
+	alpha125_08:1.2
+	alpha125_07:1.2
+	alpha125_06:1.2
+	alpha125_05:1.2
+	alpha125_04:1.2
+	alpha125_03:1.2
+	alpha125_02:1.2
+	alpha125_01:1.2
+	alpha124_19:1.2
+	alpha125:1.2
+	alpha124_18:1.2
+	alpha124_17:1.2
+	alpha124_16:1.2
+	alpha124_15:1.2
+	alpha124_14:1.2
+	alpha124_13:1.2
+	alpha124_12:1.2
+	alpha124_11:1.2
+	alpha124_10:1.2
+	alpha124_09:1.2
+	alpha124_08:1.2
+	alpha124_07:1.2
+	alpha124_7:1.2
+	alpha124_06:1.2
+	alpha124_05:1.2
+	alpha124_04:1.2
+	alpha124_03:1.2
+	alpha124_02:1.2
+	alpha124_01:1.2
+	alpha124:1.2
+	alpha123_12:1.2
+	alpha123_11:1.2
+	alpha123_10:1.2
+	alpha123_9:1.2
+	alpha123_8:1.2
+	alpha123_7:1.2
+	alpha123_6:1.2
+	alpha123_5:1.2
+	alpha123_4:1.2
+	alpha123_3:1.2
+	alpha123_2:1.2
+	alpha123:1.2
+	alpha122_48:1.2
+	alpha122_47:1.2
+	alpha122_46:1.2
+	alpha122_45:1.2
+	alpha122_44:1.2
+	alpha122_43:1.2
+	alpha122_42:1.2
+	alpha122_41:1.2
+	alpha122_40:1.2
+	alpha122_39:1.2
+	alpha122_38:1.2
+	alpha122_37:1.1
+	alpha122_36:1.1
+	alpha122_35:1.1
+	alpha122_34:1.1
+	alpha122_33:1.1
+	alpha122_32:1.1
+	alpha122_31:1.1
+	alpha122_30:1.1
+	alpha122_29:1.1
+	alpha122_28:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.10.15.08.50.23;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.05.05.13.18.47;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE QNVSTO(IFLAG,IVV,INTR,NOUT,IOUTT,XYZ,CHI2,IVOU)
+CKEY FILL VERTEX   /INTERNAL
+C----------------------------------------------------------------------
+C!  - Stores a new vertex from new tracking
+C!   Author   :  J. Boucrot                    21-Apr-1997
+C!   Called from QFNINT or QFKINK
+C  Input arguments:
+C   IFLAG  = vertex category ( 4 for Nucl Int, 5 for Kinks)
+C      IVV = Row number of the vertex in the original bank
+C     INTR = ALPHA track number of incoming track, if any
+C     NOUT = number of outgoing tracks
+C    IOUTT = list of ALPHA numbers for the outgoing tracks
+C      XYZ = vertex coordinates
+C     CHI2 = chisquare of vertex fit
+C
+C!   Output :
+C!        - new vertex IVOU in QVRT is created.
+C?
+C!======================================================================
+#ifndef DOC
+#include "qcde.h"
+      INTEGER IOUTT(*)
+      REAL XYZ(3)
+#include "qmacro.h"
+C----------------------------------------------------------------------
+      JQVRT(I,N) = KOQVRT + I * KCQVRT + N
+      JR(N) = KOQVEC + ITK* KCQVEC + N
+C----------------------------------------------------------------------
+      IF (NOUT.LE.0) GO TO 999
+C
+C--- Store new vertex
+C
+      KVRTX  = KFFRV
+      IF (KFFRV .GE. KLFRV)  CALL QSBANK ('QVRT', KFFRV+200)
+C
+      RW(JQVRT(KVRTX,JQVRVX))=XYZ(1)
+      RW(JQVRT(KVRTX,JQVRVY))=XYZ(2)
+      RW(JQVRT(KVRTX,JQVRVZ))=XYZ(3)
+      IW(JQVRT(KVRTX,JQVRVN))= IVV
+      IW(JQVRT(KVRTX,JQVRTY))= IFLAG
+      IW(JQVRT(KVRTX,JQVRIP))= INTR
+      IW(JQVRT(KVRTX,JQVRND))= NOUT
+      RW(JQVRT(KVRTX,JQVRCF))= CHI2
+      IW(JQVRT(KVRTX,JQVRAY))=0
+      IW(JQVRT(KVRTX,JQVRAF))=0
+C
+C---Set up mother to daughter relationship between incoming track
+C---and outgoing tracks.
+C
+      IF (INTR.GT.0) THEN
+C Set end vertex for track INTR:
+         ITK=INTR
+         IW(JR(JQVEEV))=KVRTX
+      ENDIF
+C Set mother-daughter relations for the tracks:
+      IF (INTR.GT.0) THEN
+         CALL QAMOTH(INTR,NOUT,IOUTT)
+         CALL QADAU(INTR,NOUT,IOUTT)
+      ENDIF
+C Fill QLIN pointers for the new vertex:
+      IF (KNQLIN+NOUT.GT.IW(KOQLIN))
+     +    CALL QSBANK('QLIN',KNQLIN+NOUT+1000)
+      IW(JQVRT(KVRTX,JQVRDL))=KNQLIN
+      DO 450 ITT=1,NOUT
+         IW(KOQLIN+KNQLIN+1)=IOUTT(ITT)
+         KNQLIN=KNQLIN+1
+ 450  CONTINUE
+C
+C Set origin vertex and number of mother tracks for all outgoing tracks:
+C
+      DO 500 II=1,NOUT
+         ITK=IOUTT(II)
+         IW(JR(JQVEOV))=KVRTX
+         IF (INTR.GT.0) IW(JR(JQVENO))=1
+ 500  CONTINUE
+C Update pointers of vertex families:
+      KFFRV = KFFRV + 1
+      KLREV = KLREV + 1
+      KNREV = KNREV + 1
+      KFMCV = KFMCV + 1
+      KLMCV = KLMCV + 1
+C
+      IVOU=KVRTX
+  999 RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@d55 5
+@

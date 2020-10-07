@@ -1,0 +1,116 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.57.43;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.40;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.41;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE TESTB3
+*
+*     TEST DIRECT ACCESS
+*
+      COMMON/BCS/IW(1000)
+*
+*     TEST DIRECT ACCESS
+*
+C     CALL INITDA(17,1000,100,'MINE')
+C     CALL INITDA(18,1000,100,'MINE')
+C     CALL BDABF(17,1000,' ','MINE')
+      IND=NBANK('ALSO',1,10)
+      CALL BDAWR(IW,17,'ALSO',1)
+      IND=NDROP('ALSO',1)
+      IND=NBANK('ALSO',2,10)
+      CALL BDAWR(IW,17,'ALSO',2)
+      IND=NDROP('ALSO',2)
+      IND=NBANK('LASO',1,10)
+      CALL BDAWR(IW,17,'LASO',1)
+      IND=NDROP('LASO',1)
+      IND=NBANK('NNNN',9,100)
+      CALL BDAWR(IW,17,'NNNN',9)
+      IND=NDROP('NNNN',9)
+      IND=NBANK('MONA',7,17)
+      CALL BDAWR(IW,17,'MONA',7)
+      IND=NDROP('MONA',7)
+      IND=NBANK('GONG',5,10)
+      CALL BDAWR(IW,17,'GONG',5)
+      IND=NDROP('GONG',5)
+      IND=NBANK('ABCD',0,10)
+      CALL BDAWR(IW,17,'ABCD',0)
+      IND=NDROP('ABCD',0)
+      IND=NBANK('XYZW',1,10)
+      CALL BDAWR(IW,17,'XYZW',1)
+      IND=NDROP('XYZW',1)
+      IND=NBANK('XYZW',2,10)
+      CALL BDAWR(IW,17,'XYZW',2)
+      IND=NDROP('XYZW',2)
+      CALL BDAPR(17,'+DIR')
+      CALL BDAPR(17,'    ')
+      CALL BDAPR(17,'XYZW')
+
+      CALL BDASQ(IW,17,19)
+C     CALL BDABF(18,1000,' ','MINE')
+      CALL BDALD(IW,18,19)
+      CALL BDAPR(18,'+DIR')
+      CALL BDAPR(18,'    ')
+      CALL BDAPR(18,'XYZW')
+      CALL BOSTA
+      RETURN
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK testb3
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

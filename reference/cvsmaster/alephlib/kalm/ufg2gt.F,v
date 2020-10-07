@@ -1,0 +1,143 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.1
+	aleph305_3:1.1
+	aleph305_2:1.1
+	aleph305_1:1.1
+	aleph305:1.1
+	aleph304_5:1.1
+	aleph304_4:1.1
+	aleph304_3:1.1
+	aleph304_2:1.1
+	aleph304_1:1.1
+	aleph304:1.1
+	aleph303_3:1.1
+	aleph303_2:1.1
+	aleph303_1_mc1:1.1
+	aleph303_1:1.1
+	aleph302:1.1
+	aleph303:1.1
+	aleph302_9:1.1
+	aleph302_8:1.1
+	aleph302_7:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.11.05.17.08.32;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.04.16.08.17.55;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@Alephlib 306
+@
+text
+@      SUBROUTINE UFG2GT(CF,CW,TW,IE,FP)
+C!  Read the UFG2 bank for the double Gaussian parameters from Dbase or
+C!  data cards, or return defaults if no UFG2 found
+C!  Returns:     CF(R*4)     Fraction of scatters in the core Gaussian
+C!               CW(R*4)     Width of the core Gaussian,
+C!                           normalized to default = 1
+C!               TW(R*4)     Width of the tail Gaussian
+C!               IE(I*4)     If 0, No energy loss, if 1, energy loss by
+C!                           particle,
+C!               FP(R*4)     Probability cut to filter (remove) a
+C!                           coordinate
+C!  If no UFG2 card, do a single Gaussian, no energy loss or filtering
+#ifndef DOC
+#include "ufg2jj.h"
+#include "bcs.h"
+      DATA NAUFG2/0/
+#include "bmacro.h"
+C ---------------------------------------------------------------------
+C
+      IF (NAUFG2.EQ.0) THEN
+         NAUFG2 = NAMIND('UFG2')
+      ENDIF
+C
+      KUFG2 = IW(NAUFG2)
+C  If no UFG2 bank (card) found, read from database
+      IF (KUFG2.LE.0) THEN
+        KUFG2= MDARD (IW,JUNIDB(0),'UFG2',0)
+        IF(KUFG2 .LE. 0)THEN
+          CF = 1.0
+          CW = 1.0
+          TW = 2.0
+          IE = 0
+          FP = 0.
+          CALL ALTELL('UFG2GT - no UFG2 bank; using single Gaussian',
+     &      1,'RETURN')
+          RETURN
+        ENDIF
+      ENDIF
+      CF = MIN(MAX(RTABL(KUFG2,1,JUFGCF),0.),1.)
+      CW = MAX(RTABL(KUFG2,1,JUFGCW),0.01)
+      TW = MAX(RTABL(KUFG2,1,JUFGTW),0.01)
+      FP = MIN(MAX(RTABL(KUFG2,1,JUFGFP),0.),1.)
+      IE = MIN(MAX(ITABL(KUFG2,1,JUFGDE),0),1)
+
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@aleph302_7 : corr in kalm
+@
+text
+@d27 1
+a27 1
+        KUFG2= MDARD (IW,JUNIDB(),'UFG2',0)
+@

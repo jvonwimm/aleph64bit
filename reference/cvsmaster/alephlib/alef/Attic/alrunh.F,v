@@ -1,0 +1,72 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  aleph212:1.1.1.1 ALEPH212:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.02.07.11.40.36;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.02.07.11.40.37;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      INTEGER FUNCTION ALRUNH ( NRUN,NEXPE,IRTYP)
+C --------------------------------------------------------------------
+C - F.Ranjard - 861003
+C!  Build the RUNH bank
+C - Input :  NRUN   = run #
+C            NEXPE  = experiment #
+C            IRTYP  = run type
+C - Output : ALRUNH = RUNH bank index
+C                     0 means not enough space to book the bank
+C  --------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+C - LRUNH  = 'RUNH' bank length
+C   NCENT  = century #
+      PARAMETER (LRUNH = 5, NCENT = 19)
+C --------------------------------------------------------------------
+C - get date and time
+      CALL DATIME (JDAT,JTIM)
+C
+C - Book 'RUNH', NR=0 bank
+       CALL AUBOS ('RUNH',0,LRUNH,JRUNH,IGARB)
+       IF (JRUNH.EQ.0) GOTO 999
+       CALL BKFMT ('RUNH','(I)')
+       IW(JRUNH+1)  = NEXPE
+       IW(JRUNH+2)  = NRUN
+       IW(JRUNH+3)  = IRTYP
+       IW(JRUNH+4)  = JDAT
+       IW(JRUNH+5)  = JTIM
+C
+  999  CONTINUE
+       ALRUNH = JRUNH
+       RETURN
+       END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

@@ -1,0 +1,173 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.58.32;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.42;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.43;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE WRIT25
+
+*     ******************************************************************
+*     *                                                                *
+*     *   EXAMPLE,                                                     *
+*     *      GENERATE BANKS FOR 25 EVENTS AND WRITE TO DATA SET 1      *
+*     *      (USES RANDOM GENERATOR RNDM FROM CERNLIB)                 *
+*     *                                                                *
+*     *   CREATE BANK (HEAD,0) WITH INFORMATION ON RUN AND EVENT       *
+*     *   NUMBER ETC                                                   *
+*     *                                                                *
+*     *   CREATE BANK (RAWD,0) WITH RANDOM FLOATING POINT NUMBERS      *
+*     *                                                                *
+*     *   CREATE BANKS (CHEN,J) , EACH WITH SOME CHANNEL NUMBERS       *
+*     *   AND ENERGY                                                   *
+*     *                                                                *
+*     ******************************************************************
+
+      COMMON/BCS/IW(1000)
+      REAL RW(1000)
+      EQUIVALENCE (IW(1),RW(1))
+
+      DO 40 IEV=1,25
+
+*     CREATE AND FILL BANK (HEAD,0)
+
+*     I   FMT   BANK(HEAD,0)
+*     ----------------------
+*     1    I    EXPERIMENT NUMBER
+*     2    I    RUN NUMBER
+*     3    I    EVENT NUMBER
+*     4    I    DATA TYPE 0=DATA >0=MONTE CARLO
+*     5    I    FURTHER DATA IDENTIFIER
+*     6    I    ...
+*     7    I    ...
+*     8    I    ...
+*     9    I    DATE YYMMDD
+*     10   I    TIME   HHMM
+
+      IHEAD=NBANK('HEAD',0,10)
+      IF(IHEAD.EQ.0) GOTO 40
+      IW(IHEAD+2)=4711
+      IW(IHEAD+3)= IEV
+      IW(IHEAD+4)=   1
+      CALL DATIME(IW(IHEAD+9),IW(IHEAD+10))
+
+*     CREATE AND FILL BANK (RAWD,0)
+
+*     I   FMT   BANK(RAWD,0)
+*     ----------------------
+*     1    F    ENERGY
+*     ...  F    ) REPEATED
+*     ND   F    ) REPEATED
+
+      ND=10.0+10.0*RNDM(DUMMY)
+      IRAWD=NBANK('RAWD',0,ND)
+      IF(IRAWD.EQ.0) GOTO 100
+      DO 10 I=1,ND
+   10 RW(IRAWD+I)=RNDM(I)
+
+*     CREATE AND FILL BANKS (CHEN,J)
+
+*     I   FMT   BANK(CHEN,J)
+*     ----------------------
+*     1    I    CHANNEL NUMBER
+*     2    F    ENERGY
+*     3    I    ) REPEATED (CHANNEL NUMBER)
+*     4    F    ) REPEATED (ENERGY)
+*     ...
+*     ND
+
+      NR=0
+      NL=5.0+5.0*RNDM(DUMMY)
+      DO 20 L=1,NL
+      NR=NR+1+RNDM(L)*2
+      ICHEN=NBANK('CHEN',NR,6)
+      IF(ICHEN.EQ.0) GOTO 100
+      ICHAN=256*RNDM(LDUMMY)
+      IW(ICHEN+1)=ICHAN
+      RW(ICHEN+2)=RNDM(L)
+      IW(ICHEN+3)=ICHAN+1
+      RW(ICHEN+4)=RNDM(L+1)+RNDM(L-1)
+      IW(ICHEN+5)=ICHAN+2
+      RW(ICHEN+6)=RNDM(L+2)
+   20 CONTINUE
+
+*     BANK FORMATS
+
+      CALL BKFMT('HEAD','10I')
+      CALL BKFMT('RAWD','F')
+      CALL BKFMT('CHEN','(I,F)')
+
+*     DEFINE EVENT-LIST
+
+      CALL BLIST(IW,'E=','HEADRAWDCHEN')
+
+      CALL BWRITE(IW,1,'E')
+      CALL BDROP(IW,'E')
+      CALL BGARB(IW)
+   30 CONTINUE
+   40 CONTINUE
+
+*     WRITE BUFFER, REWIND AND PRINT STATUS
+
+      CALL BRWND(1)
+      CALL BOSTA
+  100 RETURN
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK writ25
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

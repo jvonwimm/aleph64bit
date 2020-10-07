@@ -1,0 +1,150 @@
+head	1.1;
+access;
+symbols
+	aleph316_2:1.1
+	aleph316_1:1.1
+	aleph316:1.1
+	aleph315_7:1.1
+	aleph315_6:1.1
+	aleph315_5:1.1
+	aleph315_4:1.1
+	aleph315_3:1.1
+	aleph315_2:1.1
+	aleph315_1:1.1
+	aleph315:1.1
+	aleph314_2:1.1
+	aleph314_1:1.1
+	aleph314:1.1
+	aleph313_1:1.1
+	aleph313:1.1
+	aleph312_1:1.1
+	aleph312:1.1
+	aleph311_1:1.1
+	aleph311:1.1
+	aleph310_3:1.1
+	aleph310_2:1.1
+	aleph310_1:1.1
+	aleph310:1.1
+	aleph309_1:1.1
+	aleph309:1.1
+	aleph308_3:1.1
+	aleph308_2:1.1
+	aleph308_1:1.1
+	aleph308:1.1
+	aleph307_6:1.1
+	aleph307_5:1.1
+	aleph307_4:1.1
+	aleph307_2:1.1
+	aleph307_1:1.1
+	aleph307:1.1
+	aleph306:1.1
+	aleph305_4:1.1
+	aleph305_3:1.1
+	aleph305_2:1.1
+	aleph305_1:1.1
+	aleph305:1.1
+	aleph304_5:1.1
+	aleph304_4:1.1
+	aleph304_3:1.1
+	aleph304_2:1.1
+	aleph304_1:1.1
+	aleph304:1.1
+	aleph303_3:1.1
+	aleph303_2:1.1
+	aleph303_1_mc1:1.1
+	aleph303_1:1.1
+	aleph303:1.1
+	aleph302_9:1.1
+	aleph302_8:1.1
+	aleph302_7:1.1
+	aleph302_6:1.1
+	aleph302_5:1.1
+	aleph302_4:1.1
+	aleph302_3:1.1
+	aleph302_2:1.1
+	aleph302_1:1.1
+	aleph302:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	97.03.06.11.59.14;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@1st test version aleph302
+@
+text
+@      SUBROUTINE UF2USE(N_PT, DBL_TRK, R_PT, I_COORD, N_COORD,
+     &  INNER, OUTER, *)
+C!  Find usable coordinates (consistent with input track params)
+#ifndef DOC
+      DOUBLE PRECISION OMEGA_TRK,D0_TRK,PHI0_TRK,TANL_TRK,Z0_TRK
+      DOUBLE PRECISION DBL_TRK(5)
+      DOUBLE PRECISION R_PT(*)
+      INTEGER INNER, OUTER, I_COORD(*)
+
+      PARAMETER (MIN_PT = 3)
+
+#include "vrldcom.h"
+#include "uftcom.h"
+
+      DOUBLE PRECISION MIN_RAD, MAX_RAD
+
+C! Load local variables
+
+      OMEGA_TRK = DBL_TRK(1)
+      TANL_TRK = DBL_TRK(2)
+      PHI0_TRK = DBL_TRK(3)
+      D0_TRK = DBL_TRK(4)
+      Z0_TRK = DBL_TRK(5)
+
+C Find usable points
+C =======================
+C The track has to completely cross the tpc pad-row to justify a hit at
+C the pad-row radius similar requirements hold for itc / vd
+
+      MAX_RAD = (2.D0/OMEGA_TRK - D0_TRK)*DSIGN(1.D0,OMEGA_TRK)
+      IF ( MAX_RAD .GT. DBLE(UKRTPC) ) THEN
+        MAX_RAD = MAX_RAD -1.5D0
+      ELSEIF ( MAX_RAD .GT. DBLE(UKRITC) ) THEN
+        MAX_RAD = MAX_RAD - 1.D0
+      ELSE
+        MAX_RAD = MAX_RAD - 0.01D0
+      ENDIF
+      OUTER = 0
+  140 OUTER = OUTER + 1
+      IF ( OUTER.GT.N_PT ) RETURN 1
+      IF ( I_COORD(OUTER) .EQ. 0) GOTO 140
+      IF ( R_PT(OUTER) .GE. MAX_RAD ) GOTO 140
+      IF ( R_PT(OUTER) .LT. RAD_CUT ) RETURN 1
+      MIN_RAD = ABS( D0_TRK )
+      IF ( MIN_RAD .GT. DBLE(UKRTPC) ) THEN
+        MIN_RAD = MIN_RAD + 1.5D0
+      ELSEIF ( MIN_RAD .GT. DBLE(UKRITC) ) THEN
+        MIN_RAD = MIN_RAD + 1.D0
+      ELSE
+        MIN_RAD = MIN_RAD + 0.01D0
+      ENDIF
+      MIN_RAD = MAX(MIN_RAD,DBLE(RAD_CUT))
+      INNER = N_PT + 1
+  150 INNER = INNER - 1
+      IF ( INNER.LT.OUTER ) RETURN 1
+      IF ( R_PT(INNER) .LE. MIN_RAD ) GOTO 150
+      N_COORD = 0
+      DO I = OUTER, INNER
+        IF (I_COORD(I).NE.0) N_COORD = N_COORD + 1
+      ENDDO
+      IF ( N_COORD .LT. MIN_PT ) RETURN 1
+      RETURN
+      END
+#endif
+@

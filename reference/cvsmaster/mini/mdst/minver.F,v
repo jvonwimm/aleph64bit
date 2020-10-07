@@ -1,0 +1,139 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	mini202_9:1.1.1.1
+	mini202_8:1.1.1.1
+	mini202_7:1.1.1.1
+	mini202_6:1.1.1.1
+	mini202_5:1.1.1.1
+	mini202_4:1.1.1.1
+	mini202_2:1.1.1.1
+	mini202_1:1.1.1.1
+	mini202:1.1.1.1
+	mini201_1:1.1.1.1
+	mini104_1:1.1.1.1
+	mini103_1:1.1.1.1
+	mini102_7:1.1.1.1
+	mini102_5:1.1.1.1
+	mini102_4:1.1.1.1
+	mini102_3:1.1.1.1
+	mini102_2:1.1.1.1
+	mini102_1:1.1.1.1
+	mini102:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.08.15.11.09.37;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.08.15.11.09.38;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE MINVER
+C
+CKEY MDST /INTERNAL
+C-----------------------------------------------------------------------
+C! Fill vertex bank DVER for Mini-DST.
+C
+C     Author: Stephen Haywood      22-Jan-90
+C
+C     Input  : PYER bank
+C     Output : DVER bank
+C
+C     Called by MINDST
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+#include "minfac.h"
+#include "pyerjj.h"
+#include "dverjj.h"
+#include "bmacro.h"
+C
+C++   Identify the number of vertices.
+C++   If no vertices, return without creating DVER bank.
+C
+      KPYER = NLINK('PYER',0)
+      IF(KPYER.GT.0) THEN
+         NPYER = LROWS(KPYER)
+      ELSE
+         NPYER = 0
+      ENDIF
+      IF(NPYER.LE.0) RETURN
+C
+C++   Create the DVER bank.
+C
+      NDVER = NPYER
+      LEN = LMHLEN + LDVERA * NDVER
+      CALL AUBOS('DVER',0,LEN, KDVER,IGARB)
+      IF(IGARB.GE.2) THEN
+         WRITE(IW(6),'('' MINVER: Cannot create DVER bank'')')
+         RETURN
+      ELSE IF(IGARB.NE.0) THEN
+         KPYER = NLINK('PYER',0)
+      ENDIF
+      IW(KDVER+LMHCOL) = LDVERA
+      IW(KDVER+LMHROW) = NDVER
+C
+C++   Loop over the PYER bank and fill the DVER bank.
+C
+      DO 100 I=1,NPYER
+C
+C++      Vertex position.
+C
+         IW(KROW(KDVER,I)+JDVEX0) = NINT(DFACTM * RTABL(KPYER,I,JPYEVX))
+         IW(KROW(KDVER,I)+JDVEY0) = NINT(DFACTM * RTABL(KPYER,I,JPYEVY))
+         IW(KROW(KDVER,I)+JDVEZ0) = NINT(DFACTM * RTABL(KPYER,I,JPYEVZ))
+C
+C++      Vertex fit probability.
+C
+         CHISQ = RTABL(KPYER,I,JPYEC2)
+         NDEG  = ITABL(KPYER,I,JPYEDF)
+         PRCHI = PROB(CHISQ,NDEG)
+         IW(KROW(KDVER,I)+JDVEFP) = NINT(1000.*PRCHI)
+C
+C++      Set main vertex bit.
+C
+         IW(KROW(KDVER,I)+JDVEMV) = 1
+C
+C++      Link to parent track - zero for main vertices.
+C
+         IW(KROW(KDVER,I)+JDVEDT) = 0
+C
+  100 CONTINUE
+C
+C++   Add the bank to the Mini list.
+C
+      CALL MINLIS('DVER')
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@1st release of mini under cvs
+@
+text
+@@

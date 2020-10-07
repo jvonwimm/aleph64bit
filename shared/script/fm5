@@ -1,0 +1,26 @@
+#!/bin/sh
+# ----------------------------------------------------
+# fm5 afs-wrapper
+# Author: M.Marquina 95/02/21
+#
+# Mods by      Date   Comments
+# M.Marquina 95/02/21
+# J. Closier 96/10/21 To use framemaker 5
+# ----------------------------------------------------
+  SHNAME=`basename $0`
+  
+  while [ $# -gt 0 ]
+  do case $1 in
+     -d*) DISPLAY=$2 ; export DISPLAY ; shift ;;
+     *)   break ;;
+     esac
+     shift
+  done
+
+  if [ -z "$DISPLAY" ] ; then
+     echo "$SHNAME: DISPLAY is not set"
+     exit
+  fi
+  FMHOME="/afs/cern.ch/pttools/FrameMaker/Frame_5.1" ; export FMHOME
+  PATH="${FMHOME}/bin:${PATH}"; export PATH
+  exec $FMHOME/bin/imaker $*

@@ -1,0 +1,97 @@
+head	1.1;
+access;
+symbols
+	jul313_3:1.1
+	jul313_2:1.1
+	jul313_1:1.1
+	jul313:1.1
+	jul312_1:1.1
+	jul312:1.1
+	jul311:1.1
+	jul310_1:1.1
+	jul310:1.1
+	jul309_1:1.1
+	jul309:1.1
+	jul308_6:1.1
+	jul308_5:1.1
+	jul308_4:1.1
+	jul308_3:1.1
+	jul308_2:1.1
+	jul308_1:1.1
+	jul308:1.1
+	jul307_4:1.1
+	jul307_3:1.1
+	jul307_2:1.1
+	jul307_1:1.1
+	jul307:1.1
+	jul306_3:1.1
+	jul306_2:1.1
+	jul306_1:1.1
+	jul306:1.1
+	jul305_4:1.1
+	jul305_3:1.1
+	jul305_2:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	97.12.17.17.40.52;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Add TPC smearing routines
+@
+text
+@C-----------------------------------------------------------------------
+      SUBROUTINE TPDIAG(NDIM,EMAT,EVEC,EVAL)
+C ----------------------------------------------------------------------
+C!  TPDIAG diagonalizes the 21x21 hit error matrix
+C!         returns the eigen vectors (as columns in EVEC)
+C!         and the eigen values (as EVAL)
+C!
+C - Author         Manoj Thulasidas  5-Nov-1994
+C
+C  Input :  NDIM  - dimension
+C           EMAT   - error matrix
+C
+C  Output : EVEC   - eigen vectors of EMAT in columns
+C           EVAL   - eigen values
+C
+C -----------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+      INTEGER NDIM
+      REAL EMAT(NDIM,NDIM), EVEC(NDIM,NDIM), EVAL(NDIM)
+      INTEGER LMAX
+      PARAMETER ( LMAX = 21 )
+      REAL WORK(LMAX)
+      INTEGER IERR
+C -----------------------------------------------------------------------
+      IF (NDIM.GT.LMAX) THEN
+        CALL RERROR ('TPRNDM',1,'Dimension overflow')
+        RETURN
+      ENDIF
+C-- diagonalize the error matrix
+C-- NDIM = 21, the number of tpc padrows
+C-- EMAT is the input error matrix
+C-- EVAL contains the eigen values (=diagonal elements)
+C-- EVEC contains the eigen vectors as columns
+C-- IERR.NE.0 => goofed
+C-- WORK is a work area
+      CALL EISRS1(NDIM,NDIM,EMAT,EVAL,EVEC,IERR,WORK)
+C-- check the return code here
+      IF (IERR.NE.0) THEN
+        CALL RERROR('TPDIAG',1,'Diagonalization fails')
+      ENDIF
+      RETURN
+      END
+#endif
+@

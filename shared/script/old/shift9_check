@@ -1,0 +1,21 @@
+#!/bin/csh
+#======================================================================
+#                         shift9_check
+# 30/05/97                                                     F.Blin
+#======================================================================
+   if ($HOST == "shift9") then 
+      echo "Runs not on shift9"
+      exit
+   endif
+   set admin = "fblxu@aloha.cern.ch,hag@aloha.cern.ch,system@aloha.cern.ch"
+
+### test ping on shift9
+   set n_ping = `ping -c 3 shift9 | tail -2 | grep round-trip | awk '{print $7}'`
+   if ($n_ping == "100%") then
+      echo ">>> /usr/etc/ping shift9 4 packets, $n_ping loss" | Mail -s "shift9 problems" $admin
+      exit
+   endif
+
+### run on shift9 sycheck_check
+   rsh shift9 /aleph/script/sycheck_check
+   exit

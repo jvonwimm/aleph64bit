@@ -1,0 +1,63 @@
+*DK sadoc
+#if defined(DOC)
+.chapter SMALL ANGLE TRACKING DETECTOR
+.section INTRODUCTION
+                                         H.Burkhardt  May 87
+    The SATR detector measures the tracks of charged particles
+    before they enter the Luminosity Calorimeter. The geometry
+    and readout is optimized to obtain good resolution in theta.
+    The acceptance region is 47 - 92 mrad in theta and full
+    acceptance in phi. There are two identical detectors
+    on either side of the interaction region in the z-range
+    from 245.4 to 262.5 cm.
+.section DESCRIPTION OF SUBROUTINES
+  SAASIG
+    This routine reduces the SAHI bank in case of multihits on the same
+    wire. Only the hit closest to the wire is kept
+  ..................................................
+  SABOOK
+    Histogram booking for the SATR. The histograms 601-615 allow to
+    determine: how many electrons produce showers already in
+    the beam pipe before they enter the SATR and by how
+    much they change the measurement of theta. To do this
+    information fromn the ITC and SATR impact bank is needed.
+    They other histograms allow a study of the shower development
+    inside the SATR (representing about 67 rad. length) through
+    hit and wire statitics per layer. Since multihits are not resolved
+    and certain wires put on the same TDC this study can only be
+    done in Monte Carlo.
+  ..................................................
+  SADIGI
+    Evaluates the information from the SAHIt bank, does oring
+    of wires going to the same TDC and the digitizing to simulate
+    real data.
+  ..................................................
+  SAGROU
+    Calculate the sector group number from the sector number.
+    Called from SADIGI as part of the conversion from wire number
+    to readout numbering.
+  ..................................................
+  SAHIST
+    Fill histograms for the SATR. Most useful in runs with single gammas
+    or electrons or Bhabha generators producing particles in the SATR
+    fiducial region.
+  ..................................................
+  SAHIT
+    Calculate hit and fill SAHI bank whenever a charged particle traverses
+    an active SATR volume.
+  ..................................................
+  SAIRUN
+    initialize common variables and banks for the SATR
+  ..................................................
+  SAWSUM
+    Prints out the average averages. For a test run use single electrons
+    or positrons in the cost range from .9968 - .9990 ( 45-80 mrad).
+    Reducing the fiducial volume in r to 50 cm and in z to 300 cm
+    100 events can be generated in a few minutes of running.
+                               minimum   maximum   typical
+    number of events               10
+    average #hits sens. region      5         60       40
+    average #hits lost              0         10        5
+    average #wires set              5         30       12
+
+#endif

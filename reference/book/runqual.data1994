@@ -1,0 +1,1290 @@
+#       1 RUN    26043   26045 DUCK COMP_COIL                                                                                       
+  Symptom:Compensation coils went down (Seen first by BCAL luminosity going down)                                                   
+  Effect: Data not usable for physics (effects runs 26043 - 26044 -26045)                                                           
+#       2 RUN    27406   27406 DUCK TPC_OFF                                                                                         
+  Symptom:TPC high voltage off all this run                                                                                         
+  Cause:  High background                                                                                                           
+  Effect: No tracks!                                                                                                                
+#       3 RUN    27604   27604 DUCK JUNK_RUN                                                                                        
+  Symptom:vdet no hits, itc, tpc off for much of run                                                                                
+  Cause:  vdet multiplexer dead from power cut, high backgrounds                                                                    
+  Effect: run is useless                                                                                                            
+#       4 RUN    27608   27608 DUCK VAX_CRASH                                                                                       
+  Symptom:vax crash at beginning of run                                                                                             
+  Cause:  possible bad memory in AL0VOL                                                                                             
+  Effect: Tape is probably unreadable                                                                                               
+#       5 RUN    27622   27625 DUCK NO_COOLING                                                                                      
+  Symptom:TPC and ECAL front end electronics off, Sical overheating.                                                                
+  Cause:  No front end cooling                                                                                                      
+  Effect: No tracking or calorimetry!                                                                                               
+#       6 RUN    28899   28899 DUCK FOUR_BUNCHES                                                                                    
+  Symptom:Only four bunches in LEP. Bad T0 for TPC                                                                                  
+  Effect: BAd T0 in TPC. few data.                                                                                                  
+#       7 RUN    29989   29991 DUCK BUNCH-TRAINS                                                                                    
+  Symptom:Funny events: missing ITC hits, displaced TPC vertices, strange SICAL clusters....                                        
+  Cause:  LEP fill with bunch trains                                                                                                
+  Effect: Unreliable data                                                                                                           
+  Cause:  fill 2481                                                                                                                 
+#       8 RUN    30038   30038 DUCK BUNCH-TRAINS                                                                                    
+  Symptom:Funny events: missing ITC hits, displaced TPC vertices, funny SICAL cluster....                                           
+  Cause:  LEP fill (2490) with bunch trains                                                                                         
+  Effect: unreliable data                                                                                                           
+#       9 RUN    30042   30060 DUCK BUNCH-TRAINS                                                                                    
+  Symptom:funny events: missing ITC hits, displaced TPC vertices, funny SICAL clusters...                                           
+  Cause:  LEP fill (2491,2493) with bunch trains                                                                                    
+  Effect: unreliable data                                                                                                           
+#      10 RUN    30248   30255 DUCK BUNCH-TRAINS                                                                                    
+  Symptom:funny events: missing ITC hits , displaced TPC vertices, funny SICAL clusters...                                          
+  Cause:  LEP fill (2519) with bunch trains                                                                                         
+  Effect: unreliable data                                                                                                           
+#      11 RUN    30380   30381 DUCK BUNCH-TRAINS                                                                                    
+  Symptom:funny events: missing ITC hits, displaced TPC vertices, funny SICAL clusters....                                          
+  Cause:  LEP fill (2565) with bunch trains                                                                                         
+  Effect: unreliable data                                                                                                           
+#       1 DAQ    25000   25424 MAYB CORRUPTED BOS                                                                                   
+  Symptom:Consumer in MAEB reporting bad BOS structures                                                                             
+  Cause:  VDET producing bad banks                                                                                                  
+  Effect: Small                                                                                                                     
+  Cause:  vdet readout problems                                                                                                     
+  Effect: expected to lead only to a small innefficiency ... but there could be unexpected effects.                                 
+#       2 DAQ    25000   25554 MAYB DEAD TIME                                                                                       
+  Symptom:Dead time above 10% / Hz                                                                                                  
+  Cause:  Botleneck in the data transfer from MAEB to the VAX                                                                       
+  Effect: Unknown                                                                                                                   
+#       3 DAQ    25689   25798 PERF INCORRECT DOWN%                                                                                 
+  Symptom:The %downtime and %deadtime recorded in the run summaries is incorrect                                                    
+  Cause:  Software bug                                                                                                              
+  Cause:  Bug in EORHUH when printing the Checklist. OK in Run Summary                                                              
+  Effect: non I can think of !                                                                                                      
+#       1 ECHE   25304   25304 PERF TEST                                                                                            
+  Symptom:Testing a new feature of CIA                                                                                              
+  Cause:  aaaaa                                                                                                                     
+  Effect: bbbb                                                                                                                      
+  Effect: Testing a new way of printing the summary of the CIA problems, in particular when you have a very long line like this.    
+#       2 ECHE   25933   25933 MAYB BEAM DUMP                                                                                       
+  Symptom:VDET off last 5 minutes of run                                                                                            
+  Cause:  Aleph running with high voltages on during beam dump                                                                      
+  Effect: Hopefully none                                                                                                            
+#       1 VDET   25261   25299 MAYB NO VDET HITS                                                                                    
+  Symptom:No VDET hits.                                                                                                             
+  Cause:  wrong calibration program                                                                                                 
+  Effect: no VDET information                                                                                                       
+#       2 VDET   25335   26326 PERF TOO MANY CLUSTER                                                                                
+  Symptom:Number of clusters/event distr. shifted up by 10 (r-phi) resp. 20 (z) clusters                                            
+  Cause:  No online noise suppression yet                                                                                           
+  Effect: none                                                                                                                      
+  Cause:  Online thresholds set low                                                                                                 
+  Effect: none                                                                                                                      
+#       3 VDET   25520   25531 DUCK NOT_IN_PARTITION                                                                                
+  Symptom:VDET is out of the partition                                                                                              
+  Cause:  VDCON fails to initialise the Siroccos and MVDRCU                                                                         
+  Cause:  fb crate hung , cure ... cycle fb crate power reset fic and then use fbdb/act                                             
+  Effect: no vdet data                                                                                                              
+#       4 VDET   25335   25424 MAYB BOS ERRORS                                                                                      
+  Symptom:bos read errors in data and some data discarded in the fornt end                                                          
+  Cause:  problems with the readout                                                                                                 
+  Effect: this should cause a small ineffinecy in this period and there may be other problems with this data ( thought unlikely)    
+#       5 VDET   25532   25541 MAYB BAD CALIBRATION                                                                                 
+  Symptom:these runs were taken with a suspect pedestal file                                                                        
+  Effect: data not useable for precision physics                                                                                    
+#       6 VDET   25636   25636 PERF TOO_MANY_HITS                                                                                   
+  Symptom:Large number of hits/Face side B. Problem predates run 25636.                                                             
+  Effect: mone                                                                                                                      
+#       7 VDET   25636   25636 PERF TOO_MANY_HITS                                                                                   
+  Symptom:Problem with side B is onlny channel#1.                                                                                   
+  Effect: none                                                                                                                      
+#       8 VDET   25678   25678 PERF TOO_MANY_HITS                                                                                   
+  Symptom:large number of hits/Face Side A, channel 17                                                                              
+  Effect: none                                                                                                                      
+#       9 VDET   25712   25712 PERF N^ OF CLUSTERS                                                                                  
+  Symptom:spike @ 0 in both r-phi & z                                                                                               
+  Cause:  the high voltage was cycled on some modules for OTL                                                                       
+  Effect: no VDET data for some events                                                                                              
+#      10 VDET   25907   25908 MAYB NO READOUT                                                                                      
+  Symptom:THE VDET WAS NOT READOUT WHILE THE HV WAS ON                                                                              
+  Cause:  THE HV CABLE GOING INTO THE TSR AND HENCE THE FIC WAS DISCONNECTED                                                        
+  Effect: NO VDET DATA FOR THESE RUNS                                                                                               
+#      11 VDET   26377   26552 PERF VDET HV BIT                                                                                     
+  Symptom:The VDET 90% HV bit is intermittently failing while the 100% HV bit is on.                                                
+  Cause:  Hardware problem which will be repaired during shutdown.                                                                  
+  Effect: VDET readout is not affected. Anybody else using the VDET 90% HV bit should be aware.                                     
+  Symptom:90% HV bit no longer used- from 9-june everything uses the 100% bit.                                                      
+  Cause:  bad HV card                                                                                                               
+  Effect: none                                                                                                                      
+#      12 VDET   26670   27430 PERF HISTOGRAM                                                                                       
+  Symptom:Shift in Nb. Clus/Evt(z) histograms since last shutdown                                                                   
+  Cause:  Noise ???                                                                                                                 
+  Effect: Probably none !                                                                                                           
+#      13 VDET   26707   26737 PERF SIDE A # HITS.                                                                                  
+  Symptom:Nb HIts /face, side A, bin 15. Intermittently large number of hits                                                        
+  Effect: none                                                                                                                      
+#      14 VDET   26725   26726 DUCK NO HITS                                                                                         
+  Symptom:no hits                                                                                                                   
+  Cause:  multiplexer crate stuck due to power glitch                                                                               
+  Effect: very bad                                                                                                                  
+  Symptom:fixed by recycling power to multiplexer crate                                                                             
+#      15 VDET   26728   26738 DUCK CLUST PH (Z)                                                                                    
+  Symptom:bump at large cluster pulse height (Z)                                                                                    
+  Cause:  probably due to bad calibration resulting from power outage                                                               
+  Symptom:we did indeed have a bad calibration                                                                                      
+  Effect: bad                                                                                                                       
+#      16 VDET   26745   26746 DUCK NO HITS                                                                                         
+  Symptom:No hits in side B                                                                                                         
+  Cause:  Readout suppressed on side B because producer fails to read HV bit                                                        
+  Cause:  TSR unit (HV bit latch) on side B not working                                                                             
+  Effect: not for VDET use                                                                                                          
+#      17 VDET   26747   26748 DUCK NOTINPARTITION                                                                                  
+  Symptom:VDET is out of the partition                                                                                              
+  Symptom:No VDET hits in side B                                                                                                    
+  Cause:  TSR unit (HV bit latch) on side B had fastbus error. fixed                                                                
+  Effect: not for use with VDET                                                                                                     
+#      18 VDET   27057   27430 PERF INCREASED NOISE                                                                                 
+  Symptom:nb hits/face side b shows spike at 16 5000 greater than normal                                                            
+  Cause:  Noisy waffer                                                                                                              
+  Effect: none??                                                                                                                    
+#      19 VDET   27413   27430 PERF PULSE HT HISTO                                                                                  
+  Symptom:Clus Pulse Ht (Z) (z trig) has more entries in bins 200-250. Mean value ~ 460 , not 484.1                                 
+  Cause:  change in noise since last shutdown                                                                                       
+  Effect: none?                                                                                                                     
+#      20 VDET   28051   28123 PERF SPIKE                                                                                           
+  Symptom:Spike in bin 8 Nb. hits/face side B                                                                                       
+  Symptom:run quality shows low efficiency of BI08                                                                                  
+  Cause:  Broken attenuator in BI08                                                                                                 
+  Effect: low efficiency (30-50%) in BI08                                                                                           
+#      21 VDET   28125   28692 PERF DEAD LINE                                                                                       
+  Symptom:BI01: no hits in first 4 camex's; fail RUNQ                                                                               
+  Cause:  Dead phi1 line on BI01                                                                                                    
+  Effect: NONE                                                                                                                      
+#      22 VDET   29388   29463 PERF NOISY MODULE                                                                                    
+  Symptom:Spike in Nb. Hits/face side A , bin 18                                                                                    
+  Symptom:Lower efficiency on part of the module BO7.                                                                               
+  Cause:  the threshold of AO09 (not BO07) of phi 2 was lowered by mistake                                                          
+  Effect: none                                                                                                                      
+#      23 VDET   29517   29667 PERF AO09                                                                                            
+  Symptom:low efficicency of AO09 in run quality                                                                                    
+  Cause:  line driver has only 1/2 gain                                                                                             
+  Effect: low efficiency of half the phi wafers of AO09                                                                             
+#       1 ITC    25261   25265 PERF ALL_WIRES_HIT                                                                                   
+  Symptom:Two spikes at long drift time in T0 spectrum. Affects only this run                                                       
+  Cause:  Probably due to bad timing                                                                                                
+  Effect: In the events affected the ITC information will be useless                                                                
+  Symptom:Also seen in event 2488 run 25265.                                                                                        
+  Cause:  Due to event 648, in which most wires fired with same drift time - possibly a discharge in the chamber                    
+  Effect: None (bad events have a full ITC and no tracks). Probably there at a lower level last year also                           
+#       2 ITC    25335   25365 MAYB TRIGGER_TIMING                                                                                  
+  Symptom:Drift hits without corresponding trigger hits                                                                             
+  Cause:  Gate for trigger is about 20ns too late                                                                                   
+  Effect: Trigger may be slightly inefficient: about 5% of hits (at shortest drift times) not seen by trigger                       
+#       3 ITC    25376   25376 PERF TRIGGER HITS                                                                                    
+  Symptom:There are too many trigger hits in the inner and outer layer (ch. 50/70)                                                  
+  Cause:  Due to shape of LEP background                                                                                            
+  Effect: None                                                                                                                      
+#       4 ITC    25000   26187 PERF DEAD_HV_BLOCK                                                                                   
+  Symptom:Number of trigger hits in outer layers bins 101-->104  smaller than the adjacent bins                                     
+  Cause:  Due to no high voltage on wires 773 to 776                                                                                
+  Effect: None                                                                                                                      
+  Cause:  Broken connection at patch panel, fixed on 31-May-1994                                                                    
+#       5 ITC    25000   25000 PERF DATA ERRORS                                                                                     
+  Symptom:Some entries in data errors histogram                                                                                     
+  Cause:  Due to an intermittent fault in the readout of the trigger processor                                                      
+  Effect: none                                                                                                                      
+#       6 ITC    25812   25843 PERF NOISE                                                                                           
+  Symptom:Many entries in noisy RPP and dead Z plots, On exclusive SNG_MUON triggers                                                
+  Cause:  Noise picked up from a flickering neon light outside C1                                                                   
+  Effect: None                                                                                                                      
+#       7 ITC    26088   26088 PERF ITC TRIP                                                                                        
+  Symptom:The ITC tripped for part of the run                                                                                       
+  Effect: None. Taken care of by the HV bits                                                                                        
+#       8 ITC    26084   26084 PERF ITC TRIP                                                                                        
+  Symptom:The ITC tripped for part of the run                                                                                       
+  Cause:  not known                                                                                                                 
+  Effect: events with ITC off should not be used for physics                                                                        
+  Effect: None!! The HV bits in XLUMOK take care of it....                                                                          
+#       9 ITC    28130   28130 PERF TRIG_HITS                                                                                       
+  Symptom:Holes in bins 12,20 trigger hits (outer 4 layers) histogram                                                               
+  Cause:  Low statistics run, ITC trip due to high currents                                                                         
+  Effect: Effect not statisticaly significant                                                                                       
+#      10 ITC    28499   28515 MAYB Z COORDINATE                                                                                    
+  Symptom:Z position histograms have an incorrect mean value.                                                                       
+  Cause:  Incorrect Z calibrations constants used.                                                                                  
+  Effect: ITC z measurements are not used offline by any major analysis.                                                            
+#      11 ITC    28530   28530 DUCK BAD T0 TIMING.                                                                                  
+  Symptom:No ITC R-PHI hits on Z events.                                                                                            
+  Cause:  Incorrect trigger selection after trigger test.                                                                           
+  Effect: No ITC tracking will be possible.                                                                                         
+#       1 TPC    25340   25340 DUCK OUT_OF_DAQ                                                                                      
+  Symptom:TPC out of ALEPH partition for this run                                                                                   
+  Cause:  That was intended                                                                                                         
+  Effect: No TPC tracking                                                                                                           
+#       2 TPC    25345   25357 MAYB PAD CHARGE                                                                                      
+  Symptom:pad charge has a spike in channel 11                                                                                      
+  Effect: no serious effect                                                                                                         
+#       3 TPC    25347   25347 PERF NO HITS?                                                                                        
+  Symptom:all histograms except dEdx are empty                                                                                      
+  Cause:  Maybe TPCMON was not running                                                                                              
+  Effect: none                                                                                                                      
+#       4 TPC    25374   25375 MAYB TPC                                                                                             
+  Symptom:all histos except dE/dx are empty                                                                                         
+  Effect: problem solved                                                                                                            
+#       5 TPC    25000   25482 MAYB GATING_SEC_22                                                                                   
+  Symptom:We can not switch the gate for sector 22                                                                                  
+  Cause:  One connection to the gating grid for sector 22 is broken inside the sector                                               
+  Effect: Not yet known                                                                                                             
+  Symptom:Capacitance of one side of gating different from other side                                                               
+  Cause:  Presumed open circuit inside sector                                                                                       
+  Effect: No data from this sector                                                                                                  
+  Symptom:Problem spontaneously cured -- watch carefully                                                                            
+#       6 TPC    25420   25482 PERF TPC WIRE HITS                                                                                   
+  Symptom:noisy wires in sector 13                                                                                                  
+  Cause:  Mistuned gating circuit                                                                                                   
+  Effect: Very minor efficiency loss in one sector                                                                                  
+#       7 TPC    25414   25416 MAYB TPC DE/DX                                                                                       
+  Symptom:empty histograms                                                                                                          
+  Cause:  Insufficient number of hadronic Z's in run.                                                                               
+  Effect: None.                                                                                                                     
+  Cause:  Insufficient number of Zs in run                                                                                          
+  Effect: None.                                                                                                                     
+#       8 TPC    25592   25595 DUCK NOISE IN SECTOR                                                                                 
+  Symptom:A factor of 6 too many hits on the pads in sector 20. Factor of 2 in the wires. Avg pad charge correspondingly lower.     
+  Symptom:hi bad hit rate, wires & pads                                                                                             
+  Effect: tracks missing / inner sector                                                                                             
+#       9 TPC    25592   25592 MAYB SEC 20 DROPOUT                                                                                  
+  Symptom:High noise level/low hit reconstuction rate                                                                               
+  Effect: events with tracks missing in 1 inner sector                                                                              
+#      10 TPC    25520   25520 PERF SEC 14                                                                                          
+  Symptom:low level of noise, esp.  padrows 1, 4, 5                                                                                 
+  Effect: none                                                                                                                      
+  Symptom:This is a duplicate of problem number 13.  See that one.                                                                  
+  Cause:  No one knows, and no one cares.                                                                                           
+  Effect: None.  This is just noise, forget it.                                                                                     
+#      11 TPC    25625   25632 PERF TPC HISTOS                                                                                      
+  Symptom:empty histograms                                                                                                          
+  Symptom:Scanned events by hand -- look OK                                                                                         
+  Effect: none                                                                                                                      
+#      12 TPC    25699   25699 PERF SECTOR 14                                                                                       
+  Symptom:Sector 14 has too many hits in wires and pads.                                                                            
+  Symptom:This is also a duplicate of problem number 13.  See that one.                                                             
+  Cause:  Who knows.                                                                                                                
+  Effect: None.  This is just noise.                                                                                                
+#      13 TPC    25702   30356 PERF SECTOR 14                                                                                       
+  Symptom:The extra hits are confined to the first 8 buckets in the t0-distr.                                                       
+  Effect: Not much effect, some noise.                                                                                              
+#      14 TPC    25736   25736 PERF -                                                                                               
+  Symptom:Sector 18  abnormal high pad hit rate                                                                                     
+  Cause:  (Unneeded duplicate entry; see problem number 15.)                                                                        
+  Effect: None; see problem number 15 - I'm calling RunQual PERF because the run number is WRONG.                                   
+#      15 TPC    25744   25748 DUCK STUCK DAQ BIT                                                                                   
+  Symptom:Sector 20 has extra pad hits; spikes on t0-distribution                                                                   
+  Symptom:(Also in sector 18 during run 25832)                                                                                      
+  Cause:  stuck daq bit - padrows 1-4 keep reading out same event                                                                   
+  Effect: DUCK - very, very bad ...                                                                                                 
+  Symptom:Sector 18 also affected during run 25832 only ...                                                                         
+  Cause:  DAQ bug -padrows 1-4 keep reading out same event                                                                          
+  Effect: Very very bad.  Do Not Use Casually                                                                                       
+#      16 TPC    25814   25843 MAYB SECTOR 13 AND 14                                                                                
+  Symptom:Sector 13 has high wire hit rate; not visible in pads                                                                     
+  Symptom:Lots of wire noise in sectors 13 and 14.                                                                                  
+  Cause:  flickering neon light outside barracks C1 (!)                                                                             
+  Effect: There should be some effect on dE/dx in these sectors; otherwise none.                                                    
+#      17 TPC    25732   25732 DUCK ERRATUM                                                                                         
+  Symptom:Erratum to stuck daq bit problem (problem 15).  Sector 20 in runs 25732 and 25744-48, sector 18 in run 25734.             
+  Cause:  stuck daq bit, repeated events.                                                                                           
+  Effect: very bad, see problem number 15.                                                                                          
+#      18 TPC    26132   26133 MAYB TPRP/FVSBI 36                                                                                   
+  Symptom:bus errors from TPRP36 - sector 36 taken out of partition                                                                 
+  Cause:  fault in FVSBI for sector 36                                                                                              
+  Effect: no data in sector 36                                                                                                      
+#      19 TPC    25000   26187 MAYB GATE_NOT_CONNECT                                                                                
+  Symptom:Not seen                                                                                                                  
+  Cause:  Gating grid cables for sectors 24,33 unconnected                                                                          
+  Effect: Gating grid floating and not switching, creating E-field distortions. Not yet known the amount.                           
+#      20 TPC    25100   26187 MAYB GATING CABLES                                                                                   
+  Symptom:gating cables for sectros 24 and 33 were found disconnected                                                               
+  Effect: not known  yet                                                                                                            
+#      21 TPC    26327   26329 DUCK SECTOR 6 GAGA                                                                                   
+  Symptom:TPDs 1,2,22,23 out to lunch, other hits randomized location...                                                            
+  Cause:  corrupted coordinate banks (?) Maybe recoverable.  TPRP reboot fixed it.                                                  
+  Effect: missing sector, unless recovered                                                                                          
+#      22 TPC    26846   26857 PERF TPC                                                                                             
+  Symptom:Noisy on TPC sector 32 pad row 1                                                                                          
+  Cause:  Channel #1 TPD #2 ( pad #65 row #1 ) is noisy as run 26846, but not continuosly ...                                       
+  Effect: None                                                                                                                      
+#      23 TPC    27124   27134 PERF PAD HITS                                                                                        
+  Symptom:SECTOR 32 EXCESS NOISE - UP TO >80000 FROM 20000.  Coordinator not responding                                             
+  Symptom:TPC beep not working.                                                                                                     
+  Cause:  Sector #32: channel #1, TPD #2  (pad #65, row #1) noisy.                                                                  
+  Effect: None                                                                                                                      
+#      24 TPC    27239   27254 PERF PAD CHARGE HISTO                                                                                
+  Symptom:<Pad Charge>/Pulse Histogram has ~240 entries instead of ~170 in bin 11. Seen in Runs 27235 to 27239                      
+  Effect: None                                                                                                                      
+#      25 TPC    27309   27315 DUCK CLOCK                                                                                           
+  Symptom:TPC Clock not synchronized to the beam                                                                                    
+  Cause:  Clock module faulty                                                                                                       
+  Effect: z coordinate cannot be reconstructed                                                                                      
+#      26 TPC    28064   28064 PERF WIRE PEDESTAL                                                                                   
+  Symptom:Dip in bins 15 and 21                                                                                                     
+  Effect: none                                                                                                                      
+#      27 TPC    27972   27972 MAYB LOW_DE/DX_15_1                                                                                  
+  Symptom:Run Q reported low De/dx on scetor 15                                                                                     
+  Cause:  Intermittent problem with the gating switching circuit. Causing the pedestals go lower                                    
+  Effect: Bad De/dx on that sector                                                                                                  
+#      28 TPC    27980   27981 MAYB LOW_DE/DX_15_2                                                                                  
+  Symptom:same as LOW_DE/DX_15_1                                                                                                    
+  Cause:  same as LOW_DE/DX_15_1                                                                                                    
+  Effect: same as LOW_DE/DX_15_1                                                                                                    
+#      29 TPC    27985   27985 MAYB LOW_DE/DX_15_3                                                                                  
+  Symptom:same as low_de/dx_15_1                                                                                                    
+  Cause:  same as low_de/dx_15_1                                                                                                    
+  Effect: same as low_de/dx_15_1                                                                                                    
+#      30 TPC    27997   27999 MAYB LOW_DE/DX_15_4                                                                                  
+  Symptom:same as low_de/dx_15_1                                                                                                    
+  Cause:  same as low_de/dx_15_1                                                                                                    
+  Effect: same as low_de/dx_15_1                                                                                                    
+#      31 TPC    28012   28013 MAYB LOW_DE/DX_15_5                                                                                  
+  Symptom:same as low_de/dx_15_1                                                                                                    
+  Cause:  same as low_de/dx_15_1                                                                                                    
+  Effect: same as low_de/dx_15_1                                                                                                    
+#      32 TPC    28056   28056 MAYB LOW_DE/DX_15_6                                                                                  
+  Symptom:same as low_de/dx_15_1                                                                                                    
+  Cause:  same as low_de/dx_15_1                                                                                                    
+  Effect: same as low_de/dx_15_1                                                                                                    
+#      33 TPC    28063   28065 MAYB LOW_DE/DX_15_7                                                                                  
+  Symptom:same as low_de/dx_15_1                                                                                                    
+  Cause:  same as low_de/dx_15_1                                                                                                    
+  Effect: same as low_de/dx_15_1                                                                                                    
+#      34 TPC    28067   28090 MAYB HIGH_DE/DX_15_8                                                                                 
+  Symptom:high De/dx detected by RUNQ                                                                                               
+  Cause:  Wire pedestal file used was taken when sector 15 had a low pedestal                                                       
+  Effect: High De/dx                                                                                                                
+#      35 TPC    28075   28078 MAYB LOW_DE/DX_15_9                                                                                  
+  Symptom:same as low_de/dx_15_1                                                                                                    
+  Cause:  same as low_de/dx_15_1                                                                                                    
+  Effect: same as low_de/dx_15_1                                                                                                    
+#      36 TPC    29232   29232 PERF WIRE CHARGE/PULS                                                                                
+  Symptom:significant increase in wire charge/pulse in sector 8                                                                     
+  Cause:  Noisy wire -- incorrectly masked out, operator error  *sigh*                                                              
+  Effect: none                                                                                                                      
+#      37 TPC    29142   29269 PERF SECT 25 FVSBI                                                                                   
+  Symptom:High rate of bad hits, passed TPDTST, CALIB checks; did not go away with TPD swaps.                                       
+  Cause:  Went away with swap of FVSBI                                                                                              
+  Effect: None -- in principle, should be loss of efficiency but if so, it was to small to see in Run Quality.                      
+#      38 TPC    29142   29269 PERF SECT 25 FVSBI                                                                                   
+  Symptom:High rate of bad hits, passed TPDTST, CALIB checks; did not go away with TPD swaps.                                       
+  Cause:  Went away with swap of FVSBI                                                                                              
+  Effect: None -- in principle, should be loss of efficiency but if so, it was to small to see in Run Quality.                      
+#      39 TPC    30074   30074 PERF PAD_NOISE                                                                                       
+  Symptom:1st padrow of sector 14 noisy                                                                                             
+  Cause:  Known problem since begining of the year                                                                                  
+  Effect: none                                                                                                                      
+#      40 TPC    30106   30140 MAYB SECTOR-5-TRIP                                                                                   
+  Symptom:sector 5 cannot stand high voltage because of LEP background                                                              
+  Cause:  LEP background, possibly also weakness of sector 5                                                                        
+  Effect: no dE/dx and no TPC coordinates on sector 5                                                                               
+#      41 TPC    30141   30141 PERF SECTOR-14-NOISE                                                                                 
+  Symptom:Sector 14 pad hits is a factor of two larger than usual                                                                   
+  Cause:  Some noisy channels                                                                                                       
+  Effect: Nothing: a negligible amount of noise hits                                                                                
+#      42 TPC    25734   25734 DUCK ERRATUM                                                                                         
+  Symptom:See problem number 17                                                                                                     
+  Cause:  Problem 17 should also apply to run 25734                                                                                 
+  Effect: DUCK - very, very bad                                                                                                     
+#       1 ECAL   25345   25357 MAYB PAD VS WIRE OFF                                                                                 
+  Symptom:Endcap A and B off in pad vs wire, needs calibration                                                                      
+  Effect: can probably be corected for off-line                                                                                     
+#       2 ECAL   25000   25891 MAYB PAD-WIRE                                                                                        
+  Symptom:Endcap A and B off in pad vs wire, needs calibration                                                                      
+  Effect: No longer serios                                                                                                          
+  Cause:  Calibration constants being applied to incorrect ADCs due to a confusion in cable numbering in endcaps                    
+  Effect: None, these runs can be 'repaired' offline however for now they are MAYB                                                  
+#       3 ECAL   25347   25472 MAYB BAD_T0                                                                                          
+  Symptom:All modules in both endcaps have either no T0 or bad T0                                                                   
+  Cause:  The Pastis controller in the endcaps had not been correctly modified for the new electronics                              
+  Effect: No T0 measurements are available for either endcaps during this period                                                    
+#       4 ECAL   25347   25376 DUCK NO HV MOD 36                                                                                    
+  Symptom:No hits in wires or pads in endcap B module 12.                                                                           
+  Cause:  Disconnected control cable:HV off when status showed on                                                                   
+  Effect: No data in module 36                                                                                                      
+#       5 ECAL   25454   25455 DUCK BAD_WIRE MOD 16                                                                                 
+  Symptom:Plane distribution in module 16 shows many holes. Serious readout problem ?                                               
+  Cause:  The HV cable had not been properly replugged after blowing a fuse on a shorted wire                                       
+  Effect: About half the wire planes on this module are missing                                                                     
+#       6 ECAL   25636   25636 PERF MOD_FREQ_NONZ                                                                                   
+  Symptom:Module 19 is very noisy. Frequency=1 in non-Z events.                                                                     
+  Symptom:Misinterpretation of histogram information                                                                                
+  Effect: No effect                                                                                                                 
+#       7 ECAL   25620   25643 MAYB WIREPED                                                                                         
+  Symptom:Wire pedestal shift of about -30MeV in each Ecal module                                                                   
+  Cause:  Modification to Autopeds Wire follower program                                                                            
+  Effect: No effect on pad or cluster energy only wire energy                                                                       
+#       8 ECAL   25689   25696 PERF ECAL B                                                                                          
+  Symptom:No entries in Endcap B (due to crazy energies?)                                                                           
+  Cause:  During these runs a bad card in ECB mod 11 caused problems                                                                
+  Effect: No effect                                                                                                                 
+#       9 ECAL   25711   25711 PERF ECAL_EW>0.05                                                                                    
+  Symptom:module 11, ECAL barrel has a spike.                                                                                       
+  Cause:  Not a problem                                                                                                             
+  Effect: No effect                                                                                                                 
+#      10 ECAL   25000   25839 MAYB TRIG_EFF                                                                                        
+  Symptom:Trigger inefficiency in ECB mod 6                                                                                         
+  Cause:  Probably due to trigger connector in MUX not fully in                                                                     
+  Symptom:Noise from ECB mod 6                                                                                                      
+  Cause:  Faulty Tri 45 module causing noise(oscillations) on trig  signals for odd planes - Tri 45 module changed                  
+  Effect: Analyses that are sensitive to the ECAL trigger efficiency should take care with these runs                               
+#      11 ECAL   26409   26424 PERF NOISE                                                                                           
+  Symptom:Endcap A Module 1 ; coherent noise (cable 3 crd 1 stk 2-3 channels 17-32) of about 3 Gev peak                             
+  Cause:  Power Suply                                                                                                               
+  Effect: Might affect Bhabha selection                                                                                             
+#      12 ECAL   27575   27670 PERF NOISE                                                                                           
+  Symptom:barrel module 10 pads are noisy                                                                                           
+  Symptom:Noise barrel module 10 pads cleaned successfully in JULIA                                                                 
+  Effect: None                                                                                                                      
+  Symptom:Noise barrel module 10 pads cleaned successfully in JULIA                                                                 
+  Effect: None                                                                                                                      
+#      13 ECAL   27737   27749 DUCK ECEB                                                                                            
+  Symptom:Substantial shift in pad energy; it is serious!                                                                           
+  Symptom:Randomly occurring shifts in pedestals of pads on ECB. Noise on wires.                                                    
+  Cause:  Spikes on 5v power supply to fanout crate being randomly picked up by signal lines                                        
+  Effect: Very bad . I think these runs should be ducked. Pedestal-following will not work.                                         
+#      14 ECAL   27750   27750 PERF GOOD DATA                                                                                       
+  Symptom:Run 27750 was the first good run after fixing the power supply (correction to previous statement)                         
+  Effect: none                                                                                                                      
+  Effect: none                                                                                                                      
+#      15 ECAL   26670   28812 PERF BAD_WIRE_GAIN                                                                                   
+  Symptom:Gain too high by factor 3 to 4 on plane 21 of module 28.                                                                  
+  Cause:  Probably bad calibration signal. Seen on gain calibration output.                                                         
+  Cause:  Calibration was low. Seems gain is back to normal => signal too high in this plane                                        
+  Effect: none                                                                                                                      
+  Effect: Energy measurement wrong.                                                                                                 
+#      16 ECAL   26574   26576 PERF BAD_WIRE_GAIN                                                                                   
+  Symptom:Gain in plane 21 module 28, EcB 4, low by a factor 3                                                                      
+  Effect: none                                                                                                                      
+#      17 ECAL   27950   27957 DUCK ECEB                                                                                            
+  Symptom:Ecal Endcaps B wire energu is out scale, wire profile not sensible, pad energy is  50000 GeV                              
+  Cause:  Faulty Fanout Power supply                                                                                                
+  Effect: Data are not useable                                                                                                      
+#      18 ECAL   27995   27996 DUCK ECEB_NOISE                                                                                      
+  Symptom:Ecal Endcaps B wire energy is out of scale, wire profile not sensible, pad energy is 50 Tev!                              
+  Cause:  Faulty fanout power Supply                                                                                                
+  Effect: Data are not useable                                                                                                      
+#      19 ECAL   28014   28014 DUCK ECEB_NOISE                                                                                      
+  Symptom:Ecal Endcaps B wire energy is out of scale, wire profile not sensible, Pad energy around 50 TeV                           
+  Cause:  Faulty fanout power supply                                                                                                
+  Effect: Data are not useable                                                                                                      
+#      20 ECAL   28008   28008 DUCK ECEB_NOISE                                                                                      
+  Symptom:Ecal Endcaps B wire energy out of scale, wire profile not sensible, Pad energy around 50 TeV                              
+  Cause:  Faulty fanout power supply                                                                                                
+  Effect: About last 10% of the events affected.                                                                                    
+#      21 ECAL   28013   28013 DUCK ECEB_NOISE                                                                                      
+  Symptom:Ecal Endcaps B wire energy out of scale, wire profile not sensible, Pad energy around 50 TeV                              
+  Cause:  Faulty Fanout power supply                                                                                                
+  Effect: The last 10% of the events are affected                                                                                   
+#      22 ECAL   29130   29448 PERF BAD_WIRE_GAIN                                                                                   
+  Symptom:Gain in plane 21 mod 28 low by a factor 3                                                                                 
+  Cause:  Oscillating gain                                                                                                          
+  Effect: None                                                                                                                      
+#      23 ECAL   29487   29671 MAYB BAD_BOX_PEDS                                                                                    
+  Symptom:Peds shift by 15 counts, intermittent                                                                                     
+  Cause:  Bad contact in a switch ??????                                                                                            
+  Effect: Gain of box may be affected at the level of10 % or less.                                                                  
+  Symptom:Affects 1/4 of module 19, the low phi / high theta quarter.                                                               
+#       1 HCAL   25335   25745 PERF ADC HIGH                                                                                        
+  Symptom:Energy for ADC #47 is 20 times higher than reference and other channels                                                   
+  Effect: duck runs anyway                                                                                                          
+#       2 HCAL   25335   25475 PERF ASTRO SPIKE                                                                                     
+  Symptom:Nr. of clusters/tracks per cosmic has spike at 17 clusters                                                                
+  Effect: duck runs anyhow                                                                                                          
+#       3 HCAL   25335   25475 PERF MUON COSM. HIGH                                                                                 
+  Symptom:Number of MUON strips/cosmic 4 times too high                                                                             
+  Effect: duck runs anyway                                                                                                          
+#       4 HCAL   25348   25745 PERF STRIPS                                                                                          
+  Symptom:strips are too high;  no of clusters has spikes at 17 and 22; energy per ADC has spikes                                   
+  Effect: duck runs anyway                                                                                                          
+  Effect: duck runs anyway                                                                                                          
+#       5 HCAL   25364   25364 PERF HCAL ENER/MOD (Z                                                                                
+  Symptom:Some modules have high energy (10-11-12)                                                                                  
+  Symptom:Only this run                                                                                                             
+  Effect: Not serious                                                                                                               
+#       6 HCAL   25364   25475 PERF MUON STR (RANDOM                                                                                
+  Symptom:Very high value 220                                                                                                       
+  Effect: duck runs anyway                                                                                                          
+#       7 HCAL   25256   25475 PERF DIGITAL READOUT                                                                                 
+  Symptom:Unreliable digital information                                                                                            
+  Effect: duck runs anyway                                                                                                          
+  Cause:  ...mistake......                                                                                                          
+#       8 HCAL   25419   25475 PERF HCAL E/MODULE (Z                                                                                
+  Symptom:spike in channel 29 (barrel) ~5 times greater then expected                                                               
+  Effect: duck runs anyway                                                                                                          
+#       9 HCAL   25485   25750 PERF TOW_NOISE                                                                                       
+  Symptom:Spikes in bin 47 of ADC hist and 29 of Energy/module hist                                                                 
+  Effect: negligible                                                                                                                
+  Effect: none                                                                                                                      
+#      10 HCAL   25000   25745 PERF TOW_DEAD                                                                                        
+  Symptom:1 ADC row in phi lost (1/192 of barr.)                                                                                    
+  Cause:  disconnected cable in mixer 23B cable 4                                                                                   
+  Effect: 1 row in phi lost (1/192 of barrel lost)                                                                                  
+  Symptom:wrong statement                                                                                                           
+  Effect: neglig                                                                                                                    
+#      11 HCAL   25000   25750 PERF WIR_DEAD                                                                                        
+  Symptom:No analog signal from wires module 21 Barrel                                                                              
+  Effect: none                                                                                                                      
+#      12 HCAL   25000   25642 PERF MU_EFF                                                                                          
+  Symptom:MUCH 11M ext. Barrel off                                                                                                  
+  Effect: negligible                                                                                                                
+#      13 HCAL   25583   25590 DUCK OUT_OF_PARTITION                                                                                
+  Symptom:HCAL was out of the partition                                                                                             
+  Cause:  Readout does no work                                                                                                      
+  Effect: DUCK RUNS                                                                                                                 
+#      14 HCAL   25000   26187 MAYB TRIG_DEAD                                                                                       
+  Symptom:No trigger from barr.mod.21                                                                                               
+  Effect: Reduced trigger efficiency in the barrel (1/24)                                                                           
+#      15 HCAL   25610   26187 PERF TOW_DEAD                                                                                        
+  Symptom:Dead tower Barr 4A, row 3                                                                                                 
+  Cause:  disc.cable                                                                                                                
+  Effect: negligible (1/192 of barrel)                                                                                              
+#      16 HCAL   25635   25642 PERF TOWER_NOISE                                                                                     
+  Symptom:New spike in channel#4  (Endcap A) of Energy/ADC.                                                                         
+  Effect: negligible                                                                                                                
+#      17 HCAL   25580   25581 PERF TOW_NOISE                                                                                       
+  Symptom:Noise peak in ADC hist. at bin 30                                                                                         
+  Effect: negligible                                                                                                                
+#      18 HCAL   25580   25750 PERF TOW_NOISE                                                                                       
+  Symptom:Noise peaks at bins 4 and 30 of Energy/ADC hist                                                                           
+  Cause:  Noisy towers ECA mod2 cable 2,Bar_A mod24 rows 1,2,3                                                                      
+  Effect: negligible                                                                                                                
+  Effect: none                                                                                                                      
+#      19 HCAL   25675   25750 PERF DIG_NOISE                                                                                       
+  Symptom:Nr Clusters/Astro (cosmics) noise in bin 23                                                                               
+  Symptom:noise in bin 3 also                                                                                                       
+  Effect: none                                                                                                                      
+#      20 HCAL   25681   25682 PERF ADC_NOISE                                                                                       
+  Symptom:HCAL Energy/ADC : spike in bin 30                                                                                         
+  Symptom:already reported                                                                                                          
+  Effect: none                                                                                                                      
+#      21 HCAL   25685   25685 PERF DIG_NOISE                                                                                       
+  Symptom:Nr clusters/Astro (cosmics) spike at bin 16                                                                               
+  Effect: none                                                                                                                      
+#      22 HCAL   25711   25711 PERF TOW_DEAD                                                                                        
+  Symptom:dip in barrel module 6                                                                                                    
+  Cause:  WRONG MODULE                                                                                                              
+  Effect: NONE                                                                                                                      
+#      23 HCAL   25711   26187 PERF TOW_DEAD                                                                                        
+  Symptom:Dip in HCAL Energy in Barrel mod.7                                                                                        
+  Symptom:lesse energy seen in bin 7 of energy/module hist                                                                          
+  Cause:  High voltage crate 2 channel 14 module 7 OFF                                                                              
+  Effect: maybe energy flow affected                                                                                                
+#      24 HCAL   25000   25541 DUCK DUCK_RUNS                                                                                       
+  Symptom:duck_runs                                                                                                                 
+  Effect: duck_runs                                                                                                                 
+  Cause:  Timing problem                                                                                                            
+#      25 HCAL   25481   25537 PERF DUCK_RUNS                                                                                       
+  Symptom:duck_runs                                                                                                                 
+  Effect: duck_runs                                                                                                                 
+  Cause:  ....mistake....                                                                                                           
+#      26 HCAL   25583   25590 DUCK DUCK_RUNS                                                                                       
+  Symptom:duck runs                                                                                                                 
+  Effect: duck runs                                                                                                                 
+  Cause:  HCAL out of the partition                                                                                                 
+  Effect: No HCAL !                                                                                                                 
+#      27 HCAL   25757   25893 PERF TOW_NOISE                                                                                       
+  Symptom:intermittent spike in bin 30 (ADC 18, barrel, side A)                                                                     
+  Effect: negligible                                                                                                                
+#      28 HCAL   25833   25893 PERF DIG_NOISE_M                                                                                     
+  Symptom:noisy astros (bin 23 -> endcap B astros 1)                                                                                
+  Effect: negligible                                                                                                                
+#      29 HCAL   25000   25796 PERF MUON_EFF                                                                                        
+  Symptom:Barrel Muon 11M ext. off                                                                                                  
+  Cause:  disconn cable                                                                                                             
+  Effect: negligible                                                                                                                
+#      30 HCAL   25883   25883 PERF TOW_NOISE                                                                                       
+  Symptom:NOISY ADC #24, 42 (AND 47 ALREADY KNOWN)                                                                                  
+  Effect: neglibible                                                                                                                
+#      31 HCAL   25000   25940 PERF TOW_DEAD                                                                                        
+  Symptom:EndCap A sext 5 two disc. cables (13,14)                                                                                  
+  Effect: negligible                                                                                                                
+  Cause:  Mixer box fond OFF - Now switched on                                                                                      
+  Effect: Negligible                                                                                                                
+#      32 HCAL   25913   25914 PERF DEAD_MOD                                                                                        
+  Symptom:Bin #13 in HCAL Energy/module is low (started at run 25910)                                                               
+  Cause:  Maybe disconnected cable inside a Mixer box (need to check during the next Aleph opening)                                 
+  Effect: Negligible                                                                                                                
+#      33 HCAL   25924   25936 PERF DIG_MASK                                                                                        
+  Symptom:A noisy muon chamber produces a shift  of 128 in strips histograms                                                        
+  Symptom:Noisy channel on the astros 142 (now masked)                                                                              
+  Cause:  Opened chains                                                                                                             
+  Effect: Low muon id efficiency of the chamber 11M                                                                                 
+  Cause:  Opened chains                                                                                                             
+  Effect: Low efficiency of the chamber 11M                                                                                         
+#      34 HCAL   25951   25951 PERF ADC_NOISE                                                                                       
+  Symptom:New spikes at bins 24 and 42 in HCAL energy per ADC histogram                                                             
+  Effect: negligible                                                                                                                
+#      35 HCAL   25962   25962 PERF DIG_NOISE                                                                                       
+  Symptom:Visible discrepancy between reference and data., especially at low values.                                                
+  Cause:  the discrepancy is due to a noisy channel in the muon chamber 1B, it is correlated to the spike at bin 23 of clust/atros  
+  Effect: reduced efficiency of the muon chamber 1B                                                                                 
+#      36 HCAL   25995   25996 PERF TOW_DEAD                                                                                        
+  Symptom:Hcal  energy/module lower for module 13,14,15                                                                             
+  Effect: Energy flow may be affected                                                                                               
+  Symptom:The barrel modules affected are the number 7,8,9                                                                          
+  Cause:  energy fluctuation                                                                                                        
+  Effect: negligible                                                                                                                
+#      37 HCAL   26007   26187 PERF DIG_NOISE                                                                                       
+  Symptom:Spike at bins 15,16 of HCAL nr clust/astros hist and nr tracks/astr                                                       
+  Cause:  noisy digital chains                                                                                                      
+  Effect: negligible                                                                                                                
+#      38 HCAL   26057   26059 PERF NOISY_TOWERS                                                                                    
+  Symptom:Mean energy (random) spike around 12                                                                                      
+  Cause:  Noisy towers mod. 22                                                                                                      
+  Symptom:The module number is 23, not 22. It reflect also in the energy/adc bins 28,29                                             
+  Effect: negligible if the noisy tower is masked offline                                                                           
+  Symptom:Noise disappeared spontaneusly...                                                                                         
+  Cause:  unknown                                                                                                                   
+  Effect: negligible                                                                                                                
+#      39 HCAL   26066   26187 PERF TOW_NOISE                                                                                       
+  Symptom:spikes in energy/adc hist bins 28,29 and in total energy (random) at about 10 Gev                                         
+  Cause:  noisy towers in barrel module 23 side B (not very often)                                                                  
+  Effect: negligible (noisy towers masked offline)                                                                                  
+#      40 HCAL   26132   26187 PERF HV_OFF                                                                                          
+  Symptom:none                                                                                                                      
+  Cause:  OVC for caen 4 ch. 8 endcap B (sext. 5 layer 21,22 long tubes)                                                            
+  Effect: Reduced muon efficiency                                                                                                   
+#      41 HCAL   26327   26636 PERF DIG_INEF                                                                                        
+  Symptom:none                                                                                                                      
+  Cause:  Problems on chain 2 SB 6 astros 128 mu ch. 4C-4D 1' layer plane x2                                                        
+  Effect: mu ID efficiency may be lower                                                                                             
+  Symptom:dip in the corresponding hist in mu astros expert page                                                                    
+#      42 HCAL   26327   26402 PERF DIG_INEF                                                                                        
+  Symptom:dips in the corresponding hist in HCAL astros expert page                                                                 
+  Cause:  problems on chains 21 22 astros 141                                                                                       
+  Effect: lower mu ID efficiency                                                                                                    
+#      43 HCAL   26327   26449 PERF DIG_INEF                                                                                        
+  Symptom:Spike in the corresponding hist in mu astros expert page                                                                  
+  Cause:  Chain 4 SB20 astros 142 mu chamber 11M ext layer x4 is often open                                                         
+  Effect: Affects mu ID                                                                                                             
+#      44 HCAL   26389   26449 PERF ENERGY/ADC                                                                                      
+  Symptom:EXCESS IN BINS 11,12,30                                                                                                   
+  Effect: forget this...                                                                                                            
+#      45 HCAL   26389   26449 PERF ENERGY/MODULE(Z)                                                                                
+  Symptom:EXCESS IN BINS 6,29,30                                                                                                    
+  Effect: forget this...                                                                                                            
+#      46 HCAL   26409   26636 PERF DIG_MASK                                                                                        
+  Symptom:dip in the corresponding histogram in the HCAL exp page                                                                   
+  Cause:  masked chains 21 22 astros 141 barrel 17-18                                                                               
+  Effect: affects mu ID                                                                                                             
+#      47 HCAL   26415   26416 MAYB LV_HV                                                                                           
+  Symptom:lv_hv error                                                                                                               
+  Cause:  blown fuse                                                                                                                
+  Effect: muon trigger inefficiency in a fraction of petal 1 endcap A                                                               
+#      48 HCAL   26389   26636 PERF TOW_NOISE                                                                                       
+  Symptom:spikes in bins 11-12 en./ADC and bin 6 en./module (sometimes)                                                             
+  Cause:  HV box 21A seems to pulse the wires from time to time.                                                                    
+  Effect: Probably none.                                                                                                            
+#      49 HCAL   26388   26636 PERF TOW_NOISE                                                                                       
+  Symptom:spikes in bin 30 en./ADC and bin 30 en./module (sometimes)                                                                
+  Cause:  Corresponding mixer box sometimes oscillates.                                                                             
+  Effect: Probably none                                                                                                             
+#      50 HCAL   26454   26636 PERF DIG_MASK                                                                                        
+  Symptom:Dip in the corresponding hist in mu astros exp. page                                                                      
+  Cause:  Chain 4 SB 20 astros 142 mu ch 11M ext layer x4 masked since open.                                                        
+  Effect: Lower mu ID efficiency                                                                                                    
+#      51 HCAL   26489   26494 PERF DIG_NOISE                                                                                       
+  Symptom:noisy module in muon endcap A                                                                                             
+  Cause:  Chain 13 astros 106 SB 22 End A MV4 open                                                                                  
+  Effect: affects mu ID                                                                                                             
+#      52 HCAL   26497   26552 PERF DIG_MASK                                                                                        
+  Symptom:Dip in the corresponding hist in mu astros exp. page                                                                      
+  Cause:  Masked chain 13 astros 106 SB 22 End A MV4                                                                                
+  Effect: lower mu ID efficiency                                                                                                    
+#      53 HCAL   26501   26501 PERF TOW_NOISE                                                                                       
+  Symptom:Spikes in HCAL energy/ADC bins 24 and 42                                                                                  
+  Cause:  looks like fluctuation                                                                                                    
+  Effect: none                                                                                                                      
+#      54 HCAL   26097   26097 DUCK HCNF_MISSING                                                                                    
+  Symptom:The HCNF bank is missing                                                                                                  
+  Cause:  Problem with the run change                                                                                               
+  Effect: Muon id not completely reliable                                                                                           
+#      55 HCAL   26666   26910 MAYB HV_OFF                                                                                          
+  Symptom:OVC of the HV channel crate 3 ch. 14  barrel layers 16,17,18,19 module number 11                                          
+  Cause:  firing tube (no possible to cure without opening)                                                                         
+  Effect: maybe reduced muon efficiency                                                                                             
+#      56 HCAL   26667   26667 PERF DIG_MASK                                                                                        
+  Symptom:ERROR MESSAGE (FROM ARPEL) TOO MANY DIGITAL HITS M_ASTROS_6 (HCRPB1)                                                      
+  Cause:  NOISY DIGITAL CHAIN MUON B1 ASTROS ID. 134 (S.B. 12) # 24   (MUON CHAMBER BARREL 7 , CHAIN Y4.3)                          
+  Effect: NEGLIGIBLE                                                                                                                
+  Cause:  this chain was not responsible of the arpel message                                                                       
+#      57 HCAL   26808   26910 PERF HV_OFF                                                                                          
+  Symptom:OVC crate 1 ch. 39 Endcap B                                                                                               
+  Cause:  firing tube muon middle angle chamber 4 (endcap B)                                                                        
+  Effect: Negligible                                                                                                                
+#      58 HCAL   26846   26851 DUCK DIG INEF                                                                                        
+  Symptom:ASTROS 101 ( EndCap A, Mod 1) no dot produce output data                                                                  
+  Effect: Inefficiency in muons identification                                                                                      
+  Symptom:nothing                                                                                                                   
+  Cause:  A resetting at start of run                                                                                               
+  Symptom:These runs are ducked                                                                                                     
+#      59 HCAL   26873   26910 PERF MUON HISTOGRAM                                                                                  
+  Symptom:New spike in MUON Nr clusters/Astr - bin 14                                                                               
+  Cause:  a few noisy channels on layer # 2 , Astros 128                                                                            
+  Effect: negligible                                                                                                                
+#      60 HCAL   26887   26897 PERF HCAL ASTRO NOISY                                                                                
+  Symptom:Noisy HCAL module bin 21 in Nr. clus/Astro histogram                                                                      
+  Cause:  As hcal_62                                                                                                                
+  Effect: negligible                                                                                                                
+#      61 HCAL   26888   26897 PERF HCAL NR.STRIPS H                                                                                
+  Symptom:Number of HCAL strips per Z evt.: peak shifted up, longer tail                                                            
+  Cause:  As HCAL_62                                                                                                                
+  Effect: negligible                                                                                                                
+#      62 HCAL   26888   26897 PERF HCAL DIGITAL                                                                                    
+  Symptom:Digital HCAL readout too high; no correlation with tower energy                                                           
+  Cause:  A noise chain in barrel, mod 17-18 ( astros 141,ch 3 )                                                                    
+  Effect: negligible                                                                                                                
+#      63 HCAL   27057   27153 PERF TRIG_INEF                                                                                       
+  Symptom:trigger inefficiency on barrel, mod # 6.                                                                                  
+  Effect: negligible                                                                                                                
+  Cause:  wrong cable configuration to barrelmodule # 3,4,7,10,11,13,16,17,21; i.e. barrel trigger sect: 2,4,5,6,7,8,11             
+  Effect: negligible                                                                                                                
+#      64 HCAL   27242   27331 PERF CALIB                                                                                           
+  Symptom:strong change in gas composition - input gas wave                                                                         
+  Cause:  bad gas in input between  20:45 and 23:45 of 13-july                                                                      
+  Effect: negligible                                                                                                                
+#      65 HCAL   27244   27248 DUCK CALIB                                                                                           
+  Symptom:Hcal and MUCH are  OFF while HV_bit is ON                                                                                 
+  Cause:  unknow                                                                                                                    
+  Cause:  Hcal and MUCH was OFF dor input gas wave                                                                                  
+  Effect: wrong infornation on HCAL status                                                                                          
+#      66 HCAL   27277   27282 PERF DIG_NOISE                                                                                       
+  Symptom:too many hits in hcal barrel mod 19-20                                                                                    
+  Cause:  a open chain                                                                                                              
+  Effect: negligible                                                                                                                
+  Effect: negligible                                                                                                                
+#      67 HCAL   27310   27867 PERF DIG_NOISE                                                                                       
+  Symptom:spike in channel 18 of the Nr clusters/Astr histogram                                                                     
+  Cause:  noisy layer 4 barrel mod. 11-12                                                                                           
+  Effect: negligible                                                                                                                
+#      68 HCAL   27379   28176 PERF DIG_MASK                                                                                        
+  Symptom:dip in muon eff. histo in expert page                                                                                     
+  Cause:  open chain now masked : chain 2, SB 6, Astros 128                                                                         
+  Effect: lower mu ID efficiency                                                                                                    
+#      69 HCAL   27371   27384 MAYB ADC_NOISE                                                                                       
+  Symptom:spike in hcal energy/module bin 10-11                                                                                     
+  Cause:  a noisy ADC, BARREL SIDE B , MOD 10-11                                                                                    
+  Effect: bad hadronic energy definition for few events                                                                             
+#      70 HCAL   27495   27867 PERF MUON NR STRIPS                                                                                  
+  Symptom:In Cosmics and Random Histos, entries are at much larger values than usual (Run 27495)                                    
+  Cause:  open chain in muon chamber 11 M                                                                                           
+  Effect: negligible                                                                                                                
+#      71 HCAL   27495   27867 PERF MUON NR CLUS                                                                                    
+  Symptom:Muon Nr Clusters/Astr (cosmics) Histo : many entries in Bin 22                                                            
+  Symptom:Symptom : Muon Nr Cluster/Astr (cosmic) Histo :many entries in bin n. 21  and not in 22                                   
+  Cause:  open chain in muon chamber 11 M                                                                                           
+  Effect: negligible                                                                                                                
+#      72 HCAL   27582   27867 PERF SHIFT_NR_STRIPS                                                                                 
+  Symptom:Muon Nr. strips histos are shifted compared to ref.                                                                       
+  Cause:  Random hits due to an open chain on muon chamber 11 M : astros 142  bin 21 histo Muon nr. cluster/astros                  
+  Effect: negligible                                                                                                                
+#      73 HCAL   27739   27739 PERF SPIKE                                                                                           
+  Symptom:spike in bin 46 en./ADC                                                                                                   
+  Symptom:wrong message : spikes is on bin 47 histo hcal en./ADC                                                                    
+  Effect: negligible                                                                                                                
+#      74 HCAL   27741   27822 PERF SPIKE                                                                                           
+  Symptom:spike in bin 47 en./ADC                                                                                                   
+  Cause:  a noisy cable in  barrel module 23                                                                                        
+  Effect: negligible                                                                                                                
+  Symptom:spike in bin 23 en./module                                                                                                
+#      75 HCAL   27742   27867 PERF HCAL                                                                                            
+  Symptom:Spike in module 29 (energy per module)                                                                                    
+  Cause:  noisy cable notified on cia mess. hcal_74                                                                                 
+  Effect: negligible                                                                                                                
+#      76 HCAL   27742   27742 PERF MUON                                                                                            
+  Symptom:Rather high numbers of strips and clusters                                                                                
+  Symptom:the same known problems reported on the cia messages hcal_71 & hcal_72                                                    
+  Cause:  open chain in muno ch. 11m barrel                                                                                         
+  Effect: negligible                                                                                                                
+#      77 HCAL   27792   27792 DUCK GAS WAVE                                                                                        
+  Symptom:STRONG CHANGE IN HCAL GAS MIXTURE                                                                                         
+  Cause:  isobutane gas bottles contaminated                                                                                        
+  Effect: bad HCAL energy                                                                                                           
+#      78 HCAL   27822   28070 PERF NOISE                                                                                           
+  Symptom:spike in bin 47 en./ADC and in bin 29 en./module                                                                          
+  Cause:  a noisy cable in barrel module 23                                                                                         
+  Effect: negligible                                                                                                                
+#      79 HCAL   27840   28388 PERF NOISE                                                                                           
+  Symptom:Spikes in Total energy (Random) bin 3, and No. of strips (Random) bins 15-20 & 20-25                                      
+  Cause:  due to known noisy towers and cards                                                                                       
+  Effect: negligible                                                                                                                
+#      80 HCAL   27868   28078 PERF DIG_MASK                                                                                        
+  Symptom:chain 3,4 S.B.20 astros 142 (alias 11M) masked                                                                            
+  Cause:  very noisy chains                                                                                                         
+  Effect: negligible                                                                                                                
+#      81 HCAL   27956   27964 PERF HV_UVV                                                                                          
+  Symptom:HV caen crate 2 ch. 28,29,30,31 in endcap B was under nominal voltage                                                     
+  Cause:  caen card not properly working                                                                                            
+  Effect: negligible                                                                                                                
+#      82 HCAL   28056   28388 PERF HOLE                                                                                            
+  Symptom:Entries in bin 2 low for Nr. Clust/Astr                                                                                   
+  Cause:  ref. histogram to be reviewed...                                                                                          
+  Effect: none                                                                                                                      
+#      83 HCAL   28088   28388 PERF DIG_NOISE                                                                                       
+  Symptom:spike in bin 21 Nr. clust/astros                                                                                          
+  Cause:  Ch 3 S.B. 20 noisy                                                                                                        
+  Effect: negligible                                                                                                                
+#      84 HCAL   28130   28176 PERF DIG_MASK                                                                                        
+  Symptom:chain 22 SB 10 astros 114 MA6 ext eca masked                                                                              
+  Cause:  chain open                                                                                                                
+  Effect: negligible                                                                                                                
+#      85 HCAL   28088   28239 PERF DIG_MASK                                                                                        
+  Symptom:chain 4 SB 20 astros 142 barrel 11M masked                                                                                
+  Cause:  chain noisy and NO OK                                                                                                     
+  Effect: negligible                                                                                                                
+  Effect: a bit lower mu eff,                                                                                                       
+#      86 HCAL   28179   28239 PERF DIG_MASK                                                                                        
+  Symptom:chain 3 SB 20 astros 142 barrel 11M masked                                                                                
+  Cause:  open chain                                                                                                                
+  Effect: a bit lower mu eff                                                                                                        
+#      87 HCAL   28188   28239 PERF HV_MASK                                                                                         
+  Symptom:Lower mu eff.                                                                                                             
+  Cause:  channel 39 crate 1 endcap B masked (hard OVC)                                                                             
+  Effect: lower mu eff.                                                                                                             
+#      88 HCAL   28234   28739 PERF TOW_NOISE                                                                                       
+  Symptom:Spikes in bin 47 en./ADC and in bin 29 en./module                                                                         
+  Cause:  noisy cable in barrel module 23                                                                                           
+  Effect: negligible                                                                                                                
+  Effect: none                                                                                                                      
+#      89 HCAL   28234   28388 PERF TOW_NOISE                                                                                       
+  Symptom:Total energy has a shift of +25 Gev                                                                                       
+  Cause:  noisy cable in barrel nodule 23                                                                                           
+  Effect: negligible                                                                                                                
+#      90 HCAL   27910   28739 PERF TOW_DEAD                                                                                        
+  Symptom:Row of towers dead in barrel module 8 side B                                                                              
+  Cause:  Cable 4 module 8 side B (ADC 6) disconnected                                                                              
+  Effect: No energy in the region affected                                                                                          
+#      91 HCAL   28389   28739 PERF DIG_MASK                                                                                        
+  Symptom:Low efficiency barrel mu_chamber 11m ext,layer 2x                                                                         
+  Cause:  Open chains 20/3,20/4, astros 142                                                                                         
+  Effect: Negligible                                                                                                                
+#      92 HCAL   28485   28504 PERF DIG_INEF                                                                                        
+  Symptom:Low efficiency mu-ch barrel 4C-inner layer x2                                                                             
+  Cause:  Open chain 2 astros 128, SB 6                                                                                             
+  Effect: Negligible                                                                                                                
+#      93 HCAL   28665   28739 PERF DIG_INEF                                                                                        
+  Symptom:Low efficiency in mu-cham 4C, Barrel, inner layer, X2                                                                     
+  Cause:  Open digital chain 2 astros 128, SB 6                                                                                     
+  Effect: Negligible                                                                                                                
+#      94 HCAL   28710   28721 PERF DIG_NOISE                                                                                       
+  Symptom:MUON: Shifts in Nr.strips(cosm) and Nr.strips(rndm) distributions and a spike in bin 23 of Nr.clust/Astros                
+  Cause:  Noisy dig. chain Nr.20(Astros 148), vertical mu-chamb 1, Endcap B                                                         
+  Effect: Negligible                                                                                                                
+  Cause:  open chain                                                                                                                
+  Effect: negligible                                                                                                                
+#      95 HCAL   28719   28719 PERF DIGNOISE                                                                                        
+  Symptom:Very large shift in Nr Strips fired and noisy Astr 23.                                                                    
+  Cause:  open digital chain                                                                                                        
+  Effect: negligible                                                                                                                
+#      96 HCAL   28721   28739 PERF DIG_MASK                                                                                        
+  Symptom:Masked chain 20(astros 148), ENDB, S.B. 3                                                                                 
+  Cause:  opened chain                                                                                                              
+  Effect: Low efficiency muon chamber 1B external first layer                                                                       
+#      97 HCAL   28858   29078 PERF HCAL /STRIP # RN                                                                                
+  Symptom:Significant shift between data and reference means (50%) in HCAL number of strips (random) histogram                      
+  Cause:  one chain of the digital readout is open                                                                                  
+  Effect: negligible                                                                                                                
+#      98 HCAL   28893   29078 PERF HCAL CLUSTER/AST                                                                                
+  Symptom:HCAL Nr clusters/Astr (Cosmic): Reading for bin # 8 much larger than reference                                            
+  Cause:  one chain is open                                                                                                         
+  Effect: negligible                                                                                                                
+#      99 HCAL   28942   28946 MAYB HV OFF                                                                                          
+  Symptom:OVC Barrel Ch. 19 crate 5  (Hcal Module 19)                                                                               
+  Effect: It will influence muon id                                                                                                 
+#     100 HCAL   28834   29078 PERF DIG_OPEN                                                                                        
+  Symptom:open chain in muon chamber Astros 128 SB 6 Chain 2                                                                        
+  Effect: Some ineff.for muon ID                                                                                                    
+#     101 HCAL   28951   28968 PERF DIG_OPEN                                                                                        
+  Symptom:opem muon chamber chain 22 Astros 114 SB 10 (mid-angle 6-7)                                                               
+  Effect: might influence muon id                                                                                                   
+#     102 HCAL   29021   29078 PERF DIG_OPEN                                                                                        
+  Symptom:number 21 always firing . Constant offset of ca. 180 in no. of strips                                                     
+  Effect: Degrades muon efficiency                                                                                                  
+  Effect: Degrades muon efficiency                                                                                                  
+  Cause:  chain 4 Astros 142 (muon barrel 11 M) open                                                                                
+  Symptom:Masked out                                                                                                                
+#     103 HCAL   29113   29118 MAYB PLANES                                                                                          
+  Symptom:Profile of hit planes in barrel looks very wrong                                                                          
+  Cause:  probably due to a bad connection of cables to one adc                                                                     
+  Effect: important only for physics analysis that use the hcal plane energy                                                        
+#     104 HCAL   29105   29119 PERF HV_OFF                                                                                          
+  Symptom:none                                                                                                                      
+  Cause:  Over current on end cap a create 2 channel 10 (mu chamber middle angle 4 side A)                                          
+  Effect: Reduced muon efficiency (the chamber middle angle 4 side A is off)                                                        
+#     105 HCAL   29136   29139 PERF E/ADC(ALL)                                                                                      
+  Symptom:Energy per ADC: spikes at bins  24-25 and 42-43 since beginning of fill.                                                  
+  Effect: negligible                                                                                                                
+#     106 HCAL   29136   29139 PERF NR CLUST/ASTR                                                                                   
+  Symptom:Nr cl;usters per astro(cosmics) spike at bin 21(barrel) since beginning of fill.                                          
+  Cause:  noise due to digital readout cards (it comes and goes)                                                                    
+  Effect: none                                                                                                                      
+#     107 HCAL   29188   29191 PERF LV_MX                                                                                           
+  Symptom:SEVERAL WARNINGS ON MIXER BOX LOW VOLTAGE ENDCAP B                                                                        
+  Cause:  PROBLEMS ON SLOW CONTROL CARDS ENDCAP B                                                                                   
+  Effect: NEGLIGIBLE                                                                                                                
+#     108 HCAL   29225   29226 MAYB LV_HV                                                                                           
+  Symptom:WARNINGS ON LV_HV ON MODULE 16 OF THE BARREL                                                                              
+  Cause:  A BROKEN FUSE                                                                                                             
+  Effect: THE HCAL TRIGGER ON BARREL MODULE 16 IS OFF                                                                               
+#     109 HCAL   29258   29258 PERF NOISY ADC                                                                                       
+  Symptom:ADC channels 25 and 43 noisy, spikes in energy per ADC histogramms                                                        
+  Cause:  noise on mixer box 18 bareel both sides                                                                                   
+  Effect: negligible                                                                                                                
+#     110 HCAL   29268   29268 PERF NOISY ADC                                                                                       
+  Symptom:ADC channels 27 and 28 noisy                                                                                              
+  Cause:  noise on mixer box 22 side A                                                                                              
+  Effect: negligible                                                                                                                
+#     111 HCAL   29293   29293 MAYB NOISY ADC                                                                                       
+  Symptom:ADC channels 28,29,30 noisy                                                                                               
+  Effect: no effect foreseen : run-qual already done because of digital scan in hcal                                                
+  Effect: no effect foreseen : run-qual already done because of digital scan in hcal                                                
+#     112 HCAL   29298   29298 MAYB NOISY ADC                                                                                       
+  Symptom:noisy ADC channel 25 and 43 in run 29298                                                                                  
+  Effect: no effect : run-qual. done because of digital scanning in hcal                                                            
+#     113 HCAL   29302   29302 MAYB MUON STRIPS                                                                                     
+  Symptom:enhancment at low no. of muon strips for cosmics (some of the previous runs are affected to)                              
+  Cause:  scanning of digital plateau                                                                                               
+  Effect: no effect foreseen                                                                                                        
+#     114 HCAL   29366   29366 DUCK HCAL MODULE                                                                                     
+  Symptom:spike in energy/module at bin 8                                                                                           
+  Cause:  Run used for the digital scanning in hcal : run-qual. already done                                                        
+  Effect: low efficiency  on digita read-out                                                                                        
+#     115 HCAL   29478   29671 PERF HCAL STRIPS                                                                                     
+  Symptom:mean number of strips in random triggers has increased from 20 to 38                                                      
+  Cause:  few digital hits (noise hits) on some digital cards                                                                       
+  Effect: no effect                                                                                                                 
+#     116 HCAL   29321   29326 DUCK DIG-PLAT                                                                                        
+  Symptom:low digital efficiency                                                                                                    
+  Cause:  scanning of digital plateau : clear 3060 load-barrel 900 load-endcaps 690                                                 
+  Effect: low efficiency on digital read-out in hcal                                                                                
+#     117 HCAL   29327   29332 DUCK DIG-PLAT                                                                                        
+  Symptom:low digital efficiency                                                                                                    
+  Cause:  scanning of digital plateau : clear  3060 load-barrel 930 load-endcaps 720                                                
+  Effect: low efficiency on digital read-out in hcal                                                                                
+#     118 HCAL   29333   29337 DUCK DIG-PLAT                                                                                        
+  Symptom:low digital efficiency                                                                                                    
+  Cause:  scanning of digital plateau : clear 2730  load-barrel 300 load-endcaps 90                                                 
+  Effect: low efficiency on digital read-out in hcal                                                                                
+#     119 HCAL   29345   29351 DUCK DIG-PLAT                                                                                        
+  Symptom:low digital efficiency                                                                                                    
+  Cause:  scanning of digital plateau : clear 2670 load-barrel 300 load-endcaps 90                                                  
+  Effect: low efficiency of digital read-out in hcal                                                                                
+#     120 HCAL   29353   29361 DUCK DIG-PLAT                                                                                        
+  Symptom:low digital efficiency                                                                                                    
+  Cause:  scanning of digital plateau : clear 2760 load-barrel 300 load-endcaps 90                                                  
+  Effect: low efficiency of digital read-out in hcal                                                                                
+#     121 HCAL   29363   29367 DUCK DIG-PLAT                                                                                        
+  Symptom:low digital efficiency                                                                                                    
+  Cause:  scanning of digital  plateau : clear 2790 load-barrel 300 load-endcap 90                                                  
+  Effect: low efficiency of digital read-out in hcal                                                                                
+#     122 HCAL   29373   29380 DUCK DIG-PLAT                                                                                        
+  Symptom:low digital efficiency                                                                                                    
+  Cause:  scanning of digital plateau : clear 3060 load-barrel 990 load-endcaps 780                                                 
+  Effect: low efficiency of digital read-out in hcal                                                                                
+#     123 HCAL   29293   29299 MAYB DIG-PLAT                                                                                        
+  Symptom:digital efficiency in plateau  region                                                                                     
+  Cause:  scanning of digital plateau : clear 3060 load-barrel 720 load-endcaps 510                                                 
+  Effect: no effect foreseen                                                                                                        
+#     124 HCAL   29300   29305 MAYB DIG-PLAT                                                                                        
+  Symptom:digital efficiency in plateau region                                                                                      
+  Cause:  scanning of digital plateau : clear 3060 load-barrel 750 load-endcaps 540                                                 
+  Effect: no effect foreseen                                                                                                        
+#     125 HCAL   29306   29310 MAYB DIG-PLAT                                                                                        
+  Symptom:efficiency on plateau region                                                                                              
+  Cause:  scanning of digital plateau : clear 3060 load-barrel 780 load-endcaps 570                                                 
+  Effect: no effect foreseen                                                                                                        
+#     126 HCAL   29311   29314 MAYB DIG-PLAT                                                                                        
+  Symptom:digital efficiency on plateau region                                                                                      
+  Cause:  scanning of digital paletau : clear 3060 load-barrel 810 load-endcaps 600                                                 
+  Effect: no effect foreseen                                                                                                        
+#     127 HCAL   29582   29598 PERF HCAL ADC                                                                                        
+  Symptom:spike in energy/ADC at channel 17                                                                                         
+  Cause:  analog noise in barrel module 22-23                                                                                       
+  Effect: nmo effect foreseen                                                                                                       
+#     128 HCAL   29345   29354 DUCK HV HCAL                                                                                         
+  Symptom:HV bit off                                                                                                                
+  Cause:  1 hv power supply off                                                                                                     
+  Effect: 5 modules (1-24) and 2 muon chambers BARREL  with HV off                                                                  
+#     129 HCAL   29671   29672 PERF DIG_NOISE                                                                                       
+  Symptom:event exces in clusters and track per astr and energy per adc                                                             
+  Effect: none                                                                                                                      
+#     130 HCAL   30038   30353 PERF HV_MASK                                                                                         
+  Symptom:Loss in efficiency, mu chamb 3 (X3 layer) Barrel                                                                          
+  Cause:  Masked HV ch.2, crate 2, Barrel                                                                                           
+  Effect: Negligible                                                                                                                
+#     131 HCAL   30069   30353 PERF DIG_MASK                                                                                        
+  Symptom:Noisy digital chain 18, astros 104, mu_chamb EA                                                                           
+  Effect: Negligible                                                                                                                
+#     132 HCAL   30042   30353 MAYB TRIG_INEF                                                                                       
+  Symptom:Reduced trigger efficiency in Module of the Barrel                                                                        
+  Cause:  Probably the connector in the HV BOX                                                                                      
+  Effect: Low trigger efficiency in 1/24 of the barrel                                                                              
+  Symptom:Reduced trigger efficiency in Module 3 of the Barrel                                                                      
+#     133 HCAL   30245   30258 PERF HV_OVC                                                                                          
+  Symptom:HV overcurrent on mu chamber #3 second layer side B                                                                       
+  Cause:  short circuit on a streamer tube                                                                                          
+  Effect:  half mu chamber #3 second layer on side B is inefficient                                                                 
+#     134 HCAL   29472   29476 MAYB DIG-PLAT                                                                                        
+  Symptom:digital efficiency in plateau region                                                                                      
+  Cause:  scanning of digital plateau : clear 2820 load-barrel 300 load-endcap 90                                                   
+  Effect: no effect foreseen                                                                                                        
+#     135 HCAL   29573   29596 MAYB DIG-PLAT                                                                                        
+  Symptom:digital efficiency in plateau region                                                                                      
+  Cause:  scanning of digital plateau : clear 3060 load-barrel 540 load-endcaps 330                                                 
+  Effect: no effect foreseen                                                                                                        
+#     136 HCAL   29621   29644 MAYB DIG-PLAT                                                                                        
+  Symptom:digital efficiency in plateau region                                                                                      
+  Cause:  scanning of digital plateau : clear 3060 load-barrel 750 load-endcaps 540                                                 
+  Effect: no effect foreseen                                                                                                        
+#     137 HCAL   29647   29671 MAYB DIG-PLAT                                                                                        
+  Symptom:digital efficiency in plateau region                                                                                      
+  Cause:  scanninf of digital plateau : clear 2940 load-barrel 300 load-endcaps 90                                                  
+  Effect: no effect foreseen                                                                                                        
+#     138 HCAL   29679   29715 MAYB DIG-PLAT                                                                                        
+  Symptom:digital efficiency in plateau region                                                                                      
+  Cause:  scanning of the digital plateau : clear 3060 load-barrel 810 load-endcap 600                                              
+  Effect: no effect foreseen                                                                                                        
+#     139 HCAL   29717   29747 DUCK DIG-PLAT                                                                                        
+  Symptom:low efficiency of digital read-out                                                                                        
+  Cause:  scanning of digital plateau : clear 2790 load-barrel 300 load-endcaps 90                                                  
+  Effect: low efficiency of digital read-out                                                                                        
+#     140 HCAL   29750   29771 MAYB DIG-PLAT                                                                                        
+  Symptom:digital efficiency in plateau region                                                                                      
+  Cause:  scanning of digital plateau : clear 2880 load-barrel 300 load-endcaps 90                                                  
+  Effect: no effect foreseen                                                                                                        
+#     141 HCAL   30071   30075 MAYB DIG-PLAT                                                                                        
+  Symptom:digital efficiency in plateau region                                                                                      
+  Cause:  scanning of digital plateau : clear 3060 load-barrel 420 load-endcap 210                                                  
+  Effect: no effect foreseen                                                                                                        
+#     142 HCAL   30079   30080 DUCK DIG-PLAT                                                                                        
+  Symptom:low digital read-out efficiency                                                                                           
+  Cause:  scanning of digital plateau : clear 3060 load-barrel 870 load-endcaps 660                                                 
+  Effect: low efficiency of digital read-out                                                                                        
+#       1 SCAL   25257   25259 PERF NO SIGNAL SIDE A                                                                                
+  Symptom:Histograms and event display show no signal on side A                                                                     
+  Effect: none                                                                                                                      
+#       2 SCAL   25257   25259 PERF NO LUMINOSITY                                                                                   
+  Symptom:BCAL doesn't report any luminosity                                                                                        
+  Effect: none                                                                                                                      
+#       3 SCAL   25342   25351 DUCK TRIGGER                                                                                         
+  Symptom:Raised thresholds of SICAL_LO and SICAL_HI to 35 ADC counts==32.5 Gev.                                                    
+  Cause:  Trigger rate dominated by bkg!  We are getting too few bhabhas, Z0's per cartridge for commissioning                      
+  Effect: New thresholds higher than our offline cuts, do not use these runs for luminosity for now.                                
+#       4 SCAL   25354   25354 DUCK OFF-MOMENTUM                                                                                    
+  Symptom:lots of off-momentum electrons;threshold problem?                                                                         
+  Cause:  Yes, we know about this.  There is very very high background.                                                             
+  Effect: This problem has forced us to modify our trigger conditions, rendering runs not useful for luminosity.                    
+#       5 SCAL   25345   25403 DUCK SINGLE ARM TR                                                                                   
+  Symptom:Single arm triggers suppressed due to very high backgrounds rendering these runs not useful for luminosity.               
+  Cause:  High bkg.                                                                                                                 
+  Effect: Cannot use these runs for luminosity.                                                                                     
+  Effect: Background cannot be estimated nor trigger efficiency calculated                                                          
+#       6 SCAL   25359   25786 DUCK TRIGGER                                                                                         
+  Symptom:Coincidence trigger thresholds raised.                                                                                    
+  Cause:  High background.                                                                                                          
+  Effect: These runs cannot be used for luminosity.                                                                                 
+#       7 SCAL   25364   25364 DUCK ENERGY                                                                                          
+  Symptom:Energy side A,B wrong (mean value around 30 GeV)                                                                          
+  Cause:  Yes, we know about this. It is because there is a lot of background.                                                      
+  Effect: For the time being we are ducking all runs for SICAL because of background related problems anyway.                       
+#       8 SCAL   25796   25839 MAYB TRIGGER                                                                                         
+  Symptom:Coincidence trigger downscaled by a factor 4                                                                              
+  Cause:  High background                                                                                                           
+  Effect: Higher background, lower statistics                                                                                       
+#       9 SCAL   25840   26472 MAYB TRIGGER                                                                                         
+  Symptom:Coincidence trigger downscaled by a factor 6                                                                              
+  Cause:  High backgrounds                                                                                                          
+  Effect: Higher backgrounds, lower Bhabha statistics                                                                               
+#      10 SCAL   25937   26472 MAYB SCAL_10                                                                                         
+  Symptom:SICAL single arm high was downscaled to 80                                                                                
+  Cause:  High trigger rate                                                                                                         
+  Effect: Poor statistics for measuring coincidence trigger efficiency                                                              
+#      11 SCAL   26473   26494 MAYB TRIGGER                                                                                         
+  Symptom:Hi threshold trigger downscaled by 20                                                                                     
+  Cause:  to prevent high rate from background                                                                                      
+  Effect: poor statistics for measuring efficiency of coincidence trigger                                                           
+#      12 SCAL   26473   26737 PERF PHICUT                                                                                          
+  Symptom:96 fastors masked from trigger (AMPLICES above and below horizontal plane for each layer and each endcap)                 
+  Cause:  high backgrounds in the horizontal plane                                                                                  
+  Effect: Must reduce acceptance in offline analysis to restrict luminosity measurement to area for which trigger is efficient      
+#      13 SCAL   27764   27789 PERF NOISY CARD 6 (B)                                                                                
+  Symptom:no. of hits in card B 6 always at 300 for runs 27764 - 27767 and partially 27770,71                                       
+  Effect: None (probably...)                                                                                                        
+  Cause:  Unknown.                                                                                                                  
+  Effect: None (probably...)                                                                                                        
+#      14 SCAL   28200   28432 MAYB RMS_ENERGY                                                                                      
+  Symptom:RMS energy side B bin 9 more than 3 sigmas away                                                                           
+  Cause:  this is due to background in the horizontal plane which disturb the average energy in the bin                             
+  Effect: none if background properly handled                                                                                       
+  Symptom:this is due to background in the horizontal plane which disturb the mean value of Energy distribution                     
+  Effect: none if background substracted properly !                                                                                 
+#      15 SCAL   29293   29293 PERF BKG                                                                                             
+  Symptom:high background of beam lost particles showing up in the a/b phi plot                                                     
+  Symptom:Sical coordinator considers background at this time relatively low                                                        
+  Cause:  None                                                                                                                      
+  Effect: None                                                                                                                      
+#      16 SCAL   29977   29977 DUCK NO TRIGGERS                                                                                     
+  Symptom:Due to miscabling there were no SICAL triggers                                                                            
+  Cause:  Bad cable                                                                                                                 
+  Effect: No triggers==no lumi measurement                                                                                          
+#      17 SCAL   27903   27909 DUCK NO-BANKS                                                                                        
+  Symptom:No SICAL banks available                                                                                                  
+  Effect: No Luminosisty measurement possible !                                                                                     
+#       1 LCAL   25265   25265 DUCK NO_PAD                                                                                          
+  Symptom:No pad data, seen also on event display.                                                                                  
+  Cause:  calibration problem                                                                                                       
+  Effect: no energy in LCAL                                                                                                         
+#       2 LCAL   25345   25454 DUCK PAD                                                                                             
+  Symptom:pad energy is wrong.                                                                                                      
+  Cause:  New front end electronics.                                                                                                
+  Effect: Wrong cluster energies (by ca. factor 2). Can be corrected for.                                                           
+#       3 LCAL   25376   25425 DUCK GAS                                                                                             
+  Symptom:HV on LCAL is off due to leakage in module AL                                                                             
+  Effect: No LCAL data for these runs                                                                                               
+  Effect: no LCAL data for these runs                                                                                               
+#       4 LCAL   25591   25786 DUCK BAD TOWER ENERGY                                                                                
+  Symptom:tower energy is random                                                                                                    
+  Effect: none if wire energy is used instead of pad energy.                                                                        
+#       5 LCAL   25816   25882 MAYB EPAD                                                                                            
+  Symptom:wire/pad ratio approx 1.08                                                                                                
+  Cause:  final adjustment of pad gain factors for new frontend electronics not yet done.                                           
+  Effect: none (use wire energies)                                                                                                  
+  Effect: none (normalize with wire energy)                                                                                         
+#       6 LCAL   30092   30103 MAYB LCAL TOWER ENERG                                                                                
+  Symptom:*Significant (>40GeV) shift in LCAL tower energy (present at least since run 30090)                                       
+  Cause:  18 dead planes in LCAL module BR due to bad HV connection                                                                 
+  Effect: Worse   resolution in module                                                                                              
+  Cause:  18 dead planes in module BR due to bad HV connection                                                                      
+  Effect: Worse energy resolution in module BR                                                                                      
+#       7 LCAL   30126   30353 MAYB LCAL_ENERGY                                                                                     
+  Symptom:Significant drop in wire and tower energy in module BR                                                                    
+  Cause:  18 dead planes in module BR due to bad HV connection                                                                      
+  Effect: Worse energy resolution in module BR                                                                                      
+#       1 BCAL   25257   25257 PERF NO LUMINOSITY                                                                                   
+  Symptom:BCAL doesn't report  any luminosity!                                                                                      
+  Cause:  problem in the monitor program running on the FIC.                                                                        
+  Cause:  Bad calibration plus some bugs in the readout system.                                                                     
+  Effect: Non effects.                                                                                                              
+#       2 BCAL   25364   25364 PERF ENERGY                                                                                          
+  Symptom:BCAL 2 and BCAL 4 has wrong energy spectrum (also lum. from BCAL seems to be wrong)                                       
+  Cause:  Calibration of those modules with new data.                                                                               
+  Effect: No Effects.                                                                                                               
+  Cause:  Bad calibration.                                                                                                          
+  Effect: Non Effects                                                                                                               
+#       3 BCAL   25556   25606 PERF BCAL                                                                                            
+  Symptom:BCAL2 and 4 energy deposits shifted to lower energy                                                                       
+  Cause:  We did a reduction in the heigh pulse of the PMT to study background.                                                     
+  Effect: No Effect.                                                                                                                
+#       4 BCAL   26338   26338 MAYB SHIFTINENERGY                                                                                   
+  Symptom:shift in energy in hist bcal2,3,4  (-5 gev)                                                                               
+  Effect: None                                                                                                                      
+#       5 BCAL   26327   26327 MAYB EMPHIST                                                                                         
+  Symptom:empty histograms                                                                                                          
+  Effect: None                                                                                                                      
+  Effect: None                                                                                                                      
+#       6 BCAL   26364   26548 MAYB SHIFTINENERGY                                                                                   
+  Symptom:shift in energy in hist BCAL 2, 3, 4 (-5 GeV)                                                                             
+  Effect: None                                                                                                                      
+#       7 BCAL   27082   27280 PERF BCAL ENEGY GRAPH                                                                                
+  Symptom:this graph is offset from the beam energy                                                                                 
+  Effect: None                                                                                                                      
+#       8 BCAL   28841   28890 PERF SHIFTENERGY                                                                                     
+  Symptom:shift in energy of +5 gev istogr bcal 2,3,4                                                                               
+  Cause:  Bad calibration of the PMTs.                                                                                              
+  Effect: No effect                                                                                                                 
+#       9 BCAL   28892   28900 PERF BCAL HIST                                                                                       
+  Symptom:BCAL Energy, 1, 3 histograms *empty* since run # 28868                                                                    
+  Symptom:The first bit of the trigger mask does not appera. in the histogram.                                                      
+  Cause:  During a Fill there was a problem reading the first bit (singles module 1) of the trigger mask,                           
+  Effect: No effect.                                                                                                                
+#      10 BCAL   29113   29213 PERF E SHIFT                                                                                         
+  Symptom:Energy in BCAL3 peaks at 50 GeV                                                                                           
+  Cause:  Bad Calibration after the technical stop.                                                                                 
+  Cause:  Bad calibration after the technical stop.                                                                                 
+  Effect: No Effect                                                                                                                 
+#      11 BCAL   29135   29213 PERF E_BCAL4                                                                                         
+  Symptom:Energy in BCAL4 peaked at 48GeV                                                                                           
+  Symptom:The silicon correction is not rigth.                                                                                      
+  Cause:  Bad calibration constants and bad silicon correction.                                                                     
+  Effect: No effect.                                                                                                                
+#      12 BCAL   29169   29213 PERF ENERGY SHIFT                                                                                    
+  Symptom:Peak energy for BCAL 2 is shifted to 48 GeV.                                                                              
+  Cause:  Bad calibration contants.                                                                                                 
+  Effect: No effect.                                                                                                                
+#      13 BCAL   29230   99999 PERF BCAL_MOD_4                                                                                      
+  Symptom:BCAL-ENERGY  4   shifted to higher energies. NO EFECT on run quality                                                      
+#      14 BCAL   30186   99999 MAYB BCAL ENERGY 4                                                                                   
+  Symptom:distorsion of BCAL energy 4 histogramm double peak, one with significant shift in energy (10 GeV)                         
+#       1 LVL1   25335   25340 MAYB DISABLED                                                                                        
+  Symptom:TRK_CNT2 trigger disabled in this run.                                                                                    
+  Effect: anything                                                                                                                  
+#       2 LVL1   25456   25840 PERF DOWNSCALING                                                                                     
+  Symptom:High trigger rate                                                                                                         
+  Cause:  High background                                                                                                           
+  Effect: Downscale of LW_A+BVH set to 100 (was 10), of SNG_C_E2 to 10 (was 2)                                                      
+  Effect: since run 25439 sical_low has downscale 5000 (was 2500), sical_high has 20 (was 2)                                        
+#       3 LVL1   25591   25840 PERF ERROR_LOGGER                                                                                    
+  Symptom:There are frequent errors on the error screen about FINCHtst trigger exceeding timeout                                    
+  Symptom:Also trigger bit TAG_2GAM exceeds MaxInclRate of 6                                                                        
+  Cause:  FINCHtst: No Bcal information from Bcal yet ==>no FINCHtst ,TAG_2GAM: High Background ==>high rate                        
+  Effect: reduced two photon efficiency                                                                                             
+  Cause:  BCAL_TRG cable was not connected properly; was GROUNDED on BCAL_side                                                      
+  Effect: NO FINCHtst triggers (SNG_C_E2 * BCAL_TRG); disabled anyway due to high backgrounds                                       
+#       4 LVL1   25812   25812 PERF LVL1_HCW3                                                                                       
+  Symptom:response of Hcal Wires Modules (Barrel) is high                                                                           
+  Symptom:response of Barrel wire moduls 10 times higher than EndCaps                                                               
+  Symptom:none                                                                                                                      
+  Cause:  data manager does not know when to use cia                                                                                
+  Effect: none                                                                                                                      
+#       5 LVL1   26497   26500 PERF LCAL WIRES                                                                                      
+  Symptom:LCW SegBit hist missing spikes for LCAL wires side B and inner Side A                                                     
+  Symptom:The usual large inside-outside asymmetry mysteriously was absent for these three runs.                                    
+  Cause:  LEP managed to switch off background on Side_B; they restored it afterwards!! 11-JUN-1994 19.00-21.00                     
+  Effect: None                                                                                                                      
+#       6 LVL1   28067   28067 MAYB JUNK SNG_C_EM                                                                                   
+  Symptom:Fake SNG_C_EM Trigger                                                                                                     
+  Cause:  Two CAMAC modules "talking to each other"                                                                                 
+  Effect: SNG_C_EM trigger bit is set without an event fulfilling the required conditions                                           
+#       7 LVL1   29717   29718 MAYB MISSING_TRIGGER                                                                                 
+  Symptom:About 2 per mille of SNG_C_E2, TAG_2GAM and DBL_C_E2 did NOT trigger.                                                     
+  Cause:  unknown; maybe spurious timing-jitter (once every 15 minutes) or human intervention??                                     
+  Effect: none                                                                                                                      
+#       1 LVL2   25335   25454 MAYB PROC_18                                                                                         
+  Symptom:No tracks seen in processor 18                                                                                            
+  Cause:  Some problem in the backplane of the crate?                                                                               
+  Effect: Lower the efficiency of Level2 trigger                                                                                    
+  Symptom:Due to unplugged cable in the back of the processor                                                                       
+#       2 LVL2   25407   25798 MAYB TRACK MULTPL.                                                                                   
+  Symptom:The track mult. looks different from ref., may be due to back. events (beam-gas int.)                                     
+  Cause:  High inneficiencies in all processors                                                                                     
+  Cause:  Bad handling of the busy/clar signal on the processors                                                                    
+  Effect: Lower the efficiency of Level2                                                                                            
+#       3 LVL2   25591   25694 MAYB TRACK MULTIPLICI                                                                                
+  Symptom:Large excess  in bins 7, 12, 15 and 32                                                                                    
+  Effect: None                                                                                                                      
+#       4 LVL2   25591   25694 MAYB TRACK MULTIPLICI                                                                                
+  Symptom:Large excess  in bins 7, 12, 15 and 32                                                                                    
+  Effect: None                                                                                                                      
+#       5 LVL2   25675   25798 MAYB TRKMUL                                                                                          
+  Symptom:Track multiplicity abnormally high in bins 7; 12;19; and 24                                                               
+  Cause:  Bad handling of the busy-clear signal on the processors                                                                   
+  Effect: Lower the efficiency of Level 2                                                                                           
+#       6 LVL2   26732   26737 PERF TRK XPLXCITY                                                                                    
+  Symptom:Track multiplicity shifted  radically higher due to faulty processor.  Dates to beginning of fill.                        
+  Cause:  Lookup tables in processor 23 not loaded correctly, fixed by rebooting FIC                                                
+  Effect: No rejection by Level 2                                                                                                   
+#       7 LVL2   28695   28695 MAYB BAD_ASY                                                                                         
+  Symptom:RunQ reports bad asymmetry: Asym<30:0.069 +- 0.021                                                                        
+  Cause:  20 tracks were missed in endcab B, with 0 missing tracks in endcap A. No reason was found for this.                       
+  Effect: Analyses sensitive to trigger efficiencies should take care with this run                                                 
+#       8 LVL2   29293   29293 MAYB LOW TRACK MULTIP                                                                                
+  Symptom:high no. of events with low track multiplicity below lepton peak                                                          
+  Cause:  TPC trip                                                                                                                  
+  Effect: None                                                                                                                      
+#       1 BOM    25347   25421 MAYB NO ENTRIES                                                                                      
+  Symptom:BOM has no entries for x, xp, y, .. histograms                                                                            
+  Cause:  LEP turn clock signal was disconnected                                                                                    
+  Effect: Data lost                                                                                                                 

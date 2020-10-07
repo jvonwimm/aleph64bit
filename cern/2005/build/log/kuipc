@@ -1,0 +1,29 @@
+making Makefiles in /packlib...
+Makeing bin/kuipc in /packlib...
+gmake[1]: Entering directory '/home/wimmer/aleph64bit/cern/2005/build/packlib'
+making Makefiles in /packlib/kuip...
+Makeing bin/kuipc in /packlib/kuip...
+gmake[2]: Entering directory '/home/wimmer/aleph64bit/cern/2005/build/packlib/kuip'
+making Makefiles in /packlib/kuip/programs...
+Makeing bin/kuipc in /packlib/kuip/programs...
+gmake[3]: Entering directory '/home/wimmer/aleph64bit/cern/2005/build/packlib/kuip/programs'
+making Makefiles in /packlib/kuip/programs/kuipc...
+Makeing bin/kuipc in /packlib/kuip/programs/kuipc...
+gmake[4]: Entering directory '/home/wimmer/aleph64bit/cern/2005/build/packlib/kuip/programs/kuipc'
+gcc -O1 -fomit-frame-pointer -fPIC    -I/home/wimmer/aleph64bit/cern/2005/build/packlib/kuip -I/home/wimmer/aleph64bit/cern/2005/src/packlib/kuip -I/home/wimmer/aleph64bit/cern/2005/src/packlib/kuip/programs/kuipc -I/home/wimmer/aleph64bit/cern/2005/src/include    -DFUNCPROTO=15 -DNARROWPROTO    -DCERNLIB_LINUX -DCERNLIB_UNIX -DCERNLIB_LNX -DCERNLIB_QMGLIBC -DCERNLIB_QMLXIA64 -DCERNLIB_GFORTRAN -DCERNLIB_GCC4 -DCERNLIB_VERBOSE   -c -o kuipcc.o /home/wimmer/aleph64bit/cern/2005/src/packlib/kuip/programs/kuipc/kuipcc.c
+/home/wimmer/aleph64bit/cern/2005/src/packlib/kuip/programs/kuipc/kuipcc.c: In function ‘main’:
+/home/wimmer/aleph64bit/cern/2005/src/packlib/kuip/programs/kuipc/kuipcc.c:359:5: warning: ignoring return value of ‘fgets’, declared with attribute warn_unused_result [-Wunused-result]
+     fgets( ifile, sizeof ifile, stdin );
+     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/wimmer/aleph64bit/cern/2005/src/packlib/kuip/programs/kuipc/kuipcc.c:362:5: warning: ignoring return value of ‘fgets’, declared with attribute warn_unused_result [-Wunused-result]
+     fgets( ofile, sizeof ofile, stdin );
+     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+gcc -O1 -fomit-frame-pointer -fPIC    -I/home/wimmer/aleph64bit/cern/2005/build/packlib/kuip -I/home/wimmer/aleph64bit/cern/2005/src/packlib/kuip -I/home/wimmer/aleph64bit/cern/2005/src/packlib/kuip/programs/kuipc -I/home/wimmer/aleph64bit/cern/2005/src/include    -DFUNCPROTO=15 -DNARROWPROTO    -DCERNLIB_LINUX -DCERNLIB_UNIX -DCERNLIB_LNX -DCERNLIB_QMGLIBC -DCERNLIB_QMLXIA64 -DCERNLIB_GFORTRAN -DCERNLIB_GCC4 -DCERNLIB_VERBOSE   -c -o kkern.o /home/wimmer/aleph64bit/cern/2005/src/packlib/kuip/programs/kuipc/kkern.c
+rm -f kuipc
+gcc -o kuipc -O1 -fomit-frame-pointer -fPIC     -L/home/wimmer/aleph64bit/cern/2005/src/lib kuipcc.o kkern.o       
+rm -f /home/wimmer/aleph64bit/cern/2005/bin/kuipc
+install -c -s  kuipc /home/wimmer/aleph64bit/cern/2005/bin/kuipc
+gmake[4]: Leaving directory '/home/wimmer/aleph64bit/cern/2005/build/packlib/kuip/programs/kuipc'
+gmake[3]: Leaving directory '/home/wimmer/aleph64bit/cern/2005/build/packlib/kuip/programs'
+gmake[2]: Leaving directory '/home/wimmer/aleph64bit/cern/2005/build/packlib/kuip'
+gmake[1]: Leaving directory '/home/wimmer/aleph64bit/cern/2005/build/packlib'

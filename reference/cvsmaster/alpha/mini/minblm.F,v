@@ -1,0 +1,175 @@
+head	1.3;
+access;
+symbols
+	alpha126_22:1.3
+	alpha122_22:1.3
+	alpha126_21:1.3
+	alpha126_20:1.3
+	alpha126_19:1.3
+	alpha126_18:1.3
+	alpha126_17:1.3
+	alpha126_16:1.3
+	alpha126_15:1.3
+	alpha126_14:1.3
+	alpha126_13:1.3
+	alpha126_12:1.3
+	alpha126_11:1.3
+	alpha126_10:1.3
+	alpha126_09:1.3
+	alpha126_08:1.3
+	alpha126_07:1.3
+	alpha126_06:1.3
+	alpha126_05:1.3
+	alpha126_04:1.3
+	alpha126_03:1.3
+	alpha126_02:1.3
+	alpha126_1:1.3
+	alpha125_17:1.3
+	alpha125_16:1.3
+	alpha125_15:1.3
+	alpha125_14:1.3
+	alpha125_13:1.3
+	alpha125_12:1.3
+	alpha125_11:1.3
+	alpha125_10:1.3
+	alpha125_09:1.3
+	alpha125_08:1.3
+	alpha125_07:1.3
+	alpha125_06:1.3
+	alpha125_05:1.3
+	alpha125_04:1.3
+	alpha125_03:1.3
+	alpha125_02:1.3
+	alpha125_01:1.3
+	alpha124_19:1.3
+	alpha125:1.3
+	alpha124_18:1.3
+	alpha124_17:1.3
+	alpha124_16:1.3
+	alpha124_15:1.3
+	alpha124_14:1.3
+	alpha124_13:1.3
+	alpha124_12:1.3
+	alpha124_11:1.3
+	alpha124_10:1.3
+	alpha124_09:1.3
+	alpha124_08:1.3
+	alpha124_07:1.3
+	alpha124_7:1.3
+	alpha124_06:1.3
+	alpha124_05:1.2
+	alpha124_04:1.2
+	alpha124_03:1.2
+	alpha124_02:1.2
+	alpha124_01:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	99.04.28.08.13.47;	author boucrot;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	99.03.24.09.30.46;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	99.03.22.14.06.52;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE MINBLM
+C
+CKEY MDST /INTERNAL
+C-----------------------------------------------------------------------
+C! Build Mini banks for Monte-Carlo.
+C
+C     Author: Stephen Haywood      06-Jan-93
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+C++   Fill reduced FKIN bank.
+C
+      IF (NLINK('DTMC',0).GT.0) THEN
+         CALL MINLIS('DTMC')
+      ELSE
+         CALL MINTMC
+      ENDIF
+C
+C++   Fill reduced FVER bank.
+C
+      IF (NLINK('DVMC',0).GT.0) THEN
+         CALL MINLIS('DVMC')
+      ELSE
+         CALL MINVMC
+      ENDIF
+C
+C++   Fill reduced FZFR bank.
+C
+      IF (NLINK('DFMC',0).GT.0) THEN
+         CALL MINLIS('DFMC')
+      ELSE
+         CALL MINFMC
+      ENDIF
+C
+C++   Add further useful banks.
+C
+      CALL MINLIS('KEVH')
+      CALL MINLIS('ASEV')
+      IF (IW(NAMIND('KWTK')).GT.0) CALL MINLIS('KWTK')
+      IF (IW(NAMIND('KWGT')).GT.0) CALL MINLIS('KWGT')
+      IF (IW(NAMIND('SIID')).GT.0) CALL MINLIS('SIID')
+      IF (LROWS(NLINK('FPOL',0)).GT.0) CALL MINLIS('FPOL')
+      IF (LROWS(NLINK('PASL',0)).GT.0) CALL MINLIS('PASL')
+      IF (LROWS(NLINK('PITM',0)).GT.0) CALL MINLIS('PITM')
+      IF (LROWS(NLINK('FPOI',0)).GT.0) CALL MINLIS('FPOI')
+      IF (LROWS(NLINK('PEMH',0)).GT.0) CALL MINLIS('PEMH')
+      IF (LROWS(NLINK('PHMH',0)).GT.0) CALL MINLIS('PHMH')
+C
+C++   Add old matching banks, if new ones don't exist.
+C
+      IF (NLINK('PASL',0).LE.0 .OR. NLINK('PITM',0).LE.0) THEN
+         IF (IW(NAMIND('IPJT')).GT.0) CALL MINLIS('IPJT')
+         IF (IW(NAMIND('IRJT')).GT.0) CALL MINLIS('IRJT')
+         IF (LROWS(NLINK('PTMA',0)).GT.0) CALL MINLIS('PTMA')
+         IF (LROWS(NLINK('PTML',0)).GT.0) CALL MINLIS('PTML')
+      ENDIF
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@d44 1
+@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@d42 2
+@

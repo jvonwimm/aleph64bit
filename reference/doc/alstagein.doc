@@ -1,0 +1,24 @@
+                        Documentation for ALSTAGEIN
+                        ===========================
+
+	The command ALSTAGEIN is the stagein for ALEPH. It means
+that some defaults have been setup for ALEPH. The command ALSTAGEIN
+use the same options as STAGEIN with these defaults :
+DPMPOOL=alephdata     (Pool used to store the data)
+DPMUSER=aleph         
+DPMLINKDIR=/aleph/data   (Directory where the link for the data are created)
+DPMSIZE=400     (Size in Mb reserved for stagein a tape)
+STAGELABEL=sl  (label used for tpread)
+STAGEFSEQ=1
+STAGERECFM=F
+STAGELRECL=32040   (Record format for tpread)
+STAGEBLKSIZ=32040
+STAGEFILID=ALDATA  (Fili id for tpread)
+STAGECLEAN=/u/xu/closier/test/stage/stage-clean-sh (script which is
+invoked if a cleanup is needed)
+
+So the easy way to use this command is : alstagein -v VID filename
+or alstagein -v VID (and the filename will be
+VID.STAGEFSEQ.STAGELABEL)
+
+

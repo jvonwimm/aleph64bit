@@ -1,0 +1,71 @@
+From BLOCH@alws.cern.ch Fri Feb 13 12:54:29 2004
+Date: Fri, 13 Feb 2004 12:47:30 +0100
+From: BLOCH@alws.cern.ch
+To: BLOCH@alws.cern.ch
+
+KCAR 0 / $TEXT                                                                  
+POFF                                                                            
+*   run #                    run's title                                        
+RUN  101        'BEAM-GAS GENERATOR - E. LANGE'                                 
+*     first event   last event to be generated                                  
+TRIG       1           100                                                      
+*    unit # first event   last event to debug                                   
+DEBU  6 /       1            1                                                  
+*    SAVE EVENT FILE ON DISK                                                    
+*FILO ' SCWEEK:BMGA01.EPIO | EPIO '                                             
+*    SAVE HISTO FILE ON DISK                                                    
+*HSTO ' SCWEEK:BMGA01.HIST | NATIVE '                                           
+*  set next q family out of LEP1 range                                          
+PMAS 107 / 150.                                                                 
+PMAS 108 / 200.                                                                 
+* EBEAM : beam energy (in GeV);                                                 
+* XLEP  : incoming lepton type (7= electron,-7=positron)                        
+* XOPT  : Option choosen ( 1.-5.) for the process to be simulated,              
+*                  = 1 deep inelastic lepton nucleon scattering,                
+*                  = 2 Moeller scattering,                                      
+*                  = 3 Bhabha scattering,                                       
+*                  = 4 Mott scattering,                                         
+*                  = 5 Rosenbluth scattering;                                   
+* HIST  : Histogram flag ( 1.=on , 0.=off);                                     
+* ANUM  : Atomic weight of material(i.e. 1 for proton or neutron);              
+* ZNUM  : Atomic number of material (i.e. 1 for proton and 0 for neutron)       
+* BRAN  : DeltaZ range for interaction region around beam crossing point;       
+* TMIN  : Minimum kinetic energy (in GeV) of the delta electron in              
+*         Moeller and Bhabha scattering;                                        
+* TMAX  : Maximum kinetic energy (in GeV) of the delta electron in              
+*         Moeller and Bhabha scattering;                                        
+*       EBEAM XLEP  XOPT  HIST   ANUM   ZNUM  BRAN  TMIN   TMAX                 
+GENE    45.6    7.   1.    1.     1.     1.    20.   0.1    15.                 
+* NPOINT  : number of bins for the integration of the Rosenbluth                
+*           formula (XOPT = 5 only);                                            
+* NPX,NPY : number of bins for the integration of the deep inelastic            
+*           scattering formula (XOPT = 1 only);                                 
+*    NPOINT   NPX   NPY                                                         
+GINT  100     50    50                                                          
+* x, y, Q2, W2 and NU are the variables of the deep inelastic scattering        
+* CUT(1)   :  minimum x      (for XOPT = 1 only);                               
+* CUT(2)   :  maximum x      (for XOPT = 1 only);                               
+* CUT(3)   :  minimum y      (for XOPT = 1 only);                               
+* CUT(4)   :  maximum y      (for XOPT = 1 only);                               
+* CUT(5)   :  minimum Q2     (for XOPT = 1 only);                               
+* CUT(6)   :  maximum Q2     (for XOPT = 1 only);                               
+* CUT(7)   :  minimum W2     (for XOPT = 1 only);                               
+* CUT(8)   :  maximum W2     (for XOPT = 1 only);                               
+* CUT(9)   :  minimum NU     (for XOPT = 1 only);                               
+* CUT(10)  :  maximum NU     (for XOPT = 1 only);                               
+* CUT(11)  :  minimum energy of scattered lepton (for XOPT = 1 only);           
+* CUT(12)  :  maximum energy of scattered lepton (for XOPT = 1 only);           
+*            (CUT(11) and CUT(12) must be given in GeV)                         
+* CUT(13)  :  minimum polar angle of scattered lepton (for XOPT = 1,4,5);       
+* CUT(14)  :  maximum polar angle of scattered lepton (for XOPT = 1,4,5);       
+*            (the last two quantities must be given in radians)                 
+*     CUT(1)---------------------------------------------------CUT(14)          
+GLEP  0.01  1. 0.  1.  1. 1.E5  4. 1.E5 0.  1.E5  0.1 1.E5  0. 3.1416           
+*       sigma-x   sigma-y  sigma-z  (cm)                                        
+SVRT     0.018    0.0010    1.00                                                
+*  Use RANMAR generator for random numbers                                      
+*  INSEED : first seed (range assigned per institute)                           
+*  LOSEED : second seed (incremented locally for new runs)                      
+*      INSEED          LOSEED (1-30000)                                         
+RMAR     78             12345                                                   
+ENDQ                                                                            

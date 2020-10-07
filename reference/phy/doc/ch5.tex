@@ -1,0 +1,288 @@
+\chapter{\label{sec-HIST}Creating Histograms and Ntuples}
+\par
+The standard histogram package in ALPHA is HBOOK4.
+If you don't want to use
+HBOOK, the only system routines which
+are called automatically and
+which refer to HBOOK are the histogram initialization / termination
+routines QUIHIS and QUTHIS (\ref{sec-QUIH} and
+\ref{sec-QUTH}).
+Some utility routines which simplify calls to HBOOK
+routines or provide additional protection
+against deleting existing histograms are described below.
+Histogram output is directed by entries in the card file,
+and is described in section
+\ref{sec-HISTO}.
+ 
+\section{\label{sec-HBOOK}Booking and Filling Histograms/Ntuples}
+\par
+All of these routines call standard HBOOK4 routines.
+\par
+\subsection{\label{sec-QB1}Book a 1$-$dimensional histogram}
+\par
+\fbox{CALL QBOOK1 (ID, CHTITL, NX, XMI, XMA, VMX)}
+\par
+\par The arguments
+are the same as for CALL HBOOK1 (...):
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{Input arguments:}
+\indentitem{ID}histogram ID number -- nonzero integer
+\indentitem{CHTITL}histogram title -- character variable up to 80 characters
+\indentitem{NX}number of bins
+\indentitem{XMI}lower edge of lowest bin
+\indentitem{XMA}upper edge of highest bin
+\indentitem{VMX}normally set equal to 0.-- see HBOOK manual for details.
+\end{indentlist}
+ 
+\par
+HBOOK1 always deletes an existing histogram and creates a new one.
+To make it possible to update existing histograms
+(see \ref{sec-DCHW}),
+QBOOK1 creates a new histogram only if it does not yet exist.
+An existing histogram remains unchanged. Therefore, whenever you want
+to
+update histogram files, use QBOOK1 instead of HBOOK1.
+For new histograms, QBOOK1 and HBOOK1 are identical.
+ 
+\subsection{\label{sec-QB2}Book a 2$-$dimensional histogram}
+\par
+\fbox{CALL QBOOK2 (ID, CHTITL, NX, XMI, XMA, NY, YMI, YMA, VMX)}
+\par
+\par
+QBOOK2 includes the same features as QBOOK1.
+The arguments are the same as for CALL HBOOK2 (...):
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{Input arguments:}
+\indentitem{ID}histogram ID number -- nonzero integer
+\indentitem{CHTITL}histogram title -- character variable up to 80 characters
+\indentitem{NX}number of bins in X
+\indentitem{XMI}lower edge of lowest X bin
+\indentitem{XMA}upper edge of highest X bin
+\indentitem{NY}number of bins in Y
+\indentitem{YMI}lower edge of lowest Y bin
+\indentitem{YMA}upper edge of highest Y bin
+\indentitem{VMX}normally set equal to 0.-- see HBOOK manual for details.
+\end{indentlist}
+ 
+ 
+\subsection{\label{sec-QBP}Book a Profile histogram}
+\par
+\fbox{CALL QBPROF (ID, CHTITL, NX, XMI, XMA, YMI, YMA, CHOPT)}
+\par
+\par
+QBPROF includes the same features as QBOOK2.
+The arguments are the same as for CALL HBPROF (...): -- see HBOOK manual .
+ 
+\subsection{\label{sec-QBN}Book an Ntuple}
+\par
+\fbox{CALL QBOOKN (ID, CHTITL, NVAR, TAGS)}
+\par
+\par The arguments are NOT the same as for CALL HBOOKN (...):
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{Input arguments:}
+\indentitem{ID}Ntuple ID number -- nonzero integer
+\indentitem{CHTITL}Ntuple title -- character variable up to 80 characters
+\indentitem{NVAR}number of variables
+\indentitem{TAGS}name of character array of dimension NVAR containing
+names for variables to be stored.
+\end{indentlist}
+\par
+\begin{verbatim}
+CALL QBOOKN (ID,CHTITL,NVAR,TAGS)
+\end{verbatim}
+corresponds to :
+\begin{verbatim}
+CALL HBOOKN (ID,CHTITL,NVAR,'ALPHA',1024,TAGS).
+\end{verbatim}
+'ALPHA' is the ZEBRA directory name referring to the file
+given on the HIST card (\ref{sec-HISTW}).
+See \ref{sec-QB1} (QBOOK1 vs. HBOOK1) :
+Existing Ntuples will not be
+overwritten (see \ref{sec-QB1}).
+ 
+\subsection{\label{sec-QBR}Book an Ntuple with run, event number}
+\par
+\fbox{CALL QBOOKR (ID, CHTITL, NVAR, TAGS)}
+\par
+\par The arguments are the same as for CALL QBOOKN (...).
+QBOOKR books a Ntuple with NVAR+2 variables. The two additional variables
+contain the run and event number.
+TAGS consists of NVAR array elements. Two tags KRUN and KEVT are
+appended automatically.
+ 
+\subsection{\label{sec-QBFR}Fill Ntuple plus run, event number}
+\par
+\par
+\fbox{CALL QHFR (ID, A)}
+\par Fills the Ntuple ID with the array A and with run and event number.
+The arguments are the same as for HFN (ID, A).
+KRUN and KEVT are filled as variables NVAR+1 and NVAR+2 (see QBOOKR).
+ 
+\subsection{\label{sec-QBFN}Fill Ntuple with many variables}
+\par
+\fbox{CALL QHFN (ID, A1, A2, A3, ..., An)}
+\par
+\par Fills the Ntuple ID with the variables A1 ... An (n $<$ 80).
+CALL QHFN (ID, A1, A2) corresponds to
+\begin{verbatim}
+      DIMENSION A(80)
+      A(1) = A1
+      A(2) = A2
+      CALL HFN (ID, A)
+\end{verbatim}
+ 
+\subsection{\label{sec-QBFRN}Fill Ntuple with many variables plus
+run, event number}
+\par
+\fbox{CALL QHFNR (ID, A1, A2, A3, ..., An)}
+\par
+\par Fills the Ntuple ID with the variables A1 ... An (n $<$ 80; see
+QHFN) and with
+run / event number as variables n+1 and n+2 (see QHFR).
+\par
+\newpage
+\subsection{\label{sec-HIEXAM}Sample ALPHA program to book and fill
+histogram, Ntuple}
+\par
+The following example books and fills a histogram and Ntuple. See
+Chapters~\ref{sec-A} and~\ref{sec-TVA}
+for explanations of the ALPHA variables used.
+\begin{verbatim}
+      SUBROUTINE QUINIT
+      CHARACTER*4 TAGS(2)
+      DATA TAGS/'ECHG','NTRK'/
+C--- Book histogram to store momentum distribution for all charged
+C--- tracks.
+      CALL QBOOK1(1,'Momentum',100,0.,50.,0.)
+C--- Book Ntuple to store charged energy and number of charged tracks
+C--- per event.
+      CALL QBOOKN(1000,'Event parameters',2,TAGS)
+      END
+      SUBROUTINE QUEVNT (QT,KT,QV,KV)
+C-----------------------------------------------------------------------
+      INCLUDE 'PHYINC:QCDE.INC'              !VAX
+      DIMENSION QT(KCQVEC,1), KT(KCQVEC,1), QV(KCQVRT,1), KV(KCQVRT,1)
+      INCLUDE 'PHYINC:QMACRO.INC'            !VAX
+C-----------------------------------------------------------------------
+      IF(KNCHT.EQ.0)RETURN
+      ECHRG=0.
+C
+C--- sum energy; histogram track momentum
+C
+      DO 20 IT=KFCHT,KLCHT
+        ECHRG=ECHRG+QE(IT)
+        CALL HF1(1,QP(IT),1.)
+   20 CONTINUE
+      CALL QHFN(1000,ECHRG,FLOAT(KNCHT))
+      END
+\end{verbatim}
+ 
+\subsection{\label{sec-HILIMI}Limitations to the ALPHA histogram facilities}
+\par
+The default length (100000 words) of the /PAWC/ buffer of HBOOK may be too short for
+special uses. It may be increased by modifying  the parameter LQPAW in the QUIHIS routine.
+\par
+There are no ALPHA facilities to book of fill column-wise Ntuples.
+\par
+If the user wants to use Ntuples with more than 80 variables,
+ he has to use the standard HBOOK calls. The output
+file must be open using HROPEN and written using HROUT/HREND.  See the
+HBOOK manual for more details.
+\par
+If the user wants
+write very large Ntuple files which exceed the default maximum length
+of 64 Mbytes , he has to use the NREC and RECL parameters in the HIST data card ,
+as described in \ref{sec-HISTW} .
+ 
+ 
+ 
+ 
+\section{\label{sec-HISTO}Histogram output $-$ the ALPHA cards file}
+ 
+\subsection{\label{sec-HISTW}HIST: Write histogram file}
+\par
+Unless the NOPH card is included in the card file (see below),
+1$-$ and 2$-$dimensional histograms are printed out to the log
+file in the program termination phase (i.e., after return from QUTERM;
+see \ref{sec-UT} and \ref{sec-QUTH}).
+ 
+The HIST data card is necessary for writing histograms and Ntuples
+to a histogram file which can be used in a
+subsequent interactive session (PAW). Users who want to write files larger
+than the maximum default size of 64 Mbytes must give appropriate NREC and RECL parameters
+in their HIST Card , see below  .
+ 
+\begin{description}\item[\bf{Format
+}]{\it HIST `data$-$set$-$name $\mid$ parameters'}\end{description}
+\begin{indentlist}{ 4.00cm}{ 4.25cm}
+\indentitem{data set name}see \ref{sec-DCFT}.
+\indentitem{Default file format}HIS
+\indentitem{parameters (optional) :}
+ 
+\indentitem{UPDA}
+Update existing histograms. Can be used deliberately if a
+previous job terminated due to time limit etc. but ...
+\begin{description}\item[\bf{CAUTION}]with this option, the old histogram
+file will be
+overwritten (even on DEC).\end{description}
+\indentitem{NOOV}
+Overwrite protection (see \ref{sec-DCFILO}).
+Cannot be used with UPDA.
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{On DEC/VMS :}Unnecessary.
+\indentitem{On UNIX :}Strongly recommended.
+\end{indentlist}
+\indentitem{DISP}
+                  Returns the resulting Histogram File to the original computer from which the ALPHA job was submitted.
+                  Must be used if you are running ALPHA in batch on a UNIX platform using {\bf alpharun},see 
+                  App.~\ref{sec-ZB} on p.~\pageref{sec-ZB}.
+\indentitem{NREC nmax}
+                  Sets the maximum number of records in the file to 'nmax'.
+                  If parameter NREC is missing, or if 'nmax' is missing
+                  or not in the range 100-100000, the default of 16000
+                  records is used.
+                  The NREC parameter cannot be used with the UPDA parameter.
+ 
+\indentitem{RECL nwords}
+                  Specifies the record length in the file to be 'nwords'.
+                  If parameter RECL is missing, or if 'nwords' is missing
+                  or not in the range 1-999999, the default record length
+                  is used.
+                  The default record length is 1024 if the UPDA parameter
+                  is missing. If the UPDA parameter is present, the default
+                  record length is 0 to let ZEBRA try to determine the
+                  record length from the file itself (if ZEBRA fails to
+                  determine the record length, ALPHA retries with RECL=1024;
+                  if the file can still not be opened the user must specify
+                  explicitely the record length that was used to create
+                  the file).
+ 
+\end{indentlist}
+ 
+Only one histogram file can be specified using the HIST card.
+If you need several
+output files, use the standard HBOOK4 input / output routines and
+book
+Ntuples with different ZEBRA directory names. The directory name used
+by ALPHA is `//ALPHA'.
+ 
+\subsection{\label{sec-HISTP}NOPH: Histogram Printing}
+\par
+\par Including the NOPH card in the card file will suppress the printing
+of HBOOK histograms to the terminal or log file; histograms will still
+be
+written to a direct access file if the HIST card is used.
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{Format :}
+{\it NOPH}\end{indentlist}
+ 
+ 
+\subsection{\label{sec-HISTT}HTIT: General histogram title}
+\par
+ 
+The HTIT card assigns a general title to all histograms;
+it corresponds to the HBOOK routine HTITLE.
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{Format :}
+{\it HTIT `This is the general title'}\end{indentlist}
+ 

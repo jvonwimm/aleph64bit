@@ -1,0 +1,269 @@
+        SUBROUTINE VRECLT(KVFHL,KVFPH,KVFLG,KVCOM,
+     >                     ILAY,IPHI,IVIEW,IMOD,IWAF)
+C
+C----------------------------------------------------------------------
+C!  - Find Vdet clusters at low theta
+C!
+C!   Inputs:
+C!        - IWAF  wafer in module
+C!        - ILAY  LAYER
+C
+C!  15-12-96 A. Bonissent
+C?
+C!======================================================================
+#ifndef DOC
+C      IMPLICIT NONE
+      SAVE FIRST, NAVCSG, NAVPHN, NAVTRP
+C
+      REAL XYZ(3),ABC(3)
+      INTEGER KVFHL,KVFPH,KVFLG,KVCOM,IPHI,IVIEW
+      INTEGER NAVCSG,NAVPHN,NAVTRP
+      INTEGER IRET,IMOD,IWAF,IWFF,JWAF,ILAY,I,IPS,IPE,IPOS
+      INTEGER JFAC
+      INTEGER KVCSG,KVPHN,KVTRP
+      INTEGER NVCSG,IVCSG,NEXP,NDSP,IBEG,IEND,IFLAG
+      INTEGER ISTR,IFL,IFLG,NSIZ,NUNBD,IFRS,ILS,ISTRT,ISTOP
+      INTEGER NDATA,NROSTR,IFREQ,NPOS
+      INTEGER IRUN,IROLD,ITP,IEVT
+      REAL PITCH,ZSTRT,THICK,RADIUS,ALC,ZLOC,ALEN,ANEXP
+      REAL PHS,PHEXP,PBEST,PLOC,PHPIK,PHMIN,PHNOI,CUT2
+      REAL PBFL,PH,PSUM,PH2,SIGNO
+C
+      INTEGER NAMIND,VIWFFW,VROSTM,VDRSLC,VJWAFM,VABCXY,VFJFAC
+      INTEGER VXYZFC,GTSTUP,ALGTDB,JUNIDB
+      REAL VWTHCK
+      CHARACTER*4 LIST
+      CHARACTER*2 DET
+      LOGICAL SGOOD,SSKIP
+      DATA  IROLD/0/
+#include "vdflgs.h"
+C
+C PARAMETERS-
+C MSUNB = mask for defining generic 'unbonded' strip
+C MSGOOD = ANTI-mask for defining generic good strip
+C These are designed so that a half bonded strip will be counted
+C as good, but will still be skipped over if it's in the middle
+C of a cluster, and it's PH is below threshold.
+C
+      INTEGER MGOOD,MSKIP
+      PARAMETER (MSKIP = VBUNBD+VBUNUS)
+      PARAMETER (MGOOD = VBSUPP+VBHOTC+VBNOIS+VBUNBD+VBUNUS)
+#include "vcsgjj.h"
+#include "vphnjj.h"
+#include "vprtnc.h"
+#include "vrecon.h"
+#include "vtrpjj.h"
+#include "bcs.h"
+C      INTEGER LCOLS,LROWS,ID,KNEXT,KROW,NRBOS,LFRWRD,LFRROW,ITABL,L
+C      REAL RTABL
+      LOGICAL FIRST
+      DATA FIRST/.TRUE./
+#include "bmacro.h"
+      SGOOD(IFLG) = IFLG.GT.0.AND.IAND(IFLG,MGOOD).EQ.0
+      SSKIP(IFLG) = IAND(IFLG,MSKIP).GT.0
+      IF(FIRST)THEN
+         FIRST=.FALSE.
+         NAVCSG=NAMIND('VCSG')
+         NAVPHN=NAMIND('VPHN')
+         NAVTRP=NAMIND('VTRP')
+      ENDIF
+      LIST='VTRP'
+      DET = 'VD'
+#include "gtdbbk.h"
+      KVTRP=IW(NAVTRP)
+      PHPIK = RTABL(KVTRP,1,JVTRWP)
+      SIGNO = RTABL(KVTRP,1,JVTRWS)
+      PHNOI = PHPIK/SIGNO
+C  We need to change IWAF, wafer in module, into
+C  IWFF, wafer in face
+C
+      IRET = VIWFFW(IMOD,IWAF,IWFF)
+C
+      KVCSG=IW(NAVCSG)
+      KVPHN=IW(NAVPHN)
+      NDATA=IW(KVPHN)-LMHLEN
+      CALL VZERO(IW(KVPHN+LMHROW+1),NDATA)
+C
+C Get the pitch and position of 0th strip
+C
+      IRET = VROSTM(1,NROSTR,PITCH,IFREQ)
+      ABC(2)=0.
+      ABC(3)=0.
+      IRET = VDRSLC(1.,1,ABC(1))
+      IRET = VJWAFM(1,IWAF,JWAF)
+      IRET = VABCXY(ABC,JWAF,XYZ)
+      ZSTRT=XYZ(3)
+      ZSTRT = ZSTRT-PITCH
+      THICK = VWTHCK()
+      JFAC = VFJFAC(ILAY)
+      IRET = VXYZFC(JFAC,XYZ)
+      RADIUS = SQRT(XYZ(1)**2+XYZ(2)**2)
+      ALC = THICK/RADIUS
+C
+C Compute the sum on N strips for each readout strip
+C
+      NVCSG = IW(NAVCSG)
+      DO IVCSG=1,NROSTR
+        IFLAG = ITABL(KVCSG,IVCSG,JVCSMF+IWAF-1)
+C
+C Fired strips have flag>0; skip others
+C
+        IF(IFLAG.NE.0)THEN
+          ZLOC = ZSTRT+IVCSG*PITCH
+          ALEN = ZLOC*ALC
+          ANEXP = ALEN/PITCH
+          IF(ANEXP.LT.1)ANEXP=1
+          NEXP = ANEXP
+          NDSP = NEXP-1
+          IBEG = MAX(1,IVCSG-NDSP)
+          IEND = MIN(NROSTR,IVCSG+NDSP)
+          IF(SGOOD(IFLAG))THEN
+            PHS = RTABL(KVCSG,IVCSG,JVCSMP+IWAF-1)
+          ELSE
+            PHEXP = PHPIK*SQRT(THICK**2+ALEN**2)/THICK
+            PHS = PHEXP*PITCH/ALEN
+          ENDIF
+          DO I=IBEG,IEND
+            IPE = I-IVCSG+NEXP
+            IPS = I-IVCSG
+            IPS = MAX(1,IPS)
+            IPS = MIN(NEXP,IPS)
+            IPE = MAX(1,IPE)
+            IPE = MIN(NEXP,IPE)
+            RW(KROW(KVPHN,I)+JVPHBP)=1000.
+            DO IPOS=IPS,IPE
+              RW(KROW(KVPHN,I)+JVPHPN+IPOS-1)=
+     >                       RTABL(KVPHN,I,JVPHPN+IPOS-1)+PHS
+            ENDDO
+          ENDDO
+        ENDIF
+      ENDDO
+C
+C Search for the best pulseheight for each strip
+C
+      NPOS=LCOLS(KVPHN)-1
+      DO I=1,NROSTR
+        PBEST=0.
+C
+C The best pulseheight has been set to 100 only for strips
+C where the best is expected to be different from 0. For others
+C there is no need to search for the best
+C
+        PBFL = RTABL(KVPHN,I,JVPHBP)
+        IF(PBFL.GT.0.)THEN
+          DO IPOS=1,NPOS
+            PLOC = RTABL(KVPHN,I,JVPHPN+IPOS-1)
+            IF(PLOC.GT.PBEST)PBEST=PLOC
+          ENDDO
+          RW(KROW(KVPHN,I)+JVPHBP)=PBEST
+        ENDIF
+      ENDDO
+C
+C Find clusters on best pulseheight
+C
+C  Define threshold on the edge, cut at 3 sigmas of 2 strips
+C
+          CUT2 = PHNOI*SQRT(2.)*3.
+C
+      NSIZ=0
+      PSUM=0.
+      DO 101 ISTR=1,NROSTR
+        ZLOC = ZSTRT+ISTR*PITCH
+        ALEN = ZLOC*ALC
+        ANEXP = ALEN/PITCH
+C
+C Compute the threshold for each strip
+C
+        PHEXP = PHPIK*SQRT(THICK**2+ALEN**2)/THICK
+C cut at 3 sigmas below expected
+        PHMIN=PHEXP-PHNOI*SQRT(ANEXP)*3.
+C
+        PH=RTABL(KVPHN,ISTR,JVPHBP)
+        IFL=ITABL(KVCSG,ISTR,JVCSMF+IWAF-1)
+        IF(SGOOD(IFL).AND.PH.GE.PHMIN)THEN
+          IF(NSIZ.EQ.0)THEN
+             IBEG = ISTR
+             NUNBD=0
+          ENDIF
+          NSIZ = NSIZ + 1
+          PSUM=PSUM+RTABL(KVCSG,ISTR,JVCSMP+IWAF-1)
+        ENDIF
+        IF(NSIZ.GT.0)THEN
+C
+C-- one skips strips only if one has already started building
+C-- a cluster
+C
+          IF(SSKIP(IFL))THEN
+            NUNBD=NUNBD+1
+            NSIZ = NSIZ+1
+          ENDIF
+C
+C-- if (pulsht < 0 and good strip) or
+C--    (end of module) or
+C--    (too many unbounded strips) or
+C--    (a bad strip)
+C--    [ a bad strip is one that is not good AND can't be skipped ]
+C-- then
+C--    a cluster is found
+C
+          IF ((PH.LT.PHMIN.AND.SGOOD(IFL)) .OR.
+     $       ISTR.EQ.NROSTR .OR.
+     $       NUNBD.GT.MXUNBD .OR.
+     $       (.NOT.SSKIP(IFL).AND..NOT.SGOOD(IFL))) THEN
+
+C
+C             HERE a cluster has been found
+C
+               IFRS=IBEG
+               ILS=IFRS+NSIZ-1
+C
+C Improve the extremities
+C
+               ISTRT=IFRS
+   10          CONTINUE
+               PH2 = RTABL(KVCSG,ISTRT,JVCSMP+IWAF-1)+
+     >             RTABL(KVCSG,ISTRT+1,JVCSMP+IWAF-1)
+               IF(PH2.LT.CUT2.AND.ISTRT.LT.ILS)THEN
+                 ISTRT=ISTRT+1
+                 GO TO 10
+               ENDIF
+               ISTOP=ILS
+   11          CONTINUE
+               PH2 = RTABL(KVCSG,ISTOP,JVCSMP+IWAF-1)+
+     >             RTABL(KVCSG,ISTOP-1,JVCSMP+IWAF-1)
+               IF(PH2.LT.CUT2.AND.ISTOP.GT.ISTRT)THEN
+                 ISTOP=ISTOP-1
+                 GO TO 11
+               ENDIF
+   12          CONTINUE
+               IFRS=ISTRT
+               ILS=ISTOP
+               NSIZ = ILS-IFRS+1
+C
+C Keep clusters with at least half expected size
+C and minimum pulseheight
+C
+               IF(NSIZ.GE.MIN(ANEXP/2.,ANEXP-2.).
+     >                     AND.PSUM .GE. FNLSUM)THEN
+C
+C Put cluster in banks
+C
+                 CALL VCLBNK(KVFHL,KVFPH,KVFLG,KVCOM,IFRS,ILS,
+     >                     ILAY,IPHI,IVIEW,IWAF,IWFF)
+C
+C
+C  Increment counter for run summary
+C
+                 NFNLHT(IVIEW) = NFNLHT(IVIEW) + 1
+               ENDIF
+C
+C Reset cluster size
+C
+               NSIZ=0
+               PSUM=0
+          ENDIF
+        ENDIF
+  101 CONTINUE
+      RETURN
+      END
+#endif

@@ -1,0 +1,107 @@
+      SUBROUTINE BOSFM
+C
+C     PRINT FORMATS
+C
+#include "boscom.h"
+#include "param.h"
+#include "mparam.h"
+      CHARACTER*4 CHAINT,NAMA,NAMN(5)
+      CHARACTER*110 TEXT
+      CHARACTER*1 NUMBER(0:9)
+      CHARACTER*18 TEXTN(5)
+      DATA NUMBER/'0','1','2','3','4','5','6','7','8','9'/
+*     ...
+      IF(IW(LUP).LE.0) GOTO 100
+      WRITE(IW(LUP),1001)
+      N=IW(IDNAM)
+      LP=0
+      DO 40 I=1,N
+      NAMA=CHAINT(IW(IDNAM+I))
+      TEXT=' '
+      ID=IDFMT+I
+      IF(IW(ID).EQ.0) THEN
+         TEXT(1:11)='I (default)'
+         L=11
+         GOTO 30
+      END IF
+      ID=IW(ID)
+      IF(IW(ID+3).NE.0) THEN
+         L=3
+         IF(IW(ID+3).EQ.1) TEXT(1:3)='B32'
+         IF(IW(ID+3).EQ.2) TEXT(1:3)='B16'
+         IF(IW(ID+3).EQ.3) TEXT(1:3)='B08'
+      ELSE
+         L=0
+         J=4
+   10    IF(IW(ID).GE.J) THEN
+            IF(L.GE.100) THEN
+               L2=L+2
+               TEXT(L:L2)='...'
+               GOTO 30
+            END IF
+            JL=IW(ID+J)/10
+            JR=MOD(IW(ID+J),10)
+            J =J+1
+            IF(JL.EQ.0) THEN
+               L=L+1
+               TEXT(L:L)=')'
+               GOTO 10
+            ELSE
+            IF(L.NE.0) THEN
+               IF(TEXT(L:L).NE.'(') THEN
+                  L=L+1
+                  TEXT(L:L)=','
+               END IF
+            END IF
+C
+C              INSERT NUMBER
+C
+               IF(JL.NE.1.AND.JL.NE.100000) THEN
+                  NDIV=10000
+                  LSTART=L
+                  DO 20 KL=1,5
+                  K=MOD(JL/NDIV,10)
+                  NDIV=NDIV/10
+                  IF(K.NE.0.OR.L.NE.LSTART) THEN
+                     L=L+1
+                     TEXT(L:L)=NUMBER(K)
+                  END IF
+   20             CONTINUE
+               END IF
+               IF(JR.EQ.0) THEN
+                  L=L+1
+                  TEXT(L:L)='('
+               ELSE
+                  L=L+1
+                  IF(JR.EQ.1) TEXT(L:L)='F'
+                  IF(JR.EQ.2) TEXT(L:L)='I'
+                  IF(JR.EQ.3) TEXT(L:L)='A'
+               END IF
+               GOTO 10
+            END IF
+         END IF
+      END IF
+   30 IF(L.LE.18) THEN
+         LP=LP+1
+         NAMN(LP)=NAMA
+         TEXTN(LP)=TEXT(1:18)
+         IF(LP.EQ.5) THEN
+            WRITE(IW(LUP),1002) (NAMN(M),TEXTN(M),M=1,5)
+            LP=0
+         END IF
+      ELSE
+         IF(LP.NE.0) THEN
+            WRITE(IW(LUP),1002) (NAMN(M),TEXTN(M),M=1,LP)
+            LP=0
+         END IF
+         WRITE(IW(LUP),1003) NAMA,TEXT
+      END IF
+   40 CONTINUE
+      IF(LP.NE.0) THEN
+         WRITE(IW(LUP),1002) (NAMN(M),TEXTN(M),M=1,LP)
+      END IF
+  100 RETURN
+ 1001 FORMAT('0  ',5('NAME FORMAT........',6X)/)
+ 1002 FORMAT(3X,5(A4,1X,A18,2X))
+ 1003 FORMAT(3X,A4,1X,A110)
+      END

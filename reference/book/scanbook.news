@@ -1,0 +1,662 @@
+***************************************************************************
+ 25- Sep - 2001  10 h  corrections         -> SCANBOOK 18.8
+
+  **  Modifs in the UPDABOOK code:                         
+      - Bug fixes in BKVERBP, BKBSCR to increase local buffers w=hich were too
+        small in case of large updates
+      - Mod in BKBOKD to have a more explicit  printout
+      - Protection added in BKRKSEIN in case of crazy cross-sections
+      
+ **  Modifs in the LISTFILES code:
+     - Bug fixes in BKLISFD, BKLISDF for CASTOR sets with 999 files
+
+***************************************************************************
+ 19- Jul - 2001  10 h  small corrections         -> SCANBOOK 18.7
+
+  **  Modifs in the UPDABOOK code:
+      - Bug fix in BKBOKST to ensure erasing of multiple copies
+      - Mod in BKUPDF to write a CARDS file of BKK7 banks
+
+***************************************************************************
+ 28- May - 2001  16 h  corrections         -> SCANBOOK 18.6
+
+  **  Modifs in the UPDABOOK code:
+      - Mods in the KSEC code to update dbas.bank autonatically:
+        mods in BKRKSEIN,BKRUPDF
+
+ **  Modifs in the MAKESQL code:
+        mods in BKSQPREP,BKSQLA to update only the data or MCarlo part
+        if only one of them need to be updated
+
+***************************************************************************
+
+ 28- May - 2001  16 h  corrections         -> SCANBOOK 18.5
+
+  **  Modifs in the UPDABOOK code:
+      new structure of the Perl xml decoding -> mods in BKBNLKY,
+      small fix in BKRKSENW
+                           
+  **  Modifs in the MAKESQL code:
+      small fix in BKSQLTAP
+
+***************************************************************************
+
+ 15- May - 2001  16 h  corrections         -> SCANBOOK 18.4
+
+  **  Modifs in the UPDABOOK code:
+      - Bug fix in BKPRES (max number of datasets)                 
+      - Small mods in BKCLVR,BKINFM,BKBSCR
+      - New feature: new BKK7 bank (replaces the old BMK7):
+         mods in BKUPDF,BKMC97,BKWSEQ
+         new routines BKBNDKK7,BKBNFKK7,BKBNKK7,BKBNLKY,BKBNTOCO,BKBNYGFI
+      - New structure of bank 'RKSE' (keyword --> 60 chars):
+         mods in BKRKSEIN,BKRKSENW,BKRKSKEY
+
+  **  Modifs in the LISTFILE code:
+      - Bug fix in BKLISFD,BKLISDF (wrong ZW category --> ZM)
+ 
+  **  Modifs in the MAKESQL code:
+      - New structure of MCSETS and MCKEYSTAT:
+        mods in BKSQLMC,BKSQLMSK
+
+***************************************************************************
+
+  6- Feb - 2001   8 h  corrections         -> SCANBOOK 18.2
+
+
+  **  Modif in the UPDABOOK code:
+      - Mods in BKUPDF to abandon all calls to Online data updating
+        (BKAALO,BKAATC,BKVEHO,BKUPRU2,BKVLOC)
+
+  ** Modif in the ALBOOK code:
+      - mod in BKBSET to use the new bank 'MCKY' for unique dataset
+        nuber also for RAW EPIO data
+      - mod in BKBSET to allow to use the KSEC bank if it's in the
+        run header (e.g. HVFL06) instead of slow control records
+
+ ** Modif in the MAKESQL code:
+      - mod in BKSQLHO to define correctly the Homelab for CASTOR datasets
+ 
+
+***************************************************************************
+
+ 09- Jan - 2001   8 h  corrections         -> SCANBOOK 18.1
+
+  **  Modif in the UPDABOOK code:
+     - bug fix in BKRKSENW (all MINIs were excluded!)        
+     - mod in BKREDCOT (before TMS updating) to add MCarlo tapes there
+
+  **  Modif in the ALBOOK code:
+      - mod in BKBSET to use the new bank 'MCKY' for unique MCarlo
+        dataset number
+
+***************************************************************************
+
+ 22- Nov - 2000  10 h  corrections         -> SCANBOOK 18.0
+ 
+  **  Modif in the UPDABOOK code for the new structure of the RKSE bank:
+     - mods in BKRKSEIN,BKRKSKEY
+     - new routine BKRKXSEC
+
+  **  Modif in the MAKESQL  code for the new ORACLE8 keywords:
+     - Mods in BKSQUPSQ
+
+***************************************************************************
+
+ 2 - Nov - 2000  15 h  corrections         -> SCANBOOK 17.9
+
+ **  Modif in the UPDABOOK code for future CASTOR files:
+     - mods in BKTANA,BKBOKD,BKGTMS,BKTALO,BKBDFS,BKUTMS,BKBRK7
+                                                               
+ **  Modif in the LISTFILES code for future CASTOR files:
+     - mods in BKLIST,BKLISDF,BKLISFD
+
+ **  Modif in the MAKESQL  code for future CASTOR files:
+     - mods in BKSQLDAB,BKSQLMC
+
+ **  Modif in the ALBOOK code to get MCarlo trigger number:
+     - mods in BKBSET,BKCOPY
+
+***************************************************************************
+
+ 26 - Oct- 2000  10 h  corrections         -> SCANBOOK 17.8
+ 
+ **  Modif in the UPDABOOK code:
+     - new strucure of RKSE bank and rksebank.cards file:
+       mods in BKRKSEIN,BKRKSENW, new routine BKRKSKEY
+
+***************************************************************************
+
+ 28 - Sep- 2000  16 h  corrections         -> SCANBOOK 17.6
+
+ **  Bug fixes in the UPDABOOK code:
+     - for the RAW EPIO tape management: mods in BKBRK7,BKRUNC,BKMBYT
+
+***************************************************************************
+
+ 31 - Aug- 2000  16 h  corrections         -> SCANBOOK 17.5
+                                                           
+ **  New features in the UPDABOOK code:
+     - RAW EPIO tape management: mods in BKBRK7,BKRUNC,BKMBYT
+
+ **  New features in the ALBOOK code:
+     - RAW EPIO tape management: mods in BKCOPY,BKBPRO,BKBSET
+
+ **  New features in the MAKESQL code:
+     - RAW EPIO tape management: mods in BKSQLRU,BKSQRAWE         
+
+***************************************************************************
+
+ 18 - Jul- 2000  16 h  corrections         -> SCANBOOK 17.4
+
+ **  Bug fixes in the SCANBOOK code:
+     - increase max. number of KINGAL codes: mods in BKREAK,PRIPRO
+
+ **  Bug fixes or new features in the UPDABOOK code:
+     - increase BOS array to 7000000 in BKINBO
+     - don't try to retrieve mother POTs for 1998-> 2000 MC MINIs:
+       mods in BKCLVR
+     - check if duplicate LEP2 MCarlo comments : mods in BKMC97
+     - get Miniramp lumi even if LCAL lumi is zero: mods in BKOFJU
+     - process correctly future RAW EPIO files: mods in BKCLVR
+
+ **  Mod in the ALBOOK code:
+     - Change the MCarlo dataset_name to avoids duplicate datasets:
+       mods in BKBSET
+
+ **  Mods in the MAKESQL code:
+     - Bug fixes in BKSQRYEM,BKSQMCC (rounded energy for MCarlo)
+     - Mod in BKSQTMAS specific to HZHA03 generator 
+     - process correctly future RAW EPIO files as Master datasets for 
+       Oracle: mods in BKSQLDAB,BKSQLDAO,BKSQLDAR, new routine BKSQRAWE.
+
+***************************************************************************
+  
+ 24 - May- 2000  10 h  corrections         -> SCANBOOK 17.3
+
+ **  Bug fixes in the SCANBOOK code:
+     - for 1995 LEP 1.5 Minis : mods in BKCHKM,BKDVER
+
+ **  New features in the MAKESQL code:
+     - number of events in DATASETS,MCSETS : 
+         mods in BKSQLDAB,BKSQLDAO,BKSQLDAR,BKSQSIZ,BKSQLDS
+     - operating system transmitted in MCSETS : mods in BKSQLMC
+
+***************************************************************************
+
+  5 - May- 2000  10 h  corrections         -> SCANBOOK 17.2
+
+ **  Bug fixes in the UPDABOOK code:                        
+     - mod in BKBRK7 (Test runs for Year 2000 in RUNCARTS)
+     - protection in BKONLG against weird LEP energies from Online
+     - new routine BKUPRU2 to write the Lep energies for year 2000 runs
+       (for the Impatient Stream)
+
+ **  Mods in the ALBOOK code, to store the Op. Syst. for MC datasets:
+     - mods in BKBPRO
+
+ **  Mods in the MAKESQL code:
+     - rebuild the comment for data POTs and DSTs for Oracle
+       mod in BKSQLDAB, new routine BKSQVCO
+ 
+***************************************************************************
+
+ 28 - Mar- 2000  17 h  corrections         -> SCANBOOK 17.1
+                                                           
+ **  Corrections in the SCANBOOK code due to new Mini-Ramps:
+     - mods in PRPHY2
+     
+ **  Corrections in the UPDABOOK code due to new Mini-Ramps:
+     - mods in BKOFJU,BKTADUS
+
+ **  Corrections in the LISTFILE code due a bug:            
+     - mods in BKLISUPD
+
+ **  Corrections in the MAKESQL code:
+     - bug fix in BKSQLRU
+     - start/stop protection for CERNDB1: mods in BKSQUPSQ
+     - new structure for RUNBYYEAR table: mods in BKSQLRY
+ 
+***************************************************************************
+
+ 11 - Feb- 2000  17 h  corrections         -> SCANBOOK 17.0
+
+  **  Corrections in the MAKESQL code due to new CERNDB1 database
+      and to new sqlplus procedures WRUNSEL and ANALYZE :
+      WARNING ! NEW STRUCTURE OF albook/public_aleph DIRECTORIES !
+
+      - mods in BKSQLA,BKSQPREP,BKSQUPSQ,BKSQWR 
+      - New variables in common /SQLDIR/
+
+
+***************************************************************************
+
+ 08 - Feb- 2000  15 h  corrections         -> SCANBOOK 16.9
+
+  **  Corrections in the SCANBOOK code:
+      - Bug fix in BKVFIYE in calls to BKFKFI                      
+      - Small fixes in PRVXLI,BKCHKR,BKINSC 
+
+  **  Corrections in the UPDABOOK code:
+      - Small fixes in BKBRUNC,BKBRK7,BKLUMI,BKUPDF for Linux compiler
+        
+  **  Corrections in the MAKESQL code:
+      - Small fixes in BKSQPREP,BKSQLMC,BKSQRRV,BKSQUPCO,BKSQLDAO
+      - Fix a wrong format in BKSQLSI4                           
+
+***************************************************************************
+
+ 20 - Jan- 2000  15 h  corrections         -> SCANBOOK 16.8
+
+  **  Corrections in the SCANBOOK code:
+      - Mods for new 'CHKP' facility (check of a test processing ):
+        mods in BKCASI,BKCHKJ,PRCHKRU,PRDATSET                     
+      - Mods related to DATIME/CALDAT in BKSEHE
+      - Mods related to 'R0' cartridges in BKCHHO,BKCHKF,PRBFIL
+
+  **  Corrections in the UPDABOOK code:
+      - Fix for LEP energy in BKBRUNC
+      - Mod in BKUPDF to execute BKRKSEIN only when necessary
+      - Mods related to DATIME/CALDAT in BKAALO,BKVLOC,BKBRK7,BKLIFI,
+                                         BKOFJU,BKUXCI,BKDKLI,BKCLVR 
+      - Mods related to 'R0' cartridges in BKFINDED,BKDINDFI
+
+  **  Corrections in the MAKESQL  code:
+      - Mods related to 'R0' cartridges in BKSQRED            
+                    
+  **  Corrections in the LISTFILES code:
+      - Mods related to 'R0' cartridges and CALDAT in BKLISF
+
+
+***************************************************************************
+
+  7 - Dec- 1999  15 h  corrections                -> SCANBOOK 16.7
+
+  **  Corrections in the SCANBOOK code:
+      - fixes in BKBRUNC,PRSRUN,PRPHY2,BKTLEP for 1999 data 
+
+  **  Corrections in the UPDABOOK code:
+      - mod in BKRKSEIN to avoid KSEC in TEST mode
+ 
+  **  Corrections in the MAKESQL  code:
+      - mod in BKSQLRU for RUNCOND date format and rounded energy 
+ 
+***************************************************************************
+
+  2 - Dec- 1999  15 h  corrections                -> SCANBOOK 16.6
+ 
+  **  Corrections in the SCANBOOK code:
+      - to deal with future R0 tapes : mods in BKTALO,PRLEV2
+      - new definitions of LEP energy tolerances for 1999: 
+        mods in BKTOLSET,BKLEPL
+
+  **  Corrections in the UPDABOOK code:
+      - improvement in BKBOKED
+      - to deal with future R0 tapes : mods in BKBRK7         
+
+  **  Corrections in the LISTFILES code:
+      - to deal with future R0 tapes : mods in BKLISDF,BKLISFD
+  
+  **  Corrections in the MAKESQL code:
+      - mods in BKSQLRU (new definition of date)                
+      - new definitions of LEP energy tolerances for 1999:
+        mods in BKSQRYEN          
+
+
+***************************************************************************
+
+ 15 - Nov- 1999  15 h  corrections to listfiles   -> SCANBOOK 16.4
+ 
+  **  Corrections in the UPDABOOK code:
+      - mod in BKBOKD to call BKBOKED
+      - new routine BKBOKED to make the listfile of new datasets 
+
+  **  Corrections in the LISTFILES code to avoid the old ls -L -o: 
+      - mods in common /BKENV/
+      - mods in BKLISF, new routine BKLISUPD
+
+
+***************************************************************************
+
+ 10 - Nov- 1999  15 h  corrections to sql files   -> SCANBOOK 16.3
+
+
+  **  Corrections in the UPDABOOK code:
+      - Small fix in BKUPLE (format for LEP beam energies > 100 Gev)
+
+  **  Corrections in the MAKESQL code (new structure of some .ctl banks):
+      - mods in BKSQLDAB,BKSQLMC,BKSQLMS,BKSQLDS,BKSQLA
+      - routine BKSQLPER suppressed
+
+***************************************************************************
+
+ 29 - Sep- 1999  15 h  corrections to use sql_loader  -> SCANBOOK 16.2
+ 
+  **  Corrections in the SCANBOOK code:
+      - Small fixes in BKCH97,BKISDATE                
+
+  **  Major corrections in the MAKESQL  code:
+      to use sqplplus, sqlldr and new xx.ctl tables:
+      - mods in  comdeck /SQLDIR/  
+      - mods in BKSQLA, in all BKSQLxxx routines,BKSQWR,BKSQWF
+      - new routines BKSQUPCO,BKSQUPDI,BKSQUPSQ,BKSQUPVR,BKSQPNAM
+      - suppress old BKSQCOMP,BKSQDIFF,BKSQDKOD,BKSQDUDL,BKSQDUIN, 
+                     BKSQDULI,BKSQDUPO
+
+****************************************************************************
+
+ 02 - Sep- 1999  11 h  some  corrections for the Y2K bug -> SCANBOOK 16.1
+
+      Mods to avoid Y2K bug coming from banks ASIM,BSPF,BPER,BRUC
+ 
+  **  New service routine BKY2K
+
+  **  Corrections in the SCANBOOK code:
+      - Mods in BKCHKM,BKCH97,BKDVER,BKLEPL,PRLEV3
+
+  **  Corrections in the UPDABOOK code:
+      - Mods in BKBYEA,BKBMCL,BKBSCL,BKBSPF,BKBKOKD,BKMBYT,BKBBUP
+                             
+  **  Corrections in the MAKESQL code:
+      - use BK2YK in BKSQMCC,BKSQLMC,BKSQLMSK,BKSQLDAB,BKSQLRY
+ 
+****************************************************************************
+
+ 26 - Aug- 1999  15 h  some  corrections  -> SCANBOOK 16.0
+ 
+  **  In the Steering:
+      - add a new routine BKWSBOS to check the occupation of the 
+        BOS array in processes UPDABOOK,LISTFILES and MAKESQL 
+      - small fix in BKINSC
+
+  **  Corrections in the SCANBOOK code:
+      - Fix in BKDVER for MC X11 page 2 in case of subselections
+
+  **  Corrections in the MAKESQL code:
+      - Mod in BKSQLRU to put the Sical Lumi when adequate
+      - Suppression of BKSQLSIC
+      - New routine BKSQLTAP for file cartdes; mods in BKSQLA
+      - Small fixes in BKSQSIZ,BKSQDUDL
+      - Mods for TRUNCATE in BKSQCOMP
+
+****************************************************************************
+
+ 22 - Jun- 1999  10 h  many  corrections  -> SCANBOOK 15.9
+
+  **  In the Steering : Full integration of the SQL package
+      - new card BTSK 'BSQL'
+      - Mods in BKINIT,BKINAL,BKDOAL,BKTASK
+      - Mods in comdeck /BKTSKC/
+ 
+  **  Major additions in MAKESQL: all the SQL_update process (11 routines)
+      - Mods in BKSQLA,BKSQLDA,BKSQLDAB,BKSQLDAO,BKSQLDAR,BKSQLDS,
+                BKSQLHO,BKSQLMC,BKSQLMPA,BKSQLMS,BKSQLMSK,BKSQLPER,
+                BKSQLPH,BKSQLRU,BKSQLRY,BKSQLSI4,BKSQLSIC,BKSQRED
+      - New routines BKSQLMEN,BKSQMCC,BKSQPREP,BKSQRYEM
+      - New process BKSQCOMP with new routines BKSQDIFF,BKSQDKOD,
+                BKSQDUDL,BKSQDUIN,BKSQDULI,BKSQDUPO
+
+*****************************************************************************
+
+ 05 - May- 1999  10 h  major corrections  -> SCANBOOK 15.8
+ 
+  **  Corrections in the UPDABOOK code :
+       - Mods in BKBYEA to put the 1999 data                    
+       - Mods in BKONLG to avoid COSMOLEP data
+  
+  **  Corrections in the ALBOOK code :
+       - Bug fix in BKBSPF (for BSPA bank)
+
+  **  Full new package MAKESQL  (25 routines)
+      Makes the .sqlfile files on ~albook/public_aleph 
+      for the future ORACLE database
+
+      Steering routine BKSQLA
+      New routines BKSQLDA,BKSQLDAB,BKSQLDAO,BKSQLDAR,BKSQLDS,BKSQLHO,
+                   BKSQLKY,BKSQLMC,BKSQLMPA,BKSQLMS,BKSQLMSK,BKSQLPER,
+                   BKSQLPH,BKSQLRU,BKSQLRY,BKSQLSI4,BKSQLSIC
+      New routines auxiliary to the above ones :
+                   BKSQRED,BKSQRRV,BKSQRYEN,BKSQSIZ,BKSQTMAS,
+                   BKSQWF,BKSQWR
+
+
+*****************************************************************************
+
+ 17 - Mar- 1999  10 h  some  corrections  -> SCANBOOK 15.7
+                                                          
+   **  Corrections in the SCANBOOK code :
+       - New routine BKFPERD to compute periods limits for real data
+         mods in BKCHKR,BKFINDAA,BKSEPRDK,BKLEPL,BKDVER
+                                                       
+   **  Corrections in the UPDABOOK code :
+       - Mods in BKMBYT to put the IBDFS row number, for BKLISF,
+         in the file bkmbytes.cerntaps
+
+  **   Major changes in the LISTFILES code :
+       - Rewriting of BKLISF to gain a factor up to 60 in the LISTFILES
+         execution :
+         new intermediate banks 'BTDE' and 'BADM'
+         new routines BKLISDF and BKLISFD
+
+ *****************************************************************************
+
+ 04 - Feb- 1999  10 h  some  corrections  -> SCANBOOK 15.6
+
+   **  Corrections in the SCANBOOK code :
+       - Small fixes for Homelabs in BKFINDED,BKFINDTA,BKVLOC,PRLEV7,PRBFIL
+       - BKDVER rewritten to give adequately the new MC datasets
+       - Mod in PRMC97 for new 1998 MC keyword explanations
+
+   **  Corrections in the UPDABOOK code :
+       - Small fix in BKUPDA,BKTADUS for new afs directories
+       - New feature : update file of KSEC summaries
+         mods in BKUPDF, new routines BKRKSEIN,BKRKSENW
+   
+   **  Corrections in the ALBOOK code :
+       - Mod in BKBSPF for new LEP1 HVFL KINGAL code
+       - New feature : write a new file related to the KSEC bank 
+                       for MCarlo datasets written in 1999 and after
+         mods in BKCOPY,BKINJB,BKWRIT
+         new routine BKWRKSEC
+
+   **  Corrections in the SPLIDBAS  code :
+       - Small fix in BKSPLI for new afs directories
+ 
+   **  Corrections in the LISTFILES code :
+       - Fix in BKLISF for new afs directories
+
+******************************************************************************
+
+ 27 - Nov- 1998  10 h  some  corrections  -> SCANBOOK 15.5
+ 
+   **  Corrections in the SCANBOOK code :
+       - Small fixes in PRBFIL,PUSHFOR,BKSRIN,DISPAR97
+       - Fix of bug for selection by fill # : mods in BKVFIYE,BKFISR,BKFPFI,
+         BKVRFIRU
+       - Mods in PRBFIL and PRVXLI to prepare the transition to AFS directories
+
+   **  Corrections in the UPDABOOK code :
+       - Small fix in BKPTMS
+       - Mods in BKUNXF to prepare the transition to AFS directories
+
+******************************************************************************
+
+  8 - Oct- 1998  10 h  some  corrections  -> SCANBOOK 15.4
+
+   **  Corrections in the SCANBOOK code :
+       - Allow MC copies on Redwoods to be good: mods in BKVRDLT
+       - Various fixes in INIROW97,PRBFIL,BKPGSET,PRSRUN
+       - Small fix in BKDATSIZ for -s parameter in LEP 1 1995 reproc. 
+         mods in BKINIU,BKREDO,BKVERAL,GETSMC97,PRMC97,BKCH97,DISPAR97
+       - Mods in BKTOLSET to get 1997 energy selection correctly 
+       - Bug fix in X11 version for dilepton datasets         
+         mods in PUSHFOR
+
+   **  Corrections in the UPDABOOK code :
+       - Eliminate all references to 'AX' in BKBMCL,BKBSCL
+       - Small fixes in BKSYSD,BKSYSG,BKFTAP
+       - No more execution of BKCLMDAT and BKDLTMAS in BKUPDF 
+         (was too long;  now done by special job from time to time)
+       - New treatment of locations in 'BLOT' banks to avoid
+         multiple TMS calls for the same Redwood : 
+         mods in BKSTLO,BKBDFS, BKLOCM completely rewritten
+       - Correct location for IN2P3 'Y2' Redwoods : mod in BKTALO 
+       - Do not write any more 'LFIL' on dbas.bank, but on a separate
+         file lfil.bank : mods in BKLUFI, new routine BKLULFDB
+
+   **  Corrections in the ALBOOK code
+       - in BKBPRO,BKBSET : eliminate all obsolete calls to old commons
+
+*******************************************************************************
+
+ 12 - Jun- 1998  10 h  some  corrections  -> SCANBOOK 15.3
+                                                          
+   **  Corrections in the SCANBOOK code :
+       - New definition of LEP II MCarlos : 
+         mods in BKINIU,BKREDO,BKVERAL,GETSMC97,PRMC97,BKCH97,DISPAR97
+       - Mods in PRBFIL to print the explanation of MC keywords
+       - Bug fix in PRPHY2 for 1998 detector_quality printout
+
+   **  Corrections in the UPDABOOK code :
+       - Bug fixes in BKONLG,BKBOKD,BKCLVR
+       - Mods in BKMC97 to deal with new mcarlep2des.liste file
+
+ *******************************************************************************
+
+ 27 - May- 1998  09 h  some  corrections  -> SCANBOOK 15.2
+
+      New Physics Tools definition for 1998
+ 
+   **  Corrections in the SCANBOOK code :
+       - New definition of Physics Tools: mods in BKINIU,BKBBUP,BKPGSET,
+         INIGRLEP,INIRUNQ,PRPHY2
+       - Bug fix in PRBFIL 
+
+   **  Corrections in the UPDABOOK code :
+       - New definition of Physics Tools: mods in BKONLG,
+         new routine BKONPHY
+       - Bug fixes in BKTADUP,BKVERBP,BKFTAP,BKFTAPC
+
+   **  Corrections in the ALBOOK code :
+       - Bug fix in BKUNFI
+
+ *******************************************************************************
+
+
+ 28 - Apr- 1998  11 h  many  corrections  -> SCANBOOK 15.1
+ 
+       New comdeck /EXABYT/ and routine BKEXFI to handle datasets with
+                            more than 99 files
+ 
+   **  Corrections in the SCANBOOK code :
+       - Bug fixes from A.Waananen in BKSRIN,PROPT5                       
+       - Bug fixes in BKRUCA,BKVERBP,BKSRIN4
+       - Protections added against IBPRO=0 in BKDVER,PRMCD1
+       - New /EXABYT/ : BKEXFI rewritten, new routine PRLEVSND
+         mods in BKINIU,BKREDO,BKOPT5,BKSKEY,BKFINDED,BKSTEDNA,BKEDTA,
+         BKFINDTA,PRBFIL,PRCARD
+         mods of formats in PRLEV1,PRLEV2,PRLEV3,PRLEV6,PRLEV7,PRMCD1
+       - Mods in PRPHY2 to print the VDET lumi for 1997 runs
+       - Display the POT/MINI # of datasets for 1997 MC special prods :
+         mods in DISPAR97,new routine BKN97MC
+
+   **  Corrections in the X11 code :
+       - Bug fixes from A.Waananen in BKVRX11      
+       - Display the POT/MINI # of datasets for 1997 MC special prods :
+         routine GETSMC97 rewritten.
+        
+   **  Corrections in the UPDABOOK code :
+       - Bug fixes from A.Waananen in BKINTI,BKBFVX,BKONLG,BKUPDA      
+       - Bug fix in BKBRK7 to call BKLVPR instead of BKPRLV    
+       - Protections added against IBPRO=0 in BKNDCO,BKNMCO                 
+       - Small fix in BKREDCOP,print added in BKFTAPC
+       - New /EXABYT/ : BKEXFI completely rewritten    
+         mods in BKMBYT,BKFTAP,BKERRF,BKBOKD , new routine BKBOKST
+ 
+   **  Corrections in the LISTFILES code :
+       - New /EXABYT/ : mods in BKLISF    
+      
+   **  Corrections in the ALBOOK code :
+       - Bug fixes from A.Waananen in BKBTAP                       
+       - New /EXABYT/ : mods in BKUNFI,BKBTAP
+
+ *******************************************************************************
+
+ 26 - Feb- 1998  09 h  many  corrections  -> SCANBOOK 15.0
+  
+   **  Corrections in the SCANBOOK code :
+       - Bug fixes and improvements in PROPT5: mods in PROPT5,PRDATA,PRLEV2
+       - Warnings for POT usage: mod in INNADATA
+
+   **  Corrections in the X11 code :
+       - Warnings for POT usage: mod in PUSHFOR, new routine PRWRPX11
+
+   **  Corrections in the UPDABOOK code :
+       - Bug fixes in file # management: mods in BKBOKD,BKCLMC,BKCLMDAT
+       - Bug fix in BKUTOW
+       - TMS management of full Redwoods: mods in BKUTMS,BKSYSD,BKREDCOP,
+         new routines BKREDCOT,BKSYSRED
+       - New verification routines BKVEFN,BKVERBP called from BKUPDF
+         for banks BDFS,BPRO,BSET,BTPN
+       
+ *******************************************************************************
+
+  13 - Feb- 1998  09 h  many  corrections  -> SCANBOOK 14.9
+
+       Further preparations for the > 99 files Redwoods.
+
+       New comdeck DLTFILES used by BKISDL and other routines.
+ 
+
+   **  Corrections in the SCANBOOK code :
+       - Bug fix in BKSEVR to use input CARDS with SFIL data card 
+       - Use New comdeck DLTFILES: mods in BKISDL,PRDLTR,PROPT5,
+             new routine PROPT5ST
+       - Mod of printout for > 99 files, in PRLEV2,PRLEV6,PRMCD1
+       - Mod for > 99 files in PRLEV4
+       - Mod for new FILIs for AA RAW 1993 at CERN:
+             mods in INNADATA,BKVERAL,PRBFIL,BKFIRAA     
+
+   **  Corrections in the UPDABOOK code :
+       - Use New comdeck DLTFILES: mods in BKBSCR,BKLOCM,BKSYSD
+       - No more ypcat: mod in BKUTOW
+       - Changes for > 99 files in BKCLMC,BKCLMDAT,BKSYSD,BKSYSF,
+                                   BKSYSG,BKBSCR
+       - Send a mail to the Tape Manager in case of duplication
+         of files : mod in BKTADUP, new routine BKTADUS
+       - Mod in BKBRK7, new routine BKBRUNC to write the runcarts.list
+         file 
+
+   **  Corrections in the ALBOOK code :
+       - Mods in routine BKFTCA 
+
+ *******************************************************************************
+
+  30 - Jan- 1998  09 h  many  corrections  -> SCANBOOK 14.8
+
+   **  Corrections in the SCANBOOK code :
+       - Fix for the printout of luminosity summary with run range selection
+         mods in PRPHY2, BKSRUN
+       - Fix for printout level 4 for MCarlo datasets:  
+         mods in PRMCD1,PRLEV4
+       - Removal of BKSEDS, not used anymore
+
+   **  Corrections in the UPDABOOK code :
+       - Take word 16 of bank 'JEDS' as # of hadronic events in LEP2 runs 
+         mod in BKOFJU
+       - New Request Files BCOP.xxxxx for future duplication of Redwoods
+         and management of special "duplication" BSYST.yyyyy files:
+         mods in BKINRQ,BKSYSD,BKUPDA
+         new routine BKREDCOP
+       - Write new files numfiles.cerntaps and tobecopied.cerntaps
+         mods in BKUPDF,BKMBYT
+         new routines BKFTAP,BKFTAPC,BKTADUP        
+
+   **  Corrections in the X11 code :
+       - Set the default year in the 1st panel to the one of last real data
+         mods in pushfor and in scanbook_x11.c
+       - Fix for the LEP energy button in the 2nd panel:
+         mods in the scanbook_x11.c routines
+         mods in DISNGLEP,PUSHFOR,PUSHSUBR(majjver,setlep,disppos)
+         new routines getlep_x11 and fsetlep in PUSHSUBR
+

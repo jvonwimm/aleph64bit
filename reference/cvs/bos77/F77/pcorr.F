@@ -1,0 +1,144 @@
+      SUBROUTINE PCORR(ID)
+      REAL S(5),T(5)
+      COMMON/HCS/KW(100)
+      REAL XW(1)
+      EQUIVALENCE (XW(1),KW(1))
+#include "bosmdl.h"
+      EQUIVALENCE (JW,WJ),(K,RK)
+      CHARACTER*1 LL(100),LCH(2)
+      INTEGER IP1(10),IP2(10)
+      REAL RS(11)
+      CHARACTER*4 BLK,TA
+      CHARACTER*8 TS(11),TH
+      CHARACTER*1 VP,CHI,CHT
+      DATA BLK/'    '/,CHI/'I'/,CHT/'T'/
+      DATA    IP1    /1,8,64,512,4096,32768,262144,2097152,
+     +                16777216,134217728/
+      DATA    IP2    /7,56,448,3584,28672,229376,1835008,14680064,
+     +                117440512,939524096/
+      DATA       LCH   /' ','X'/
+      IF(KW(6).EQ.0) GOTO 100
+      CALL DLUNP(KW(6))
+      IF(ID.LT.0) GOTO 100
+      IF(ID.NE.0) THEN
+         IF(IBS.LT.0) GOTO 100
+         NA=ID
+         IF(IBS.EQ.0) THEN
+            IF(NA.GT.999999999) GOTO 100
+         ELSE
+            IF(NA.GT.99) GOTO 100
+            NA=NA+IBS
+         END IF
+         IND= MLINK(KW,'CORR',NA)
+      ELSE
+         IND=KW(NAMIND('CORR'))
+      END IF
+   10 IF(IND.EQ.0) GOTO 100
+   12 IF(KW(IND+30).EQ.1) GOTO 75
+      N=KW(IND+21)
+      IF(N.EQ.0) GOTO 75
+      IF(N.GT.315) GOTO 20
+      CALL CCOR(IND)
+   20 LTY=6
+      NS=0
+      DO 22 I=1,100
+      NS=NS+KW(IND+100+I)
+   22 XW(IND+100+I)=KW(IND+100+I)
+      WRITE(KW(6),110)
+      CALL PTITLB(IND)
+      CALL PVERT(XW(IND+101),100,-6)
+      DO 23 I=1,100
+   23 KW(IND+100+I)=XW(IND+100+I)+0.5
+      WRITE(KW(6),102)
+      DO 24 I=1,6
+   24 RS(I)=XW(IND+22)+10.0*XW(IND+23)*FLOAT(I-1)
+      CALL CFMT(RS,6,TS,TA)
+      WRITE(KW(6),102) TA
+      ICHAR0=ICHAR('0')
+      DO 40 LY=1,50
+      CALL ICFMT(KW(IND+101-LY),TH,6)
+      JND=IND+700-10*LY
+      L=0
+      DO 30 LJ=1,10
+      JW=KW(JND+LJ)
+      DO 30 N=1,10
+      IF(L.EQ.100) GOTO 32
+      L=L+1
+      LL(L)=LCH(1)
+      K=IAND(JW,IP2(N))/IP1(N)
+      IF(K.NE.0) LL(L)=CHAR(ICHAR0+K)
+      IF(K.EQ.7) LL(L)='X'
+   30 CONTINUE
+   32 CONTINUE
+      IF(MOD(51-LY,10).EQ.0) GOTO 35
+      VP=CHI
+      IF(MOD(51-LY,10).EQ.5) VP=CHT
+      WRITE(KW(6),103) VP,LL,VP,TH
+      GOTO 40
+   35 WRITE(KW(6),104) TS(LTY),LL,TH
+      LTY=LTY-1
+   40 CONTINUE
+      WRITE(KW(6),102) BLK
+      DO 50 I=1,11
+   50 RS(I)=XW(IND+24)+10.0*XW(IND+25)*FLOAT(I-1)
+      CALL CFMT(RS,11,TS,TA)
+      WRITE(KW(6),105) (TS(I),I=1,11)
+      WRITE(KW(6),106) (TA,I=1,11)
+   55 CONTINUE
+      DO 60 I=1,5
+   60 S(I)=XW(IND+36+I)
+      XN=KW(IND+26)
+      XN=1.0/XN
+      XR=KW(IND+26)-1
+      IF(XR.NE.0) XR=1.0/XR
+      XT=KW(IND+26)-2
+      IF(XT.NE.0.0) XT=1.0/XT
+      T(1)=S(1)*XN
+      T(2)=S(2)*XN
+      T(3)=S(3)-S(1)*S(1)*XN
+      T(4)=S(4)-S(2)*S(2)*XN
+      T(5)=S(5)-S(1)*S(2)*XN
+      DO 70 I=3,5
+      IF(T(I).LT.0.0) T(I)=0.0
+   70 CONTINUE
+      XW(IND+37)=T(1)+XW(IND+33)
+      XW(IND+38)=SQRT(T(3)*XR)
+      ST=T(3)*T(4)-T(5)*T(5)
+      IF(ST.LT.0.0) ST=0.0
+      XW(IND+45)=T(2)+XW(IND+34)
+      XW(IND+46)=SQRT(T(4)*XR)
+      RXY=ABS(T(3)*T(4))
+      IF(RXY.NE.0.0) RXY=1.0/RXY
+      XW(IND+32)=T(5)*SQRT(RXY)
+      IF(T(3).NE.0.0) T(3)=1.0/T(3)
+      IF(T(4).NE.0.0) T(4)=1.0/T(4)
+      XW(IND+39)=T(5)*T(4)
+      XW(IND+40)=SQRT(XT*ST*T(4))
+      XW(IND+47)=T(5)*T(3)
+      XW(IND+48)=SQRT(XT*ST*T(3))
+      KW(IND+27)=KW(IND+21)-KW(IND+26)
+      KW(IND+30)=1
+      KW(IND+34)=KW(IND+49)
+      KW(IND+33)=KW(IND+21)-KW(IND+34)
+      KW(IND+42)=KW(IND+50)
+      KW(IND+41)=KW(IND+21)-KW(IND+42)
+      WRITE(KW(6),107) KW(IND+21)
+      WRITE(KW(6),108) KW(IND+26),(XW(IND+J),J=33,38),XW(IND+32)
+      WRITE(KW(6),109) KW(IND+27),(XW(IND+J),J=41,46)
+   75 JND=KW(IND-1)
+      IND=JND
+   80 IF(ID.EQ.0) GOTO 10
+  100 RETURN
+  101 FORMAT(' UCORR',I10)
+  102 FORMAT(5X,A4,' +',10('L----L----'),'+')
+  103 FORMAT(10X,A1,100A1,A1,A6)
+  104 FORMAT(1X,A8,' T',100A1,'T',A6)
+  105 FORMAT(6X,11(A8,2X))
+  106 FORMAT(3X,11(6X,A4))
+  107 FORMAT('0TOTAL',I10,14X,'INSIDE OUTSIDE',3X,'MIN',7X,'MAX',
+     1   12X,'ONLY',4X,'MEAN',5X,'SIGMA',5X,'CORR-COFF')
+  108 FORMAT(' INSIDE',I9,8X,'Y',3X,2I8,2G10.3,8X,'FROM  ',2G10.3,
+     1   F10.3)
+  109 FORMAT(' OUTSIDE',I8,8X,'X',3X,2I8,2G10.3,8X,'INSIDE',2G10.3)
+  110 FORMAT(1H1)
+      END

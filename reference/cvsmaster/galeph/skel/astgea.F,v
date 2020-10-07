@@ -1,0 +1,205 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.30.07.13.50;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.01.47;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.48;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ cahtra.h gmacro.h lccomc.h lcnamc.h ljjpar.h siconst.h
+ sigeco.h version.h
+ itmsk1.F itmsk2.F itnois.F itres.F itxtlk.F
+ lcadc.F lcamp.F lcasig.F lcbhab.F lcbkpr.F lcdigi.F lcfral.F
+ lchit.F lcirun.F lcnami.F lcnois.F lcpad.F lcroc.F lcsamp.F
+ lcsatu.F lcshow.F lcstrt.F lctrak.F lctrdi.F lctrht.F lcwire.F
+ lcwsum.F lcwtri.F
+ muasig.F mubook.F muirun.F muunoi.F muwsum.F
+ trignews.h
+ siasig.F sitrak.F siwsum.F
+ asasig.F asbook.F ascjob.F ascrun.F asctra.F asevst.F asfxxx.F
+ asieve.F asigea.F asijob.F asimod.F asinit.F asipac.F asirun.F
+ askine.F asksin.F asktrk.F aspeve.F asprun.F asread.F asredc.F
+ asreve.F asrkin.F asrtyp.F asrust.F astdeb.F astgea.F astrac.F
+ astrig.F aswkin.F aswrtp.F aswsum.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+ xtrcom.h
+ ecalnews.h geomnews.h lcalnews.h news.h skelnews.h vdetnews.h
+@
+text
+@*DK astgea
+      SUBROUTINE ASTGEA
+C -----------------------------------------------------
+C - F.Ranjard - 880408 / 881005
+C! clean KINE BOS banks and transfert to GEANT
+C - called by   ASPEVE                        from this .HLB
+C - calls       ASRKIN                        from this .HLB
+C               FYTOKI                        from ALEPHLIB
+C               NDROP,NLINK                   from BOSlib
+C ---------------------------------------
+#ifndef DOC
+      SAVE
+#include "jobcom.h"
+#include "jqcom.h"
+#include "kincom.h"
+#include "bmacro.h"
+#include "kmacro.h"
+C ---------------------------------------------------------
+C - IF no KINE/VERT banks THEN
+C      get them from FKIN/FVER if any
+C   ENDIF
+      IF (IW(NAKINE).EQ.0 .OR. IW(NAVERT).EQ.0) THEN
+         CALL FYTOKI
+      ENDIF
+C
+C - Drop banks produced by the TRAC module
+      KVX = NLINK ('VERT',NIVXKI)
+ 1    KVX = IW(KVX-1)
+      IF (KVX .NE. 0) THEN
+         IDRP = NDROP ('VERT',IW(KVX-2))
+         GOTO 1
+      ENDIF
+      KKI = NLINK ('KINE',NITRKI)
+ 2    KKI = IW(KKI-1)
+      IF (KKI .NE. 0) THEN
+         IDRP = NDROP ('KINE',IW(KKI-2))
+         GOTO 2
+      ENDIF
+      CALL BDROP (IW,'IMPA')
+C
+C - clean banks coming from primary vertices and tracks
+      KKI = NAKINE+1
+ 4    KKI = IW(KKI-1)
+      IF (KKI .NE. 0) THEN
+         NSV = NOFVK(KKI)
+         KSV = KLISVK(KKI)
+         DO 3 NS = 1,NOFVK(KKI)
+            IF (IW(KSV+NS) .GT. NIVXKI) THEN
+               NSV = NSV - 1
+               IW(KSV+NS) = 0
+            ENDIF
+ 3       CONTINUE
+         IW(KKI+3) = NSV
+         GOTO 4
+      ENDIF
+      KVX = NAVERT + 1
+ 5    KVX = IW(KVX-1)
+      IF (KVX .NE. 0) THEN
+         NST = NOFVK(KVX)
+         KST = KLISVK(KVX)
+         DO 6 NS = 1,NOFVK(KVX)
+            IF (IW(KST+NS) .GT. NITRKI) THEN
+               NST = NST - 1
+               IW(KST+NS) = 0
+            ENDIF
+  6      CONTINUE
+         IW(KVX+3) = NST
+         GOTO 5
+      ENDIF
+C
+      IF (FDEBJO .AND. IPRIJO(16).EQ.1) CALL PRKINE
+C
+C - reset KVOL length to the # of input vertices
+      JKVOL = IW(NAKVOL)
+      IW(JKVOL+LMHROW) = NIVXKI
+C - add kinematic banks to 'E' list
+      CALL BLIST (IW,'E+','KVOLIMPA')
+C
+C - transfert KINE and VERT banks to GEANT banks
+      CALL ASRKIN
+C
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d10 1
+a10 1
+C -----------------------------------------------------------
+d12 1
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

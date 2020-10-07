@@ -1,0 +1,355 @@
+      SUBROUTINE BTAG_INIT
+CKEY   QIPBTAG / INTERNAL
+C-----------------------------------------------------------------------
+C! Define cuts and histos for QIPBTAG
+C  Called from QIPBTAG
+C
+C  read the cuts used for the B-tagging and then store them
+C  All cards are now optional.
+C
+C  Author  Dave Brown  29-1-93
+C  MODIFIED:
+C  ---------
+C  03/05/95  Stephan Schael, L_SCUT CHANGED FROM 2.0/3.0 TO 1.3/1.3
+C  07/11/95  Stephan Schael, data card to read in NUMJET
+C  Modified  Manoj Thulasidas  Dec. 8, 1997
+C      Read in the calibration from QIPC - database bank
+C  Modified Ian Tomalin 8-3-99: Old btagpar96 code greatly streamlined
+C                               and included directly here.
+C  Modified P-F Giraud 17-8-99: New numbering convention
+C                               for CALB histograms
+C
+C-----------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+#include "qdecl.h"
+#include "qcde.h"
+#include "btpar.h"
+#include "qsmear.h"
+C
+C  Jet resolution common
+C
+      REAL JRES(3),JMAX,JSCALE
+      COMMON/JSIG/JRES,JMAX,JSCALE
+C
+C  Local variables
+C
+      INTEGER JTRA2,JCALB,JNUMJ, JBHIS,JVCUT,JBNEG,JNOBG, JBTRK
+      INTEGER IBIN, IND, IPAR, ICHAR, IFIT, ITYPE, NJET
+      INTEGER MTYPE
+      INTEGER NLINK,NAMIND
+      CHARACTER*4 CHAINT
+      CHARACTER*8 UNAME
+      REAL DMIN_BINS(101)
+C
+C Calibration local variables
+      REAL SMINFO(3)
+      INTEGER IVDET, IOPT
+      INTEGER  GTSTUP
+      LOGICAL ALLEP1
+      INTEGER ISUBBIN
+C
+      LOGICAL FIRST
+      DATA FIRST/.TRUE./
+C
+C  logical for new code
+      LOGICAL NEWCOD
+C
+C  functions
+      INTEGER VDYEAR
+C
+C  Inlines
+C
+#include "qmacro.h"
+C----------------------------------------------------------------------
+C
+C  Make sure we only setup once
+C
+      IF (FIRST) THEN
+        FIRST = .FALSE.
+      ELSE
+        GOTO 2000
+      END IF
+      
+C See which version of the code is used, John Carr's modifications or 
+C standard?
+      CALL CODSEL(NEWCOD)
+
+C  Get track selection cuts and calibration.
+      IF (NEWCOD) THEN
+C  New codes uses different track selection for old/new VDET.
+        IF (VDYEAR().LE.92) THEN
+          WRITE (IW(6),*)'QIPBTAG: init. params (new routine, old VDET)'
+          CALL BTAGPAR_NEW1
+        ELSE
+          WRITE (IW(6),*)'QIPBTAG: init. params (new routine, new VDET)'
+          CALL BTAGPAR_NEW2
+        END IF
+      ELSE
+        WRITE (IW(6),*)'QIPBTAG: initializing parameters (old routine)'
+        CALL BTAGPAR_OLD
+      END IF
+C
+C  Check if user-selected tracks are being used
+C
+      JBTRK = IW(NAMIND('BTRK'))
+      DO WHILE(JBTRK.GT.0)
+C
+C  Get the type and 'particle' name for each track
+C
+        ITYPE = IW(JBTRK+1)+INTYPE
+        IF(ITYPE.LE.INTYPE.OR.ITYPE.GT.MAXTYPE)THEN
+          WRITE (IW(6),*)'QIPBTAG: BTRK # out of range',ITYPE
+          GOTO 444
+        END IF
+        UNAME = '        '
+        DO ICHAR=1,MIN(2,(IW(JBTRK)-1))
+          UNAME(1+(ICHAR-1)*4:ICHAR*4) = CHAINT(IW(JBTRK+1+ICHAR))
+        END DO
+        USRNAME(ITYPE) = UNAME
+        NVIEW(ITYPE) = 2
+C
+C  If no calibration has been given for this type, assume that they
+C  have the same calibration as 1-hit 2-d tracks
+C
+        IF(ITYPE.GT.NTYPE)THEN
+          DO IFIT=1,NFIT
+            FITP(IFIT,ITYPE) = FITP(IFIT,1)
+          END DO
+          NTYPE = ITYPE
+          WRITE (IW(6),*)' Default calibration for user track, type ',
+     &         USRNAME(ITYPE),ITYPE
+        ELSE
+          WRITE (IW(6),*)' FITP calibration for user track, type ',
+     &         USRNAME(ITYPE),ITYPE
+        END IF
+C
+C  Chain to the next bank
+C
+        JBTRK = IW(JBTRK-1)
+      END DO
+ 444  CONTINUE
+C
+C  Check for new track cuts
+C
+      JTRA2 = IW(NAMIND('TRA2'))
+      IF(JTRA2 .GT. 0)THEN
+        WRITE (IW(6),*)'QIPBTAG: OVERWRITING track selection cuts'
+        WRITE (IW(6),1100)
+        MTYPE = LROWS(JTRA2)
+        DO ITYPE=1,MTYPE
+          LCUT(ITYPE)    = RTABL(JTRA2,ITYPE,1)
+          LSIGCUT(ITYPE) = RTABL(JTRA2,ITYPE,2)
+          SCUT(ITYPE)    = RTABL(JTRA2,ITYPE,3)
+          MXDMIN(ITYPE)  = RTABL(JTRA2,ITYPE,4)
+          MXSDMIN(ITYPE) = RTABL(JTRA2,ITYPE,5)
+          WRITE (IW(6),1101)ITYPE,LCUT(ITYPE),LSIGCUT(ITYPE),
+     &         SCUT(ITYPE),MXDMIN(ITYPE),MXSDMIN(ITYPE)
+        END DO
+      END IF
+C
+C Check for new jet momentum cut
+C
+      IND = IW(NAMIND('PJET'))
+      IF ( IND .GT. 0 ) THEN
+        PCUT = RW(IND+1)
+        WRITE (IW(6),*)'QIPBTAG: Jet momentum cut changed to ',
+     &                           PCUT,' GeV/c'
+      ENDIF
+C
+C  check for jet resolution bank
+C
+      IND = NLINK('JRES',1)
+      IF(IND .GT. 0)THEN
+C
+C  Dummy call to jeterr to clear the 'FIRST' flag (prevent variable 
+C  overwrite)
+C
+        CALL JETERR(0,JRES,JRES)
+        DO IPAR=1,3
+          JRES(IPAR) = RW(IND+IPAR)
+        END DO
+        WRITE (IW(6),*)'QIPBTAG: OVERWRITING jet resolution parameters'
+        WRITE (IW(6),777) JRES
+ 777    FORMAT(' Angle resolution = ',E11.4,' + ',E11.4,'*P + ',E11.4,
+     &         '*P^2')
+      END IF
+C
+C  Check for negative probability track use if not default. 
+C
+      JBNEG = IW(NAMIND('BNEG'))
+      IF (JBNEG.GT.0) NEGPROB = .TRUE.
+      JNOBG = IW(NAMIND('NOBG'))
+      IF (JNOBG.GT.0) NEGPROB = .FALSE.
+C
+      IF(NEGPROB)THEN
+        WRITE (IW(6),*)'QIPBTAG: using +ve and -ve d0 tracks in prob'
+      ELSE
+        WRITE (IW(6),*)'QIPBTAG: using only +ve d0 tracks in prob'
+      END IF
+C
+C  Check if different # of jets is requested
+C
+      JNUMJ = IW(NAMIND('NUMJ'))
+      IF(JNUMJ .GT. 0)THEN
+        NJET = IW(JNUMJ+1)
+        IF (NJET.LE.0 .OR. NJET.GT.10) NJET = 3
+        WRITE(IW(6),'(A,I6,A,I6)')
+     &              'QIPBTAG: number of jets used changed from ',
+     &               NUMJET,' to ',NJET
+        NUMJET = NJET
+      ENDIF
+C
+C  Check if diagnostic histograms are requested
+C
+      JBHIS = IW(NAMIND('BHIS'))
+      IF(JBHIS .GT. 0)THEN
+        IF (IW(JBHIS).EQ.1) THEN
+          IDB = IW(JBHIS+1)
+        ELSE
+          IDB = 100000
+        END IF
+        WRITE (IW(6),*) 'QIPBTAG : diagnostic histograms on, offset = ',
+     &                   IDB
+C
+C  Track selection histograms
+C
+        CALL HBOOK1(IDB+100,'TRSEL',20,-.5,19.5,0.0)
+        CALL HBOOK1(IDB+101,'QP',100,0.,20.,0.0)
+        CALL HBOOK1(IDB+102,'NITC',10,-.5,9.5,0.0)
+        CALL HBOOK1(IDB+103,'NTPC',30,-.5,29.5,0.0)
+        CALL HBOOK1(IDB+104,'Track flag',11,-.5,10.5,0.0)
+        CALL HBOOK1(IDB+106,'D0',100,-.5,.5,0.0)
+        CALL HBOOK1(IDB+107,'Z0',100,-1.,1.,0.0)
+        CALL HBOOK1(IDB+108,'CHI/DOF',100,0.,10.,0.0)
+        CALL HBOOK1(IDB+109,'SIG_D0',100,0.,.2,0.0)
+        CALL HBOOK1(IDB+110,'SIG_Z0',100,0.,.2,0.0)
+        CALL HBOOK1(IDB+111,'IJET',10,-.5,9.5,0.0)
+        CALL HBOOK1(IDB+112,'MAXDOT',100,-1.,1.0,0.0)
+C
+C V0 selection
+C
+        CALL HBOOK1(IDB+200,'TRSEL',20,-.5,19.5,0.0)
+        CALL HBOOK1(IDB+204,'Track flag',11,-.5,10.5,0.0)
+        CALL HBOOK1(IDB+206,'D0',100,-.5,.5,0.0)
+        CALL HBOOK1(IDB+207,'Z0',100,-1.,1.,0.0)
+        CALL HBOOK1(IDB+209,'SIG_D0',100,0.,.2,0.0)
+        CALL HBOOK1(IDB+210,'SIG_Z0',100,0.,.2,0.0)
+        CALL HBOOK1(IDB+211,'IJET',10,-.5,9.5,0.0)
+        CALL HBOOK1(IDB+212,'MAXDOT',100,-1.,1.0,0.0)
+C
+C  Final selection
+C
+        DO ITYPE=1,INTYPE
+          ID = IDB+ITYPE*1000
+          CALL HBOOK1(ID+150,'FINAL CUT IN TRSEL2',10,-0.5,9.5,0.0)
+          CALL HBOOK1(ID+151,'DMIN',100,
+     &         -1.5*MXDMIN(ITYPE),1.5*MXDMIN(ITYPE),0.0)
+          CALL HBOOK1(ID+152,'S_DMIN',100,
+     &         0.0,1.5*MXSDMIN(ITYPE),0.0)
+          CALL HBOOK1(ID+153,'LDIST',100,
+     &         -1.5*LCUT(ITYPE),1.5*LCUT(ITYPE),0.0)
+          CALL HBOOK1(ID+154,'LDIST/S_LDIST',100,
+     &         -1.5*LSIGCUT(ITYPE),1.5*LSIGCUT(ITYPE),0.0)
+          CALL HBOOK1(ID+155,'JDIST',100,
+     &         -1.5*SCUT(ITYPE),1.5*SCUT(ITYPE),0.0)
+        END DO
+C
+C  V0 removal histograms
+C
+        CALL HBOOK1(IDB+60,'N V0s per event',11,-0.5,10.5,0.0)
+        CALL HBOOK1(IDB+61,'N V0s by type',4,-0.5,3.5,0.0)
+        CALL HBOOK1(IDB+62,'V0 probability',100,0.,1.,0.0)
+C
+C  Generic
+C
+        CALL HBOOK1(IDB+10,'QIPBTAG return code',21,-10.5,10.5,0.0)
+        CALL HBOOK1(IDB+20,'Track prob',200,-1.,1.,0.0)
+        CALL HBOOK1(IDB+21,'Jet prob',200,0.,1.00001,0.0)
+        CALL HBOOK1(IDB+22,'Hemi prob',200,0.,1.00001,0.0)
+        CALL HBOOK1(IDB+23,'Event prob',200,0.,1.00001,0.0)
+        CALL HBOOK1(IDB+24,'N Jet prob',200,0.,1.00001,0.0)
+        CALL HBOOK1(IDB+25,'N Hemi prob',200,0.,1.00001,0.0)
+        CALL HBOOK1(IDB+26,'N Event prob',200,0.,1.00001,0.0)
+      ELSE
+        IDB = 0
+      END IF
+C
+C  See if the CALB card is present; if so, book the histograms
+C
+      JCALB = IW(NAMIND('CALB'))
+      IF(JCALB.GT.0 .OR. IDB.GT.0)THEN
+
+        IF (IDB.GT.0) THEN
+          ICHIS = IDB + 20000
+        ELSE
+          IF (IW(JCALB).EQ.1) THEN
+            ICHIS = IW(JCALB+1)
+          ELSE
+            ICHIS = IQHIS
+          END IF
+        END IF
+C
+C Histogram for smearing/deletion information (bank number)
+        CALL HBOOK1(ICHIS+100, 'Bank number info', 3, 0., 3., 0.)
+        IVDET = GTSTUP ('VD', KRUN)
+        IF (ALLEP1(KRUN)) THEN
+          IOPT = 1
+        ELSE
+          IOPT = 2
+        ENDIF
+        SMINFO(1) = FLOAT(IVDET)
+        SMINFO(2) = FLOAT(IOPT)
+        SMINFO(3) = FLOAT(NTYPE)
+        CALL HPAK(ICHIS+100, SMINFO)
+C
+C  Histogram for monitoring QIPBTAG track selection efficiency.
+        DO ISUBBIN = 0, NCPHIS
+          CALL HBOOK1(ICHIS+10*ISUBBIN,
+     &         'QIPBTAG track type (-2=Events,-1=CL16 tracks)',
+     &         NTYPE+KDEDIFF,-2.5,NTYPE+0.5,0.0)
+        ENDDO
+C
+C  Special uneven-bin histograms for fitting DMIN/SIG; separate by
+C  the track flag.
+C
+        DO IBIN=1,51
+          DMIN_BINS(IBIN) = (IBIN-1)*.08
+        END DO
+        DO IBIN=1,40
+          DMIN_BINS(51+IBIN) = 4.+ IBIN*.8
+        END DO
+        DO IBIN=1,10
+          DMIN_BINS(91+IBIN) = 36.+ IBIN*8.
+        END DO
+        DO ITYPE=1,NTYPE
+          CALL HBOOKB(ICHIS+ITYPE,'Neg signifigance',
+     &         100,DMIN_BINS,0.0)
+          CALL HBARX(ICHIS+ITYPE)
+          IF (ITYPE.LE.NTTSB) THEN 
+            DO ISUBBIN = 1, NCPHIS
+                CALL HBOOKB(ICHIS+10*ISUBBIN+ITYPE
+     &               ,'Neg signifigance', 100,DMIN_BINS,0.0)
+                CALL HBARX(ICHIS+10*ISUBBIN+ITYPE)
+            ENDDO
+          ENDIF
+        END DO
+      ELSE
+        ICHIS = 0
+      END IF
+      IF(JCALB.GT.0)THEN
+        WRITE (IW(6),*)'QIPBTAG: calibration on, histos booked offset=',
+     &   ICHIS
+        CALIB = .TRUE.
+      ELSE
+        CALIB = .FALSE.
+      END IF
+C
+ 2000 CONTINUE
+      RETURN
+C ----------------------------------------------------------------------------
+ 1100 FORMAT(10X,'type ','|ldist| ','|ldist|/sig ','|sdist|',
+     &     ' |dmin|',' s_dmin')
+ 1101 FORMAT(10X,I2,1X,5(F8.3,1X))
+      END
+#endif

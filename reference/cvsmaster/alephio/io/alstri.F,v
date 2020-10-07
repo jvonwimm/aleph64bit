@@ -1,0 +1,144 @@
+head	1.1;
+access;
+symbols
+	alio83:1.1
+	alio82:1.1
+	alio81:1.1
+	alio80:1.1
+	alio74:1.1
+	alio73:1.1
+	alio72:1.1
+	alio71:1.1
+	alio70:1.1
+	alio68:1.1
+	alio69:1.1
+	alio67:1.1
+	alio66:1.1
+	alio65:1.1
+	alio64:1.1
+	alio63:1.1
+	alio62:1.1
+	alio61:1.1
+	alio60:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.04.23.10.00.06;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@move alph, dbas, a part of alef and a part of c to alephio
+Modified Files:
+ 	version.h
+ Added Files:
+ 	adbrow.F adbrpn.F adbrun.F adbswp.F adbver.F agetdb.F agtfil.F
+	albos.F aldawr.F aldtyp.F aleveh.F alfind.F alfmt.F algtbk.F
+ 	algtdb.F algtlu.F algtro.F algtyp.F alinst.F alk7fil.F
+ 	alk7fru.F alk7op.F alk7tru.F alredb.F alrune.F alrunh.F
+ 	alrunr.F alseed.F alstho.F alstin.F alstri.F altabl.F alvsn.F
+ 	aopdbs.F aublis.F aubos.F aubprs.F bkcari.F bkinca.F bkrhab.F
+ 	bkrhal.F bkrhaw.F bktobk.F cafiht.F chahol.F dafrds.F gtdbas.F
+ 	gtstup.F igtfmt.F jhocha.F julrec.F junial.F junidb.F
+ 	kbytrec.F loctab.F nameru.F ubpack.F uclean.F uindxs.F usbos.F
+ 	usgtdb.F utcblk.F utccop.F utcofo.F utwocl.F utwoex.F
+Removed Files:
+	noibm.F
+@
+text
+@      SUBROUTINE ALSTRI(STR,CHLIM,NWMAX,CHOUT,NWORD)
+C---------------------------------------------------------------------
+C!  Blow character string STR into character array CHOUT, limiter CHLIM
+CKEY ALEF CARD STRING / USER
+C   Author     :Ronald Hagelberg        17-APR-91
+C
+C  Remove all laeding and trailing blanks of the character string STR
+C  Blow character string STR into character array CHOUT according to
+C  limiter character CHLIM. Generaly CHLIM will be the blank ' ' , but
+C  could be as well e.g. '|' .
+C
+C!   Inputs: STR    CHARARACTER string with length to be defined
+C!                        in the calling program
+C!           CHLIM  CHARARACTER*1 delimiting the substrings
+C!           NWMAX  Dimension of CHOUT, Maximum Number of substrings
+C!
+C!   Output: CHOUT  ARRAY of CHARARACTER Strings, with dimension
+C!                  and length to be defined in calling program.
+C!           NWORD  Number of substrings found
+C!
+C?   Example of character string:
+C?                         SMCF   I25138  -K   Wait  SIZE   200 FS 1
+C?   taken here from a FILI card:
+C? FILI 'ALDATA | EPIO |   SMCF   I25138  -K   Wait  SIZE   200 FS 1 '
+C?   The syntactical separator CHLIM  is here the blank ' '.
+C?   ABCD 'PARM1 | XYZ   | PARM3 | | PARM5|PARM6   '
+C?   The syntactical separator CHLIM  is here  '|'.
+C?=====================================================================
+C
+#ifndef DOC
+      DIMENSION CHOUT(*)
+      CHARACTER*(*) CHOUT
+      CHARACTER*1 CHLIM
+      CHARACTER*1 BLANK
+      CHARACTER*(*) STR
+      PARAMETER (BLANK=' ')
+      IYW=0
+      IFW=0
+      ILW=0
+      JW=0
+C            dimension of CHOUT is NWMAX
+      DO I=1,NWMAX
+         CHOUT(I)=' '
+      ENDDO
+C
+      L=LNBLNK(STR)
+C
+      DO 20 I=1,L
+C            check if first character blank or limiter
+         IF (IYW.EQ.0) THEN
+            IF (STR(I:I).EQ.BLANK) THEN
+C            get rid of leading blanks
+               CONTINUE
+            ELSEIF (STR(I:I).EQ.CHLIM) THEN
+C            if limiter non blank then it is significant
+               JW=JW+1
+               CHOUT(JW)=' '
+            ELSEIF (STR(I:I).NE.BLANK) THEN
+               IFW=I
+               ILW=I
+               IYW=1
+               JW=JW+1
+            ENDIF
+         ENDIF
+         IF (IYW.NE.0) THEN
+C            after start of word (IYW.NE.0) , check for limiter
+            IF (STR(I:I).EQ.CHLIM) THEN
+               CHOUT(JW)=STR(IFW:ILW)
+               IYW=0
+C            check if last character of string
+            ELSEIF (I.EQ.L) THEN
+               ILW=I
+               CHOUT(JW)=STR(IFW:ILW)
+C            get rid of trailing blanks
+               LCJW=LNBLNK(CHOUT(JW))
+               CHOUT(JW)=CHOUT(JW)(:LCJW)
+C            check if non blank character after start of word (IYW.NE.0)
+            ELSEIF (STR(I:I).NE.BLANK) THEN
+               ILW=I
+            ENDIF
+         ENDIF
+   20 CONTINUE
+C
+      NWORD=JW
+      RETURN
+      END
+#endif
+@

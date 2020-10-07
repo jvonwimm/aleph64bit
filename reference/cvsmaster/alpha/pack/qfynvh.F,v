@@ -1,0 +1,184 @@
+head	1.1;
+access;
+symbols
+	alpha126_22:1.1
+	alpha122_22:1.1
+	alpha126_21:1.1
+	alpha126_20:1.1
+	alpha126_19:1.1
+	alpha126_18:1.1
+	alpha126_17:1.1
+	alpha126_16:1.1
+	alpha126_15:1.1
+	alpha126_14:1.1
+	alpha126_13:1.1
+	alpha126_12:1.1
+	alpha126_11:1.1
+	alpha126_10:1.1
+	alpha126_09:1.1
+	alpha126_08:1.1
+	alpha126_07:1.1
+	alpha126_06:1.1
+	alpha126_05:1.1
+	alpha126_04:1.1
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1
+	alpha124:1.1
+	alpha123_12:1.1
+	alpha123_11:1.1
+	alpha123_10:1.1
+	alpha123_9:1.1
+	alpha123_8:1.1
+	alpha123_7:1.1
+	alpha123_6:1.1
+	alpha123_5:1.1
+	alpha123_4:1.1
+	alpha123_3:1.1
+	alpha123_2:1.1
+	alpha123:1.1
+	alpha122_48:1.1
+	alpha122_47:1.1
+	alpha122_46:1.1
+	alpha122_45:1.1
+	alpha122_44:1.1
+	alpha122_43:1.1
+	alpha122_42:1.1
+	alpha122_41:1.1
+	alpha122_40:1.1
+	alpha122_39:1.1
+	alpha122_38:1.1
+	alpha122_37:1.1
+	alpha122_36:1.1
+	alpha122_35:1.1
+	alpha122_34:1.1
+	alpha122_33:1.1
+	alpha122_32:1.1
+	alpha122_31:1.1
+	alpha122_30:1.1
+	alpha122_29:1.1
+	alpha122_28:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	97.05.05.13.18.46;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE QFYNVH(IVRTX,INTRA,NOUTR,LISOU)
+CKEY FILL VERTEX   /INTERNAL
+C----------------------------------------------------------------------
+C!  - Fill list of tracks from Nuclear Interaction vertices from new
+C!  - tracking bank YNVH.
+C!
+C!   Author   :  J. Boucrot                    21-Apr-1997
+C!
+C!    Input  :
+C!          IVRTX = Vertex number
+C!   Outputs :
+C!          INTRA = ALPHA number of incoming track, if any
+C!          NOUTR = Number of outgoing tracks
+C!          LISOU = List of ALPHA numbers of outgoing tracks
+C?
+C!======================================================================
+#ifndef DOC
+#include "qcde.h"
+#include "ynvhjj.h"
+      PARAMETER ( NOUTT = 50 )
+      INTEGER LISOU(NOUTT)
+#include "qmacro.h"
+C----------------------------------------------------------------------
+C--- Check if bank of nuclear interactions is present :
+C
+      INTRA=0
+      NOUTR=0
+      JYNVH=IW(NAMIND('YNVH'))
+      IF (JYNVH.LE.0) GO TO 999
+C
+C Loop on tracks:
+C
+      DO 600 ITR=1,LROWS(JYNVH)
+         KYNVH=KROW(JYNVH,ITR)
+         ITRAK=IW(KYNVH+JYNVTN)
+         IVERT=IW(KYNVH+JYNVVN)
+C Vertex must be the input one:
+         IF (IABS(IVERT).NE.IVRTX) GO TO 600
+C If IVERT < 0 , the track is incoming to the vertex:
+         IF (IVERT.LT.0) THEN
+            INTRA=IABS(ITRAK)+KFCHT-1
+            GO TO 600
+         ENDIF
+C If ITRAK < 0 : this is not a track, but a V0 from bank YLV0:
+         IF (ITRAK.LT.0) THEN
+            IVOL=IABS(ITRAK)
+C Search vertex IVOL in the reconstructed vertices:
+            DO 100 IV=KFREV,KLREV
+               IF (KVTYPE(IV).NE.3) GO TO 100
+               IF (KVN(IV).NE.IVOL) GO TO 100
+               NOUTR=NOUTR+1
+               IF (NOUTR.GT.NOUTT) GO TO 999
+               LISOU(NOUTR)=KVINCP(IV)
+               GO TO 600
+ 100        CONTINUE
+         ENDIF
+C ITRAK > 0 : this is an ordinary charged reconstructed track:
+C Build the list of outgoing tracks:
+         NOUTR=NOUTR+1
+         IF (NOUTR.GT.NOUTT) GO TO 999
+         LISOU(NOUTR)=IABS(ITRAK)+KFCHT-1
+  600 CONTINUE
+C
+  999 RETURN
+      END
+#endif
+@

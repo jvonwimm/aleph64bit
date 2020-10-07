@@ -1,0 +1,1200 @@
+head	1.5;
+access;
+symbols
+	jul313_3:1.5
+	jul313_2:1.5
+	jul313_1:1.5
+	jul313:1.5
+	jul312_1:1.5
+	jul312:1.5
+	jul311:1.5
+	jul310_1:1.5
+	jul310:1.5
+	jul309_1:1.5
+	jul309:1.5
+	jul308_6:1.5
+	jul308_5:1.5
+	jul308_4:1.5
+	jul308_3:1.5
+	jul308_2:1.5
+	jul308_1:1.5
+	jul308:1.5
+	jul307_4:1.5
+	jul307_3:1.5
+	jul307_2:1.5
+	jul307_1:1.5
+	jul307:1.5
+	jul306_3:1.5
+	jul306_2:1.5
+	jul306_1:1.5
+	jul306:1.5
+	jul305_4:1.5
+	jul305_3:1.5
+	jul305_2:1.3
+	jul305_1:1.3
+	jul305:1.3
+	jul304_3:1.3
+	jul304_2:1.3
+	jul304_1:1.3
+	jul304:1.2
+	jul303_7:1.2
+	jul303_6:1.2
+	jul303_5:1.2
+	jul303_4:1.2
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2
+	jul280_1:1.2
+	jul280:1.2
+	jul279:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.5
+date	98.02.06.08.29.34;	author cattanem;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	98.02.05.13.01.41;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.10.01.07.09.33;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.03.12.15.42.24;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.20.05;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.20.06;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.5
+log
+@More fixes to tovrlp
+@
+text
+@      SUBROUTINE TOVRLP(IER,MTOSS,MADD)
+C
+C-------------------------------------------------------------------
+C! Resolve TPC track overlaps in pad coordinates
+C
+C     Author:  R. Johnson     15-07-88
+C!    Modified: I. Tomalin     4-03-94 Bug removed concering ICFLG.
+C!    Modified: I. Tomalin     5-02-98 Changed scale factor in ITRKSW(2)
+C!                                     to allow for events with > 999 tracks
+C!              D. Casper      5-02-98 Before allowing a chain to pick up
+C!                                     a split coordinate, check all chains
+C!                                     which are linked into the same track
+C!                                     candidate to be sure none have hits in
+C!                                     the padrow.  This prevents track
+C!                                     candidates from winding up with more
+C!                                     than one hit in a given padrow.
+C
+C     Output:   IER     /I          Error return = 0 if all was OK
+C               MTOSS   /I          Number of coordinates removed from
+C                                   track candidates
+C               MADD    /I          Number of twin coordinates calculate
+C
+C     Input banks:     TPCO 2       TPC pad coordinates
+C                      TCAL 1       TPC track candidates
+C                      TTCC 1
+C                      TCHA         TPC chains
+C                      TCTC
+C                      TSPU 1-36    TPC pad subpulses per sector
+C                      TSCL 1-36    TPC pad subclusters per sector
+C     Output banks:    TPCO 1       Resolved TPC pad coordinates
+C                      TCAL 0       Resolved TPC track candidates
+C                      TTCC 0
+C                               *** Also, if TPCO is changed, then
+C                                   pointers to TPCO from TCTC, TATC,
+C                                   TCRL and TSCL are updated to point
+C                                   to the new TPCO bank.
+C     Called by TPCREC
+C
+C-------------------------------------------------------------------
+#ifndef DOC
+C
+#include "alcons.h"
+#include "bcs.h"
+#include "tpcojj.h"
+#include "tcaljj.h"
+#include "tchajj.h"
+#include "tscljj.h"
+#include "tspujj.h"
+#include "tpgpar.h"
+#include "tpgeom.h"
+#include "tpgeop.h"
+#include "tcrljj.h"
+#include "tpccon.h"
+#include "tzcorr.h"
+#include "tcluct.h"
+C
+      COMMON/TOVRWK/ ITRKSW(3),INTRSW,IOLDRF
+C
+C   Workbanks ITRKSW:  arrays for sorting chains by sector
+C         ITRKSW(1) =  chain number
+C         ITRKSW(2) =  10000*ISLOT + ITK
+C                      where ISLOT is the sector through with the chain
+C                      passes, and ITK is the track candidate OR 0 if
+C                      the chain has no coordinates on the first arc of
+C                      a track candidate.
+C         ITRKSW(3) =  array to sort by increasing 10000*ISLOT+ITK
+C
+C   Workbank INTRSW:  intersections of chains with padrow radii
+      PARAMETER (JNTRPH=1, JNTRZV=2, JNTRTN=3, LNTRSW=3)
+C   +--------------------------------------------------------------+
+C   |  +--------+                                                  |
+C   |  | INTRSW |          1.   Number of words per point          |
+C   |  +--------+          2.   Number of intersection points      |
+C   |--------------------------------------------------------------|
+C   |    JNTRPH       1     R*Phi of intersection point            |
+C   |    JNTRZV       2     Z of intersection point                |
+C   |    JNTRTN       3     Pointer to chain in TCHA               |
+C   +--------------------------------------------------------------+
+C
+C++   IRLST is a list of offsets by sector into banks ITRKSW(1:2)
+C++        (using ITRKSW(3) to sort by sector number)
+C++        1:   offset to the first entry for the sector
+C++        2:   number of entries for the sector
+C++        3:   number of track candidates in the sector
+C++   IPLST is a list of offsets by row into the bank INTRSW
+C++        1:   offset to first point for the row
+C++        2:   number of points in the row
+C++   ICTOS is a list of coordinates to be removed from track candidates
+C++   ICFLG is true if coordinate to be removed will be replaced
+C++   NPMIN is the minimum number of hits on a track candidate
+C
+      PARAMETER (MXMAT=100,LMXSEC=3,MXNEW=38,MXADJ=36)
+      DIMENSION SI(2),PHII(2),ZI(2),IADJ(MXADJ),JADJ(MXADJ)
+      DIMENSION IMAT(MXMAT),ICTOS(MXMAT),ICFLG(MXMAT)
+      DIMENSION ICNMT(MXMAT),ICH1(MXMAT),ICH2(MXMAT)
+      DIMENSION ITPCO(LTPCOA,MXNEW),RTPCO(LTPCOA,MXNEW),IPUT(MXNEW)
+      EQUIVALENCE (ITPCO(1,1),RTPCO(1,1))
+      DIMENSION IRLST(3,LTSECT),HP(5),HPT(5),HPS(5),IPLST(2,LTSROW)
+      LOGICAL FIRST,ICFLG,TSCINT
+      INTEGER  NAMIND, NDROP,IRET
+      EXTERNAL NAMIND, NDROP
+C
+C++   List of sectors inside of each outer sector
+C
+      DIMENSION IISCT(2,LTSECT)
+      DATA IISCT/0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,
+     &           1, 6,  1, 0,  1, 2,  2, 0,  2, 3,  3, 0,
+     &           3, 4,  4, 0,  4, 5,  5, 0,  5, 6,  6, 0,
+     &           0, 0,  0, 0,  0, 0,  0, 0,  0, 0,  0, 0,
+     &          19,24, 19, 0, 19,20, 20, 0, 20,21, 21, 0,
+     &          21,22, 22, 0, 22,23, 23, 0, 23,24, 24, 0/
+      DATA FIRST/.TRUE./,NROUT/1/,NROUC/0/,NPMIN/3/
+C
+C-------------------- Statement Function Definitions ---------------
+C
+#include "bmacro.h"
+C
+C-------------------------------------------------------------------
+C
+      IF (FIRST) THEN
+        FIRST=.FALSE.
+        NTPCO=NAMIND('TPCO')
+        NTCHA=NAMIND('TCHA')
+        NTCTC=NAMIND('TCTC')
+        NTCAL=NAMIND('TCAL')
+        NTTCC=NAMIND('TTCC')
+        NTSCL=NAMIND('TSCL')
+        NTSPU=NAMIND('TSPU')
+        NTCTC=NAMIND('TCTC')
+        NTATC=NAMIND('TATC')
+        NTCRL=NAMIND('TCRL')
+        INTRSW=0
+        ITRKSW(1)=0
+        ITRKSW(2)=0
+        ITRKSW(3)=0
+        IOLDRF=0
+      ENDIF
+      MADD=0
+      MTOSS=0
+      IER=0
+C
+C++   Check for the proper input banks.  They should have an NR >
+C++   than NROUT, meaning that they are not already the output of
+C++   this routine.
+C
+      KTPCO=IW(NTPCO)
+      IF (KTPCO.EQ.0) GO TO 997
+      NRTPC=IW(KTPCO-2)
+      IF (NRTPC.LE.NROUT) GO TO 999
+C
+      KTCAL=IW(NTCAL)
+      IF (KTCAL.EQ.0) GO TO 997
+      NRTCA=IW(KTCAL-2)
+      IF (NRTCA.LE.NROUC) GO TO 999
+      KTTCC=IW(NTTCC)
+      IF (KTTCC.EQ.0) GO TO 997
+      IF (IW(KTTCC-2).NE.NRTCA) GO TO 999
+C
+      KTCHA=IW(NTCHA)
+      IF (KTCHA.EQ.0) GO TO 997
+      KTCTC=IW(NTCTC)
+      IF (KTCTC.EQ.0) GO TO 997
+      KTSCL=IW(NTSCL)
+      IF (KTSCL.EQ.0) GO TO 997
+      KTSPU=IW(NTSPU)
+      IF (KTSPU.EQ.0) GO TO 997
+C
+C++   Drop the output banks if they already exist
+C
+      IRET = NDROP('TPCO',NROUT)
+      IRET = NDROP('TCAL',NROUC)
+      IRET = NDROP('TTCC',NROUC)
+C
+C++   Mark the pad coordinates with the track candidate number
+C
+      DO 30 IC=1,LROWS(KTPCO)
+        IW(KROW(KTPCO,IC)+JTPCTN)=0
+   30 CONTINUE
+      DO 40 ITK=1,LROWS(KTCAL)
+        IOFF=ITABL(KTCAL,ITK,JTCAIO)+LMHLEN
+        DO 35 II=1,ITABL(KTCAL,ITK,JTCANF)
+          IC=IW(KTTCC+IOFF+II)
+      IF(IC.LE.0) GO TO 35
+          IW(KROW(KTPCO,IC)+JTPCTN)=ITK
+   35   CONTINUE
+        IOFF=IOFF+ITABL(KTCAL,ITK,JTCANF)
+        DO 37 II=1,ITABL(KTCAL,ITK,JTCANR)
+          IC=IW(KTTCC+IOFF+II)
+      IF(IC.LE.0) GO TO 37
+          IW(KROW(KTPCO,IC)+JTPCTN)=-ITK
+   37   CONTINUE
+   40 CONTINUE
+C
+C++   Establish lists of chains in sectors
+C
+      LEN=LROWS(KTCHA)*LMXSEC
+      DO 45 I=1,3
+        IW(1)=1
+        CALL WBANK(IW,ITRKSW(I),LEN,*998)
+        IW(ITRKSW(I)-3)=INTCHA('WOV1')
+   45 CONTINUE
+C
+C++   Loop over all chains
+C
+      NUMB=0
+      DO 70 ICH=1,LROWS(KTCHA)
+C
+C++     Is this chain part of 1st arc of a track candidate?
+C
+        DO 46 II=1,ITABL(KTCHA,ICH,JTCHNC)
+          IC=IW(KTCTC+LMHLEN+ITABL(KTCHA,ICH,JTCHOF)+II)
+          ITK=ITABL(KTPCO,IC,JTPCTN)
+          IF (ITK.GT.0) THEN
+            IFLG=ITK
+            GO TO 47
+          ENDIF
+          IF (ITK.LT.0) THEN
+            IFLG=0
+            GO TO 47
+          ENDIF
+   46   CONTINUE
+        IFLG=0
+   47   CONTINUE
+C
+C++     Loop over all coordinates on the chain to determine sector numbe
+C
+        NBEG=NUMB+1
+        DO 50 II=1,ITABL(KTCHA,ICH,JTCHNC)
+          IC=IW(KTCTC+LMHLEN+ITABL(KTCHA,ICH,JTCHOF)+II)
+          ISLOT= MOD(ITABL(KTPCO,IC,JTPCIN),100000)/1000
+          DO 48 J=NBEG,NUMB
+            IOLD=IW(ITRKSW(2)+J)/10000
+            IF (ISLOT.EQ.IOLD) GO TO 50
+   48     CONTINUE
+          NUMB=NUMB+1
+          IF (NUMB.GT.IW(ITRKSW(1))) THEN
+            CALL RERROR('TOVRLP',4,
+     &              'Extension of ITRKSW workbank was required')
+            LEN=IW(ITRKSW(1))+50
+            DO 49 I=1,3
+              IW(1)=1
+              CALL WBANK(IW,ITRKSW(I),LEN,*998)
+   49       CONTINUE
+          ENDIF
+          IW(ITRKSW(1)+NUMB)=ICH
+          IW(ITRKSW(2)+NUMB)=10000*ISLOT+IFLG
+   50   CONTINUE
+C
+C++     If the chain is present in an outer sector but not an inner,
+C++     check whether it crosses the outer padrow of the inner
+C++     sector
+C
+        DO 61 J=NBEG,NUMB
+          KSLOT=IW(ITRKSW(2)+J)/10000
+          IF (ITPTYP(KSLOT).EQ.1) GO TO 69
+   61   CONTINUE
+        DO 68 J=NBEG,NUMB
+          DO 67 K=1,2
+            MSLOT=IW(ITRKSW(2)+J)/10000
+            KSLOT=IISCT(K,MSLOT)
+            IF (KSLOT.EQ.0) GO TO 67
+            KTYP=ITPTYP(KSLOT)
+C
+C++         Change the TCHA helix parameters to the good sign convention
+C
+            HP(1)=-RTABL(KTCHA,ICH,JTCHIR)
+            HP(2)= RTABL(KTCHA,ICH,JTCHTL)
+            HP(3)= RTABL(KTCHA,ICH,JTCHP0)
+            HP(4)= SIGN(1.0,HP(1))*RTABL(KTCHA,ICH,JTCHD0)
+            HP(5)= RTABL(KTCHA,ICH,JTCHZ0)
+C
+C++         Convert the helix parameters to the sector coord. system.
+C++         Don't worry about alignment corrections here, as this
+C++         need not be precise.
+C
+            CALL TGHPTS(KSLOT,HP,HPS)
+C
+C++         Find intersection point with outermost padrow of K sector
+C
+            RADR=TPPROW(NTPDRW(KTYP))
+            CALL THLCIR(HPS,RADR,SI,PHII,ZI,IERR)
+            IF (IERR.NE.0) GO TO 67
+            IF (PHII(1).GT.PI) THEN
+              PHII(1)=PHII(1)-TWOPI
+            ENDIF
+            IF (PHII(1).GT.PI) THEN
+              PHII(1)=PHII(1)-TWOPI
+            ENDIF
+C
+C++         Skip if phi is not within sector
+C
+            IF (ABS(PHII(1)).GT.TPDPHF(NTPDRW(KTYP),KTYP)) GO TO 67
+C
+C++         Add the sector to the list for this chain
+C
+            NUMB=NUMB+1
+            IF (NUMB.GT.IW(ITRKSW(1))) THEN
+              CALL RERROR('TOVRLP',4,
+     &                'Extension of ITRKSW workbank was required')
+              LEN=IW(ITRKSW(1))+50
+              DO 949 I=1,3
+                IW(1)=1
+                CALL WBANK(IW,ITRKSW(I),LEN,*998)
+  949         CONTINUE
+            ENDIF
+            IW(ITRKSW(1)+NUMB)=ICH
+            IW(ITRKSW(2)+NUMB)=10000*KSLOT+IFLG
+C
+   67     CONTINUE
+   68   CONTINUE
+   69   CONTINUE
+C
+C++     Check also whether the track passes through any of the
+C++     nearby sectors in which it has no coordinates.
+C
+        NIN=NUMB-NBEG+1
+        DO 3717 I=1,MIN(MXADJ,NIN)
+          JADJ(I)=IW(ITRKSW(2)+NBEG+I-1)/10000
+ 3717   CONTINUE
+        CALL TSNEXT(MIN(MXADJ,NIN),JADJ,MXADJ,NADJ,IADJ)
+        HP(1)=-RTABL(KTCHA,ICH,JTCHIR)
+        HP(2)= RTABL(KTCHA,ICH,JTCHTL)
+        HP(3)= RTABL(KTCHA,ICH,JTCHP0)
+        HP(4)= SIGN(1.0,HP(1))*RTABL(KTCHA,ICH,JTCHD0)
+        HP(5)= RTABL(KTCHA,ICH,JTCHZ0)
+        DO 4283 I=1,NADJ
+          IF (TSCINT(HP,IADJ(I))) THEN
+            NUMB=NUMB+1
+            IF (NUMB.GT.IW(ITRKSW(1))) THEN
+              CALL RERROR('TOVRLP',4,
+     &              'Extension of ITRKSW workbank was required')
+              LEN=IW(ITRKSW(1))+50
+              DO 372 II=1,3
+                IW(1)=1
+                CALL WBANK(IW,ITRKSW(II),LEN,*998)
+  372         CONTINUE
+            ENDIF
+            IW(ITRKSW(1)+NUMB)=ICH
+            IW(ITRKSW(2)+NUMB)=10000*IADJ(I)+IFLG
+          ENDIF
+ 4283   CONTINUE
+   70 CONTINUE
+C
+C++   Now sort the chains by sector number.  Within each sector,
+C++   sort such that the chains in 1st arcs of tracks come last.
+C
+      IF (NUMB.LE.1) THEN
+        IW(KTPCO-2)=NROUT
+        IW(KTCAL-2)=NROUC
+        IW(KTTCC-2)=NROUC
+        GO TO 999
+      ENDIF
+      CALL SORTZV(IW(ITRKSW(2)+1),IW(ITRKSW(3)+1),NUMB,-1,0,0)
+C
+C++   Find offsets in list for each sector
+C
+      CALL VZERO(IRLST,3*LTSECT)
+      ISLST=-1
+      DO 100 IND=1,NUMB
+        ISORT=IW(ITRKSW(3)+IND)
+        ISLOT=IW(ITRKSW(2)+ISORT)/10000
+        ITK=IW(ITRKSW(2)+ISORT)-ISLOT*10000
+        IF (ISLOT.NE.ISLST) THEN
+          ISLST=ISLOT
+          IRLST(1,ISLOT)=IND-1
+        ENDIF
+        IRLST(2,ISLOT)=IRLST(2,ISLOT)+1
+        IF (ITK.NE.0) IRLST(3,ISLOT)=IRLST(3,ISLOT)+1
+  100 CONTINUE
+C
+C++   Book a workbank for storing chain-padrow intersections
+C
+      NXMX=0
+      DO 130 ISLOT=1,NTSECT
+        ISTYP=ITPTYP(ISLOT)
+        NXMX=MAX(NXMX,IRLST(2,ISLOT)*NTPDRW(ISTYP))
+  130 CONTINUE
+      LEN=NXMX*LNTRSW+LMHLEN
+      IW(1)=1
+      CALL WBANK(IW,INTRSW,LEN,*998)
+      IW(INTRSW+LMHCOL)=LNTRSW
+      IW(INTRSW+LMHROW)=NXMX
+C
+C++   Loop over all sectors with reconstructed subclusters
+C
+      NNEW=0
+      NTOSS=0
+  200 IF (KTSCL.EQ.0 .OR. KTSPU.EQ.0) GO TO 800
+        ISLOT=IW(KTSCL-2)
+        IF (IW(KTSPU-2).NE.ISLOT) THEN
+          IER=5
+          CALL RERROR('TOVRLP',IER,'TSPU or TSCL bank is missing')
+          GO TO 999
+        ENDIF
+        ISTYP=ITPTYP(ISLOT)
+C
+C++     Skip sectors with no track candidates or <2 chains
+C
+        IF (IRLST(3,ISLOT).GE.1 .AND. IRLST(2,ISLOT).GE.2) THEN
+          NSKP=NXMX/NTPDRW(ISTYP)
+          DO 204 II=1,NTPDRW(ISTYP)
+            IPLST(1,II)= (II-1)*NSKP
+            IPLST(2,II)= 0
+  204     CONTINUE
+C
+C++       Find all intersections of chains with padrows within sector
+C
+          IW(INTRSW+LMHROW)=0
+          DO 250 II=1,IRLST(2,ISLOT)
+            IND= IRLST(1,ISLOT)+II
+            ISORT=IW(ITRKSW(3)+IND)
+            ICH=IW(ITRKSW(1)+ISORT)
+C
+C++         Change the TCHA helix parameters to the good sign convention
+C
+            HP(1)=-RTABL(KTCHA,ICH,JTCHIR)
+            HP(2)= RTABL(KTCHA,ICH,JTCHTL)
+            HP(3)= RTABL(KTCHA,ICH,JTCHP0)
+            HP(4)= SIGN(1.0,HP(1))*RTABL(KTCHA,ICH,JTCHD0)
+            HP(5)= RTABL(KTCHA,ICH,JTCHZ0)
+C
+C++         Convert the helix parameters from the ALEPH system to the
+C++         TPC system, using the alignment corrections.
+C
+            CALL TGHPAL(HP,HPT)
+C
+C++         Convert the helix parameters to the sector coord. system
+C++         NOTE that no alignment corrections are made here.  Such
+C++         corrections should be small enough to be unimportant
+C++         for matching tracks with clusters.
+C
+            CALL TGHPTS(ISLOT,HPT,HPS)
+C
+C++         Find intersection with each row in the sector
+C
+            R=1./HPS(1)
+            SGN=SIGN(1.0,R)
+            RHOC= (R-HPS(4))*SGN
+            DIF= (RHOC+R)*(RHOC-R)
+            D=HPS(4)/R
+            R2=R**2
+            DO 230 IROW=1,NTPDRW(ISTYP)
+              RPADR= TPDRBG(ISTYP)+FLOAT(IROW-1)*TPDRST(ISTYP)
+C
+C++           Find phi of the intersection and check if in sector
+C
+              CT= (RPADR**2 + DIF)/(2.0*RPADR*RHOC)
+              IF (ABS(CT).GT.1.0) GO TO 230
+              THETA=ACOS(CT)
+              PHI= HPS(3) + SGN*(PIBY2-THETA)
+              IF (PHI.GT.PI) THEN
+                PHI=PHI-TWOPI
+              ELSEIF (PHI.LT.-PI) THEN
+                PHI=PHI+TWOPI
+              ENDIF
+              IF (ABS(PHI).GT.TPDPHF(IROW,ISTYP)) GO TO 230
+C
+C++           Find arc length to the intersection point
+C
+              DELT= (HPS(4)-RPADR**2)/(2.0*(1.0-D)*R2)
+              CA= 1.0 + DELT
+              IF (ABS(CA).GT.1.0) GO TO 230
+              IF (CA.GT.0.9) THEN
+                SA=SQRT(-DELT*(2.0+DELT))
+                ALPHA=ASIN(SA)
+              ELSE
+                ALPHA=ACOS(CA)
+              ENDIF
+              SXY=ALPHA*ABS(R)
+C
+C++           Find z of intersection and check if inside sector
+C
+              Z=HPS(5)+SXY*HPS(2)
+              IF (Z.LT.0. .OR. Z.GT.ZTPCMX) GO TO 230
+C
+C++           Fill good points into the workbank
+C
+              IPLST(2,IROW)=IPLST(2,IROW)+1
+              IDX=IPLST(1,IROW)+IPLST(2,IROW)
+              RW(KROW(INTRSW,IDX)+JNTRPH)=RPADR*PHI
+              RW(KROW(INTRSW,IDX)+JNTRZV)=Z
+              IW(KROW(INTRSW,IDX)+JNTRTN)=ICH
+  230       CONTINUE
+  250     CONTINUE
+C
+C++       Now loop over only those coordinates on the
+C++       1st arc of track candidates.  Go by order of chains,
+C++       so that we always know what chain we're dealing with.
+C
+          DO 400 JJ=1,IRLST(2,ISLOT)
+            IND= IRLST(1,ISLOT)+JJ
+            ISORT=IW(ITRKSW(3)+IND)
+            ITK= MOD(IW(ITRKSW(2)+ISORT),10000)
+            IF (ITK.EQ.0) GO TO 400
+C
+            ICH=IW(ITRKSW(1)+ISORT)
+            IPI1=ITABL(KTCHA,ICH,JTCHPI)
+            DO 375 II=1,ITABL(KTCHA,ICH,JTCHNC)
+              IC=IW(KTCTC+LMHLEN+ITABL(KTCHA,ICH,JTCHOF)+II)
+              IF (ITABL(KTPCO,IC,JTPCTN).LE.0) GO TO 375
+C
+              IROWG=ITABL(KTPCO,IC,JTPCIN)/100000
+              ISTST=(ITABL(KTPCO,IC,JTPCIN)-100000*IROWG)/1000
+              IF (ISTST.NE.ISLOT) GO TO 375
+              IF (ISTYP.EQ.1) THEN
+                IROW=IROWG
+              ELSE
+                IROW=IROWG-NTPDRW(1)
+              ENDIF
+C
+C++           Skip rows with only a single intersection (or less)
+C
+              IF (IPLST(2,IROW).LT.2) GO TO 375
+C
+C++           Find the subcluster from which the coord. was made
+C
+              ISC=ITABL(KTPCO,IC,JTPCCN)
+              IF (ISC.LE.0) THEN
+                IER=6
+                CALL RERROR('TOVRLP',IER,'Coordinate bank does not'//
+     &               ' have subcluster pointers filled; abort')
+                GO TO 999
+              ENDIF
+C
+C++           Find extremeties of subcluster in r*phi
+C
+              NTPAD=NTPDPR(IROW,ISTYP)+2
+              PDF=FLOAT(ITABL(KTSCL,ISC,JTSCFP))
+              RPHMX= TPDSEP(ISTYP)*(0.5*FLOAT(NTPAD+1)-PDF)
+              RPHMN= RPHMX - FLOAT(ITABL(KTSCL,ISC,JTSCNS)-1)
+     &                                               * TPDSEP(ISTYP)
+              RPHMX=RPHMX + 0.5*TPDWID(ISTYP)
+              RPHMN=RPHMN - 0.5*TPDWID(ISTYP)
+C
+C++           Look for another chain within this r*phi window
+C
+              NPMAT=0
+              DO 354 KK=1,IPLST(2,IROW)
+                IPT= IPLST(1,IROW) + KK
+                ICHP=ITABL(INTRSW,IPT,JNTRTN)
+                IF (ICHP.NE.ICH) THEN
+                  RPHI= RTABL(INTRSW,IPT,JNTRPH)
+                  IF (RPHI.GT.RPHMN .AND. RPHI.LT.RPHMX) THEN
+C
+C++                 Skip this chain if it already has a
+C++                 coordinate on this padrow
+C
+                    JOFF=KTCTC+LMHLEN+ITABL(KTCHA,ICHP,JTCHOF)
+                    JTK = 0
+                    DO 347 LL=1,ITABL(KTCHA,ICHP,JTCHNC)
+                      ICP= IW(JOFF+LL)
+                      JROWG=ITABL(KTPCO,ICP,JTPCIN)/100000
+                      IF (IROWG.EQ.JROWG) GO TO 354
+                      IF (JTK.LE.0) JTK = ITABL(KTPCO,ICP,JTPCTN)
+  347               CONTINUE
+C
+C++                 Also skip this chain if the TRACK it is assigned
+C++                 to already has a coordinate on this padrow!
+C
+                    IF (JTK.GT.0) THEN
+                      JOFF = KTTCC + LMHLEN + ITABL(KTCAL,JTK,JTCAIO)
+                      DO LL = 1, ITABL(KTCAL,JTK,JTCANF)
+                        ICP = IW(JOFF+LL)
+                        JROWG=ITABL(KTPCO,ICP,JTPCIN)/100000
+                        IF (IROWG.EQ.JROWG) GO TO 354
+                      ENDDO
+                    ENDIF
+C
+C++                 Important:  don't worry about overlap of two
+C++                 chains which don't have any padrows in common.
+C++                 Probably they are from the same track and hence
+C++                 should be overlapping.
+C
+                    IPI2=ITABL(KTCHA,ICHP,JTCHPI)
+                    ITEST=IAND(IPI1,IPI2)
+                    IF (ITEST.NE.0) THEN
+                      IF (NPMAT.LT.MXMAT) THEN
+                        NPMAT=NPMAT+1
+                        IMAT(NPMAT)=IPT
+                      ELSE
+                        CALL RERROR('TOVRLP',7,'Overflow of array '//
+     &                  'IMAT; increase MXMAT if this happens often')
+                        GO TO 355
+                      ENDIF
+                    ENDIF
+                  ENDIF
+                ENDIF
+  354         CONTINUE
+  355         CONTINUE
+              IF (NPMAT.GT.0) THEN
+C
+C++             We found some in the r*phi window, so now check z
+C
+                T1=999.
+                T2=0.
+                DO 364 KK=1,ITABL(KTSCL,ISC,JTSCNS)
+                  ISP= ITABL(KTSCL,ISC,JTSCPO) + KK
+                  T1=AMIN1(T1,RTABL(KTSPU,ISP,JTSPT1))
+                  T2=AMAX1(T2,RTABL(KTSPU,ISP,JTSPT2))
+  364           CONTINUE
+C
+                Z0= ZTPCMX-((T1-TVOFFS(ISLOT))*TVDRFT(IENDTP(ISLOT)))
+                TANL= Z0/TPPROW(IROWG)
+                IF (TANL.LT.RTLCTL) THEN
+                  JTANL=1
+                ELSE
+                  JTANL=2
+                ENDIF
+                T1=T1+TZOFFS(ITLCTA(JTANL))
+                T2=T2+TZOFFS(ITLCTA(JTANL))
+                ZMN= (T1-TVOFFS(ISLOT))*TVDRFT(IENDTP(ISLOT))
+                ZMX= (T2-TVOFFS(ISLOT))*TVDRFT(IENDTP(ISLOT))
+                NMAT=0
+                DO 358 M=1,NPMAT
+                  Z=RTABL(INTRSW,IMAT(M),JNTRZV)
+                  IF (Z.GT.ZMN .AND. Z.LT.ZMX) THEN
+                    NMAT=NMAT+1
+                    IMAT(NMAT)=ITABL(INTRSW,IMAT(M),JNTRTN)
+                  ENDIF
+  358           CONTINUE
+C
+C++             Build list of the problem coordinates
+C
+                IF (NMAT.GT.0) THEN
+                  IF (NTOSS.LT.MXMAT) THEN
+                    NTOSS=NTOSS+1
+                    ICTOS(NTOSS)=IC
+                    ICFLG(NTOSS)=.FALSE.
+                    ICNMT(NTOSS)=NMAT
+                    ICH1(NTOSS)=ICH
+                    ICH2(NTOSS)=IMAT(1)
+                  ELSE
+                    CALL RERROR('TOVRLP',7,'Overflow of array ICTOS')
+                  ENDIF
+                ENDIF
+              ENDIF
+  375       CONTINUE
+  400     CONTINUE
+        ENDIF
+C
+        KTSCL=IW(KTSCL-1)
+        KTSPU=IW(KTSPU-1)
+        GO TO 200
+  800 CONTINUE
+C
+C++   Quit here if no defective coordinates were found
+C
+      IF (NTOSS.EQ.0) THEN
+        IW(KTPCO-2)=NROUT
+        IW(KTCAL-2)=NROUC
+        IW(KTTCC-2)=NROUC
+        GO TO 999
+      ENDIF
+C
+C++   Loop over the coordinates which have been found to be defective
+C++   and try to make twin coordinates out of those which have
+C++   exactly two chains overlapping.
+C
+      DO 835 IBD=1,NTOSS
+        NMAT=ICNMT(IBD)
+        IF (NMAT.EQ.1) THEN
+          IF (NNEW.LT.MXNEW) THEN
+            IC=ICTOS(IBD)
+            INDXS=ITABL(KTPCO,IC,JTPCIN)
+            IROW=INDXS/100000
+            ISLOT=(INDXS-IROW*100000)/1000
+            ISC=ITABL(KTPCO,IC,JTPCCN)
+            CALL TWINCO(ISLOT,IROW,ISC,
+     &         ICH1(IBD),ICH2(IBD),ITPCO(1,NNEW+1),RTPCO(1,NNEW+1),IRET)
+            IF (IRET.EQ.0) THEN
+              ICFLG(IBD)=.TRUE.
+              IPUT(NNEW+1)=IC
+              IPUT(NNEW+2)=0
+C
+C++           Use the last column of TPCO to save pointer to new data
+C
+              IW(KROW(KTPCO,IC)+JTPCIT)=NNEW+1
+C
+C++           Try to associate the new coordinates with tracks
+C
+              CALL TATWIN(NTOSS,ICTOS,ITPCO(1,NNEW+1),
+     &                          RTPCO(1,NNEW+1),ICH1(IBD),ICH2(IBD))
+              IF (ITPCO(JTPCTN,NNEW+1).NE.0) MADD=MADD+1
+              IF (ITPCO(JTPCTN,NNEW+2).NE.0) MADD=MADD+1
+              NNEW=NNEW+2
+            ENDIF
+          ELSE
+            CALL RERROR('TOVRLP',8,'Overflow of array ITPCO')
+          ENDIF
+        ENDIF
+  835 CONTINUE
+C
+C++   Remake the coordinate and track candidate banks and drop the old.
+C++   All pointers to the TPCO bank have to be updated.  In the
+C++   following code, pointers beginning with J (eg. JTPCO) refer to
+C++   the old bank, and those beginning with K to the new.
+C
+      IW(1)=1
+      LEN=IW(KTPCO)+LTPCOA*(NNEW/2)
+      CALL AUBOS('TPCO',NROUT,LEN,KTPCO,IGARB)
+      IF (IGARB.EQ.2) GO TO 996
+      IW(KTPCO+LMHCOL)=LTPCOA
+      IW(KTPCO+LMHROW)=0
+C
+      IW(1)=1
+      KTCAL=IW(NTCAL)
+      CALL AUBOS('TCAL',NROUC,IW(KTCAL),KTCAL,IGARB)
+      IF (IGARB.EQ.2) GO TO 996
+      JTCAL=IW(KTCAL-1)
+      CALL UCOPY(IW(JTCAL+1),IW(KTCAL+1),IW(JTCAL))
+      KTPCO=IW(NTPCO)
+      JTPCO=IW(KTPCO-1)
+C
+C++   Delete all coordinates with overlap from track candidates
+C
+      DO 840 I=1,NTOSS
+        IC=ICTOS(I)
+C
+C++     Don't delete it if it will leave the candidate with too few hits
+C
+        ITK=ITABL(JTPCO,IC,JTPCTN)
+        IF (ICFLG(I) .OR. ITABL(KTCAL,ITK,JTCANF).GT.NPMIN) THEN
+          MTOSS=MTOSS+1
+          ITK=ITABL(JTPCO,IC,JTPCTN)
+          IW(KROW(JTPCO,IC)+JTPCTN)=0
+          IW(KROW(KTCAL,ITK)+JTCANF)=ITABL(KTCAL,ITK,JTCANF)-1
+        ENDIF
+  840 CONTINUE
+C
+C++   Copy coordinates to the new bank.  Save reference from old to new
+C++   in the workbank IOLDRF.
+C
+      IW(1)=1
+      CALL WBANK(IW,IOLDRF,LROWS(JTPCO),*998)
+      IW(IOLDRF-3)=INTCHA('WOLD')
+      ISLST=-1
+      DO 890 IC=1,LROWS(JTPCO)
+        ID=ITABL(JTPCO,IC,JTPCIN)
+        IROW=ID/100000
+        ISLOT=(ID-IROW*100000)/1000
+        IF (ISLOT.NE.ISLST) THEN
+          ISLST=ISLOT
+          KTSCL=NLINK('TSCL',ISLOT)
+        ENDIF
+C
+C++     Insert newly formed coordinates in the proper place
+C
+        ISC=ITABL(JTPCO,IC,JTPCCN)
+        INEW=ITABL(JTPCO,IC,JTPCIT)
+        IF (INEW.GT.0) THEN
+C
+C++       Update pointers to coordinate bank from the subcluster bank
+C
+          IF (KTSCL.GT.0) THEN
+            IW(KROW(KTSCL,ISC)+JTSCNC)=2
+            IW(KROW(KTSCL,ISC)+JTSCCO)=LROWS(KTPCO)
+          ENDIF
+          IW(IOLDRF+IC)=LROWS(KTPCO)+1
+          DO 860 II=0,1,1
+            I= II + INEW
+            IW(KTPCO+LMHROW)=LROWS(KTPCO)+1
+            ICNEW=LROWS(KTPCO)
+            ITK=ITPCO(JTPCTN,I)
+            CALL UCOPY(ITPCO(1,I),IW(KROW(KTPCO,ICNEW)+1),LTPCOA)
+            IF (ITK.NE.0) THEN
+              IW(KROW(KTCAL,ITK)+JTCANF)=ITABL(KTCAL,ITK,JTCANF)+1
+            ENDIF
+  860     CONTINUE
+        ELSE
+C
+C++       Or else copy the old coordinate
+C
+          IF (KTSCL.GT.0) THEN
+            IW(KROW(KTSCL,ISC)+JTSCNC)=1
+            IW(KROW(KTSCL,ISC)+JTSCCO)=LROWS(KTPCO)
+          ENDIF
+          IW(KTPCO+LMHROW)=LROWS(KTPCO)+1
+          ICNEW=LROWS(KTPCO)
+          CALL UCOPY(IW(KROW(JTPCO,IC)+1),
+     &                IW(KROW(KTPCO,ICNEW)+1),LTPCOA)
+          IW(IOLDRF+IC)=ICNEW
+        ENDIF
+  890 CONTINUE
+      IRET = NDROP('TPCO',NRTPC)
+C
+C++   Update the offsets stored in TCAL and zero coordinate counts
+C
+      ICNT=0
+      DO 900 ITK=1,LROWS(KTCAL)
+        IW(KROW(KTCAL,ITK)+JTCAIO)=ICNT
+        ICNT=ICNT+ITABL(KTCAL,ITK,JTCANF)+ITABL(KTCAL,ITK,JTCANR)
+        IW(KROW(KTCAL,ITK)+JTCANF)=0
+  900 CONTINUE
+C
+C++   Loop over coordinates and fill the references from track
+C++   to coordinates into a new TTCC bank.
+C
+      IW(1)=1
+      CALL AUBOS('TTCC',NROUC,ICNT+LMHLEN,KTTCC,IGARB)
+      IF (IGARB.EQ.2) GO TO 996
+      IW(KTTCC+LMHCOL)=1
+      IW(KTTCC+LMHROW)=ICNT
+      KTPCO=IW(NTPCO)
+      KTCAL=IW(NTCAL)
+      JTCAL=IW(KTCAL-1)
+      JTTCC=IW(KTTCC-1)
+      DO 930 IC=1,LROWS(KTPCO)
+        ITK=ITABL(KTPCO,IC,JTPCTN)
+        IF (ITK.GT.0) THEN
+          IW(KROW(KTCAL,ITK)+JTCANF)=ITABL(KTCAL,ITK,JTCANF)+1
+          IPT=ITABL(KTCAL,ITK,JTCAIO)+ITABL(KTCAL,ITK,JTCANF)
+          IW(KTTCC+LMHLEN+IPT)=IC
+        ENDIF
+  930 CONTINUE
+C
+C++   Now the coordinate references for the first arc are filled.  Go
+C++   bank through them and make sure that the order is the same as
+C++   in the old reference bank.  Reverse order if necessary.
+C
+      DO 940 ITK=1,LROWS(KTCAL)
+        NFRST=ITABL(KTCAL,ITK,JTCANF)
+        IF (NFRST.LT.2) GO TO 940
+        IOFF=ITABL(JTCAL,ITK,JTCAIO)
+        IC1=IW(JTTCC+LMHLEN+IOFF+1)
+        IC2=IW(JTTCC+LMHLEN+IOFF+2)
+        IF (IC1.GT.IC2) THEN
+          IOFF=ITABL(KTCAL,ITK,JTCAIO)
+          NLOOP=NFRST/2
+          DO 945 II=1,NLOOP
+            JJ=NFRST+1-II
+            ITEMP=IW(KTTCC+LMHLEN+IOFF+II)
+            IW(KTTCC+LMHLEN+IOFF+II)=IW(KTTCC+LMHLEN+IOFF+JJ)
+            IW(KTTCC+LMHLEN+IOFF+JJ)=ITEMP
+  945     CONTINUE
+        ENDIF
+  940 CONTINUE
+C
+C++   Fill references for extra loops of candidates.  Here we make use
+C++   of the fact that no coordinates are removed from extra loops.
+C
+      DO 950 ITK=1,LROWS(KTCAL)
+        NREST=ITABL(KTCAL,ITK,JTCANR)
+        IF (NREST.EQ.0) GO TO 950
+        IOFF=ITABL(KTCAL,ITK,JTCAIO)+ITABL(KTCAL,ITK,JTCANF)
+        IOLD=ITABL(JTCAL,ITK,JTCAIO)+ITABL(JTCAL,ITK,JTCANF)
+        DO 955 II=1,NREST
+          ICOLD=IW(JTTCC+LMHLEN+IOLD+II)
+          IW(KTTCC+LMHLEN+IOFF+II)=IW(IOLDRF+ICOLD)
+  955   CONTINUE
+  950 CONTINUE
+      IRET = NDROP('TTCC',NRTCA)
+      IRET = NDROP('TCAL',NRTCA)
+C
+C++   Update references to TPCO from chains and arcs
+C
+      KTCTC=IW(NTCTC)
+      IF (KTCTC.NE.0) THEN
+        DO 963 I=1,LROWS(KTCTC)
+          ICOLD=IW(KTCTC+LMHLEN+I)
+          IW(KTCTC+LMHLEN+I)=IW(IOLDRF+ICOLD)
+  963   CONTINUE
+      ENDIF
+      KTATC=IW(NTATC)
+      IF (KTATC.NE.0) THEN
+        DO 964 I=1,LROWS(KTATC)
+          ICOLD=IW(KTATC+LMHLEN+I)
+          IW(KTATC+LMHLEN+I)=IW(IOLDRF+ICOLD)
+  964   CONTINUE
+      ENDIF
+C
+C++   If the TCRL bank exists, update it also
+C
+      KTCRL=IW(NTCRL)
+      IF (KTCRL.NE.0) THEN
+        CALL VZERO(IW(KTCRL+LMHLEN+1),LROWS(KTCRL)*LCOLS(KTCRL))
+        IRL=-1
+        DO 982 IC=1,LROWS(KTPCO)
+          ID=ITABL(KTPCO,IC,JTPCIN)
+          IROW=ID/100000
+          IF (IROW.NE.IRL) THEN
+            IRL=IROW
+            IW(KROW(KTCRL,IROW)+JTCROC)=IC-1
+            IW(KROW(KTCRL,IROW)+JTCRNC)=0
+            IW(KROW(KTCRL,IROW)+JTCRN1)=0
+          ENDIF
+          IW(KROW(KTCRL,IROW)+JTCRNC)=ITABL(KTCRL,IROW,JTCRNC)+1
+          ISLOT=(ID-IROW*100000)/1000
+          IF (IENDTP(ISLOT).EQ.1) THEN
+            IW(KROW(KTCRL,IROW)+JTCRN1)=ITABL(KTCRL,IROW,JTCRN1)+1
+          ENDIF
+  982   CONTINUE
+      ENDIF
+C
+      GO TO 999
+  996 CONTINUE
+        IRET = NDROP('TPCO',NRTPC)
+        IRET = NDROP('TCAL',NRTCA)
+        IRET = NDROP('TTCC',NRTCA)
+        IER=9
+        CALL RERROR('TOVRLP',IER,'No room in BOS for named banks')
+        GO TO 999
+  997 CONTINUE
+        IER=2
+        CALL RERROR('TOVRLP',IER,'Proper input banks not found')
+        GO TO 999
+  998 CONTINUE
+        IER=3
+        CALL RERROR('TOVRLP',IER,'No space available for work bank')
+  999 CONTINUE
+C
+C++   Drop all workbanks before exiting
+C
+      CALL WDROP(IW,IOLDRF)
+      CALL WDROP(IW,INTRSW)
+      CALL WDROP(IW,ITRKSW(3))
+      CALL WDROP(IW,ITRKSW(2))
+      CALL WDROP(IW,ITRKSW(1))
+      RETURN
+      END
+#endif
+@
+
+
+1.4
+log
+@fix to itrksw in t0vrlp
+@
+text
+@d10 7
+d92 1
+a92 1
+      PARAMETER (MXMAT=35,LMXSEC=3,MXNEW=20,MXADJ=18)
+d549 1
+d554 1
+d556 12
+@
+
+
+1.3
+log
+@Fixes for Linux
+@
+text
+@d8 2
+d54 1
+a54 1
+C         ITRKSW(2) =  1000*ISLOT + ITK
+d59 1
+a59 1
+C         ITRKSW(3) =  array to sort by increasing 1000*ISLOT+ITK
+d225 1
+a225 1
+            IOLD=IW(ITRKSW(2)+J)/1000
+d239 1
+a239 1
+          IW(ITRKSW(2)+NUMB)=1000*ISLOT+IFLG
+d247 1
+a247 1
+          KSLOT=IW(ITRKSW(2)+J)/1000
+d252 1
+a252 1
+            MSLOT=IW(ITRKSW(2)+J)/1000
+d300 1
+a300 1
+            IW(ITRKSW(2)+NUMB)=1000*KSLOT+IFLG
+d311 1
+a311 1
+          JADJ(I)=IW(ITRKSW(2)+NBEG+I-1)/1000
+d332 1
+a332 1
+            IW(ITRKSW(2)+NUMB)=1000*IADJ(I)+IFLG
+d354 2
+a355 2
+        ISLOT=IW(ITRKSW(2)+ISORT)/1000
+        ITK=IW(ITRKSW(2)+ISORT)-ISLOT*1000
+d486 1
+a486 1
+            ITK= MOD(IW(ITRKSW(2)+ISORT),1000)
+@
+
+
+1.2
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+ 	gambnk.F gapeco.F gasteer.F
+ 	hcalib.F hcalrd.F hcatow.F hcbhis.F hcfclu.F hchist.F hclcra.F
+ 	hcltst.F hclufi.F hcos.F hcsimm.F hdgdeb.F hdgfil.F hdgpot.F
+ 	hdgsum.F hdprec.F hdspre.F hflnoi.F hinijo.F hiniru.F hmener.F
+ 	hmfind.F hmroad.F hnoise.F hnoisy.F hpatco.F hphnoi.F hplink.F
+ 	hprana.F hpranp.F hprdig.F hpreda.F hprpot.F hprsum.F hprunc.F
+ 	hrcomp.F hrcpat.F hrdcal.F hroad.F hslink.F hslowc.F hspare.F
+ 	hsptre.F hstofi.F htrack.F htubfi.F htwcr.F
+ 	iasign.F iattma.F ibnkin.F icaswt.F icftoi.F iclimb.F icrcco.F
+ 	ideadw.F idigpr.F ienang.F ifind1.F ifind2.F ifitp.F iftrak.F
+ 	igetti.F igettp.F igicha.F iheler.F iinijo.F iiniru.F iintrk.F
+ 	imatch.F inigap.F insect.F intrak.F ipakdi.F ipdsti.F iphcor.F
+ 	ipreda.F iprsum.F ipstat.F irefin.F ireopd.F isave.F ishuff.F
+ 	ishufl.F islowc.F isrch.F itbook.F itccut.F itcopr.F itcrec.F
+ 	itcrep.F itctpc.F itctrk.F itcxng.F iterr.F itextn.F ithist.F
+ 	itidy1.F itidy2.F itlnk1.F itlnk2.F itpcan.F itrak.F itrecf.F
+ 	itreci.F itree.F itrkci.F itrkeq.F itrkzr.F itrmca.F
+@
+text
+@d91 2
+d161 3
+a163 3
+      CALL NDROP('TPCO',NROUT)
+      CALL NDROP('TCAL',NROUC)
+      CALL NDROP('TTCC',NROUC)
+d761 1
+a761 1
+      CALL NDROP('TPCO',NRTPC)
+d828 2
+a829 2
+      CALL NDROP('TTCC',NRTCA)
+      CALL NDROP('TCAL',NRTCA)
+d873 3
+a875 3
+        CALL NDROP('TPCO',NRTPC)
+        CALL NDROP('TCAL',NRTCA)
+        CALL NDROP('TTCC',NRTCA)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK tovrlp
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

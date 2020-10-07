@@ -1,0 +1,272 @@
+head	1.3;
+access;
+symbols
+	jul313_3:1.3
+	jul313_2:1.3
+	jul313_1:1.3
+	jul313:1.3
+	jul312_1:1.3
+	jul312:1.3
+	jul311:1.3
+	jul310_1:1.3
+	jul310:1.3
+	jul309_1:1.3
+	jul309:1.2
+	jul308_6:1.2
+	jul308_5:1.2
+	jul308_4:1.2
+	jul308_3:1.2
+	jul308_2:1.2
+	jul308_1:1.2
+	jul308:1.2
+	jul307_4:1.2
+	jul307_3:1.2
+	jul307_2:1.2
+	jul307_1:1.2
+	jul307:1.2
+	jul306_3:1.2
+	jul306_2:1.2
+	jul306_1:1.2
+	jul306:1.2
+	jul305_4:1.2
+	jul305_3:1.2
+	jul305_2:1.2
+	jul305_1:1.2
+	jul305:1.2
+	jul304_3:1.2
+	jul304_2:1.2
+	jul304_1:1.2
+	jul304:1.2
+	jul303_7:1.2
+	jul303_6:1.2
+	jul303_5:1.2
+	jul303_4:1.2
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2
+	jul280_1:1.2
+	jul280:1.2
+	jul279:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	99.05.18.16.27.52;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.03.12.15.46.22;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.20.21;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.20.22;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@TPC clock frequency in Hz
+@
+text
+@      SUBROUTINE TSORDP(LUNIT)
+C
+C---------------------------------------------------------------------
+C! Print TPC start-of-run conditions
+C
+C      Author:   R. Johnson   27-06-88
+C                W.Wiedenmann 12.05.99  Display clock frequency in Hz 
+C                                       from TSOR bank
+C
+C      Input:    LUNIT     /I     Fortran logical unit for output
+C
+C---------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+C
+      CHARACTER RNTYP*8,CHAINT*4
+C
+      KTSOR=IW(NAMIND('TSOR'))
+      IF (KTSOR.EQ.0) THEN
+C
+C++     Sometimes the online folks forget the T in 'TSOR'
+C
+        KTSOR=IW(NAMIND(' SOR'))
+      ENDIF
+      IF (KTSOR.NE.0) THEN
+        KRUNH=IW(NAMIND('RUNH'))
+        IF (KRUNH.NE.0) THEN
+          RNTYP(1:4)=CHAINT(IW(KRUNH+7))
+          RNTYP(5:8)=CHAINT(IW(KRUNH+8))
+        ELSE
+          RNTYP(1:8)='        '
+        ENDIF
+        BF= FLOAT(IW(KTSOR+1))/10000.
+        IFG=IW(KTSOR+2)
+        SW= FLOAT(IW(KTSOR+3))/10.
+        WG= FLOAT(IW(KTSOR+4))/10.
+        EL= FLOAT(IW(KTSOR+5))/10.
+        CC= FLOAT(IW(KTSOR+6))/100.
+        WRITE(LUNIT,1) RNTYP,BF,IFG,SW,WG,EL,CC,IW(KTSOR+7),
+     &                  IW(KTSOR+8),IW(KTSOR+9),IW(KTSOR+10)
+    1   FORMAT(//' TPC start of run conditions (bank TSOR):'/
+     &           ' Trigger type=',T42,A/
+     &           ' Magnetic field=',T40,F10.5,' kgauss'/
+     &           ' Pulsed (1) or DC (0)=',T40,I10/
+     &           ' Sense wire potential=',T40,F10.1,' V'/
+     &           ' Gating grid potential=',T40,F10.1,' V'/
+     &           ' Last electrode potential=',T40,F10.1,' V'/
+     &           ' Resistor chain current=',T40,F10.2,' muA'/
+     &           ' Potential wire potential=',T40,I10,' V'/
+     &           ' Clock frequency (from 1999 on)=',T40,I10,'  Hz'/
+     &           ' Clock frequency=',T40,I10,' kHz'/
+     &           ' Trigger repetition rate=',T40,I10,' Hz')
+        AP= FLOAT(IW(KTSOR+17))/10.
+        AT= FLOAT(IW(KTSOR+18))/10.
+        GP= FLOAT(IW(KTSOR+19))/10.
+        GT= FLOAT(IW(KTSOR+20))/10.
+        WRITE(LUNIT,2) (IW(KTSOR+I),I=11,16),AP,AT,GP,GT
+    2   FORMAT(' Level 1 scale factor=',T40,I10/
+     &         ' Level 2 scale factor=',T40,I10/
+     &         ' Level 1 delay=',T40,I10,' nsec'/
+     &         ' Level 2 delay=',T40,I10,' nsec'/
+     &         ' Ebx delay=',T40,I10,' nsec'/
+     &         ' Laser delay=',T40,I10,' nsec'/
+     &         ' Atmospheric pressure=',T40,F10.1,' hPa'/
+     &         ' Atmospheric temperature=',T40,F10.1,' degrees'/
+     &         ' Gas pressure=',T40,F10.1,' hPa'/
+     &         ' Gas temperature=',T40,F10.1,' degrees'//)
+      ENDIF
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+ 	gambnk.F gapeco.F gasteer.F
+ 	hcalib.F hcalrd.F hcatow.F hcbhis.F hcfclu.F hchist.F hclcra.F
+ 	hcltst.F hclufi.F hcos.F hcsimm.F hdgdeb.F hdgfil.F hdgpot.F
+ 	hdgsum.F hdprec.F hdspre.F hflnoi.F hinijo.F hiniru.F hmener.F
+ 	hmfind.F hmroad.F hnoise.F hnoisy.F hpatco.F hphnoi.F hplink.F
+ 	hprana.F hpranp.F hprdig.F hpreda.F hprpot.F hprsum.F hprunc.F
+ 	hrcomp.F hrcpat.F hrdcal.F hroad.F hslink.F hslowc.F hspare.F
+ 	hsptre.F hstofi.F htrack.F htubfi.F htwcr.F
+ 	iasign.F iattma.F ibnkin.F icaswt.F icftoi.F iclimb.F icrcco.F
+ 	ideadw.F idigpr.F ienang.F ifind1.F ifind2.F ifitp.F iftrak.F
+ 	igetti.F igettp.F igicha.F iheler.F iinijo.F iiniru.F iintrk.F
+ 	imatch.F inigap.F insect.F intrak.F ipakdi.F ipdsti.F iphcor.F
+ 	ipreda.F iprsum.F ipstat.F irefin.F ireopd.F isave.F ishuff.F
+ 	ishufl.F islowc.F isrch.F itbook.F itccut.F itcopr.F itcrec.F
+ 	itcrep.F itctpc.F itctrk.F itcxng.F iterr.F itextn.F ithist.F
+ 	itidy1.F itidy2.F itlnk1.F itlnk2.F itpcan.F itrak.F itrecf.F
+ 	itreci.F itree.F itrkci.F itrkeq.F itrkzr.F itrmca.F
+@
+text
+@d7 2
+d41 1
+a41 1
+     &                  IW(KTSOR+9),IW(KTSOR+10)
+d51 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK tsordp
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

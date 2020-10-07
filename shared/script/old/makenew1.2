@@ -1,0 +1,111 @@
+#! /bin/csh
+#============================================================================
+#                             MAKENEW
+# 14/02/95                                                      F.Ranjard
+#============================================================================
+# procedure to create a new module for galeph or julia
+#============================================================================
+# all Aleph libraries on file -> ${alib_dir}/pub/progl
+# all Aleph CERNVM disks on file -> ${alib_dir}/alibdisk
+# Call by newlib, newunix
+#============================================================================
+# P1 -> prog_name                          eg: julia
+# P2 -> program version number             eg: 273
+# P3 -> ="pwd" to make the module in the current directory
+#============================================================================
+# makenew1.0 
+# 14/02/95 - 1st version
+# 28/09/95 - makenew1.1
+# remove LDFLAGS=-non_shared on OSF1 which is nolonger necessary
+# 28/11/95 - makenew1.2
+#  use $ALEPH_ROOT instead of /al
+#============================================================================
+#set echo on if last argument is "-v"
+
+set exec_name = "makenew1.2"
+set nar = $#argv
+if (${nar} != 0) then
+  if ($argv[${nar}] == "-v") then
+     set echo on
+     echo "${exec_name}" 
+     set argv[${nar}] = ""
+     @ nar = ${nar} - 1 
+  endif
+endif
+
+# set lib_dir to "" or to current dir
+
+set lib_dir = ""
+if (${nar} != 0) then
+  if ($argv[${nar}] == "pwd") then
+     set lib_dir = `pwd`
+     set argv[${nar}] = ""
+     @ nar = ${nar} - 1 
+  endif
+endif
+
+#
+#*******> get program name (1st argument)
+if ($1 == "") then
+  echo -n "Enter Aleph program name [eg:julia <CR>=exit]-> "
+   set prog_name = $<
+   if (${prog_name} == "") goto end
+else
+   set prog_name = $1
+endif
+ 
+set alib_dir = ${ALEPH}/alib
+set ini = `echo ${prog_name} | awk '{print substr($0,1,1)}'`
+set idir = `egrep ^" ${prog_name} " ${alib_dir}/pub/progl | awk '{print $2}'`
+set name = `egrep ^" ${prog_name} " ${alib_dir}/pub/progl | awk '{print $4}'`
+set ref_dir = "${ALEPH_ROOT}/${MASTER}/${idir}"
+
+if !(-e ${ref_dir}/Makefile) goto end
+
+# ===================== build a module if the make file exists ===============
+
+set prog_dir = "${ALEPH_ROOT}/${OS}/${idir}"
+if (${lib_dir} == "") set lib_dir = ${prog_dir}
+
+set cycle_old = `egrep ^" ${prog_name} " ${prog_dir}/alib.log | awk '{print $3}'`
+set dmy_old = `egrep ^" ${prog_name} " ${prog_dir}/alib.log | awk '{print $4}'`
+
+if ($2 == "") then
+  set string = "<CR=${cycle_old}>"
+  echo -n "Enter version number [${string}]->"
+  set cycle = $<
+  if (${cycle} == "") then
+     set cycle = ${cycle_old}
+  endif
+else
+  set cycle = $2
+endif
+
+cd ${lib_dir}
+rm ${name}${cycle}new
+unalias ln
+if ( ${OS} == "OSF1" ) then
+   make -f ${ref_dir}/Makefile VERSION=${cycle} SYS=new
+else if ( ${OS} == "HPUX9") then
+   make -f ${ref_dir}/Makefile VERSION=${cycle} SYS=new FC=fort77
+else
+   make -f ${ref_dir}/Makefile VERSION=${cycle} SYS=new 
+endif 
+if !( -e ${name}${cycle}new ) then
+  set flag = "cannot build a module for ${name}${cycle}new"
+  goto spy
+endif
+echo " "
+echo " new module ${lib_dir}/${name}${cycle}new exists , check it before you rename it"
+echo " ================================================================ "
+
+spy:
+set dmyh = `date '+%d-%h-19%y %T'`
+echo "${exec_name} ${user} ${dmyh} ${prog_name} ${cycle} ${lib_dir}/${name}${cycle}new" >> ${lib_dir}/spy
+
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> exec_end
+end:
+exit
+
+

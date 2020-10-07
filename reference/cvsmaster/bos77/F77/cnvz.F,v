@@ -1,0 +1,94 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.51.27;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.26;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.27;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE CNVZ(NUM,NT,STRUT)
+      EXTERNAL STRUT
+      CHARACTER STR*256, STP*12
+      COMMON/FMTSTR/STR
+      COMMON/STRSTR/JS,IAST,IBST
+      INTEGER NUM(*)
+      DO 50 L=1,NT
+      CALL PNVZ(NUM(L),STP,JSP)
+   54 IF(JS.EQ.0) THEN
+         STR=' '
+         JS=IAST-1
+      ELSE IF(JS+JSP+3.LE.IBST) THEN
+         JS=JS+1
+      ELSE
+         CALL STRUT
+         GOTO 54
+      END IF
+      STR(JS+1:JS+1)='Z'
+      JS=JS+1
+      IF(STP(1:4).EQ.'0000') THEN
+         STR(JS+1:JS+JSP-4)=STP(5:JSP)
+         JS=JS+JSP-4
+      ELSE
+         STR(JS+1:JS+JSP)=STP(1:JSP)
+         JS=JS+JSP
+      END IF
+   50 CONTINUE
+      RETURN
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK cnvz
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

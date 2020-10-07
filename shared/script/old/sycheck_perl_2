@@ -1,0 +1,539 @@
+#!/usr/local/bin/perl 
+require "complete.pl"; 
+require "ctime.pl";
+#######################################################################
+#                         SYCHECK_PERL
+#
+# F. Blin      original csh /aleph/script/sycheck  1994 
+#
+#                             97/08
+#######################################################################
+# paramaters: -a [all nodes]
+#             -w [write on sycheck.out]
+#             -s [only run stagein_tapeslock]
+#             -n node_name [only node_name without stagein_tapeslock]
+#######################################################################
+$host = $ENV{'HOST'};
+$ALEPH = $ENV{'ALEPH'};
+$HOME = $ENV{'HOME'};
+
+$DT = $HOME;
+$check_host = "";
+$check_login = "";
+
+$check_host = "OK" if ($host eq "shift9");
+print "Runs only on shift9 \n" if ($check_host ne "OK");
+
+$check_login = "OK" if (-e "${DT}/.login");
+print "One file ${DT}/.login is necessary for dispose \n" if ($check_login ne "OK");
+exit if ($check_host ne "OK" || $check_login ne "OK");
+
+@all_nodes = ();
+@OUT_tmp = ();
+$write_out = "n";
+$par_a = "";
+$flag_stagein = "OK";
+$n_parametre = @ARGV;
+$n = 0;
+while ($n != $n_parametre){ &search_arg;}
+
+$begin_date = `date "+%Y %m %d %H:%M:%S"`;
+$sycheck_out = "$ALEPH/log/sycheck.out";
+
+
+if (${write_out} eq "n") {
+   print "====> Last lines on file output \n";
+   @buf = `tail -10 ${sycheck_out}`;
+   print @buf; 
+   print "\n";
+}
+
+$decnet_host = "afal10";
+$aloha_server = "afal01";
+@data_hosts = ("shift9","shift50","afal01");
+@batch_hosts = ("saga01","shift9","shift50","csf");
+$ALWS_node = "al2f01";
+
+if ($#all_nodes == -1){
+   @all_nodes = `cat /aleph/log/aleph_hosts | grep -v "#"` if ($par_a eq "-a");
+   @all_nodes = `cat /aleph/log/aleph_hosts | grep -v "saga" | grep -v "afal" | grep -v "#"` if ("$par_a" eq "");
+}
+push (@all_nodes,"saga01") if ($par_a eq "" && $#all_nodes > 0);
+push (@all_nodes,"$ALWS_node") if ($#all_nodes > 0);
+#print "all_nodes=@all_nodes \n";
+
+####>stagein_tapeslock
+$flag_stagein = "NO" if ($#all_nodes == 0);
+if ($flag_stagein eq "OK" || $flag_stagein eq "-s") {
+   $stagein_tapeslock = "/u/xu/fblxu/dir_sycheck/stagein_tapeslock";
+   print `date` if (${write_out} eq "n");
+   print "-->run ${stagein_tapeslock}\n" if (${write_out} eq "n");
+   system("$stagein_tapeslock");
+   if (-e "${DT}/tmp_stagein_tapeslock") {
+      @buf = `cat ${DT}/tmp_stagein_tapeslock"`;
+      foreach $i (0 .. $#buf) { &write_OUT($buf[$i]) };
+      system ("rm -f ${DT}/tmp_stagein_tapeslock");
+   }
+   exit if ($flag_stagein eq "-s");
+}
+
+$current_sycheck_rsh = "/u/xu/fblxu/dir_sycheck/sycheck_rsh_n";
+####>sycheck_rsh for decnet_host
+$flag_run = "OK";
+$flag_run = "NO" if ($#all_nodes == 0 && !grep(/$all_nodes[0]/,@batch_hosts)); 
+$flag_run = "OK" if ($#all_nodes == 0 && $all_nodes[0] eq $decnet_host); 
+&run_sycheck_rsh(${decnet_host}) if ($flag_run eq "OK");
+
+$n_df_error = 0;
+foreach $i (0 .. $#all_nodes){
+   $node_search = $all_nodes[$i];
+   $node_search =~ s/\s+$//;
+   $node_4 = substr(${node_search},0,4);
+   $status_ping = "OK";
+   $flag_batch = "NO";
+   $flag_batch = "OK" if (grep(/$node_search/,@batch_hosts));
+   if (!&check_ping(1,$node_search)){
+      $status_ping = "BAD" if (!&check_ping(3,$node_search));
+   }
+   print "\n ====>$node_search status_ping= $status_ping\n" if (${write_out} eq "n");
+   next if ($status_ping eq "BAD");
+   next if ($node_search eq "$ALWS_node");
+
+#===>>check NQS
+   if (${flag_batch} eq "OK"){
+      print "-->NQS connection \n" if (${write_out} eq "n");
+      if (-e "$DT/error_${node_search}.rsh"){
+         if (-z "$DT/error_${node_search}.rsh"){
+            $string = ">>> NQS connection refused on ${node_search} \n";
+            &write_OUT($string);
+         }
+         system ("rm -f $DT/error_${node_search}.rsh");
+      }
+      else { &WARNING_file("$DT/error_${node_search}.rsh")}
+      next if ($node_search eq "csf");
+   }
+
+###>>sfetch
+   print "-->sfetch ${node_search}/etc/motd \n" if (${write_out} eq "n");
+   open (OUT_fetch,">> $DT/sfetch_$node_search.check");
+   system ("sfetch $DT/sfetch_$node_search.check -t ${node_search}:/etc/motd > $DT/error_sfetch_${node_search}");
+   close OUT_fetch;
+   if (-e "${DT}/error_sfetch_${node_search}"){
+      if (!-z "${DT}/error_sfetch_${node_search}") {
+         $string = "sfetch ERROR ${node_search} \n"; 
+         &write_OUT($string);
+      }
+      system ("rm -f ${DT}/error_sfetch_${node_search}");
+      system ("rm -f ${DT}/sfetch_${node_search}.check");
+   }
+   else { &WARNING_file("${DT}/error_sfetch_${node_search}")}
+
+###>>dispose
+   print "-->dispose ${DT}/.login on ${node_search} \n" if (${write_out} eq "n");
+   $string_dispose = "''${node_search}:/tmp/dispose_${node_search}.check''";
+   system ("dispose ${DT}/.login -t ${string_dispose} > ${DT}/error_dispose_${node_search}");
+   if (-e "${DT}/error_dispose_${node_search}") {
+      &search_grep ("successful","${DT}/error_dispose_${node_search}",0);
+      system ("rm -f ${DT}/error_dispose_${node_search}");
+      system (`rsh ${node_search} "rm -f /tmp/dispose_${node_search}.check"`);
+   }
+   else { &WARNING_file("${DT}/error_dispose_${node_search}")}
+
+#=====>>run /u/xu/fblxu/dir_sycheck/sycheck_rsh
+   &run_sycheck_rsh(${node_search}) if (${node_search} ne "${decnet_host}");
+
+   $flag_data = "NO";
+   $flag_data = "OK" if (grep(/$node_search/,@data_hosts));
+
+   if ($flag_data eq "OK") {
+#===>> check /al/shared/data
+      $MAX_data = 1000;
+      print "-->check /al/shared/data > $MAX_data \n" if (${write_out} eq "n");
+       if (!-e "${DT}/ls_aouR_${node_search}"){ 
+          &WARNING_file("${DT}/ls_aouR_${node_search}");
+       }
+       else {
+         @ls_aouR = `cat ${DT}/ls_aouR_${node_search}`;
+         foreach $l (0 .. $#ls_aouR){
+#            print "$ls_aouR[$l] \n";
+            ($rw, $str_d, $name, $p_Mb, $str1, $str2, $str3, $file_aouR, $str_end) = split(' ',$ls_aouR[$l]);
+            next if (substr($rw,0,1) eq "d");
+            next if (${p_Mb} < ${MAX_data});
+            print "MAX_data=${MAX_data} p_Mb=$p_Mb rw=$rw file_aouR=$file_aouR \n" if (${write_out} eq "n");
+#	     system ("rm -f $ALEPH/data/${file_aouR}");
+	    $string = "rm $ALEPH/data/${file_aouR} -> $ls_aouR[$l] \n";
+            &write_OUT($string);
+         } 
+         system ("rm -f ${DT}/ls_aouR_${node_search}");
+      }
+
+#===>> scwork scweek
+      print "-->check scwork scweek \n" if (${write_out} eq "n");
+      $p_min = 88; 
+      &check_pourcent($p_min,"scwork","${DT}/scwork_${node_search}");
+      $p_min = 95; 
+      &check_pourcent($p_min,"scweek","${DT}/scweek_${node_search}");
+#===>> df
+      print "-->check df \n" if (${write_out} eq "n");
+      $n_df = 90;
+      &check_pourcent(0,"df","${DT}/df_${node_search}");
+
+#===>> nfsd 
+      if ($node_search ne "shift9"){
+         print "-->check nfsd \n" if (${write_out} eq "n");
+         if (-e "${DT}/nfsd_${node_search}") {
+            if (!-z "${DT}/nfsd_${node_search}"){
+	        @nfsd = ();
+                @nfsd = `cat ${DT}/nfsd_${node_search}`;
+                $string = "-->look-at nfsd on $node_search \n";
+                &write_OUT($string);
+                &write_OUT(@nfsd);
+            }
+            system ("rm -f ${DT}/nfsd_${node_search}");
+         }
+         else { &WARNING_file("${DT}/nfsd_${node_search}"); }
+      }
+   }
+
+#===>> qstat
+   if (${node_4} eq "shif" || $node_4 eq "saga") {
+      print "-->check queues not AVAILBL \n" if (${write_out} eq "n");
+      @buf = ();
+      $n_buf = 0;
+      if (!-e "${DT}/qstat_${node_search}") {
+          $n_buf = 10;
+          &WARNING_file("${DT}/qstat_${node_search}");
+      }
+      if (-e "${DT}/qstat_${node_search}"){
+	 @buf = `cat ${DT}/qstat_${node_search}`;
+         $n_buf = $#buf;
+         system ("rm -f ${DT}/qstat_${node_search}");
+      }
+       if (${n_buf} > 0) {
+         $string = "-->Look-at qstat -b on ${node_search}\n";
+         &write_OUT($string);
+         &write_OUT(@buf) if (-e "${DT}/qstat_${node_search}");
+      }
+   }
+#=======>> reboot
+   print "-->check last reboot \n" if (${write_out} eq "n");
+   if (!-e "${DT}/who_b_${node_search}") {
+#       &WARNING_file("${DT}/who_b_${node_search}");
+      $string = "Please look-at who_b on ${node_search} \n"; 
+      &write_OUT($string);
+   }
+   else {
+      $str_n4 = $node_4;
+      $str_n4 = "shift" if (${node_4} eq "shif");
+      $dat_last_reboot = `cat ${DT}/who_b_${node_search}`;
+      $dat_last_reboot =~ s/\s+$//;
+      $str_reboot = "$dat_last_reboot ${node_search} rebooted";
+      &search_grep ("'${str_reboot}'","$ALEPH/log/problem_${str_n4}.list",0);
+      system ("rm -f ${DT}/who_b_${node_search}") if (-e "${DT}/who_b_${node_search}");
+   }
+
+#======> df -k /usr 
+   if (${node_search} ne "shift9") {
+      print "-->check df -k /usr \n" if (${write_out} eq "n");
+      $n_df_usr = 96;
+      &check_pourcent($n_df_usr,"df_usr","${DT}/df_usr_${node_search}");
+    }
+
+#=======>>check in file ps
+    if (!-e "${DT}/ps_${node_search}") {
+       &WARNING_file("${DT}/ps_${node_search}");
+       next;
+    }
+#=====>>check sendmail
+    print "-->check sendmail\n" if (${write_out} eq "n");
+    &search_grep("sendmail","${DT}/ps_${node_search}",0);
+#=====>> check cron
+    print "-->check /sbin/cron\n" if (${write_out} eq "n");
+    &search_grep("/sbin/cron","${DT}/ps_${node_search}",0);
+#=====>>check /usr/lib/nqs/nqs++daemon [except afal00 and saga (-saga01)]
+    $flag_nqs = "OK";
+    $flag_nqs = "NO" if (${node_search} eq "afal00");
+    $flag_nqs = "NO" if (${node_4} eq "saga" && ${node_search} ne "saga01");
+    if ($flag_nqs eq "OK"){
+        print "-->check nqs++daemon\n" if (${write_out} eq "n");
+	&search_grep("nqs++daemon","${DT}/ps_${node_search}",0);
+    }
+#=====>>check stgdaemon on shift9
+    if (${node_search} eq "shift9"){
+       print "-->check stgdaemon\n" if (${write_out} eq "n");
+       &search_grep("stgdaemon","${DT}/ps_${node_search}",0);
+       print "-->check stager\n" if (${write_out} eq "n");
+       &search_grep("stager","${DT}/ps_${node_search}",0);
+    }
+#=====>>check all_daemon
+    if (${node_search} eq "afal00"){
+       @all_daemon = ("/usr/local/bin/rfiod","/bin/zhm") if (${node_search} eq "afal00");
+    }
+    else {
+	@all_daemon = ("/usr/local/bin/rfiod","nqsdaemon","netdaemon","logdaemon");
+        push (@all_daemon,"/bin/zhm") if ($node_4 eq "afal");
+        push (@all_daemon,"/bin/zhm") if (${node_search} eq "shift50");
+    }
+    foreach $i (0 ..$#all_daemon) {
+       print "-->check ${all_daemon[$i]}\n" if (${write_out} eq "n");
+       &search_grep("${all_daemon[$i]}","${DT}/ps_${node_search}",0);
+    }
+    system ("rm -f ${DT}/ps_${node_search}") if (-e "${DT}/ps_${node_search}");
+}
+&exit_sycheck;
+##############################################################################
+sub check_ping {
+
+   local (@buffer) = ();
+   local($str1,$str2,$str_end,$string) = "";
+   local ($ij) = 0;
+
+   @buffer = `/usr/etc/ping -c $_[0] $_[1]`;
+   if ($#buffer == -1) {
+      $string = ">>>>/usr/etc/ping ${node_search} $_[0] packet(s)...nothing\n";
+      &write_OUT($string);
+      return 0;
+   }
+   $i = 0;
+   while ($i <= $#buffer){
+      $i++;
+      $line = $buffer[$i];
+      $line =~ s/\s+$//;
+      if (index($line,"%") > 1){
+         ($part1,$part2,$part3) = split(/,/,$line);
+         ($pourcent,$end_str) = split(/%/,$part3);
+         $pourcent =~ s/^\s+//;
+         return 1 if ($pourcent eq "0");
+         print "ping C = $_[0] % = $pourcent i=$i line = $line \n" if (${write_out} eq "n");
+         return 0 if ($_[0] eq "1");
+         $ij = $i + 1;
+         last;
+      }
+   }
+   ($str1,$str2) = split(/=/,$buffer[$ij]);
+   $str2 =~ s/^\s+//;
+   print "next line(${ij}): str1=$str1 str2=$str2 $buffer[$ij]\n" if (${write_out} eq "n");
+   ($ms,$str_end) = split(/ /,$str2);
+   $ms =~ s/^\s+//;
+   print "ms = $ms \n" if (${write_out} eq "n");
+   $string = ">>>>/usr/etc/ping ${node_search} $_[0] packets, ${pourcent}% loss \n";
+   &write_OUT($string);
+   $string = "${node_search} 4 packets, $n_ping loss, $ms ms \n";
+   open (OUT_ping, ">>$ALEPH/log/ping.log");
+   print OUT_ping $string;
+   close OUT_ping;
+   
+    return 0;
+}
+##############################################################################
+sub check_pourcent {
+
+    local(@buf,@line) = ();
+    local($str_p,$str_end,$string) = "";
+    local($first_ligne,$p) = 0;
+    
+    &WARNING_file("$_[2]") if (!-e $_[2]);
+    return 0 if (!-e $_[2]);
+
+    @buf = `cat $_[2]` if ($_[1] ne "df_usr");
+    @buf = `tail -l $_[2]` if ($_[1] eq "df_usr");
+
+    $first_ligne = 3 if ($_[1] eq "df");
+    $first_ligne = 1 if ($_[1] eq "df" && $node_search eq "shift9");
+
+    foreach $i_ligne ($first_ligne.. $#buf){
+       @line = split(/\s+/,$buf[$i_ligne]);
+       $p_min = $_[0];
+       if ($_[1] eq "df"){
+          ($name,$str) = split(/ /,reverse($buf[$i_ligne]));
+          $disk_name = reverse($name);
+          $disk_name =~ s/\s+$//; 
+       }       
+       $disk_name = $_[1] if ($_[1] ne "df");
+       $pourcent = 0;
+       &search_pourcent($buf[$i_ligne]); 
+       $p = $pourcent; 
+
+       $p_min = 80 if ($disk_name eq "/usr" && $node_search eq "shift9");     
+       $p_min = 96 if ($disk_name eq "/cernlib");     
+       $p_min = 110 if ($disk_name eq "/proc");   
+  
+       if ($p_min == 0){
+	  $line_min = "";
+	  $line_min = `grep " $disk_name " $ALEPH/log/df_all`;
+          if ($line_min ne ""){
+             $pourcent = 0;
+             &search_pourcent($line_min);
+             $p_min = $pourcent;
+          }
+          else { $p_min = $n_df; }
+       }
+       if ($p >= $p_min) {
+	  $n_df_error++;
+          &write_OUT(" ---- df ---- \n") if ($n_df_error == 1 && ${write_out} eq "y");
+#         print "check_p:disk_name=$disk_name p_min=$p_min p=${p}% \n" if (${write_out} eq "n");
+          $string = ">>>WARNING disk $disk_name on node ${node_search} -> ${p}% \n" if ($_[1] ne "df");
+          $string = "${node_search}: @line\n" if ($_[1] eq "df") ;
+          &write_OUT($string); 
+       }           
+    }
+    system ("rm -f $_[2]"); 
+    return 1;
+
+}
+##############################################################################
+sub exit_sycheck {
+
+   if (${write_out} eq "y"){
+      $begin_date =~ s/\s+$//;
+      $end_date = `date "+%Y %m %d %H:%M:%S"`;
+      $end_date =~ s/\s+$//;
+      open(OUT_spy, ">>$sycheck_out");
+      print OUT_spy "${par_a}++++${begin_date} => ${end_date} \n"; 
+      print OUT_spy @OUT_tmp if ($#OUT_tmp > -1);
+      close OUT_spy;
+      &send_mail;
+   }
+   system ("rm -f ${DT}/df_usr_${decnet_host}") if (-e "${DT}/df_usr_${decnet_host}");
+   system ("rm -f ${DT}/ps_${decnet_host}") if (-e "${DT}/ps_${decnet_host}");
+   system ("rm -f ${DT}/who_b_${decnet_host}") if (-e "${DT}/who_b_${decnet_host}");
+   system ("rm -f ${DT}/error_*.rsh");
+   exit;
+}
+##############################################################################
+sub run_sycheck_rsh {
+
+    print `date` if (${write_out} eq "n");
+    print  "-->run sycheck_rsh [$_[0]] \n" if (${write_out} eq "n");
+    system("rsh $_[0] $current_sycheck_rsh") if ($_[0] ne "shift9");
+    system ("$current_sycheck_rsh") if ($_[0] eq "shift9");
+    print `date` if (${write_out} eq "n");
+    return 1;
+}
+##############################################################################
+sub search_arg {
+
+  $arg = shift(@ARGV);
+  $n++;
+  $write_out = "y" if ($arg =~ /^-[wW]/);
+  $par_a = "-a" if ($arg =~ /^-[aA]/);
+  $flag_stagein = "-s" if ($arg =~ /^-[sS]/);
+  if ($arg eq "-n"){
+     @all_nodes = shift(@ARGV);
+     $n++;
+  }
+  return 1;
+}
+##############################################################################
+sub search_grep {
+
+    local($n_ligne,$n_check,$h,$H,$diff,$h_diff) = 0;
+    local($string) = "";
+    local(@buffer,@line) = ();
+
+    $n_check = $_[2];
+    @buffer = `grep $_[0] $_[1]` if ($_[0] eq "stager");
+    $n_ligne = `grep $_[0] $_[1] | wc -l` if ($_[0] ne "stager");
+    $n_ligne =~ s/^\s+//;
+    $n_ligne =~ s/\s+$//;
+
+#    print "$_[0] n_check=$n_check n_ligne=$n_ligne \n" if ($#all_nodes == 0);
+
+    if ($_[0] eq "stager"){
+       $h_diff = 2;
+       foreach $i (0 .. $#buffer) {
+          @line = split(/\s+/,$buffer[$i]);
+          $n = index($line[5],":");
+          if ($n < 1){
+            $string = "WARNING old stager : @line\n";
+            &write_OUT($string);
+          }
+          else {
+	    $H = `date "+%H"`;
+            $H =~ s/\s+$//;
+            $h = substr($line[5],0,$n);
+            $diff = $H - $h;
+            print "$i stager -> $line[5] \n" if ($#all_nodes == 0); 
+            if ($diff > $h_diff) {
+               $string = "WARNING stager > ${h_diff} hours : @line\n";
+               &write_OUT($string);
+            }
+	  }
+       }
+       return 1;
+    }
+    if ($_[0] eq "successful" && $n_ligne == $n_check){
+       $string = "WARNING on node ${node_search} dispose ERROR \n";
+       &write_OUT($string);
+       return 1;
+    }
+    if ($n_ligne == $n_check){
+       if ($_[1] eq "$ALEPH/log/problem_${str_n4}.list") {
+	  $string = $_[0];
+          $year = `date "+%Y`;
+          $year =~ s/\s+$//;
+          $string = substr($_[0],1,length($_[0])-2);
+          if (${write_out} eq "y"){
+             open (OUT_reboot, ">>$ALEPH/log/problem_${str_n4}.list");
+             print OUT_reboot "$year $string \n";
+             close OUT_reboot;
+	  }
+          &write_OUT("$string \n");
+       }
+       else {
+          $string = "WARNING on node ${node_search} $_[0] not found \n";
+          &write_OUT($string);
+       }
+    }
+
+    return 1;
+}
+##############################################################################
+sub search_pourcent {
+
+    local($str_p,$str_end,$string,$line_check) = "";
+
+    ($line_check) = @_;
+    $line_check =~ s/^\s+//;
+    $line_check =~ s/\s+$//;
+    ($str_p,$str_end) = split(/%/,$line_check);
+    $string = reverse($str_p);
+    ($pourcent,$str_end) = split(/ /,$string);
+    $pourcent = reverse($pourcent);
+#    print "search_p:$pourcent $line_check\n"; 
+    return 1;
+}
+##############################################################################
+sub send_mail{
+
+  local(@admin) = ();
+  local($str_mail,$title_mess) = "";
+  local($n_ligne) = 0;
+
+#  @admin = "fblxu\@aloha.cern.ch,hag\@aloha.cern.ch,system\@aloha.cern.ch";
+  @admin = "fblxu\@aloha.cern.ch,system\@aloha.cern.ch";
+  $n_ligne = $#OUT_tmp + 1;
+  $title_mess = "$n_ligne sycheck! $OUT_tmp[$#OUT_tmp]" if ($#OUT_tmp > -1);
+  $title_mess = "sycheck OK!" if ($#OUT_tmp == -1);
+  $str_mail = "Mail -s '$title_mess'";
+  open (MAIL, "|${str_mail} '@admin' ");
+  print MAIL @OUT_tmp;
+  close (MAIL);
+  return 1;
+}
+##############################################################################
+sub WARNING_file {
+
+    local($string) = "";
+    $string = "WARNING file $_[0] not found ..> connect refused \n";
+    &write_OUT($string);
+    return 1;
+}
+##############################################################################
+sub write_OUT {
+
+    push (@OUT_tmp,$_[0]) if (${write_out} eq "y");
+    print $_[0] if (${write_out} eq "n");
+    return 1;
+}
+##############################################################################

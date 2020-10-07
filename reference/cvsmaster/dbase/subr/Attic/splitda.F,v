@@ -1,0 +1,409 @@
+head	1.2;
+access;
+symbols
+	dbase01:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.02.13.10.50.29;	author flr;	state dead;
+branches;
+next	1.1;
+
+1.1
+date	97.02.12.10.06.06;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.02.12.10.06.06;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release dbase02
+@
+text
+@      SUBROUTINE SPLITDA (LUDAF,LUDOC,LUSTC,LUNAT,LUEPI,IFLAG)
+C ---------------------------------------------------------------------
+C.
+C! - Split the ADBSCONS DAF into 3 pieces
+C.
+C. - from A.Putzer (routine UTDBPR)
+C. - Modified by M.Rumpf
+C. - Modified by F.Ranjard
+C.
+C.   Input:     -  LUDAF / I     ADBSCONS DAF logical unit #
+C.              -  LUDOC / I     ADBSDOC DAF logical unit #
+C.              -  LUSTC / I     ShortTermConstant DAF logical unit #
+C.              -  LUNAT / I     LongTermConstant NATIVE logical unit #
+C.              -  LUEPI / I     LongTermConstant EPIO logical unit #
+C.              -  IFLAG / I     if .not. 0 meand write EPIO only
+C.   Output:    -  IFLAG / I     Error flag  = 0 ok
+C.                                            -1 No format info on d/a
+C.                                            -2 No info for this table
+C.                                            -3 Table not on this d/a
+C.                                            -4 Table empty
+C.
+C ---------------------------------------------------------------------
+#ifndef DOC
+C - Column numbers in the .TAB table for
+C           Table ID, Table name
+#include "tab2jj.h"
+#include "tstcjj.h"
+#include "tdocjj.h"
+#include "tcoljj.h"
+#include "ttabjj.h"
+#include "adbljj.h"
+C Careful : overflow not checked (m.r)
+      CHARACTER*36 DAFMTB
+      PARAMETER (MXLIST=2000)
+      CHARACTER*2000 LIST
+      CHARACTER*4 NAME,CHAINT
+C
+#include "bcs.h"
+#include "bmacro.h"
+C..........
+C
+      IFLAG = 0
+      LUNPR = IW(6)
+      LIST  = ' '
+      IFSTC = 0
+      NATABL = NAMIND('.TAB')
+      NACOLU = NAMIND('.COL')
+      NATAB2 = NAMIND('TAB2')
+      NACOL2 = NAMIND('COL2')
+      NATDOC = NAMIND('TDOC')
+      NATSTC = NAMIND('TSTC')
+      NADROP = NAMIND('DROP')
+      JEPIO = IFLAG
+C
+C - get ADAMO tables
+C
+      CALL GETDOC (LUNDA,IGET)
+      IF (IGET.GT.0.AND.IGET.LT.10) CALL EXIT
+C
+C - Get bank DROP if any
+C
+      LDROP = 0
+C
+C - Get Bank TSTC
+C
+      JTSTC = IW(NATSTC)
+      IF (JTSTC .NE. 0) THEN
+         IW(JTSTC+LMHROW) = IW(JTSTC)-2
+         CALL BDAWR (IW,LUDOC,'TSTC',0)
+         NWRDS = NWRDS+IW(JTSTC)
+         WRITE(LUNPR,*)' SPLIT TSTC ',IW(JTSTC-2),(IW(JTSTC+MM),MM=0,2)
+      ENDIF
+C
+C - Create bank TDOC
+C
+      JTDOC = IW(NATDOC)
+      IF (JTDOC.EQ.0 .AND. LUDOC.GT.0) THEN
+        JTDOC = NBANK('TDOC',0,LMHLEN+NAMAX*LTDOCA)
+        IF (JTDOC .NE. 0) THEN
+           IBLK = INTCHA('    ')
+           CALL UFILL(IW(JTDOC+1),1,IW(JTDOC),IBLK)
+           IW(JTDOC+LMHCOL) = LTDOCA
+           IW(JTDOC+LMHROW) = 1
+           CALL BKFMT ('TDOC','2I,(A)')
+           KTDOC = JTDOC+LMHLEN
+           IW(KTDOC+JTDONA) = INTCHA('TDOC')
+           IW(KTDOC+JTDOUN) = INTCHA('DOC ')
+           IW(KTDOC+JTDOBF) = INTCHA('2I,(')
+           IW(KTDOC+JTDOBF+1) = INTCHA('A)  ')
+           IW(KTDOC+JTDONC) = LTDOCA
+           KTDOC = KNEXT(JTDOC)
+           IW(KTDOC+JTDONA) = INTCHA('TSTC')
+           IW(KTDOC+JTDOUN) = INTCHA('DOC ')
+           IW(KTDOC+JTDOBF) = INTCHA('2I,(')
+           IW(KTDOC+JTDOBF+1) = INTCHA('A)  ')
+           IW(KTDOC+JTDONC) = LTSTCA
+           IW(JTDOC+LMHROW) = LROWS(JTDOC) + 1
+           KTDOC = KNEXT(JTDOC)
+           IW(KTDOC+JTDONA) = INTCHA('TNOG')
+           IW(KTDOC+JTDOUN) = INTCHA('DOC ')
+           IW(KTDOC+JTDOBF) = INTCHA('2I,(')
+           IW(KTDOC+JTDOBF+1) = INTCHA('A)  ')
+           IW(KTDOC+JTDONC) = LTSTCA
+           IW(JTDOC+LMHROW) = LROWS(JTDOC) + 1
+           KTDOC = KNEXT(JTDOC)
+           IW(KTDOC+JTDONA) = INTCHA('TNOJ')
+           IW(KTDOC+JTDOUN) = INTCHA('DOC ')
+           IW(KTDOC+JTDOBF) = INTCHA('2I,(')
+           IW(KTDOC+JTDOBF+1) = INTCHA('A)  ')
+           IW(KTDOC+JTDONC) = LTSTCA
+           IW(JTDOC+LMHROW) = LROWS(JTDOC) + 1
+           KTDOC = KNEXT(JTDOC)
+           IW(KTDOC+JTDONA) = INTCHA('TPOT')
+           IW(KTDOC+JTDOUN) = INTCHA('DOC ')
+           IW(KTDOC+JTDOBF) = INTCHA('2I,(')
+           IW(KTDOC+JTDOBF+1) = INTCHA('A)  ')
+           IW(KTDOC+JTDONC) = LTSTCA
+           IW(JTDOC+LMHROW) = LROWS(JTDOC) + 1
+           KTDOC = KNEXT(JTDOC)
+           IW(KTDOC+JTDONA) = INTCHA('CPRO')
+           IW(KTDOC+JTDOUN) = INTCHA('DOC ')
+           IW(KTDOC+JTDOBF) = INTCHA('2I,(')
+           IW(KTDOC+JTDOBF+1) = INTCHA('5A,I')
+           IW(KTDOC+JTDOBF+2) = INTCHA(',2A)')
+           IW(KTDOC+JTDONC) = LTCOLA
+           IW(JTDOC+LMHROW) = LROWS(JTDOC) + 1
+           KTDOC = KNEXT(JTDOC)
+           IW(KTDOC+JTDONA) = INTCHA('TPRO')
+           IW(KTDOC+JTDOUN) = INTCHA('DOC ')
+           IW(KTDOC+JTDOBF) = INTCHA('2I,(')
+           IW(KTDOC+JTDOBF+1) = INTCHA('A,I)')
+           IW(KTDOC+JTDONC) = LTTABA
+           IW(JTDOC+LMHROW) = LROWS(JTDOC) + 1
+           KTDOC = KNEXT(JTDOC)
+           IW(KTDOC+JTDONA) = INTCHA('TADB')
+           IW(KTDOC+JTDOUN) = INTCHA('DOC ')
+           IW(KTDOC+JTDOBF) = INTCHA('2I,(')
+           IW(KTDOC+JTDOBF+1) = INTCHA('A,I)')
+           IW(KTDOC+JTDONC) = LTTABA
+           IW(JTDOC+LMHROW) = LROWS(JTDOC) + 1
+           KTDOC = KNEXT(JTDOC)
+           IW(KTDOC+JTDONA) = INTCHA('CADB')
+           IW(KTDOC+JTDOUN) = INTCHA('DOC ')
+           IW(KTDOC+JTDOBF) = INTCHA('2I,(')
+           IW(KTDOC+JTDOBF+1) = INTCHA('5A,I')
+           IW(KTDOC+JTDOBF+2) = INTCHA(',2A)')
+           IW(KTDOC+JTDONC) = LTCOLA
+           IW(JTDOC+LMHROW) = LROWS(JTDOC) + 1
+        ELSE
+           WRITE(LUNPR,*)' SPLITDA TDOC not enough space to create it'
+        ENDIF
+      ENDIF
+C
+C - Put  bank ADBL on 'S' list (LTC file)
+C
+      CALL BLIST (IW,'S=','ADBL')
+C
+C - Loop over all banks present on the DAF
+C   drop banks present on DROP data card
+C   drop banks with 0 rows
+C   search the format information into .TAB and .COL
+C   IF not there THEN print a warning
+C   ELSE write the bank on LTC file or STC DAF file
+C
+      NWRDS = 0
+  200 CONTINUE
+      JNAME = MDARS (IW,LUDAF)
+      IF (IW(2) .NE. 0) GOTO 210
+C
+      IF (JNAME .EQ. 0) THEN
+         WRITE (LUNPR,*) ' not enough space for the bank, skip it '
+         GOTO 200
+      ENDIF
+      NAME = CHAINT (IW(JNAME-3))
+      NR = IW(JNAME-2)
+CCC   WRITE (LUNPR,*) 'bank read from DAF ',NAME,NR,
+CCC  &                (IW(JNAME+MM),MM=0,2)
+C
+C - get the destination of the bank :DOC, LTC or STC
+C
+      IDAF  = 0
+      JTSTC = IW(NATSTC)
+      IF (JTSTC.NE.0) THEN
+         DO 201 K=1,LROWS(JTSTC)
+            IF (NAME .EQ. CHAINT(ITABL(JTSTC,K,1))) THEN
+               IDAF = LUSTC
+               GOTO 202
+            ENDIF
+ 201     CONTINUE
+      ELSE
+         IF (IFSTC.EQ.0) THEN
+            IFSTC = 1
+            WRITE (IW(6),*) 'TSTC not there !!!!!!!!!!!!'
+         ENDIF
+      ENDIF
+      IF (NAME(1:1).EQ.'.'.OR.NAME.EQ.'TAB2'.OR.NAME.EQ.'COL2') THEN
+         IDAF = LUDOC
+      ENDIF
+ 202  CONTINUE
+C
+C - find the format
+C
+      CALL FNDFMT(JNAME,NAME,DAFMTB,IER)
+      IF (IER.EQ.-1 .AND. IDAF .NE. LUSTC) THEN
+         WRITE (LUNPR,*) ' +++++ BECAREFUL ++++ there are more ',
+     &                   'than one number of this bank: it should ',
+     &                   'go to the STC file ', NAME,NR,IDAF
+      ENDIF
+C
+C - fill TDOC with bank formats if not done yet
+C
+      JTDOC = IW(NATDOC)
+      IF (IER.NE.-1 .AND. JTDOC .GT.0) THEN
+         IF (LFMT.GT.(JTDONC-JTDOBF+1)*4) THEN
+            WRITE (LUNPR,*) '******* WARNING ******* format',
+     &                   ' of this bank is too long ',NAME,LFMT,
+     &                   (JTDONC-JTDOBF+1)*4,DAFMTB(1:LFMT)
+         ELSE
+            IF (LFRROW(JTDOC).LT.1) THEN
+               WRITE (LUNPR,*) '***** PROGRAMMING ERROR****',
+     &                   ' more lines than NAMAX names - STOP ',
+     &                   (IW(JTDOC+MM),MM=0,2)
+               CALL EXIT
+            ENDIF
+            KTDOC = KNEXT(JTDOC)
+            IW(JTDOC+LMHROW) = LROWS(JTDOC)+1
+            IW(KTDOC+JTDONA) = INTCHA(NAME)
+            IW(KTDOC+JTDONC) = IW(JNAME+LMHCOL)
+            IF (IDAF.EQ.0) THEN
+               IW(KTDOC+JTDOUN) = INTCHA('LTC ')
+            ELSEIF (IDAF.EQ.LUSTC) THEN
+               IW(KTDOC+JTDOUN) = INTCHA('STC ')
+            ELSEIF (IDAF.EQ.LUDOC) THEN
+               IW(KTDOC+JTDOUN) = INTCHA('DOC ')
+            ENDIF
+            LW = (LFMT+3)/4
+            DO 209 MM=1,LW
+               K=(MM-1)*4
+               IW(KTDOC+JTDOBF-1+MM)=INTCHA(DAFMTB(K+1:K+4))
+ 209        CONTINUE
+         ENDIF
+      ENDIF
+C
+ 205  CONTINUE
+C    drop banks with NR.LT.2 and 0 row
+      IF (NR.LT.2 .AND. IW(JNAME+LMHROW).EQ.0) GOTO 200
+C
+C    drop banks present on DROP data card
+      JDROP = IW(NADROP)
+      IF (JDROP .GT.0) THEN
+         DO 280 K=1,IW(JDROP),2
+            IF (NAME.EQ.CHAINT(IW(JDROP+K)) .AND.
+     &            NR.EQ.IW(JDROP+K+1)) THEN
+               LDROP=LDROP+1
+               IF (LDROP.EQ.IW(JDROP)/2) JDROP = 0
+               GOTO 200
+            ENDIF
+  280    CONTINUE
+      ENDIF
+C
+C     write the bank NAME,NR onto LTC EPIO file or onto STC DAF file
+      IF (IDAF.EQ.0) THEN
+         CALL BLIST (IW,'S+',NAME)
+         IF (JEPIO.GT.0) THEN
+            IF (IW(NADROP).EQ.0 .OR. NAME(1:1).NE.'.') THEN
+               CALL BEPWS (IW,LUEPI,NAME,NR)
+            ENDIF
+         ENDIF
+CCC      WRITE (LUNPR,*)  ' SPLITDA put on LTC EPIO file ',
+CCC  &               IROW,NAME,NR,(IW(JNAME+MM),MM=0,2)
+      ELSE
+         CALL BDAWR (IW,IDAF,NAME,NR)
+CCC      WRITE (LUNPR,*)  ' SPLITDA put on  DAF file ', IDAF,
+CCC  &               IROW,NAME,NR,(IW(JNAME+MM),MM=0,2)
+      ENDIF
+      NWRDS = NWRDS + IW(JNAME)
+      IDRP = MDROP (IW,NAME,NR)
+      IF ((IW(16)-IW(15)).LT.5000) CALL BGARB(IW)
+      GOTO 200
+C
+ 210  CONTINUE
+C
+C  ==============================================================
+C
+C write Txxx  banks onto LUDOC DAF file
+C
+      IF (LUDOC.GT.0) THEN
+         CALL BDAWR (IW,LUDOC,'TNOG',0)
+         CALL BDAWR (IW,LUDOC,'TNOJ',0)
+         CALL BDAWR (IW,LUDOC,'TSTC',0)
+      ENDIF
+C
+C complete TDOC with PROGram banks from COL2 and TAB2
+C
+      JTDOC = IW(NATDOC)
+      JTAB2 = IW(NATAB2)
+      JCOL2 = IW(NACOL2)
+      IF (JTDOC.GT.0) THEN
+         DO 220 I=1,LROWS(JTAB2)
+            INAM  = ITABL(JTAB2,I,JTABN2)
+            NAME  = CHAINT(INAM)
+            JTAID = ITABL(JTAB2,I,JTABID)
+C           if INAM bank already in TDOC ==> skip it
+            DO 221 J=1,LROWS(JTDOC)
+               IF (INAM.EQ.ITABL(JTDOC,J,JTDONA)) GOTO 220
+ 221        CONTINUE
+C           bank INAM not yet in TDOC ==> add it
+            IF (LFRROW(JTDOC).EQ.0) THEN
+               NFR = LROWS(JTAB2)-I+1
+               JTDOC = NBANK ('TDOC',0,IW(JTDOC)+NFR*LTDOCA)
+               IF ( JTDOC.EQ.0) THEN
+                  WRITE (IW(6),*) ' **** NOT ENOUGH SPACE - STOP'
+                  STOP
+               ENDIF
+            ENDIF
+            CALL UTAFMT(NAME,JTAID,JCOL2,NCOLB,IFLAG,DAFMTB)
+            LFMT = LENOCC(DAFMTB)
+            IF (LFMT.GT.(JTDONC-JTDOBF+1)*4) THEN
+               WRITE (LUNPR,*) '******* WARNING ******* format',
+     &                   ' of this bank is too long ',NAME,LFMT,
+     &                   (JTDONC-JTDOBF+1)*4,DAFMTB(1:LFMT)
+               GOTO 220
+            ENDIF
+            KTDOC = KNEXT(JTDOC)
+            IW(KTDOC+JTDONA) = INAM
+            IW(KTDOC+JTDOUN) = INTCHA('PROG')
+            IW(KTDOC+JTDONC) = NCOLB
+            LW = (LFMT+3)/4
+            DO 229 MM=1,LW
+              K=(MM-1)*4
+              IW(KTDOC+JTDOBF-1+MM)=INTCHA(DAFMTB(K+1:K+4))
+ 229          CONTINUE
+            IW(JTDOC+LMHROW) = LROWS(JTDOC)+1
+            WRITE(IW(6),'(1X,I3,A5,I5,A36,I5)') I,NAME,NCOLB,
+     &                 DAFMTB(1:LFMT),IW(JTDOC+LMHROW)
+ 220     CONTINUE
+         CALL AUBPRS ('TDOC')
+         IF (LUDOC.GT.0) CALL BDAWR (IW,LUDOC,'TDOC',0)
+      ENDIF
+C
+C - suppress 'T' list banks from LTC file if any
+      CALL AUBLIS ('T')
+      CALL BLIST (IW,'S-','T')
+      CALL AUBLIS ('S')
+C
+C Write the 'S' list onto LTC files
+C
+      IF (LUEPI.GT.0 .AND. JEPIO.EQ.0) CALL BWRITE (IW,LUEPI,'S')
+      IF (LUNAT.GT.0) CALL BWRITE (IW,LUNAT,'S')
+C
+C Just for control
+C
+       WRITE (LUNPR,*) ' SPLITDA NWRDS = ', NWRDS
+C
+ 999  RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@@
+
+
+1.1.1.1
+log
+@1st release of dbase library
+@
+text
+@@

@@ -1,0 +1,35 @@
+#!/bin/sh
+######################################################
+#     Delete a lock file in the pool alephdata
+#  You must give as argument the filename
+#   Written by Joel Closier 19 March 1993
+#####################################################
+#set -x
+#######################usage####################
+usage() {
+echo " usage : $0 filename" 1>&2
+}
+#
+
+if [ $# -ne 1 ]
+   then 
+      usage;
+      exit 1
+fi
+#    take the filename
+FILENAME=$1
+
+#    find the full pathname
+FILE=`sfget -k $FILENAME`
+if [ "$FILE" -eq "" ]
+  then
+    FILE=`sfget -k $FILENAME.lock | awk -F. '{printf "%s.%s",$1,$2}'`
+fi
+#    Take the name of the tape
+TAPE=`echo $FILENAME | awk -F. '{print $1}'`
+#   deallocate the tape
+sfadvise -r -v $TAPE
+#   remove the lock file in the pool
+sflock -r -u $DPMUSER $FILE
+sfrm $FILENAME
+exit 0

@@ -1,0 +1,47 @@
+ ! last changes                                                                 
+   GAL:TPCSIM.HLB, .FOR, .OLB, _D.OLB, .NEWS                                    
+                                                                                
+   TPCSIM OLDLIB GAL, TXTLIB, NEWS                                              
+                                                                                
+   TPCSIM CRAYLIB CRAYXU.401                                                    
+   $KEEP/tpcsim.lib                                                             
+                                                                                
+   ALEPH DECS stations, SHIFT and CSF :                                         
+   source is on      /aleph/src/srctpcsim                                       
+   library           /aleph/lib/libtpcsim.a                                     
+   debug library     /aleph/gal/libtpc218_dbx.a                                 
+   ---------------------------------------------------------------              
+ ! TPCSIM 218   940331   16.00                                                  
+                was made from TPCSIM 2.16                                       
+                TPCSIM 2.17 is kept as a private FLORIDA version.               
+                                                                                
+   TPCOND: Add Gaussian lookup table to /AVLNCH/                                
+           (previously was in a standalone                                      
+           common block.                                                        
+                                                                                
+   TRAKEL: Add an array to treat time-of-flight properly.                       
+                                                                                
+   TBLOCH: Change the dE/dx curve to reproduce the data                         
+           better at the ends of the curve (high and low                        
+           beta*gamma)                                                          
+                                                                                
+   TGTEER: keep TPTE bank (short, and needed for debugging).                    
+                                                                                
+   TPAVAL: Fix bug which caused all pulses to be skewed in                      
+           the same direction causing a bias.                                   
+                                                                                
+   TPBRTK: Convert TOF from GALEPH into nanoseconds before                      
+           using it.                                                            
+                                                                                
+   TPFBRT: Add TOF calculation to prevent reset to zero at                      
+           every sector boundary.                                               
+                                                                                
+   TPGETR: Pass TOF to broken tracks.                                           
+                                                                                
+   TSCDEF: Suppress debugging printout of shaping amplifier                     
+           response.                                                            
+                                                                                
+   TGINIT: Fill Gaussian lookup table, demanding that it                        
+           is symmetric about zero and contains no entries                      
+           beyond +/- 3 sigma.                                                  
+   ----------------------------------------------------------------             

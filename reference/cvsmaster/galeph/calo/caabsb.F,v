@@ -1,0 +1,154 @@
+head	1.4;
+access;
+symbols
+	gal309_3:1.4
+	gal309_2:1.4
+	gal309_1:1.4
+	gal309:1.4
+	gal308_2:1.4
+	gal308_1:1.4
+	gal308:1.4
+	gal307_2:1.4
+	gal307_1:1.4
+	gal307:1.4
+	gal306_3:1.4
+	gal306_2:1.4
+	gal306_1:1.4
+	gal306:1.4
+	gal305_3:1.4
+	gal305_2:1.4
+	gal305_1:1.4
+	gal305:1.4
+	gal304_11:1.3
+	gal304_10:1.3
+	gal304_9:1.3
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.4
+date	97.03.20.08.18.58;	author flr;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.08.26.10.48.28;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.06.29.16.08.28;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.01.57;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.58;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@return after #endif in caabsb
+@
+text
+@*DK caabsb
+      SUBROUTINE CAABSB(EMGNRJ,EMBETA,EMALFA,TINOX0,IER)
+C ---------------------------------------------------------------
+C - M.N.Minard - 930901
+CKEY CALO
+C! TEST ABSORBPTION OF ELECTROMAGNETIC SHOWER
+C     ARGUMENT INPUT
+C                   EMGNRJ = SHOWER ENERGY
+C                   EMBETA = BETA COEFFICIENT OF SHOWER
+C                   EMALFA = ALFA COEFFICIENT OF SHOWER
+C                   TINOX0 = CURRENT RADIATION LENGTH
+C     ARGUMENT OUTPUT
+C                   IER = 0 SHOWER NOT FULLY ABSORBED
+C                   IER = 1 SHOWER ABSORBED
+C ----------------------------------------------------------------
+#ifndef DOC
+      PARAMETER (SLEN = 1. , SFRAC = 0.001 , SA0 = 0.0001 )
+      PARAMETER (ERADMX = 20.)
+C ------------------------------------------------------------------
+C
+C-       Test shower is decreasing
+C
+      IER = 0
+      A0 = CASHEM(TINOX0,1)
+      A1 = CASHEM(TINOX0+SLEN,1)
+      IF ( A0.GT.A1.OR.(A0.LT.SA0.AND.TINOX0.GT.ERADMX)) THEN
+        XFR = (A0+A1)*SLEN/(2.*EMGNRJ)
+        IF ( XFR.LT.SFRAC.OR.A1.LT.SA0) THEN
+           IER = 1
+        ENDIF
+      ENDIF
+      RETURN
+      END
+#endif
+@
+
+
+1.3
+log
+@add ifndef DOC in caabsb
+@
+text
+@d34 1
+a34 1
+#endif@
+
+
+1.2
+log
+@release galeph 302
+@
+text
+@d16 1
+d34 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a15 1
+#ifndef DOC
+a32 1
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

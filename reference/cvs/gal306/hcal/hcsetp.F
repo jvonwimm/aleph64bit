@@ -1,0 +1,87 @@
+*DK hcsetp
+      SUBROUTINE HCSETP
+C------------------------------------------------
+C
+C!Prepare information from track banks for the parametrization routines
+C!Transform coordinates to the local frame : z-axis is
+C!    always normal to the wire planes
+C!
+C!         Authors   :G.Catanesi,F.Romano 86/09/01
+C!
+C!         Called by : CAHMOD
+C -----------------------------------
+#ifndef DOC
+      SAVE
+#include "jobcom.h"
+#include "alcons.h"
+#include "iocom.h"
+#include "trkcom.h"
+#include "hccoun.h"
+#include "hcgega.h"
+#include "hcloc.h"
+#include "hccong.h"
+      PARAMETER(LDIM=3)
+      DIMENSION XX0(LDIM),XX1(LDIM)
+C.....................
+      UNO=1.
+      IHCMOD=ITRKEL(10)
+C
+      IF(IHCPOR.EQ.LPBAR) THEN
+C
+C.....Rotate to the module frame
+         DO 10 I=1,LDIM
+            XX0(I)=0.
+            XX1(I)=0.
+            DO 10 J=1,LDIM
+C
+               XX0(I)=TRKELE(J)*TRKELE(14+3*I+J)+XX0(I)
+               XX1(I)=(TRKELE(J+3)+TRKELE(J))*TRKELE(14+3*I+J)+XX1(I)
+   10    CONTINUE
+C.....
+C     Transform to the 'parametrization' frame
+C.....
+C........in the barrel
+C.....
+         IF(MOD(IHCMOD,2).EQ.1) UNO=-1.
+         HCPAX0 = UNO*XX0(3)
+         HCPAY0 = UNO*XX0(1)
+         HCPAZ0 = XX0(2)-RHBAMN
+         X1 = UNO*XX1(3)
+         Y1 = UNO*XX1(1)
+         Z1 = XX1(2)-RHBAMN
+C
+      ELSE
+C.....
+C........in the endcap
+C.....
+         IF(IHCPOR.EQ.LPECB) UNO=-1.
+         HCPAX0 = TRKELE(1)
+         HCPAY0 = UNO*TRKELE(2)
+         HCPAZ0 = UNO*TRKELE(3)-ZHECMN
+         X1 = TRKELE(1)+TRKELE(4)
+         Y1 = UNO*(TRKELE(2)+TRKELE(5))
+         Z1 = UNO*(TRKELE(3)+TRKELE(6))-ZHECMN
+      ENDIF
+C
+C...find theta-phi angles in the new system
+C
+      ALXYZ = SQRT((X1-HCPAX0)**2+(Y1-HCPAY0)**2+(Z1-HCPAZ0)**2)
+
+      HCPACX =(X1-HCPAX0)/ALXYZ
+      HCPACY =(Y1-HCPAY0)/ALXYZ
+      HCPACZ =(Z1-HCPAZ0)/ALXYZ
+      HCPDIP =ASIN(HCPACZ)
+      HCPPHI =ATG(HCPACY,HCPACX)
+C.....
+      IF(FHCDB2)THEN
+         WRITE(LOUTIO,510)ITRKEL(1)
+         WRITE (LOUTIO,500) HCPAX0,HCPAY0,HCPAZ0,HCPACX,HCPACY,HCPACZ ,
+     +   HCPDIP*RADEG,HCPPHI*RADEG,IHCMOD
+      ENDIF
+      RETURN
+
+  500 FORMAT (/1X,'+++HCSETP+++ shower starting pt. ',3F10.3,3F10. 6/3X,
+     +'Theta phi in show.ref.sys. ',2F7.2,3X, ' starting mod. ',I4)
+  510 FORMAT(1X,'The GEANT track # is ==> ',I6)
+      END
+#endif

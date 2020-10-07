@@ -1,0 +1,82 @@
+#!/usr/local/bin/perl
+require "complete.pl";
+require "ctime.pl";
+########################################################################
+#                               tapelist
+# script to query tms (sysreq tms q , including text tag )
+# 16/01/96                                                 F.Blin
+########################################################################
+
+$vid_first = "";
+$vid_last = "";
+$label = "";
+@buffer = ();
+$n_exit = 0;
+
+&HELP(0) if ($ARGV[0] eq "help" || @ARGV == 0 || $ARGV[0] eq "?");
+&HELP(1) if (length($ARGV[0]) != 6);
+
+    $vid_first = $ARGV[0] ;
+    $vid_last = $ARGV[1] if (length($ARGV[1]) == 6);
+    $vid_last = $ARGV[2] if (length($ARGV[2]) == 6);
+
+$vid_first =~ tr/a-z/A-Z/;
+&HELP(1) if (!&check_TAPENO($vid_first));
+$label = substr($vid_first,0,2);
+$numb_first = substr($vid_first,2,4);
+$i_last = $numb_first;
+if ($vid_last ne ""){
+    $vid_last =~ tr/a-z/A-Z/;
+    $label_last = substr($vid_last,0,2);
+    if ($label_last ne $label){
+        print "\n WARNING Please same label!...\n";
+	&HELP(1);
+    }
+    &HELP(1) if (!&check_TAPENO($vid_last));
+    $numb_last = substr($vid_last,2,4);
+    if ($numb_last <= $numb_first){
+       $vid_last = "" ;
+       $n_exit = 1;
+    }
+    $i_last = $numb_last if ($vid_last ne "");
+}
+
+$vid_tms = $vid_first; 
+$vid_tms = "$vid_first - $vid_last" if ($vid_last ne "");
+@buffer = `sysreq tms query vid $vid_tms  \"(\" own lib labeltyp vsn dens ring group 2>&1`;
+if ($?){
+   print "\n @buffer \n";
+   exit(1);
+}
+
+print "  Vid  Owner    Library Label vsn      den ring group     Comments\n";
+for($i==0 ; $i<=$#buffer ; $i++){
+   $str_begin = $buffer[$i];
+   $str_begin =~ s/\n/ /;
+   $vid_search = substr($str_begin,0,index($str_begin," "));
+   $str_comment = `sysreq tms tag vid $vid_search get text`;
+   $str_comment =~ s/^\s+//;
+   $str_comment =~ s/\n/ /;
+   print "$str_begin $str_comment \n";
+}
+exit($n_exit); 
+#++++++++++++++++++++++++++++++++++++++++++++++
+sub check_TAPENO{
+
+    local($str) = $_[0];
+    foreach $i (0..6) {
+        $str_search = substr($str,$i,1); 
+        return 0 if ($str_search=~ /^(\d)$/  && $i < 1);
+#	return 0 if ($str_search ne "A" && $i == 0);
+        return 0 if ($str_search=~ /^(\D)$/  && $i > 1);
+    }
+    return 1;
+}
+#+++++++++++++++++++++++++++++++++++++++++++++++
+sub HELP{
+
+      print "\n Syntax     : tapelist  first_tape_number [- last_tape_number]\n";   
+      print "\n examples : tapelist AU0010";
+      print "\n            tapelist AU0010 - AU0025      blanks are mandatory\n";
+exit($_[0]);
+  }

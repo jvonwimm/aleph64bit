@@ -1,0 +1,56 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	tpc300_1:1.1.1.1
+	tpc300:1.1.1.1
+	tpc218:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.09.14.29.59;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.09.14.30.00;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK tpcver
+      SUBROUTINE TPCVER(VERTPC)
+C-------------------------------------------------------------
+C! Return TPCSIM version number.
+C
+C  P. Janot  --  26 June 1988
+C-------------------------------------------------------------
+#include "version.h"
+C ------------------------------------------------------------
+      VERTPC = TSIVER
+      RETURN
+      END
+@
+
+
+1.1.1.1
+log
+@import tpcsim 300
+@
+text
+@@

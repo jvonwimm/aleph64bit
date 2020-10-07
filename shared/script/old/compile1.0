@@ -1,0 +1,169 @@
+#! /bin/csh
+#============================================================================
+#                             compile
+#                                                       F.Ranjard
+#============================================================================
+# compile all files in a source directory
+# OSF1 IRIX5 HPUX9 are used to compile *.F or *.c
+# if it does not exist it is created
+#============================================================================
+# P1 -> source directory
+# P2 -> " " or  sub-directory name
+# P3 -> " " or "dbx"      compile in debug mode
+# last arg -> -v  for verbose
+#============================================================================
+# compile1.0
+# 960411 - 1st version
+#============================================================================
+#
+set exec_name = "compile1.0"
+set nar = $#argv
+if (nar != 0) then
+  if ($argv[${nar}] == "-v") then
+     set echo on
+     set argv[${nar}] = ""
+     @ nar = ${nar} - 1
+  endif
+endif
+#
+if ( $?ENVIRONMENT ) then
+ if ( "$ENVIRONMENT" == "INTERACTIVE" && ${nar} < 1) then
+   echo " "
+   echo " usage: "
+   echo " compile <source directory> [<sub-directory>] [<-g>] "
+   echo " "
+   echo " i.e. - compile /al/reference/cvs/c  "
+   echo " will create c/${OS} directory if it does not exist"
+   echo " will remove all c/${OS}/*.o files and then "
+   echo " will create without debug c/${OS}/*.o from c/*.c"
+   echo " will create /al/reference/cvs/gal303/${OS}/*.o from"
+   echo " "
+   echo "      - compile /al/reference/cvs/gal303  -g"
+   echo " will create /al/reference/cvs/gal303/${OS}/*.o from"
+   echo " /al/reference/cvs/gal303/*/*.F compiled in debug mode"
+   echo "      - compile /al/reference/cvs/gal303  ecal "
+   echo " will create /al/reference/cvs/gal303/${OS}/*.o from"
+   echo " /al/reference/cvs/gal303/ecal/*.F compiled without debug "
+   echo " "
+   exit(1)
+ endif
+endif
+#
+set src_dir = $1
+set debug   = ""
+set sub_dir = ""
+if (${nar} >= 2) then
+  if ($argv[${nar}] == "dbx") then
+    set debug   = "-g"
+    set argv[${nar}] = ""
+    @ nar = ${nar} - 1
+  endif
+endif
+if (${nar} >= 2) set sub_dir = $2
+#   
+#*******>
+set UNAME = `uname`
+#*******<
+unset noclobber
+#
+set flag = "OK"
+ 
+set src_inc = "."
+if ( -d ${src_dir}/inc ) set src_inc = "${src_dir}/inc"
+if !( -d ${src_dir}/${OS} ) then
+   cd ${src_dir}
+   mkdir ${OS}
+endif
+#
+# =========================================================================
+#
+echo `date` "=== START ${exec_name} ${HOST} ${src_dir} ===" >> ${src_dir}/spy
+#
+# ===============================================================================
+#
+#  ---> compile all *.F and *.c just created < ---------------------
+#
+if ($UNAME == "HP-UX") then
+   set FC = "fort77"
+else
+   set FC = "f77"
+endif
+set FC_OPT = "${FC} ${FCOPT} ${debug} -I${src_inc}"
+set CC_OPT = "cc ${CCOPT} ${debug} -I${src_inc}"
+#
+cd ${src_dir}/${OS}
+  
+### compile c routines if any
+
+set flagc = " "
+if (${sub_dir} != "") then
+   set lsc = "../${sub_dir}/*.c"
+else
+   set lsc = "../*.c ../*/*.c"
+endif
+ls ${lsc}
+if ( $status == 0 ) then
+   ${CC_OPT} ${lsc} | & tee -a comp{debug}.log
+   if ($status == 1) then
+      set flagc = "C NOT OK"
+      goto cend
+   endif
+   set flagc = "C OK" 
+endif  
+#
+
+#### compile *.F routines if any
+set flagf = " "
+if (${sub_dir} != "") then
+   set lsD = "${sub_dir}"
+   set upF = ""
+else
+   set lsD = `ls .. `
+   set upF = `ls ../*.F ../*.f`
+endif
+
+foreach dir ( $lsD[*] )
+   if ( -d ../${dir} || ${upF} != "") then
+      set lsF = "${upF} ../${dir}/*.F ../${dir}/*.f"
+      ls ${lsF} 
+      if ($status == 0) then
+         ${FC_OPT} ${lsF} | & tee -a comp${debug}.log   
+         if ($status == 1) then
+            set flagf = "F NOT OK"
+            goto cend
+         else
+            set flagf = "F OK"
+         endif
+      endif
+      set upF = ""
+   endif
+end
+if ($status == 1) then
+   set flagf = "no *.F or *.f"
+   goto cend
+endif
+#
+
+# ===============================================================
+
+cend:
+set flag = "${flagf} ${flagc}"
+
+# ================================================================
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> spy
+spy:
+
+cd ${src_dir}
+echo `date` "${exec_name} ${user} ${src_dir} ${flag}" >> ${src_dir}/spy
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> exec_end
+exec_end:
+ exit
+ 
+
+
+
+

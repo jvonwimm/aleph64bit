@@ -1,0 +1,160 @@
+      SUBROUTINE ABBINS(JW,LUN,LISTR,NXT,NTO)
+
+*     DEFINE LIST OF BANK NAMES, INSERT POINTER INTO NEW BANKS
+*     AND FINALLY DROP +REC BANK
+
+      INTEGER JW(*)
+      CHARACTER*(*) LISTR
+#include "boscom.h"
+#include "param.h"
+      CHARACTER*4 NAME,CHAINT
+*     ...
+      JW2=0
+      JW(1)=0
+      JW(2)=0
+
+*     DEFINE LIST OF BANK NAMES
+
+*     GET LIST-INDEX AND INITIALIZE LIST
+      NLS=0
+      JLS=6
+      IF(LEN(LISTR).EQ.1) THEN
+         JLS=INDEX('CERST',LISTR)
+         IF(JLS.EQ.0) JLS=6
+      END IF
+      JLS=JLS+ILT
+      IF(JW(JLS).EQ.0) THEN
+         CALL WBANC(JW,JW(JLS),0,*91)
+         JW(JW(JLS)-3)=INTCHA('+LST')
+      END IF
+      JW(JW(JLS))=0
+
+*     START RECORD
+C      IRD=MLINK(JW,'+REC',LUN)
+C      IF(IRD.EQ.0) GOTO 100
+C      NTOT=JW(IRD)
+C      NEXT=IRD+1
+        NEXT    = NXT
+        NTOT    = NTO
+      NAMI=JW(NEXT+2)+1
+
+*     NEXT BANK
+   10 LENG=JW(NEXT+3)+4
+      IF(JW(NEXT+2).NE.NAMI) THEN
+*        NEW NAME
+         NAMI=JW(NEXT+2)
+*        RESET LINK BANKS
+         JND=JW(IDL)+NAMI-NSYST
+         IF(JW(JND).NE.0) JW(JW(JND))=0
+*        STORE NAME INDEX IN LIST
+         DO 20 I=1,NLS
+         IF(JW(JW(JLS)+I).EQ.NAMI) GOTO 30
+   20    CONTINUE
+         IF(JW(JW(JLS)-2)-4.LE.NLS) THEN
+            JW(JW(JLS))=NLS
+            CALL WBANC(JW,JW(JLS),NLS+4,*91)
+         END IF
+         NLS=NLS+1
+         JW(JW(JLS)+NLS)=NAMI
+*        IO-STATISTIC FOR THIS NAME
+         IOA=NAMI-NSYST
+         IF(JW(IOS).EQ.0.OR.JW(JW(IOS)).LT.2*IOA) THEN
+            CALL WBANC(JW,JW(IOS),2*IOA+10,*91)
+         END IF
+         JW(JW(IOS)+2*IOA-1)=JW(JW(IOS)+2*IOA-1)+1
+      END IF
+   30 NEXT=NEXT+LENG
+      NTOT=NTOT-LENG
+      IF(NTOT.GT.0) GOTO 10
+*     WORD COUNT ERROR
+      IF(NTOT.LT.0) GOTO 92
+*     SET LENGTH OF LIST
+      JW(JW(JLS))=NLS
+
+*     INSERT POINTER INTO NEW BANKS
+
+*     START RECORD
+C      NTOT=JW(IRD)
+        NTOT    = NTO
+      NSFT=0
+C      NEXT=IRD+1
+        NEXT    = NXT
+      NAMI=JW(NEXT+2)+1
+
+*     NEXT BANK
+   40 LENG=JW(NEXT+3)+4
+
+*     COMPARE NAME INDICES
+      IF(JW(NEXT+2).NE.NAMI) THEN
+*        NEW NAME
+         NAMI=JW(NEXT+2)
+      ELSE
+*        SAME NAME AS PREVIOUS
+         IF(JW(IND-2).EQ.JW(NEXT+1).AND.IND+JW(IND)+1.EQ.NEXT) THEN
+*           SAME NUMBER, ADD TO SAME BANK
+            NSFT=NSFT+4
+            JW(IND)=JW(IND)+LENG-4
+            CALL UCOPY2(JW(NEXT+4),JW(NEXT),NTOT-4)
+            NEXT=NEXT+LENG-4
+            GOTO 70
+         ELSE
+            NIND=JW(IND-1)
+            IF(JW(IND-2).LT.JW(NEXT+1).AND.NIND.EQ.0) GOTO 60
+         END IF
+      END IF
+
+*     FIND LAST BANK, TO INSERT POINTER
+      IND=NAMI+1
+   50 NIND=JW(IND-1)
+      IF(NIND.NE.0) THEN
+         IF(JW(NIND-2).LT.JW(NEXT+1)) THEN
+            IND=NIND
+            GOTO 50
+         ELSE IF(JW(NIND-2).EQ.JW(NEXT+1)) THEN
+*           DROP BANK WITH SAME NAME,NR
+            NAME=CHAINT(JW(NEXT))
+            JW(1)=1
+            MDRP=MDROP(JW,NAME,JW(NEXT+1))
+            NIND=JW(IND-1)
+         END IF
+      END IF
+
+*     INSERT POINTER
+   60 JW(IND-1)=NEXT+3
+      IND=NEXT+3
+      JW(IND-1)=NIND
+      NEXT=NEXT+LENG
+
+*     TRANSITION TO NEXT BANK
+
+   70 NTOT=NTOT-LENG
+      IF(NTOT.NE.0) GOTO 40
+      IF(NSFT.NE.0) THEN
+C         NSFT=JW(IRD)-NSFT
+C         IRD=MBANK(JW,'+REC',LUN,NSFT)
+C       PRINT *,'ERROR +REC-BANK NEEDED'
+C
+C ADJUST GAP FOR SHIFTED BANKS
+C
+          JW(15)    = JW(15)-NSFT
+      END IF
+
+*     RECORD COMPLETE - DROP +REC BANK
+
+C      JW(IRD)=0
+C      IRD=MDROP(JW,'+REC',LUN)
+*     DUMP IF FLAG
+C     IF(IFFF.NE.0) CALL BOSDP(JW)
+      GOTO 90
+
+*     ERROR CONDITIONS
+*     ERROR IN WORD LENGTH
+   92 JW2=JW2+1
+*     NO SPACE FOR WORK BANK
+   91 JW2=JW2+1
+      JW(JW(JLS))=0
+C      IRD=MDROP(JW,'+REC',LUN)
+
+   90 JW(2)=JW2
+  100 RETURN
+      END

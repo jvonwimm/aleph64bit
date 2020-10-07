@@ -1,0 +1,144 @@
+head	1.1;
+access;
+symbols
+	alio83:1.1
+	alio82:1.1
+	alio81:1.1
+	alio80:1.1
+	alio74:1.1
+	alio73:1.1
+	alio72:1.1
+	alio71:1.1
+	alio70:1.1
+	alio68:1.1
+	alio69:1.1
+	alio67:1.1
+	alio66:1.1
+	alio65:1.1
+	alio64:1.1
+	alio63:1.1
+	alio62:1.1
+	alio61:1.1
+	alio60:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.04.23.10.01.11;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@move alph, dbas, a part of alef and a part of c to alephio
+Modified Files:
+ 	version.h
+ Added Files:
+ 	adbrow.F adbrpn.F adbrun.F adbswp.F adbver.F agetdb.F agtfil.F
+	albos.F aldawr.F aldtyp.F aleveh.F alfind.F alfmt.F algtbk.F
+ 	algtdb.F algtlu.F algtro.F algtyp.F alinst.F alk7fil.F
+ 	alk7fru.F alk7op.F alk7tru.F alredb.F alrune.F alrunh.F
+ 	alrunr.F alseed.F alstho.F alstin.F alstri.F altabl.F alvsn.F
+ 	aopdbs.F aublis.F aubos.F aubprs.F bkcari.F bkinca.F bkrhab.F
+ 	bkrhal.F bkrhaw.F bktobk.F cafiht.F chahol.F dafrds.F gtdbas.F
+ 	gtstup.F igtfmt.F jhocha.F julrec.F junial.F junidb.F
+ 	kbytrec.F loctab.F nameru.F ubpack.F uclean.F uindxs.F usbos.F
+ 	usgtdb.F utcblk.F utccop.F utcofo.F utwocl.F utwoex.F
+Removed Files:
+	noibm.F
+@
+text
+@      INTEGER FUNCTION USGTDB(LBASE,LIST,IRUN)
+C -------------------------------------------------------------
+C! USER routine to get a list of data base banks
+C - F.Ranjard - 890802
+C - modified by F.Ranjard - 891001
+CKEY DAF DBASE / USER
+C
+C  Input  :   LBASE = data base logical unit
+C             LIST  = list of banks names to be accessed from data base
+C                     single name or list of names
+C             IRUN  = current run number
+C
+C  Ouput : USGTDB = > 0  if existing bank(s) are still valid
+C                   = 0  if error occurs ( no valid bank found)
+C                   < 0  if one or more existing banks were reloaded
+C
+C  Called by : ALGTDB, AGETDB when a UDAF data card is encountered
+C
+C ============= FALCON I version of USGTDB =======================
+C
+C  reads the DAF in the following way:
+C  This routine assumes that ONLY 1 RUN is executed at a time
+C  that means that if a bank NAME exists when entering the routine
+C  it must be used, otherwise get it from data base.
+C
+C     IF a bank exists (read from data cards or from tape) THEN
+C        it is taken in priority.
+C     ELSE
+C        valid bank is read from the data base
+C     ENDIF
+C
+C - ENTRY point USGTD1 (INEW)
+C   input argument : INEW   / INTE = data card bank number
+C   output         : USGTD1 / INTE = previous data card bank number
+C   data base bank  given on data cards have the bank number INEW
+C--------------------------------------------------------------
+#ifndef DOC
+      CHARACTER*(*)  LIST,NAME*4
+#include "bcs.h"
+      INTEGER USGTD1
+      DATA NRDC /-1/
+C ----------------------------------------------------------------------
+C
+      ISTAT=1
+      IOLD=1
+C                     Analyse list of Banks
+      IMAX = (LNBLNK(LIST)+3)/4
+      I=0
+  2   I=I+1
+      IF (I.LE.IMAX) THEN
+         NAME=LIST((I-1)*4+1:I*4)
+C
+C     take the bank if already there
+         IND = IW(NAMIND(NAME))
+         IF (IND .NE. 0) THEN
+            IOLD = -1
+         ELSE
+C     otherwise get it from the data base
+C     get the bank# valid for run# IRUN
+            NEW = NDANR (LBASE,NAME,'LE',IRUN)
+C     if there is a valid bank then load it
+            IF (NEW .NE. 0) THEN
+               IND = MDARD (IW,LBASE,NAME,NEW)
+               IOLD=-1
+            ELSE
+               ISTAT = 0
+            ENDIF
+         ENDIF
+C
+C     get next bank name in the list
+         GO TO 2
+      ENDIF
+C
+      USGTDB=ISTAT*IOLD
+      RETURN
+C
+C - entry point to reset the data card bank number NRDC
+C   which is not used in the present version
+C   this FUNCTION is called by ADBSWP after reading data cards
+C
+      ENTRY USGTD1 (INEW)
+      USGTD1 = NRDC
+      NRDC = INEW
+      RETURN
+C
+      END
+#endif
+@

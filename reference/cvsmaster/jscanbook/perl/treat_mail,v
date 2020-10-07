@@ -1,0 +1,554 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	V0060:1.1.1.1
+	V0059:1.1.1.1
+	V0058:1.1.1.1
+	V0057:1.1.1.1
+	V0056:1.1.1.1
+	V0055:1.1.1.1
+	V0054:1.1.1.1
+	V0053:1.1.1.1
+	V0052:1.1.1.1
+	V0051:1.1.1.1
+	V0050:1.1.1.1
+	V0049:1.1.1.1
+	V0048:1.1.1.1
+	V0047:1.1.1.1
+	V0046:1.1.1.1
+	V0045:1.1.1.1
+	V0044:1.1.1.1
+	V0043:1.1.1.1
+	V0042:1.1.1.1
+	V0041:1.1.1.1
+	V0040:1.1.1.1
+	V0039:1.1.1.1
+	V0038:1.1.1.1
+	V0037:1.1.1.1
+	V0036:1.1.1.1
+	V0035:1.1.1.1
+	V0034:1.1.1.1
+	V0033:1.1.1.1
+	V0032:1.1.1.1
+	V0031:1.1.1.1
+	V0030:1.1.1.1
+	V0029:1.1.1.1
+	V0028:1.1.1.1
+	V0027:1.1.1.1
+	V0026:1.1.1.1
+	V0025:1.1.1.1
+	V0024:1.1.1.1
+	V0023:1.1.1.1
+	V0022:1.1.1.1
+	V0021:1.1.1.1
+	V0020:1.1.1.1
+	V0019:1.1.1.1
+	V0018:1.1.1.1
+	V0017:1.1.1.1
+	V0016:1.1.1.1
+	V0015:1.1.1.1
+	V0014:1.1.1.1
+	V0013:1.1.1.1
+	V0000:1.1.1.1
+	V0001:1.1.1.1
+	v1:1.1.1.1
+	jacotf:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2000.03.01.10.29.49;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	2000.03.01.10.29.49;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#!/usr/local/bin/perl
+#
+# Perl program submitted by crontab
+# Will read mail files residing on a "savmail" directory 
+# where they have been written before and treat them:
+# If the subject is in the subject_keywords list, copy
+# the body of the mail file in a directory where the 
+# fortran Program will find it later.
+# If not, copy the complete mail file in another directory and  
+# send a mail to the system Manager.
+# If no problem occurs, remove the file from the "savmail"
+# directory.   
+# F.Loverre Apr 1996
+# F.Loverre Updated 18/06/96
+#           Routine OPEN_FILE added
+# F.Loverre Updated 26/01/98 
+#           Add the subject COP in the subject_keywords list
+# J.Boucrot Updated 05/01/99 Main directory on afs 
+#
+#***************************************************************
+#***************************************************************
+# Define the main directory
+$main_dir = "/afs/cern.ch/user/a/alsoft/";
+#########$main_dir = "/u/xu/alsoft/";
+#########$main_dir = "/u/xu/alsoft/jacotf/";
+#
+# Define the System Manager Mailing address
+$syst_manager = 'boucrot@@alws.cern.ch';
+#########$syst_manager = 'jacotf@@alws.cern.ch';
+#
+#***************************************************************
+#***************************************************************
+#
+############  Define some local variables  ##########
+# Store the date and time into a local variable
+$date_start = " Begin $script_file on : " .`date`;
+#
+# Store the full name and base name of this Perl script into local variables
+$script_file = $0;
+($script_name = $0) =~ s#.*/(.*)$#$1#;
+#
+# Store the name of the Directory on which have been copied the incoming mails
+# and a temporary file which will contain the list of files residing on that
+# directory
+$sav_mail_dir = $main_dir . "savmail";
+$list_file = $main_dir . "savmail.list";
+#
+# Store the name of the file which decides if we are in test or in production
+$flag_file = $main_dir . $script_name . ".card";
+#
+# Define the acceptable mail subjects 
+@@subject_keywords =  ("BOK",
+                      "SCR",
+                      "NEW",
+                      "MOD",
+                      "SYS",
+                      "UNQ",
+                      "COP");
+#
+# Store the current process PID number into a local variable
+$pid_num = $$;
+#
+############ Do a list of files residing on the "savmail" Directory ##########
+# Check if the directory exists - 
+# If not, send a mail to the system manager and abend
+&DIR_EXIST($sav_mail_dir,"abend","mail");
+#
+# If the files list file already exists, delete it 
+if (-e $list_file) {
+    unlink($list_file);
+}
+`ls -al $sav_mail_dir > $list_file `;
+#
+############ Open the flag file and retrieve the process mode ########
+############ If it does not exist, abend
+# The flag name ("test" or "production") will be used to define 
+# some working directories
+&OPEN_FILE("FLAGFILE",$flag_file,"read","mail");
+#
+$fltest = 0;
+$flprod = 0;
+while (<FLAGFILE>) {
+    $linin = $_;
+    if (/flag = test\s+(.*)/) {
+        $fltest = 1;
+        $iflag = "test/";
+    }
+    elsif (/flag = production\s+(.*)/) {
+        $flprod = 1;
+        $iflag = "prod/";
+    }
+}
+if ($fltest eq $flprod) {
+    if ($fltest eq 0) {
+        $flagmail = "Could not find the process Flag mode !! Please check the file $flag_file !";
+    }
+    elsif ($fltest eq 1) {
+        $flagmail = "The process Flag mode is ambiguous !! Please check the file $flag_file !";
+    }
+    $subj_error = "Flag file error";
+    &SEND_MAIL($subj_error,$flagmail,"mail");
+}
+close FLAGFILE;
+#
+############ Define the directories and files whose names depend of the process Flag value
+$from_flag_dir = $main_dir . $iflag; 
+#
+# Define a file name for the log file
+$log_file = $from_flag_dir . $script_name . ".log";
+#
+# Define the receipies directories for mail files
+$good_mail_dir = $from_flag_dir . "rqfiles/";
+$bad_mail_dir  = $from_flag_dir . "unwantmail/";
+#
+############ Open the log file - If it exists append it ########
+############    If directory does not exist create it   ########
+# If an error occurs send a mail to the system Manager 
+&DIR_EXIST($from_flag_dir,"create","mail");
+#
+if (-e $log_file) {
+    &OPEN_FILE("LOGFILE",$log_file,"append","mail");
+}
+else {
+    &OPEN_FILE("LOGFILE",$log_file,"write","mail");
+}
+# Append the log file
+print LOGFILE "============================================================================================\n";
+print LOGFILE " \n";
+print LOGFILE $date_start;
+#
+############ If receipies directories do not exist create them  ########
+&DIR_EXIST($good_mail_dir,"create","log");
+&DIR_EXIST($bad_mail_dir,"create","log");
+# 
+############## Read the "savmail" files list and treat the files #############
+# Open files list file in read mode
+&OPEN_FILE("LISTFILE",$list_file,"read","log");
+#
+# Loop on files residing on list files file
+$nread_file = 0;
+$nleave_file = 0;
+$nwrite_good = 0;
+$nwrite_bad = 0;
+$nfile = 0;
+LOOPFILES:
+while (<LISTFILE>) {
+    $lfile = $_;
+    $nfile++;
+#       Skip 1st line (contains the total number of files
+    next LOOPFILES unless $nfile > 1; 
+    @@fields = split(/\s+/,$lfile); 
+#       Skip lines containing a non interesting file name
+    $fname = $fields[8];
+    next LOOPFILES unless $fname ne "." && $fname ne ".."; 
+    next LOOPFILES unless (substr($fname,0,1)) ne "#";
+#
+    $fname = $sav_mail_dir . "/" .$fname;
+#
+    print LOGFILE "      - Treat file : $fname\n";
+    $nread_file++;
+#
+#       Skip file if file has zero size
+    if (-z $fname) {
+        print LOGFILE "      **** File $fname is empty - Ignored\n";
+        print LOGFILE " \n";
+        $nleave_file++;
+        next LOOPFILES;
+    }
+#
+#       If file is newer than process do not treat it
+    if (-M $fname < 0) {
+            print LOGFILE "     **** File $fname is newer than process - Ignored\n";
+        print LOGFILE " \n";
+        $nleave_file++;
+        next LOOPFILES;
+    } 
+#
+#      Open the file and fix some flags 
+    &OPEN_FILE("SAVFILE",$fname,"read","log");
+    $nlin = 0;
+    $good = 0;
+    $start_body = 0;
+    $subject = 0;
+    while (<SAVFILE>) {
+        $linin = $_;
+        $nlin++;
+#       Check the quality of the mail  
+        if (/^From:\s+(.*)/) {
+            $from = $1;
+            $from =~ s/\s+/ /g;
+        }
+        elsif (/^Subj:\s+(.*)/ || /^Subject:\s+(.*)/){
+            $subject = $1;
+            if ($subject ne "") {
+                CHECKGOOD:
+#                 Check if the subject is in the acceptable subjects list
+                foreach $subj_key (@@subject_keywords) {            
+                    if (substr($subject,1,3) eq $subj_key) {
+                        $good = 1;
+                        last CHECKGOOD;
+                    }
+                }
+            }
+            else {
+                $subject = "unknown";
+            } 
+        }
+#                 Find the first blank line after the message header
+        elsif (/^ *$/ && $start_body eq 0) {
+            $start_body = $nlin;
+        }
+    }
+    if ($subject eq 0) {
+        $subject = "unknown";
+    }
+#
+    close SAVFILE;
+#
+###########  Output file criterias ########
+# We will write the message files found on "savmail" directory with the following conventions:
+#   - The body of acceptable message files will be written on the "good_mail_dir" directory
+#     The filename will be the subject of the message (filename + file extension).
+#     If the subject contains blanks they will be replaced by one underscore.
+#     If a file exists already with the same filename, the file extension will be implemented
+#     with : _PID_n (PID = Process ID) (n = order number of the file in the Loop on files) 
+#   - Non acceptable messages will be written on the "bad_mail_dir" directory
+#     with the same conventions as acceptable ones.
+#      If the subject contains blanks replace them by an underscore
+    $subject =~ s/\s+/_/g;
+#
+    if ($good eq 0) {
+        $write_dir = $bad_mail_dir;
+        $start_write = 1;
+        $nwrite_bad++;
+        print LOGFILE "      **** Non acceptable Mail file sent by $from\n";
+    }
+    else {
+        print LOGFILE "      Acceptable Mail file sent by $from\n";
+        $write_dir = $good_mail_dir; 
+        $start_write = $start_body + 1;
+        $nwrite_good++;
+    }
+#
+    $file_name = $write_dir . $subject;
+#
+#      Look if another file with the same filename exists already in the output
+#      directory
+#      If yes, implement the file extension 
+    if (-e $file_name) {
+        print LOGFILE "      **** File $file_name exists already !!\n";
+        $incr = $pid_num . "_" . $nread_file;
+        $file_name = $file_name . "_" . $incr;
+    }
+#
+###########  Write the file on the appropriate directory ########
+#      Open the file again and decide how and where copy it
+    &OPEN_FILE("SAVFILE",$fname,"read","log");
+#
+#      Open the output file in write mode
+#      If an error occurs send a mail to the system manager - The file will
+#      stay in the savmail directory
+    if (&OPEN_FILE("OUTFILE",$file_name,"write","log") eq 777) {
+        print LOGFILE "           File will be left in $sav_mail_dir directory\n";
+        print LOGFILE " \n";
+        if ($good eq 0) {
+            $nwrite_bad--;
+        }
+        else {
+            $nwrite_good--;
+        }
+        $nleave_file++;
+        close SAVFILE;
+        next LOOPFILES;
+    }
+#
+# For acceptable messages write only the body of the message
+# For the others write the message as it is
+    $nlin = 0;
+    while (<SAVFILE>) {
+        $linin = $_;
+        $nlin++;
+        next unless ($nlin) >= $start_write;
+        printf OUTFILE $linin;
+    }
+#
+    print LOGFILE "           has be written as ->  $file_name\n";
+#
+# Close files
+close SAVFILE;
+close OUTFILE;
+#
+# Remove the file from the "savmail" directory
+if (!unlink ($fname)) {
+    print LOGFILE "      * Warning : Could not remove file $fname\n";
+}
+else {
+    print LOGFILE "      File $fname has been removed\n";
+}
+#
+    print LOGFILE " \n";
+#
+#   End of LOOPFILES ####
+}
+#
+############### Normal End of program ############
+print LOGFILE "           $nread_file files read on disk $sav_mail_dir\n";
+print LOGFILE "           $nleave_file files not treated and kept on disk $sav_mail_dir\n";
+print LOGFILE "           $nwrite_good files written onto disk $good_mail_dir\n";
+print LOGFILE "           $nwrite_bad files written onto disk $bad_mail_dir\n";
+#
+$date_stop = " Normal end of $script_file on : " .`date`;
+print LOGFILE $date_stop;
+#
+# Close files
+close LOGFILE;
+close LISTFILE;
+#
+# If some bad mails have been found, send a mail to the system Manager
+if ($nwrite_bad ne 0) {
+    $subj_error = "Bad mails found";
+    $bad_mail = "Some bad mails have been copied onto directory $bad_mail_dir !!";
+    &SEND_MAIL($subj_error,$bad_mail,"log");
+}
+#
+# If some files have been left on "savmail" directory, send a mail to the system Manager
+if ($nleave_file ne 0) {
+    $subj_error = "Files not treated";
+    $left_mail = "Some files have been left in the directory $sav_mail_dir !!";
+    &SEND_MAIL($subj_error,$left_mail,"log");
+}
+######################### exit from script ############################
+exit;
+#######################################################################
+##
+##
+sub DIR_EXIST { 
+# Check if a Directory exists - If not, create it or abend 
+# Send a mail to the system manager or append the log file + send a mail
+    local($dirname,$action,$inform)= @@_;
+    if (! -d $dirname) {
+        if ($action eq "abend") {
+            if ($inform eq "mail") {
+                $subj_error = "Missing Directory";
+                $dir_mail = "Directory $dirname does not exist !!";
+                &SEND_MAIL($subj_error,$dir_mail,"mail");
+            }
+            elsif ($inform eq "log") {
+                print LOGFILE "      **** Directory: $dirname does not exist\n";
+                &ABEND;
+            }
+        }
+        elsif ($action eq "create") {
+            if ($inform eq "log") {
+                print LOGFILE "      **** Directory: $dirname does not exist\n";
+                print LOGFILE "           We will create it\n";
+            }
+            if (!mkdir($dirname,0777)) {
+                if ($inform eq "log") {
+                    print LOGFILE "      **** Could not create the Directory $dirname\n";
+                    &ABEND;
+                }
+                elsif ($inform eq "mail") {
+                    $subj_error = "Create Directory Error";
+                    $dir_mail = "Could not create Directory $dirname !!";
+                    &SEND_MAIL($subj_error,$dir_mail,"mail");
+                }
+	    }
+            else {
+                print LOGFILE "          $dirname has been created\n";
+            }
+        }
+    }
+}
+##
+##
+sub OPEN_FILE {
+# Open a file in read or write or append mode  
+# If no error return with a return code 0
+# If an error occurs :
+#   If mode = "write" and inform = "log" return with a return code 777
+#   else : 
+# Send a mail to the system manager or append the log file + send a mail
+    local($fhandle,$filname,$mode,$inform)= @@_;
+#
+    if ($mode eq "read") {
+        $open_way = $filname;
+    }
+    elsif ($mode eq "write") {
+        $open_way = "> $filname";
+    }
+    elsif ($mode eq "append") {
+        $open_way = ">> $filname";
+    }
+    if (!open($fhandle,$open_way)) {
+        if ($inform eq "mail") {
+            $subj_error = "Open file error";
+            $file_mail = "Could not open file $filname in $mode mode !! ";
+            &SEND_MAIL($subj_error,$file_mail,"mail");
+        }
+        elsif ($inform eq "log") {
+            print LOGFILE "      **** Could not open file $filname in $mode mode\n";
+            if ($mode eq "write") {
+		return 777;
+            }
+            &ABEND;
+        }
+    } 
+    return 0;
+}
+##
+##
+sub SEND_MAIL { 
+# Send a mail to the system Manager and quit
+    local($mailsubj,$mailbody_1,$inform)= @@_;
+    $mailbody_2 = "Look at $log_file";
+    $mail_body3 = " ";
+    if ($inform eq "mail") {
+        $mailbody_2 = "Exit from $script_file ->";
+    }
+    elsif ($inform eq "log_mail") {
+        $mailbody_3 = "Exit from $script_file ->";
+    } 
+    open (MAIL, "| mailx -s \"$mailsubj\" $syst_manager");
+    print MAIL <<EOT;
+    $mailbody_1
+    $mailbody_2
+    $mailbody_3
+EOT
+    close MAIL;
+    if ($inform eq "mail" || $inform eq "log_mail") {
+        exit;
+    }
+}
+##
+##
+    sub ABEND {
+# Abnormal end
+    $date_abend = " Abend $script_file on : " .`date`;
+    print LOGFILE $date_abend;
+    close LOGFILE;
+    &ALARM;
+}
+##
+##
+    sub ALARM {
+# Send a mail to the system Manager
+    $subj_error = "$script_file problem";
+    $alarm_mail = "There was a problem during $script_file execution !!";
+    &SEND_MAIL($subj_error,$alarm_mail,"log_mail");
+    exit;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+@
+
+
+1.1.1.1
+log
+@ import jscanbook
+@
+text
+@@

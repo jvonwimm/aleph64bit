@@ -1,0 +1,41 @@
+C -------- Start of /QNCDE/ Specific commons for the NANO -------------         
+      INTEGER  KONVEC,KCNVEC,KONDBM,KCNDBM,KONDDE,KCNDDE,KONDHE,KCNDHE,         
+     &  KONBIP,KCNBIP,KONDJT,KCNDJT,KONDLV,KCNDLV,KONDMS,KCNDMS,KONDPH,         
+     &  KCNDPH,KONDTK,KCNDTK,KONDNT,KCNDNT,KONDAR,KCNDAR,KONDV0,KCNDV0,         
+     &  KONDGC,KCNDGC,KONDEJ,KCNDEJ                                             
+      COMMON /NBNKPO/KONVEC,KCNVEC,KONDBM,KCNDBM,KONDDE,KCNDDE,                 
+     +               KONDHE,KCNDHE,KONBIP,KCNBIP,KONDJT,KCNDJT,                 
+     +               KONDLV,KCNDLV,KONDMS,KCNDMS,KONDPH,KCNDPH,                 
+     +               KONDTK,KCNDTK,KONDNT,KCNDNT,KONDAR,KCNDAR,                 
+     +               KONDV0,KCNDV0,KONDGC,KCNDGC,KONDEJ,KCNDEJ                  
+      INTEGER JNDVHY,JNDVVX,JNDVVY,JNDVVZ,JNDVVM,JNDVTH,JNDVPH,JNDVPP,          
+     +        JNDVC2,JNDVDL,JNDVTT,LNDV0A                                       
+      PARAMETER (JNDVHY=1,JNDVVX=2,JNDVVY=3,JNDVVZ=4,JNDVVM=5,JNDVTH=6,         
+     +           JNDVPH=7,JNDVPP=8,JNDVC2=11,JNDVDL=12,JNDVTT=13,               
+     +           LNDV0A=13)                                                     
+      INTEGER JNDTPX,JNDTPY,JNDTPZ,JNDTDZ,JNDTTA,JNDTTQ,LNDTKA                  
+      PARAMETER(JNDTPX=1,JNDTPY=2,JNDTPZ=3,JNDTDZ=4,JNDTTA=5,JNDTTQ=6,          
+     +          LNDTKA=6)                                                       
+      REAL    BJSPCH,BJSPEF,BBSPR1,BBSPR2,BEETT1,BEETT2,BEETM1,BEETM2           
+      LOGICAL NXHVOK,NXDEOK,NXVDOK,NXMUOK,NXLEPT,NXBJSC,NXBJSF,NXBEES,          
+     &        NXGAMP,NXQFVX,NXQFOK                                              
+      INTEGER MINTRK,NITCUT,NTPCUT,NITCUJ,NTPCUJ,MCOPTI                         
+      REAL    ECHMIN,PCUTMI,PCUTMA,THCCUT,BD0CUT,BZ0CUT,PCUMIJ,PCUMAJ,          
+     &        THCCUJ,BD0CUJ,BZ0CUJ,BMYCUT,ENEVIS,PHOCUT,V0CHSI,V0CHBO,          
+     &        PMINMC,REFMIN,RMYCUT                                              
+      INTEGER KTNO                                                              
+      REAL    QV0PCH,QV0NCH                                                     
+      CHARACTER*2 RECOOP                                                        
+      CHARACTER*4 NCPROD                                                        
+      CHARACTER*80 NCLPOT,NCLRUN                                                
+      CHARACTER*80 NCLNDS                                                       
+      COMMON  /QNCDE/BJSPCH,BJSPEF,BBSPR1,BBSPR2,BEETT1,BEETT2,BEETM1,          
+     &        BEETM2,                                                           
+     &        NXHVOK,NXDEOK,NXVDOK,NXMUOK,NXLEPT,NXBJSC,NXBJSF,NXBEES,          
+     &        NXGAMP,NXQFVX,NXQFOK                                              
+      COMMON  /QNCDE/ECHMIN,MINTRK,PCUTMI,PCUTMA,THCCUT,NITCUT,NTPCUT,          
+     &        BD0CUT,BZ0CUT,PCUMIJ,PCUMAJ,THCCUJ,NITCUJ,NTPCUJ,BD0CUJ,          
+     &        BZ0CUJ,BMYCUT,ENEVIS,PHOCUT,V0CHSI,V0CHBO,MCOPTI,PMINMC,          
+     &        REFMIN,RMYCUT                                                     
+      COMMON  /QNCDE/RECOOP,NCPROD,NCLPOT,NCLRUN,NCLNDS                         
+C -------- End of /QNCDE/ Specific commons for the NANO ----------------        

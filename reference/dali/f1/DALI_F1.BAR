@@ -1,0 +1,519 @@
+        | Internal number
+        |
+        |  color number
+        |  |
+        |  | comment
+        |  | |
+ color  1  1 background
+ color  2  8 long horizontal line
+ color  3 12 frame if active
+ color  4  1 frame if waiting for operator input
+ color  5 31 window : area
+ color  6  8 window : lines
+ color  7  8 window : non active text
+ color  8  9 window : active text
+ color  9  9 active selection
+ color 10  9 DTYANS: color of upper text
+ color 11  8 DTYANS: color of lower text
+ color 12  7 color of unusable command
+
+   bottom row:
+  from right or left
+  |
+  |  width
+  |  |   
+  |  |   color
+  |  |   |                      action
+  |  |   |  letter size         |
+  |  |   |  |                   |   command string
+  |  |   |  | text in the bar   |   |
+  |  |   |  | |                 |   |              comment
+  /  |   |  | |                 |   |              |
+ R 260.  0  0 windows           W#| W#:            | windows
+
+            2 lines, small size
+            |
+            |    line feed
+            |    |
+ L  39. 14  2 Top;level         GT| GT:            | Go to top level 
+ S   0. 14  0 Top               GT| GT:            | Go to top level
+
+ L  11. 12  6 |                 $$|
+
+ L  50.  8  2 File;proc.        FI| GG:FI:         | Read next event
+ S  50.  8  0 File              FI| GG:FI:         | Read next event
+
+ L  40. 14  2 Event;proc.       EV| GG:EV:         | Read next event
+ S  40. 14  0 Event             EV| GG:EV:         | Read next event
+
+ L  11. 12  6 |                 $$|
+
+ L  40. 10  4 Y/X               YX| GG:YX:         | Get event processor
+
+ L  35. 14  5 \rho /z           RZ| GG:RZ:         | Get rho/z projection
+ S   0. 14  0 RZ                RZ| GG:RZ:         | Get rho/z projection
+
+ L  40. 10  2  3D;rot.          RO| GG:RO:         | Get slow 3D rotations
+ S   0. 10  0  3D;rot.          RO| GG:RO:         | Get slow 3D rotations
+
+ L  12. 14  5 V                 FT| GG:FT:         | Get V-plot = phi/theta pr.
+ L  35. 14  2 ;plot             FT| GG:FT:         |
+
+ L  11. 12  6 |                 $$|
+
+ L  46.  8  2 input;data        DD| GG:DD:         | Select 2D data
+ S   0.  8  0 data              DD| GG:DD:         | Select 2D data
+
+ L  46. 14  2 Color;func.       CF| GG:CF:         | Select color function
+ S   0. 14  0 Col.              CF| GG:CF:         | Select color function
+
+ L  11. 12  6 |                 $$|
+
+ L  46.  8  2 ALPHA;calc.       AL| GG:AL:         | ALPHA calculations
+ S   0.  8  0 AL.c.             AL| GG:AL:         | ALPHA calculations
+
+ L  46.  8  2 ALPHA;proj.       AP| GG:AP:         | ALPHA projections
+ S   0. 10  0 AL.p.             AP| GG:AP:         | ALPHA projections
+
+ L  11. 12  6 |                 $$|
+
+ L  36.  8  4 Pick              PI| PI             | Pick hit or track
+ S  36.  8  0 Pick              PI| PI             | Pick hit or track
+
+ R  26. 14  4 Do                DO| DO             | Do = execute
+ R  34.  8  4 Get                 | G.             | Get data set of sel. window
+ R  20. 10  2 <=;=>               | GB             | Go back
+ S   0. 10  0 <=                  | GB             | Go back
+
+ R  11. 12  6 |                 $$|
+
+ R  40. 14  4 Quit                | QU             | Quit: then type Y
+ S  40. 14  0 Quit                | QU             | Quit: then type Y
+
+ R  11. 12  6 |                 $$|
+
+ U                              
+ R   0.  8  0 t+                  | cr             | refresh terminal output
+ R   0. 14  0 w±                  | ;              | Lower/raise main window
+ R   0.  8  0 h±                  | <              | remove/get ATLANTIS help
+ R   0. 14  0 search              | ??             | in ATLANT.help, store name 
+ R   0.  8  0 Help                | help           | Get this terminal output
+
+ R   0.  9 -1 Usl 0             _0| _1             | select user level 0
+ R   0.  9 -2 Usl 1             _1| _3             | select user level 1
+ R   0.  9 -2 Usl 2             _2| _3             | select user level 2
+ R   0.  9 -2 Usl 3             _3| _5             | select user level 3
+ R   0.  9 -2 Usl 4             _4| _5             | select user level 4
+ R   0.  9 -2 Usl 5             _5| _1             | select user level 5
+ R   0. 12 -2 Usl 6             _6| _7             | select user level 6
+ R   0. 12 -2 Usl 7             _7| _5             | select user level 7
+
+ U            Top Level         GT               
+ L   0.  0  0                   no| do
+ L   0.  9  0 cont.               | \C             | DALI help: continue
+ L   0.  8  0 Introd.             | IN:            | Get introduction
+ L   0. 14  0 Y/Z                 | YZ             | Y/Z projection
+ L   0. 10  0 phi/rho             | FR             | phi/rho projection
+ L   0. 14  0 phi/Z               | FZ             | phi/Z projection
+ L   0. 10  0 list_tracks         | DL             | dispaly list of tracks
+ L   0. 14  0 track-col           | TC             | track colors
+ L   0. 10  0 Vertex              | VX             | draw/calculate vertices
+ L   0. 14  0 3D_xx               | MM             | Moving 3D markers
+ R   0.  8  0 Text                | TX             | text, picture editor 
+ R   0. 14  0 DALIhlp:PostSc.     | \M             | Show postscript page
+ R   0.  8  0 Print               | SF             | save file
+
+ U            Introduction      IN               
+ L   0.  0  0                   no| do
+ R   0. 14  0 Get_new_input_file  | GG:FI:         | Get new input file
+
+ U            Read event        EV
+ L   0.  0  0                   no| do
+ L   0. 10  0 read next           | RN             | read next event
+ L   0. 14  0 display next        | DN             | display next event
+ L   0. 10  0 read selected       | RS             | read selected event
+ L   0. 14  0 display selected    | DS             | display selected event
+ L   0.  8  0 event number      nu| NU             | event number
+ L   0. 14  0 run               ru| RU             | run number
+
+ U            List EDIR         ED
+ 
+ R   0. 10  0 list down           | DO             | continue listing down
+ R   0. 14  0 list around line    | SL             | list around line
+ L   0. 14  0 select run,event    | LI             |
+ L   0. 14  0 of line             | LI             | run,event of line
+ L   0. 10  0 RETURN to           | T              | RETURN = <CR>
+ L   0. 10  0 event selection     | T              | 
+
+ U            Y/X               YX          
+ L   0. 14 -1 no zoom           NZ| ZO             | toggle to zoom
+ L   0.  9 -2    zoom           ZO| NZ             | toggle to no zoom
+ L   0. 11 -2 g. zoom           ZB| ZQ             | quit general lin. transfor.
+
+ L   0.  8 -1 no square         NS| SQ             | toggle to zoom
+ L   0.  8 -2    square         SQ| NS             | toggle to no zoom
+ L   0. 14  0 Aspect R.         $g| AS           $A| aspect Ratio
+
+ L   0.  8  0 to=               to| TO             | display to
+ L   0. 14  0 VDET                | TO=V1:         | display to end of VDET
+ L   0.  8  0 TPC                 | TO=T3:         | display to end of TPC
+ L   0. 14  0 HCAL                | TO=H2:         | display to end of HCAL
+ L   0.  8  0 MDET                | TO=M2:         | display to end of MDET
+
+ L   0. 10  0 Rubber b.?        RB| RB             | If pr., get rubber band
+ R   0.  8  0 Prev                | G0:DO:         | Restore previous picture
+
+ R   0. 11  0 Incr.+DO            | ++             | Increment+DO
+ R   0. 14  0 ±                   | +-             | In-, decrement by ..
+ R   0. 11  0 Decr.+DO            | --             | Decrement+DO
+ R   0. 14  0 Fish-eye          $O| DS             | Fish eye
+
+ U            Y/Z               YZ          
+ L   0. 14  0 angle               | FY             | Y'=Y*cos(angle)-X*sin(a.)
+ L   0.  8  0 0 deg               | F1             | angle =   0 deg
+ L   0. 14  0 60 deg              | F2             | angle =  60 deg
+ L   0.  8  0 120 deg             | F3             | angla = 120 deg
+
+ L   0. 14 -1 no zoom           NZ| ZO             | toggle to zoom
+ L   0.  9 -2    zoom           ZO| NZ             | toggle to no zoom
+ L   0. 11 -2 g. zoom           ZB| ZQ             | quit general lin. transfor.
+
+ L   0.  8 -1 no square         NS| SQ             | toggle to zoom
+ L   0.  8 -2    square         SQ| NS             | toggle to no zoom
+ L   0. 14  0 Aspect R.         $g| AS           $A| aspect Ratio
+
+ L   0.  8  0 to=               to| TO             | display to
+ L   0.  8  0 TPC                 | TO=T3:         | display to end of TPC
+ L   0. 14  0 HCAL                | TO=H2:         | display to end of HCAL
+ L   0.  8  0 MDET                | TO=M2:         | display to end of MDET
+
+ L   0. 10  0 Rubber b.?        RB| RB             | If pr., get rubber band
+ R   0.  8  0 Prev                | G0:DO:         | Restore previous picture
+
+ R   0. 11  0 Incr.+DO            | ++             | Increment+DO
+ R   0. 14  0 ±                   | +-             | In-, decrement by ..
+ R   0. 11  0 Decr.+DO            | --             | Decrement+DO
+
+ U            \rho /z           RZ
+ L   0. 10  0 set phi             | MM             | set separating phi
+ L   0. 14 -1 no zoom           NZ| ZO             | toggle to zoom
+ L   0.  9 -2    zoom           ZO| NZ             | toggle to no zoom
+ L   0. 11 -2 g. zoom           ZB| ZQ             | quit general lin. transfor.
+
+ L   0.  8 -1 no square         NS| SQ             | toggle to zoom
+ L   0.  8 -2    square         SQ| NS             | toggle to no zoom
+ L   0. 14  0 Aspect R.         $g| AS           $A| aspect Ratio
+
+ L   0.  8  0 to=               to| TO             | display to
+ L   0. 14  0 TPC                 | TO=T3:         | display to end of TPC
+ L   0.  8  0 HCAL                | TO=H2:         | display to end of HCAL
+ L   0. 14  0 MDET                | TO=M2:         | display to end of MDET
+
+ L   0. 10  0 Rub. b.?          RB| RB             | If pr., get rubber band
+ R   0.  8  0 Prev                | G0:DO:         | Restore previous picture
+
+ R   0. 11  0 Inc.+DO             | ++             | Increment+DO
+ R   0. 14  0 ±                   | +-             | In-, decrement by ..
+ R   0. 11  0 Dec.+DO             | --             | Decrement+DO
+ R   0. 14  0 Fish-eye          $O| DS             | Fish eye
+
+
+ U            3D rotation       RO          
+ L   0. 14 -1 no zoom           NZ| ZO             | toggle to zoom
+ L   0.  9 -2    zoom           ZO| NZ             | toggle to no zoom
+ L   0. 11 -2 g. zoom           ZB| ZQ             | quit general lin. transfor.
+
+ L   0.  8 -1 no square         NS| SQ             | toggle to zoom
+ L   0.  8 -2    square         SQ| NS             | toggle to no zoom
+ L   0. 14  0 Aspect R.         $g| AS           $A| aspect Ratio
+
+ L   0.  8  0 to=               to| TO             | display to
+ L   0. 14  0 Short range         | TO=1:          | To 1 cm
+ L   0.  8  0 TPC                 | TO=288:        | display to end of TPC
+
+ L   0. 14  0 Rubber b.?        RB| RB             | If pr., get rubber band
+ R   0.  8  0 Prev                | G0:DO:         | Restore previous picture
+ R   0. 11  0 Incr.+DO            | ++             | Increment+DO
+ R   0. 14  0 ±                   | +-             | In-, decrement by ..
+ R   0. 11  0 Decr.+DO            | --             | Decrement+DO
+
+ U            \phi /\rho        FR            
+ L   0. 14 -1 no zoom           NZ| ZO             | toggle to zoom
+ L   0.  9 -2    zoom           ZO| NZ             | toggle to no zoom
+ L   0. 11 -2 g. zoom           ZB| ZQ             | quit general lin. transfor.
+
+ L   0. 10  0 delta phi=        $g| DF           ZO| delta phi = 
+
+ L   0.  8  0 to=               to| TO             | display to
+ L   0. 14  0 TPC                 | TO=T3:         | display to end of TPC
+ L   0.  8  0 ECAL                | TO=E3:         | display to end of ECAL
+ L   0. 14  0 HCAL                | TO=H2:         | display to end of HCAL
+ L   0.  8  0 MDET                | TO=M2:         | display to end of MDET
+
+ L   0. 10  0 Rubber b.?        RB| RB             | If pr., get rubber band
+
+ R   0.  8  0 Prev                | G0:DO:         | Restore previous picture
+
+ U            \phi /z           FZ            
+
+ L   0.  8 -1 TPC l.            LT| L1             | -> VDET layer 1
+ L   0.  8 -2 VDET 1            L1| L2             | -> VDET layer 2
+ L   0.  8 -2 VDET 2            L2| LT             | -> TPC  layer
+
+ L   0. 14 -1 no zoom           NZ| ZO             | toggle to zoom
+ L   0.  9 -2    zoom           ZO| NZ             | toggle to no zoom
+ L   0. 11 -2 g. zoom           ZB| ZQ             | quit general lin. transfor.
+
+ L   0. 14  0 delta phi=        $g| DF           ZO| delta phi = 
+ L   0.  8  0 to=               to| TO             | display to
+ L   0. 14  0 TPC                 | TO=T3:       LT| display to end of TPC
+ L   0.  8  0 ECAL                | TO=E3:       LT| display to end of ECAL
+ L   0. 14  0 HCAL                | TO=H2:       LT| display to end of HCAL
+ L   0.  8  0 MDET                | TO=M2:       LT| display to end of MDET
+ L   0. 14  0 ±Z                $g| TZ           ZO| toggle ±Z
+ L   0. 10  0 Rubber b.?        RB| RB             | If pr., get rubber band
+
+ R   0.  8  0 Prev                | G0:DO:         | Restore previous picture
+
+ U            V-plot            FT            
+ L   0. 14 -1 no zoom           NZ| ZO             | toggle to zoom
+ L   0.  9 -2    zoom           ZO| NZ             | toggle to no zoom
+ L   0. 11 -2 g. zoom           ZB| ZQ
+ L   0.  8  0 D-phi             $g| DF           ZO| delta phi
+ L   0. 14  0 D-theta           $g| DT           ZO| delta theta
+
+ L   0. 10  0 Rubber band       RB| RB             | If pr., get rubber band
+ L   0.  8  0 size              $O| SZ             | large size for hits
+ L   0. 14  0 V_lines           $O| LP             | connecting V lines
+
+ L   0.  8  0 V1                  | FR:V1:TO:TP    | TPC + VDET layer 1
+ L   0. 14  0 V2                  | FR:V2:TO:TP    | TPC + VDET layer 2
+ L   0.  8  0 TPC                 | LA:TP:         | TPC layer
+ L   0. 14  0 +                   | LA:TP:TO:E3:   | TPC + ECAL layer
+ L   0.  8  0 ECAL                | LA:E1:TO:E3:   | ECAL layer
+ L   0. 14  0 []                $O| LE             | display ECAL boxes
+ L   0.  8  0 HCAL                | LA:H1:         | HCAL layer
+
+ R   0.  8  0 Prev                | G0:DO:         | Restore previous picture
+ R   0. 14  0 c_phi             $O| CF             | cut phi on/of
+ R   0. 10  0 cut_theta         $O| CT             | cut theta on/of
+ R   0. 14  0 V                   | MM             | great circle or V
+
+ U            input data        DD
+ L   0.  0  0                   dr| do
+ L   0. 10 -1 hits+tracks       HT| HI             | -> hits
+ L   0. 10 -2 hits              HI| TR             | -> tracks
+ L   0. 10 -2      tracks       TR| HT             | -> hits + tracks
+ L   0. 10 -2 no hits,tr.       RM| HT             | -> hits + tracks
+
+ L   0. 14 -1 reconstructed     JU| CH             | -> hits
+ L   0. 14 -2 connected hits    CH| MC             | -> hits
+ L   0. 14 -2 Monte Carlo       MC| JU             | -> hits
+ L   0. 14 -2 Kalmann Input     KI| JU             | -> hits
+ L   0. 14 -2 Kalmann Output    KO| JU             | -> hits
+ L   0. 14 -2 Kalmann hits      KH| JU             | -> hits
+
+ L   0.  8 -1 coordinates       CD| BC             | -> Bad coordinates
+ L   0.  8 -2 bad coordi.       BC| PA             | -> Pads
+ L   0.  8 -2 Pads              PA| CD             | -> Coordinates
+
+ L   0. 14 -1 all coord.        AC| TC             | -> track coordinates
+ L   0. 14 -2 track co.         TC| FC             | -> fitted coordinates
+ L   0. 14 -2 fit coord.        FC| UC             | -> noise coordinates
+ L   0. 14 -2 noise co.         UC| AC             | -> track coordinates
+
+ L   0.  8 -1 no hit cut        CT| CA             | ->    use of cuts on hits
+ L   0.  8 -2    hit cut        CA| CT             | -> no use of cuts on hits
+
+ L   0. 14  0 Pcut              $O| CM             | momentum cut
+ L   0.  8  0 D0                $O| D0             | D0 cut
+ L   0. 14  0 Z0                $O| Z0             | Z0 cut
+ 
+
+ R   0.  8  0 Prev                | G0:DO:         | Restore previous picture
+ R   0. 10  0 get <=              | G.:GB:         | get and go back
+ R   0. 11  0 Incr                | ++             | Increment+DO
+ R   0. 14  0 ±                   | +-             | In-, decrement by ..
+ R   0. 11  0 Decr                | --             | Decrement+DO
+
+
+ U            color function    CF
+ L   0.  7  0 hit/track color:  $$|                | hit/track color:
+ L   0.  8  0 constant            | AC:            | constant color
+ L   0. 10  0 reconstructed tr.   | PC:NT:AN:      | color of reconstructed tr.
+ L   0.  7  0 ECAL color:       $$|                | ECAL color:
+ L   0.  8  0 constant            | EC:CN:DO       | constant
+ L   0. 14  0 Energy              | EC:EN:DO       | 7 color(energy)
+ L   0.  8  0 low/high            | EC:CU:DO       | 2 colors(energy) with
+ L   0. 14  0 below               | CE             | energy color threshold
+
+ U            Symbols           SY
+ L   0.  7  0 see ATLANTIS help $$|
+
+
+ U            Alpha calculationsAL
+ L   0.  8  0 Show                | DO             | show list
+ L   0. 14  0 Jets                | JD             | calculate Durham jets
+ L   0. 10  0 Color jets          | CA             | color jets
+ L   0. 14  0 Color jets only     | CJ             | color jets, remove others
+ L   0. 10  0 Clear               | EL:SC:EO:AC:   | clear
+ L   0. 14  0 Default color       | DC             | color by default
+
+ U            Alpha projections AP
+ L   0.  8  0 | World             | TU             | world map vertical axis
+ L   0. 12  0 on WU               | CU             | preferably drawn on WU.
+ L   0.  8  0 --World             | UT             | world map horizontal axis
+ L   0. 12  0 on WR               | CR             | preferably drawn on WR.
+ L   0.  8  0 Rotate              | FM             | Rotate world
+ L   0. 14  0 Scale towers        | SL             | scale of vertiacl lines
+ L   0.  8  0 Scale jets          | SS             | scal of circles
+
+ R   0. 11  0 Incr.+DO            | ++             | Increment+DO
+ R   0. 14  0 ±                   | +-             | In-, decrement by ..
+ R   0. 11  0 Decr.+DO            | --             | Decrement+DO
+ R   0.  8  0 Prev                | G0:DO:         | Restore previous picture
+
+ U            List tracks       DL 
+ L   0.  8 -1 List of Tracks    LT| CT             | -> Tracklist with Cuts
+ L   0.  8 -2 Tracks with Cuts  CT| LT             | -> Tracklist without Cuts
+ L   0. 14 -2 Trig.bits level i TB| LT             | -> Tracklist without Cuts
+ L   0. 14 -2 Detector bits     DB| LT             | -> Tracklist without Cuts
+ L   0. 14 -2 HCAL-Muon assoc.  HM| LT             | -> Tracklist without Cuts
+ L   0. 14 -2 Short track list  ST| LT             | -> Tracklist without Cuts
+ L   0. 14 -2 Track-Muon assoc. TM| LT             | -> Tracklist without Cuts
+ L   0. 14 -2 Ionisation list   IO| LT             | -> Tracklist without Cuts
+ L   0. 14 -2 Full list of 1 t. F1| LT             | -> Tracklist without Cuts
+ L   0. 14 -2 Full list of 2 t. F2| LT             | -> Tracklist without Cuts
+ L   0. 14 -2 Ioni. list/sector IL| LT             | -> Tracklist without Cuts
+ R   0. 11  0 Incr.+DO            | ++             | Increment+DO
+ R   0. 14  0 ±                   | +-             | In-, decrement by ..
+ R   0. 11  0 Decr.+DO            | --             | Decrement+DO
+ R   0.  8  0 Prev                | G0:DO:         | Restore previous picture
+
+ U            track residuals   RS
+ L   0.  8  0 track               | TR             | select track by number
+ L   0. 14  0 redraw hits large   | SB:D.          | redraw with large tr. hits
+ L   0. 10  0 clear               | SN:D.          | clear = set default
+ R   0. 11  0 Incr.+DO            | ++             | Increment+DO
+ R   0. 14  0 ±                   | +-             | In-, decrement by ..
+ R   0. 11  0 Decr.+DO            | --             | Decrement+DO
+ R   0.  8  0 Prev                | G0:DO:         | Restore previous picture
+
+ U            Sical projections SC
+ L   0.  8  0 Y/X               $O| XY           XY| Y/X     Sical projection
+ L   0. 14  0 rho/Z             $O| RZ           RZ| rho/z   Sical projection
+ L   0.  8  0 phi/rho           $O| FR           FR| phi/rho Sical projection
+ L   0. 14  0 phi/Z             $O| FZ           FZ| phi/Z   Sical projection
+ L   0. 10 -1 side AB           AB| SA             | select side A and B
+ L   0. 10 -2 side A             A| SB             | select side A
+ L   0. 10 -2 side B            B | AB             | select side B
+ R   0. 11  0 Incr.+DO            | ++             | Increment+DO
+ R   0. 14  0 ±                   | +-             | In-, decrement by ..
+ R   0. 11  0 Decr.+DO            | --             | Decrement+DO
+ R   0.  8  0 Prev                | G0:DO:         | Restore previous picture
+
+ U            Track distance    TD
+ L   0. 14 -1 no zoom           NZ| ZO             | toggle to zoom
+ L   0.  9 -2    zoom           ZO| NZ             | toggle to no zoom
+ L   0.  8  0 fr=               fr| FR             | display from
+ L   0. 14  0 to=               to| TO             | display to
+
+ L   0. 10  0 track=            tn| TN             | number of track
+ L   0. 14  0 track direction     | DT             | axis = direction of track
+ L   0. 10  0 vertex=           vn| VN             | number of vertex
+ L   0. 14  0 vertex direction    | DV             | axis = direction of vertex
+
+
+ R   0. 11  0 Incr.+DO            | ++             | Increment+DO
+ R   0. 14  0 ±                   | +-             | In-, decrement by ..
+ R   0. 11  0 Decr.+DO            | --             | Decrement+DO
+ R   0.  8  0 Prev                | G0:DO:         | Restore previous picture
+
+ U            Endcap front view EC
+ L   0.  8 -1 Side AB           AB| EA             | select side A and B
+ L   0.  8 -2 Side A            A | EB             | select side A
+ L   0.  8 -2 Side B            B | AB             | select side B
+ L   0. 14  0 to=               to| TO             | draw TO
+ L   0. 10  0 LCAL                | TO:LC          | draw to outer LCAL radius
+
+ R   0. 11  0 Incr.+DO            | ++             | Increment+DO
+ R   0. 14  0 ±                   | +-             | In-, decrement by ..
+ R   0. 11  0 Decr.+DO            | --             | Decrement+DO
+ R   0.  8  0 Prev                | G0:DO:         | Restore previous picture
+
+ U            Look              LK
+ L   0.  8  0 Bank name           | NA             | Bank name
+ L   0. 14  0 Bank #              | NU             | bank number
+ L   0. 10  0 List bank #         | LB             | list bank
+ L   0. 14  0 List all banks      | LA             | list banks with same name
+ L   0.  8  0 Type bank names     | TY             | display bank names
+ L   0. 14  0 DO = display list   | DO             | display list on DALI w.
+ R   0.  8  0 Prev                | G0:DO:         | Restore previous picture
+
+ U            Vertex select     VX
+ L   0. 14  0 kink l.             | LK             | List precalculated kinks
+ L   0. 10  0 ellips              | EL             | symbol = ellipse
+ L   0. 14  0 sigma=              | SI             | sigma of ellipse
+ L   0. 10  0 area                | AR             | symbol = area
+ L   0. 11  0 off                 | OF             | vertex not drawn
+ L   0. 14  0 on                  | ON             | vertex drawn
+ L   0.  8  0 vertex list         | LV             | list vertices
+ L   0. 14  0 +                   | LB             | list tracks+vertices
+ L   0.  8  0 track l.            | LT             | list tracks
+ L   0. 14  0 Track               | TR             | select track number
+ L   0.  8  0 store pick          | LP             | select picked tracks
+ L   0. 14  0 Select              | SE             | select line
+ L   0. 10  0 sec. V.             | SV             | calculate sec. vertex
+ R   0.  8  0 Prev                | G0:DO:         | Restore previous picture
+
+ U            man. track colors TC
+ L   0.  8  0 store pick          | LP             | select picked tracks
+ L   0. 14  0 Track               | TR             | select track number
+ L   0.  8  0 Select              | SE             | select line
+ L   0. 14  0 invisible           | IV             | track invisible
+ L   0.  0  0 IV                &c                 | use colors
+ L   0. 14  0 default             | DF             | default colors
+ L   0. 10  0 color of others     | CO             | color tracks outside list
+ R   0.  8  0 Prev                | G0:DO:         | Restore previous picture
+
+ U            Text / Line editorTX
+ L   0.  0  0 CO:               %C
+ L   0. 14 -1 Size 1            S1| S2             | -> size 2
+ L   0. 14 -2 Size 2            S2| S3             | -> size 3
+ L   0. 14 -2 Size 3            S3| S4             | -> size 2
+ L   0. 14 -2 Size 4            S4| S5             | -> size 4
+ L   0. 14 -2 Size 5            S5| S6             | -> size 5
+ L   0. 14 -2 Size 6            S6| S1             | -> size 1
+ L   0.  8  0 input text          | IN             | accept text string
+ L   0. 14  0 store               | DO             | store  text string
+ L   0.  8  0 input line          | PL             | enter line
+ L   0. 14  0 fix                 | FL             | fix (store) line 
+ L   0.  8  0 fill                | FA             | fill (store) area
+ L   0. 14  0 fill window         | CW             | color selected window
+ R   0.  8  0 redraw              | D.:RA          | redraw
+
+ U            Store PostScript  PS
+ L   0  14  0 display colors      | DC             | select display colors
+ L   0   8  0 black+white         | FG:OF:BW:      | select black and white
+ L   0   7  0 grey                | FG:ON:BW:      | select black, white, grey
+ L   0. 10  0 Best_colors         | BS             | select best print set
+ L   0. 14  0 Comment             | CO             | enter comment to  filename
+ L   0.  8  0 Open                | OP             | ope PS file
+ L   0. 14  0 Store_header        | SH           OP| store header
+ L   0.  8  0 Store_text          | ST           OP| store text
+ L   0. 14  0 Close               | CF           OP| close PS file
+
+ U                              BT
+ L   0.  8  0 Points              | FR=7,15:SP   
+ L   0. 14  0 col                 | SC
+ L   0.  8  0 Tracks              | NU=3:DV=1:S6
+ L   0. 14  0 Noise               | GG:WA:WS:N0
+ L   0.  8  0 Frame               | WW:F1
+ L   0. 14  0 Intensity           | B0:BV
+ L   0.  8  0 Color change        | CC
+ L   0. 14  0 Move                | NU:200:MM
+ L   0.  8  0 Stereo              | R0:R3
+ L   0. 14  0 Art.Cube 2          | A1
+ L   0.  8  0 Art.Cube 1          | P1:1:AC
+ L   0. 14  0 blue                | B1
+ R   0.  8  0 clear               | GG:WA:GG:DC

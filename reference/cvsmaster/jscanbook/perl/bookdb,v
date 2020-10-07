@@ -1,0 +1,696 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	V0060:1.1.1.1
+	V0059:1.1.1.1
+	V0058:1.1.1.1
+	V0057:1.1.1.1
+	V0056:1.1.1.1
+	V0055:1.1.1.1
+	V0054:1.1.1.1
+	V0053:1.1.1.1
+	V0052:1.1.1.1
+	V0051:1.1.1.1
+	V0050:1.1.1.1
+	V0049:1.1.1.1
+	V0048:1.1.1.1
+	V0047:1.1.1.1
+	V0046:1.1.1.1
+	V0045:1.1.1.1
+	V0044:1.1.1.1
+	V0043:1.1.1.1
+	V0042:1.1.1.1
+	V0041:1.1.1.1
+	V0040:1.1.1.1
+	V0039:1.1.1.1
+	V0038:1.1.1.1
+	V0037:1.1.1.1
+	V0036:1.1.1.1
+	V0035:1.1.1.1
+	V0034:1.1.1.1
+	V0033:1.1.1.1
+	V0032:1.1.1.1
+	V0031:1.1.1.1
+	V0030:1.1.1.1
+	V0029:1.1.1.1
+	V0028:1.1.1.1
+	V0027:1.1.1.1
+	V0026:1.1.1.1
+	V0025:1.1.1.1
+	V0024:1.1.1.1
+	V0023:1.1.1.1
+	V0022:1.1.1.1
+	V0021:1.1.1.1
+	V0020:1.1.1.1
+	V0019:1.1.1.1
+	V0018:1.1.1.1
+	V0017:1.1.1.1
+	V0016:1.1.1.1
+	V0015:1.1.1.1
+	V0014:1.1.1.1
+	V0013:1.1.1.1
+	V0000:1.1.1.1
+	V0001:1.1.1.1
+	v1:1.1.1.1
+	jacotf:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2000.03.01.10.29.41;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	2000.03.01.10.29.41;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#!/usr/local/bin/perl
+#
+# Perl program submitted by crontab
+# - Will execute the Bookkeeping fortran program. 
+#      1) Via Shell script "alupdate.sh"
+#      2) Via Shell script "splidbas.sh"
+# - After successfull executions:
+#      3) Do copies in the ufficial areas via Perl program "copydbas"
+#      4) Execute the Bookkeeping fortran program.
+#         Via Perl Program "listfiles"   
+#      5) Remove obsolete files from "good_mail" directory
+# After any problem succeding during a previous execution, it  
+# must be submitted ("by hand") with the argument "ok" to give 
+# the green light.
+# F.Loverre Apr 1996
+# Updated 11/06/96        F.Loverre
+#     Increase variable ndays_before_today
+#     Print Fortran program output  
+# Updated 25/07/96        F.Loverre
+#     Decrease variable ndays_before_today
+# Updated 08/06/97        F.Loverre
+#     Execute the Perl Program "listfiles" (see 4) above)
+# Updated 05/01/99        main_dir on afs          
+# parasitic introduction of make_sqlfiles 23/06/99 J. Boucrot
+#***************************************************************
+#***************************************************************
+# Define the main directory
+$main_dir = "/afs/cern.ch/user/a/alsoft/";
+#########$main_dir = "/u/xu/alsoft/";
+#########$main_dir = "/u/xu/alsoft/jacotf/";
+#
+# Define the System Manager Mailing address
+$syst_manager = 'boucrot@@alws.cern.ch';
+#########$syst_manager = 'jacotf@@alws.cern.ch';
+#
+#***************************************************************
+#***************************************************************
+#
+############  Argument given to Script  #########
+if ($#ARGV ge 0) { 
+    $iarg = $ARGV[0];
+}
+#
+############  Define some variables used by the program ##########
+# Store the full name and base name of this Shell script into local variables
+$script_file = $0;
+($script_name = $0) =~ s#.*/(.*)$#$1#;
+#
+# Store the name of the file which decides if we are in test or in production
+$flag_file = $main_dir . $script_name . ".card";
+#
+# Store the current process PID number into a local variable
+$pid_num = $$;
+#
+# Define a file which will contain the list of eventual other 
+# "still running" processes
+$proc_list = $main_dir . "other_proc.list";
+#
+# Store the date and time into a local variable
+$date_start = " Begin $script_file $iarg ($pid_num) on : " .`date`;
+#
+# Define the number of days used to clean the Directory on which reside
+# the files read by the Fortran program alupdate
+$ndays_before_today = 30;
+#
+############ Open the flag file and retrieve the process mode ########
+############ If it does not exist, abend
+# The flag name ("test" or "production") will be used to define 
+# some working directories and some files
+&OPEN_FILE("FLAGFILE",$flag_file,"read","mail");
+#
+$fltest = 0;
+$flprod = 0;
+while (<FLAGFILE>) {
+    $linin = $_;
+    if (/flag = test\s+(.*)/) {
+        $fltest = 1;
+        $iflag = "test/";
+    }
+    elsif (/flag = production\s+(.*)/) {
+        $flprod = 1;
+        $iflag = "prod/";
+    }
+}
+if ($fltest eq $flprod) {
+    if ($fltest eq 0) {
+        $flagmail = "Could not find the process Flag mode !! Please check the file $flag_file !";
+    }
+    elsif ($fltest eq 1) {
+        $flagmail = "The process Flag mode is ambiguous !! Please check the file $flag_file !";
+    }
+    $subj_error = "Flag file error";
+    &SEND_MAIL($subj_error,$flagmail,"mail");
+}
+close FLAGFILE;
+#
+############ Define the directories and files whose names depend of the process Flag value
+$from_flag_dir = $main_dir . $iflag; 
+#
+# Store the name of the file where we will write the PID number 
+# This file will be written at the beginning of the script and deleted at the
+# end if everything ok
+$pid_file = $from_flag_dir . "my_pid";
+#
+# Store a log file name in a local variable
+$log_file = $from_flag_dir . $script_name . ".log";
+#
+# Store Script files names which submit the Fortran Program 
+# and the Perl program which will do the copies into local variables
+$submit_prog1 = $main_dir . "alupdate.sh";
+$submit_prog2 = $main_dir . "splidbas.sh";
+$submit_prog3 = $main_dir . "copydbas";
+$submit_prog4 = $main_dir . "listfiles";
+$submit_prog5 = $main_dir . "sqlfiles.sh";
+#
+# Define the directory where reside the files read by the fortran program 
+# and a file which will contain the list of these files 
+$good_mail_dir = $from_flag_dir . "rqfiles/";
+$good_mail_list = $main_dir . "rqfiles.list";
+#
+# Define the directory where resides the Fortran program
+# Define the fortran program name which will be executed by
+# the Script Files alupdate and splidbas
+$fort_dir = $from_flag_dir . "prog/";
+if ($iflag eq "test/") {
+    $fort_dir = $from_flag_dir . "dev/";
+}
+$fort_file = $fort_dir . "updabook";
+#
+# Define the directory where will reside :
+#   - The eventual error file written by the Fortran programs (alupdate-splidbas-listfiles)
+#   - The eventual message file written by the Fortran program alupdate if no new
+#     files to process have been found (no update to do)
+#   - The debugout output of the Fortran program alupdate which will be printed
+$status_dir = $from_flag_dir. "status/";
+$fort_err_file = $status_dir . "filestop.errorfor";
+$noupdate_file = $status_dir . "noupdate_today";
+$output_toprint = $status_dir . "updabook.debugout";
+#
+############ Open the log file - If it exists append it ########
+############    If directory does not exist create it   ########
+# If an error occurs send a mail to the system Manager
+&DIR_EXIST($from_flag_dir,"create","mail");
+#
+if (&FILE_EXIST($log_file,"","back","") eq 0) {
+    &OPEN_FILE("LOGFILE",$log_file,"append","mail");
+}
+else {
+    &OPEN_FILE("LOGFILE",$log_file,"write","mail");
+}
+# Append the log file
+print LOGFILE "============================================================================================\n";
+print LOGFILE " \n";
+print LOGFILE $date_start;
+#
+# ********** Check if the previous process has ended properly *********
+# Before any action we check if file pid_file exists
+# If yes, some problems occurred during previous pass
+# File pid_file exists ? 
+print LOGFILE "    -->> Check if the previous process was ok\n";
+if (&FILE_EXIST($pid_file,"","back","") eq 0) {
+#   File pid_file exists - Investigate -------
+    print LOGFILE "         ***** File $pid_file exists - Investigate\n";
+#            Argument "ok" given ?
+    if ($iarg eq "ok") {
+        if (!unlink ($pid_file)) {
+            print LOGFILE "      ***** Could not remove existing file $pid_file\n";
+            &ABEND;
+        }
+        else {
+            print LOGFILE "               Argument <ok> given - File $pid_file erased - Start ->\n";
+        }
+    }
+    else {
+#            A previous process is still running ?? - Fortran program is looping ??
+        if (&FILE_EXIST($proc_list,"","back","") eq 0) {
+#            unlink ($proc_list);
+            if (!unlink ($proc_list)) {
+                print LOGFILE "      ***** Could not remove existing file $proc_list\n";
+                &ABEND;
+            }
+        }
+#            Do a list of the other "still running" process[es] 
+#            Keep only Fortran program process[es]
+        $nproc_run = `ps -f | grep alsoft | grep $fort_file | grep -v grep | grep -v csh | wc -l`;
+	if ($nproc_run > 0) {
+             `ps -f | grep alsoft | grep $fort_file | grep -v grep | grep -v csh > $proc_list `;
+             if (&FILE_EXIST($proc_list,"","back","") eq 0) {
+                 &ERROR1;
+             }
+        }
+        else {
+#            The fortran program has crashed or there was a shut down
+            &ERROR2;
+        }
+    }
+}
+else {
+#   It does not exist - process -------
+    print LOGFILE "         Previous process was ok - Start ->\n";
+}
+#################   Start   #####################
+# Write the pid_file
+# Open the pid_file in write mode
+&OPEN_FILE("PIDFILE",$pid_file,"write","log");
+printf PIDFILE $pid_num;
+close PIDFILE; 
+#
+########## Check if directories and programs used by this script exist  ########
+########## If not abend
+&DIR_EXIST($good_mail_dir,"abend","log"); 
+&DIR_EXIST($status_dir,"abend","log");
+#
+&FILE_EXIST($fort_file,"Fortran Program","abend","log");
+&FILE_EXIST($submit_prog1,"Script","abend","log"); 
+&FILE_EXIST($submit_prog2,"Script","abend","log"); 
+&FILE_EXIST($submit_prog3,"Perl program","abend","log");
+&FILE_EXIST($submit_prog4,"Perl program","abend","log"); 
+# 
+############################# ALUPDATE ###############################################
+print LOGFILE " \n";
+print LOGFILE "    -->> Execute the Shell script file $submit_prog1\n";
+#
+$output = `$submit_prog1 $fort_file`;
+$return_code_from_fortran = $?;
+print LOGFILE $output; 
+#
+#-------- Check if the fortran program has ended normally
+# If a looping process is killed by hand 
+# If the fortran program crashes
+print LOGFILE "         Return from Shell script file $submit_prog1\n";
+if ($return_code_from_fortran ne 0) {
+    print LOGFILE "         ***** Error during Fortran execution\n";
+    print LOGFILE "               Error code is $return_code_from_fortran\n";
+    &ERROR3;
+}
+# If the fortran program was stopped voluntarily 
+# If an error occurs during the execution of the Fortran Program
+# an error file is written by the fortran program
+if (&FILE_EXIST($fort_err_file,"","back","") eq 0) {
+    print LOGFILE "         ***** Error during Fortran execution\n";
+    &ERROR3;
+}
+else {
+    print LOGFILE "         No Fortran error was detected\n";
+}
+#
+########################   Bookkeeping Update done ?   ########################
+# If no new files found by the fortran program the Update has not been done
+# and a file has been written to inform the script
+# Check if this file was written  
+if (&FILE_EXIST($noupdate_file,"","back","") eq 0) {
+    print LOGFILE "         ** Warning ! The fortran program did not find new files on the directory $good_mail_dir\n";
+    print LOGFILE "            No Bookkeeping Update has been done !!\n";
+#
+    print LOGFILE "         So ......\n";
+    print LOGFILE "    -->> ***** $submit_prog2 will not be processed\n";
+    print LOGFILE "    -->> ***** $submit_prog3 will not be processed\n";
+    print LOGFILE "    -->> ***** $submit_prog4 will not be processed\n";
+    goto CLEANING;
+}
+# Print the output of ALUPDATE fortran program
+`xprint -P2-cor -f P1CL68 $output_toprint`;
+`xprint -P32-aleph0 -f P1CL68 $output_toprint`;
+#
+############################# SPLIDBAS ###############################################
+####### Submit Shell script file which will process the SPLIDBAS Fortran Program ##### 
+print LOGFILE "\n";
+print LOGFILE "    -->> Execute the Shell script file $submit_prog2\n";
+#
+$output = `$submit_prog2 $fort_file`;
+$return_code_from_fortran = $?;
+print LOGFILE $output; 
+#
+#-------- Check if the fortran program has ended normally
+# If a looping process is killed by hand 
+# If the fortran program crashes
+print LOGFILE "         Return from Shell script file $submit_prog2\n";
+if ($return_code_from_fortran ne 0) {
+    print LOGFILE "         ***** Error during Fortran execution\n";
+    print LOGFILE "               Error code is $return_code_from_fortran\n";
+    &ERROR3;
+}
+#
+# If the fortran program was stopped voluntarily 
+# If an error occurs during the execution of the Fortran Program
+# an error file is written by the fortran program
+if (&FILE_EXIST($fort_err_file,"","back","") eq 0) {
+    print LOGFILE "         ***** Error during Fortran execution\n";
+    &ERROR3;
+}
+else {
+    print LOGFILE "         No Fortran error was detected\n";
+}
+#
+############################## COPYDBAS ######################################
+####### Submit Shell script "copydbas" to do the copies in the ufficial areas ##### 
+# If the bookdb flag is "test" don't do the copies 
+print LOGFILE " \n";
+if ($iflag eq "test/") {
+    print LOGFILE "    -->> ***** Warning ! $script_name flag = $iflag\n";
+    print LOGFILE "         ***** $submit_prog3 will not be processed\n";
+    goto CLEANING;
+}
+else {
+print LOGFILE "    -->> Execute the Perl program $submit_prog3\n";
+}
+#
+$output = `$submit_prog3`;
+$return_code_from_script = $?;
+print LOGFILE $output; 
+#
+#-------- Check if shell script has ended normally
+print LOGFILE "         Return from Perl program $submit_prog3\n";
+if ($return_code_from_script ne 0) {
+    &ERROR4;
+}
+else {    
+print LOGFILE "         Copy files ended\n";
+}
+#
+############################# LISTFILES ###############################################
+####### Submit Perl Program which will process the LISTFILES Fortran Program ####
+print LOGFILE "\n";
+print LOGFILE "    -->> Execute the Perl Program $submit_prog4\n";
+#
+$output = `$submit_prog4 $fort_file`;
+$return_code_from_script = $? >> 8;
+print LOGFILE $output;
+# 
+#    Check if Perl Program has ended normally
+print LOGFILE "         Return from Perl program $submit_prog4 with Error code = $return_code_from_script \n";
+if ($return_code_from_script ne 0) {
+    &ERROR4;
+}
+#
+####################### CLEAN the good_mail Directory ########################
+CLEANING:
+print LOGFILE "\n";
+print LOGFILE "    -->> Clean the $good_mail_dir directory ->\n";
+#
+# Do a list of files which reside on the good_mail Directory
+# If the list already exists delete it before 
+if (&FILE_EXIST($good_mail_list,"","back","") eq 0) {
+    if (!unlink ($good_mail_list)) {
+        print LOGFILE "         ***** Could not remove existing file $good_mail_list\n";
+        &ABEND;
+    }
+}
+#
+`ls -al $good_mail_dir > $good_mail_list `;
+#
+# Open the good_mail_list in read mode
+&OPEN_FILE("REQLIST",$good_mail_list,"read","log");
+#
+# Loop on files  
+# If the file creation date is "ndays_before_today" older than today remove it
+$nremfile = 0;
+$nfile = 0;
+LOOPREQ:
+while (<REQLIST>) {
+    $lfile = $_;
+    $nfile++;
+#       Skip 1st line (contains the total number of files
+    next LOOPREQ unless $nfile > 1;     
+    @@fields = split(/\s+/,$lfile); 
+#       Skip lines containing a non interesting file name
+    $fname = $fields[8];
+    next LOOPREQ unless $fname ne "." && $fname ne ".."; 
+    $fname = $good_mail_dir . $fname;
+#       If file creation date is "ndays_before_today" days old today remove the file
+    if (-M $fname > $ndays_before_today) {
+        unlink $fname; 
+        print LOGFILE "            File $fname has been removed\n";
+        $nremfile++;
+    }
+}
+#
+close REQLIST;
+#
+print LOGFILE "            $nremfile files have been removed from Directory $good_mail_dir\n"; 
+print LOGFILE "         Cleaning of $good_mail_dir directory ended\n";
+#
+#
+################# Normal End of program ################
+# Remove the pid_file 
+if (!unlink ($pid_file)) {
+    print LOGFILE "      * Warning !!! Could not remove file $pid_file\n";
+    &ABEND;
+}
+#
+print LOGFILE "\n";
+$date_stop = " Normal end of $script_file $iarg ($pid_num) on : " .`date`;
+print LOGFILE $date_stop;
+#
+##### parasitic execution of sqlfiles here : ######## <<<<<<<<<  new 
+#$output = `$submit_prog5`;
+#print LOGFILE $output;
+##### end of parasitic execution of sqlfiles ######## <<<<<<<<<  new
+close LOGFILE;
+#
+######################### exit from script #################################
+exit;
+############################################################################
+##
+##
+sub DIR_EXIST { 
+# Check if a Directory exists - If not, create it or abend 
+# Send a mail to the system manager or append the log file + send a mail
+    local($dirname,$action,$inform)= @@_;
+    if (! -d $dirname) {
+        if ($action eq "abend") {
+            if ($inform eq "mail") {
+                $subj_error = "Missing Directory";
+                $dir_mail = "Directory $dirname does not exist !!";
+                &SEND_MAIL($subj_error,$dir_mail,"mail");
+            }
+            elsif ($inform eq "log") {
+                print LOGFILE "         ***** Directory: $dirname does not exist\n";
+                &ABEND;
+            }
+        }
+        elsif ($action eq "create") {
+            if ($inform eq "log") {
+                print LOGFILE "         ***** Directory: $dirname does not exist\n";
+                print LOGFILE "               We will create it\n";
+            }
+            if (!mkdir($dirname,0777)) {
+                if ($inform eq "log") {
+                    print LOGFILE "         ***** Could not create the Directory $dirname\n";
+                    &ABEND;
+                }
+                elsif ($inform eq "mail") {
+                    $subj_error = "Create Directory Error";
+                    $dir_mail = "Could not create Directory $dirname !!";
+                    &SEND_MAIL($subj_error,$dir_mail,"mail");
+                }
+	    }
+            else {
+                print LOGFILE "               $dirname has been created\n";
+            }
+        }
+    }
+}
+##
+##
+sub FILE_EXIST { 
+# Check if a file exists 
+# If yes, return with a return code = 0
+# If no, depending of the value of $action :
+#        abend or return with a return code 99  
+    local($filname,$type,$action,$inform)= @@_;
+    if (!-e $filname) {
+        if ($action eq "abend") {
+            if ($inform eq "mail") {
+                $subj_error = "Missing File";
+                $file_mail = "$type file $filname does not exist !!";
+                &SEND_MAIL($subj_error,$file_mail,"mail");
+            }
+            elsif ($inform eq "log") {
+                print LOGFILE "         ***** $type file $filname does not exist !!\n";
+                &ABEND;
+            }
+        }
+        elsif ($action eq "back") {
+	    return 99;
+        }
+    }
+    return 0;
+}
+##
+##
+sub OPEN_FILE {
+# Open a file in read or write or append mode  
+# If an error occurs abend and :
+# Send a mail to the system manager or append the log file + send a mail
+    local($fhandle,$filname,$mode,$inform)= @@_;
+#
+    if ($mode eq "read") {
+        $open_way = $filname;
+    }
+    elsif ($mode eq "write") {
+        $open_way = "> $filname";
+    }
+    elsif ($mode eq "append") {
+        $open_way = ">> $filname";
+    }
+    if (!open($fhandle,$open_way)) {
+        if ($inform eq "mail") {
+            $subj_error = "Open file error";
+            $file_mail = "Could not open file $filname in $mode mode !! ";
+            &SEND_MAIL($subj_error,$file_mail,"mail");
+        }
+        elsif ($inform eq "log") {
+            print LOGFILE "         ***** Could not open file $filname in $mode mode\n";
+            &ABEND;
+        }
+    } 
+}
+##
+##
+sub SEND_MAIL { 
+# Send a mail to the system Manager and quit
+    local($mailsubj,$mailbody_1,$inform)= @@_;
+    $mailbody_2 = "Look at $log_file";
+    $mail_body3 = " ";
+    if ($inform eq "mail") {
+        $mailbody_2 = "Exit from $script_file ->";
+    }
+    elsif ($inform eq "log_mail") {
+        $mailbody_3 = "Exit from $script_file ->";
+    } 
+    open (MAIL, "| mailx -s \"$mailsubj\" $syst_manager");
+    print MAIL <<EOT;
+    $mailbody_1
+    $mailbody_2
+    $mailbody_3
+EOT
+    close MAIL;
+    if ($inform eq "mail" || $inform eq "log_mail") {
+        exit;
+    }
+}
+##
+##
+sub ERROR1 {
+#Open processes list file in read mode
+    &OPEN_FILE("PROCLIST",$proc_list,"read","log"); 
+    print LOGFILE "         ***** Error -> A process is still running\n";
+    print LOGFILE "               USER       PID  PPID %CPU STARTED  TTY             TIME COMMAND\n";
+#
+#   Read the processes list file and store the processes PIDs
+    $nproc = 0;
+    while (<PROCLIST>) {
+        $lproc = $_;
+        $nproc++;
+        print LOGFILE "               $lproc";
+        @@fields = split(/\s+/,$lproc);
+        $tokill{$nproc} .= $fields[1] . ' ';
+    }
+    print LOGFILE "               Looping ? If yes, after check do:\n";
+#
+    foreach $kill (keys(%tokill)) {
+        $killnum = $tokill{$kill};
+        print LOGFILE "                > kill $killnum\n";
+    }
+    print LOGFILE " \n";
+    &ABEND;
+} 
+##
+##
+sub ERROR2 {
+    print LOGFILE "         ***** Error -> Previous process died or machine shutdown\n";
+    print LOGFILE " \n";
+    &ABEND;
+} 
+##
+##
+sub ERROR3 {
+    if (&FILE_EXIST($fort_err_file,"","back","") eq 0) {
+        print LOGFILE "               File $fort_err_file has been written\n";
+    }
+    else {
+        print LOGFILE "               File $fort_err_file has NOT been written\n";
+    }
+    print LOGFILE " \n";
+    &ABEND;
+}
+##
+## 
+sub ERROR4 {
+    print LOGFILE "         ***** Error during Perl program execution\n";
+    print LOGFILE " \n";
+    &ABEND;
+}
+##
+##
+    sub ABEND {
+# Abnormal end
+    $date_abend = " Abend $script_file $iarg ($pid_num) on : " .`date`;
+    print LOGFILE $date_abend;
+    close LOGFILE;
+    &ALARM;
+}
+##
+##
+    sub ALARM {
+# Send a mail to the system Manager
+    $subj_error = "$script_file problem";
+    $alarm_mail = "There was a problem during $script_file execution !!";
+    &SEND_MAIL($subj_error,$alarm_mail,"log_mail");
+    exit;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+@
+
+
+1.1.1.1
+log
+@ import jscanbook
+@
+text
+@@

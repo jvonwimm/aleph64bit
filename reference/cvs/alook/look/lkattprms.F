@@ -1,0 +1,92 @@
+      SUBROUTINE LKATTPRMS(TABLE,I1,I2,
+     +   LEN,ANAME,NBID,ITYP,IOK)
+C -----------------------------------------------------------------
+C - author: A.Bonissent
+C! return list of attributes for a given table
+C TABLE = table name (input)
+C I1, I2 : boundaries of rows in TADB or TPRO for this TABLE (input)
+C LEN(*)   = length of the attribute name
+C ANAME(*) = attribute name
+C NBID(*)  = column number
+C ITYP(*)  = type : 1  = INTEGER
+C               2  = REAL
+C               50 = OTHER (String)
+C -------------------------------------------------------------
+#ifndef DOC
+      CHARACTER*4 TABLE,TABLOC,BUF
+      CHARACTER*100 ANAME
+#include "bcs.h"
+      DATA NACADB, NACPRO /2*0/
+#include "bmacro.h"
+C --------------------------------------------------------------
+      IF(NACPRO .eq. 0)THEN
+         IRET=MDARD(IW,JUNIDB(0),'CADB',0)
+         IRET=MDARD(IW,JUNIDB(0),'CPRO',0)
+         NACADB=NAMIND('CADB')
+         NACPRO=NAMIND('CPRO')
+      ENDIF
+      CALL CLTOU(TABLE)
+C
+      IF(I1.EQ.0.AND.I2.NE.0)THEN
+         KGLOB=IW(NACPRO)
+         IPOS=I2
+      ELSEIF(I1.NE.0.AND.I2.EQ.0)THEN
+         KGLOB=IW(NACADB)
+         IPOS=I1
+      ENDIF
+      IF (KGLOB.EQ.0) THEN
+         IOK = 0
+         GOTO 20
+      ENDIF
+C
+      ICAR=ITABL(KGLOB,IPOS,1)
+      CALL UHTOC(ICAR,4,TABLOC,4)
+      IF(TABLOC.NE.TABLE)THEN
+         IOK=0
+      ELSE
+         DO 10 ILOC=2,5
+         ICAR=ITABL(KGLOB,IPOS,ILOC)
+         IBEG=(ILOC-2)*4+1
+         IEND=IBEG+4
+         CALL UHTOC(ICAR,4,ANAME(IBEG:IEND),4)
+   10    CONTINUE
+         DO 30 IP=1,16
+            IQ=16-IP+1
+            IF(ANAME(IQ:IQ).NE.' ')THEN
+               LEN=IQ
+               GO TO 31
+            ENDIF
+   30    CONTINUE
+   31    CONTINUE
+C
+C Also remove dimensions at the end !
+C
+         DO 40 IP=1,16
+            IQ=16-IP+1
+            IF(ANAME(IQ:IQ).EQ.'(')THEN
+               LEN=IQ-1
+               GO TO 41
+            ENDIF
+   40    CONTINUE
+   41    CONTINUE
+         CALL CUTOL(ANAME(1:LEN))
+         ICAR=ITABL(KGLOB,IPOS,7)
+         CALL UHTOC(ICAR,4,BUF,4)
+         IF(BUF(1:1).EQ.'I')THEN
+            ITYP=1
+         ELSEIF(BUF(1:1).EQ.'F')THEN
+            ITYP=2
+         ELSEIF(BUF(1:1).EQ.'G')THEN
+            ITYP=2
+         ELSEIF(BUF(1:1).EQ.'E')THEN
+            ITYP=2
+         ELSE
+            ITYP=50
+         ENDIF
+         NBID=ITABL(KGLOB,IPOS,6)
+         IOK=1
+      ENDIF
+   20 CONTINUE
+      RETURN
+      END
+#endif

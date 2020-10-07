@@ -1,0 +1,160 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.30.07.08.48;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.36;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.37;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ cahtra.h gmacro.h lccomc.h lcnamc.h ljjpar.h siconst.h
+ sigeco.h version.h
+ itmsk1.F itmsk2.F itnois.F itres.F itxtlk.F
+ lcadc.F lcamp.F lcasig.F lcbhab.F lcbkpr.F lcdigi.F lcfral.F
+ lchit.F lcirun.F lcnami.F lcnois.F lcpad.F lcroc.F lcsamp.F
+ lcsatu.F lcshow.F lcstrt.F lctrak.F lctrdi.F lctrht.F lcwire.F
+ lcwsum.F lcwtri.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+ xtrcom.h
+@
+text
+@*DK lcpad
+      SUBROUTINE LCPAD(NAMI,ISTOR,IPAD,NHIT)
+C--------------------------------------------------------------
+C! Store energies in towers
+C. - J.Dines Hansen & P.Hansen - 860417
+C. - Store energy deposition on pads in banks LTHT or LTDI
+C. - Input : NAMI   = name-index of bank
+C.           ISTOR  = storey number
+C.           IPAD   = tower address
+C.           NHIT   = number of hits to be stored
+C. - Called by  LCSHOW, LCTRAK                   from this .HLB
+C -----------------------------------------------
+#ifndef DOC
+      SAVE
+      CHARACTER*4 CHAINT, NAME
+#include "iocom.h"
+#include "jqcom.h"
+#include "lcnamc.h"
+#include "lccomc.h"
+#include "bmacro.h"
+C -------------------------------------------------------------
+C
+      KINDX = IW(NAMI)
+      IF(KINDX .LE. 0)                        GOTO 999
+      NROW = LROWS(KINDX)
+      NCOL = LCOLS(KINDX)
+C
+C - Loop over towers starting from bottom of table
+      KLL = KROW(KINDX,NROW)
+      DO 200 I = 1,NROW
+        IF (IPAD .EQ. IW(KLL+1))              GOTO 300
+        KLL = KLL - NCOL
+  200 CONTINUE
+C
+C - If address IPAD was not found then expand the table
+  100 NROW = NROW + 1
+      IF(LFRWRD(KINDX) .LE. NCOL) THEN
+         LEN = (NROW+20)*NCOL + LMHLEN
+         NAME = CHAINT (IW(KINDX-3))
+         CALL ALBOS (NAME,0,LEN,KINDX,IGARB)
+      ENDIF
+      IW(KINDX+2) = NROW
+      KLL = KROW(KINDX,NROW)
+      IW(KLL+1) = IPAD
+C
+C - Deposit here the number of hits
+  300 IW(KLL+1+ISTOR) = IW(KLL+1+ISTOR)+NHIT
+  999 RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d12 1
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

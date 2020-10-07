@@ -1,0 +1,89 @@
+head	1.2;
+access;
+symbols
+	look25:1.2
+	look24:1.2
+	look23:1.2
+	look22:1.2
+	look21:1.2
+	look20:1.2
+	v15:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.04.18.09.06.03;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.09.15.50.25;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.09.15.50.26;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@change VAX to DEC.AND..NOT.UNIX ==> version 20
+
+ Modified Files:
+ 	lkevt.h lkfil.h lklast.h lkunpk.h version.h
+ Removed Files:
+	lookend.h
+@
+text
+@      INTEGER FUNCTION LKLWRD(STR)
+C ----------------------------------------------------------
+C! find the length of a string
+C ----------------------------------------------------------
+#ifndef DOC
+      CHARACTER STR*(*)
+C -----------------------------------------------------------
+C - len1 = position of last character preceding the 1st " "
+      LEN1=INDEX(STR,' ')-1
+C - len2 = position of last character preceding the 1st "/"
+      LEN2=INDEX(STR,'/')-1
+C - if there is a "/" before the 1st " " or there is no " "
+C   then len1 = position of last char. before the "/"
+      IF (LEN2.GT.-1.AND.LEN2.LT.LEN1.OR.LEN1.EQ.-1) LEN1=LEN2
+C - len2 = position of 1st '"'
+      LEN2=INDEX(STR(1:),'"')
+C - if there is a '"' look for the 2nd '"'
+C   the length of the string is defined by the position of the 2nd '"'
+      IF (LEN2.LE.LEN1.AND.LEN2.GT.0) LEN1=INDEX(STR(LEN2+1:),'"')+LEN2
+      IF (LEN1.EQ.-1) LEN1=LEN(STR)
+      LKLWRD=LEN1
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK lklwrd
+@
+
+
+1.1.1.1
+log
+@import look 15
+@
+text
+@@

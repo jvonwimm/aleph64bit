@@ -1,0 +1,227 @@
+KCAR 0 / $TEXT                                                                  
+POFF                                                                            
+*     RUN #     RUN'S TITLE                                                     
+RUN    111       'ARIADNE 4.04 WITH MIXED FLAVOR    '                           
+*     FIRST EVENT    LAST EVENT    TO BE GENERATED                              
+TRIG     1            1000                                                      
+TIME    50                                                                      
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG                                 
+DEBU  6     /      1            2                                               
+*    UNIT # / FORMAT                                                            
+*FILO 'TSTAR4 EPIO A | EPIO '                                                   
+* FLAVOR CODE(0=MIX,1=U,2=D,3=S,4=C,5=B,6=T)                                    
+* ECMS  Center of mass energy in Gev                                            
+* IPRINT 1=PRINTOUT of PART bank , 0=noprintout                                 
+* IPROC  1=use ARIADNE     2= use JETSET 7.3 ( for easier comparison)           
+*        3=USE PYTHIA      4= use LEPTO  ( LAST two not yet implemented)        
+* SETUP  default set for 'ALEPH', 'DELPHI', 'OPAL' as known from Lonnblad       
+*        The additionnal data cards will supersede the set up.                  
+*     IFLAVOR     ECMS     IPRINT      IPROC    SETUP                           
+GARI    0         91.2       0           1     'ALEPH'                          
+*  vertex smearing x     y     z                                                
+SVRT          0.0180   0.0010   1.00                                            
+*  use RANMAR generator for random numbers                                      
+*  INSEED : first seed (range assigned per institute)                           
+*  LOSEED : second seed (incremented locally for new runs)                      
+*      INSEED          LOSEED (1-30000)                                         
+RMAR     78             12345                                                   
+*-----------------------------------------------------------                    
+*  standard modification to Ariadne  parameters                                 
+C...Breif explanation of parameters and switches:                               
+C...                                                                            
+C...                                                                            
+C...Parameters:                                                                 
+C...                                                                            
+C...                                                                            
+C...PARA(1) (D=0.22) lambda_QCD                                                 
+C...PARA(2) (D=0.200) Constant alpha_QCD for MSTA(12)=0                         
+C...PARA(3) (D=0.600) Cutoff in invariant p_t for QCD emission                  
+C...PARA(4) (D=1/137) Constant alpha_EM                                         
+C...PARA(5) (D=0.600) Cutoff in invariant p_t for EM emission                   
+C...PARA(6) (D=-1.00) Maximum allowed invariant p_t (if >0)                     
+C...PARA(7) (D=0.000) Maximum invariant mass (if >0)                            
+C...PARA(8-9) not used                                                          
+C...PARA(10)(D=1.000) Power in soft suppression (dimnsionality of               
+C...                  the extended source)                                      
+C...PARA(11)(D=0.600) Soft suppression parameter for code 1                     
+C...PARA(12)(D=0.600) Soft suppression parameter for code 2                     
+C...PARA(13)(D=0.600) Soft suppression parameter for code 3                     
+C...PARA(14-19) not used                                                        
+C...PARA(20)(D=0.000) Minimum p_t^2/Q^2 of q-qbar pair in boson-gluon           
+C...                  fusion to be allowed to be treated as such. Else          
+C...                  treated as sea-quark interaction. Only used when          
+C...                  running with LEPTO version 6.0 or higher                  
+C...PARA(21-24) not used                                                        
+C...PARA(25)(D=0.000) exponent in propability for having a larger fraction      
+C...                  than a in extended emissions.                             
+C...PARA(26-30) not used                                                        
+C...PARA(31)(D=25.00) Maximum invariant p_t^2 for clustering three jets         
+C...                  into two in ARCLUS                                        
+C...PARA(32-38) not used                                                        
+C...PARA(39)(D=0.001) Tolerance factor for momentum conservation                
+C...PARA(40)(D=1E32)  Maximum allowed floating point number ("minimum"          
+C...                  is 1/PARA(40)                                             
+C...Switches:                                                                   
+C...                                                                            
+C...MSTA(1) (R)       Ariadne mode (set by ARINIT) for treatment of             
+C...                  incomming events.                                         
+C...         0 =>      No special treatment                                     
+C...         1 =>      as if produced by JETSET                                 
+C...         2 =>      as if produced by PYTHIA                                 
+C...         3 =>      as if produced by LEPTO                                  
+C...MSTA(2) (I)       Initialization done and headers written                   
+C...MSTA(3) (D=1)     Setting of parameters in  Ariadne, JETSET,                
+C...                  PYTHIA and LEPTO to suitable values.                      
+C...         0 =>      off                                                      
+C...         1 =>      on                                                       
+C...MSTA(4) (I)       Number of calls made to AREXEC                            
+C...MSTA(5) (D=0)     Perform fragmentation at the end of AREXEC                
+C...         0 =>      off                                                      
+C...         1 =>      on                                                       
+C...                  When running with JETSET, PYTHIA or LEPTO this            
+C...                  switch is set to the value of the corresponding           
+C...                  switch in these programs.                                 
+C...MSTA(6) (D=-1)    Maximum number of emission (per string) in a              
+C...                  AREXEC call (if <0 - no limit)                            
+C...MSTA(7) (D=6)     File number for output (stdout) from Ariadne              
+C...                  set to MSTU(11) by ARINIT                                 
+C...MSTA(8) (D=6)     File number for error messages (stdout) from              
+C...                  Ariadne                                                   
+C...MSTA(9) (D=1)     Debug mode                                                
+C...         0 =>      debug off                                                
+C...         1 =>      check that energy and momentum is conserved after        
+C...                   each call to AREXEC produce. Warns if change             
+C...                   in momentum is larger a factor PARA(39)                  
+C...         2 =>      as for 1 but check every emission                        
+C...         3 =>      as for 2 but dump string to /LUJETS/ after each          
+C...                   emission                                                 
+C...MSTA(10)(D=5)     Maximum number of warnings (of each kind) issued          
+C...                  by Ariadne                                                
+C...MSTA(11)(D=0)     Phase space restrictions. The maximum p_t of an           
+C...                  emission is set to the p_t of the last emission           
+C...                  (otherwise no restrictions) for:                          
+C...                    gluon  q-qbar  photon  emissions                        
+C...         0 =>        yes     yes     yes                                    
+C...         1 =>        yes     yes     no                                     
+C...         2 =>        yes     no      yes                                    
+C...         3 =>        yes     no      no                                     
+C...         4 =>        no      no      no                                     
+C...MSTA(12)(D=1)     Running alpha_QCD                                         
+C...         0 =>      off                                                      
+C...         1 =>      on                                                       
+C...MSTA(13) (R)      Error experienced by Ariadne in last call to              
+C...                  AREXECc. Reset to 0 at each call to AREXEC                
+C...MSTA(14)(D=1)     The maximum allowed p_t is set to the minimum             
+C...                  invariant p_t of all gluons in an incomming               
+C...                  string                                                    
+C...         0 =>      off                                                      
+C...         1 =>      on                                                       
+C...MSTA(15)(D=5)     Number of flavours allowed in q-qbar emission             
+C...MSTA(16)(D=2)     Recoil treatment                                          
+C...         0 =>      minimize p_t1^2 + p_t3^2                                 
+C...         1 =>      as for 0 but pointlike string ends takes                 
+C...                   all recoil                                               
+C...         2=>       as for 0 but also extended string ends which             
+C...                   have a>0 takes full recoil                               
+C...MSTA(17)(D=2)     Recoil treatment for extended dipoles                     
+C...         0 =>      no special treatment (but cf. MSTA(16))                  
+C...         1 =>      emit recoil gluon (except if pointlike quark             
+C...                   in other dipole end for MSTA(16)=1)                      
+C...         2 =>      emit recoilgluon according to new strategy               
+C...MSTA(18)(D=3)     P_t ordering of recoil gluons                             
+C...         0 =>      off                                                      
+C...         1 =>      on and require p_t larger than cutoff and mu             
+C...         2 =>      as 1 but p_t may be smaller than mu                      
+C...         3 =>      as 2 but p_t may also be smaller than the cutoff         
+C...MSTA(19)(D=1)     Correct or quick treatment of emissions from              
+C...                  heavy quarks                                              
+C...         0 =>      quick                                                    
+C...         1 =>      correct                                                  
+C...MSTA(20)(D=0)     Final state photon radiation                              
+C...         0 =>      off                                                      
+C...         1 =>      on                                                       
+C...         2 =>      on but turned off at the first occurence of              
+C...                   q-qbar emission in a string.                             
+C...MSTA(21)(D=0)     Photon radiation when run with PYTHIA or LEPTO            
+C...         0 =>      off                                                      
+C...         1 =>      on                                                       
+C...MSTA(22)(D=0)     Transfer of recoils in Drell-Yan processes                
+C...         0 =>      off                                                      
+C...         1 =>      on                                                       
+C...MSTA(23)(I)       Line number of particle to transfer recoil to             
+C...                  for MSTA(22) > 0                                          
+C...MSTA(24)(D=2)     Quark masses to be used in q-qbar emissions               
+C...         0 =>      as specified in PMAS(1-8) in /ARDAT2/                    
+C...         1 =>      "bare" quark masses as specified in PMAS(1-8)            
+C...                   in /LUDAT2/                                              
+C...         2 =>      "constituent" quark masses as specified in               
+C...                   PARF(101-108) in /LUDAT2/                                
+C...MSTA(25)(D=0)     Generation procedure for exetended dipoled                
+C...         0 =>      Using restricted phase space                             
+C...         1 =>      Using full phase space rejecting unphysical              
+C...                   emissions allowing larger fractions of a according       
+C...                   to PARA(25)                                              
+C...         2 =>      as 1 but new definition of p_T for calculation of a      
+C...MSTA(26-29) not used                                                        
+C...MSTA(30)(D=1)    various options for running with Lepto                     
+C...         0 => Stuck quark point like, remnant extended with PARA(11)        
+C...         1 =>      as 0 but remnant extended with PARA(11)/(1-x)            
+C...         2 =>      as 1 bur struck quark extended with Q                    
+C...MSTA(31)(D=1)    mass of extended partons                                   
+C...         0 =>      set to zero for backward compatibility                   
+C...         1 =>      keeps value given                                        
+C...MSTA(32-40) not used                                                        
+C...                                                                            
+C...End of description                                                          
+*-----------------------------------------------------------                    
+MSTA 20 / 2            ! SWITCH ON FSR IN ARIADNE                               
+MSTA 24 / 1            ! PARTON MASSES FROM LUDAT2                              
+*                                                                               
+*    modifications as given by G.Rudolph from ARIADNE4.2.....                   
+*                                on September 28, 1992                          
+*                                                                               
+PARA  1 / 0.225        ! LAMBDA QCD                                             
+PARA  3 / 0.73         ! Pt min for QCD emission                                
+PARA  5 / 1.0          ! Pt min for photon emission                             
+PARJ 21 / 0.354        ! Sigma Mt                                               
+PARJ 41 / 0.5          ! a                                                      
+PARJ 42 / 0.80         ! b                                                      
+*-----------------------------------------------------------                    
+*  standard modification to Lund parameters                                     
+*-----------------------------------------------------------                    
+*MSTJ 105 / 0           ! NO LUEXEC CALL IN LUEEVT                              
+MSTJ 107 / 1           ! Turn on initial state radiation.                       
+MSTJ 115 / 3           ! Store beam-particles and Z0 in event record            
+PMA1 6 / 100.          ! Set top mass                                           
+PMA1 23 / 91.182       !   set Z0 mass                                          
+PMA1 25 / 100.         !   set Higgs mass                                       
+* Set next quarks family away                                                   
+PMA1 7 / 150.                                                                   
+PMA1 8 / 300.                                                                   
+*PMA4 511 / 1.3E-12    ! Modify B0 life time                                    
+MDM1 174 / 0           ! Turn off decay of W into top-quark                     
+MSTJ 24 / 2            !  use non discrete masses for resonnances               
+MSTJ 11 / 3         !  USE PETERSON'S FRAGM. FUNCTIONS FOR C AND B QUARKS       
+*   Use Standard LUND values for  Epsilon_c                                     
+*   Measured one for Epsilon_b   ( values used when fitting parameters)         
+*   ( Peterson's fragm. functions params )                                      
+*  include Aleph standard values for sin2theta, mz, gamz                        
+PARJ 54 / -0.050         ! EPSILON_C                                            
+PARJ 55 / -0.006         ! Epsilon_b                                            
+*  include Aleph standard values for sin2theta, mz, gamz                        
+*  FROM A. BLONDEL  26/04/91                                                    
+PARU 102 / .232        ! Sin sqared Theta                                       
+PARJ 123 /  91.182     ! M z                                                    
+PARJ 124 / 2.484       ! Gamma z                                                
+*----------------------------------------------                                 
+*   QCD fit from QCD GROUP   (28/ 9/92)                                         
+*   mod to lund fragm. functions params                                         
+*-->To be activated if IPROC = 2 used    <------                                
+*---------------------------------------------                                  
+*MSTJ 41 / 2            ! Turn on final state radiation.                        
+*PARJ 81 / .311         ! Lambda QCD                                            
+*PARJ 82 / 1.90         ! M min.                                                
+*PARJ 21 / 0.347        ! Sigma Mt                                              
+*PARJ 41 / 0.5          ! a                                                     
+*PARJ 42 / 0.77         ! b                                                     
+ENDQ                                                                            

@@ -1,0 +1,41 @@
+head	1.1;
+access;
+symbols
+	bos3589:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	97.01.29.15.49.10;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@release bos3589: new epio routines
+@
+text
+@      SUBROUTINE EPIOT ( LUN)
+C.
+C.
+C.    ******************************************************************
+C.    *                                                                *
+C.    *                                                                *
+C.    *       PRINT PAM TITLE ON LUN                                   *
+C.    *                                                                *
+C.    *                                                                *
+C.    ******************************************************************
+C.
+      WRITE (LUN,1000)
+      RETURN
+ 1000 FORMAT (33H0PACKAGE COMPILED FROM PAM FILE= ,
+     + 40H EPIO  1_77_01  970117  I101                 
+     +/)
+      END
+@

@@ -1,0 +1,267 @@
+head	1.2;
+access;
+symbols
+	alpha126_22:1.2
+	alpha126_21:1.2
+	alpha126_20:1.2
+	alpha126_19:1.2
+	alpha126_18:1.2
+	alpha126_17:1.2
+	alpha126_16:1.2
+	alpha126_15:1.2
+	alpha126_14:1.2
+	alpha126_13:1.2
+	alpha126_12:1.2
+	alpha126_11:1.2
+	alpha126_10:1.2
+	alpha126_09:1.2
+	alpha126_08:1.2
+	alpha126_07:1.2
+	alpha126_06:1.2
+	alpha126_05:1.2
+	alpha126_04:1.2
+	alpha126_03:1.2
+	alpha126_02:1.2
+	alpha126_1:1.2
+	alpha125_17:1.2
+	alpha125_16:1.2
+	alpha125_15:1.2
+	alpha125_14:1.2
+	alpha125_13:1.2
+	alpha125_12:1.2
+	alpha125_11:1.2
+	alpha125_10:1.2
+	alpha125_09:1.2
+	alpha125_08:1.2
+	alpha125_07:1.2
+	alpha125_06:1.2
+	alpha125_05:1.2
+	alpha125_04:1.2
+	alpha125_03:1.2
+	alpha125_02:1.2
+	alpha125_01:1.2
+	alpha124_19:1.2
+	alpha125:1.2
+	alpha124_18:1.2
+	alpha124_17:1.2
+	alpha124_16:1.2
+	alpha124_15:1.2
+	alpha124_14:1.2
+	alpha124_13:1.2
+	alpha124_12:1.2
+	alpha124_11:1.2
+	alpha124_10:1.2
+	alpha124_09:1.2
+	alpha124_08:1.2
+	alpha124_07:1.2
+	alpha124_7:1.2
+	alpha124_06:1.2
+	alpha124_05:1.2
+	alpha124_04:1.2
+	alpha124_03:1.2
+	alpha124_02:1.2
+	alpha124_01:1.2
+	alpha124:1.2
+	alpha123_12:1.2
+	alpha123_11:1.2
+	alpha123_10:1.2
+	alpha123_9:1.2
+	alpha123_8:1.2
+	alpha123_7:1.2
+	alpha123_6:1.2
+	alpha123_5:1.2
+	alpha123_4:1.2
+	alpha123_3:1.2
+	alpha123_2:1.2
+	alpha123:1.2
+	alpha122_48:1.2
+	alpha122_47:1.2
+	alpha122_46:1.2
+	alpha122_45:1.2
+	alpha122_44:1.2
+	alpha122_43:1.2
+	alpha122_42:1.2
+	alpha122_41:1.2
+	alpha122_40:1.2
+	alpha122_39:1.2
+	alpha122_38:1.2
+	alpha122_37:1.2
+	alpha122_36:1.2
+	alpha122_35:1.2
+	alpha122_34:1.2
+	alpha122_33:1.2
+	alpha122_32:1.2
+	alpha122_31:1.2
+	alpha122_30:1.2
+	alpha122_29:1.2
+	alpha122_28:1.2
+	alpha122_27:1.2
+	alpha122_26:1.2
+	alpha122_25:1.2
+	alpha122_24:1.2
+	alpha122_23:1.2
+	alpha122_22:1.2
+	alpha122_21:1.2
+	alpha122_20:1.2
+	alpha122_19:1.2
+	alpha122_18:1.2
+	alpha122_17:1.2
+	alpha122_16:1.2
+	alpha122_15:1.2
+	alpha122_14:1.2
+	alpha122_13:1.2
+	alpha122_12:1.2
+	alpha122_11:1.2
+	alpha122_10:1.2
+	alpha122_9:1.2
+	alpha122_8:1.2
+	alpha122_6:1.1.1.1
+	alpha122_5:1.1.1.1
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.07.23.11.24.53;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.03.14.12.42.31;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.42.32;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@alpha122 release corr file no.8
+@
+text
+@      SUBROUTINE QHMOST(IER)
+C-----------------------------------------------------------------------
+C! Get the 4 most energetic HCAL towers in PHCO clusters
+C  Author   G.Ganis      2 July 1991
+C  Input    None
+C  Output         following arrays are dimensioned 4x200
+C                 for cluster  j-th. COMMON /CUMOST/
+C           ETW(i,j) energy in the 4 most energetic towers ( GeV )
+C                    i=1,...,4  descending order
+C           TWH(i,j) theta of i-th tower ( radians )
+C           PWH(i,j) phi   of i-th tower ( radians )
+C           JST(i,j) position in PHST bank of i-th tower
+C           IER= 0  ok
+C                1  PHCO or PHST bank missing
+C                2  PHCO too large
+C-----------------------------------------------------------------------
+#ifndef DOC
+#include "qcde.h"
+#include "qhac.h"
+#include "cuhnto.h"
+#include "cuphco.h"
+      PARAMETER (ltow=50)
+      INTEGER NTOW(LCLU),JHST(LTOW,LCLU)
+      REAL    ETOW(LTOW,LCLU)
+      REAL    AWW(LTOW)
+      INTEGER IWW(LTOW)
+#include "qmacro.h"
+C-----------------------------------------------------------------------
+      IER= 0
+C - Link to proper banks
+      IPHCO= NLINK('PHCO',0)
+      IPHST= NLINK('PHST',0)
+      IF(IPHCO.EQ.0.OR.IPHST.EQ.0) THEN
+       IER= 1
+       GOTO 999
+      END IF
+      NPHCO= LROWS(IPHCO)
+      IF(NPHCO.GT.LCLU) THEN
+       IER= 2
+       GOTO 999
+      END IF
+      NPHST= LROWS(IPHST)
+C - Initialize arrays
+      CALL VZERO(NTOW,NPHCO)
+      NARRAY= NPHCO*LTOW
+      CALL VZERO(ETOW,NARRAY)
+      CALL VZERO(JHST,NARRAY)
+C - Fill them
+      DO 10 L1=1,NPHST
+       ITH= ITABL(IPHST,L1,JPHSTI)
+       IPH= ITABL(IPHST,L1,JPHSPI)
+       DO 11 L2=1,NNTO
+        IF(ITH.EQ.ITHNTO(L2).AND.IPH.EQ.IPHNTO(L2)) GOTO 10
+11     CONTINUE
+       IROW= ITABL(IPHST,L1,JPHSPH)
+       IF (IROW.EQ.0) THEN
+          IER= 1
+          GOTO 999
+       ENDIF
+       ECOR= RTABL(IPHST,L1,JPHSCE)
+       IF(NTOW(IROW).EQ.LTOW) GOTO 10
+       NTOW(IROW)= NTOW(IROW)+1
+       ETOW(NTOW(IROW),IROW)= ECOR
+       JHST(NTOW(IROW),IROW)= L1
+10    CONTINUE
+C - Sort towers following energy
+      NPH= NPHCO
+      DO 20 L0=1,NPHCO
+       DO L1=1,NTOW(L0)
+        AWW(L1)= ETOW(L1,L0)
+       END DO
+       IF ( ntow(l0) .GT. 0 )
+     . CALL SORTZV(AWW,IWW,NTOW(L0),1,1,0)
+       DO L1=1,4
+        IF(L1.GT.NTOW(L0)) THEN
+         ETW(L1,L0)= 0.
+         JST(L1,L0)= 0
+         TWH(L1,L0)= 0.
+         PWH(L1,L0)= 0.
+        ELSE
+         ETW(L1,L0)= ETOW(IWW(L1),L0)
+         JST(L1,L0)= JHST(IWW(L1),L0)
+         ITH= ITABL(IPHST,JST(L1,L0),JPHSTI)
+         IPH= ITABL(IPHST,JST(L1,L0),JPHSPI)
+C-- Get polar coordinates for the tower
+         IST= 1
+         CALL HUSRAN(ITH,IPH,IST,THW,PHW,DTH,DPH)
+         TWH(L1,L0)= THW
+         PWH(L1,L0)= PHW
+        END IF
+       END DO
+20    CONTINUE
+C
+999   CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d56 4
+@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

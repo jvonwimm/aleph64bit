@@ -1,0 +1,58 @@
+#!/bin/csh
+###############################################################################
+#                          sycheck_rsh
+# 19/06/96                                                         F.Blin
+###############################################################################
+# to check QUEUES on shift9, shift50 and saga..
+ set string_4 = `echo ${HOST} | awk '{print substr($0,1,4)}'`
+
+ if (${string_4} == "shif" || ${string_4} == "saga") then
+    if (-e ${home}/qstat_${HOST}} ) rm -f ${home}/qstat_${HOST}
+    qstat -b | grep -v "-" | grep -v "=" | grep -v "QUEUE" |  grep -v "AVAILBL" > ${home}/qstat_${HOST}
+ endif 
+# to check df -k and scwork/scweek on nodes_DF [shift9 shift50 afal01]
+ if (${string_4} == "shif" || ${HOST} == "afal01") then
+     if (-e ${home}/scwork_${HOST}) rm -f ${home}/scwork_${HOST}
+     if (-e ${home}/scweek_${HOST}) rm -f ${home}/scweek_${HOST}
+     df -k /aleph/scwork | tail -1 > ${home}/scwork_${HOST} 
+     df -k /aleph/scweek | tail -1 > ${home}/scweek_${HOST}
+     if (-e ${home}/df_${HOST}) rm -f ${home}/df_${HOST}
+     if (${HOST} == "shift9") then
+        df -k /u/xu > ${home}/df_${HOST}
+     else
+        df -k > ${home}/df_${HOST}
+     endif
+ endif
+
+ if (-e ${home}/who_b_${HOST}} ) rm -f ${home}/who_b_${HOST}
+ who -b | awk '{print $4 " " $5 " " $6}' >${home}/who_b_${HOST} 
+
+ if (-e ${home}/ps_${HOST}} ) rm -f ${home}/ps_${HOST}
+ if (${HOST} == "shift9") then
+    ps -ef > ${home}/ps_${HOST}
+ else 
+    ps axw > ${home}/ps_${HOST} 
+ endif 
+
+ if (${HOST} == "shift9") exit
+
+ if (${HOST} == "afal01") then
+    if (-e ${home}/nfsd_${HOST}) rm -f ${home}/nfsd_${HOST}
+    top -d1 -n | grep nfsd | awk '{print substr($9,1,index($9,".")-1)}' > ${home}/nfsd_${HOST}
+ endif
+# echo "${HOST} /aleph/script/sycheck_rsh" >> /aleph/log/check_sycheck_rsh
+ if (${HOST} == "afal10") then
+    if (-e ${home}/error_saga01.rsh) rm -f ${home}/error_saga01.rsh
+    if (-e ${home}/error_shift9.rsh) rm -f ${home}/error_shift9.rsh
+    if (-e ${home}/error_shift50.rsh) rm -f ${home}/error_shift50.rsh
+    if (-e ${home}/error_csf.rsh) rm -f ${home}/error_csf.rsh
+    qtell -c qstat -b -h saga01 > ${home}/error_saga01.rsh
+    qtell -c qstat -b -h shift9 > ${home}/error_shift9.rsh
+    qtell -c qstat -b -h shift50 > ${home}/error_shift50.rsh
+    qtell -c qstat -b -h csf > ${home}/error_csf.rsh
+ endif
+ 
+ if (-e ${home}/df_usr_${HOST}) rm -f ${home}/df_usr_${HOST}
+ df -k /usr > ${home}/df_usr_${HOST}
+
+ exit

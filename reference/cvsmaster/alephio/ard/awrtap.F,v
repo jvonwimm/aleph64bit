@@ -1,0 +1,540 @@
+head	1.11;
+access;
+symbols
+	alio83:1.11
+	alio82:1.11
+	alio81:1.11
+	alio80:1.11
+	alio74:1.11
+	alio73:1.11
+	alio72:1.11
+	alio71:1.11
+	alio70:1.10
+	alio68:1.8
+	alio69:1.9
+	alio67:1.7
+	alio66:1.6
+	alio65:1.5
+	alio64:1.5
+	alio63:1.4
+	alio62:1.4
+	alio61:1.4
+	alio60:1.4
+	alephio53:1.3
+	v4:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.11
+date	97.11.02.13.35.37;	author flr;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	97.06.05.13.07.49;	author flr;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	97.01.29.15.51.23;	author flr;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	97.01.16.13.55.21;	author flr;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	96.10.21.07.38.21;	author flr;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	96.09.03.15.44.41;	author flr;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.07.19.07.05.18;	author flr;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.05.03.14.40.40;	author flr;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.03.13.15.00.36;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.01.18.13.49.17;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.52.38;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.52.39;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.11
+log
+@alephio7.1 mods for redwood and corr in bkrhab
+@
+text
+@      SUBROUTINE AWRTAP(LUN,ANAME,ATYPE,FDEVI,IER )
+C----------------------------------------------------------------------
+CKEY ALREAD OPEN WRITE TAPE CARTRIDGE
+C   Author: T. Wildish (IBM code)   January 1989
+C           F.Ranjard  (UNIX code)  February 1993
+C           U.Schafer  (VAX code)   March 1994
+C
+C!  Purpose   : OPEN   tape or cartridge for writing
+C   Inputs    : LUN      logical unit
+C
+C               ANAME    DSN of tape file, can be ' ' if NL tape
+C                        is used or if you wish to ignore the dsn
+C
+C               ATYPE    'NATIVE'  for native fortran
+C                        'EPIO'    for EPIO
+C               FDEVI     'TAPE tapeid options' or
+C                         'CART tapeid options'
+C
+C               where 'tapeid' is 'vsn.fseq.label' and 'options' are
+C               any staging options as required
+C                For SL tapes, options should not be used and the
+C               defaults will be taken
+C
+C   Outputs   : IER  = 0  successful opening
+C
+C  e.g. FILO 'DSNAME |EPIO | CART AC0021.1.SL'
+C   or  FILO '       |NATIVE|TAPE 03558W.1.NL RECFM VBS BLOCK 32040'
+C --------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "alrcom.h"
+#include "albitw.h"
+#include "gtchdecl.h"
+      INTEGER SYSTEM
+      EXTERNAL SYSTEM
+      CHARACTER*10  CHDROP
+      LOGICAL FDROP
+      DATA FDROP/.FALSE./
+C----------------------------------------------------------------------
+      SUBR = ' AWRTAP '
+      FNAME = ANAME
+#include "prfname.h"
+C
+C - get file type and record length
+C   close previous file and pass file name to EPIO
+#include "gtftyp.h"
+C - get record length in characters
+      CALL CSETDI (KRECL,CHRECL,1,5)
+C - get logical unit as character variable
+#include "gtchunit.h"
+C
+C - IF NOT an EPIO or NATIVE file THEN RETURN
+      IF (FTYP3.NE.'NAT' .AND. FTYP3.NE.'EPI') THEN
+         IST = 3
+         GOTO 98
+      ENDIF
+C
+#include "gtvsn.h"
+C     Verify that we have a tape or cartridge request
+      IF (INDEX(TAPPAR,CHMED) .EQ.0) THEN
+C      something nasty has happened if we got here!
+         IST = 4
+         GOTO 98
+      ENDIF
+C
+#if defined(IBM)
+C --------- the code which follows is specific to IBM -----------------
+C
+C     CHDEF is a string of default output options
+      CHDEF = ' RECFM U BLOCK '//CHRECL
+C     length of CHOPT
+      LOPT = MAX(1,LNBLNK(CHOPT))
+C
+C     EXABYTE REQUEST
+      IF ( CHMED.EQ.'8MM ' ) THEN
+C      look for DENsity 43200 (Model 8200 ), if absent, put it in!
+         IF ( INDEX(CHOPT,' DEN ').EQ.0 ) THEN
+            CHOPT = CHOPT(1:LOPT)//' DEN 8200 DEV 8MM'
+         END IF
+C
+C     TAPE OR CARTRIDGE REQUEST
+      ELSE
+C      tape DSN, if given in FNAME, must be appended to options
+         IF ( LNBLNK(FNAME).NE.0 ) THEN
+           CHOPT = CHOPT(1:LOPT)//' DSN '//FNAME
+         END IF
+C
+      ENDIF
+      LOPT = MAX (1,LNBLNK(CHOPT))
+C
+C     drop any previous staged data disk
+      IF ( FDROP ) THEN
+           MSG = 'EXEC STAGE DROP '//DSNAME
+#include "prmsg.h"
+           CALL  VMCMS (MSG(1:LNBLNK(MSG)),IST)
+           FDROP = .FALSE.
+      END IF
+C
+      MSG = 'EXEC STAGE POST '//DSNAME//CHTAPE//CHDEF(1:LNBLNK(CHDEF))
+     &                        //' '//CHOPT(1:LOPT)
+C
+C     Now for the STAGE request!
+#include "prmsg.h"
+      CALL VMCMS (MSG(1:LNBLNK(MSG)),IST)
+C
+C     Fatal error ?
+      IF ( IST.GT.20 ) GOTO 98
+C
+C     Non-fatal error? Set flag for dropping disk next time
+      IF ( IST.NE.0 )  IER = 1
+      FDROP = .TRUE.
+C
+C     Flag use of staging for dropping at end of job
+      CALL ASTAGE(LUN,' ',IERROR)
+C --------------- end of IBM code ------------------------------------
+#endif
+#if defined(UNIX)
+C -----------------  UNIX code ------------------------------------
+C
+C     build stageout message, append tape no.
+C
+      LT     = LNBLNK (CHTAPE)
+      I1P    = INDEX(CHTAPE,'.')
+      IF ( I1P.GT.1 ) THEN
+         I2P = INDEX (CHTAPE(I1P+1:LT),'.') + I1P
+         CALL CUTOL (CHTAPE(I2P+1:LT))
+         CHDEF = ' -V '// CHTAPE(1:I1P-1)//
+     &           ' -q '// CHTAPE(I1P+1:I2P-1)//
+     &           ' -l '// CHTAPE(I2P+1:LT)//
+     &           ' -L '// CHRECL
+      ENDIF
+C
+C      if there are user options add them
+      IF (LNBLNK(CHOPT).GT.0) THEN
+         CHDEF = CHDEF(1:LNBLNK(CHDEF))//' '//CHOPT(1:LNBLNK(CHOPT))
+      ENDIF
+C
+C      tape DSN, if given in FNAME, must be appended to options
+      IF ( LNBLNK(FNAME).NE.0 ) THEN
+          CHDEF = CHDEF(1:LNBLNK(CHDEF))//' -f '//FNAME
+      END IF
+C
+C     Now for the STAGE request!
+      CALL CUTOL (CHTAPE(1:LT))
+C
+C     remove previous file if any, create a link to the pool,
+C     without creating a file
+C     Environmental variable ALSTOUT has to be defined on UNIX systems!
+C     ALSTOUT defines the disk pool for the files to be staged out.
+C     May be different from the disk pool for stagein data.
+C
+#if defined(ALEPH_OUTSIDE)
+C     sfget creates a symbolic link in $ALSTAGE to the file in $ALSTOUT.
+      MSG = 'sfget -p $ALSTOUT -r -t '//CHTAPE(1:LT)
+#else
+      MSG = 'alstageout -p $ALSTOUT'//CHDEF(1:LNBLNK(CHDEF))
+     &      //' '//CHTAPE(1:LT)
+#endif
+#include "prmsg.h"
+      IST = SYSTEM (MSG(1:LNBLNK(MSG))) / 256
+      IF (IST .NE. 0) GOTO 98
+C
+C    open the file for write
+      CALL GETENV ('ALSTAGE',FNAME)
+      FNAME = FNAME(1:LNBLNK(FNAME))//'/'//CHTAPE(1:LT)
+      IF (FTYP3 .EQ. 'EPI') THEN
+C      if EPIO then send filename and set UNIX flag
+C      file is opened by rfio through EPIO
+         CALL EPSETW (LUN,33,2,IST)
+         LE = LNBLNK(FNAME)
+         CALL EPDEFU (LUN,FNAME(1:LE),IST)
+         IF (IST.NE.0) GOTO 98
+      ELSE
+C      open native file in direct access
+         OPEN (LUN,STATUS='NEW',FILE=FNAME,ACCESS='DIRECT',
+     &      FORM='UNFORMATTED',RECL=MRECL,IOSTAT=IST,ERR=98)
+         IF (IST.NE.0) GOTO 98
+      ENDIF
+C     Register unit no.s  and filename for file
+C     which has to be staged out at end of job
+#if defined(ALEPH_OUTSIDE)
+      CHDEF = CHDEF(1:LNBLNK(CHDEF))//' '//CHTAPE(1:LT)
+      CALL ASTAGE(LUN,CHDEF(1:LNBLNK(CHDEF)),IERROR)
+#else
+      CALL ASTAGE(LUN,FNAME(1:LNBLNK(FNAME)),IERROR)
+#endif
+C
+C ---- end of UNIX code ------------- end of UNIX code ----------------
+#else
+#if defined(ALEPH_DEC)
+C ----------------  VAX code ------------------------------------
+C
+C     build stageout message, append tape no.
+C
+C     DO WE HAVE AN ALSTAGEOUT COMMAND INSTALLED?
+      IF (LIB$GET_SYMBOL('ALSTAGEOUT',MSG).NE.1) GOTO 98
+C
+      LT     = LNBLNK (CHTAPE)
+      I1P    = INDEX(CHTAPE,'.')
+      IF ( I1P.GT.1 ) THEN
+         I2P = INDEX (CHTAPE(I1P+1:LT),'.') + I1P
+         CALL CUTOL (CHTAPE(I2P+1:LT))
+         CHDEF = ' -v '// CHTAPE(1:I1P-1)//
+     &           ' -q '// CHTAPE(I1P+1:I2P-1)//
+     &           ' -l '// CHTAPE(I2P+1:LT)//
+     &           ' -b '// CHRECL //
+     &           ' -L '// CHRECL
+      ENDIF
+C
+C      if there are user options add them
+      IF (LNBLNK(CHOPT).GT.0) THEN
+         CHDEF = CHDEF(1:LNBLNK(CHDEF))//' '//CHOPT(1:LNBLNK(CHOPT))
+      ENDIF
+C
+C      tape DSN, if given in FNAME, must be appended to options
+      IF ( LNBLNK(FNAME).NE.0 ) THEN
+          CHDEF = CHDEF(1:LNBLNK(CHDEF))//' -f '//FNAME
+      END IF
+C
+C     Now for the STAGE request!
+      CALL CUTOL (CHTAPE(1:LT))
+C
+      CHTAPE(I1P:I1P)='_'
+      FNAME = 'ALDATAOUT:'//CHTAPE(1:LT)
+C DO  SFGET , IF DEFINED
+      IF (LIB$GET_SYMBOL('SFGET',MSG).EQ.1)  THEN
+        CALL LIB$DELETE_LOGICAL(DSNAME(1:6))
+        MSG = 'sfget -y '//DSNAME(1:6)//' '//CHTAPE(1:LT)
+#include "prmsg.h"
+        STATUS = LIB$SPAWN (MSG,,,,,,IST)
+        IF (IST.NE.1) GOTO 98
+        CHTAPE=DSNAME(1:6)
+        LT     = LNBLNK (CHTAPE)
+      ELSE
+        CALL LIB$SET_LOGICAL(DSNAME(1:6),FNAME(1:lnblnk(fname)))
+      ENDIF
+C
+C    open the file for write
+      IF (FTYP3 .EQ. 'EPI') THEN
+C      EPIO file
+         OPEN (LUN,STATUS='NEW',FORM='UNFORMATTED',
+     &        RECORDTYPE='FIXED',RECL=MRECL,ACCESS='SEQUENTIAL',
+     &        ERR=98,IOSTAT=IST)
+      ELSEIF (FTYP3.EQ.'NAT') THEN
+C      logical record length is given in words
+         OPEN (LUN,STATUS='NEW',
+     &        FORM='UNFORMATTED',
+     &        ORGANIZATION='SEQUENTIAL',
+     &        RECORDTYPE='FIXED',
+     &        BLOCKSIZE=51*512,BUFFERCOUNT=4,RECL=MRECL,
+     &        ERR=98,IOSTAT=IST)
+C
+      ENDIF
+C     Register unit no.s  and options for files
+C     which have to be staged out at end of job
+      CHDEF = CHDEF(1:LNBLNK(CHDEF))//' '//CHTAPE(1:LT)
+      CALL ASTAGE(LUN,CHDEF(1:LNBLNK(CHDEF)),IERROR)
+C
+C ---- end of VAX code ------------- end of VAX code ----------------
+#endif
+#endif
+C----------------------------------------------------------------------
+C                  define BOS file format  (FORT,EPIO,TEXT)
+C----------------------------------------------------------------------
+      BFORM2 = 'SEQ'
+#include "stbforma.h"
+C
+      RETURN
+C - error when opening
+ 98   CONTINUE
+      IER = 7
+      CALL PRSTAT ('AWRTAP',FNAME,IST)
+      END
+#endif
+@
+
+
+1.10
+log
+@restore ard as it was in alio68
+@
+text
+@a129 1
+     &           ' -b '// CHRECL //
+@
+
+
+1.9
+log
+@release alephio69: call cfio on VMS
+@
+text
+@d35 1
+d107 1
+a107 1
+       IF ( IST.GT.20 ) GOTO 98
+d241 4
+a244 5
+C      if EPIO then send filename and set UNIX flag
+C      file is opened by rfio through EPIO
+         CALL EPSETW (LUN,33,2,IST)
+         CALL EPDEFU (LUN,DSNAME(1:6),IST)
+         IF (IST.NE.0) GOTO 98
+@
+
+
+1.8
+log
+@alephio68 introduce ALEPH_LINUX flag
+@
+text
+@a34 1
+      EXTERNAL SYSTEM
+d106 1
+a106 1
+      IF ( IST.GT.20 ) GOTO 98
+d240 5
+a244 4
+C      EPIO file
+         OPEN (LUN,STATUS='NEW',FORM='UNFORMATTED',
+     &        RECORDTYPE='FIXED',RECL=MRECL,ACCESS='SEQUENTIAL',
+     &        ERR=98,IOSTAT=IST)
+@
+
+
+1.7
+log
+@alephio 6.7 introduce new stager on HP
+@
+text
+@d35 1
+@
+
+
+1.6
+log
+@add #ifdef ALEPH_HP in awrtap and replace -v with -V
+@
+text
+@d152 1
+a152 1
+#if defined(ALEPH_HP)
+d181 1
+a181 1
+#if defined(ALEPH_HP)
+@
+
+
+1.5
+log
+@replace Call SYSTEM with IST=SYSTEM
+@
+text
+@d126 1
+a126 1
+         CHDEF = ' -v '// CHTAPE(1:I1P-1)//
+d181 4
+d186 1
+d191 1
+a191 1
+C -----------------  VAX code ------------------------------------
+@
+
+
+1.4
+log
+@replace flag ${VENDOR} with ALEPH_${VENDOR}
+Modified Files:
+ 	ainqui.F algtenv.F aopen.F aopenw.F aoperd.F aoptap.F astage.F
+ 	awrtap.F
+@
+text
+@d34 1
+d160 2
+a161 1
+      CALL SYSTEM (MSG(1:LNBLNK(MSG)))
+@
+
+
+1.3
+log
+@import alephio 52 from historian. Modify aclose.F to NOT call brwnd twice
+for the same file. update version.h to 5.3
+@
+text
+@d151 1
+a151 1
+#if defined(HP)
+d183 1
+a183 1
+#if defined(DEC)
+@
+
+
+1.2
+log
+@ Modified Files:
+	acdarg.F afilin.F afilou.F ainqui.F amount.F aoptap.F astage.F
+	awrtap.F
+@
+text
+@a0 1
+*DK awrtap
+d182 2
+a183 2
+#endif
+#if defined(VAX)
+d253 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d29 1
+a29 1
+C
+d146 2
+a147 2
+C    remove previous file if any, create a link to the pool,
+C    without creating a file
+d151 2
+d155 4
+d178 3
+a180 4
+C     Register unit no.s  and options for files
+C     which have to be staged out at end of job
+      CHDEF = CHDEF(1:LNBLNK(CHDEF))//' '//CHTAPE(1:LT)
+      CALL ASTAGE(LUN,CHDEF(1:LNBLNK(CHDEF)),IERROR)
+@
+
+
+1.1.1.1
+log
+@import alephio 4
+@
+text
+@@

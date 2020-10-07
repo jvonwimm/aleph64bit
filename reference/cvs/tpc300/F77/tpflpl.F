@@ -1,0 +1,53 @@
+*DK tpflpl
+      SUBROUTINE TPFLPL(ICHRF,IBIN1,NLEN)
+C--------------------------------------------------------------------
+C!  Fill the single-pulse work bank from the appropriate blocks
+C!  in the full signal bank
+C
+C  Called from:  TSRESP
+C  Calls:        UCOPY, VZERO
+C
+C  Inputs:   PASSED:      --ICHRF,  the pointer to the current channel's
+C                                   block in the signal reference bank
+C            /TPCBOS/     --NTSCAN, the number of divisions of the
+C                                   total analog signal collection time
+C                         --NTBNAS, the number of bins in each division
+C                         --INDSIG, the full signal bank id
+C                         --ITPULS, the single-pulse bank id
+C
+C  Outputs:  PASSED:      --IBIN1, the first bin of the signal
+C                         --NLEN, the length of the signal
+C            BANKS:       --ITPULS, (work bank id) single-pulse work
+C                                   bank filled with signal from full
+C                                   collection time for current channel
+C                           IW(ITPULS+I) = electrons in Ith bin
+C  D. DeMille
+C--------------------------------------------------------------------
+#include "bcs.h"
+#include "tpcons.h"
+#include "tpcbos.h"
+C
+C  Get pointers and fill pulse bank
+C
+      DO 1 I = 1, NTSCAN
+C
+         NPNT = IW(ICHRF+2+I)
+         IPLB1 = ITPULS + (I-1)*NTBNAS
+C
+         IF ( NPNT .NE. 0 ) THEN
+            IDSS = INDSIG + 2 + (NPNT-1)*IW(INDSIG+1)
+            CALL UCOPY(IW(IDSS+1),IW(IPLB1+1),NTBNAS)
+         ELSE
+            CALL VZERO(IW(IPLB1+1),NTBNAS)
+         ENDIF
+C
+ 1    CONTINUE
+C
+C  First bin and length
+C
+      IBIN1 = IW(ICHRF+1)
+      IBINL = IW(ICHRF+2)
+      NLEN = IBINL - IBIN1 + 1
+C
+      RETURN
+      END

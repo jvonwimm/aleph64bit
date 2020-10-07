@@ -1,0 +1,105 @@
+head	1.1;
+access;
+symbols
+	alio83:1.1
+	alio82:1.1
+	alio81:1.1
+	alio80:1.1
+	alio74:1.1
+	alio73:1.1
+	alio72:1.1
+	alio71:1.1
+	alio70:1.1
+	alio68:1.1
+	alio69:1.1
+	alio67:1.1
+	alio66:1.1
+	alio65:1.1
+	alio64:1.1
+	alio63:1.1
+	alio62:1.1
+	alio61:1.1
+	alio60:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.04.23.10.00.08;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@move alph, dbas, a part of alef and a part of c to alephio
+Modified Files:
+ 	version.h
+ Added Files:
+ 	adbrow.F adbrpn.F adbrun.F adbswp.F adbver.F agetdb.F agtfil.F
+	albos.F aldawr.F aldtyp.F aleveh.F alfind.F alfmt.F algtbk.F
+ 	algtdb.F algtlu.F algtro.F algtyp.F alinst.F alk7fil.F
+ 	alk7fru.F alk7op.F alk7tru.F alredb.F alrune.F alrunh.F
+ 	alrunr.F alseed.F alstho.F alstin.F alstri.F altabl.F alvsn.F
+ 	aopdbs.F aublis.F aubos.F aubprs.F bkcari.F bkinca.F bkrhab.F
+ 	bkrhal.F bkrhaw.F bktobk.F cafiht.F chahol.F dafrds.F gtdbas.F
+ 	gtstup.F igtfmt.F jhocha.F julrec.F junial.F junidb.F
+ 	kbytrec.F loctab.F nameru.F ubpack.F uclean.F uindxs.F usbos.F
+ 	usgtdb.F utcblk.F utccop.F utcofo.F utwocl.F utwoex.F
+Removed Files:
+	noibm.F
+@
+text
+@      INTEGER FUNCTION ALTABL (NAME,NCOL,NROW,TABL,FMT,LIST)
+C ------------------------------------------------------------
+C - J.Boucrot - F.Ranjard - 870516
+C
+C! Book tabular bank 'NAME',NR=0
+C  then Fill it with the array given in a tabular format,
+C       Give a format and Put on a list
+C
+C - structure: INTEGER FUNCTION subprogram
+C              User Entry Name: ALTABL
+C              External References: AUBOS(ALEPHLIB), BKFMT/BLIST(BOS77)
+C                                   UCOPY(CERNLIB)
+C              Comdecks referenced: BCS
+C
+C - Usage   : JTABL   = ALTABL (NAME,NCOL,NROW,TABL,FMT,LIST)
+C - Input   : NAME    = bank name (up to 4 characters)
+C             NCOL    = # of columns
+C             NROW    = # of rows
+C             TABL    = array containing the table (REAL or INTEGER)
+C             FMT     = bank format (character string)
+C             LIST    = list on wich the bank must be put onto
+C - Output  : ALTABL  = bank index
+C   --------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+      DIMENSION TABL(*)
+      CHARACTER*(*) FMT,LIST,NAME
+      CHARACTER LP*2
+C -----------------------------------------------------------------
+      IF (NCOL*NROW .EQ.0) THEN
+         ALTABL = -1
+         GOTO 999
+      ELSE
+         CALL AUBOS (NAME,0,NCOL*NROW+LMHLEN,JTABL,IGARB)
+         IF (JTABL.GT.0) THEN
+            IW(JTABL+LMHCOL) = NCOL
+            IW(JTABL+LMHROW) = NROW
+            CALL UCOPY (TABL(1),RW(JTABL+LMHLEN+1),NCOL*NROW)
+            CALL BKFMT (NAME,FMT)
+            LP = LIST//'+'
+            CALL BLIST (IW,LP,NAME)
+         ENDIF
+         ALTABL = JTABL
+      ENDIF
+C
+ 999  CONTINUE
+      END
+#endif
+@

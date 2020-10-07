@@ -1,0 +1,138 @@
+head	1.1;
+access;
+symbols
+	alpha126_22:1.1
+	alpha122_22:1.1
+	alpha126_21:1.1
+	alpha126_20:1.1
+	alpha126_19:1.1
+	alpha126_18:1.1
+	alpha126_17:1.1
+	alpha126_16:1.1
+	alpha126_15:1.1
+	alpha126_14:1.1
+	alpha126_13:1.1
+	alpha126_12:1.1
+	alpha126_11:1.1
+	alpha126_10:1.1
+	alpha126_09:1.1
+	alpha126_08:1.1
+	alpha126_07:1.1
+	alpha126_06:1.1
+	alpha126_05:1.1
+	alpha126_04:1.1
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	99.03.22.14.07.18;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE MINPJL
+C
+CKEY MDST /INTERNAL
+C-----------------------------------------------------------------------
+C! Fill PLJT bank from DLJT.
+C
+C     Author: Agnieszka Jacholkowska    14-Nov-94
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+C
+      PARAMETER (AFACTM=100000.,DFACTM=100000.,EFACTM=10000.)
+#include "pljtjj.h"
+#include "dljtjj.h"
+
+C!    set of intrinsic functions to handle BOS banks
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+C
+C++   Pick up DLJT bank.
+C
+      KDLJT = NLINK('DLJT',0)
+      IF (KDLJT.LE.0) RETURN
+      NDLJT = LROWS(KDLJT)
+      IF (NDLJT.LE.0) RETURN
+C
+C++   Create PLJT bank.
+C
+      NPLJT = NDLJT
+      LEN = LMHLEN + LPLJTA * NDLJT
+      CALL AUBOS('PLJT',0,LEN, KPLJT,IGARB)
+      CALL BLIST(IW,'S+','PLJT')
+      IF (IGARB.GE.2) THEN
+         RETURN
+      ELSE IF (IGARB.NE.0) THEN
+         KDLJT = NLINK('DLJT',0)
+      ENDIF
+      IW(KPLJT+LMHCOL) = LPLJTA
+      IW(KPLJT+LMHROW) = NDLJT
+C
+C++   Fill PLJT bank.
+C
+      DO 100 I=1,NDLJT
+         RW(KROW(KPLJT,I)+JPLJPX) = FLOAT(ITABL(KDLJT,I,JDLJPX))/AFACTM
+         RW(KROW(KPLJT,I)+JPLJPY) = FLOAT(ITABL(KDLJT,I,JDLJPY))/AFACTM
+         RW(KROW(KPLJT,I)+JPLJPZ) = FLOAT(ITABL(KDLJT,I,JDLJPZ))/AFACTM
+         RW(KROW(KPLJT,I)+JPLJPE) = FLOAT(ITABL(KDLJT,I,JDLJPE))/AFACTM
+         IW(KROW(KPLJT,I)+JPLJNO) = ITABL(KDLJT,I,JDLJNO)
+  100 CONTINUE
+C
+      RETURN
+      END
+#endif
+@

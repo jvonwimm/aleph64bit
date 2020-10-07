@@ -1,0 +1,32 @@
+*---   First section : steering
+NREFCARD       ! loads setup 9700 and 9702 (Z0 Z0,GAMMA Z0,WW) from Data Base
+*                             ------------- 
+*     RUN #    RUN'S TITLE
+RUN   NUMRUN   'KEYWORD PRODUCTION'
+*     FIRST EVENT    LAST EVENT    TO BE GENERATED
+TRIG     1          NUMEVT
+DEBU 6 / 1  5    !    FIRST,LAST EVENT TO BE debugged
+TIME    10
+*FILO '/shift/shift9/data14/knering/kin/97/znn183_1380_1k.epio|EPIO'
+FILOCARD
+*  use RANMAR generator for random numbers
+*  INSEED : first seed (range assigned per institute)
+*  LOSEED : second seed (incremented locally for new runs)
+*     INSEED  LOSEED (1-30000)
+RMAR     RMAR1           RMAR2
+ENDQ
+*---   second section : modifications to Data Base setup
+KCAR 0 / $TEXT
+POFF
+PMA3 20433 / 0.054      ! truncation after 54 mev to avoid infinite loops
+*       x        y        z    vertex smearing x y z
+SVRTCARD
+* Generator parameters                                                  
+*    ECM     :  center-of-mass energy (GeV)                             
+*    MZ      :  Z mass  (GeV)                                           
+*    GZ      :  Z width (GeV)                                           
+*    SW2     :  sin**2(theta_w)                                         
+*     ECM      MZ      GZ    SW2                                        
+GENE  CMSENE 91.189  2.497  0.2317                                      
+*
+END$

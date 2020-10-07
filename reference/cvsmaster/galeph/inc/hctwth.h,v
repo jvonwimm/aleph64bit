@@ -1,0 +1,64 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.08.21.15.09.11;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.07.03.14.47.35;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@gal307.1 see ChangeLog
+@
+text
+@C
+      INTEGER NUHFTH,IFHFTH,ILHFTH
+      PARAMETER(NUHFTH=4,IFHFTH=14,ILHFTH=17)
+C
+      REAL ENHFTW(NUHFTH,96,2,2)
+C
+      COMMON/HCTWTH/ENHFTW
+C
+#if DOC
+C! HCAL half-tower energies
+    NUHFTH = number of half-tower rows per side
+    IFHFTH = first row of half-towers
+    ILHFTH = last row of half-towers
+    ENHFTW(N,IPH,ISIDE,IHALF) = energy in each half of the half-towers
+#endif
+@
+
+
+1.1
+log
+@gal307 look at galeph/news/news.h
+@
+text
+@d3 1
+a3 1
+      PARAMETER(NUHFTH=5,IFHFTH=13,ILHFTH=17)
+@

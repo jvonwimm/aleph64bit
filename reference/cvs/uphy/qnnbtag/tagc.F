@@ -1,0 +1,62 @@
+*****************************************************************
+      SUBROUTINE TAG_C(NC,NCOD_C,NPART)
+*****************************************************************
+*     Aim = * finds the final charmed hadrons  D0, D+/-, Ds, /\c.
+*           * fills an array with theirs  alpha # .
+*           * fills an array with their alpha particle code.
+*     input   : none
+*     outputs : NC         number of charmed hadrons.
+*               NCOD_C(nc) alpha code of charmed hadron.
+*               NPART(nc)  track number.
+*****************************************************************
+#include "qcde.h"
+       DIMENSION NCOD_C(10),NPART(10)
+       LOGICAL CHARM,LASTC
+C
+C      Logicals definitions
+C
+       CHARM(IEX)  = ((IEX.GE.35.AND.IEX.LE.41).OR.(IEX.EQ.53).OR.
+     $                (IEX.GE.82.AND.IEX.LE.87).OR.
+     $                (IEX.GE.115.AND.IEX.LE.120).OR.
+     $                (IEX.GE.169.AND.IEX.LE.210))
+#include "qmacro.h"
+C
+C      Initializes arrays
+C
+       do i= 1,10
+          ncod_c(i) = 0
+          npart(i) = 0
+       enddo
+       nc = 0
+C
+C      Loop  over all MC tarcks / selects quark c in
+C
+       DO 10 ITKM = KFMCT,KLMCT
+       ICODE = KTPCOD(ITKM)
+          IF (CHARM(ICODE)) THEN
+          LASTC = .TRUE.
+C
+C      Vcheck if it's the ultimate hadron LASTC = .true.
+C
+          DO 11 IDAU = 1,KNDAU(ITKM)
+          JCODE = KTPCOD(KDAU(ITKM,IDAU))
+          IF (CHARM(JCODE)) LASTC = .FALSE.
+  11      CONTINUE
+C
+C       If LASTC .true. nature and countings
+C
+         IF (LASTC) THEN
+
+             NC = NC + 1
+             NCOD_C(NC) = KTPCOD(ITKM)
+             NPART(NC) = ITKM
+
+          ENDIF                      ! ultimate charm.
+          ENDIF                      ! Selection of charm.
+  10    CONTINUE                     ! end of loop on MC tracks.
+C
+C       made
+C
+        RETURN
+        END
+C

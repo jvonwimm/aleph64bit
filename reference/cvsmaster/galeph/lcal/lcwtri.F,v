@@ -1,0 +1,169 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.30.07.09.07;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.38;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.39;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ cahtra.h gmacro.h lccomc.h lcnamc.h ljjpar.h siconst.h
+ sigeco.h version.h
+ itmsk1.F itmsk2.F itnois.F itres.F itxtlk.F
+ lcadc.F lcamp.F lcasig.F lcbhab.F lcbkpr.F lcdigi.F lcfral.F
+ lchit.F lcirun.F lcnami.F lcnois.F lcpad.F lcroc.F lcsamp.F
+ lcsatu.F lcshow.F lcstrt.F lctrak.F lctrdi.F lctrht.F lcwire.F
+ lcwsum.F lcwtri.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+ xtrcom.h
+@
+text
+@*DK lcwtri
+      SUBROUTINE LCWTRI
+C--------------------------------------------------------------
+C! Make Wire Trigger bank
+C. - J.Dines Hansen & P.Hansen - 861001
+C. - Modified P.Hansen - 950202
+C. - Fill bank 'LWTR' with the sum of odd and even wire-planes
+C. - called by LCTRDI                           from this .HLB
+C. - calls     BLIST                            from BOS
+C --------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "jqcom.h"
+#include "jobcom.h"
+#include "iocom.h"
+#include "lccomc.h"
+#include "lcnamc.h"
+#include "lcparm.h"
+#include "bmacro.h"
+C--------------------------------------------------------------
+C - are there any wire digitalisations
+      KWIRE = IW(NALWDI)
+      IF(KWIRE .LE. 0)                         GOTO 999
+      IF(LROWS(KWIRE) .LE. 0)                  GOTO 999
+C
+C - Book wire sum digitalisation bank
+      LEN = LWTRR * LWTRC + LMHLEN
+      CALL ALBOS ('LWTR',0,LEN,KINDX,IGARB)
+      IW(KINDX+1) = LWTRC
+      IW(KINDX+2) = LWTRR
+      CALL BLIST(IW,'E+','LWTR')
+      IF (IGARB.EQ.1) KWIRE = IW(NALWDI)
+C
+C? Sum the wire signals in each module
+      DO 200 M = 1,LROWS(KWIRE)
+        KRWD = KROW(KWIRE,M)
+        MODU = IW(KRWD+1)
+        KRWT = KROW(KINDX,MODU)
+        IFB  = (MODU-1)/2+1
+        DO 100 IPL = 1,LCNWPL
+          IWRD = MOD(IPL-1,2)+1
+          IW(KRWT+IWRD) = IW(KRWT+IWRD) + IW(KRWD+1+IPL)
+  100   CONTINUE
+  200 CONTINUE
+      IF (FDEBJO .AND. IPRIJO(5).NE.0) THEN
+         WRITE(LOUTIO,*) ' +++LCWTRI+++ debug of LWTR bank'
+         CALL PRTABL('LWTR',0)
+      ENDIF
+  999 RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d6 1
+d10 1
+a32 1
+      KWS = IW(NALCWS)
+a43 4
+        IF(KWS.GT.0) THEN
+           IW(KWS+LMHLEN+8+IFB) = IW(KWS+LMHLEN+8+IFB) +
+     &                            IW(KRWT+1)+IW(KRWT+2)
+        ENDIF
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

@@ -1,0 +1,432 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.07.14.02.43;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.44;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK mustsg
+      SUBROUTINE MUSTSG(XLOC,DCLOC)
+C
+C**************************************************************************
+C
+C T.Wang -851212
+C
+C
+C             modified for DAF and new bank layout
+C             by F.Bossi,D.Kuhn,R.Xu 87-09-24
+C           - modified for final dbase
+C             by A. Antonelli, F. Bossi 1 July 89
+C
+C!Calculate segments of a track element in active
+C       area of tubes in two tube planes with straight extrapolation.
+C
+C       Input :
+C             XLOC(*)  -- Coordinates of track element
+C             DCLOC(*) -- Direction cosine of track element
+C       Output :
+C             in BOS bank JDMUST
+C
+C       Called by MUSTRM
+C       Calls ALBOS                        in this .HLB
+C             BLIST                  in BOS
+C
+C***************************************************************************
+C
+#ifndef DOC
+      SAVE
+#include "munamc.h"
+#include "mustjj.h"
+#include "bcs.h"
+#include "jobcom.h"
+#include "iocom.h"
+#include "trkcom.h"
+#include "mugncn.h"
+#include "musgcn.h"
+      REAL XLOC(3),DCLOC(3)
+#include "gcvolu.h"
+#include "mjjpar.h"
+      EXTERNAL MUNSTA
+      CHARACTER*4 CHAHOL
+#include "bmacro.h"
+#include "muiwna.h"
+C
+C       Do loop for two tube planes
+C
+C
+      TXY = DCLOC(1)/DCLOC(2)
+      TXZ = DCLOC(1)/DCLOC(3)
+      TYZ = DCLOC(2)/DCLOC(3)
+      DO 30 IPLN=1,2
+C
+C       Straight extrapolate track element to up and down face of
+C       active area for one tube plane
+C
+        ZUP = ZPSWMU(IPLN) + HFHTMU - XLOC(3)
+        ZDN = ZPSWMU(IPLN) - HFHTMU - XLOC(3)
+        XUP = XLOC(1) + ZUP*TXZ + WDMDMU - XSOFMU(IPLN)
+        XDN = XLOC(1) + ZDN*TXZ + WDMDMU - XSOFMU(IPLN)
+        YUP = XLOC(2) + ZUP*TYZ + XLMDMU - YSOFMU(IPLN)
+        YDN = XLOC(2) + ZDN*TYZ + XLMDMU - YSOFMU(IPLN)
+        IF( XUP .LE. XDN )THEN
+          X1 = XUP
+          Y1 = YUP
+          Z1 = ZUP
+          X2 = XDN
+          Y2 = YDN
+          Z2 = ZDN
+        ELSE
+          X1 = XDN
+          Y1 = YDN
+          Z1 = ZDN
+          X2 = XUP
+          Y2 = YUP
+          Z2 = ZUP
+        ENDIF
+C
+        IF(X1.LE.0..AND.X2.LE.0.) GO TO 30
+C       Calculate the eight-fold tube # and tube # taking the gap
+C       between two 16-fold tubes into account
+C
+        L1 = X1/WD16MU
+        XMOD1 = MOD(X1,WD16MU)
+        M1 = XMOD1/WDEIMU
+        N1 = 2*L1 + M1 + 1
+        IF( M1 .EQ. 2 )THEN
+          NT1 = 1
+        ELSE
+          NT1 = (X1 - L1*WD16MU - M1*WDEIMU - OFTBMU )/
+     *            WDTBMU + 1
+        ENDIF
+C
+        L2 = X2/WD16MU
+        XMOD2 = MOD(X2,WD16MU)
+        M2 = XMOD2/WDEIMU
+        IF( M2 .EQ. 2 )THEN
+          N2 = 2*L2 + M2
+          NT2 = 8
+        ELSE
+          N2 = 2*L2 + M2 + 1
+          NT2 = (X2 - L2*WD16MU - M2*WDEIMU - OFTBMU)/
+     *            WDTBMU + 1
+        ENDIF
+        IF(M1.EQ.2.AND.M2.EQ.2) GO TO 30
+        IF( (N1.LE.0) .AND. (N2.LE.0) )THEN
+          GOTO 30
+        ELSE IF( (N1.GT.NMEIMU) .AND. (N2.GT.NMEIMU) )THEN
+          GOTO 30
+        ENDIF
+C
+C       The first and last eight-fole tubes, also the
+C       first tube insidethe first eight-fole tube and
+C       thelast tube inside the last eight-fole tube
+C
+        IF( N1 .LE.  0) THEN
+          N1 = 1
+          NT1 = 1
+        ENDIF
+        IF( N2 .GT. NMEIMU ) THEN
+          IF(NT1.EQ.9.AND.N2.EQ.(N1+1)) GO TO 30
+          N2 = NMEIMU
+          NT2 = 8
+        ENDIF
+C
+        IF(NT1.LE.0.AND.NT2.LE.0) GO TO 30
+        IF(NT1.GE.9.AND.NT2.GE.9) GO TO 30
+        IF(NT1.GE.9.AND.NT2.LE.0) THEN
+          IF(N2.EQ.(N1+1)) THEN
+            GO TO 30
+          ELSE
+            NT1=1
+            NT2=8
+            N1=N1+1
+            N2=N2-1
+          ENDIF
+        ENDIF
+        IF(NT1.LE.0.AND.NT2.GE.9) THEN
+          NT1=1
+          NT2=8
+        ENDIF
+        IF(NT1.LE.0) NT1=1
+        IF(NT2.LE.0) THEN
+          IF(M1.EQ.2.AND.N1.EQ.N2) GO TO 30
+          NT2=8
+          IF(N1.NE.N2)N2=N2-1
+        ENDIF
+        IF(NT2.GE.9) NT2=8
+        IF(NT1.GE.9) THEN
+          IF(M2.EQ.2.AND.N1.EQ.N2) GO TO 30
+          NT1=1
+          IF(N1.NE.N2)N1=N1+1
+        ENDIF
+C
+C    check bank size
+C
+        MXWRD = (N2-N1+1)*8 * LMUSTA
+        IF (JDMUST .EQ. 0) THEN
+          CALL WBANK (IW,JDMUST,2*MXWRD+LMHLEN,*998)
+          IW(JDMUST+1) = LMUSTA
+        ELSEIF (LFRWRD(JDMUST) .LT. MXWRD) THEN
+          CALL WBANK (IW,JDMUST,IW(JDMUST)+MXWRD,*998)
+        ENDIF
+        KMUST = KNEXT(JDMUST)
+C
+C       Loop of eightfold tubes
+C
+        DO 20 IEIT=N1,N2
+C
+C       Fetch length of eightfold tube for endcap and m.a., because
+C       it is variable
+C
+          IF( (TMUCVO.EQ.'MUC1') .OR. (TMUCVO.EQ.'MUC2') )THEN
+            NSLOT = ITRKEL(10)
+            TMUCVO = TRKVOL
+            TMU3VO = CHAHOL(NGAMES(3))
+            NUMV = MUNSTA(NSLOT,TMUCVO,TMU3VO)
+            IDXMD = ITABL(JMESG,NUMV,JMESK2)
+            NPRSER = ITABL(JMETG,IDXMD,JMETNP)
+            NEDA2 = ITABL(JMETG,IDXMD,JMETN2)
+            NEDA1 = ITABL(JMETG,IDXMD,JMETN1)
+            IDX1 = MOD(IDXMD,2)
+            IF (TMU3VO.EQ.'MUEA') THEN
+              IF(IDX1.EQ.0) THEN
+                I8TU = IEIT
+              ELSE
+                I8TU = -(IEIT - NMEIMU)
+              ENDIF
+            ELSE
+              IF(IDX1.EQ.0) THEN
+                I8TU = -(IEIT - NMEIMU)
+              ELSE
+                I8TU = IEIT
+              ENDIF
+            ENDIF
+            IF(I8TU.LT.NPRSER) THEN
+              IR = 1
+            ELSE
+              IF(I8TU.LE.(NPRSER + 2*NEDA2)) THEN
+                IDTU = I8TU - NPRSER
+                IRES = MOD(IDTU,2)
+                IR = IDTU/2 + IRES + 1
+              ELSE
+                IR = NEDA2 + 2
+              ENDIF
+            ENDIF
+            XLEIMU = RTABL(JMETG,IDXMD,JMETN1+IR) + YCUTSL(IPLN)
+          ENDIF
+C
+          IF( (TMUCVO.EQ.'MUM1') .OR. (TMUCVO.EQ.'MUM2') )
+     +         XLEIMU = YCUTSL(IPLN)
+C
+C       # of tube in eightfold tube
+C
+          IF( IEIT .EQ. N1 )THEN
+            NTB1 = NT1
+          ELSE
+            NTB1 = 1
+          ENDIF
+          IF( IEIT .EQ. N2 )THEN
+            NTB2 = NT2
+          ELSE
+            NTB2 = 8
+          ENDIF
+C
+C       Loop of tubes
+C
+          DO 10 ITUB=NTB1,NTB2
+C
+            IF( IEIT.EQ.N1) THEN
+              IF( ITUB.EQ.NTB1 ) THEN
+                IF( M1 .EQ. 2 )THEN
+                  XIN = (L1+1)*WD16MU + OFTBMU
+                  ZIN = Z1 + (XIN-X1)/TXZ
+                ELSE
+                  XIN = X1
+                  XT = XIN - L1*WD16MU - M1*WDEIMU -
+     *                       OFTBMU - (ITUB-1)*WDTBMU
+                  IF( XT .GT. WDATMU )GOTO 10
+                  ZIN = Z1
+                ENDIF
+              ELSE
+                XIN = L1*WD16MU + M1*WDEIMU +
+     *                        OFTBMU + (ITUB-1)*WDTBMU
+                ZIN = Z1 + (XIN-X1)/TXZ
+              ENDIF
+              XOUT = L1*WD16MU + M1*WDEIMU +
+     *                OFTBMU + (ITUB-1)*WDTBMU + WDATMU
+              ZOUT = Z1 + (XOUT-X1)/TXZ
+            ENDIF
+C
+            IF( IEIT.EQ.N2 ) THEN
+              IF( ITUB.EQ.NTB2 ) THEN
+                IF( M2 .EQ. 2 )THEN
+                  XOUT = L2*WD16MU + 2*WDEIMU +
+     *                              WDATMU - WDTBMU
+                  ZOUT = Z1 + (XOUT-X1)/TXZ
+                ELSE
+                  XOUT = X2
+                  ZOUT = Z2
+                  XT = XOUT - L2*WD16MU - M2*WDEIMU -
+     *                           OFTBMU - (ITUB-1)*WDTBMU
+                  IF( XT .GT. WDATMU )THEN
+                    XOUT = L2*WD16MU + M2*WDEIMU +
+     *                                OFTBMU + (ITUB-1)*WDTBMU +
+     *                                WDATMU
+                    ZOUT = Z1 + (XOUT-X1)/TXZ
+                  ENDIF
+                ENDIF
+              ELSE
+                XOUT = L2*WD16MU + M2*WDEIMU + OFTBMU +
+     *                           (ITUB-1)*WDTBMU + WDATMU
+                ZOUT = Z1 + (XOUT-X1)/TXZ
+              ENDIF
+              IF(N1.NE.N2) THEN
+                XIN = L2*WD16MU + M2*WDEIMU +
+     *                   OFTBMU + (ITUB-1)*WDTBMU
+                ZIN = Z1 + (XIN-X1)/TXZ
+              ENDIF
+            ENDIF
+            IF (IEIT.NE.N1.AND.IEIT.NE.N2) THEN
+              LL = IEIT/2
+              IM = IEIT-1
+              MM = MOD(IM,2)
+              XIN = LL*WD16MU + MM*WDEIMU +
+     *                    OFTBMU + (ITUB-1)*WDTBMU
+              ZIN = Z1 + (XIN-X1)/TXZ
+              XOUT = LL*WD16MU + MM*WDEIMU + OFTBMU +
+     *                     (ITUB-1)*WDTBMU + WDATMU
+              ZOUT = Z1 + (XOUT-X1)/TXZ
+            ENDIF
+            YIN =  Y1 + (ZIN-Z1)*TYZ
+            YOUT = Y1 + (ZOUT-Z1)*TYZ
+
+C
+C       Check if part or whole of track element is outside of tube
+C       in Y-direction, considering both ends.
+C
+            IF( YIN .GT. YOUT )THEN
+              REG = YIN
+              YIN = YOUT
+              YOUT = REG
+              REG = XIN
+              XIN = XOUT
+              XOUT = REG
+              REG = ZIN
+              ZIN = ZOUT
+              ZOUT = REG
+            ENDIF
+C
+            IF( YIN .GE. XLEIMU )THEN
+              GOTO 10
+            ELSE IF( YIN .GE. YCUTSB(IPLN) )THEN
+              IF( YOUT .GT. XLEIMU )THEN
+                XOUT = XOUT + (XLEIMU - YOUT)*TXY
+                ZOUT = ZOUT + (XLEIMU - YOUT)/TYZ
+                YOUT = XLEIMU
+              ENDIF
+            ELSE
+              IF( YOUT .GT. YCUTSB(IPLN) )THEN
+                XIN = XIN - YIN*TXY
+                ZIN = ZIN - YIN/TYZ
+                YIN = YCUTSB(IPLN)
+              ELSE
+                GOTO 10
+              ENDIF
+            ENDIF
+C
+C       Fill bank JDMUST
+C
+            IW(JDMUST+LMHROW) = LROWS(JDMUST) + 1
+            IW(KMUST + JMUSFF) = 0
+            IW(KMUST + JMUSPL) = IPLN
+            IW(KMUST + JMUSET) = IEIT
+            IW(KMUST + JMUSTU) = ITUB
+            RW(KMUST + JMUSXI ) = XIN
+            RW(KMUST + JMUSYI ) = YIN
+            RW(KMUST + JMUSZI ) = ZIN
+            RW(KMUST + JMUSXO) = XOUT
+            RW(KMUST + JMUSYO) = YOUT
+            RW(KMUST + JMUSZO) = ZOUT
+            RW(KMUST + JMUSXY ) = TXY
+            RW(KMUST + JMUSXZ ) = TXZ
+            RW(KMUST + JMUSYZ ) = TYZ
+            KMUST = KMUST + LMUSTA
+   10     CONTINUE
+   20   CONTINUE
+   30 CONTINUE
+      RETURN
+C
+  998 CONTINUE
+      CALL ALTELL ('MUSTSG: not enough space to enlarge JDMUST ',1,
+     &             'NEXT')
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

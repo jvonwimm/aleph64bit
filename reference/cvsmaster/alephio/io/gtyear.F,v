@@ -1,0 +1,143 @@
+head	1.3;
+access;
+symbols
+	alio83:1.3
+	alio82:1.3
+	alio81:1.3
+	alio80:1.3;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	99.12.09.16.45.00;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	99.12.03.17.31.19;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	99.12.03.14.19.41;	author flr;	state dead;
+branches
+	1.1.2.1;
+next	;
+
+1.1.2.1
+date	99.12.03.14.19.41;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@alio80 - remove fortran bug in gtyear
+@
+text
+@      INTEGER FUNCTION GTYEAR()
+CKEY YEAR
+C-----------------------------------------------------------------------------
+C! returns the data taking year or the MC geometry year
+C  Author - F.Ranjard - 991201
+C-----------------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+      INTEGER NAMIND,NAASIM,IDUM,ADBRUN,JASIM,IYY
+      INTEGER YEARID,IRUN,IEVT,IROW,ISETUP
+      DATA NAASIM/0/
+#include "bmacro.h"
+C----------------------------------------------------------------------------
+      IF(NAASIM.EQ.0) NAASIM=NAMIND('ASIM')
+C
+      JASIM = IW(NAASIM)
+      IF (JASIM.GT.0) THEN 
+        IYY=ITABL(JASIM,1,1)
+      ELSE
+        CALL ABRUEV(IRUN,IEVT)
+        IDUM = ADBRUN('VD',IROW,IYY,IRUN,ISETUP)
+      ENDIF
+      IYY = IYY/100
+      IF (IYY.LT.100) then
+         YEARID = 1900+IYY
+      ELSE
+         YEARID = IYY
+      ENDIF
+      IF (YEARID.LT.1989 .OR. YEARID.GT.2002) YEARID=0
+C
+      GTYEAR = YEARID
+      RETURN
+C
+      END
+#endif
+@
+
+
+1.2
+log
+@alio80 - add gtyear in io/
+@
+text
+@d9 1
+a9 1
+      INTEGER NAMIND,NAASIM,IDUM,ADBRUN,JASIM,IYY,YEARID
+@
+
+
+1.1
+log
+@file gtyear.F was initially added on branch alio2000.
+@
+text
+@d1 35
+@
+
+
+1.1.2.1
+log
+@alio80 - Y2K compliant
+@
+text
+@a0 35
+      INTEGER FUNCTION GTYEAR()
+CKEY QSELEP/INTERNAL
+C-----------------------------------------------------------------------------
+C! returns the data taking year or the MC geometry year
+C  Author - F.Ranjard - 991201
+C-----------------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+#include "bcs.h"
+      INTEGER NAMIND,NAASIM,IDUM,ADBRUN,JASIM,IYY,YEARID
+      INTEGER YEARID,IRUN,IEVT,IROW,ISETUP
+      DATA NAASIM/0/
+C----------------------------------------------------------------------------
+      IF(NAASIM.EQ.0) NAASIM=NAMIND('ASIM')
+C
+      JASIM = IW(NAASIM)
+      IF (JASIM.GT.0) THEN 
+        IYY=ITABL(JASIM,1,1)
+      ELSE
+        CALL ABRUEV(IRUN,IEVT)
+        IDUM = ADBRUN('VD',IROW,IYY,IRUN,ISETUP)
+      ENDIF
+      IYY = IYY/100
+      IF (IYY.LT.100) then
+         YEARID = 1900+IYY
+      ELSE
+         YEARID = IYY
+      ENDIF
+      IF (YEARID.LT.1989 .OR. YEARID.GT.2002) YEARID=0
+C
+      GTYEAR = YEARID
+      RETURN
+C
+      END
+#endif
+@
+

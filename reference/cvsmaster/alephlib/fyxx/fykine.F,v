@@ -1,0 +1,204 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	98.04.01.10.34.48;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.41.50;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.41.51;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@Mods for Alephlib 307.6
+@
+text
+@      SUBROUTINE FYKINE(DROP,GARB,IBFUL)
+C ------------------------------------------------------
+CKEY FYXX MCARLO KINE / USER
+C - F.Ranjard - 871202             B.Bloch 901010,980316
+C! translate KINGAL or GALEPH banks to equivalent Fxxx MC banks
+C The banks are KINE,VERT,KHIS,KVOL --> FKIN,FVER 
+C               KPOL,KZFR,KSHO      --> FPOL,FZFR,FSHO
+C Drop tracks and vertices depending on flags set at beginning of run
+C through a call to FYIRUN : A CALL TO FYIRUN IS MANDATORY.
+C If there is a problem with space, the old banks are not dropped.
+C
+C - input arguments :
+C        DROP     = character flag
+C                   if = 'DROP' then drop KINE,VERT,KHIS,KVOL,KPOL 
+C                               KSHO and KZFR banks
+C        GARB     = character flag
+C                   if = 'GARB' then make a garbage collection
+C
+C - output argument :
+C        IBFUL    = -1 means not enough space in BOS array
+C
+C - this routine must be called once per event after reading
+C - USER routine
+#ifndef DOC
+      SAVE
+#include "bcs.h"
+#include "fyrela.h"
+      CHARACTER*(*) DROP,GARB
+      DATA IONC /0/
+C -------------------------------------------------------------
+C
+      IF (IONC.EQ.0) THEN
+         NKINE = NAMIND('KINE')
+         IONC = 1
+      ENDIF
+C Test if the KINE banks are present. Do nothing if not.
+      IF (IW(NKINE).LE.0)  GOTO 991
+C - initialize the event
+      IBFUL = 0
+      CALL FYINEV(IBFUL)
+      IF (IBFUL .EQ. -1)  GOTO 990
+C
+C - Build a tree of mother and daugther tracks in JDMOTH,JDTREE
+C   from KINE and VERT which content tracks and vertices to be kept
+C   fill JDKOFN which gives the old KINE# for each new track# and
+C        JDKNFO which gives the new track# for each old KINE#
+C   JDMOTH and JDTREE are dropped before return
+      CALL FYTREE (IBFUL)
+      IF (IBFUL .EQ. -1) GOTO 990
+C
+C - Fill FKIN, FVER, FVOL,FPOI using KINE,VERT and all working banks
+      CALL FYFKIN(IBFUL)
+      IF (IBFUL .EQ. -1)  GOTO 990
+C
+C
+C - tidy
+C
+C - Drop work banks and temporary banks
+      IF (DROP.EQ.'DROP') CALL BDROP(IW,'KINEVERTKHISKVOLKPOLKSHOKZFR')
+      IF (GARB .EQ. 'GARB') CALL BGARB (IW)
+C
+ 990  CONTINUE
+C
+C - workbanks
+      IW(1) = LFXWBK
+      CALL WDROP(IW,JDFXWB)
+C
+  991 CONTINUE
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 1
+a4 1
+C - F.Ranjard - 871202             B.Bloch 901010
+d6 2
+a7 1
+C The banks are KINE,VERT,KHIS,KVOL,KPOL,KZFR-->FKIN,FVER,FVOL,FPOL,FZFR
+d14 2
+a15 2
+C                   if = 'DROP' then drop KINE,VERT,KHIS,KVOL,KPOL and
+C                               KZFR banks
+d59 1
+a59 1
+      IF (DROP .EQ. 'DROP') CALL BDROP (IW,'KINEVERTKHISKVOLKPOLKZFR')
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

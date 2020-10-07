@@ -1,0 +1,229 @@
+head	1.2;
+access;
+symbols
+	dbase01:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.02.13.10.50.19;	author flr;	state dead;
+branches;
+next	1.1;
+
+1.1
+date	97.02.12.10.06.03;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.02.12.10.06.03;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release dbase02
+@
+text
+@      PROGRAM CRFODF
+C----------------------------------------------------------------------
+C! Extract the bank format and dataflows from TDOC
+C!
+C!   Author   :-    F.RANJARD                   22-JAN-1990
+C!
+C!   data cards:
+C!        * read the DOCumentation data base
+C!        FDBA   'DBS:ADBSDOC.DAF123 | DAF'
+C!        * write the aleph format file
+C!        FFMT   'DBS:BANKAL.FMT | CARD'
+C!        * write the aleph dataflow file
+C!        FLOW   'DBS:DATAFLOW.DDL | CARD'
+C!        ENDQ
+C!
+C!
+C!   Libraries required: ALEPHLIB, BOS77, CERNLIB
+C!
+C!   Description
+C!   ===========
+C! read ADBSDOC.DAF to get TDOC
+C! extract bank formats and write them on an ASCII file
+C! create a dataflow.DDL
+C?
+C!======================================================================
+#ifndef DOC
+      CHARACTER*4 NAME,CHAINT,FLOW,NLIST
+      CHARACTER*40 BFMT
+      CHARACTER*16 DFLOW
+      CHARACTER*28 DFLTITL(4)
+      CHARACTER*2 DFLIST(4)
+      CHARACTER*12 MSG
+#include "lbos.h"
+#include "tdocjj.h"
+#include "bmacro.h"
+C
+C ------------------------------------------------------------------
+C
+C - Initialize BOS
+       CALL BNAMES (NAMAX)
+       CALL BOS (IW,LBOS)
+       IW(5) = 7
+       IW(7) = 100000
+C
+C - Initialize dataflow names, lists, titles
+       DFLOW     = 'STC LTC DOC PROG'
+       DFLIST(1) = 'S+'
+       DFLTITL(1)= ':  ''Short term banks '';'
+       DFLIST(2) = 'C+'
+       DFLTITL(2)= ':  ''Long term banks '';'
+       DFLIST(3) = 'T+'
+       DFLTITL(3)= ':  ''Documentation banks '';'
+       DFLIST(4) = 'R+'
+       DFLTITL(4)= ':  ''Programme banks '';'
+
+C
+C - Read data card file
+       CALL BREADC
+C
+C - open ADBSDOC.DAF and get TDOC bank
+C
+       LUDOC = JUNIDB(0)
+       CALL AOPDBS ('  ',IER)
+       IF (IER.NE.0) THEN
+          CALL AWERRC (IW(6),'AOPDBS','ADBSDOC.DAF',IER)
+          JTDOC = 0
+       ELSE
+          JTDOC = MDARD (IW,LUDOC,'TDOC',0)
+       ENDIF
+       IF (JTDOC.EQ.0) THEN
+          WRITE(IW(6),*) ' TDOC bank not found on ADBSDOC.DAF - STOP'
+          STOP
+       ENDIF
+C
+C - open the ASCII file
+C
+       LUFMT = 8
+       CALL AGTFIL ('FFMT','WRIT',LUFMT,IER)
+       IF (IER.NE.0) THEN
+          CALL AWERRC (IW(6),'CRTFODF','FMT file',IER)
+          LUFMT = IW(6)
+       ENDIF
+C
+C - open the ASCII file
+C
+       LUFLOW = 9
+       CALL AGTFIL ('FLOW','WRIT',LUFLOW,IER)
+       IF (IER.NE.0) THEN
+          CALL AWERRC (IW(6),'CRTFODF','FLOW file',IER)
+          LUFLOW=IW(6)
+       ENDIF
+C
+C - loop over all banks
+C
+       LINE = 0
+       NFMT = JTDONC-JTDOBF+1
+       DO 200 I=1,LROWS(JTDOC)
+          NAME = CHAINT(ITABL(JTDOC,I,JTDONA))
+          FLOW = CHAINT(ITABL(JTDOC,I,JTDOUN))
+          M = INDEX (DFLOW,FLOW(1:3))
+          IF (NAME(1:1).EQ.'.') M=0
+          IF (M.EQ.0) THEN
+             WRITE (IW(6),*) ' NO dataflow for ',NAME
+          ELSE
+             M = M/4+1
+             CALL BLIST (IW,DFLIST(M),NAME)
+          ENDIF
+          NCOLB = ITABL(JTDOC,I,JTDONC)
+          KTDOC = KROW(JTDOC,I)
+          CALL ALSTIN (IW(KTDOC+JTDOBF),NFMT,BFMT)
+          IF (INDEX(BFMT,'A').EQ.0 .AND. INDEX(BFMT,'F').EQ.0) THEN
+             BFMT = 'I'
+          ENDIF
+          LFMT = LENOCC(BFMT)
+          IF (LFMT.EQ.NFMT*4) THEN
+             LL=INDEX(BFMT,')')
+             IF (LL.EQ.0) THEN
+                IF (BFMT(1:2).EQ.'2I') THEN
+                   LLL=2
+                ELSEIF (BFMT(1:1).EQ.'I') THEN
+                   LLL=1
+                ELSE
+                   WRITE(IW(6),*) ' *** BAD FORMAT *** ',NAME,BFMT
+                   GOTO 200
+                ENDIF
+             ELSEIF (LL.LT.LFMT) THEN
+ 198            LLL=LL
+                LL=INDEX(BFMT(LL+1:LFMT),')')
+                IF (LL.EQ.0) GOTO 199
+                IF (LL.LT.LFMT) GOTO 198
+             ENDIF
+ 199         LFMT = LLL
+          ENDIF
+          LINE = LINE + 1
+          WRITE (LUFMT,'(A4,1X,A)') NAME,BFMT(1:LFMT)
+ 200   CONTINUE
+C
+C - write FLOW file
+C
+       WRITE(LUFLOW,'(A)')' SUBSCHEMA Dataflow'
+       WRITE(LUFLOW,'(A)')'   : ''ALEPH dataflows'' '
+       WRITE(LUFLOW,'(A)')' AUTHOR ''F.Ranjard'' '
+       WRITE(LUFLOW,'(A)')'   DEFINE DATAFLOW'
+       DO 300 I=1,4
+          M=(I-1)*4
+          WRITE(LUFLOW,'(5X,A)')DFLOW(M+1:M+4)
+          L=0
+ 301      L=L+1
+          NAME = NLIST(IW,L,DFLIST(I)(1:1))
+          IF (NAME.NE.' ') THEN
+            IF (L.EQ.1) THEN
+               MSG = '= { '//NAME//'_},'
+               WRITE(LUFLOW,'(10X,A)') MSG
+            ELSEIF(NLIST(IW,L+1,DFLIST(I)(1:1)) .NE.' ') THEN
+               MSG = '  { '//NAME//'_},'
+               WRITE(LUFLOW,'(10X,A)') MSG
+            ELSE
+               MSG = '  { '//NAME//'_}'
+               WRITE(LUFLOW,'(10X,A)') MSG
+               WRITE(LUFLOW,'(10X,A)') DFLTITL(I)
+            ENDIF
+            GOTO 301
+          ENDIF
+          WRITE(LUFLOW,'(A)')
+ 300   CONTINUE
+       WRITE(LUFLOW,'(A)') '   END DATAFLOW'
+       WRITE(LUFLOW,'(A)') ' END SUBSCHEMA'
+C
+C - close files
+C
+       CALL BOSTA
+       CALL BOSIO
+       CALL ACLOSE(0,IER)
+       STOP
+C
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@@
+
+
+1.1.1.1
+log
+@1st release of dbase library
+@
+text
+@@

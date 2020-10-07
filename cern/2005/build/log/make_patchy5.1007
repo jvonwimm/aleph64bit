@@ -1,0 +1,2403 @@
+cd /home/wimmer/aleph64bit/cern/2005/bin/;	\
+if [ -f ../../patchy/4.15/bin/ycompar ] ; then \
+	cp ../../patchy/4.15/bin/ycompar ycompar; \
+else  \
+	echo "ycompar not linked, not existing";\
+fi
+cd /home/wimmer/aleph64bit/cern/2005/bin/;	\
+if [ -f ../../patchy/4.15/bin/yedit ] ; then \
+	cp ../../patchy/4.15/bin/yedit yedit; \
+else  \
+	echo "yedit not linked, not existing";\
+fi
+cd /home/wimmer/aleph64bit/cern/2005/bin/;	\
+if [ -f ../../patchy/4.15/bin/yfrceta ] ; then \
+	cp ../../patchy/4.15/bin/yfrceta yfrceta; \
+else  \
+	echo "yfrceta not linked, not existing";\
+fi
+cd /home/wimmer/aleph64bit/cern/2005/bin/;	\
+if [ -f ../../patchy/4.15/bin/yindex ] ; then \
+	cp ../../patchy/4.15/bin/yindex yindex; \
+else  \
+	echo "yindex not linked, not existing";\
+fi
+cd /home/wimmer/aleph64bit/cern/2005/bin/;	\
+if [ -f ../../patchy/4.15/bin/ylist ] ; then \
+	cp ../../patchy/4.15/bin/ylist ylist; \
+else  \
+	echo "ylist not linked, not existing";\
+fi
+cd /home/wimmer/aleph64bit/cern/2005/bin/;	\
+if [ -f ../../patchy/4.15/bin/ypatchy ] ; then \
+	cp ../../patchy/4.15/bin/ypatchy ypatchy; \
+else  \
+	echo "ypatchy not linked, not existing";\
+fi
+cd /home/wimmer/aleph64bit/cern/2005/bin/;	\
+if [ -f ../../patchy/4.15/bin/ysearch ] ; then \
+	cp ../../patchy/4.15/bin/ysearch ysearch; \
+else  \
+	echo "ysearch not linked, not existing";\
+fi
+cd /home/wimmer/aleph64bit/cern/2005/bin/;	\
+if [ -f ../../patchy/4.15/bin/yshift ] ; then \
+	cp ../../patchy/4.15/bin/yshift yshift; \
+else  \
+	echo "yshift not linked, not existing";\
+fi
+cd /home/wimmer/aleph64bit/cern/2005/bin/;	\
+if [ -f ../../patchy/4.15/bin/ytobcd ] ; then \
+	cp ../../patchy/4.15/bin/ytobcd ytobcd; \
+else  \
+	echo "ytobcd not linked, not existing";\
+fi
+cd /home/wimmer/aleph64bit/cern/2005/bin/;	\
+if [ -f ../../patchy/4.15/bin/ytobin ] ; then \
+	cp ../../patchy/4.15/bin/ytobin ytobin; \
+else  \
+	echo "ytobin not linked, not existing";\
+fi
+cd /home/wimmer/aleph64bit/cern/2005/bin/;	\
+if [ -f ../../patchy/4.15/bin/ytoceta ] ; then \
+	cp ../../patchy/4.15/bin/ytoceta ytoceta; \
+else  \
+	echo "ytoceta not linked, not existing";\
+fi
+rm -f fcasplit.o
+gfortran -no-pie -c -O -fno-automatic -fno-second-underscore -fno-range-check -fPIC    -I/home/wimmer/aleph64bit/cern/2005/build -I/home/wimmer/aleph64bit/cern/2005/src -I/home/wimmer/aleph64bit/cern/2005/src/patchy -I/home/wimmer/aleph64bit/cern/2005/src/include  -DCERNLIB_LINUX -DCERNLIB_UNIX -DCERNLIB_LNX -DCERNLIB_QMGLIBC -DCERNLIB_QMLXIA64 -DCERNLIB_GFORTRAN -DCERNLIB_GCC4 -DCERNLIB_VERBOSE   -o fcasplit.o /home/wimmer/aleph64bit/cern/2005/src/patchy/fcasplit.F
+gfortran -no-pie fcasplit.o -o fcasplit
+rm -f /home/wimmer/aleph64bit/cern/2005/bin/fcasplit
+install -c -s  fcasplit /home/wimmer/aleph64bit/cern/2005/bin/fcasplit
+rm -f /home/wimmer/aleph64bit/cern/2005/bin/yexpand
+install -c -m 0755 /home/wimmer/aleph64bit/cern/2005/src/patchy/yexpand.script /home/wimmer/aleph64bit/cern/2005/bin/yexpand
+PLINAME=LINUX,UNIX,LNX,QMGLIBC,QMLXIA64,GFORTRAN,GCC4,VERBOSE;export PLINAME;/home/wimmer/aleph64bit/cern/2005/build/patchy/yexpand /home/wimmer/aleph64bit/cern/2005/src/patchy/nypatchy.cra /home/wimmer/aleph64bit/cern/2005/build/patchy/nypatchy.cra
+ypatchy - nypatchy.f nypatchy.cra TTY .go
+
+ YPATCHY  executing with Files / Options
+
+   1  PAM    11   -
+   2  ASM    21    nypatchy.f
+   3  READ    2    nypatchy.cra
+   4  PRINT   6   TTY
+   5  ASMA   22   -    ...
+
+ VERSION  PATCHY  4.15 /1  911211 12.02           .RJP, TODAY:  201007  1549
+
+                    OPTIONS ..C..F...........R............
+
+
+    0 *         ================================================== P=CRA*     D=          1 ============================
+
+        1 + +USE, LINUX,UNIX,LNX,QMGLIBC,QMLXIA64,GFORTRAN,GCC4,VERBOSE.                    
+        2 + +EXE, RUN,    D=NPATCH.                                                         
+        3 + +USE, *PATCHY.                                                                  
+        4 + +PAM, 11, T=C,ATT   .patchy                                                     
+
+ ---------- PATCHY    .START PAM-FILE 101,   --  RESUME   
+
+        1 T PATCHY  5.05 /3  1996/06/29 17.00   
+
+
+ -------------------  .END   PAM  1  AFTER  28177 CARDS TOTAL,   --  REWIND
+1--------------------------------------
+ SUMMARY OF PATCHES IN PROCESSING ORDER
+
+ PROCESSING MODE SELECTIONS                        OTHER STATUS BITS FOR P=X
+
+ D - DIVERT                                        F  - - -  DESELECTED BY  +PATCH,P=X,IF=...
+ M - MIX                                            M - - -  DESELECTED BY  +IMITATE,P=X
+ E - EXE                                             X  - -  NOT +EXE BUT AT LEAST 1 DECK TO ASM
+ L - LIST                                             P - -  PARTIAL USE-SELECTION BY +USE,P=X,D=...
+ U - USE                    SELF +         SELF        R  -  P=X,T=REPEAT
+                    INHIBIT FOREIGN  TRANS   ONLY       Q -  QUOTED IN IF=X
+                    ------- ------- ------ ------
+                     DMELU   DMELU   DMEL   DMEL   FMXPRQ    USED FROM P=
+
+        0 CRA*     .       .     U .      .      .     R   . CRA*    
+ PATCHY                                                      PAM  CALL/FILE  101
+        0 -     0
+        0 *PATCHY  .       .     U .      .      .         . CRA*    
+        0 MACHINE  .       .     U .      .      .         . *PATCHY 
+        0 NOOPT    .       .     U .      .      .         . *PATCHY 
+        0 PATCHY_G .       .     U .      .      .         . *PATCHY 
+        0 *HYDRA   .       .     U .      .      .         . PATCHY_G
+        0 PCDE     .       .     U .      .      .         . PATCHY_G
+        0 QCDE     .       .     U .      .      .         . *HYDRA  
+        0 DOCUMENT .       .       .      .      .      Q  .         
+        0 FLDIALG  .       .     U .      .      .         . PATCHY_G
+        0 RUN      .       .     U .      .      .   X     . PATCHY_G
+        0 ACSORT   .       .     U .      .      .         . PATCHY_G
+        0 DOMAP    .       .     U .      .      .         . PATCHY_G
+        0 DOXQT    .       .     U .      .      .         . PATCHY_G
+        0 DOFORG   .       .     U .      .      .         . PATCHY_G
+        0 ARRIVE   .       .     U .      .      .         . PATCHY_G
+        0 DEPART   .       .     U .      .      .         . PATCHY_G
+        0 PUTIL    .       .     U .      .      .         . PATCHY_G
+        0 SERVICE  .       .     U .      .      .         . PATCHY_G
+        0 NAMING   .       .     U .      .      .         . PATCHY_G
+        0 MQ       .       .     U .      .      .         . *HYDRA  
+        0 QUTIL    .       .     U .      .      .         . *HYDRA  
+        0 YINDEX   .       .     U .      .      .         . PATCHY_G
+        0 YLIST    .       .     U .      .      .         . PATCHY_G
+        0 YSYNOPT  .       .     U .      .      .         . PATCHY_G
+        0 YCHECK   .       .     U .      .      .         . PATCHY_G
+        0 YTIDY    .       .     U .      .      .         . PATCHY_G
+        0 YMERGE   .       .     U .      .      .         . PATCHY_G
+        0 YDIFF    .       .     U .      .      .         . PATCHY_G
+        0 DIF_XQT  .       .     U .      .      .         . YDIFF   
+        0 YSHELL   .       .     U .      .      .         . PATCHY_G
+        0 AUXSM    .       .     U .      .      .         . YSHELL  
+        0 AUXIL    .       .     U .      .      .         . PATCHY_G
+        0 KERN     .       .     U .      .      .         . *HYDRA  
+        1 CRA*     .       .     U .      .      .     R   . CRA*    
+
+ ----------------------------
+ QUOTED PATCHES NOT TURNED UP
+
+        0 ALLIANT  .       .       .      .      .      Q  .         
+        0 APOF77   .       .       .      .      .      Q  .         
+        0 APOLLO   .       .       .      .      .      Q  .         
+        0 AUXIL_GO .       .     U .      .      .      Q  . *PATCHY 
+        0 CONVEX   .       .       .      .      .      Q  .         
+        0 CRAY     .       .       .      .      .      Q  .         
+        0 DECS     .       .       .      .      .      Q  .         
+        0 DOC_INL  .       .       .      .      .      Q  .         
+        0 HPUX     .       .       .      .      .      Q  .         
+        0 IBMAIX   .       .       .      .      .      Q  .         
+        0 IBMRT    .       .       .      .      .      Q  .         
+        0 IBMVM    .       .       .      .      .      Q  .         
+        0 LINUX    .       .     U .      .      .      Q  . CRA*    
+        0 MACMPW   .       .       .      .      .      Q  .         
+        0 OK       .       .     U .      .      .      Q  . MACHINE 
+        0 QCIO     .       .     U .      .      .      Q  . PATCHY_G
+        0 QDEBUG   .       .       .      .      .      Q  .         
+        0 QDIAG    .       .       .      .      .      Q  .         
+        0 QEBCDIC  .       .       .      .      .      Q  .         
+        0 QFIO     .       .       .      .      .      Q  .         
+        0 QF_F2C   .       .     U .      .      .      Q  . MACHINE 
+        0 QMAPO    .       .       .      .      .      Q  .         
+        0 QMHPX    .       .       .      .      .      Q  .         
+        0 QMIBM    .       .       .      .      .      Q  .         
+        0 QMIBX    .       .       .      .      .      Q  .         
+        0 QMIRT    .       .       .      .      .      Q  .         
+        0 QMLNX    .       .     U .      .      .      Q  . MACHINE 
+        0 QMMPW    .       .       .      .      .      Q  .         
+        0 QMNXT    .       .       .      .      .      Q  .         
+        0 QMSGI    .       .       .      .      .      Q  .         
+        0 QMSUN    .       .       .      .      .      Q  .         
+        0 QMUUX    .       .       .      .      .      Q  .         
+        0 QMVAO    .       .       .      .      .      Q  .         
+        0 QMVAOS   .       .       .      .      .      Q  .         
+        0 QMVAX    .       .       .      .      .      Q  .         
+        0 QMVMI    .       .       .      .      .      Q  .         
+        0 QNEWLINE .       .     U .      .      .      Q  . PATCHY_G
+        0 QS_IBMVM .       .       .      .      .      Q  .         
+        0 QS_UNIX  .       .     U .      .      .      Q  . MACHINE 
+        0 QS_VMS   .       .       .      .      .      Q  .         
+        0 SGI      .       .       .      .      .      Q  .         
+        0 SOLARIS  .       .       .      .      .      Q  .         
+        0 SUN      .       .       .      .      .      Q  .         
+        0 UNKNOWN  .       .       .      .      .      Q  .         
+        0 VAX      .       .       .      .      .      Q  .         
+        0 VAXVMS   .       .       .      .      .      Q  .         
+
+ ----------------------------
+ OTHER  PATCHES NOT TURNED UP
+
+        0 BACKCOMP .       .     U .      .      .         . PATCHY_G
+        0 GCC4     .       .     U .      .      .         . CRA*    
+        0 GFORTRAN .       .     U .      .      .         . CRA*    
+        0 INITRH   .       .     U .      .      .         . PATCHY_G
+        0 LNX      .       .     U .      .      .         . CRA*    
+        0 QASCII   .       .     U .      .      .         . MACHINE 
+        0 QMGLIBC  .       .     U .      .      .         . CRA*    
+        0 QMLXIA64 .       .     U .      .      .         . CRA*    
+        0 UNIX     .       .     U .      .      .         . CRA*    
+        0 VERBOSE  .       .     U .      .      .         . CRA*    
+
+ --------------
+ READ         4 CARDS   ON CRADLE
+          28177 CARDS   ON CARD-PAMS
+              0 RECORDS ON COMPACT BINARY PAMS, INCL.     0 SKIPPED.
+              1 PAM-CALLS.
+
+ --------------
+ WRITTEN
+        ASM       49 CARDS     1 DECKS TO  LUN= 21   -- REWIND
+
+ ------------
+ MEMORY USAGE
+ FINAL SIZE OF STORE = 160418
+ LARGEST GAP REQUIRED BY ANY DECK WAS = 1451
+ GAP SECURITY FOR THIS RUN WAS        = 4000
+ NUMBER OF GARBAGE COLLECTIONS =   0
+ NUMBER OF WORDS UNUSED =150688
+
+ -----------------
+ LINES IN  /QMACH/
+ NQL-NOR  MAX  PTH
+     108  110    0
+
+ ----------------------
+ NO.OF WARNINGS PRINTED
+
+ BAD CONTROL CARDS    0
+ MISSING SEQUENCES    0
+ LOST ACTIVATIONS     0
+ UNSATISF/ REF'S      0
+ LEVEL 1 CLASHES      0
+ LEVEL 2 CLASHES      0
+ ----------------------
+gfortran -no-pie -c -fno-automatic -fno-second-underscore -fno-range-check -fPIC  -O nypatchy.f
+PLINAME=LINUX,UNIX,LNX,QMGLIBC,QMLXIA64,GFORTRAN,GCC4,VERBOSE;export PLINAME;/home/wimmer/aleph64bit/cern/2005/build/patchy/yexpand /home/wimmer/aleph64bit/cern/2005/src/patchy/p5lib.cra /home/wimmer/aleph64bit/cern/2005/build/patchy/p5lib.cra
+rm -f p5lib.libmake
+echo "libp5lib.a: \$(ROUTINES)" > p5lib.libmake
+echo "	ar cr \$(@) \$(ROUTINES)" >> p5lib.libmake
+echo "	[ -x /usr/bin/ranlib ] && /usr/bin/ranlib \$(@) || true" >>p5lib.libmake
+echo "	rm -f \$(ROUTINES)" 	>> p5lib.libmake
+echo "	rm -f \$(subst .o,.f,\$(ROUTINES))" >> p5lib.libmake
+ypatchy - p5lib p5lib TTY .go
+
+ YPATCHY  executing with Files / Options
+
+   1  PAM    11   -
+   2  ASM    21    p5lib.f
+   3  READ    2    p5lib.cra
+   4  PRINT   6   TTY
+   5  ASMA   22   -    ...
+
+ VERSION  PATCHY  4.15 /1  911211 12.02           .RJP, TODAY:  201007  1549
+
+                    OPTIONS ..C..F...........R............
+
+
+    0 *         ================================================== P=CRA*     D=          1 ============================
+
+        1 + +USE, LINUX,UNIX,LNX,QMGLIBC,QMLXIA64,GFORTRAN,GCC4,VERBOSE.                    
+        2 + +ASM, 21, T=,LOG, IF=NEW_PROC.                                                  
+        3 + +EXE.                                                                           
+        4 + +USE, *PATCHY.                                                                  
+        5 + +USE, PATCHY_LIB.                                                               
+        6 + +USE, QDEBUG.                                                                   
+        7 + +USE, BUGLRSHFT,IF=SUN.  Sun's F77 Version 3.0 has bad lrshft.                  
+
+    0 *         ================================================== P=CRA*     D=GFORTRAN  1 ============================
+
+       13 + +PAM, 11, T=C,ATT   .patchy                                                     
+
+ ---------- PATCHY    .START PAM-FILE 101,   --  RESUME   
+
+        1 T PATCHY  5.05 /3  1996/06/29 17.00   
+
+
+ -------------------  .END   PAM  1  AFTER  28177 CARDS TOTAL,   --  REWIND
+1--------------------------------------
+ SUMMARY OF PATCHES IN PROCESSING ORDER
+
+ PROCESSING MODE SELECTIONS                        OTHER STATUS BITS FOR P=X
+
+ D - DIVERT                                        F  - - -  DESELECTED BY  +PATCH,P=X,IF=...
+ M - MIX                                            M - - -  DESELECTED BY  +IMITATE,P=X
+ E - EXE                                             X  - -  NOT +EXE BUT AT LEAST 1 DECK TO ASM
+ L - LIST                                             P - -  PARTIAL USE-SELECTION BY +USE,P=X,D=...
+ U - USE                    SELF +         SELF        R  -  P=X,T=REPEAT
+                    INHIBIT FOREIGN  TRANS   ONLY       Q -  QUOTED IN IF=X
+                    ------- ------- ------ ------
+                     DMELU   DMELU   DMEL   DMEL   FMXPRQ    USED FROM P=
+
+        0 CRA*     .       .   E U .      .   E  .     R   . CRA*    
+ PATCHY                                                      PAM  CALL/FILE  101
+        0 -     0
+        0 *PATCHY  .       .   E U .      .   E  .         . CRA*    
+        0 MACHINE  .       .   E U .      .   E  .         . *PATCHY 
+        0 NOOPT    .       . D E U .      . D E  .         . *PATCHY 
+        0 PATCHY_G .       .   E U .      .   E  .         . *PATCHY 
+        0 PATCHY_L .       .   E U .      .   E  .         . CRA*    
+        0 *HYDRA   .       .   E U .      .   E  .         . PATCHY_G
+        0 PCDE     .       .   E U .      .   E  .         . PATCHY_G
+        0 QCDE     .       .   E U .      .   E  .         . *HYDRA  
+        0 DOCUMENT .       .   E   .      .   E  .      Q  .         
+        0 FLDIALG  .       .   E U .      .   E  .         . PATCHY_G
+        0 RUN      .       .   E U .      .   E  .         . PATCHY_G
+        0 ACSORT   .       .   E U .      .   E  .         . PATCHY_G
+        0 DOMAP    .       .   E U .      .   E  .         . PATCHY_G
+        0 DOXQT    .       .   E U .      .   E  .         . PATCHY_G
+        0 DOFORG   .       .   E U .      .   E  .         . PATCHY_G
+        0 ARRIVE   .       .   E U .      .   E  .         . PATCHY_G
+        0 DEPART   .       .   E U .      .   E  .         . PATCHY_G
+        0 PUTIL    .       .   E U .      .   E  .         . PATCHY_G
+        0 SERVICE  .       .   E U .      .   E  .         . PATCHY_G
+        0 NAMING   .       .   E U .      .   E  .         . PATCHY_G
+        0 MQ       .       .   E U .      .   E  .         . *HYDRA  
+        0 QUTIL    .       .   E U .      .   E  .         . *HYDRA  
+        0 YINDEX   .       .   E U .      .   E  .         . PATCHY_G
+        0 YLIST    .       .   E U .      .   E  .         . PATCHY_G
+        0 YSYNOPT  .       .   E U .      .   E  .         . PATCHY_G
+        0 YCHECK   .       .   E U .      .   E  .         . PATCHY_G
+        0 YTIDY    .       .   E U .      .   E  .         . PATCHY_G
+        0 YMERGE   .       .   E U .      .   E  .         . PATCHY_G
+        0 YDIFF    .       .   E U .      .   E  .         . PATCHY_G
+        0 DIF_XQT  .       .   E U .      .   E  .         . YDIFF   
+        0 YSHELL   .       .   E U .      .   E  .         . PATCHY_G
+        0 AUXSM    .       .   E U .      .   E  .         . YSHELL  
+        0 AUXIL    .       .   E U .      .   E  .         . PATCHY_G
+        0 DQ       .       .   E U .      .   E  .         . *HYDRA  
+        0 KERN     .       .   E U .      .   E  .         . *HYDRA  
+        1 CRA*     .       .   E U .      .   E  .     R   . CRA*    
+
+ ----------------------------
+ QUOTED PATCHES NOT TURNED UP
+
+        0 ALLIANT  .       .   E   .      .   E  .      Q  .         
+        0 APOF77   .       .   E   .      .   E  .      Q  .         
+        0 APOLLO   .       .   E   .      .   E  .      Q  .         
+        0 AUXIL_GO .       .   E U .      .   E  .      Q  . *PATCHY 
+        0 BACKCOMP .       .   E U .      .   E  .      Q  . PATCHY_G
+        0 CONVEX   .       .   E   .      .   E  .      Q  .         
+        0 CRAY     .       .   E   .      .   E  .      Q  .         
+        0 DECS     .       .   E   .      .   E  .      Q  .         
+        0 DOC_INL  .       .   E   .      .   E  .      Q  .         
+        0 GFORTRAN .       .   E U .      .   E  .      Q  . CRA*    
+        0 HPUX     .       .   E   .      .   E  .      Q  .         
+        0 IBMAIX   .       .   E   .      .   E  .      Q  .         
+        0 IBMRT    .       .   E   .      .   E  .      Q  .         
+        0 IBMVM    .       .   E   .      .   E  .      Q  .         
+        0 INITRH   .       .   E U .      .   E  .      Q  . PATCHY_G
+        0 LINUX    .       .   E U .      .   E  .      Q  . CRA*    
+        0 MACMPW   .       .   E   .      .   E  .      Q  .         
+        0 NEW_PROC .       .   E   .      .   E  .      Q  .         
+        0 OK       .       .   E U .      .   E  .      Q  . MACHINE 
+        0 PY_VS5   .       .   E   .      .   E  .      Q  .         
+        0 QASCII   .       .   E U .      .   E  .      Q  . MACHINE 
+        0 QCIO     .       .   E U .      .   E  .      Q  . PATCHY_G
+        0 QDEBUG   .       .   E U .      .   E  .      Q  . CRA*    
+        0 QDIAG    .       .   E   .      .   E  .      Q  .         
+        0 QEBCDIC  .       .   E   .      .   E  .      Q  .         
+        0 QFIO     .       .   E   .      .   E  .      Q  .         
+        0 QF_APO   .       .   E   .      .   E  .      Q  .         
+        0 QF_APO77 .       .   E   .      .   E  .      Q  .         
+        0 QF_DEC   .       .   E   .      .   E  .      Q  .         
+        0 QF_F2C   .       .   E U .      .   E  .      Q  . MACHINE 
+        0 QF_IBM   .       .   E   .      .   E  .      Q  .         
+        0 QMALT    .       .   E   .      .   E  .      Q  .         
+        0 QMAMX    .       .   E   .      .   E  .      Q  .         
+        0 QMAPO    .       .   E   .      .   E  .      Q  .         
+        0 QMAPO10  .       .   E   .      .   E  .      Q  .         
+        0 QMCRU    .       .   E   .      .   E  .      Q  .         
+        0 QMCRY    .       .   E   .      .   E  .      Q  .         
+        0 QMCVX    .       .   E   .      .   E  .      Q  .         
+        0 QMDOS    .       .   E   .      .   E  .      Q  .         
+        0 QMHPX    .       .   E   .      .   E  .      Q  .         
+        0 QMIBM    .       .   E   .      .   E  .      Q  .         
+        0 QMIBX    .       .   E   .      .   E  .      Q  .         
+        0 QMIRT    .       .   E   .      .   E  .      Q  .         
+        0 QMLNX    .       .   E U .      .   E  .      Q  . MACHINE 
+        0 QMMPW    .       .   E   .      .   E  .      Q  .         
+        0 QMNXT    .       .   E   .      .   E  .      Q  .         
+        0 QMSGI    .       .   E   .      .   E  .      Q  .         
+        0 QMSUN    .       .   E   .      .   E  .      Q  .         
+        0 QMTMO    .       .   E   .      .   E  .      Q  .         
+        0 QMUUX    .       .   E   .      .   E  .      Q  .         
+        0 QMVAO    .       .   E   .      .   E  .      Q  .         
+        0 QMVAOS   .       .   E   .      .   E  .      Q  .         
+        0 QMVAX    .       .   E   .      .   E  .      Q  .         
+        0 QMVMI    .       .   E   .      .   E  .      Q  .         
+        0 QNEWLINE .       .   E U .      .   E  .      Q  . PATCHY_G
+        0 QS_IBMVM .       .   E   .      .   E  .      Q  .         
+        0 QS_UNIX  .       .   E U .      .   E  .      Q  . MACHINE 
+        0 QS_VMS   .       .   E   .      .   E  .      Q  .         
+        0 SGI      .       .   E   .      .   E  .      Q  .         
+        0 SOLARIS  .       .   E   .      .   E  .      Q  .         
+        0 SUN      .       .   E   .      .   E  .      Q  .         
+        0 TRANSIT  .       .   E   .      .   E  .      Q  .         
+        0 UNKNOWN  .       .   E   .      .   E  .      Q  .         
+        0 VAX      .       .   E   .      .   E  .      Q  .         
+        0 VAXVMS   .       .   E   .      .   E  .      Q  .         
+        0 XCOLLECT .       .   E   .      .   E  .      Q  .         
+        0 XDDSNAP  .       .   E   .      .   E  .      Q  .         
+        0 XDEBUG   .       .   E   .      .   E  .      Q  .         
+        0 XDETAILD .       .   E   .      .   E  .      Q  .         
+        0 XDINEED  .       .   E   .      .   E  .      Q  .         
+        0 XDISAME  .       .   E   .      .   E  .      Q  .         
+        0 XDOFORG  .       .   E   .      .   E  .      Q  .         
+        0 XDUMPASM .       .   E   .      .   E  .      Q  .         
+        0 XFLPARA  .       .   E   .      .   E  .      Q  .         
+        0 XLOGCALL .       .   E   .      .   E  .      Q  .         
+        0 XMQGARB  .       .   E   .      .   E  .      Q  .         
+        0 XMQLIFT  .       .   E   .      .   E  .      Q  .         
+        0 XNAMES   .       .   E   .      .   E  .      Q  .         
+        0 XSAVE    .       .   E   .      .   E  .      Q  .         
+        0 XSHIFT   .       .   E   .      .   E  .      Q  .         
+        0 XSHOWDK  .       .   E   .      .   E  .      Q  .         
+        0 XWITHME  .       .   E   .      .   E  .      Q  .         
+        0 XX_USE   .       .   E   .      .   E  .      Q  .         
+        0 XYDIFF   .       .   E   .      .   E  .      Q  .         
+        0 XYDIFFTB .       .   E   .      .   E  .      Q  .         
+        0 XYSHELL  .       .   E   .      .   E  .      Q  .         
+
+ ----------------------------
+ OTHER  PATCHES NOT TURNED UP
+
+        0 GCC4     .       .   E U .      .   E  .         . CRA*    
+        0 LNX      .       .   E U .      .   E  .         . CRA*    
+        0 QMGLIBC  .       .   E U .      .   E  .         . CRA*    
+        0 QMLXIA64 .       .   E U .      .   E  .         . CRA*    
+        0 UNIX     .       .   E U .      .   E  .         . CRA*    
+        0 VERBOSE  .       .   E U .      .   E  .         . CRA*    
+
+ --------------
+ READ        21 CARDS   ON CRADLE
+          28177 CARDS   ON CARD-PAMS
+              0 RECORDS ON COMPACT BINARY PAMS, INCL.     0 SKIPPED.
+              1 PAM-CALLS.
+
+ --------------
+ WRITTEN
+        ASM    26658 CARDS   267 DECKS TO  LUN= 21   -- REWIND
+
+ ------------
+ MEMORY USAGE
+ FINAL SIZE OF STORE = 160418
+ LARGEST GAP REQUIRED BY ANY DECK WAS = 1451
+ GAP SECURITY FOR THIS RUN WAS        = 4000
+ NUMBER OF GARBAGE COLLECTIONS =   0
+ NUMBER OF WORDS UNUSED =150240
+
+ -----------------
+ LINES IN  /QMACH/
+ NQL-NOR  MAX  PTH
+     108  110    0
+
+ ----------------------
+ NO.OF WARNINGS PRINTED
+
+ BAD CONTROL CARDS    0
+ MISSING SEQUENCES    0
+ LOST ACTIVATIONS     0
+ UNSATISF/ REF'S      0
+ LEVEL 1 CLASHES      0
+ LEVEL 2 CLASHES      0
+ ----------------------
+fcasplit p5lib.f
+ FCASPLIT executing.
+             Input file : p5lib.f
+           Shell script : p5lib.shfca
+              Make file : p5lib.mkfca
+        Fortran    name : gfortran  
+        Fortran options : -c -O -fno-automatic  
+             CC    name : gcc  
+             CC options : -c -O2  
+      Assembler    name : as  
+      Assembler options :   
+  26657 lines written for   267 decks
+      1 trailing comment lines ignored.
+rm -f p5lib.f
+cat p5lib.libmake >> p5lib.mkfca
+gmake -f p5lib.mkfca libp5lib.a
+gmake[1]: Entering directory '/home/wimmer/aleph64bit/cern/2005/build/patchy'
+gfortran  -c -O -fno-automatic  flpara.f
+gfortran  -c -O -fno-automatic  flkrak.f
+gfortran  -c -O -fno-automatic  flink.f
+gfortran  -c -O -fno-automatic  flname.f
+gfortran  -c -O -fno-automatic  flsplit.f
+gfortran  -c -O -fno-automatic  fljoin.f
+gfortran  -c -O -fno-automatic  helppr.f
+gfortran  -c -O -fno-automatic  psteer.f
+gfortran  -c -O -fno-automatic  pinit.f
+gfortran  -c -O -fno-automatic  pinit2.f
+gfortran  -c -O -fno-automatic  p_crash.f
+gfortran  -c -O -fno-automatic  p_killm.f
+gfortran  -c -O -fno-automatic  p_kill.f
+gfortran  -c -O -fno-automatic  exitrc.f
+gfortran  -c -O -fno-automatic  p_fatam.f
+gfortran  -c -O -fno-automatic  p_fatal.f
+gfortran  -c -O -fno-automatic  pabend.f
+gfortran  -c -O -fno-automatic  pend.f
+gfortran  -c -O -fno-automatic  docrad.f
+gfortran  -c -O -fno-automatic  doapam.f
+gfortran  -c -O -fno-automatic  dopamco.f
+gfortran  -c -O -fno-automatic  dopam.f
+gfortran  -c -O -fno-automatic  dopat.f
+gfortran  -c -O -fno-automatic  dodeck.f
+gfortran  -c -O -fno-automatic  acsort.f
+gfortran  -c -O -fno-automatic  domap.f
+gfortran  -c -O -fno-automatic  m_ana1.f
+gfortran  -c -O -fno-automatic  m_ana2.f
+gfortran  -c -O -fno-automatic  m_head.f
+gfortran  -c -O -fno-automatic  m_ana3.f
+gfortran  -c -O -fno-automatic  m_a3if.f
+gfortran  -c -O -fno-automatic  m_a3sq.f
+gfortran  -c -O -fno-automatic  m_a3nx.f
+gfortran  -c -O -fno-automatic  m_a3ke.f
+gfortran  -c -O -fno-automatic  m_a3ac.f
+gfortran  -c -O -fno-automatic  m_split.f
+gfortran  -c -O -fno-automatic  m_krak.f
+gfortran  -c -O -fno-automatic  m_fail.f
+gfortran  -c -O -fno-automatic  m_wnif.f
+gfortran  -c -O -fno-automatic  mk_nil.f
+gfortran  -c -O -fno-automatic  doxqt.f
+gfortran  -c -O -fno-automatic  x_next.f
+gfortran  -c -O -fno-automatic  x_seq.f
+gfortran  -c -O -fno-automatic  x_seqsp.f
+gfortran  -c -O -fno-automatic  x_asm.f
+gfortran  -c -O -fno-automatic  x_imit.f
+gfortran  -c -O -fno-automatic  x_incl.f
+gfortran  -c -O -fno-automatic  x_opt.f
+gfortran  -c -O -fno-automatic  x_use.f
+gfortran  -c -O -fno-automatic  x_uput.f
+gfortran  -c -O -fno-automatic  x_udeck.f
+gfortran  -c -O -fno-automatic  doforg.f
+gfortran  -c -O -fno-automatic  mk_frag.f
+gfortran  -c -O -fno-automatic  mk_fnx.f
+gfortran  -c -O -fno-automatic  arrskp.f
+gfortran  -c -O -fno-automatic  arrive.f
+gfortran  -c -O -fno-automatic  arrtm.f
+gfortran  -c -O -fno-automatic  arrin.f
+gfortran  -c -O -fno-automatic  arrnxd.f
+gfortran  -c -O -fno-automatic  dpexgo.f
+gfortran  -c -O -fno-automatic  dpexe.f
+gfortran  -c -O -fno-automatic  dpexmo.f
+gfortran  -c -O -fno-automatic  dpextm.f
+gfortran  -c -O -fno-automatic  dphead.f
+gfortran  -c -O -fno-automatic  dppage.f
+gfortran  -c -O -fno-automatic  dplist.f
+gfortran  -c -O -fno-automatic  dpline.f
+gfortran  -c -O -fno-automatic  dptag.f
+gfortran  -c -O -fno-automatic  dplact.f
+gfortran  -c -O -fno-automatic  dplmsq.f
+gfortran  -c -O -fno-automatic  dplmsg.f
+gfortran  -c -O -fno-automatic  dpblan.f
+gfortran  -c -O -fno-automatic  asmini.f
+gfortran  -c -O -fno-automatic  asmuse.f
+gfortran  -c -O -fno-automatic  asmall.f
+gfortran  -c -O -fno-automatic  asmalia.f
+gfortran  -c -O -fno-automatic  asmfind.f
+gfortran  -c -O -fno-automatic  asmcrea.f
+gfortran  -c -O -fno-automatic  asmcrx.f
+gfortran  -c -O -fno-automatic  asmname.f
+gfortran  -c -O -fno-automatic  asmdump.f
+gfortran  -c -O -fno-automatic  cckrak.f
+gfortran  -c -O -fno-automatic  cciflv.f
+gfortran  -c -O -fno-automatic  cccomg.f
+gfortran  -c -O -fno-automatic  cccrak.f
+gfortran  -c -O -fno-automatic  cccoix.f
+gfortran  -c -O -fno-automatic  ccproc.f
+gfortran  -c -O -fno-automatic  ccopt.f
+gfortran  -c -O -fno-automatic  ccdopt.f
+gfortran  -c -O -fno-automatic  creact.f
+gfortran  -c -O -fno-automatic  creapd.f
+gfortran  -c -O -fno-automatic  crdeco.f
+gfortran  -c -O -fno-automatic  failcc.f
+gfortran  -c -O -fno-automatic  failln.f
+gfortran  -c -O -fno-automatic  failmsg.f
+gfortran  -c -O -fno-automatic  jptype.f
+gfortran  -c -O -fno-automatic  krtitl.f
+gfortran  -c -O -fno-automatic  liftsq.f
+gfortran  -c -O -fno-automatic  linksq.f
+gfortran  -c -O -fno-automatic  linksu.f
+gfortran  -c -O -fno-automatic  locpat.f
+gfortran  -c -O -fno-automatic  lockeep.f
+gfortran  -c -O -fno-automatic  locseq.f
+gfortran  -c -O -fno-automatic  locsq2.f
+gfortran  -c -O -fno-automatic  mxjoin.f
+gfortran  -c -O -fno-automatic  mxoper.f
+gfortran  -c -O -fno-automatic  nextde.f
+gfortran  -c -O -fno-automatic  nextsi.f
+gfortran  -c -O -fno-automatic  nextxx.f
+gfortran  -c -O -fno-automatic  nextcc.f
+gfortran  -c -O -fno-automatic  setgap.f
+gfortran  -c -O -fno-automatic  strmid.f
+gfortran  -c -O -fno-automatic  usett.f
+gfortran  -c -O -fno-automatic  iniseq.f
+gfortran  -c -O -fno-automatic  inisqx.f
+gfortran  -c -O -fno-automatic  ln_equ.f
+gfortran  -c -O -fno-automatic  ln_get.f
+gfortran  -c -O -fno-automatic  ln_put.f
+gfortran  -c -O -fno-automatic  ln_putr.f
+gfortran  -c -O -fno-automatic  ln_cop2.f
+gfortran  -c -O -fno-automatic  ln_mov2.f
+gfortran  -c -O -fno-automatic  ln_to3.f
+gfortran  -c -O -fno-automatic  ln_cop3.f
+gfortran  -c -O -fno-automatic  ln_env3.f
+gfortran  -c -O -fno-automatic  ln_to4.f
+gfortran  -c -O -fno-automatic  ln_cop4.f
+gfortran  -c -O -fno-automatic  nospace.f
+gfortran  -c -O -fno-automatic  togarb.f
+gfortran  -c -O -fno-automatic  togatx.f
+gfortran  -c -O -fno-automatic  na_init.f
+gfortran  -c -O -fno-automatic  na_inpy.f
+gfortran  -c -O -fno-automatic  na_rein.f
+gfortran  -c -O -fno-automatic  na_new.f
+gfortran  -c -O -fno-automatic  na_long.f
+gfortran  -c -O -fno-automatic  na_get.f
+gfortran  -c -O -fno-automatic  na_jtx.f
+gfortran  -c -O -fno-automatic  na_dif.f
+gfortran  -c -O -fno-automatic  na_chk.f
+gfortran  -c -O -fno-automatic  na_xco.f
+gfortran  -c -O -fno-automatic  na_ful.f
+gfortran  -c -O -fno-automatic  na_prix.f
+gfortran  -c -O -fno-automatic  na_dump.f
+gfortran  -c -O -fno-automatic  mqinit.f
+gfortran  -c -O -fno-automatic  mqpage.f
+gfortran  -c -O -fno-automatic  mqshow.f
+gfortran  -c -O -fno-automatic  mqwork.f
+gfortran  -c -O -fno-automatic  mqlift.f
+gfortran  -c -O -fno-automatic  mqshift.f
+gfortran  -c -O -fno-automatic  mqgarb.f
+gfortran  -c -O -fno-automatic  mqgett.f
+gfortran  -c -O -fno-automatic  mqtabl.f
+gfortran  -c -O -fno-automatic  mqrelc.f
+gfortran  -c -O -fno-automatic  mqmove.f
+gfortran  -c -O -fno-automatic  mqkill.f
+gfortran  -c -O -fno-automatic  mqltab.f
+gfortran  -c -O -fno-automatic  mqlrel.f
+gfortran  -c -O -fno-automatic  mqlmov.f
+gfortran  -c -O -fno-automatic  iqlocf.f
+gfortran  -c -O -fno-automatic  kqlast.f
+gfortran  -c -O -fno-automatic  kqfind.f
+gfortran  -c -O -fno-automatic  lqfind.f
+gfortran  -c -O -fno-automatic  lqstep.f
+gfortran  -c -O -fno-automatic  nqcount.f
+gfortran  -c -O -fno-automatic  qshunt.f
+gfortran  -c -O -fno-automatic  qshlin.f
+gfortran  -c -O -fno-automatic  qtopsy.f
+gfortran  -c -O -fno-automatic  qsorti.f
+gfortran  -c -O -fno-automatic  qsortn.f
+gfortran  -c -O -fno-automatic  qlump.f
+gfortran  -c -O -fno-automatic  qblow.f
+gfortran  -c -O -fno-automatic  qname.f
+gfortran  -c -O -fno-automatic  qblowx.f
+gfortran  -c -O -fno-automatic  qnamex.f
+gfortran  -c -O -fno-automatic  exindex.f
+gfortran  -c -O -fno-automatic  inddeck.f
+gfortran  -c -O -fno-automatic  indxqt.f
+gfortran  -c -O -fno-automatic  indcrp.f
+gfortran  -c -O -fno-automatic  indcrd.f
+gfortran  -c -O -fno-automatic  indcrz.f
+gfortran  -c -O -fno-automatic  exlist.f
+gfortran  -c -O -fno-automatic  lideck.f
+gfortran  -c -O -fno-automatic  lixqt.f
+gfortran  -c -O -fno-automatic  nsynopt.f
+gfortran  -c -O -fno-automatic  exsynopt.f
+gfortran  -c -O -fno-automatic  sycrad.f
+gfortran  -c -O -fno-automatic  sypam.f
+gfortran  -c -O -fno-automatic  sypat.f
+gfortran  -c -O -fno-automatic  syxqt.f
+gfortran  -c -O -fno-automatic  syforg.f
+gfortran  -c -O -fno-automatic  sykeep.f
+gfortran  -c -O -fno-automatic  syseq.f
+gfortran  -c -O -fno-automatic  syktag.f
+gfortran  -c -O -fno-automatic  sylkeep.f
+gfortran  -c -O -fno-automatic  sylseq.f
+gfortran  -c -O -fno-automatic  sysplit.f
+gfortran  -c -O -fno-automatic  excheck.f
+gfortran  -c -O -fno-automatic  chdeck.f
+gfortran  -c -O -fno-automatic  extidy.f
+gfortran  -c -O -fno-automatic  tideck.f
+gfortran  -c -O -fno-automatic  ticomm.f
+gfortran  -c -O -fno-automatic  tiforg.f
+gfortran  -c -O -fno-automatic  tiseq.f
+gfortran  -c -O -fno-automatic  tilist.f
+gfortran  -c -O -fno-automatic  tisend.f
+gfortran  -c -O -fno-automatic  tidistb.f
+gfortran  -c -O -fno-automatic  exmerge.f
+gfortran  -c -O -fno-automatic  metitl.f
+gfortran  -c -O -fno-automatic  mesend.f
+gfortran  -c -O -fno-automatic  meload.f
+gfortran  -c -O -fno-automatic  exdiff.f
+gfortran  -c -O -fno-automatic  diload.f
+gfortran  -c -O -fno-automatic  dilread.f
+gfortran  -c -O -fno-automatic  didupl.f
+gfortran  -c -O -fno-automatic  diprem.f
+gfortran  -c -O -fno-automatic  disame.f
+gfortran  -c -O -fno-automatic  disamd.f
+gfortran  -c -O -fno-automatic  dinewp.f
+gfortran  -c -O -fno-automatic  dimname.f
+gfortran  -c -O -fno-automatic  dimstr.f
+gfortran  -c -O -fno-automatic  diord.f
+gfortran  -c -O -fno-automatic  diordx.f
+gfortran  -c -O -fno-automatic  dilost.f
+gfortran  -c -O -fno-automatic  dicrad.f
+dicrad.f:57:72:
+
+           ASSIGN 9008 TO IFMT
+                                                                        1
+Warning: Deleted feature: ASSIGN statement at (1)
+dicrad.f:64:72:
+
+       ASSIGN 9009 TO IFMT
+                                                                        1
+Warning: Deleted feature: ASSIGN statement at (1)
+dicrad.f:125:20:
+
+       WRITE (LUNCRA,IFMT) LINE(1:JCPE)
+                    1
+Warning: Deleted feature: ASSIGNED variable in FORMAT tag at (1)
+dicrad.f:149:20:
+
+       WRITE (LUNCRA,IFMT) LINE(1:NESLAT-1)
+                    1
+Warning: Deleted feature: ASSIGNED variable in FORMAT tag at (1)
+dicrad.f:256:20:
+
+       WRITE (LUNCRA,IFMT) LINE(1:N)
+                    1
+Warning: Deleted feature: ASSIGNED variable in FORMAT tag at (1)
+dicrad.f:355:20:
+
+       WRITE (LUNCRA,IFMT) LINE(1:N)
+                    1
+Warning: Deleted feature: ASSIGNED variable in FORMAT tag at (1)
+gfortran  -c -O -fno-automatic  disend.f
+disend.f:42:72:
+
+           ASSIGN 9008 TO IFMT
+                                                                        1
+Warning: Deleted feature: ASSIGN statement at (1)
+disend.f:44:72:
+
+           ASSIGN 9009 TO IFMT
+                                                                        1
+Warning: Deleted feature: ASSIGN statement at (1)
+disend.f:64:20:
+
+    23 WRITE (LUNCRA,IFMT) LINE(1:NDSLAT)
+                    1
+Warning: Deleted feature: ASSIGNED variable in FORMAT tag at (1)
+gfortran  -c -O -fno-automatic  diacerr.f
+gfortran  -c -O -fno-automatic  diwylb.f
+diwylb.f:52:72:
+
+           ASSIGN 9008 TO IFMT
+                                                                        1
+Warning: Deleted feature: ASSIGN statement at (1)
+diwylb.f:66:72:
+
+       ASSIGN 9009 TO IFMT
+                                                                        1
+Warning: Deleted feature: ASSIGN statement at (1)
+diwylb.f:121:20:
+
+       WRITE (LUNCRA,IFMT) '#     fetch a lost child'
+                    1
+Warning: Deleted feature: ASSIGNED variable in FORMAT tag at (1)
+diwylb.f:129:20:
+
+       WRITE (LUNCRA,IFMT) LINE(1:NESLAT-1)
+                    1
+Warning: Deleted feature: ASSIGNED variable in FORMAT tag at (1)
+diwylb.f:137:20:
+
+       WRITE (LUNCRA,IFMT) LINE(1:NESLAT-1)
+                    1
+Warning: Deleted feature: ASSIGNED variable in FORMAT tag at (1)
+gfortran  -c -O -fno-automatic  diwylr.f
+diwylr.f:50:72:
+
+                   ASSIGN 9001 TO IFMT
+                                                                        1
+Warning: Deleted feature: ASSIGN statement at (1)
+diwylr.f:51:72:
+
+       IF (PRINT)  ASSIGN 9002 TO IFMT
+                                                                        1
+Warning: Deleted feature: ASSIGN statement at (1)
+diwylr.f:115:20:
+
+       WRITE (LUNCRA,IFMT) '#     change the order'
+                    1
+Warning: Deleted feature: ASSIGNED variable in FORMAT tag at (1)
+diwylr.f:164:20:
+
+       WRITE (LUNCRA,IFMT) LINE(1:NRANGE)
+                    1
+Warning: Deleted feature: ASSIGNED variable in FORMAT tag at (1)
+diwylr.f:165:20:
+
+       WRITE (LUNCRA,IFMT) LONG(1:NPUT)
+                    1
+Warning: Deleted feature: ASSIGNED variable in FORMAT tag at (1)
+diwylr.f:173:20:
+
+       WRITE (LUNCRA,IFMT) 'range'
+                    1
+Warning: Deleted feature: ASSIGNED variable in FORMAT tag at (1)
+diwylr.f:174:20:
+
+       WRITE (LUNCRA,IFMT) 'end end-marker'
+                    1
+Warning: Deleted feature: ASSIGNED variable in FORMAT tag at (1)
+diwylr.f:175:20:
+
+       WRITE (LUNCRA,IFMT) 'set val w11 *'
+                    1
+Warning: Deleted feature: ASSIGNED variable in FORMAT tag at (1)
+diwylr.f:176:20:
+
+       WRITE (LUNCRA,IFMT) LINE(1:NRANGE)
+                    1
+Warning: Deleted feature: ASSIGNED variable in FORMAT tag at (1)
+diwylr.f:196:20:
+
+       WRITE (LUNCRA,IFMT) LINE(1:NPUT)
+                    1
+Warning: Deleted feature: ASSIGNED variable in FORMAT tag at (1)
+diwylr.f:200:20:
+
+       WRITE (LUNCRA,IFMT) 'set val w12 *'
+                    1
+Warning: Deleted feature: ASSIGNED variable in FORMAT tag at (1)
+diwylr.f:201:20:
+
+       WRITE (LUNCRA,IFMT) 'copy,o,n :w11+/:w12 to f'
+                    1
+Warning: Deleted feature: ASSIGNED variable in FORMAT tag at (1)
+diwylr.f:202:20:
+
+       WRITE (LUNCRA,IFMT) 'del -nol :w11/:w12'
+                    1
+Warning: Deleted feature: ASSIGNED variable in FORMAT tag at (1)
+gfortran  -c -O -fno-automatic  dineed.f
+gfortran  -c -O -fno-automatic  dinein.f
+gfortran  -c -O -fno-automatic  diclfi.f
+gfortran  -c -O -fno-automatic  dilink.f
+gfortran  -c -O -fno-automatic  dilook.f
+gfortran  -c -O -fno-automatic  dinoun.f
+gfortran  -c -O -fno-automatic  dif_xqt.f
+gfortran  -c -O -fno-automatic  dif_head.f
+gfortran  -c -O -fno-automatic  dif_tail.f
+gfortran  -c -O -fno-automatic  dif_fmat.f
+gfortran  -c -O -fno-automatic  dif_back.f
+gfortran  -c -O -fno-automatic  dif_same.f
+gfortran  -c -O -fno-automatic  dif_lx.f
+gfortran  -c -O -fno-automatic  dif_ly.f
+gfortran  -c -O -fno-automatic  dif_nx.f
+gfortran  -c -O -fno-automatic  dif_ny.f
+gfortran  -c -O -fno-automatic  exshell.f
+gfortran  -c -O -fno-automatic  shupto.f
+gfortran  -c -O -fno-automatic  shwsta.f
+gfortran  -c -O -fno-automatic  shwpar.f
+gfortran  -c -O -fno-automatic  shwcomp.f
+gfortran  -c -O -fno-automatic  shwxqt.f
+gfortran  -c -O -fno-automatic  smcil.f
+gfortran  -c -O -fno-automatic  smcinst.f
+gfortran  -c -O -fno-automatic  smcode.f
+gfortran  -c -O -fno-automatic  smdef.f
+gfortran  -c -O -fno-automatic  smdisp.f
+gfortran  -c -O -fno-automatic  smjopt.f
+gfortran  -c -O -fno-automatic  smrlog.f
+gfortran  -c -O -fno-automatic  smrxqt.f
+gfortran  -c -O -fno-automatic  smsid.f
+gfortran  -c -O -fno-automatic  iniaux.f
+gfortran  -c -O -fno-automatic  inipam.f
+gfortran  -c -O -fno-automatic  ccjoin.f
+gfortran  -c -O -fno-automatic  domapa.f
+gfortran  -c -O -fno-automatic  kropt.f
+gfortran  -c -O -fno-automatic  pgsize.f
+gfortran  -c -O -fno-automatic  xeject.f
+gfortran  -c -O -fno-automatic  dqclobb.f
+gfortran  -c -O -fno-automatic  dqbank.f
+ar cr libp5lib.a flpara.o flkrak.o flink.o flname.o flsplit.o fljoin.o helppr.o psteer.o pinit.o pinit2.o p_crash.o p_killm.o p_kill.o exitrc.o p_fatam.o p_fatal.o pabend.o pend.o docrad.o doapam.o dopamco.o dopam.o dopat.o dodeck.o acsort.o domap.o m_ana1.o m_ana2.o m_head.o m_ana3.o m_a3if.o m_a3sq.o m_a3nx.o m_a3ke.o m_a3ac.o m_split.o m_krak.o m_fail.o m_wnif.o mk_nil.o doxqt.o x_next.o x_seq.o x_seqsp.o x_asm.o x_imit.o x_incl.o x_opt.o x_use.o x_uput.o x_udeck.o doforg.o mk_frag.o mk_fnx.o arrskp.o arrive.o arrtm.o arrin.o arrnxd.o dpexgo.o dpexe.o dpexmo.o dpextm.o dphead.o dppage.o dplist.o dpline.o dptag.o dplact.o dplmsq.o dplmsg.o dpblan.o asmini.o asmuse.o asmall.o asmalia.o asmfind.o asmcrea.o asmcrx.o asmname.o asmdump.o cckrak.o cciflv.o cccomg.o cccrak.o cccoix.o ccproc.o ccopt.o ccdopt.o creact.o creapd.o crdeco.o failcc.o failln.o failmsg.o jptype.o krtitl.o liftsq.o linksq.o linksu.o locpat.o lockeep.o locseq.o locsq2.o mxjoin.o mxoper.o nextde.o nextsi.o nextxx.o nextcc.o setgap.o strmid.o usett.o iniseq.o inisqx.o ln_equ.o ln_get.o ln_put.o ln_putr.o ln_cop2.o ln_mov2.o ln_to3.o ln_cop3.o ln_env3.o ln_to4.o ln_cop4.o nospace.o togarb.o togatx.o na_init.o na_inpy.o na_rein.o na_new.o na_long.o na_get.o na_jtx.o na_dif.o na_chk.o na_xco.o na_ful.o na_prix.o na_dump.o mqinit.o mqpage.o mqshow.o mqwork.o mqlift.o mqshift.o mqgarb.o mqgett.o mqtabl.o mqrelc.o mqmove.o mqkill.o mqltab.o mqlrel.o mqlmov.o iqlocf.o kqlast.o kqfind.o lqfind.o lqstep.o nqcount.o qshunt.o qshlin.o qtopsy.o qsorti.o qsortn.o qlump.o qblow.o qname.o qblowx.o qnamex.o exindex.o inddeck.o indxqt.o indcrp.o indcrd.o indcrz.o exlist.o lideck.o lixqt.o nsynopt.o exsynopt.o sycrad.o sypam.o sypat.o syxqt.o syforg.o sykeep.o syseq.o syktag.o sylkeep.o sylseq.o sysplit.o excheck.o chdeck.o extidy.o tideck.o ticomm.o tiforg.o tiseq.o tilist.o tisend.o tidistb.o exmerge.o metitl.o mesend.o meload.o exdiff.o diload.o dilread.o didupl.o diprem.o disame.o disamd.o dinewp.o dimname.o dimstr.o diord.o diordx.o dilost.o dicrad.o disend.o diacerr.o diwylb.o diwylr.o dineed.o dinein.o diclfi.o dilink.o dilook.o dinoun.o dif_xqt.o dif_head.o dif_tail.o dif_fmat.o dif_back.o dif_same.o dif_lx.o dif_ly.o dif_nx.o dif_ny.o exshell.o shupto.o shwsta.o shwpar.o shwcomp.o shwxqt.o smcil.o smcinst.o smcode.o smdef.o smdisp.o smjopt.o smrlog.o smrxqt.o smsid.o iniaux.o inipam.o ccjoin.o domapa.o kropt.o pgsize.o xeject.o dqclobb.o dqbank.o
+[ -x /usr/bin/ranlib ] && /usr/bin/ranlib libp5lib.a || true
+rm -f flpara.o flkrak.o flink.o flname.o flsplit.o fljoin.o helppr.o psteer.o pinit.o pinit2.o p_crash.o p_killm.o p_kill.o exitrc.o p_fatam.o p_fatal.o pabend.o pend.o docrad.o doapam.o dopamco.o dopam.o dopat.o dodeck.o acsort.o domap.o m_ana1.o m_ana2.o m_head.o m_ana3.o m_a3if.o m_a3sq.o m_a3nx.o m_a3ke.o m_a3ac.o m_split.o m_krak.o m_fail.o m_wnif.o mk_nil.o doxqt.o x_next.o x_seq.o x_seqsp.o x_asm.o x_imit.o x_incl.o x_opt.o x_use.o x_uput.o x_udeck.o doforg.o mk_frag.o mk_fnx.o arrskp.o arrive.o arrtm.o arrin.o arrnxd.o dpexgo.o dpexe.o dpexmo.o dpextm.o dphead.o dppage.o dplist.o dpline.o dptag.o dplact.o dplmsq.o dplmsg.o dpblan.o asmini.o asmuse.o asmall.o asmalia.o asmfind.o asmcrea.o asmcrx.o asmname.o asmdump.o cckrak.o cciflv.o cccomg.o cccrak.o cccoix.o ccproc.o ccopt.o ccdopt.o creact.o creapd.o crdeco.o failcc.o failln.o failmsg.o jptype.o krtitl.o liftsq.o linksq.o linksu.o locpat.o lockeep.o locseq.o locsq2.o mxjoin.o mxoper.o nextde.o nextsi.o nextxx.o nextcc.o setgap.o strmid.o usett.o iniseq.o inisqx.o ln_equ.o ln_get.o ln_put.o ln_putr.o ln_cop2.o ln_mov2.o ln_to3.o ln_cop3.o ln_env3.o ln_to4.o ln_cop4.o nospace.o togarb.o togatx.o na_init.o na_inpy.o na_rein.o na_new.o na_long.o na_get.o na_jtx.o na_dif.o na_chk.o na_xco.o na_ful.o na_prix.o na_dump.o mqinit.o mqpage.o mqshow.o mqwork.o mqlift.o mqshift.o mqgarb.o mqgett.o mqtabl.o mqrelc.o mqmove.o mqkill.o mqltab.o mqlrel.o mqlmov.o iqlocf.o kqlast.o kqfind.o lqfind.o lqstep.o nqcount.o qshunt.o qshlin.o qtopsy.o qsorti.o qsortn.o qlump.o qblow.o qname.o qblowx.o qnamex.o exindex.o inddeck.o indxqt.o indcrp.o indcrd.o indcrz.o exlist.o lideck.o lixqt.o nsynopt.o exsynopt.o sycrad.o sypam.o sypat.o syxqt.o syforg.o sykeep.o syseq.o syktag.o sylkeep.o sylseq.o sysplit.o excheck.o chdeck.o extidy.o tideck.o ticomm.o tiforg.o tiseq.o tilist.o tisend.o tidistb.o exmerge.o metitl.o mesend.o meload.o exdiff.o diload.o dilread.o didupl.o diprem.o disame.o disamd.o dinewp.o dimname.o dimstr.o diord.o diordx.o dilost.o dicrad.o disend.o diacerr.o diwylb.o diwylr.o dineed.o dinein.o diclfi.o dilink.o dilook.o dinoun.o dif_xqt.o dif_head.o dif_tail.o dif_fmat.o dif_back.o dif_same.o dif_lx.o dif_ly.o dif_nx.o dif_ny.o exshell.o shupto.o shwsta.o shwpar.o shwcomp.o shwxqt.o smcil.o smcinst.o smcode.o smdef.o smdisp.o smjopt.o smrlog.o smrxqt.o smsid.o iniaux.o inipam.o ccjoin.o domapa.o kropt.o pgsize.o xeject.o dqclobb.o dqbank.o
+rm -f flpara.f flkrak.f flink.f flname.f flsplit.f fljoin.f helppr.f psteer.f pinit.f pinit2.f p_crash.f p_killm.f p_kill.f exitrc.f p_fatam.f p_fatal.f pabend.f pend.f docrad.f doapam.f dopamco.f dopam.f dopat.f dodeck.f acsort.f domap.f m_ana1.f m_ana2.f m_head.f m_ana3.f m_a3if.f m_a3sq.f m_a3nx.f m_a3ke.f m_a3ac.f m_split.f m_krak.f m_fail.f m_wnif.f mk_nil.f doxqt.f x_next.f x_seq.f x_seqsp.f x_asm.f x_imit.f x_incl.f x_opt.f x_use.f x_uput.f x_udeck.f doforg.f mk_frag.f mk_fnx.f arrskp.f arrive.f arrtm.f arrin.f arrnxd.f dpexgo.f dpexe.f dpexmo.f dpextm.f dphead.f dppage.f dplist.f dpline.f dptag.f dplact.f dplmsq.f dplmsg.f dpblan.f asmini.f asmuse.f asmall.f asmalia.f asmfind.f asmcrea.f asmcrx.f asmname.f asmdump.f cckrak.f cciflv.f cccomg.f cccrak.f cccoix.f ccproc.f ccopt.f ccdopt.f creact.f creapd.f crdeco.f failcc.f failln.f failmsg.f jptype.f krtitl.f liftsq.f linksq.f linksu.f locpat.f lockeep.f locseq.f locsq2.f mxjoin.f mxoper.f nextde.f nextsi.f nextxx.f nextcc.f setgap.f strmid.f usett.f iniseq.f inisqx.f ln_equ.f ln_get.f ln_put.f ln_putr.f ln_cop2.f ln_mov2.f ln_to3.f ln_cop3.f ln_env3.f ln_to4.f ln_cop4.f nospace.f togarb.f togatx.f na_init.f na_inpy.f na_rein.f na_new.f na_long.f na_get.f na_jtx.f na_dif.f na_chk.f na_xco.f na_ful.f na_prix.f na_dump.f mqinit.f mqpage.f mqshow.f mqwork.f mqlift.f mqshift.f mqgarb.f mqgett.f mqtabl.f mqrelc.f mqmove.f mqkill.f mqltab.f mqlrel.f mqlmov.f iqlocf.f kqlast.f kqfind.f lqfind.f lqstep.f nqcount.f qshunt.f qshlin.f qtopsy.f qsorti.f qsortn.f qlump.f qblow.f qname.f qblowx.f qnamex.f exindex.f inddeck.f indxqt.f indcrp.f indcrd.f indcrz.f exlist.f lideck.f lixqt.f nsynopt.f exsynopt.f sycrad.f sypam.f sypat.f syxqt.f syforg.f sykeep.f syseq.f syktag.f sylkeep.f sylseq.f sysplit.f excheck.f chdeck.f extidy.f tideck.f ticomm.f tiforg.f tiseq.f tilist.f tisend.f tidistb.f exmerge.f metitl.f mesend.f meload.f exdiff.f diload.f dilread.f didupl.f diprem.f disame.f disamd.f dinewp.f dimname.f dimstr.f diord.f diordx.f dilost.f dicrad.f disend.f diacerr.f diwylb.f diwylr.f dineed.f dinein.f diclfi.f dilink.f dilook.f dinoun.f dif_xqt.f dif_head.f dif_tail.f dif_fmat.f dif_back.f dif_same.f dif_lx.f dif_ly.f dif_nx.f dif_ny.f exshell.f shupto.f shwsta.f shwpar.f shwcomp.f shwxqt.f smcil.f smcinst.f smcode.f smdef.f smdisp.f smjopt.f smrlog.f smrxqt.f smsid.f iniaux.f inipam.f ccjoin.f domapa.f kropt.f pgsize.f xeject.f dqclobb.f dqbank.f
+gmake[1]: Leaving directory '/home/wimmer/aleph64bit/cern/2005/build/patchy'
+rm -f p5lib.mkfca
+rm -f p5lib.shfca
+rm -f nypatchy
+Linking with cern libraries
+/home/wimmer/aleph64bit/cern/2005/lib/libkernlib.a -lnsl -lcrypt -ldl
+gfortran -no-pie -o nypatchy -O -fno-automatic -fno-second-underscore -fno-range-check -fPIC     -L/home/wimmer/aleph64bit/cern/2005/src/lib nypatchy.o libp5lib.a     `cernlib kernlib`  \
+ || rm -f nypatchy
+rm -f /home/wimmer/aleph64bit/cern/2005/bin/nypatchy
+install -c -s  nypatchy /home/wimmer/aleph64bit/cern/2005/bin/nypatchy
+PLINAME=LINUX,UNIX,LNX,QMGLIBC,QMLXIA64,GFORTRAN,GCC4,VERBOSE;export PLINAME;/home/wimmer/aleph64bit/cern/2005/build/patchy/yexpand /home/wimmer/aleph64bit/cern/2005/src/patchy/nycheck.cra /home/wimmer/aleph64bit/cern/2005/build/patchy/nycheck.cra
+ypatchy - nycheck.f nycheck.cra TTY .go
+
+ YPATCHY  executing with Files / Options
+
+   1  PAM    11   -
+   2  ASM    21    nycheck.f
+   3  READ    2    nycheck.cra
+   4  PRINT   6   TTY
+   5  ASMA   22   -    ...
+
+ VERSION  PATCHY  4.15 /1  911211 12.02           .RJP, TODAY:  201007  1549
+
+                    OPTIONS ..C..F...........R............
+
+
+    0 *         ================================================== P=CRA*     D=          1 ============================
+
+        1 + +USE, LINUX,UNIX,LNX,QMGLIBC,QMLXIA64,GFORTRAN,GCC4,VERBOSE.                    
+        2 + +EXE, YCHECK, D=NCHECK.                                                         
+        3 + +USE, *PATCHY.                                                                  
+        4 + +PAM, 11, T=C,ATT   .patchy                                                     
+
+ ---------- PATCHY    .START PAM-FILE 101,   --  RESUME   
+
+        1 T PATCHY  5.05 /3  1996/06/29 17.00   
+
+
+ -------------------  .END   PAM  1  AFTER  28177 CARDS TOTAL,   --  REWIND
+1--------------------------------------
+ SUMMARY OF PATCHES IN PROCESSING ORDER
+
+ PROCESSING MODE SELECTIONS                        OTHER STATUS BITS FOR P=X
+
+ D - DIVERT                                        F  - - -  DESELECTED BY  +PATCH,P=X,IF=...
+ M - MIX                                            M - - -  DESELECTED BY  +IMITATE,P=X
+ E - EXE                                             X  - -  NOT +EXE BUT AT LEAST 1 DECK TO ASM
+ L - LIST                                             P - -  PARTIAL USE-SELECTION BY +USE,P=X,D=...
+ U - USE                    SELF +         SELF        R  -  P=X,T=REPEAT
+                    INHIBIT FOREIGN  TRANS   ONLY       Q -  QUOTED IN IF=X
+                    ------- ------- ------ ------
+                     DMELU   DMELU   DMEL   DMEL   FMXPRQ    USED FROM P=
+
+        0 CRA*     .       .     U .      .      .     R   . CRA*    
+ PATCHY                                                      PAM  CALL/FILE  101
+        0 -     0
+        0 *PATCHY  .       .     U .      .      .         . CRA*    
+        0 MACHINE  .       .     U .      .      .         . *PATCHY 
+        0 NOOPT    .       .     U .      .      .         . *PATCHY 
+        0 PATCHY_G .       .     U .      .      .         . *PATCHY 
+        0 *HYDRA   .       .     U .      .      .         . PATCHY_G
+        0 PCDE     .       .     U .      .      .         . PATCHY_G
+        0 QCDE     .       .     U .      .      .         . *HYDRA  
+        0 DOCUMENT .       .       .      .      .      Q  .         
+        0 FLDIALG  .       .     U .      .      .         . PATCHY_G
+        0 RUN      .       .     U .      .      .         . PATCHY_G
+        0 ACSORT   .       .     U .      .      .         . PATCHY_G
+        0 DOMAP    .       .     U .      .      .         . PATCHY_G
+        0 DOXQT    .       .     U .      .      .         . PATCHY_G
+        0 DOFORG   .       .     U .      .      .         . PATCHY_G
+        0 ARRIVE   .       .     U .      .      .         . PATCHY_G
+        0 DEPART   .       .     U .      .      .         . PATCHY_G
+        0 PUTIL    .       .     U .      .      .         . PATCHY_G
+        0 SERVICE  .       .     U .      .      .         . PATCHY_G
+        0 NAMING   .       .     U .      .      .         . PATCHY_G
+        0 MQ       .       .     U .      .      .         . *HYDRA  
+        0 QUTIL    .       .     U .      .      .         . *HYDRA  
+        0 YINDEX   .       .     U .      .      .         . PATCHY_G
+        0 YLIST    .       .     U .      .      .         . PATCHY_G
+        0 YSYNOPT  .       .     U .      .      .         . PATCHY_G
+        0 YCHECK   .       .     U .      .      .   X     . PATCHY_G
+        0 YTIDY    .       .     U .      .      .         . PATCHY_G
+        0 YMERGE   .       .     U .      .      .         . PATCHY_G
+        0 YDIFF    .       .     U .      .      .         . PATCHY_G
+        0 DIF_XQT  .       .     U .      .      .         . YDIFF   
+        0 YSHELL   .       .     U .      .      .         . PATCHY_G
+        0 AUXSM    .       .     U .      .      .         . YSHELL  
+        0 AUXIL    .       .     U .      .      .         . PATCHY_G
+        0 KERN     .       .     U .      .      .         . *HYDRA  
+        1 CRA*     .       .     U .      .      .     R   . CRA*    
+
+ ----------------------------
+ QUOTED PATCHES NOT TURNED UP
+
+        0 ALLIANT  .       .       .      .      .      Q  .         
+        0 APOF77   .       .       .      .      .      Q  .         
+        0 APOLLO   .       .       .      .      .      Q  .         
+        0 AUXIL_GO .       .     U .      .      .      Q  . *PATCHY 
+        0 CONVEX   .       .       .      .      .      Q  .         
+        0 CRAY     .       .       .      .      .      Q  .         
+        0 DECS     .       .       .      .      .      Q  .         
+        0 DOC_INL  .       .       .      .      .      Q  .         
+        0 HPUX     .       .       .      .      .      Q  .         
+        0 IBMAIX   .       .       .      .      .      Q  .         
+        0 IBMRT    .       .       .      .      .      Q  .         
+        0 IBMVM    .       .       .      .      .      Q  .         
+        0 LINUX    .       .     U .      .      .      Q  . CRA*    
+        0 MACMPW   .       .       .      .      .      Q  .         
+        0 OK       .       .     U .      .      .      Q  . MACHINE 
+        0 QCIO     .       .     U .      .      .      Q  . PATCHY_G
+        0 QDEBUG   .       .       .      .      .      Q  .         
+        0 QDIAG    .       .       .      .      .      Q  .         
+        0 QEBCDIC  .       .       .      .      .      Q  .         
+        0 QFIO     .       .       .      .      .      Q  .         
+        0 QF_F2C   .       .     U .      .      .      Q  . MACHINE 
+        0 QMAPO    .       .       .      .      .      Q  .         
+        0 QMHPX    .       .       .      .      .      Q  .         
+        0 QMIBM    .       .       .      .      .      Q  .         
+        0 QMIBX    .       .       .      .      .      Q  .         
+        0 QMIRT    .       .       .      .      .      Q  .         
+        0 QMLNX    .       .     U .      .      .      Q  . MACHINE 
+        0 QMMPW    .       .       .      .      .      Q  .         
+        0 QMNXT    .       .       .      .      .      Q  .         
+        0 QMSGI    .       .       .      .      .      Q  .         
+        0 QMSUN    .       .       .      .      .      Q  .         
+        0 QMUUX    .       .       .      .      .      Q  .         
+        0 QMVAO    .       .       .      .      .      Q  .         
+        0 QMVAOS   .       .       .      .      .      Q  .         
+        0 QMVAX    .       .       .      .      .      Q  .         
+        0 QMVMI    .       .       .      .      .      Q  .         
+        0 QNEWLINE .       .     U .      .      .      Q  . PATCHY_G
+        0 QS_IBMVM .       .       .      .      .      Q  .         
+        0 QS_UNIX  .       .     U .      .      .      Q  . MACHINE 
+        0 QS_VMS   .       .       .      .      .      Q  .         
+        0 SGI      .       .       .      .      .      Q  .         
+        0 SOLARIS  .       .       .      .      .      Q  .         
+        0 SUN      .       .       .      .      .      Q  .         
+        0 UNKNOWN  .       .       .      .      .      Q  .         
+        0 VAX      .       .       .      .      .      Q  .         
+        0 VAXVMS   .       .       .      .      .      Q  .         
+
+ ----------------------------
+ OTHER  PATCHES NOT TURNED UP
+
+        0 BACKCOMP .       .     U .      .      .         . PATCHY_G
+        0 GCC4     .       .     U .      .      .         . CRA*    
+        0 GFORTRAN .       .     U .      .      .         . CRA*    
+        0 INITRH   .       .     U .      .      .         . PATCHY_G
+        0 LNX      .       .     U .      .      .         . CRA*    
+        0 QASCII   .       .     U .      .      .         . MACHINE 
+        0 QMGLIBC  .       .     U .      .      .         . CRA*    
+        0 QMLXIA64 .       .     U .      .      .         . CRA*    
+        0 UNIX     .       .     U .      .      .         . CRA*    
+        0 VERBOSE  .       .     U .      .      .         . CRA*    
+
+ --------------
+ READ         4 CARDS   ON CRADLE
+          28177 CARDS   ON CARD-PAMS
+              0 RECORDS ON COMPACT BINARY PAMS, INCL.     0 SKIPPED.
+              1 PAM-CALLS.
+
+ --------------
+ WRITTEN
+        ASM       39 CARDS     1 DECKS TO  LUN= 21   -- REWIND
+
+ ------------
+ MEMORY USAGE
+ FINAL SIZE OF STORE = 160418
+ LARGEST GAP REQUIRED BY ANY DECK WAS = 1451
+ GAP SECURITY FOR THIS RUN WAS        = 4000
+ NUMBER OF GARBAGE COLLECTIONS =   0
+ NUMBER OF WORDS UNUSED =150688
+
+ -----------------
+ LINES IN  /QMACH/
+ NQL-NOR  MAX  PTH
+     108  110    0
+
+ ----------------------
+ NO.OF WARNINGS PRINTED
+
+ BAD CONTROL CARDS    0
+ MISSING SEQUENCES    0
+ LOST ACTIVATIONS     0
+ UNSATISF/ REF'S      0
+ LEVEL 1 CLASHES      0
+ LEVEL 2 CLASHES      0
+ ----------------------
+gfortran -no-pie -c -fno-automatic -fno-second-underscore -fno-range-check -fPIC  -O nycheck.f
+rm -f nycheck
+Linking with cern libraries
+/home/wimmer/aleph64bit/cern/2005/lib/libkernlib.a -lnsl -lcrypt -ldl
+gfortran -no-pie -o nycheck -O -fno-automatic -fno-second-underscore -fno-range-check -fPIC     -L/home/wimmer/aleph64bit/cern/2005/src/lib nycheck.o libp5lib.a     `cernlib kernlib`  \
+ || rm -f nycheck
+rm -f /home/wimmer/aleph64bit/cern/2005/bin/nycheck
+install -c -s  nycheck /home/wimmer/aleph64bit/cern/2005/bin/nycheck
+PLINAME=LINUX,UNIX,LNX,QMGLIBC,QMLXIA64,GFORTRAN,GCC4,VERBOSE;export PLINAME;/home/wimmer/aleph64bit/cern/2005/build/patchy/yexpand /home/wimmer/aleph64bit/cern/2005/src/patchy/nydiff.cra /home/wimmer/aleph64bit/cern/2005/build/patchy/nydiff.cra
+ypatchy - nydiff.f nydiff.cra TTY .go
+
+ YPATCHY  executing with Files / Options
+
+   1  PAM    11   -
+   2  ASM    21    nydiff.f
+   3  READ    2    nydiff.cra
+   4  PRINT   6   TTY
+   5  ASMA   22   -    ...
+
+ VERSION  PATCHY  4.15 /1  911211 12.02           .RJP, TODAY:  201007  1549
+
+                    OPTIONS ..C..F...........R............
+
+
+    0 *         ================================================== P=CRA*     D=          1 ============================
+
+        1 + +USE, LINUX,UNIX,LNX,QMGLIBC,QMLXIA64,GFORTRAN,GCC4,VERBOSE.                    
+        2 + +EXE, YDIFF,  D=NDIFF.                                                          
+        3 + +USE, *PATCHY.                                                                  
+        4 + +PAM, 11, T=C,ATT   .patchy                                                     
+
+ ---------- PATCHY    .START PAM-FILE 101,   --  RESUME   
+
+        1 T PATCHY  5.05 /3  1996/06/29 17.00   
+
+
+ -------------------  .END   PAM  1  AFTER  28177 CARDS TOTAL,   --  REWIND
+1--------------------------------------
+ SUMMARY OF PATCHES IN PROCESSING ORDER
+
+ PROCESSING MODE SELECTIONS                        OTHER STATUS BITS FOR P=X
+
+ D - DIVERT                                        F  - - -  DESELECTED BY  +PATCH,P=X,IF=...
+ M - MIX                                            M - - -  DESELECTED BY  +IMITATE,P=X
+ E - EXE                                             X  - -  NOT +EXE BUT AT LEAST 1 DECK TO ASM
+ L - LIST                                             P - -  PARTIAL USE-SELECTION BY +USE,P=X,D=...
+ U - USE                    SELF +         SELF        R  -  P=X,T=REPEAT
+                    INHIBIT FOREIGN  TRANS   ONLY       Q -  QUOTED IN IF=X
+                    ------- ------- ------ ------
+                     DMELU   DMELU   DMEL   DMEL   FMXPRQ    USED FROM P=
+
+        0 CRA*     .       .     U .      .      .     R   . CRA*    
+ PATCHY                                                      PAM  CALL/FILE  101
+        0 -     0
+        0 *PATCHY  .       .     U .      .      .         . CRA*    
+        0 MACHINE  .       .     U .      .      .         . *PATCHY 
+        0 NOOPT    .       .     U .      .      .         . *PATCHY 
+        0 PATCHY_G .       .     U .      .      .         . *PATCHY 
+        0 *HYDRA   .       .     U .      .      .         . PATCHY_G
+        0 PCDE     .       .     U .      .      .         . PATCHY_G
+        0 QCDE     .       .     U .      .      .         . *HYDRA  
+        0 DOCUMENT .       .       .      .      .      Q  .         
+        0 FLDIALG  .       .     U .      .      .         . PATCHY_G
+        0 RUN      .       .     U .      .      .         . PATCHY_G
+        0 ACSORT   .       .     U .      .      .         . PATCHY_G
+        0 DOMAP    .       .     U .      .      .         . PATCHY_G
+        0 DOXQT    .       .     U .      .      .         . PATCHY_G
+        0 DOFORG   .       .     U .      .      .         . PATCHY_G
+        0 ARRIVE   .       .     U .      .      .         . PATCHY_G
+        0 DEPART   .       .     U .      .      .         . PATCHY_G
+        0 PUTIL    .       .     U .      .      .         . PATCHY_G
+        0 SERVICE  .       .     U .      .      .         . PATCHY_G
+        0 NAMING   .       .     U .      .      .         . PATCHY_G
+        0 MQ       .       .     U .      .      .         . *HYDRA  
+        0 QUTIL    .       .     U .      .      .         . *HYDRA  
+        0 YINDEX   .       .     U .      .      .         . PATCHY_G
+        0 YLIST    .       .     U .      .      .         . PATCHY_G
+        0 YSYNOPT  .       .     U .      .      .         . PATCHY_G
+        0 YCHECK   .       .     U .      .      .         . PATCHY_G
+        0 YTIDY    .       .     U .      .      .         . PATCHY_G
+        0 YMERGE   .       .     U .      .      .         . PATCHY_G
+        0 YDIFF    .       .     U .      .      .   X     . PATCHY_G
+        0 DIF_XQT  .       .     U .      .      .         . YDIFF   
+        0 YSHELL   .       .     U .      .      .         . PATCHY_G
+        0 AUXSM    .       .     U .      .      .         . YSHELL  
+        0 AUXIL    .       .     U .      .      .         . PATCHY_G
+        0 KERN     .       .     U .      .      .         . *HYDRA  
+        1 CRA*     .       .     U .      .      .     R   . CRA*    
+
+ ----------------------------
+ QUOTED PATCHES NOT TURNED UP
+
+        0 ALLIANT  .       .       .      .      .      Q  .         
+        0 APOF77   .       .       .      .      .      Q  .         
+        0 APOLLO   .       .       .      .      .      Q  .         
+        0 AUXIL_GO .       .     U .      .      .      Q  . *PATCHY 
+        0 CONVEX   .       .       .      .      .      Q  .         
+        0 CRAY     .       .       .      .      .      Q  .         
+        0 DECS     .       .       .      .      .      Q  .         
+        0 DOC_INL  .       .       .      .      .      Q  .         
+        0 HPUX     .       .       .      .      .      Q  .         
+        0 IBMAIX   .       .       .      .      .      Q  .         
+        0 IBMRT    .       .       .      .      .      Q  .         
+        0 IBMVM    .       .       .      .      .      Q  .         
+        0 LINUX    .       .     U .      .      .      Q  . CRA*    
+        0 MACMPW   .       .       .      .      .      Q  .         
+        0 OK       .       .     U .      .      .      Q  . MACHINE 
+        0 QCIO     .       .     U .      .      .      Q  . PATCHY_G
+        0 QDEBUG   .       .       .      .      .      Q  .         
+        0 QDIAG    .       .       .      .      .      Q  .         
+        0 QEBCDIC  .       .       .      .      .      Q  .         
+        0 QFIO     .       .       .      .      .      Q  .         
+        0 QF_F2C   .       .     U .      .      .      Q  . MACHINE 
+        0 QMAPO    .       .       .      .      .      Q  .         
+        0 QMHPX    .       .       .      .      .      Q  .         
+        0 QMIBM    .       .       .      .      .      Q  .         
+        0 QMIBX    .       .       .      .      .      Q  .         
+        0 QMIRT    .       .       .      .      .      Q  .         
+        0 QMLNX    .       .     U .      .      .      Q  . MACHINE 
+        0 QMMPW    .       .       .      .      .      Q  .         
+        0 QMNXT    .       .       .      .      .      Q  .         
+        0 QMSGI    .       .       .      .      .      Q  .         
+        0 QMSUN    .       .       .      .      .      Q  .         
+        0 QMUUX    .       .       .      .      .      Q  .         
+        0 QMVAO    .       .       .      .      .      Q  .         
+        0 QMVAOS   .       .       .      .      .      Q  .         
+        0 QMVAX    .       .       .      .      .      Q  .         
+        0 QMVMI    .       .       .      .      .      Q  .         
+        0 QNEWLINE .       .     U .      .      .      Q  . PATCHY_G
+        0 QS_IBMVM .       .       .      .      .      Q  .         
+        0 QS_UNIX  .       .     U .      .      .      Q  . MACHINE 
+        0 QS_VMS   .       .       .      .      .      Q  .         
+        0 SGI      .       .       .      .      .      Q  .         
+        0 SOLARIS  .       .       .      .      .      Q  .         
+        0 SUN      .       .       .      .      .      Q  .         
+        0 UNKNOWN  .       .       .      .      .      Q  .         
+        0 VAX      .       .       .      .      .      Q  .         
+        0 VAXVMS   .       .       .      .      .      Q  .         
+
+ ----------------------------
+ OTHER  PATCHES NOT TURNED UP
+
+        0 BACKCOMP .       .     U .      .      .         . PATCHY_G
+        0 GCC4     .       .     U .      .      .         . CRA*    
+        0 GFORTRAN .       .     U .      .      .         . CRA*    
+        0 INITRH   .       .     U .      .      .         . PATCHY_G
+        0 LNX      .       .     U .      .      .         . CRA*    
+        0 QASCII   .       .     U .      .      .         . MACHINE 
+        0 QMGLIBC  .       .     U .      .      .         . CRA*    
+        0 QMLXIA64 .       .     U .      .      .         . CRA*    
+        0 UNIX     .       .     U .      .      .         . CRA*    
+        0 VERBOSE  .       .     U .      .      .         . CRA*    
+
+ --------------
+ READ         4 CARDS   ON CRADLE
+          28177 CARDS   ON CARD-PAMS
+              0 RECORDS ON COMPACT BINARY PAMS, INCL.     0 SKIPPED.
+              1 PAM-CALLS.
+
+ --------------
+ WRITTEN
+        ASM       40 CARDS     1 DECKS TO  LUN= 21   -- REWIND
+
+ ------------
+ MEMORY USAGE
+ FINAL SIZE OF STORE = 160418
+ LARGEST GAP REQUIRED BY ANY DECK WAS = 1451
+ GAP SECURITY FOR THIS RUN WAS        = 4000
+ NUMBER OF GARBAGE COLLECTIONS =   0
+ NUMBER OF WORDS UNUSED =150688
+
+ -----------------
+ LINES IN  /QMACH/
+ NQL-NOR  MAX  PTH
+     108  110    0
+
+ ----------------------
+ NO.OF WARNINGS PRINTED
+
+ BAD CONTROL CARDS    0
+ MISSING SEQUENCES    0
+ LOST ACTIVATIONS     0
+ UNSATISF/ REF'S      0
+ LEVEL 1 CLASHES      0
+ LEVEL 2 CLASHES      0
+ ----------------------
+gfortran -no-pie -c -fno-automatic -fno-second-underscore -fno-range-check -fPIC  -O nydiff.f
+rm -f nydiff
+Linking with cern libraries
+/home/wimmer/aleph64bit/cern/2005/lib/libkernlib.a -lnsl -lcrypt -ldl
+gfortran -no-pie -o nydiff -O -fno-automatic -fno-second-underscore -fno-range-check -fPIC     -L/home/wimmer/aleph64bit/cern/2005/src/lib nydiff.o libp5lib.a     `cernlib kernlib`  \
+ || rm -f nydiff
+rm -f /home/wimmer/aleph64bit/cern/2005/bin/nydiff
+install -c -s  nydiff /home/wimmer/aleph64bit/cern/2005/bin/nydiff
+PLINAME=LINUX,UNIX,LNX,QMGLIBC,QMLXIA64,GFORTRAN,GCC4,VERBOSE;export PLINAME;/home/wimmer/aleph64bit/cern/2005/build/patchy/yexpand /home/wimmer/aleph64bit/cern/2005/src/patchy/nyindex.cra /home/wimmer/aleph64bit/cern/2005/build/patchy/nyindex.cra
+ypatchy - nyindex.f nyindex.cra TTY .go
+
+ YPATCHY  executing with Files / Options
+
+   1  PAM    11   -
+   2  ASM    21    nyindex.f
+   3  READ    2    nyindex.cra
+   4  PRINT   6   TTY
+   5  ASMA   22   -    ...
+
+ VERSION  PATCHY  4.15 /1  911211 12.02           .RJP, TODAY:  201007  1549
+
+                    OPTIONS ..C..F...........R............
+
+
+    0 *         ================================================== P=CRA*     D=          1 ============================
+
+        1 + +USE, LINUX,UNIX,LNX,QMGLIBC,QMLXIA64,GFORTRAN,GCC4,VERBOSE.                    
+        2 + +EXE, YINDEX, D=NINDEX.                                                         
+        3 + +USE, *PATCHY.                                                                  
+        4 + +PAM, 11, T=C,ATT   .patchy                                                     
+
+ ---------- PATCHY    .START PAM-FILE 101,   --  RESUME   
+
+        1 T PATCHY  5.05 /3  1996/06/29 17.00   
+
+
+ -------------------  .END   PAM  1  AFTER  28177 CARDS TOTAL,   --  REWIND
+1--------------------------------------
+ SUMMARY OF PATCHES IN PROCESSING ORDER
+
+ PROCESSING MODE SELECTIONS                        OTHER STATUS BITS FOR P=X
+
+ D - DIVERT                                        F  - - -  DESELECTED BY  +PATCH,P=X,IF=...
+ M - MIX                                            M - - -  DESELECTED BY  +IMITATE,P=X
+ E - EXE                                             X  - -  NOT +EXE BUT AT LEAST 1 DECK TO ASM
+ L - LIST                                             P - -  PARTIAL USE-SELECTION BY +USE,P=X,D=...
+ U - USE                    SELF +         SELF        R  -  P=X,T=REPEAT
+                    INHIBIT FOREIGN  TRANS   ONLY       Q -  QUOTED IN IF=X
+                    ------- ------- ------ ------
+                     DMELU   DMELU   DMEL   DMEL   FMXPRQ    USED FROM P=
+
+        0 CRA*     .       .     U .      .      .     R   . CRA*    
+ PATCHY                                                      PAM  CALL/FILE  101
+        0 -     0
+        0 *PATCHY  .       .     U .      .      .         . CRA*    
+        0 MACHINE  .       .     U .      .      .         . *PATCHY 
+        0 NOOPT    .       .     U .      .      .         . *PATCHY 
+        0 PATCHY_G .       .     U .      .      .         . *PATCHY 
+        0 *HYDRA   .       .     U .      .      .         . PATCHY_G
+        0 PCDE     .       .     U .      .      .         . PATCHY_G
+        0 QCDE     .       .     U .      .      .         . *HYDRA  
+        0 DOCUMENT .       .       .      .      .      Q  .         
+        0 FLDIALG  .       .     U .      .      .         . PATCHY_G
+        0 RUN      .       .     U .      .      .         . PATCHY_G
+        0 ACSORT   .       .     U .      .      .         . PATCHY_G
+        0 DOMAP    .       .     U .      .      .         . PATCHY_G
+        0 DOXQT    .       .     U .      .      .         . PATCHY_G
+        0 DOFORG   .       .     U .      .      .         . PATCHY_G
+        0 ARRIVE   .       .     U .      .      .         . PATCHY_G
+        0 DEPART   .       .     U .      .      .         . PATCHY_G
+        0 PUTIL    .       .     U .      .      .         . PATCHY_G
+        0 SERVICE  .       .     U .      .      .         . PATCHY_G
+        0 NAMING   .       .     U .      .      .         . PATCHY_G
+        0 MQ       .       .     U .      .      .         . *HYDRA  
+        0 QUTIL    .       .     U .      .      .         . *HYDRA  
+        0 YINDEX   .       .     U .      .      .   X     . PATCHY_G
+        0 YLIST    .       .     U .      .      .         . PATCHY_G
+        0 YSYNOPT  .       .     U .      .      .         . PATCHY_G
+        0 YCHECK   .       .     U .      .      .         . PATCHY_G
+        0 YTIDY    .       .     U .      .      .         . PATCHY_G
+        0 YMERGE   .       .     U .      .      .         . PATCHY_G
+        0 YDIFF    .       .     U .      .      .         . PATCHY_G
+        0 DIF_XQT  .       .     U .      .      .         . YDIFF   
+        0 YSHELL   .       .     U .      .      .         . PATCHY_G
+        0 AUXSM    .       .     U .      .      .         . YSHELL  
+        0 AUXIL    .       .     U .      .      .         . PATCHY_G
+        0 KERN     .       .     U .      .      .         . *HYDRA  
+        1 CRA*     .       .     U .      .      .     R   . CRA*    
+
+ ----------------------------
+ QUOTED PATCHES NOT TURNED UP
+
+        0 ALLIANT  .       .       .      .      .      Q  .         
+        0 APOF77   .       .       .      .      .      Q  .         
+        0 APOLLO   .       .       .      .      .      Q  .         
+        0 AUXIL_GO .       .     U .      .      .      Q  . *PATCHY 
+        0 CONVEX   .       .       .      .      .      Q  .         
+        0 CRAY     .       .       .      .      .      Q  .         
+        0 DECS     .       .       .      .      .      Q  .         
+        0 DOC_INL  .       .       .      .      .      Q  .         
+        0 HPUX     .       .       .      .      .      Q  .         
+        0 IBMAIX   .       .       .      .      .      Q  .         
+        0 IBMRT    .       .       .      .      .      Q  .         
+        0 IBMVM    .       .       .      .      .      Q  .         
+        0 LINUX    .       .     U .      .      .      Q  . CRA*    
+        0 MACMPW   .       .       .      .      .      Q  .         
+        0 OK       .       .     U .      .      .      Q  . MACHINE 
+        0 QCIO     .       .     U .      .      .      Q  . PATCHY_G
+        0 QDEBUG   .       .       .      .      .      Q  .         
+        0 QDIAG    .       .       .      .      .      Q  .         
+        0 QEBCDIC  .       .       .      .      .      Q  .         
+        0 QFIO     .       .       .      .      .      Q  .         
+        0 QF_F2C   .       .     U .      .      .      Q  . MACHINE 
+        0 QMAPO    .       .       .      .      .      Q  .         
+        0 QMHPX    .       .       .      .      .      Q  .         
+        0 QMIBM    .       .       .      .      .      Q  .         
+        0 QMIBX    .       .       .      .      .      Q  .         
+        0 QMIRT    .       .       .      .      .      Q  .         
+        0 QMLNX    .       .     U .      .      .      Q  . MACHINE 
+        0 QMMPW    .       .       .      .      .      Q  .         
+        0 QMNXT    .       .       .      .      .      Q  .         
+        0 QMSGI    .       .       .      .      .      Q  .         
+        0 QMSUN    .       .       .      .      .      Q  .         
+        0 QMUUX    .       .       .      .      .      Q  .         
+        0 QMVAO    .       .       .      .      .      Q  .         
+        0 QMVAOS   .       .       .      .      .      Q  .         
+        0 QMVAX    .       .       .      .      .      Q  .         
+        0 QMVMI    .       .       .      .      .      Q  .         
+        0 QNEWLINE .       .     U .      .      .      Q  . PATCHY_G
+        0 QS_IBMVM .       .       .      .      .      Q  .         
+        0 QS_UNIX  .       .     U .      .      .      Q  . MACHINE 
+        0 QS_VMS   .       .       .      .      .      Q  .         
+        0 SGI      .       .       .      .      .      Q  .         
+        0 SOLARIS  .       .       .      .      .      Q  .         
+        0 SUN      .       .       .      .      .      Q  .         
+        0 UNKNOWN  .       .       .      .      .      Q  .         
+        0 VAX      .       .       .      .      .      Q  .         
+        0 VAXVMS   .       .       .      .      .      Q  .         
+
+ ----------------------------
+ OTHER  PATCHES NOT TURNED UP
+
+        0 BACKCOMP .       .     U .      .      .         . PATCHY_G
+        0 GCC4     .       .     U .      .      .         . CRA*    
+        0 GFORTRAN .       .     U .      .      .         . CRA*    
+        0 INITRH   .       .     U .      .      .         . PATCHY_G
+        0 LNX      .       .     U .      .      .         . CRA*    
+        0 QASCII   .       .     U .      .      .         . MACHINE 
+        0 QMGLIBC  .       .     U .      .      .         . CRA*    
+        0 QMLXIA64 .       .     U .      .      .         . CRA*    
+        0 UNIX     .       .     U .      .      .         . CRA*    
+        0 VERBOSE  .       .     U .      .      .         . CRA*    
+
+ --------------
+ READ         4 CARDS   ON CRADLE
+          28177 CARDS   ON CARD-PAMS
+              0 RECORDS ON COMPACT BINARY PAMS, INCL.     0 SKIPPED.
+              1 PAM-CALLS.
+
+ --------------
+ WRITTEN
+        ASM       40 CARDS     1 DECKS TO  LUN= 21   -- REWIND
+
+ ------------
+ MEMORY USAGE
+ FINAL SIZE OF STORE = 160418
+ LARGEST GAP REQUIRED BY ANY DECK WAS = 1451
+ GAP SECURITY FOR THIS RUN WAS        = 4000
+ NUMBER OF GARBAGE COLLECTIONS =   0
+ NUMBER OF WORDS UNUSED =150688
+
+ -----------------
+ LINES IN  /QMACH/
+ NQL-NOR  MAX  PTH
+     108  110    0
+
+ ----------------------
+ NO.OF WARNINGS PRINTED
+
+ BAD CONTROL CARDS    0
+ MISSING SEQUENCES    0
+ LOST ACTIVATIONS     0
+ UNSATISF/ REF'S      0
+ LEVEL 1 CLASHES      0
+ LEVEL 2 CLASHES      0
+ ----------------------
+gfortran -no-pie -c -fno-automatic -fno-second-underscore -fno-range-check -fPIC  -O nyindex.f
+rm -f nyindex
+Linking with cern libraries
+/home/wimmer/aleph64bit/cern/2005/lib/libkernlib.a -lnsl -lcrypt -ldl
+gfortran -no-pie -o nyindex -O -fno-automatic -fno-second-underscore -fno-range-check -fPIC     -L/home/wimmer/aleph64bit/cern/2005/src/lib nyindex.o libp5lib.a     `cernlib kernlib`  \
+ || rm -f nyindex
+rm -f /home/wimmer/aleph64bit/cern/2005/bin/nyindex
+install -c -s  nyindex /home/wimmer/aleph64bit/cern/2005/bin/nyindex
+PLINAME=LINUX,UNIX,LNX,QMGLIBC,QMLXIA64,GFORTRAN,GCC4,VERBOSE;export PLINAME;/home/wimmer/aleph64bit/cern/2005/build/patchy/yexpand /home/wimmer/aleph64bit/cern/2005/src/patchy/nylist.cra /home/wimmer/aleph64bit/cern/2005/build/patchy/nylist.cra
+ypatchy - nylist.f nylist.cra TTY .go
+
+ YPATCHY  executing with Files / Options
+
+   1  PAM    11   -
+   2  ASM    21    nylist.f
+   3  READ    2    nylist.cra
+   4  PRINT   6   TTY
+   5  ASMA   22   -    ...
+
+ VERSION  PATCHY  4.15 /1  911211 12.02           .RJP, TODAY:  201007  1549
+
+                    OPTIONS ..C..F...........R............
+
+
+    0 *         ================================================== P=CRA*     D=          1 ============================
+
+        1 + +USE, LINUX,UNIX,LNX,QMGLIBC,QMLXIA64,GFORTRAN,GCC4,VERBOSE.                    
+        2 + +EXE, YLIST,  D=NLIST.                                                          
+        3 + +USE, *PATCHY.                                                                  
+        4 + +PAM, 11, T=C,ATT   .patchy                                                     
+
+ ---------- PATCHY    .START PAM-FILE 101,   --  RESUME   
+
+        1 T PATCHY  5.05 /3  1996/06/29 17.00   
+
+
+ -------------------  .END   PAM  1  AFTER  28177 CARDS TOTAL,   --  REWIND
+1--------------------------------------
+ SUMMARY OF PATCHES IN PROCESSING ORDER
+
+ PROCESSING MODE SELECTIONS                        OTHER STATUS BITS FOR P=X
+
+ D - DIVERT                                        F  - - -  DESELECTED BY  +PATCH,P=X,IF=...
+ M - MIX                                            M - - -  DESELECTED BY  +IMITATE,P=X
+ E - EXE                                             X  - -  NOT +EXE BUT AT LEAST 1 DECK TO ASM
+ L - LIST                                             P - -  PARTIAL USE-SELECTION BY +USE,P=X,D=...
+ U - USE                    SELF +         SELF        R  -  P=X,T=REPEAT
+                    INHIBIT FOREIGN  TRANS   ONLY       Q -  QUOTED IN IF=X
+                    ------- ------- ------ ------
+                     DMELU   DMELU   DMEL   DMEL   FMXPRQ    USED FROM P=
+
+        0 CRA*     .       .     U .      .      .     R   . CRA*    
+ PATCHY                                                      PAM  CALL/FILE  101
+        0 -     0
+        0 *PATCHY  .       .     U .      .      .         . CRA*    
+        0 MACHINE  .       .     U .      .      .         . *PATCHY 
+        0 NOOPT    .       .     U .      .      .         . *PATCHY 
+        0 PATCHY_G .       .     U .      .      .         . *PATCHY 
+        0 *HYDRA   .       .     U .      .      .         . PATCHY_G
+        0 PCDE     .       .     U .      .      .         . PATCHY_G
+        0 QCDE     .       .     U .      .      .         . *HYDRA  
+        0 DOCUMENT .       .       .      .      .      Q  .         
+        0 FLDIALG  .       .     U .      .      .         . PATCHY_G
+        0 RUN      .       .     U .      .      .         . PATCHY_G
+        0 ACSORT   .       .     U .      .      .         . PATCHY_G
+        0 DOMAP    .       .     U .      .      .         . PATCHY_G
+        0 DOXQT    .       .     U .      .      .         . PATCHY_G
+        0 DOFORG   .       .     U .      .      .         . PATCHY_G
+        0 ARRIVE   .       .     U .      .      .         . PATCHY_G
+        0 DEPART   .       .     U .      .      .         . PATCHY_G
+        0 PUTIL    .       .     U .      .      .         . PATCHY_G
+        0 SERVICE  .       .     U .      .      .         . PATCHY_G
+        0 NAMING   .       .     U .      .      .         . PATCHY_G
+        0 MQ       .       .     U .      .      .         . *HYDRA  
+        0 QUTIL    .       .     U .      .      .         . *HYDRA  
+        0 YINDEX   .       .     U .      .      .         . PATCHY_G
+        0 YLIST    .       .     U .      .      .   X     . PATCHY_G
+        0 YSYNOPT  .       .     U .      .      .         . PATCHY_G
+        0 YCHECK   .       .     U .      .      .         . PATCHY_G
+        0 YTIDY    .       .     U .      .      .         . PATCHY_G
+        0 YMERGE   .       .     U .      .      .         . PATCHY_G
+        0 YDIFF    .       .     U .      .      .         . PATCHY_G
+        0 DIF_XQT  .       .     U .      .      .         . YDIFF   
+        0 YSHELL   .       .     U .      .      .         . PATCHY_G
+        0 AUXSM    .       .     U .      .      .         . YSHELL  
+        0 AUXIL    .       .     U .      .      .         . PATCHY_G
+        0 KERN     .       .     U .      .      .         . *HYDRA  
+        1 CRA*     .       .     U .      .      .     R   . CRA*    
+
+ ----------------------------
+ QUOTED PATCHES NOT TURNED UP
+
+        0 ALLIANT  .       .       .      .      .      Q  .         
+        0 APOF77   .       .       .      .      .      Q  .         
+        0 APOLLO   .       .       .      .      .      Q  .         
+        0 AUXIL_GO .       .     U .      .      .      Q  . *PATCHY 
+        0 CONVEX   .       .       .      .      .      Q  .         
+        0 CRAY     .       .       .      .      .      Q  .         
+        0 DECS     .       .       .      .      .      Q  .         
+        0 DOC_INL  .       .       .      .      .      Q  .         
+        0 HPUX     .       .       .      .      .      Q  .         
+        0 IBMAIX   .       .       .      .      .      Q  .         
+        0 IBMRT    .       .       .      .      .      Q  .         
+        0 IBMVM    .       .       .      .      .      Q  .         
+        0 LINUX    .       .     U .      .      .      Q  . CRA*    
+        0 MACMPW   .       .       .      .      .      Q  .         
+        0 OK       .       .     U .      .      .      Q  . MACHINE 
+        0 QCIO     .       .     U .      .      .      Q  . PATCHY_G
+        0 QDEBUG   .       .       .      .      .      Q  .         
+        0 QDIAG    .       .       .      .      .      Q  .         
+        0 QEBCDIC  .       .       .      .      .      Q  .         
+        0 QFIO     .       .       .      .      .      Q  .         
+        0 QF_F2C   .       .     U .      .      .      Q  . MACHINE 
+        0 QMAPO    .       .       .      .      .      Q  .         
+        0 QMHPX    .       .       .      .      .      Q  .         
+        0 QMIBM    .       .       .      .      .      Q  .         
+        0 QMIBX    .       .       .      .      .      Q  .         
+        0 QMIRT    .       .       .      .      .      Q  .         
+        0 QMLNX    .       .     U .      .      .      Q  . MACHINE 
+        0 QMMPW    .       .       .      .      .      Q  .         
+        0 QMNXT    .       .       .      .      .      Q  .         
+        0 QMSGI    .       .       .      .      .      Q  .         
+        0 QMSUN    .       .       .      .      .      Q  .         
+        0 QMUUX    .       .       .      .      .      Q  .         
+        0 QMVAO    .       .       .      .      .      Q  .         
+        0 QMVAOS   .       .       .      .      .      Q  .         
+        0 QMVAX    .       .       .      .      .      Q  .         
+        0 QMVMI    .       .       .      .      .      Q  .         
+        0 QNEWLINE .       .     U .      .      .      Q  . PATCHY_G
+        0 QS_IBMVM .       .       .      .      .      Q  .         
+        0 QS_UNIX  .       .     U .      .      .      Q  . MACHINE 
+        0 QS_VMS   .       .       .      .      .      Q  .         
+        0 SGI      .       .       .      .      .      Q  .         
+        0 SOLARIS  .       .       .      .      .      Q  .         
+        0 SUN      .       .       .      .      .      Q  .         
+        0 UNKNOWN  .       .       .      .      .      Q  .         
+        0 VAX      .       .       .      .      .      Q  .         
+        0 VAXVMS   .       .       .      .      .      Q  .         
+
+ ----------------------------
+ OTHER  PATCHES NOT TURNED UP
+
+        0 BACKCOMP .       .     U .      .      .         . PATCHY_G
+        0 GCC4     .       .     U .      .      .         . CRA*    
+        0 GFORTRAN .       .     U .      .      .         . CRA*    
+        0 INITRH   .       .     U .      .      .         . PATCHY_G
+        0 LNX      .       .     U .      .      .         . CRA*    
+        0 QASCII   .       .     U .      .      .         . MACHINE 
+        0 QMGLIBC  .       .     U .      .      .         . CRA*    
+        0 QMLXIA64 .       .     U .      .      .         . CRA*    
+        0 UNIX     .       .     U .      .      .         . CRA*    
+        0 VERBOSE  .       .     U .      .      .         . CRA*    
+
+ --------------
+ READ         4 CARDS   ON CRADLE
+          28177 CARDS   ON CARD-PAMS
+              0 RECORDS ON COMPACT BINARY PAMS, INCL.     0 SKIPPED.
+              1 PAM-CALLS.
+
+ --------------
+ WRITTEN
+        ASM       39 CARDS     1 DECKS TO  LUN= 21   -- REWIND
+
+ ------------
+ MEMORY USAGE
+ FINAL SIZE OF STORE = 160418
+ LARGEST GAP REQUIRED BY ANY DECK WAS = 1451
+ GAP SECURITY FOR THIS RUN WAS        = 4000
+ NUMBER OF GARBAGE COLLECTIONS =   0
+ NUMBER OF WORDS UNUSED =150688
+
+ -----------------
+ LINES IN  /QMACH/
+ NQL-NOR  MAX  PTH
+     108  110    0
+
+ ----------------------
+ NO.OF WARNINGS PRINTED
+
+ BAD CONTROL CARDS    0
+ MISSING SEQUENCES    0
+ LOST ACTIVATIONS     0
+ UNSATISF/ REF'S      0
+ LEVEL 1 CLASHES      0
+ LEVEL 2 CLASHES      0
+ ----------------------
+gfortran -no-pie -c -fno-automatic -fno-second-underscore -fno-range-check -fPIC  -O nylist.f
+rm -f nylist
+Linking with cern libraries
+/home/wimmer/aleph64bit/cern/2005/lib/libkernlib.a -lnsl -lcrypt -ldl
+gfortran -no-pie -o nylist -O -fno-automatic -fno-second-underscore -fno-range-check -fPIC     -L/home/wimmer/aleph64bit/cern/2005/src/lib nylist.o libp5lib.a     `cernlib kernlib`  \
+ || rm -f nylist
+rm -f /home/wimmer/aleph64bit/cern/2005/bin/nylist
+install -c -s  nylist /home/wimmer/aleph64bit/cern/2005/bin/nylist
+PLINAME=LINUX,UNIX,LNX,QMGLIBC,QMLXIA64,GFORTRAN,GCC4,VERBOSE;export PLINAME;/home/wimmer/aleph64bit/cern/2005/build/patchy/yexpand /home/wimmer/aleph64bit/cern/2005/src/patchy/nymerge.cra /home/wimmer/aleph64bit/cern/2005/build/patchy/nymerge.cra
+ypatchy - nymerge.f nymerge.cra TTY .go
+
+ YPATCHY  executing with Files / Options
+
+   1  PAM    11   -
+   2  ASM    21    nymerge.f
+   3  READ    2    nymerge.cra
+   4  PRINT   6   TTY
+   5  ASMA   22   -    ...
+
+ VERSION  PATCHY  4.15 /1  911211 12.02           .RJP, TODAY:  201007  1549
+
+                    OPTIONS ..C..F...........R............
+
+
+    0 *         ================================================== P=CRA*     D=          1 ============================
+
+        1 + +USE, LINUX,UNIX,LNX,QMGLIBC,QMLXIA64,GFORTRAN,GCC4,VERBOSE.                    
+        2 + +EXE, YMERGE, D=NMERGE.                                                         
+        3 + +USE, *PATCHY.                                                                  
+        4 + +PAM, 11, T=C,ATT   .patchy                                                     
+
+ ---------- PATCHY    .START PAM-FILE 101,   --  RESUME   
+
+        1 T PATCHY  5.05 /3  1996/06/29 17.00   
+
+
+ -------------------  .END   PAM  1  AFTER  28177 CARDS TOTAL,   --  REWIND
+1--------------------------------------
+ SUMMARY OF PATCHES IN PROCESSING ORDER
+
+ PROCESSING MODE SELECTIONS                        OTHER STATUS BITS FOR P=X
+
+ D - DIVERT                                        F  - - -  DESELECTED BY  +PATCH,P=X,IF=...
+ M - MIX                                            M - - -  DESELECTED BY  +IMITATE,P=X
+ E - EXE                                             X  - -  NOT +EXE BUT AT LEAST 1 DECK TO ASM
+ L - LIST                                             P - -  PARTIAL USE-SELECTION BY +USE,P=X,D=...
+ U - USE                    SELF +         SELF        R  -  P=X,T=REPEAT
+                    INHIBIT FOREIGN  TRANS   ONLY       Q -  QUOTED IN IF=X
+                    ------- ------- ------ ------
+                     DMELU   DMELU   DMEL   DMEL   FMXPRQ    USED FROM P=
+
+        0 CRA*     .       .     U .      .      .     R   . CRA*    
+ PATCHY                                                      PAM  CALL/FILE  101
+        0 -     0
+        0 *PATCHY  .       .     U .      .      .         . CRA*    
+        0 MACHINE  .       .     U .      .      .         . *PATCHY 
+        0 NOOPT    .       .     U .      .      .         . *PATCHY 
+        0 PATCHY_G .       .     U .      .      .         . *PATCHY 
+        0 *HYDRA   .       .     U .      .      .         . PATCHY_G
+        0 PCDE     .       .     U .      .      .         . PATCHY_G
+        0 QCDE     .       .     U .      .      .         . *HYDRA  
+        0 DOCUMENT .       .       .      .      .      Q  .         
+        0 FLDIALG  .       .     U .      .      .         . PATCHY_G
+        0 RUN      .       .     U .      .      .         . PATCHY_G
+        0 ACSORT   .       .     U .      .      .         . PATCHY_G
+        0 DOMAP    .       .     U .      .      .         . PATCHY_G
+        0 DOXQT    .       .     U .      .      .         . PATCHY_G
+        0 DOFORG   .       .     U .      .      .         . PATCHY_G
+        0 ARRIVE   .       .     U .      .      .         . PATCHY_G
+        0 DEPART   .       .     U .      .      .         . PATCHY_G
+        0 PUTIL    .       .     U .      .      .         . PATCHY_G
+        0 SERVICE  .       .     U .      .      .         . PATCHY_G
+        0 NAMING   .       .     U .      .      .         . PATCHY_G
+        0 MQ       .       .     U .      .      .         . *HYDRA  
+        0 QUTIL    .       .     U .      .      .         . *HYDRA  
+        0 YINDEX   .       .     U .      .      .         . PATCHY_G
+        0 YLIST    .       .     U .      .      .         . PATCHY_G
+        0 YSYNOPT  .       .     U .      .      .         . PATCHY_G
+        0 YCHECK   .       .     U .      .      .         . PATCHY_G
+        0 YTIDY    .       .     U .      .      .         . PATCHY_G
+        0 YMERGE   .       .     U .      .      .   X     . PATCHY_G
+        0 YDIFF    .       .     U .      .      .         . PATCHY_G
+        0 DIF_XQT  .       .     U .      .      .         . YDIFF   
+        0 YSHELL   .       .     U .      .      .         . PATCHY_G
+        0 AUXSM    .       .     U .      .      .         . YSHELL  
+        0 AUXIL    .       .     U .      .      .         . PATCHY_G
+        0 KERN     .       .     U .      .      .         . *HYDRA  
+        1 CRA*     .       .     U .      .      .     R   . CRA*    
+
+ ----------------------------
+ QUOTED PATCHES NOT TURNED UP
+
+        0 ALLIANT  .       .       .      .      .      Q  .         
+        0 APOF77   .       .       .      .      .      Q  .         
+        0 APOLLO   .       .       .      .      .      Q  .         
+        0 AUXIL_GO .       .     U .      .      .      Q  . *PATCHY 
+        0 CONVEX   .       .       .      .      .      Q  .         
+        0 CRAY     .       .       .      .      .      Q  .         
+        0 DECS     .       .       .      .      .      Q  .         
+        0 DOC_INL  .       .       .      .      .      Q  .         
+        0 HPUX     .       .       .      .      .      Q  .         
+        0 IBMAIX   .       .       .      .      .      Q  .         
+        0 IBMRT    .       .       .      .      .      Q  .         
+        0 IBMVM    .       .       .      .      .      Q  .         
+        0 LINUX    .       .     U .      .      .      Q  . CRA*    
+        0 MACMPW   .       .       .      .      .      Q  .         
+        0 OK       .       .     U .      .      .      Q  . MACHINE 
+        0 QCIO     .       .     U .      .      .      Q  . PATCHY_G
+        0 QDEBUG   .       .       .      .      .      Q  .         
+        0 QDIAG    .       .       .      .      .      Q  .         
+        0 QEBCDIC  .       .       .      .      .      Q  .         
+        0 QFIO     .       .       .      .      .      Q  .         
+        0 QF_F2C   .       .     U .      .      .      Q  . MACHINE 
+        0 QMAPO    .       .       .      .      .      Q  .         
+        0 QMHPX    .       .       .      .      .      Q  .         
+        0 QMIBM    .       .       .      .      .      Q  .         
+        0 QMIBX    .       .       .      .      .      Q  .         
+        0 QMIRT    .       .       .      .      .      Q  .         
+        0 QMLNX    .       .     U .      .      .      Q  . MACHINE 
+        0 QMMPW    .       .       .      .      .      Q  .         
+        0 QMNXT    .       .       .      .      .      Q  .         
+        0 QMSGI    .       .       .      .      .      Q  .         
+        0 QMSUN    .       .       .      .      .      Q  .         
+        0 QMUUX    .       .       .      .      .      Q  .         
+        0 QMVAO    .       .       .      .      .      Q  .         
+        0 QMVAOS   .       .       .      .      .      Q  .         
+        0 QMVAX    .       .       .      .      .      Q  .         
+        0 QMVMI    .       .       .      .      .      Q  .         
+        0 QNEWLINE .       .     U .      .      .      Q  . PATCHY_G
+        0 QS_IBMVM .       .       .      .      .      Q  .         
+        0 QS_UNIX  .       .     U .      .      .      Q  . MACHINE 
+        0 QS_VMS   .       .       .      .      .      Q  .         
+        0 SGI      .       .       .      .      .      Q  .         
+        0 SOLARIS  .       .       .      .      .      Q  .         
+        0 SUN      .       .       .      .      .      Q  .         
+        0 UNKNOWN  .       .       .      .      .      Q  .         
+        0 VAX      .       .       .      .      .      Q  .         
+        0 VAXVMS   .       .       .      .      .      Q  .         
+
+ ----------------------------
+ OTHER  PATCHES NOT TURNED UP
+
+        0 BACKCOMP .       .     U .      .      .         . PATCHY_G
+        0 GCC4     .       .     U .      .      .         . CRA*    
+        0 GFORTRAN .       .     U .      .      .         . CRA*    
+        0 INITRH   .       .     U .      .      .         . PATCHY_G
+        0 LNX      .       .     U .      .      .         . CRA*    
+        0 QASCII   .       .     U .      .      .         . MACHINE 
+        0 QMGLIBC  .       .     U .      .      .         . CRA*    
+        0 QMLXIA64 .       .     U .      .      .         . CRA*    
+        0 UNIX     .       .     U .      .      .         . CRA*    
+        0 VERBOSE  .       .     U .      .      .         . CRA*    
+
+ --------------
+ READ         4 CARDS   ON CRADLE
+          28177 CARDS   ON CARD-PAMS
+              0 RECORDS ON COMPACT BINARY PAMS, INCL.     0 SKIPPED.
+              1 PAM-CALLS.
+
+ --------------
+ WRITTEN
+        ASM       40 CARDS     1 DECKS TO  LUN= 21   -- REWIND
+
+ ------------
+ MEMORY USAGE
+ FINAL SIZE OF STORE = 160418
+ LARGEST GAP REQUIRED BY ANY DECK WAS = 1451
+ GAP SECURITY FOR THIS RUN WAS        = 4000
+ NUMBER OF GARBAGE COLLECTIONS =   0
+ NUMBER OF WORDS UNUSED =150688
+
+ -----------------
+ LINES IN  /QMACH/
+ NQL-NOR  MAX  PTH
+     108  110    0
+
+ ----------------------
+ NO.OF WARNINGS PRINTED
+
+ BAD CONTROL CARDS    0
+ MISSING SEQUENCES    0
+ LOST ACTIVATIONS     0
+ UNSATISF/ REF'S      0
+ LEVEL 1 CLASHES      0
+ LEVEL 2 CLASHES      0
+ ----------------------
+gfortran -no-pie -c -fno-automatic -fno-second-underscore -fno-range-check -fPIC  -O nymerge.f
+rm -f nymerge
+Linking with cern libraries
+/home/wimmer/aleph64bit/cern/2005/lib/libkernlib.a -lnsl -lcrypt -ldl
+gfortran -no-pie -o nymerge -O -fno-automatic -fno-second-underscore -fno-range-check -fPIC     -L/home/wimmer/aleph64bit/cern/2005/src/lib nymerge.o libp5lib.a     `cernlib kernlib`  \
+ || rm -f nymerge
+rm -f /home/wimmer/aleph64bit/cern/2005/bin/nymerge
+install -c -s  nymerge /home/wimmer/aleph64bit/cern/2005/bin/nymerge
+PLINAME=LINUX,UNIX,LNX,QMGLIBC,QMLXIA64,GFORTRAN,GCC4,VERBOSE;export PLINAME;/home/wimmer/aleph64bit/cern/2005/build/patchy/yexpand /home/wimmer/aleph64bit/cern/2005/src/patchy/nyshell.cra /home/wimmer/aleph64bit/cern/2005/build/patchy/nyshell.cra
+ypatchy - nyshell.f nyshell.cra TTY .go
+
+ YPATCHY  executing with Files / Options
+
+   1  PAM    11   -
+   2  ASM    21    nyshell.f
+   3  READ    2    nyshell.cra
+   4  PRINT   6   TTY
+   5  ASMA   22   -    ...
+
+ VERSION  PATCHY  4.15 /1  911211 12.02           .RJP, TODAY:  201007  1549
+
+                    OPTIONS ..C..F...........R............
+
+
+    0 *         ================================================== P=CRA*     D=          1 ============================
+
+        1 + +USE, LINUX,UNIX,LNX,QMGLIBC,QMLXIA64,GFORTRAN,GCC4,VERBOSE.                    
+        2 + +EXE, YSHELL, D=NSHELL.                                                         
+        3 + +USE, *PATCHY.                                                                  
+        4 + +PAM, 11, T=C,ATT   .patchy                                                     
+
+ ---------- PATCHY    .START PAM-FILE 101,   --  RESUME   
+
+        1 T PATCHY  5.05 /3  1996/06/29 17.00   
+
+
+ -------------------  .END   PAM  1  AFTER  28177 CARDS TOTAL,   --  REWIND
+1--------------------------------------
+ SUMMARY OF PATCHES IN PROCESSING ORDER
+
+ PROCESSING MODE SELECTIONS                        OTHER STATUS BITS FOR P=X
+
+ D - DIVERT                                        F  - - -  DESELECTED BY  +PATCH,P=X,IF=...
+ M - MIX                                            M - - -  DESELECTED BY  +IMITATE,P=X
+ E - EXE                                             X  - -  NOT +EXE BUT AT LEAST 1 DECK TO ASM
+ L - LIST                                             P - -  PARTIAL USE-SELECTION BY +USE,P=X,D=...
+ U - USE                    SELF +         SELF        R  -  P=X,T=REPEAT
+                    INHIBIT FOREIGN  TRANS   ONLY       Q -  QUOTED IN IF=X
+                    ------- ------- ------ ------
+                     DMELU   DMELU   DMEL   DMEL   FMXPRQ    USED FROM P=
+
+        0 CRA*     .       .     U .      .      .     R   . CRA*    
+ PATCHY                                                      PAM  CALL/FILE  101
+        0 -     0
+        0 *PATCHY  .       .     U .      .      .         . CRA*    
+        0 MACHINE  .       .     U .      .      .         . *PATCHY 
+        0 NOOPT    .       .     U .      .      .         . *PATCHY 
+        0 PATCHY_G .       .     U .      .      .         . *PATCHY 
+        0 *HYDRA   .       .     U .      .      .         . PATCHY_G
+        0 PCDE     .       .     U .      .      .         . PATCHY_G
+        0 QCDE     .       .     U .      .      .         . *HYDRA  
+        0 DOCUMENT .       .       .      .      .      Q  .         
+        0 FLDIALG  .       .     U .      .      .         . PATCHY_G
+        0 RUN      .       .     U .      .      .         . PATCHY_G
+        0 ACSORT   .       .     U .      .      .         . PATCHY_G
+        0 DOMAP    .       .     U .      .      .         . PATCHY_G
+        0 DOXQT    .       .     U .      .      .         . PATCHY_G
+        0 DOFORG   .       .     U .      .      .         . PATCHY_G
+        0 ARRIVE   .       .     U .      .      .         . PATCHY_G
+        0 DEPART   .       .     U .      .      .         . PATCHY_G
+        0 PUTIL    .       .     U .      .      .         . PATCHY_G
+        0 SERVICE  .       .     U .      .      .         . PATCHY_G
+        0 NAMING   .       .     U .      .      .         . PATCHY_G
+        0 MQ       .       .     U .      .      .         . *HYDRA  
+        0 QUTIL    .       .     U .      .      .         . *HYDRA  
+        0 YINDEX   .       .     U .      .      .         . PATCHY_G
+        0 YLIST    .       .     U .      .      .         . PATCHY_G
+        0 YSYNOPT  .       .     U .      .      .         . PATCHY_G
+        0 YCHECK   .       .     U .      .      .         . PATCHY_G
+        0 YTIDY    .       .     U .      .      .         . PATCHY_G
+        0 YMERGE   .       .     U .      .      .         . PATCHY_G
+        0 YDIFF    .       .     U .      .      .         . PATCHY_G
+        0 DIF_XQT  .       .     U .      .      .         . YDIFF   
+        0 YSHELL   .       .     U .      .      .   X     . PATCHY_G
+        0 AUXSM    .       .     U .      .      .         . YSHELL  
+        0 AUXIL    .       .     U .      .      .         . PATCHY_G
+        0 KERN     .       .     U .      .      .         . *HYDRA  
+        1 CRA*     .       .     U .      .      .     R   . CRA*    
+
+ ----------------------------
+ QUOTED PATCHES NOT TURNED UP
+
+        0 ALLIANT  .       .       .      .      .      Q  .         
+        0 APOF77   .       .       .      .      .      Q  .         
+        0 APOLLO   .       .       .      .      .      Q  .         
+        0 AUXIL_GO .       .     U .      .      .      Q  . *PATCHY 
+        0 CONVEX   .       .       .      .      .      Q  .         
+        0 CRAY     .       .       .      .      .      Q  .         
+        0 DECS     .       .       .      .      .      Q  .         
+        0 DOC_INL  .       .       .      .      .      Q  .         
+        0 HPUX     .       .       .      .      .      Q  .         
+        0 IBMAIX   .       .       .      .      .      Q  .         
+        0 IBMRT    .       .       .      .      .      Q  .         
+        0 IBMVM    .       .       .      .      .      Q  .         
+        0 LINUX    .       .     U .      .      .      Q  . CRA*    
+        0 MACMPW   .       .       .      .      .      Q  .         
+        0 OK       .       .     U .      .      .      Q  . MACHINE 
+        0 QCIO     .       .     U .      .      .      Q  . PATCHY_G
+        0 QDEBUG   .       .       .      .      .      Q  .         
+        0 QDIAG    .       .       .      .      .      Q  .         
+        0 QEBCDIC  .       .       .      .      .      Q  .         
+        0 QFIO     .       .       .      .      .      Q  .         
+        0 QF_F2C   .       .     U .      .      .      Q  . MACHINE 
+        0 QMAPO    .       .       .      .      .      Q  .         
+        0 QMHPX    .       .       .      .      .      Q  .         
+        0 QMIBM    .       .       .      .      .      Q  .         
+        0 QMIBX    .       .       .      .      .      Q  .         
+        0 QMIRT    .       .       .      .      .      Q  .         
+        0 QMLNX    .       .     U .      .      .      Q  . MACHINE 
+        0 QMMPW    .       .       .      .      .      Q  .         
+        0 QMNXT    .       .       .      .      .      Q  .         
+        0 QMSGI    .       .       .      .      .      Q  .         
+        0 QMSUN    .       .       .      .      .      Q  .         
+        0 QMUUX    .       .       .      .      .      Q  .         
+        0 QMVAO    .       .       .      .      .      Q  .         
+        0 QMVAOS   .       .       .      .      .      Q  .         
+        0 QMVAX    .       .       .      .      .      Q  .         
+        0 QMVMI    .       .       .      .      .      Q  .         
+        0 QNEWLINE .       .     U .      .      .      Q  . PATCHY_G
+        0 QS_IBMVM .       .       .      .      .      Q  .         
+        0 QS_UNIX  .       .     U .      .      .      Q  . MACHINE 
+        0 QS_VMS   .       .       .      .      .      Q  .         
+        0 SGI      .       .       .      .      .      Q  .         
+        0 SOLARIS  .       .       .      .      .      Q  .         
+        0 SUN      .       .       .      .      .      Q  .         
+        0 UNKNOWN  .       .       .      .      .      Q  .         
+        0 VAX      .       .       .      .      .      Q  .         
+        0 VAXVMS   .       .       .      .      .      Q  .         
+
+ ----------------------------
+ OTHER  PATCHES NOT TURNED UP
+
+        0 BACKCOMP .       .     U .      .      .         . PATCHY_G
+        0 GCC4     .       .     U .      .      .         . CRA*    
+        0 GFORTRAN .       .     U .      .      .         . CRA*    
+        0 INITRH   .       .     U .      .      .         . PATCHY_G
+        0 LNX      .       .     U .      .      .         . CRA*    
+        0 QASCII   .       .     U .      .      .         . MACHINE 
+        0 QMGLIBC  .       .     U .      .      .         . CRA*    
+        0 QMLXIA64 .       .     U .      .      .         . CRA*    
+        0 UNIX     .       .     U .      .      .         . CRA*    
+        0 VERBOSE  .       .     U .      .      .         . CRA*    
+
+ --------------
+ READ         4 CARDS   ON CRADLE
+          28177 CARDS   ON CARD-PAMS
+              0 RECORDS ON COMPACT BINARY PAMS, INCL.     0 SKIPPED.
+              1 PAM-CALLS.
+
+ --------------
+ WRITTEN
+        ASM       40 CARDS     1 DECKS TO  LUN= 21   -- REWIND
+
+ ------------
+ MEMORY USAGE
+ FINAL SIZE OF STORE = 160418
+ LARGEST GAP REQUIRED BY ANY DECK WAS = 1451
+ GAP SECURITY FOR THIS RUN WAS        = 4000
+ NUMBER OF GARBAGE COLLECTIONS =   0
+ NUMBER OF WORDS UNUSED =150688
+
+ -----------------
+ LINES IN  /QMACH/
+ NQL-NOR  MAX  PTH
+     108  110    0
+
+ ----------------------
+ NO.OF WARNINGS PRINTED
+
+ BAD CONTROL CARDS    0
+ MISSING SEQUENCES    0
+ LOST ACTIVATIONS     0
+ UNSATISF/ REF'S      0
+ LEVEL 1 CLASHES      0
+ LEVEL 2 CLASHES      0
+ ----------------------
+gfortran -no-pie -c -fno-automatic -fno-second-underscore -fno-range-check -fPIC  -O nyshell.f
+rm -f nyshell
+Linking with cern libraries
+/home/wimmer/aleph64bit/cern/2005/lib/libkernlib.a -lnsl -lcrypt -ldl
+gfortran -no-pie -o nyshell -O -fno-automatic -fno-second-underscore -fno-range-check -fPIC     -L/home/wimmer/aleph64bit/cern/2005/src/lib nyshell.o libp5lib.a     `cernlib kernlib`  \
+ || rm -f nyshell
+rm -f /home/wimmer/aleph64bit/cern/2005/bin/nyshell
+install -c -s  nyshell /home/wimmer/aleph64bit/cern/2005/bin/nyshell
+PLINAME=LINUX,UNIX,LNX,QMGLIBC,QMLXIA64,GFORTRAN,GCC4,VERBOSE;export PLINAME;/home/wimmer/aleph64bit/cern/2005/build/patchy/yexpand /home/wimmer/aleph64bit/cern/2005/src/patchy/nysynopt.cra /home/wimmer/aleph64bit/cern/2005/build/patchy/nysynopt.cra
+ypatchy - nysynopt.f nysynopt.cra TTY .go
+
+ YPATCHY  executing with Files / Options
+
+   1  PAM    11   -
+   2  ASM    21    nysynopt.f
+   3  READ    2    nysynopt.cra
+   4  PRINT   6   TTY
+   5  ASMA   22   -    ...
+
+ VERSION  PATCHY  4.15 /1  911211 12.02           .RJP, TODAY:  201007  1549
+
+                    OPTIONS ..C..F...........R............
+
+
+    0 *         ================================================== P=CRA*     D=          1 ============================
+
+        1 + +USE, LINUX,UNIX,LNX,QMGLIBC,QMLXIA64,GFORTRAN,GCC4,VERBOSE.                    
+        2 + +EXE, YSYNOPT, D=NSYNOPT.                                                       
+        3 + +USE, *PATCHY.                                                                  
+        4 + +PAM, 11, T=C,ATT   .patchy                                                     
+
+ ---------- PATCHY    .START PAM-FILE 101,   --  RESUME   
+
+        1 T PATCHY  5.05 /3  1996/06/29 17.00   
+
+
+ -------------------  .END   PAM  1  AFTER  28177 CARDS TOTAL,   --  REWIND
+1--------------------------------------
+ SUMMARY OF PATCHES IN PROCESSING ORDER
+
+ PROCESSING MODE SELECTIONS                        OTHER STATUS BITS FOR P=X
+
+ D - DIVERT                                        F  - - -  DESELECTED BY  +PATCH,P=X,IF=...
+ M - MIX                                            M - - -  DESELECTED BY  +IMITATE,P=X
+ E - EXE                                             X  - -  NOT +EXE BUT AT LEAST 1 DECK TO ASM
+ L - LIST                                             P - -  PARTIAL USE-SELECTION BY +USE,P=X,D=...
+ U - USE                    SELF +         SELF        R  -  P=X,T=REPEAT
+                    INHIBIT FOREIGN  TRANS   ONLY       Q -  QUOTED IN IF=X
+                    ------- ------- ------ ------
+                     DMELU   DMELU   DMEL   DMEL   FMXPRQ    USED FROM P=
+
+        0 CRA*     .       .     U .      .      .     R   . CRA*    
+ PATCHY                                                      PAM  CALL/FILE  101
+        0 -     0
+        0 *PATCHY  .       .     U .      .      .         . CRA*    
+        0 MACHINE  .       .     U .      .      .         . *PATCHY 
+        0 NOOPT    .       .     U .      .      .         . *PATCHY 
+        0 PATCHY_G .       .     U .      .      .         . *PATCHY 
+        0 *HYDRA   .       .     U .      .      .         . PATCHY_G
+        0 PCDE     .       .     U .      .      .         . PATCHY_G
+        0 QCDE     .       .     U .      .      .         . *HYDRA  
+        0 DOCUMENT .       .       .      .      .      Q  .         
+        0 FLDIALG  .       .     U .      .      .         . PATCHY_G
+        0 RUN      .       .     U .      .      .         . PATCHY_G
+        0 ACSORT   .       .     U .      .      .         . PATCHY_G
+        0 DOMAP    .       .     U .      .      .         . PATCHY_G
+        0 DOXQT    .       .     U .      .      .         . PATCHY_G
+        0 DOFORG   .       .     U .      .      .         . PATCHY_G
+        0 ARRIVE   .       .     U .      .      .         . PATCHY_G
+        0 DEPART   .       .     U .      .      .         . PATCHY_G
+        0 PUTIL    .       .     U .      .      .         . PATCHY_G
+        0 SERVICE  .       .     U .      .      .         . PATCHY_G
+        0 NAMING   .       .     U .      .      .         . PATCHY_G
+        0 MQ       .       .     U .      .      .         . *HYDRA  
+        0 QUTIL    .       .     U .      .      .         . *HYDRA  
+        0 YINDEX   .       .     U .      .      .         . PATCHY_G
+        0 YLIST    .       .     U .      .      .         . PATCHY_G
+        0 YSYNOPT  .       .     U .      .      .   X     . PATCHY_G
+        0 YCHECK   .       .     U .      .      .         . PATCHY_G
+        0 YTIDY    .       .     U .      .      .         . PATCHY_G
+        0 YMERGE   .       .     U .      .      .         . PATCHY_G
+        0 YDIFF    .       .     U .      .      .         . PATCHY_G
+        0 DIF_XQT  .       .     U .      .      .         . YDIFF   
+        0 YSHELL   .       .     U .      .      .         . PATCHY_G
+        0 AUXSM    .       .     U .      .      .         . YSHELL  
+        0 AUXIL    .       .     U .      .      .         . PATCHY_G
+        0 KERN     .       .     U .      .      .         . *HYDRA  
+        1 CRA*     .       .     U .      .      .     R   . CRA*    
+
+ ----------------------------
+ QUOTED PATCHES NOT TURNED UP
+
+        0 ALLIANT  .       .       .      .      .      Q  .         
+        0 APOF77   .       .       .      .      .      Q  .         
+        0 APOLLO   .       .       .      .      .      Q  .         
+        0 AUXIL_GO .       .     U .      .      .      Q  . *PATCHY 
+        0 CONVEX   .       .       .      .      .      Q  .         
+        0 CRAY     .       .       .      .      .      Q  .         
+        0 DECS     .       .       .      .      .      Q  .         
+        0 DOC_INL  .       .       .      .      .      Q  .         
+        0 HPUX     .       .       .      .      .      Q  .         
+        0 IBMAIX   .       .       .      .      .      Q  .         
+        0 IBMRT    .       .       .      .      .      Q  .         
+        0 IBMVM    .       .       .      .      .      Q  .         
+        0 LINUX    .       .     U .      .      .      Q  . CRA*    
+        0 MACMPW   .       .       .      .      .      Q  .         
+        0 OK       .       .     U .      .      .      Q  . MACHINE 
+        0 QCIO     .       .     U .      .      .      Q  . PATCHY_G
+        0 QDEBUG   .       .       .      .      .      Q  .         
+        0 QDIAG    .       .       .      .      .      Q  .         
+        0 QEBCDIC  .       .       .      .      .      Q  .         
+        0 QFIO     .       .       .      .      .      Q  .         
+        0 QF_F2C   .       .     U .      .      .      Q  . MACHINE 
+        0 QMAPO    .       .       .      .      .      Q  .         
+        0 QMHPX    .       .       .      .      .      Q  .         
+        0 QMIBM    .       .       .      .      .      Q  .         
+        0 QMIBX    .       .       .      .      .      Q  .         
+        0 QMIRT    .       .       .      .      .      Q  .         
+        0 QMLNX    .       .     U .      .      .      Q  . MACHINE 
+        0 QMMPW    .       .       .      .      .      Q  .         
+        0 QMNXT    .       .       .      .      .      Q  .         
+        0 QMSGI    .       .       .      .      .      Q  .         
+        0 QMSUN    .       .       .      .      .      Q  .         
+        0 QMUUX    .       .       .      .      .      Q  .         
+        0 QMVAO    .       .       .      .      .      Q  .         
+        0 QMVAOS   .       .       .      .      .      Q  .         
+        0 QMVAX    .       .       .      .      .      Q  .         
+        0 QMVMI    .       .       .      .      .      Q  .         
+        0 QNEWLINE .       .     U .      .      .      Q  . PATCHY_G
+        0 QS_IBMVM .       .       .      .      .      Q  .         
+        0 QS_UNIX  .       .     U .      .      .      Q  . MACHINE 
+        0 QS_VMS   .       .       .      .      .      Q  .         
+        0 SGI      .       .       .      .      .      Q  .         
+        0 SOLARIS  .       .       .      .      .      Q  .         
+        0 SUN      .       .       .      .      .      Q  .         
+        0 UNKNOWN  .       .       .      .      .      Q  .         
+        0 VAX      .       .       .      .      .      Q  .         
+        0 VAXVMS   .       .       .      .      .      Q  .         
+
+ ----------------------------
+ OTHER  PATCHES NOT TURNED UP
+
+        0 BACKCOMP .       .     U .      .      .         . PATCHY_G
+        0 GCC4     .       .     U .      .      .         . CRA*    
+        0 GFORTRAN .       .     U .      .      .         . CRA*    
+        0 INITRH   .       .     U .      .      .         . PATCHY_G
+        0 LNX      .       .     U .      .      .         . CRA*    
+        0 QASCII   .       .     U .      .      .         . MACHINE 
+        0 QMGLIBC  .       .     U .      .      .         . CRA*    
+        0 QMLXIA64 .       .     U .      .      .         . CRA*    
+        0 UNIX     .       .     U .      .      .         . CRA*    
+        0 VERBOSE  .       .     U .      .      .         . CRA*    
+
+ --------------
+ READ         4 CARDS   ON CRADLE
+          28177 CARDS   ON CARD-PAMS
+              0 RECORDS ON COMPACT BINARY PAMS, INCL.     0 SKIPPED.
+              1 PAM-CALLS.
+
+ --------------
+ WRITTEN
+        ASM       41 CARDS     1 DECKS TO  LUN= 21   -- REWIND
+
+ ------------
+ MEMORY USAGE
+ FINAL SIZE OF STORE = 160418
+ LARGEST GAP REQUIRED BY ANY DECK WAS = 1451
+ GAP SECURITY FOR THIS RUN WAS        = 4000
+ NUMBER OF GARBAGE COLLECTIONS =   0
+ NUMBER OF WORDS UNUSED =150688
+
+ -----------------
+ LINES IN  /QMACH/
+ NQL-NOR  MAX  PTH
+     108  110    0
+
+ ----------------------
+ NO.OF WARNINGS PRINTED
+
+ BAD CONTROL CARDS    0
+ MISSING SEQUENCES    0
+ LOST ACTIVATIONS     0
+ UNSATISF/ REF'S      0
+ LEVEL 1 CLASHES      0
+ LEVEL 2 CLASHES      0
+ ----------------------
+gfortran -no-pie -c -fno-automatic -fno-second-underscore -fno-range-check -fPIC  -O nysynopt.f
+rm -f nysynopt
+Linking with cern libraries
+/home/wimmer/aleph64bit/cern/2005/lib/libkernlib.a -lnsl -lcrypt -ldl
+gfortran -no-pie -o nysynopt -O -fno-automatic -fno-second-underscore -fno-range-check -fPIC     -L/home/wimmer/aleph64bit/cern/2005/src/lib nysynopt.o libp5lib.a     `cernlib kernlib`  \
+ || rm -f nysynopt
+rm -f /home/wimmer/aleph64bit/cern/2005/bin/nysynopt
+install -c -s  nysynopt /home/wimmer/aleph64bit/cern/2005/bin/nysynopt
+PLINAME=LINUX,UNIX,LNX,QMGLIBC,QMLXIA64,GFORTRAN,GCC4,VERBOSE;export PLINAME;/home/wimmer/aleph64bit/cern/2005/build/patchy/yexpand /home/wimmer/aleph64bit/cern/2005/src/patchy/nytidy.cra /home/wimmer/aleph64bit/cern/2005/build/patchy/nytidy.cra
+ypatchy - nytidy.f nytidy.cra TTY .go
+
+ YPATCHY  executing with Files / Options
+
+   1  PAM    11   -
+   2  ASM    21    nytidy.f
+   3  READ    2    nytidy.cra
+   4  PRINT   6   TTY
+   5  ASMA   22   -    ...
+
+ VERSION  PATCHY  4.15 /1  911211 12.02           .RJP, TODAY:  201007  1549
+
+                    OPTIONS ..C..F...........R............
+
+
+    0 *         ================================================== P=CRA*     D=          1 ============================
+
+        1 + +USE, LINUX,UNIX,LNX,QMGLIBC,QMLXIA64,GFORTRAN,GCC4,VERBOSE.                    
+        2 + +EXE, YTIDY,  D=NTIDY.                                                          
+        3 + +USE, *PATCHY.                                                                  
+        4 + +PAM, 11, T=C,ATT   .patchy                                                     
+
+ ---------- PATCHY    .START PAM-FILE 101,   --  RESUME   
+
+        1 T PATCHY  5.05 /3  1996/06/29 17.00   
+
+
+ -------------------  .END   PAM  1  AFTER  28177 CARDS TOTAL,   --  REWIND
+1--------------------------------------
+ SUMMARY OF PATCHES IN PROCESSING ORDER
+
+ PROCESSING MODE SELECTIONS                        OTHER STATUS BITS FOR P=X
+
+ D - DIVERT                                        F  - - -  DESELECTED BY  +PATCH,P=X,IF=...
+ M - MIX                                            M - - -  DESELECTED BY  +IMITATE,P=X
+ E - EXE                                             X  - -  NOT +EXE BUT AT LEAST 1 DECK TO ASM
+ L - LIST                                             P - -  PARTIAL USE-SELECTION BY +USE,P=X,D=...
+ U - USE                    SELF +         SELF        R  -  P=X,T=REPEAT
+                    INHIBIT FOREIGN  TRANS   ONLY       Q -  QUOTED IN IF=X
+                    ------- ------- ------ ------
+                     DMELU   DMELU   DMEL   DMEL   FMXPRQ    USED FROM P=
+
+        0 CRA*     .       .     U .      .      .     R   . CRA*    
+ PATCHY                                                      PAM  CALL/FILE  101
+        0 -     0
+        0 *PATCHY  .       .     U .      .      .         . CRA*    
+        0 MACHINE  .       .     U .      .      .         . *PATCHY 
+        0 NOOPT    .       .     U .      .      .         . *PATCHY 
+        0 PATCHY_G .       .     U .      .      .         . *PATCHY 
+        0 *HYDRA   .       .     U .      .      .         . PATCHY_G
+        0 PCDE     .       .     U .      .      .         . PATCHY_G
+        0 QCDE     .       .     U .      .      .         . *HYDRA  
+        0 DOCUMENT .       .       .      .      .      Q  .         
+        0 FLDIALG  .       .     U .      .      .         . PATCHY_G
+        0 RUN      .       .     U .      .      .         . PATCHY_G
+        0 ACSORT   .       .     U .      .      .         . PATCHY_G
+        0 DOMAP    .       .     U .      .      .         . PATCHY_G
+        0 DOXQT    .       .     U .      .      .         . PATCHY_G
+        0 DOFORG   .       .     U .      .      .         . PATCHY_G
+        0 ARRIVE   .       .     U .      .      .         . PATCHY_G
+        0 DEPART   .       .     U .      .      .         . PATCHY_G
+        0 PUTIL    .       .     U .      .      .         . PATCHY_G
+        0 SERVICE  .       .     U .      .      .         . PATCHY_G
+        0 NAMING   .       .     U .      .      .         . PATCHY_G
+        0 MQ       .       .     U .      .      .         . *HYDRA  
+        0 QUTIL    .       .     U .      .      .         . *HYDRA  
+        0 YINDEX   .       .     U .      .      .         . PATCHY_G
+        0 YLIST    .       .     U .      .      .         . PATCHY_G
+        0 YSYNOPT  .       .     U .      .      .         . PATCHY_G
+        0 YCHECK   .       .     U .      .      .         . PATCHY_G
+        0 YTIDY    .       .     U .      .      .   X     . PATCHY_G
+        0 YMERGE   .       .     U .      .      .         . PATCHY_G
+        0 YDIFF    .       .     U .      .      .         . PATCHY_G
+        0 DIF_XQT  .       .     U .      .      .         . YDIFF   
+        0 YSHELL   .       .     U .      .      .         . PATCHY_G
+        0 AUXSM    .       .     U .      .      .         . YSHELL  
+        0 AUXIL    .       .     U .      .      .         . PATCHY_G
+        0 KERN     .       .     U .      .      .         . *HYDRA  
+        1 CRA*     .       .     U .      .      .     R   . CRA*    
+
+ ----------------------------
+ QUOTED PATCHES NOT TURNED UP
+
+        0 ALLIANT  .       .       .      .      .      Q  .         
+        0 APOF77   .       .       .      .      .      Q  .         
+        0 APOLLO   .       .       .      .      .      Q  .         
+        0 AUXIL_GO .       .     U .      .      .      Q  . *PATCHY 
+        0 CONVEX   .       .       .      .      .      Q  .         
+        0 CRAY     .       .       .      .      .      Q  .         
+        0 DECS     .       .       .      .      .      Q  .         
+        0 DOC_INL  .       .       .      .      .      Q  .         
+        0 HPUX     .       .       .      .      .      Q  .         
+        0 IBMAIX   .       .       .      .      .      Q  .         
+        0 IBMRT    .       .       .      .      .      Q  .         
+        0 IBMVM    .       .       .      .      .      Q  .         
+        0 LINUX    .       .     U .      .      .      Q  . CRA*    
+        0 MACMPW   .       .       .      .      .      Q  .         
+        0 OK       .       .     U .      .      .      Q  . MACHINE 
+        0 QCIO     .       .     U .      .      .      Q  . PATCHY_G
+        0 QDEBUG   .       .       .      .      .      Q  .         
+        0 QDIAG    .       .       .      .      .      Q  .         
+        0 QEBCDIC  .       .       .      .      .      Q  .         
+        0 QFIO     .       .       .      .      .      Q  .         
+        0 QF_F2C   .       .     U .      .      .      Q  . MACHINE 
+        0 QMAPO    .       .       .      .      .      Q  .         
+        0 QMHPX    .       .       .      .      .      Q  .         
+        0 QMIBM    .       .       .      .      .      Q  .         
+        0 QMIBX    .       .       .      .      .      Q  .         
+        0 QMIRT    .       .       .      .      .      Q  .         
+        0 QMLNX    .       .     U .      .      .      Q  . MACHINE 
+        0 QMMPW    .       .       .      .      .      Q  .         
+        0 QMNXT    .       .       .      .      .      Q  .         
+        0 QMSGI    .       .       .      .      .      Q  .         
+        0 QMSUN    .       .       .      .      .      Q  .         
+        0 QMUUX    .       .       .      .      .      Q  .         
+        0 QMVAO    .       .       .      .      .      Q  .         
+        0 QMVAOS   .       .       .      .      .      Q  .         
+        0 QMVAX    .       .       .      .      .      Q  .         
+        0 QMVMI    .       .       .      .      .      Q  .         
+        0 QNEWLINE .       .     U .      .      .      Q  . PATCHY_G
+        0 QS_IBMVM .       .       .      .      .      Q  .         
+        0 QS_UNIX  .       .     U .      .      .      Q  . MACHINE 
+        0 QS_VMS   .       .       .      .      .      Q  .         
+        0 SGI      .       .       .      .      .      Q  .         
+        0 SOLARIS  .       .       .      .      .      Q  .         
+        0 SUN      .       .       .      .      .      Q  .         
+        0 UNKNOWN  .       .       .      .      .      Q  .         
+        0 VAX      .       .       .      .      .      Q  .         
+        0 VAXVMS   .       .       .      .      .      Q  .         
+
+ ----------------------------
+ OTHER  PATCHES NOT TURNED UP
+
+        0 BACKCOMP .       .     U .      .      .         . PATCHY_G
+        0 GCC4     .       .     U .      .      .         . CRA*    
+        0 GFORTRAN .       .     U .      .      .         . CRA*    
+        0 INITRH   .       .     U .      .      .         . PATCHY_G
+        0 LNX      .       .     U .      .      .         . CRA*    
+        0 QASCII   .       .     U .      .      .         . MACHINE 
+        0 QMGLIBC  .       .     U .      .      .         . CRA*    
+        0 QMLXIA64 .       .     U .      .      .         . CRA*    
+        0 UNIX     .       .     U .      .      .         . CRA*    
+        0 VERBOSE  .       .     U .      .      .         . CRA*    
+
+ --------------
+ READ         4 CARDS   ON CRADLE
+          28177 CARDS   ON CARD-PAMS
+              0 RECORDS ON COMPACT BINARY PAMS, INCL.     0 SKIPPED.
+              1 PAM-CALLS.
+
+ --------------
+ WRITTEN
+        ASM       40 CARDS     1 DECKS TO  LUN= 21   -- REWIND
+
+ ------------
+ MEMORY USAGE
+ FINAL SIZE OF STORE = 160418
+ LARGEST GAP REQUIRED BY ANY DECK WAS = 1451
+ GAP SECURITY FOR THIS RUN WAS        = 4000
+ NUMBER OF GARBAGE COLLECTIONS =   0
+ NUMBER OF WORDS UNUSED =150688
+
+ -----------------
+ LINES IN  /QMACH/
+ NQL-NOR  MAX  PTH
+     108  110    0
+
+ ----------------------
+ NO.OF WARNINGS PRINTED
+
+ BAD CONTROL CARDS    0
+ MISSING SEQUENCES    0
+ LOST ACTIVATIONS     0
+ UNSATISF/ REF'S      0
+ LEVEL 1 CLASHES      0
+ LEVEL 2 CLASHES      0
+ ----------------------
+gfortran -no-pie -c -fno-automatic -fno-second-underscore -fno-range-check -fPIC  -O nytidy.f
+rm -f nytidy
+Linking with cern libraries
+/home/wimmer/aleph64bit/cern/2005/lib/libkernlib.a -lnsl -lcrypt -ldl
+gfortran -no-pie -o nytidy -O -fno-automatic -fno-second-underscore -fno-range-check -fPIC     -L/home/wimmer/aleph64bit/cern/2005/src/lib nytidy.o libp5lib.a     `cernlib kernlib`  \
+ || rm -f nytidy
+rm -f /home/wimmer/aleph64bit/cern/2005/bin/nytidy
+install -c -s  nytidy /home/wimmer/aleph64bit/cern/2005/bin/nytidy
+rm nysynopt.f /home/wimmer/aleph64bit/cern/2005/build/patchy/nypatchy.cra nymerge.f /home/wimmer/aleph64bit/cern/2005/build/patchy/nyindex.cra /home/wimmer/aleph64bit/cern/2005/build/patchy/nycheck.cra /home/wimmer/aleph64bit/cern/2005/build/patchy/nylist.cra /home/wimmer/aleph64bit/cern/2005/build/patchy/nydiff.cra nypatchy.f nytidy.f nyindex.f nylist.f /home/wimmer/aleph64bit/cern/2005/build/patchy/nyshell.cra nycheck.f nydiff.f nyshell.f /home/wimmer/aleph64bit/cern/2005/build/patchy/nymerge.cra /home/wimmer/aleph64bit/cern/2005/build/patchy/nytidy.cra /home/wimmer/aleph64bit/cern/2005/build/patchy/nysynopt.cra

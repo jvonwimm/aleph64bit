@@ -1,0 +1,134 @@
+#! /bin/csh -f
+#====================================================================================
+# 930609                                 F.Ranjard
+#                       UPHYINSTAL
+#====================================================================================
+# uphyinstal4.0
+# 960819 - adapt uphyinstal to cvs
+# uphyinstal4.1
+# 961125 - check current directory name ONLY when updating an existing module.
+# ============================================================================
+#
+set script_dir = "${SHARED}/script"
+set exec_name = "uphyinstal4.1"
+set verbflr = ""
+set nar = $#argv
+if (${nar} != 0) then
+   if ($argv[${nar}] == "-v") then
+      echo "${exec_name}"
+      set verflr = "-v"
+      set echo on
+      set argv[${nar}] = ""
+      @ nar = ${nar} - 1
+   endif
+endif  
+if ($1 == "-h") then
+  echo " "
+  echo "usage: " 
+  echo " uphyinstal  <module> "
+  echo " "
+  echo " <module> is the directory name where you are"
+  echo ""
+  echo " a library is created with name libmodule.a if more than 1 .F file in <module>"
+
+  echo " "
+  echo " example"
+  echo " uphyinstal obspos "
+  echo " - will check the existence of /uphy/obspos on CVSROOT"
+  echo " -if it does not exist yet ," 
+  echo "    it will import it with the id as vendortag"
+  echo "    and uphy_module_1 as release tag"
+  echo " -else ,"  
+  echo "   it assumes that "
+  echo "   + you have cvs checked out the uphy/obspos module first,"
+  echo "      with the command: cvs co uphy/obspos, "
+  echo "      which creates or updates the uphy/obspos directory." 
+  echo "   + your current working directory is uphy/obspos,"
+  echo "   + you have modified it and you are ready to install a new version"
+  echo "   + it will cvs commit your new version of uphy/obspos into $CVSROOT/uphy/obspos"
+  echo " -endif" 
+  echo " - will export the uphy/obspos module to $ALROOT/uphy/obspos"
+  echo " - will compile all *.F using the current alpha version include files"
+  echo " - will store the *.o file or make a library on $ALEPH/uphy"
+  echo ""
+
+  exit(1)
+else
+  set module = $1
+endif
+#
+if (${module} == "") then
+  echo " uphyinstal : no file name given - exit"
+  exit(1)
+endif 
+#
+#********
+#
+set UNAME = `uname`
+#
+set uphy_mod = "uphy/${module}"
+set obj_dir = "${ALROOT}/${uphy_mod}/${OS}"
+set lib_dir = "${ALEPH}/uphy"
+# 
+#*************
+
+set opt = "add"
+if (-d ${CVSROOT}/${uphy_mod}) set opt = "update"
+
+#*************
+if (${opt} == "add") then
+
+#      add a new module
+  set list = `ls`
+  echo " following files will be imported into $CVSROOT/${uphy_mod}"
+  cvs import -m 'import ' ${uphy_mod} ${UNAME} ${module}_1
+  cd ${ALROOT}
+  cvs co ${uphy_mod}
+
+else
+
+  if (${opt} == "update") then
+
+#     check the directory name
+    set wrk_dir = `echo $cwd | grep "${uphy_mod}"`
+    if (${wrk_dir} == "") then
+     echo " you are NOT in ${uphy_mod} directory, go there and restart"
+     goto exit_end
+    endif 
+#      update an existing module
+     cvs commit -m 'update'
+     cd ${ALROOT}
+     cvs co ${uphy_mod} 
+  endif
+
+else
+#      unknown option : exit
+  echo " ${opt} is UNKNOWN option : exit"
+  goto exec_end
+
+endif
+
+#
+# ============================================< compile
+#
+compile:
+#
+${script_dir}/uphycompil ${module} ${verbflr}
+if ( ${SERVICE} != "AFAL" && ${SERVICE} != "SHIFTALEPH" ) rsh shift50 ${script_dir}/uphycompil ${module} ${verbflr}
+if ( ${SERVICE} != "CSF" ) rsh csf ${script_dir}/uphycompil ${module} ${verbflr}
+
+copy2clone /aleph/uphy
+
+# 
+echo "${exec_name} normal exit"
+exit
+#=============================================> abnormal exit
+error_end:
+echo "${exec_name} abnormal exit - previous files are kept if any "
+
+exit_end:
+exit
+ 
+
+
+

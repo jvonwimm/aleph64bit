@@ -1,0 +1,160 @@
+#!/bin/ksh
+#---------------------------------------------------------------------
+#
+# scanbook.sh
+# shell script for interactive use of scanbook
+#
+# Author:   H. Meinhard     07-Sep-1992
+#
+#---------------------------------------------------------------------
+#
+typeset -u -L1 ANSWER
+
+# check number of arguments given
+
+case $# in
+    0)
+# no argument given. Check whether scanbook.output exists
+	if [ -f scanbook.output ] 
+	then
+	    echo
+	    echo '  Default name of the Output will be scanbook.output on' \
+		'your working directory'
+	    echo '  File scanbook.output exists already - May I REMOVE it ?' \
+		'(CR = Yes)'
+	    echo
+	    ANSWER=Y
+	    read ANSWER
+	    if [ "$ANSWER" != "N" ]
+	    then
+		rm scanbook.output
+		if [ -f scanbook.filicard ]
+		then
+		    rm scanbook.filicard
+		fi
+		if [ -f scanbook.sruncard ]
+		then
+		    rm scanbook.sruncard
+		fi
+	    fi
+	fi
+	;;
+    1)
+# argument given. Check that it is a valid data cards file.
+	INCARDS=$1
+	if [ ! -f "$INCARDS" ]
+	then
+	    INCARDS=${INCARDS}.cards
+	    if [ ! -f "$INCARDS" ]
+	    then
+		echo
+		echo '  Input cards file not found.'
+		echo '  Usage: scanbook [cards-file-name]'
+		echo
+		exit 2
+	    fi
+	fi
+        if [ ! "`grep ^BTSK $INCARDS`" ]
+	then
+		echo
+		echo '  BTSK card missing from your card input. Fix it!'
+		echo '  Usage: scanbook [cards-file-name]'
+		echo
+		exit 3
+	fi
+        OUTPUT=`basename $INCARDS '\..*'`.output
+        if [ -f "$OUTPUT" ]
+        then
+            if [ ! -t 0 ]
+            then
+                echo
+                echo "  File $OUTPUT exists already. Rename it, or rename" \
+                     "the cards file,"
+                echo "  and try again."
+                echo
+                exit 5
+            else
+                echo
+                echo "  Name of the output will be $OUTPUT on your" \
+                     "working directory"
+                echo "  File $OUTPUT exists already - May I REMOVE it ?" \
+                     "(CR = Yes)"
+                echo
+                ANSWER=Y
+                read ANSWER
+                if [ "$ANSWER" != "N" ]
+                then
+                    rm $OUTPUT
+                    if [ -f "`basename $OUTPUT '\.output'`.filicard" ]
+                    then
+                        rm `basename $OUTPUT '\.output'`.filicard
+                    fi
+                    if [ -f "`basename $OUTPUT '\.output'`.sruncard" ]
+                    then
+                        rm `basename $OUTPUT '\.output'`.sruncard
+                    fi
+                else
+                    echo "Rename $OUTPUT, or rename the cards file, and try" \
+                         "again."
+                    exit 5
+                fi
+            fi
+        fi
+	;;
+    *)
+	echo Usage: scanbook \[cards-file-name\]
+	exit 1
+	;;
+esac
+
+# check whether fort.7 exists
+
+if [ -f fort.7 ]
+then
+    echo
+    echo '  I need the file fort.7 as a temporary storage.'
+    echo '  File fort.7 exists already - May I REMOVE it ?' \
+	'(CR = Yes)'
+    echo
+    ANSWER=Y
+    read ANSWER
+    if [ "$ANSWER" = "N" ]
+    then
+	echo '  Please move fort.7 to a different name and try again.'
+        echo
+        exit 4
+    fi
+    rm fort.7
+fi
+
+# create the fort.7 input for scanbook
+echo "BNDC '`hostname`'" > fort.7
+if [ -f "$INCARDS" ]
+then
+    echo "BKAR '$INCARDS'" >> fort.7
+    if [ ! "`grep ^BUSR $INCARDS`" ]
+    then
+	echo "BUSR '`whoami`'" >> fort.7
+    fi
+    cat $INCARDS >> fort.7
+    if [ ! "`grep ^ENDQ $INCARDS`" ]
+    then
+	echo "ENDQ" >> fort.7
+    fi
+else
+    echo "BUSR '`whoami`'" >> fort.7
+    echo "BTSK 'SCANBOOK = 100'" >> fort.7
+    echo "ENDQ" >> fort.7
+fi
+
+# run the program
+
+scanbookexe
+
+# get rid of the temporary input file
+
+rm fort.7
+
+# That's all
+
+exit 0

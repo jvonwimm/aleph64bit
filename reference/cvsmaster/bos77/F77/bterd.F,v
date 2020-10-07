@@ -1,0 +1,260 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.49.44;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.22;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.23;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE BTERD(JW,LUN,LISTR,*,*)
+C
+C     READ FROM UNIT LUN
+C
+      INTEGER JW(*)
+#include "boscom.h"
+#include "param.h"
+#include "mparam.h"
+      REAL RW(1000)
+      EQUIVALENCE (IW(1),RW(1))
+      CHARACTER*(*) LISTR, TXT*256, CHAINT*4,NAME*4
+      COMMON/COMCNV/LABEL,ISL,NT,NFR(128),LFR(128)
+*     ...
+      JW(3)=0
+      NBLK=0
+
+*     buffer bank for unit LUN
+
+      IBF= NLINK('+BUF',LUN)
+      IF(IBF.NE.0) THEN
+#include "unpackio.h"
+*        stop if wrong unit
+         IF(IOMD.NE.2.OR.IOST.EQ.2) THEN
+           IF(JW(LUP).GT.0) WRITE(JW(LUP),1001) LUN
+            CALL BABEND('BTERD')
+         END IF
+         IF(IOST.EQ.1)  GOTO 15
+         NBLK=IW(IBF+2)
+      END IF
+*     create 10-word bank
+   10 IBF= NBANK('+BUF',LUN,10)
+      IF(IBF.EQ.0) GOTO 201
+      DO 12 M=1,10
+   12 IW(IBF+M)=0
+#include "unpackio.h"
+      IOMD=2
+#include "packio.h"
+      IW(IBF+2)=NBLK
+
+*     treat +REC bank
+
+   15 NBLK=IW(IBF+2)
+      IF(LISTR.EQ.' ') THEN
+         IRD=MDROP(JW,'+REC',LUN)
+      ELSE
+         IRD=MLINK(JW,'+REC',LUN)
+         IF(IRD.NE.0) GOTO 29
+      END IF
+
+      ISTART=0
+      ICOUNT=0
+      MREA  =0
+
+*     read character string
+
+   20 READ(LUN,'(A)',ERR=30,END=50) TXT(1:NBLK)
+
+*     count
+
+      IW(IBF+5)=IW(IBF+5)+1
+
+*     interprete
+      IS=1
+      IF(TXT(1:1).EQ.' ') IS=2
+      IF(TXT(IS:IS).EQ.'*') GOTO 20
+      CALL CNVCHA(TXT(IS:NBLK))
+C     WRITE(6,109) LABEL,NT
+  109 FORMAT(' IN BTERD LABEL NT ',A4,I5)
+*     check and process $FMT input, which is: name $FMT 'format'
+      LA=INDEX(TXT(1:NBLK),'$FMT')
+      IF(LA.NE.0) THEN
+         LB=INDEX(TXT(LA+4:72),'''')+LA+3
+         IF(LB.EQ.LA+3) THEN
+*           no starting ' - assume end
+            LC=73
+         ELSE
+            LC=INDEX(TXT(LB+1:72),'''')+LB
+*           no ending ' - assume end
+            IF(LC.EQ.LB) LC=73
+         END IF
+         CALL BKFMT(CHAINT(LABEL),TXT(LB+1:LC-1))
+         GOTO 20
+      END IF
+*     check ENDQ card
+      IF(CHAINT(LABEL).EQ.'ENDQ') GOTO 39
+*     start bank  or add to bank
+      NP=0
+*     create +REC bank
+      IF(ISTART.EQ.0) THEN
+         IRD=MBANK(JW,'+REC',LUN,0)
+         IF(IRD.EQ.0) GOTO 201
+         ISTART=JW(IGP)
+      ELSE IF(CHAINT(LABEL).EQ.' ') THEN
+         GOTO 53
+      END IF
+*     start bank
+      ND=0
+      NAME=CHAINT(LABEL)
+      NAMI=NAMIND(NAME)
+*     determine number of bank, either next nr ...
+      IF(ISL.EQ.0) THEN
+         NR=0
+         IND=NAMIND(NAME)+1
+   55    IND=JW(IND-1)
+         IF(IND.NE.0) THEN
+            NR=JW(IND-2)+1
+            GOTO 55
+         END IF
+      ELSE
+*        ... or / nr
+         NP=1
+         NR=NFR(1)
+      END IF
+      MREA=1
+*     LABEL NR 0 0 and store index of last value
+*     space for at least 4 words
+      IF(ISTART+4+4.GE.JW(IWK)) CALL WGARB(JW)
+      IF(ISTART+4+4.GE.JW(IWK)) THEN
+         IFLG=3
+         GOTO 40
+      END IF
+      ISTART=ISTART+4
+      JW(ISTART-4)=LABEL
+      JW(ISTART-3)=NR
+      JW(ISTART-2)=0
+      JW(ISTART-1)=0
+      JSTART=ISTART-1
+      ICOUNT=ICOUNT+4
+C     WRITE(6,108) LABEL,NR,ISTART,ICOUNT
+  108 FORMAT(' START BANK LABEL NR ISTART ICOUNT ',A4,3I8)
+*     space for NT-NP words
+   53 IF(ISTART+NT-NP+4.GE.JW(IWK)) CALL WGARB(JW)
+      IF(ISTART+NT-NP+4.GE.JW(IWK)) THEN
+         IFLG=3
+         GOTO 40
+      END IF
+*     add to +REC bank
+      DO 60 I=1,NT-NP
+   60 JW(ISTART+I-1)=NFR(I+NP)
+      ISTART=ISTART+NT-NP
+      ICOUNT=ICOUNT+NT-NP
+      JW(JSTART)=JW(JSTART)+NT-NP
+      GOTO 20
+
+*     record completed, define +REC bank with complete record
+   39 JW(1)=1
+      IRD=MBANK(JW,'+REC',LUN,ICOUNT)
+      IF(IRD.EQ.0) THEN
+         IRD=MDROP(JW,'+REC',LUN)
+         GOTO 201
+      END IF
+      JW(2)=0
+*     count ...
+      IW(IBF+6)=IW(IBF+6)+1
+      IW(IBF+7)=MAX0(IW(IBF+7),ICOUNT)
+*     return for blank list
+      JW(3)=IRD+4
+      IF(LISTR.EQ.' ') GOTO 100
+*     check internal structure and determine name indices
+   29 CALL BBNIN(JW,LUN)
+C     CALL BOSDP(IW)
+      IF(JW(2).NE.0) GOTO 40
+      JW(3)=IRD+4
+*     define list and insert pointers
+      CALL BBINS(JW,LUN,LISTR)
+      GOTO 100
+
+*     read error (in read statement)
+
+   30 IFLG=1
+      GOTO 101
+
+*     FORMAL ERROR IN RECORD
+
+   40 IF(IFLG.EQ.0) IFLG=2
+      GOTO 20
+
+*     END OF FILE
+
+   50 JW(2)=0
+      IBF=NBANK('+BUF',LUN,11)
+CFLR      IF(JW(LUP).NE.0)
+CFLR     1   WRITE(JW(LUP),1002) LUN
+      GOTO 102
+
+  100 RETURN
+  101 RETURN 1
+  102 RETURN 2
+  201 CALL BBSPC(IW,'BTERD')
+      GOTO 100
+ 1001 FORMAT('0BOS--BTERD-  WRONG UNIT - STOP',
+     1       14X,'UNIT =',I3)
+ 1002 FORMAT('0BOS--BTERD-  END-OF-FILE ON UNIT',I3)
+ 1003 FORMAT('0BOS--BTERD-  INSUFFICIENT SPACE TO STORE FMT DATA -STOP')
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK bterd
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

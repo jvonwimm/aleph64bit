@@ -1,0 +1,125 @@
+head	1.3;
+access;
+symbols
+	look25:1.3
+	look24:1.3
+	look23:1.3
+	look22:1.3
+	look21:1.3
+	look20:1.3
+	v15:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	96.09.02.13.18.36;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.04.18.09.06.49;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.09.15.50.28;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.09.15.50.29;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@look21 release
+@
+text
+@      SUBROUTINE LKREAC
+C -------------------------------------------------------
+C! read input file until 1st event of 1st run or of run
+C  required on SRUN card is  found.
+C  called at start of file
+CKEY LOOK RUNH CLIST
+C -------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "lkfil.h"
+#include "lkunpk.h"
+      DATA NSLOW/ 0/
+C ------------------------------------------------------
+      IF (NSLOW.EQ.0) NSLOW=NAMIND('SLOW')
+C           READ till the begin of run or 1st event
+      CALL BDROP(IW,'E')
+      CALL BDROP(IW,'C')
+      CALL BLIST(IW,'E=','0')
+      CALL BLIST(IW,'C=','0')
+      IF (LINSEL.GT.0) CALL BDROP (IW,'$PTS')
+      CALL ABMODE ('BATC')
+C
+ 10   IRET = 0
+      CALL ABRREC ('E',ULIST,IRET)
+      IF (IRET.GE.5) THEN
+         WRITE (LOUT,*) ' [EOF or data file not opened]'
+         goto 999
+      ENDIF
+C     reset ULIST
+      CALL LKRSUNP
+      CALL LKSHOW (IRET)
+      IF (IRET.EQ.3) THEN
+        CALL BLIST (IW,'T+','E')
+        CALL BLIST (IW,'E=','0')
+      ENDIF
+      IF (IW(NSLOW).EQ.0 .AND. IRET.NE.1) GOTO 10
+C
+ 999  CONTINUE
+      CALL ABMODE ('INTE')
+      END
+#endif
+@
+
+
+1.2
+log
+@change VAX to DEC.AND..NOT.UNIX ==> version 20
+
+ Modified Files:
+ 	lkevt.h lkfil.h lklast.h lkunpk.h version.h
+ Removed Files:
+	lookend.h
+@
+text
+@d3 2
+a4 1
+C! Read C-list (until 1st event found)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK lkreac
+d30 1
+a30 1
+      CALL LKSHOW
+@
+
+
+1.1.1.1
+log
+@import look 15
+@
+text
+@@

@@ -1,0 +1,131 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	alio83:1.1.1.1
+	alio82:1.1.1.1
+	alio81:1.1.1.1
+	alio80:1.1.1.1
+	alio74:1.1.1.1
+	alio73:1.1.1.1
+	alio72:1.1.1.1
+	alio71:1.1.1.1
+	alio70:1.1.1.1
+	alio68:1.1.1.1
+	alio69:1.1.1.1
+	alio67:1.1.1.1
+	alio66:1.1.1.1
+	alio65:1.1.1.1
+	alio64:1.1.1.1
+	alio63:1.1.1.1
+	alio62:1.1.1.1
+	alio61:1.1.1.1
+	alio60:1.1.1.1
+	dbas212:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.04.23.09.43.33;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.04.23.09.43.34;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE UTAHDR(IBKNA,NRBOS,IMFLG,NCOLS,NROWS,IMODE,LUNPR)
+C ---------------------------------------------------------------------
+C.
+C! - Print the table header
+C.
+C. - Author   : A. Putzer  - 87/08/14
+C. - Modified : A. Putzer  - 89/03/14
+C.
+C.
+C.   Arguments: -  IBKNA CHA*4 (input) Name of the bank
+C.              -  NRBOS INTE  (input) BOS NR
+C.              -  IMFLG INTE  (input)
+C.                             1 = Table taken from d/a file
+C.                             2 = Table taken from memory
+C.              -  NCOLS INTE  (input) Number of columns
+C.              -  NROWS INTE  (input) Number of rows
+C.              -  IMODE INTE  (input) Print mode
+C.                             1 = horizontally
+C.                             2 = vertically
+C.                             3 = vertically (continued)
+C.              -  LUNPR INTE  (input) Unit for print out
+C.
+C ---------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+      CHARACTER*4 IBKNA,IVERS
+      CHARACTER*12 IPMOD(2)
+      CHARACTER*21 IFMOD(2)
+
+#include "bcs.h"
+      EXTERNAL MDARD,NDANR,NDROP
+C...............
+      DATA IVERS/' 2.0'/
+      DATA IPMOD/'horizontally','vertically '/
+      DATA IFMOD/'[taken from d/a file]',
+     +           '[taken from memory]  '/
+C
+      IF (IMODE.LT.3) THEN
+C
+C --   Print the complete header part of a table
+C
+        WRITE(LUNPR,6001) IVERS,IBKNA,NRBOS,IFMOD(IMFLG),
+     +                    NCOLS,NROWS,IPMOD(IMODE)
+ 6001   FORMAT(///,1X,'|',         30('----'),            '--|',/,
+     +             1X,'|', 98X,'UTAPRI version ',A4,5X,     '|',/,
+     +             1X,'|',122X,                             '|',/,
+     +             1X,'|',8X,'Table name          :',2X,A4,6X,
+     +                     '   ( NR  = ',I6,' )',9X,A21,32X,'|',/,
+     +             1X,'|',122X,                             '|',/,
+     +             1X,'|',8X,'Number of columns   :',I6,87X,'|',/,
+     +             1X,'|',8X,'Number of rows      :',I6,87X,'|',/,
+     +             1X,'|',122X,                             '|',/,
+     +             1X,'|',8X,'Columns are printed ',A12,82X,'|',/,
+     +             1X,'|',122X,                             '|',/,
+     +             1X,'|',         30('----'),            '--|')
+      ELSE
+C
+C --   Print a short header part if a table print is continued
+C
+        WRITE(LUNPR,6002) IBKNA,NRBOS
+ 6002   FORMAT(///,1X,'|',         30('----'),            '--|',/,
+     +             1X,'|',122X,                             '|',/,
+     +             1X,'|',8X,'Table name          :',2X,A4,6X,
+     +                       '   ( NR  = ',I6,' )',
+     +                  '       ....... continued  ',   36X,'|',/,
+     +             1X,'|',122X,                             '|',/,
+     +             1X,'|',         30('----'),            '--|')
+      ENDIF
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import alephio/dbas
+@
+text
+@@

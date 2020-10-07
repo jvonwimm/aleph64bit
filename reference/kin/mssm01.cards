@@ -1,0 +1,148 @@
+KCAR 0 / $TEXT                                                          
+POFF                                                                    
+*     RUN #     RUN'S TITLE                                             
+RUN    111      'SUSYGEN - JETSET 7.4'                                  
+*     FIRST EVENT    LAST EVENT    TO BE GENERATED                      
+TRIG     1            1000                                              
+TIME    100                                                             
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG                         
+DEBU  6     /      1           10                                       
+*    UNIT # / FORMAT                                                    
+*FILO 'SCWORK:mssm01_K.epio | EPIO '                 
+*HSTO 'MSSM01.his'
+* ECMS   Center of mass energy in Gev                                   
+* IPRINT print out flag for PART bank
+* IHISTO 0=delete/1=keep the working histograms created by SUSYGEN
+*       ECMS  IPRINT  IHISTO                                                  
+GENE    161.0    10     0                                                 
+* vertex smearing    x        y       z                                 
+SVRT               0.018    0.0010   0.70                               
+* use RANMAR generator for random numbers                               
+* INSEED : first seed (range assigned per institute)                    
+* LOSEED : second seed (incremented locally for new runs)               
+*      INSEED          LOSEED (1-30000)                                 
+RMAR     78             12345                                           
+*                                                                       
+* parameters of standard model                                          
+* ============================                                          
+* Weinberg angle                                                        
+SW2   0.231243                                                          
+* couplings: alpha, alphas: they are not necessary same as in LUND      
+ALPH  0.0078125 0.1175                                                  
+* steering cards for SUSYGEN                                            
+* ==========================                                            
+* MODE: 1=GUT mode, 2=user supported mode                               
+MODE  1                                                                 
+* SUPA: basic supersymmetry parameters                                  
+*      M       mu      m0     tanBeta     A                             
+SUPA  55.0    -100.0    45.0     2.0      0.0                           
+* masses of squarks                                                     
+*        d       u       s       c       b       t                      
+MLSQ  1000.0  1000.0  1000.0  1000.0  1000.0  1000.0                    
+MRSQ  1000.0  1000.0  1000.0  1000.0  1000.0  1000.0                    
+* masses of sleptons. The masses for right-handed sneutrinos set here   
+* have no effect.                                                       
+*        e      nu_e     mu    nu_mu   tau     nu_tau                   
+MLSL  1000.0  1000.0  1000.0  1000.0  1000.0  1000.0                    
+MRSL  1000.0  10000.  1000.0  10000.  1000.0  10000.                    
+* mass of gluino                                                        
+MGLU  1000.0                                                            
+* alow mixing or not 0=not,1=yes                                        
+MIX   0                                                                 
+* specially option for the 3rd family, one can provide Stop mass        
+* and mixing angle, mass=0.0 the option is not active                   
+*     phimix Mstop                                                      
+MIX3  0.0    0.0                                                        
+* switch initial state radiation 1=on/0=off                             
+IRAD  1                                                                 
+* switch 1=on/0=off virtual Z and W decay modes                         
+DESC   1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1                              
+* use LEPI limit                                                        
+LEPI   1                                                                
+* active process, the following production channels are availabe        
+* in SUSYGEN, they are all open by default.                             
+*          process no.    e+e- --->   sparticle1  +  sparticle 2        
+*          ----------- neutralino production --------------------       
+*              1                        Z1SS            Z1SS            
+*              2                        Z2SS            Z1SS            
+*              3                        Z2SS            Z2SS            
+*              4                        Z3SS            Z1SS            
+*              5                        Z3SS            Z2SS            
+*              6                        Z3SS            Z3SS            
+*              7                        Z4SS            Z1SS            
+*              8                        Z4SS            Z2SS            
+*              9                        Z4SS            Z3SS            
+*             10                        Z4SS            Z4SS            
+*          ----------- chargino production   --------------------       
+*             11                        W1SS+           W1SS-           
+*             12                        W2SS+           W1SS-           
+*             13                        W2SS+           W2SS-           
+*          ----------- sneutrino production  --------------------       
+*             14                        NUEL            NUEL~           
+*             15                        NUML            NUML~           
+*             16                        NUTL            NUTL~           
+*          ----------- slepton production    --------------------       
+*             17                        EL-             EL+             
+*             18                        EL-             ER+             
+*             19                        ER-             ER+             
+*             20                        ML-             ML+             
+*             21                        MR-             MR+             
+*             22                        TL-             TL+             
+*             23                        TR-             TR+             
+*          ----------- squark  production    --------------------       
+*             24                        UL              UL~             
+*             25                        UR              UR~             
+*             26                        DL              DL~             
+*             27                        DR              DR~             
+*             28                        CL              CL~             
+*             29                        CR              CR~             
+*             30                        SL              SL~             
+*             31                        SR              SR~             
+*             32                        TopL            TopL~           
+*             33                        TopR            TopR~           
+*             34                        BL              BL~             
+*             35                        BR              BR~             
+*          -------------------------------------------------------      
+* You can switch on/off a process as
+* PROC  i / 1    ! switch on   process i
+* PROC  i / 0    ! switch off  process i
+*
+* PROC 11 / 0    ! switch off w1ss+ w1ss- production
+*                                                                       
+* modification to LUND parameters, take from LUND04                       
+* =================================================
+*-----------------------------------------------------------            
+PMA1 7 / 250.      !  NEXT QUARK GENERATION                             
+PMA1 8 / 350.      !                                                    
+PMA1 10221 / 1.    !  SET F0(980) MASS TO ALLOW KK DECAYS               
+*-----------------------------------------------------------            
+*  modification to Lund parameters                                      
+*  They come from Gerald's fit and/or  heavy flavor group               
+*---------------------------------------------------------------        
+*   QCD FIT FROM G. RUDOLPH  ( 5/03/94)  14 VARIABLES                   
+*   mod to lund fragm. functions params                                 
+PARJ 81 / .321          ! LAMBDA QCD was .311                           
+PARJ 82 / 1.74          ! M MIN.     was 1.90                           
+PARJ 21 / 0.333         ! SIGMA MT   was .347                           
+PARJ 41 / 0.5           ! a          was .5                             
+PARJ 42 / 0.973         ! B          was .77                            
+*     modified V/P/T production                                         
+PARJ 11 /  0.516        ! FRACTION V/P FOR UD =VUD             WAS 0.5  
+PARJ 12 /  0.566        ! FRACTION V/P FOR S  =VS              WAS 0.6  
+PARJ 13 /  0.85         ! FRACTION V/P FOR C AND HEAVIER =VCB  WAS .75  
+PARJ 17 /  0.21         ! FRACTION T/T+V FOR ALL FLAVORS       WAS 0.   
+*  reject 60% of eta' produced by fragmentation ( keep 40%) new fit GR  
+PARJ 26 / 0.25                                                 WAS 0.20 
+*     modified Baryon , strange production etc...                       
+PARJ 1  /  0.095        ! FRACTION OF BARYON VS MESON PRODUCED WAS 0.100
+PARJ 2  /  0.298        ! FRACTION OF S/U                      WAS 0.300
+PARJ 3  /  0.48         ! FRACTION OF US/DU                    WAS 0.40 
+PARJ 4  /  0.05         ! FRACTION OF (QQ)1 /( QQ)0            WAS 0.05 
+PARJ 33 /  0.80         ! WMIN IN SYMETRIC LUND FRAGMENTATION  WAS 0.80 
+*   Use Standard LUND values for  Epsilon_c                             
+*   Measured one for Epsilon_b                                          
+*   ( Peterson's fragm. functions params )                              
+PARJ 54 / -0.040         ! EPSILON_C                                    
+PARJ 55 / -0.006         ! Epsilon_b                                    
+*                                                                       
+ENDQ                                                                    

@@ -1,0 +1,148 @@
+head	1.1;
+access;
+symbols
+	alpha126_22:1.1
+	alpha122_22:1.1
+	alpha126_21:1.1
+	alpha126_20:1.1
+	alpha126_19:1.1
+	alpha126_18:1.1
+	alpha126_17:1.1
+	alpha126_16:1.1
+	alpha126_15:1.1
+	alpha126_14:1.1
+	alpha126_13:1.1
+	alpha126_12:1.1
+	alpha126_11:1.1
+	alpha126_10:1.1
+	alpha126_09:1.1
+	alpha126_08:1.1
+	alpha126_07:1.1
+	alpha126_06:1.1
+	alpha126_05:1.1
+	alpha126_04:1.1
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	99.03.22.14.07.08;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE MININI(NWANT,WLIST)
+C
+CKEY MDST /INTERNAL
+C-----------------------------------------------------------------------
+C! Mini code initialisation.
+C
+C     Author: Stephen Haywood      06-Jan-93
+C
+C     Output : NWANT  = number of banks listed on MINI card
+C                     = 1 if no MINI card
+C              WLIST  = list of banks on MINI card
+C                     = ' ' if no MINI card
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+#include "mincom.h"
+C
+      CHARACTER*800 WLIST
+      CHARACTER*4 CHAINT,BANK
+      CHARACTER*75 FORM
+      INTEGER ALFMT
+C
+#include "bmacro.h"
+C------------------------------------------------------------------------
+C++   Print the version number.
+C
+      WRITE (IW(6),'(//40X,''**** Mini-DST version'',I5,'' ****'')')
+     &       MINVSN(DUMMY)
+C
+C++   Identify which of the standard Mini banks are wanted from MINI
+C++   card. Default is all.
+C++   Note: EVEH and DVRS are forced to be copied to o/p.
+C++   Note: NWANT=1 is necessary even if WLIST is empty because of
+C++   statement function in MINBLD.
+C
+      WLIST = ' '
+      KMINI = NLINK('MINI',0)
+      NMINI = IW(KMINI)
+      IF (NMINI.GT.0) THEN
+         WLIST(1:4) = 'EVEH'
+         WLIST(5:8) = 'DVRS'
+         NWANT = 2
+         DO I=1,NMINI
+            IF (NWANT.LT.MAXCHA/4) THEN
+               BANK = CHAINT(IW(KMINI+I))
+               IF (BANK.NE.'EVEH' .AND. BANK.NE.'DVRS') THEN
+                  NWANT = NWANT + 1
+                  WLIST(4*NWANT-3:4*NWANT) = CHAINT(IW(KMINI+I))
+               ENDIF
+            ENDIF
+         ENDDO
+      ELSE
+         NWANT = 1
+      ENDIF
+C
+C++   Define run list.
+C
+      CALL MINRUN
+C
+      RETURN
+      END
+C
+#endif
+@

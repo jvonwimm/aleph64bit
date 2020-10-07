@@ -1,0 +1,217 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.2
+	aleph304_5:1.2
+	aleph304_4:1.2
+	aleph304_3:1.2
+	aleph304_2:1.2
+	aleph304_1:1.2
+	aleph304:1.2
+	aleph303_3:1.2
+	aleph303_2:1.2
+	aleph303_1_mc1:1.2
+	aleph303_1:1.2
+	aleph303:1.2
+	aleph302_9:1.2
+	aleph302_8:1.2
+	aleph302_7:1.2
+	aleph302_6:1.2
+	aleph302_5:1.2
+	aleph302_4:1.2
+	aleph302_3:1.2
+	aleph302_2:1.2
+	aleph302_1:1.2
+	aleph302:1.2
+	aleph216:1.2
+	aleph215_3:1.2
+	aleph215_2:1.2
+	aleph215:1.2
+	aleph214:1.2
+	aleph213:1.2
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.04.30.12.35.01;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.41.12;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.41.13;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@replace #include "implicit.h" by "IMPLICIT NONE"
+Modified Files:
+	aire.F airsct.F avolum.F ealgmk.F ealign.F ealtmk.F ecplst.F
+@
+text
+@      SUBROUTINE EHSIMT(X,V,S,SC,MD,NMGTR,
+     &                    NGTR,XD,XF,VS,SS,PL)
+C.----------------------------------------------------------------------
+C     H.Videau      Creation 15/12/85   Modification 8/09/89
+CKEY ECALDES CUT TRACK GALEPH / INTERNAL
+C! Cuts long track element
+C  This routine simulates GAZ TRACK ELEMENTS by slicing in
+C    (NGTR<NMGTR) pieces a long track element
+C Input:
+C    The long Track Element is defined by sub component SC   (integer)
+C                                         module        MD   (integer)
+C                                         origine       X(3)
+C                                         direction     V(3)
+C                                         length        S
+C   Output:
+C   The Gaz Track elements are defined by their plane       PL (integer)
+C                                         their origine     XD(3)
+C                                         their extremities XF(3)
+C                                         their direction   VS(3)
+C                                         their length      SS
+C   Calls: EPLSCN
+C   Called by EHTRKE in GALEPH if ECAL Run Condition TCUTRK on.
+C.----------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+      SAVE
+#include "ecccom.h"
+      EXTERNAL VDOT,EPLSQL
+      INTEGER EPLSQL
+C  Variables d'input
+      REAL    X(ECALLS-1),V(ECALLS-1),S
+      INTEGER SC,MD,NMGTR
+C  Variables d'output
+      REAL XD(ECALLS-1,1),XF(ECALLS-1,1),VS(ECALLS-1,1),SS(1)
+      INTEGER NGTR,PL(*)
+C  Declaration des locales
+      REAL PX(ECALLP),PV(ECALLP),VN,ALK
+      INTEGER I,K,PN
+      REAL X1(ECALLS-1),X2(ECALLS-1),VV(ECALLS-1)
+      INTEGER KPL1,KPL2,KPLMI,KPLMA
+C
+C  Initialisation des vecteurs projectifs.
+      DO 2001 I=1,ECALLS-1
+            X1(I)=X(I)
+            VV(I)=V(I)
+ 2001 CONTINUE
+      CALL ENORME(VV)
+      DO 2004 I=1,ECALLS-1
+            X2(I)=X(I)+S*VV(I)
+ 2004 CONTINUE
+C Recherche du plan du premier point
+      KPL1=EPLSQL(EALIPL(1,1,MD,SC),ECALPL+1,EPSCPC(1,1,SC),X1)
+C Recherche du plan du point terminal
+      KPL2=EPLSQL(EALIPL(1,1,MD,SC),ECALPL+1,EPSCPC(1,1,SC),X2)
+      IF(KPL1.EQ.KPL2)     THEN
+            NGTR=0
+            GO TO 999
+      END IF
+      KPLMI=MIN(KPL1,KPL2)
+      KPLMI=MAX(KPLMI,1)
+      IF(KPLMI.NE.1.AND.KPLMI.NE.11.AND.KPLMI.NE.34)KPLMI=KPLMI+1
+      KPLMA=MAX(KPL1,KPL2)
+      KPLMA=MIN(KPLMA,ECALPL)
+C
+      DO 2050 PN=1,ECALLP
+      PX(PN)=EALIPL(1,PN,MD,SC)*X1(1)+EALIPL(2,PN,MD,SC)*X1(2)+
+     &       EALIPL(3,PN,MD,SC)*X1(3)+EALIPL(4,PN,MD,SC)
+      PV(PN)=EALIPL(1,PN,MD,SC)*VV(1)+EALIPL(2,PN,MD,SC)*VV(2)+
+     &       EALIPL(3,PN,MD,SC)*VV(3)
+ 2050  CONTINUE
+      NGTR=0
+      DO 2003 K=KPLMI,KPLMA
+          IF(NGTR.EQ.NMGTR)       GO TO 999
+          NGTR=NGTR+1
+          VN=PV(2)*EPSCPC(1,K,SC)-PV(1)*EPSCPC(2,K,SC)
+          IF(VN.EQ.0) GO TO 2012
+          ALK=(PX(1)*EPSCPC(2,K,SC)-PX(2)*EPSCPC(1,K,SC))/VN
+          SS(NGTR)=ECALGP/VN
+          DO 2002 I=1,ECALLS-1
+              XD(I,NGTR)=X1(I)+ALK*VV(I)
+              XF(I,NGTR)=X1(I)+(ALK+SS(NGTR))*VV(I)
+              VS(I,NGTR)=V(I)
+              PL(NGTR)=K
+ 2002     CONTINUE
+ 2012     CONTINUE
+ 2003 CONTINUE
+C
+  999 RETURN
+C
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d25 1
+a25 1
+#include "implicit.h"
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

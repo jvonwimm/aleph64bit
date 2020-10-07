@@ -1,0 +1,74 @@
+*DK axdoc
+#if defined(DOC)
+.chapter   INTERACTIVE VERSION
+     An interactive graphic version can be set up for development
+ and debugging purposes.
+   For now , it runs on VAX and IBM-VM/CMS ( provided you get enough virtual
+   storage ).
+     In this version the user can call one by one and in any order the
+  basic functions of the GALEPH Monte-Carlo:
+     -Design or modify the geometry description
+     -Exploit the drawing package to visualise any set of components
+      in an adequate way.
+     -Change the running conditions on an event by event basis
+
+.section How to build an interactive job
+   To activate this version one must use the Historian flag INTER and
+   recompile the following routines:
+  ASCEVE,ASIPAC,ASPRUN,AGTPCH,GAXEPH
+  Those routines may be compiled on a separate .OBJ file (VAX) or TEXT
+ file (VM/CMS) and used in the linking step of your job (GALINT TEXT
+ or GALINT.OBJ).
+            INTERACTIVE on VAX
+
+  The steering Data cards file must be assigned to FOR007 which will be read by
+ the program.
+  As the dialogue with the user is under control of ZCEDEX,make sure it is
+ available on your machine.
+  As in the standard user application job,you can read your own Historian
+ correction set and/or fortran and/or binary files in the GALRUN exec:
+    Do not forget to include in the .obj files 'USER$LIBRARY:GXINT.OBJ'.
+
+    REMEMBER not to put a DISPLAY 0 card in your steering data cards as this
+ would prevent any graphics output from running.
+
+            INTERACTIVE on VM/CMS
+  This mode can be obtained via running mode 8 or 9 (or 4 if you have
+ already a module) of exec GALRUN.
+  You can keep your GALINT TEXT and use it at load time specifying it
+ on panel 3 (files). Do not put a DISP 0 card to be able to open a
+ capture file. In the ZCEDEX environment in CMS  you can have access
+ to some useful CMS commands (FILELIST , XEDIT ...)
+.section Specific changes and new  subroutines
+   ASCEVE: no automatic standard views are displayed
+   ASIEVE: FDISJO flag is activated for every event
+   ASPRUN: a special routine is activated which initializes the
+           interactive package (GINTRI) and gives control to the
+           interactive control routine (GINTER).
+   AGTPCH: The maximum turning angle in the field for the TPC is limited
+           to 3 degrees (instead of 120) to display nice curling steps.
+   GAXEPH: This deck includes a set of subroutines which may be called
+           by the interactive commands:
+           GTRIG: processes an event and closes it.
+           GTRIGI: initialises an event.
+           GUKINE: generates kinematics.
+           GULAST: job termination.
+           GUVIEW: draw some typical views of ALEPH with header and text.
+   GUINTI:  Initialisation routine for the drawing partof the program.
+            it computes some scaling factors and sets the 'fake' volumes as
+             unseen.
+.section Interactive commands
+    All commands are described in GEANT3 user's guide ,section XINT.
+    They are organised in 4 menus:
+    -Drawing commands
+    -Graphic control commands
+    -Geometry commands
+    -General control commands
+    Among the Graphic contol commands , a useful one is the command
+ 'CAPTure n '  to create a GKS metafile on unit n.
+ The user must be aware that some logical units are reserved for special
+ use and that GEANT is not fully protected against such a usage.
+ In particular , units 11 to 13 are reserved for ZCEDEX and unit 10
+ (unfortunately used by GEANT as an example...) is reserved for GKS.
+
+#endif

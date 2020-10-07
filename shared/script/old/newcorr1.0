@@ -1,0 +1,143 @@
+#! /bin/csh
+#============================================================================
+#                             NEWCORR
+# 01/07/94                                                      F.Blin
+#============================================================================
+# procedure to update the correction of ALEPH programs in BATCH
+#============================================================================
+# all Aleph CERNVM disks on file -> ${alib_dir}/alibdisk
+# run FTP on CERNVM to search one file on PUBXU
+#============================================================================
+# P1 -> prog_name                          eg: julia
+# P2 -> program version number             eg: 273
+# P3 -> get a new correction from cernvm   eg: "new"=yes  or "old"=no
+#============================================================================
+#set echo on if last argument is "-v"
+set exec_name = "newcorr1.0"
+set verbflr = ""
+set nar = $#argv
+if (${nar} != 0) then
+  if ($argv[${nar}] == "-v") then
+     set echo on
+     echo "${exec_name}" 
+     set verbflr = "-v"
+     set argv[${nar}] = ""
+     @ nar = ${nar} - 1 
+  endif
+endif
+#
+set fget = "new"
+if (${nar} != 0) then
+   if ($argv[${nar}] == "old") set fget = "old"  
+   set argv[${nar}] = ""
+endif
+#*******>
+set UNAME = `uname`
+set alib_dir = "/aleph/alib"
+set lib_dir  = `pwd`
+set mnemonic = ""
+set all_para_dbx = ""
+set flag = "OK"
+#
+#*******>
+if ($1 == "") then
+  echo -n "Enter Aleph program name [eg:julia <CR>=exit]-> "
+   set prog_name = $<
+   if (${prog_name} == "") goto end
+else
+   set prog_name = $1
+endif
+ 
+if (${prog_name} == "julia" || ${prog_name} == "galeph" || ${prog_name} == "alpha" ) goto begin
+echo " Only alpha, galeph or julia ."
+goto end
+
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> begin
+begin:
+#*******
+set idir = `egrep ^" ${prog_name} " ${alib_dir}/pub/progl | awk '{print $2}'`
+if (${idir} == "") then
+   echo " WARNING ***> see file ${alib_dir}/pub/ progl"
+   goto end
+endif
+set mnemonic = `echo ${prog_name} | awk '{print substr($0,1,1) "cor"}'`
+if (${prog_name} == "alpha") then
+   set mnemonic = `echo ${prog_name} | awk '{print substr($0,1,2) "cor"}'`
+endif
+ 
+#*******
+set prog_dir = "/al/${OS}/${idir}"
+ 
+set cycle_old = `egrep ^" ${prog_name} " ${prog_dir}/alib.log | awk '{print $3}'`
+set dmy_old = `egrep ^" ${prog_name} " ${prog_dir}/alib.log | awk '{print $4}'`
+
+if (${exec_name} == "updcorr") then
+  if ($2 == "") then
+    set string = "<CR=${cycle_old}>"
+    echo -n "Enter version number [${string}]->"
+    set cycle = $<
+    if (${cycle} == "") then
+      set cycle = ${cycle_old}
+    endif
+  else
+    set cycle = $2
+  endif
+else
+  set cycle = ${cycle_old} 
+endif
+ 
+set file_name = ${mnemonic}${cycle}
+#*******
+
+set ref_dir = "/al/${MASTER}/${idir}"
+
+#*******> if a new file is requested run sfetch and fnice
+if (${fget} == "new") then
+   cd ${ref_dir}
+   set file_type = `egrep ^" ${prog_name} " ${alib_dir}/pub/progl | awk '{print $5}'`
+   set disk_ibm_name = "pub"
+   set transfert_type = "ascii"
+   set disk_ibm = `egrep "${disk_ibm_name} " ${alib_dir}/alibdisk | awk '{print $2 "." $3}'`
+   echo "Now fetch -> sfetch ${file_name} ${file_type} ${disk_ibm} ${transfert_type}"
+   sfetch ${file_name}.${file_type} -t cernvm:${file_name}.${file_type} -u ${disk_ibm} \
+         -f ${transfert_type}
+ 
+   if !(-e ${ref_dir}/${file_name}.${file_type}) then
+      echo " WARNING ***> file ${ref_dir}/${file_name}.${file_type} is unknown"
+      set flag = "problem with sfetch"
+      goto exec_end
+   endif
+ 
+   mv -f ${ref_dir}/${file_name}.${file_type} ${ref_dir}/${file_name}.f
+ 
+   if (-e ${file_name}.f) then
+      echo "Now -> fnice for ${file_name}.f"
+      fnice ${file_name}.f && rm ${file_name}.fugly
+   else
+      echo " WARNING ***> fnice"
+      set flag = "fnice problems"
+      goto exec_end
+   endif
+endif 
+#*******> set a link into prog_dir
+unalias ln
+ln -fs ${ref_dir}/${file_name}.f ${prog_dir}/${file_name}.f
+
+#*******> compile ${ref_dir}/${file_name}.f on to ${lib_dir}
+compile:
+updcorr ${prog_name} ${cycle} old ${verbflr}
+if ( ${SERVICE} != "AFAL" && ${SERVICE} != "SAGA" ) rsh saga updcorr ${prog_name} ${cycle} old ${verbflr}
+if ( ${SERVICE} != "SHIFTALEPH" ) rsh shift9 updcorr ${prog_name} ${cycle} old ${verbflr}
+if ( ${SERVICE} != "CSF" ) rsh csf updcorr ${prog_name} ${cycle} old ${verbflr}
+  
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> exec_end
+exec_end:
+#*******> spy
+set dmyh = `date '+%d-%h-19%y %T'`
+echo "${exec_name} ${HOST} ${user} ${dmyh} ${prog_name} ${fget} ${file_name} ${all_para_dbx} ${flag}" >> ${ref_dir}/spy
+
+end:
+exit
+
+

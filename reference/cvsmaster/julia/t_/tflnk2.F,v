@@ -1,0 +1,936 @@
+head	1.5;
+access;
+symbols
+	jul313_3:1.5
+	jul313_2:1.5
+	jul313_1:1.5
+	jul313:1.5
+	jul312_1:1.5
+	jul312:1.5
+	jul311:1.5
+	jul310_1:1.5
+	jul310:1.5
+	jul309_1:1.5
+	jul309:1.5
+	jul308_6:1.5
+	jul308_5:1.5
+	jul308_4:1.5
+	jul308_3:1.5
+	jul308_2:1.5
+	jul308_1:1.5
+	jul308:1.5
+	jul307_4:1.5
+	jul307_3:1.5
+	jul307_2:1.5
+	jul307_1:1.5
+	jul307:1.5
+	jul306_3:1.5
+	jul306_2:1.5
+	jul306_1:1.5
+	jul306:1.5
+	jul305_4:1.5
+	jul305_3:1.5
+	jul305_2:1.5
+	jul305_1:1.5
+	jul305:1.5
+	jul304_3:1.5
+	jul304_2:1.5
+	jul304_1:1.5
+	jul304:1.5
+	jul303_7:1.5
+	jul303_6:1.5
+	jul303_5:1.5
+	jul303_4:1.4
+	jul303_3:1.4
+	jul303_2_mc1:1.4
+	jul303_2:1.4
+	jul303_1_mc1:1.4
+	jul303_1:1.4
+	jul303_v:1.4
+	jul303:1.4
+	jul302_6:1.4
+	jul302_5:1.4
+	jul302_4:1.4
+	jul302_3:1.4
+	jul302_2:1.4
+	jul302_1:1.4
+	jul302:1.4
+	jul285_1:1.3
+	jul285:1.3
+	jul284_1:1.3
+	jul284:1.3
+	jul283_1:1.3
+	jul283:1.3
+	jul282_1:1.3
+	jul282:1.3
+	jul281_3:1.3
+	jul281_2:1.3
+	jul281_1:1.3
+	jul281:1.3
+	jul280_1:1.3
+	jul280:1.3
+	jul279:1.2
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.5
+date	97.07.10.07.33.22;	author cattanem;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	97.03.06.09.55.14;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.03.12.15.40.44;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.11.29.17.20.11;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.19.59;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.20.00;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.5
+log
+@Add sanity checks on TPC tracks
+@
+text
+@      SUBROUTINE TFLNK2(IER)
+C-----------------------------------------------------
+C! Finds links between pairs of tracks in the TPC.
+C  If the chi**2 of the combined fit is too bad the point
+C  with the largest contribution to the chi**2 is rejected
+C  and the fit is repeated. A maximum of 2 points can be removed.
+C
+C  Input banks:  T1FT, T1TL, T1CL
+C  Output banks: TGFT, TGTL, TGCL
+C
+C  Author : LL. Garrido 30/5/1989
+C  Modified:  R. Johnson   29-05-91
+C  Modified:  P. Colrain   01-08-95
+C             Treatment of track candidates (2 linked tracks)
+C             is now consistent with that in TFITTK, the main
+C             TPC track fitting routine
+C             D. Casper    09-07-97
+c             Check for bogus fits
+C-----------------------------------------------------
+#ifndef DOC
+#include "alcons.h"
+#include "t1ftjj.h"
+#include "t1tljj.h"
+#include "bcs.h"
+#include "tgcljj.h"
+#include "tgftjj.h"
+#include "tgtljj.h"
+#include "tpcojj.h"
+#include "rconds.h"
+#include "ufitcb.h"
+#include "fconjj.h"
+C
+      COMMON/TFLNWB/ NBPWRK
+C
+      PARAMETER (MXGD=25)
+      DIMENSION VV1(10),VV2(10),VV0(6),EE0(21),COV(21)
+      DIMENSION LIST1(21),LIST2(2),LIST3(2)
+      DIMENSION LGOOD(MXGD,27),QGOOD(MXGD,21)
+      LOGICAL FIRST
+      DATA FIRST/.TRUE./
+      DATA RF/75./
+C
+C---> Steering constants follow:
+C
+      DATA MINPT/4/,PMIN/0.00030/,LOMAX/2/,CHIPM/300.0/
+C          |        |            |         |
+C          |        |            |         +- CHI2 DIFF OF LINKS
+C          |        |            +- MAX. POINTS TO THROW AWAY
+C          |        +- MIN. FIT PROBABILITY FOR TRACK
+C          +- MINIMAL NUMBER OF POINTS ON A TRACK
+C
+#include "bmacro.h"
+C
+      IF(FIRST) THEN
+        FIRST=.FALSE.
+        NBPWRK=0
+        NTPCO=NAMIND('TPCO')
+        NFCON=NAMIND('FCON')
+        NATGFT=NAMIND('TGFT')
+        NATGTL=NAMIND('TGTL')
+        NATGCL=NAMIND('TGCL')
+        NT1FT=NAMIND('T1FT')
+        NT1TL=NAMIND('T1TL')
+        NT1CL=NAMIND('T1CL')
+      ENDIF
+C
+C++   Check if the input banks exist
+C
+      KT1FT=IW(NT1FT)
+      IF(KT1FT.EQ.0) THEN
+        IER=0
+        RETURN
+      ENDIF
+      NTRI=LROWS(KT1FT)
+      KT1TL=IW(NT1TL)
+      KT1CL=IW(NT1CL)
+      IF (KT1TL.EQ.0 .OR. KT1CL.EQ.0) THEN
+        IER=5
+        CALL RERROR('TFLNK2',IER,'T1TL and T1CL banks are missing.')
+        RETURN
+      ENDIF
+      KTPCO=IW(NTPCO)
+      IF (KTPCO.EQ.0) THEN
+        IER=6
+        CALL RERROR('TFLNK2',IER,'TPCO coordinate banks is missing.')
+        RETURN
+      ENDIF
+C
+C++   Drop the output banks if they already exist
+C
+      KTGFT=NDROP('TGFT',1)
+      KTGTL=NDROP('TGTL',1)
+      KTGCL=NDROP('TGCL',1)
+C
+C++   Create the output banks
+C
+      LEN=NTRI*LTGFTA+LMHLEN
+      CALL AUBOS('TGFT',1,LEN,KTGFT,IGARB)
+      IF (IGARB.EQ.2) THEN
+        IER=8
+        CALL RERROR('TFLNK2',IER,'No room in BOS for bank TGFT')
+        RETURN
+      ENDIF
+      IW(KTGFT+LMHCOL)=LTGFTA
+      LEN=NTRI*LTGTLA+LMHLEN
+      CALL AUBOS('TGTL',1,LEN,KTGTL,IGARB)
+      IF (IGARB.EQ.2) THEN
+        IER=9
+        KTGFT=NDROP('TGFT',1)
+        CALL RERROR('TFLNK2',IER,'No room in BOS for bank TGTL')
+        RETURN
+      ENDIF
+      IF (IGARB.NE.0) THEN
+        KTGFT=NLINK('TGFT',1)
+      ENDIF
+      IW(KTGTL+LMHCOL)=LTGTLA
+      KT1CL=IW(NT1CL)
+      LEN=IW(KT1CL)
+      CALL AUBOS('TGCL',1,LEN,KTGCL,IGARB)
+      IF (IGARB.EQ.2) THEN
+        IER=10
+        KTGFT=NDROP('TGFT',1)
+        KTGTL=NDROP('TGTL',1)
+        CALL RERROR('TFLNK2',IER,'No room in BOS for bank TGCL')
+        RETURN
+      ENDIF
+      IF (IGARB.NE.0) THEN
+        KTGFT=NLINK('TGFT',1)
+        KTGTL=NLINK('TGTL',1)
+      ENDIF
+      IW(KTGCL+LMHCOL)=LTGCLA
+      CALL BLIST(IW,'T+','TGFTTGTLTGCL')
+C
+      KT1FT=IW(NT1FT)
+      KT1TL=IW(NT1TL)
+      KT1CL=IW(NT1CL)
+C
+C     Calculating bit pattern for each track in a workbank
+C
+      IW(1)=1
+      CALL WBANK(IW,NBPWRK,NTRI,*848)
+      DO 1 I=1,NTRI
+        IW(NBPWRK+I)=0
+        KP1=ITABL(KT1TL,I,JT1TIO)
+        NPT=ITABL(KT1TL,I,JT1TN1)
+        DO 11 J=1,NPT
+          ICO=IW(KT1CL+LMHLEN+KP1+J)
+          NPAD=ITABL(KTPCO,ICO,JTPCIN)/100000+10
+          IF (NPAD.GT.10.AND.NPAD.LT.33) CALL SBIT1(IW(NBPWRK+I),NPAD)
+   11   CONTINUE
+    1 CONTINUE
+C
+C     Loop over pairs of tracks to find candidates to link
+C
+      NG=0
+      DO 91 I1=1,NTRI-1
+        NPT1=ITABL(KT1TL,I1,JT1TN1)
+        IF (NPT1.EQ.0) GOTO 91
+        IFF=0
+        DO 89 I2=I1+1,NTRI
+          NPT2=ITABL(KT1TL,I2,JT1TN1)
+          IF (NPT2.EQ.0) GOTO 89
+          IX=IAND(IW(NBPWRK+I1),IW(NBPWRK+I2))
+          IF (IX.NE.0) GOTO 89
+          IF (IFF.EQ.0) THEN
+            IFF=1
+            IT1F1=KROW(KT1FT,I1)
+            DO 22 I=JT1FIR,JT1FZ0
+              VV1(I)=RW(IT1F1+I)
+   22       CONTINUE
+            VV1( 6)=SQRT(ABS(RW(IT1F1+JT1FEM)))
+            VV1( 7)=SQRT(ABS(RW(IT1F1+JT1FEM+ 2)))
+            VV1( 8)=SQRT(ABS(RW(IT1F1+JT1FEM+ 5)))
+            VV1( 9)=SQRT(ABS(RW(IT1F1+JT1FEM+ 9)))
+            VV1(10)=SQRT(ABS(RW(IT1F1+JT1FEM+14)))
+          ENDIF
+          IT1F2=KROW(KT1FT,I2)
+          DO 23 I=JT1FIR,JT1FZ0
+            VV2(I)=RW(IT1F2+I)
+  23      CONTINUE
+          VV2( 6)=SQRT(ABS(RW(IT1F2+JT1FEM)))
+          VV2( 7)=SQRT(ABS(RW(IT1F2+JT1FEM+ 2)))
+          VV2( 8)=SQRT(ABS(RW(IT1F2+JT1FEM+ 5)))
+          VV2( 9)=SQRT(ABS(RW(IT1F2+JT1FEM+ 9)))
+          VV2(10)=SQRT(ABS(RW(IT1F2+JT1FEM+14)))
+C
+C         Check the consistency of the helix parameters of the 2 tracks
+C
+          CHIP=0.
+          DPHI=VV1(3)-VV2(3)
+          IF (ABS(DPHI) .GT. ACOS(-1.)) DPHI=2*ACOS(-1.)-ABS(DPHI)
+          DO 67 IK=1,5
+            IF (IK.EQ.3) THEN    ! PHI
+              CHIP=CHIP+DPHI**2/(VV1(IK+5)**2+VV2(IK+5)**2)
+            ELSE
+              CHIP=CHIP+(VV1(IK)-VV2(IK))**2/(VV1(IK+5)**2+VV2(IK+5)**2)
+            ENDIF
+   67     CONTINUE
+          IF (NPT1.EQ.3.OR.NPT2.EQ.3) CHIP=CHIPM-1.
+          IF (CHIP.GT.CHIPM) GOTO 89
+C
+C         Assemble the TPC coordinate list in increasing pad row number
+C
+          DO J1=1,21
+            LIST1(J1)=0
+          ENDDO
+          NPTPC1 =ITABL(KT1TL,I1,JT1TIO)
+          DO J1=1,NPT1
+            ICO=IW(KT1CL+LMHLEN+NPTPC1+J1)
+            NPAD=ITABL(KTPCO,ICO,JTPCIN)/100000
+            IF(NPAD.GT.0.AND.NPAD.LT.22) LIST1(NPAD)=ICO
+          ENDDO
+          NPTPC2 =ITABL(KT1TL,I2,JT1TIO)
+          DO J2=1,NPT2
+            ICO=IW(KT1CL+LMHLEN+NPTPC2+J2)
+            NPAD=ITABL(KTPCO,ICO,JTPCIN)/100000
+            IF(NPAD.GT.0.AND.NPAD.LT.22) LIST1(NPAD)=ICO
+          ENDDO
+          NTPC=0
+          DO IJ=1,21
+            IF(LIST1(IJ).NE.0.) THEN
+              NTPC=NTPC+1
+              LIST1(NTPC)=LIST1(IJ)
+            ENDIF
+          ENDDO
+          DO IJ=NTPC+1,21
+            LIST1(IJ)=0
+          ENDDO
+C
+C         Fit the track candidate. Remove upto LOMAX points to get a
+C         good fit, as in TFITTK.
+C
+          LOST=0
+          IOPT=2
+          NMULT=1
+          NTPC=NPT1+NPT2
+          NITC=0
+          NVDET=0
+  333     CONTINUE
+          CALL UFITMS(NTPC,NITC,NVDET,LIST1,LIST2,LIST3,IOPT,NMULT
+     +                              ,29.6,.027,VV0,EE0,COV,CHI2,IERR)
+          PPP=PROB(CHI2,2*NTPC-5)
+          IF (PPP.LT.PMIN) THEN
+            IF (NTPC.GT.MINPT.AND.LOST.LT.LOMAX) THEN
+              LOST=LOST+1
+              CMAX=0.
+              IMAX=0
+              DO 234 IKK=1,NTPC
+                IF(CHIACU(IKK).GT.CMAX) THEN
+                  CMAX=CHIACU(IKK)
+                  IMAX=IKK
+                ENDIF
+  234         CONTINUE
+              J2=0
+              DO J1=1,NTPC
+                IF (J1.NE.IMAX) THEN
+                  J2=J2+1
+                  LIST1(J2)=LIST1(J1)
+                ENDIF
+              ENDDO
+              LIST1(NTPC)=0
+              NTPC=NTPC-1
+              GOTO 333
+            ELSE
+              GOTO 89
+            ENDIF
+          ENDIF
+C  Check for garbage fit
+          CALL TFCHEK(VV0,.FALSE.,IERR)
+          IF (IERR.EQ.0) THEN
+C
+C  Pair found, store relevant parameters
+C
+           IF(NG.LT.MXGD) THEN
+             NG=NG+1
+             LGOOD(NG,1)=I1
+             LGOOD(NG,2)=I2
+             LGOOD(NG,3)=LOST
+             LGOOD(NG,4)=NINT(1000000.0*CHI2)
+             LGOOD(NG,5)=0
+             LGOOD(NG,6)=NTPC
+             DO I=1,21
+               LGOOD(NG,6+I)=LIST1(I)
+             ENDDO
+             DO I=1,5
+               QGOOD(NG,I)=VV0(I)
+             ENDDO
+             DO I=1,15
+               QGOOD(NG,5+I)=COV(I)
+             ENDDO
+             QGOOD(NG,21)=CHI2
+           ELSE
+            CALL RERROR('TFLNK2',2,'Overflow of buffer for track '//
+     +                  ' pairs.  Some TPC track links lost.')
+           ENDIF
+          ENDIF
+   89   CONTINUE
+   91 CONTINUE
+C
+C     If 2 links have a track in common, flag the link with the
+C     largest chi**2.
+C
+      IF (NG.GT.1) THEN
+        DO 107 IT1=1,NG-1
+          IF (LGOOD(IT1,5).EQ.1) GOTO 107
+          N1A=LGOOD(IT1,1)
+          N1B=LGOOD(IT1,2)
+          ICH1=LGOOD(IT1,4)
+          DO 7 IT2=IT1+1,NG
+            IF (LGOOD(IT2,5).EQ.1) GOTO 7
+            N2A=LGOOD(IT2,1)
+            N2B=LGOOD(IT2,2)
+            IF (N1A.NE.N2A .AND. N1A.NE.N2B .AND. N1B.NE.N2A
+     +                                   .AND. N1B.NE.N2B) GOTO 7
+            ICH2=LGOOD(IT2,4)
+            IF (ICH1.LT.ICH2) THEN
+              LGOOD(IT2,5)=1
+            ELSE
+              LGOOD(IT1,5)=1
+              ICH1=ICH2
+            ENDIF
+    7     CONTINUE
+  107   CONTINUE
+      ENDIF
+      NPREG=0
+      NTASS=0
+      DO 123 IT=1,NG
+        IF (LGOOD(IT,5).EQ.0) THEN
+          NTASS=NTASS+1
+          NPREG=NPREG+LGOOD(IT,3)
+        ENDIF
+  123 CONTINUE
+C
+      NTGFT = NTRI - NTASS
+      NTGCL = LROWS(KT1CL) - NPREG
+      IW(KTGFT+LMHROW)=NTGFT
+      IW(KTGTL+LMHROW)=NTGFT
+      IW(KTGCL+LMHROW)=NTGCL
+      NT=0
+      NCL=0
+C
+C++   Loop over all tracks
+C
+      DO 567 I0=1,NTRI
+C
+C++     Look for a link
+C
+        DO 577 IT=1,NG
+          I1=LGOOD(IT,1)
+          I2=LGOOD(IT,2)
+          IF (I1.NE.I0.AND.I2.NE.I0) GOTO 577
+C
+C++       Here is a link with another track
+C
+          NFL=LGOOD(IT,5)
+C
+C++       Skip this link if a better (smaller chi**2) link exists
+C
+          IF (NFL.EQ.1) GOTO 577
+C
+C++       Skip this track if it already was linked to a previous one
+C
+          IF (NFL.EQ.2) GOTO 567
+C
+C++       Copy fit results to the new bank
+C
+          LGOOD(IT,5)=2
+C
+          NTPC=LGOOD(IT,6)
+          DO I=1,21
+            LIST1(I)=LGOOD(IT,6+I)
+          ENDDO
+          DO I=1,5
+            VV0(I)=QGOOD(IT,I)
+          ENDDO
+          DO I=1,15
+            COV(I)=QGOOD(IT,5+I)
+          ENDDO
+          CHI2=QGOOD(IT,21)
+C
+          NT=NT+1
+          IW(KROW(KT1FT,I1)+JT1FTG) = NT
+          IW(KROW(KT1FT,I2)+JT1FTG) = NT
+          ITGFT=KROW(KTGFT,NT)
+          CALL UCOPY(VV0,RW(ITGFT+JTGFIR),5)
+          CALL UCOPY(COV,RW(ITGFT+JTGFEM),15)
+          RW(ITGFT+JTGFCD)=CHI2
+          IW(ITGFT+JTGFDF)=2*NTPC-5
+          IW(ITGFT+JTGFTC)=0  ! Pointer to fitted FRFT track
+          ITGTL=KROW(KTGTL,NT)
+          IW(ITGTL+JTGTIO)=NCL
+          IW(ITGTL+JTGTN1)=NTPC
+          NRT1=ITABL(KT1TL,I1,JTGTNR)
+          NRT2=ITABL(KT1TL,I2,JTGTNR)
+          NRT=NRT1+NRT2
+          IW(ITGTL+JTGTNR)=NRT
+          CALL UCOPY(LIST1,IW(KTGCL+LMHLEN+NCL+1),NTPC)
+          IF (NRT1.NE.0) THEN
+            KP1=ITABL(KT1TL,I1,JTGTIO)
+            NPT1=ITABL(KT1TL,I1,JTGTN1)
+            CALL UCOPY(IW(KT1CL+LMHLEN+KP1+NPT1+1),
+     +                       IW(KTGCL+LMHLEN+NCL+NTPC+1),NRT1)
+          ENDIF
+          IF (NRT2.NE.0) THEN
+            KP2=ITABL(KT1TL,I2,JTGTIO)
+            NPT2=ITABL(KT1TL,I2,JTGTN1)
+            CALL UCOPY(IW(KT1CL+LMHLEN+KP2+NPT2+1),
+     +                       IW(KTGCL+LMHLEN+NCL+NTPC+NRT1+1),NRT2)
+          ENDIF
+          NCL=NCL+NTPC+NRT
+          GOTO 567
+C
+  577   CONTINUE
+C
+C++     Copy the unchanged tracks
+C
+        NT=NT+1
+        IT1FT=KROW(KT1FT,I0)
+        IW(IT1FT+JT1FTG) = NT
+        ITGFT=KROW(KTGFT,NT)
+        CALL UCOPY(RW(IT1FT+JTGFIR),RW(ITGFT+JTGFIR),5)
+        CALL UCOPY(RW(IT1FT+JTGFEM),RW(ITGFT+JTGFEM),15)
+        RW(ITGFT+JTGFCD)=RW(IT1FT+JTGFCD)
+        IW(ITGFT+JTGFDF)=IW(IT1FT+JTGFDF)
+        IW(ITGFT+JTGFTC)=IW(IT1FT+JT1FTC)
+        IT1TL=KROW(KT1TL,I0)
+        ITGTL=KROW(KTGTL,NT)
+        IW(ITGTL+JTGTIO)=NCL
+        IW(ITGTL+JTGTN1)=IW(IT1TL+JTGTN1)
+        IW(ITGTL+JTGTNR)=IW(IT1TL+JTGTNR)
+        KP=ITABL(KT1TL,I0,JTGTIO)
+        NTOT=IW(ITGTL+JTGTN1)+IW(ITGTL+JTGTNR)
+        CALL UCOPY(IW(KT1CL+LMHLEN+KP+1),IW(KTGCL+LMHLEN+NCL+1),NTOT)
+        NCL=NCL+NTOT
+C
+  567 CONTINUE
+C
+C Update the pointers in TPCO to the TGFT bank
+C
+      DO 705 IC=1,LROWS(KTPCO)
+        IW(KROW(KTPCO,IC)+JTPCTN)=0
+  705 CONTINUE
+      DO 756 ITK=1,LROWS(KTGTL)
+        IOFF=ITABL(KTGTL,ITK,JTGTIO)+LMHLEN
+        N1=ITABL(KTGTL,ITK,JTGTN1)
+        NTOT=N1+ITABL(KTGTL,ITK,JTGTNR)
+        DO 732 II=1,N1
+          IC=IW(KTGCL+IOFF+II)
+          IW(KROW(KTPCO,IC)+JTPCTN)=ITK
+  732   CONTINUE
+        DO 742 II=N1+1,NTOT
+          IC=IW(KTGCL+IOFF+II)
+          IW(KROW(KTPCO,IC)+JTPCTN)=-ITK
+  742   CONTINUE
+  756 CONTINUE
+C
+C Compress the new banks
+C
+      CALL AUBPRS('TGFTTGTLTGCL')
+C
+      IER=0
+      CALL WDROP(IW,NBPWRK)
+      RETURN
+  848 CONTINUE
+      IER=11
+      CALL RERROR('TFLNK2',IER,'No room to create a workbank.')
+      KTGFT=NDROP('TGFT',1)
+      KTGTL=NDROP('TGTL',1)
+      KTGCL=NDROP('TGCL',1)
+      END
+#endif
+@
+
+
+1.4
+log
+@Tracking upgrade
+@
+text
+@d17 2
+d268 3
+d274 19
+a292 19
+          IF(NG.LT.MXGD) THEN
+            NG=NG+1
+            LGOOD(NG,1)=I1
+            LGOOD(NG,2)=I2
+            LGOOD(NG,3)=LOST
+            LGOOD(NG,4)=NINT(1000000.0*CHI2)
+            LGOOD(NG,5)=0
+            LGOOD(NG,6)=NTPC
+            DO I=1,21
+              LGOOD(NG,6+I)=LIST1(I)
+            ENDDO
+            DO I=1,5
+              QGOOD(NG,I)=VV0(I)
+            ENDDO
+            DO I=1,15
+              QGOOD(NG,5+I)=COV(I)
+            ENDDO
+            QGOOD(NG,21)=CHI2
+          ELSE
+d295 1
+@
+
+
+1.3
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+ 	gambnk.F gapeco.F gasteer.F
+ 	hcalib.F hcalrd.F hcatow.F hcbhis.F hcfclu.F hchist.F hclcra.F
+ 	hcltst.F hclufi.F hcos.F hcsimm.F hdgdeb.F hdgfil.F hdgpot.F
+ 	hdgsum.F hdprec.F hdspre.F hflnoi.F hinijo.F hiniru.F hmener.F
+ 	hmfind.F hmroad.F hnoise.F hnoisy.F hpatco.F hphnoi.F hplink.F
+ 	hprana.F hpranp.F hprdig.F hpreda.F hprpot.F hprsum.F hprunc.F
+ 	hrcomp.F hrcpat.F hrdcal.F hroad.F hslink.F hslowc.F hspare.F
+ 	hsptre.F hstofi.F htrack.F htubfi.F htwcr.F
+ 	iasign.F iattma.F ibnkin.F icaswt.F icftoi.F iclimb.F icrcco.F
+ 	ideadw.F idigpr.F ienang.F ifind1.F ifind2.F ifitp.F iftrak.F
+ 	igetti.F igettp.F igicha.F iheler.F iinijo.F iiniru.F iintrk.F
+ 	imatch.F inigap.F insect.F intrak.F ipakdi.F ipdsti.F iphcor.F
+ 	ipreda.F iprsum.F ipstat.F irefin.F ireopd.F isave.F ishuff.F
+ 	ishufl.F islowc.F isrch.F itbook.F itccut.F itcopr.F itcrec.F
+ 	itcrep.F itctpc.F itctrk.F itcxng.F iterr.F itextn.F ithist.F
+ 	itidy1.F itidy2.F itlnk1.F itlnk2.F itpcan.F itrak.F itrecf.F
+ 	itreci.F itree.F itrkci.F itrkeq.F itrkzr.F itrmca.F
+@
+text
+@d5 2
+a6 1
+C  with the bigest contribution to the chi**2 is rejected.
+d12 5
+a16 2
+C  Modified: R. Johnson 29-05-91
+C  Modified: I. Tomalin 18-10-95 (protected against straight tracks).
+d19 1
+d36 1
+a36 1
+      DIMENSION LGOOD(MXGD,6)
+d40 9
+a48 1
+      PARAMETER(EPSIL=1.0E-15)
+a52 2
+        PI=2.*ASIN(1.)
+        PIT2=2.*PI
+a135 20
+C     Get cut parameters from the database
+C
+      KFCON=IW(NFCON)
+      IF(KFCON.EQ.0) THEN
+        CALL RERROR('TFLNK2',4,'FCON bank not found.  Using defaults'//
+     +              ' for track linking parameters.')
+        DELMIN=.3
+        CHIPM=300.
+        CHIC0=500.
+        CHIC1=125.
+        CHIC2=255.
+      ELSE
+        IFCON=KROW(KFCON,1)
+        DELMIN=RW(IFCON+JFCODM)
+        CHIPM =RW(IFCON+JFCOCP)
+        CHIC0 =RW(IFCON+JFCOC0)
+        CHIC1 =RW(IFCON+JFCOC1)
+        CHIC2 =RW(IFCON+JFCOC2)
+      ENDIF
+C
+a156 1
+        NRT1=ITABL(KT1TL,I1,JT1TNR)
+a160 2
+          NRT2=ITABL(KT1TL,I2,JT1TNR)
+          IF (NRT1.NE.0.AND.NRT2.NE.0) GOTO 89
+a173 26
+            RR01  = VV1(1)
+            IF (ABS(RR01).LT.EPSIL) RR01 = SIGN(EPSIL,RR01)
+            DZDS1 = VV1(2)
+            PH01  = VV1(3)
+            DD01  = VV1(4)
+            ZZ01  = VV1(5)
+            SST1=1.
+            IF (RR01.LT.0.) SST1=-1.
+            GG01=RR01*DD01-1.
+            HH01=1./GG01
+            FF01=SST1*(RR01*(RF*RF-DD01**2)/(2.0*RF*GG01)+DD01/RF)
+            IF (FF01.GT.1.0)  FF01 = 1.0
+            IF (FF01.LT.-1.0) FF01 = -1.0
+            PH1=PH01-SST1*ASIN(FF01)
+            IF (PH1.LT.0.) PH1=PIT2+PH1
+            IF (PH1.GT.PIT2) PH1=PH1-PIT2
+            EEE1=-0.5*RR01
+     +         *SQRT(ABS((RF*RF-DD01**2)/(1.0-RR01*DD01)))
+            IF (EEE1.GT. 0.99990)  EEE1=  0.99990
+            IF (EEE1.LT.-0.99990)  EEE1= -0.99990
+            SXY1=-2.0*ASIN(EEE1)/RR01
+            ZZ1= ZZ01+DZDS1*SXY1
+            NPTPC1 =ITABL(KT1TL,I1,JT1TIO)
+            DO 31 J1=1,NPT1
+              LIST1(J1)=IW(KT1CL+LMHLEN+NPTPC1+J1)
+  31        CONTINUE
+d184 3
+a186 25
+          RR02  = VV2(1)
+          IF (ABS(RR02).LT.EPSIL) RR02 = SIGN(EPSIL,RR02)
+          DZDS2 = VV2(2)
+          PH02  = VV2(3)
+          DD02  = VV2(4)
+          ZZ02  = VV2(5)
+          SST2=1.
+          IF (RR02.LT.0.) SST2=-1.
+          GG02=RR02*DD02-1.
+          HH02=1./GG02
+          FF02=SST2*(RR02*(RF*RF-DD02**2)/(2.0*RF*GG02)+DD02/RF)
+          IF (FF02.GT.1.0)  FF02 = 1.0
+          IF (FF02.LT.-1.0) FF02 = -1.0
+          PH2=PH02-SST2*ASIN(FF02)
+          IF (PH2.LT.0.) PH2=PIT2+PH2
+          IF (PH2.GT.PIT2) PH2=PH2-PIT2
+          EEE2=-0.5*RR02
+     +     *SQRT(ABS((RF*RF-DD02**2)/(1.0-RR02*DD02)))
+          IF (EEE2.GT. 0.99990)  EEE2=  0.99990
+          IF (EEE2.LT.-0.99990)  EEE2= -0.99990
+          SXY2=-2.0*ASIN(EEE2)/RR02
+          ZZ2= ZZ02+DZDS2*SXY2
+          DELPH=PH2-PH1
+          IF (DELPH.GT. PI) DELPH=DELPH-PIT2
+          IF (DELPH.LT.-PI) DELPH=DELPH+PIT2
+d188 2
+d191 5
+a195 1
+            CHIP=CHIP+(VV1(IK)-VV2(IK))**2/(VV1(IK+5)**2+VV2(IK+5)**2)
+d197 14
+a210 3
+          IF (NPT1.EQ.3.OR.NPT1.EQ.4.OR.NPT2.EQ.3.OR.NPT2.EQ.4)
+     +        CHIP=CHIPM-1.
+          IF (ABS(DELPH).GT.DELMIN.OR.CHIP.GT.CHIPM) GOTO 89
+d212 22
+a233 5
+          DO 931 J1=1,NPT2
+            LIST1(J1+NPT1)=IW(KT1CL+LMHLEN+NPTPC2+J1)
+  931     CONTINUE
+          IOPT=1
+          NMULT=0
+d237 1
+d240 24
+a263 7
+          IF (CHI2.GT.CHIC0) GOTO 89
+          CMAX=0.
+          IMAX=1
+          DO 234 IKK=1,NTPC
+            IF(CHIACU(IKK).GT.CMAX) THEN
+              CMAX=CHIACU(IKK)
+              IMAX=IKK
+d265 1
+a265 2
+  234     CONTINUE
+          IF(CHI2-CMAX.GT.CHIC2) GOTO 89
+a268 1
+          IF(CHI2.LT.CHIC1) IMAX=0
+d273 2
+a274 2
+            LGOOD(NG,3)=IMAX
+            LGOOD(NG,4)=CHI2-CMAX
+d276 11
+a286 5
+            IF (IMAX.EQ.0) THEN
+              LGOOD(NG,6)=0
+            ELSE
+              LGOOD(NG,6)=LIST1(IMAX)
+            ENDIF
+d294 2
+a295 1
+C Fit match candidates and store them
+a301 1
+          IDEL=IT1
+a313 1
+              IDEL=IT2
+d324 1
+a324 1
+          IF (LGOOD(IT,3).NE.0) NPREG=NPREG+1
+d350 3
+d359 1
+a359 1
+C++       Fit the combined track and copy it to the new bank
+d362 13
+a374 38
+          DO 344 IJ=1,21
+            LIST1(IJ)=0
+  344     CONTINUE
+          KP1=ITABL(KT1TL,I1,JTGTIO)
+          NPT1=ITABL(KT1TL,I1,JTGTN1)
+          NRT1=ITABL(KT1TL,I1,JTGTNR)
+          IMCOU=0
+          IMAX=LGOOD(IT,3)
+          DO 345 JI1=1,NPT1
+            IMCOU=IMCOU+1
+            IF(IMCOU.EQ.IMAX) GOTO 345
+            ICO=IW(KT1CL+LMHLEN+KP1+JI1)
+            NPAD=ITABL(KTPCO,ICO,JTPCIN)/100000
+            IF(NPAD.GT.0.AND.NPAD.LT.22) LIST1(NPAD)=ICO
+  345     CONTINUE
+          KP2=ITABL(KT1TL,I2,JTGTIO)
+          NPT2=ITABL(KT1TL,I2,JTGTN1)
+          NRT2=ITABL(KT1TL,I2,JTGTNR)
+          NRRR=0
+          IF(NRT1.NE.0) NRRR=I1
+          IF(NRT2.NE.0) NRRR=I2
+          DO 346 JI2=1,NPT2
+            IMCOU=IMCOU+1
+            IF(IMCOU.EQ.IMAX) GOTO 346
+            ICO=IW(KT1CL+LMHLEN+KP2+JI2)
+            NPAD=ITABL(KTPCO,ICO,JTPCIN)/100000
+            IF(NPAD.GT.0.AND.NPAD.LT.22) LIST1(NPAD)=ICO
+  346     CONTINUE
+          NTPC=0
+          DO 347 IJ=1,21
+            IF(LIST1(IJ).NE.0.) THEN
+            NTPC=NTPC+1
+            LIST1(NTPC)=LIST1(IJ)
+          ENDIF
+  347     CONTINUE
+          IOPT=2
+          CALL UFITMS(NTPC,NITC,NVDET,LIST1,LIST2,LIST3,IOPT,NMULT
+     +                               ,29.6,.027,VV0,EE0,COV,CHI3,IERR)
+d381 1
+a381 1
+          RW(ITGFT+JTGFCD)=CHI3
+d383 1
+a383 5
+          IF(NRRR.EQ.0) THEN
+            IW(ITGFT+JTGFTC)=0
+          ELSE
+            IW(ITGFT+JTGFTC)=ITABL(KT1FT,NRRR,JT1FTC)
+          ENDIF
+d387 2
+d392 11
+a402 6
+          IF(NRRR.NE.0) THEN
+            KP=ITABL(KT1TL,NRRR,JTGTIO)
+            N11=ITABL(KT1TL,NRRR,JTGTN1)
+            NR1=ITABL(KT1TL,NRRR,JTGTNR)
+            CALL UCOPY(IW(KT1CL+LMHLEN+KP+N11+1),
+     +                       IW(KTGCL+LMHLEN+NCL+NTPC+1),NR1)
+d406 1
+d429 1
+@
+
+
+1.2
+log
+@julia version 279
+@
+text
+@a0 1
+*DK tflnk2
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d12 2
+a13 1
+C  Modified:  R. Johnson   29-05-91
+d36 1
+d188 1
+d224 1
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

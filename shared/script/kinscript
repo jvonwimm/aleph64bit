@@ -1,0 +1,13 @@
+#! /bin/tcsh
+set name = `echo $1 | cut -d " " -f1 | sed s/"_origine"/""/ | sed s/"\.f"/"\.log"/`
+set dirname = $ALEPH_ROOT/Linux/kin/log
+echo logfile at $dirname/$name
+if (!(-e $dirname)) then
+ mkdir $dirname
+endif
+set tempdir = $ALEPH_ROOT/Linux/kin/temp
+if (!(-e $tempdir)) then
+ mkdir $tempdir
+endif
+cd $tempdir
+mklibkin "$1" $2 $3 $4 >& $dirname/$name

@@ -1,0 +1,152 @@
+head	1.3;
+access;
+symbols
+	bos3489-1:1.3.0.2
+	bos3589:1.3
+	bos3489:1.3
+	bos3389:1.3
+	bos3289:1.3
+	bos3189:1.3
+	bos3089:1.3
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	96.03.11.12.49.10;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.01.19.16.50.49;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.18;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.19;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE BOSRPT
+
+*     REPORT ON OPERATION
+      CHARACTER*4 NAM1,NAM2,CHAINT, TEXTF1*32, TEXTF2*32
+      INTEGER IOCT1(2),IOCT2(2)
+#include "boscom.h"
+#include "param.h"
+
+      IF(IW(IDNAM).EQ.0.OR.IW(LUP).EQ.0) GOTO 100
+      WRITE(IW(LUP),103)
+      IDX=0
+      CALL WBANK(IW,IDX,IW(IDNAM),*100)
+      CALL SORTBL(IW(IDNAM+1),IW(IDX+1),-IW(IDNAM))
+      NHALF=IW(IDNAM)/2
+      IS   =IW(IDNAM)-NHALF
+      IF(IS.GT.10) IS=((IS+9)/10)*10
+*     pointer to io-statistic
+      ID   =IW(IOS)
+      WRITE(IW(LUP),101)
+      DO 10 I=1,IS
+      IF(MOD(I,10).EQ.1) WRITE(IW(LUP),'(1X)')
+      J=IW(IDX+I)
+      NAM1=CHAINT(IW(IDNAM+J))
+      NUM1=J
+      IOCT1(1)=0
+      IOCT1(2)=0
+      IF(ID.NE.0) THEN
+         IF(2*J.LE.IW(ID)) THEN
+            IOCT1(1)=IW(ID+2*J-1)
+            IOCT1(2)=IW(ID+2*J  )
+         END IF
+      END IF
+      CALL BOSFMT(NAM1,TEXTF1)
+      IF(I+IS.LE.IW(IDNAM)) THEN
+         J=IW(IDX+I+IS)
+         NAM2=CHAINT(IW(IDNAM+J))
+         NUM2=J
+         IOCT2(1)=0
+         IOCT2(2)=0
+         IF(ID.NE.0) THEN
+            IF(2*J.LE.IW(ID)) THEN
+               IOCT2(1)=IW(ID+2*J-1)
+               IOCT2(2)=IW(ID+2*J  )
+            END IF
+         END IF
+         CALL BOSFMT(NAM2,TEXTF2)
+      WRITE(IW(LUP),102) NUM1,NAM1,IOCT1,TEXTF1, NUM2,NAM2,IOCT2,TEXTF2
+      ELSE
+         WRITE(IW(LUP),102) NUM1,NAM1,IOCT1,TEXTF1
+      END IF
+
+   10 CONTINUE
+      CALL WDROP(IW,IDX)
+  100 RETURN
+  101 FORMAT
+     +(1X,2(' pos  Name      in     out  Format................  ',12X))
+  102 FORMAT(1X,2(I4,2x,A4,2I8,2X,A32,4X))
+  103 FORMAT(' The table below shows all used names in alphabetical ',
+     +'oder. The column ''pos'' gives the order,'/
+     +' in which the names were made known to the system ',
+     +'(useful in reading dumps).'/
+     +' The numbers under ''in'' and ''out'' count the number',
+     +' of records, in which banks of the name appeared.'/)
+      END
+@
+
+
+1.2
+log
+@change few print statments to please VAX fpp
+Modified Files:
+ 	bosrpt.F bosta.F bseqr.F pmodul.F
+@
+text
+@a0 1
+*DK bosrpt
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d59 6
+a64 6
+  103 FORMAT('0The table below shows all used names in alphabetical orde
+     +r. The column ''pos'' gives the order,'/
+     +' in which the names were made known to the system (useful in read
+     +ing dumps).'/
+     +          ' The numbers under ''in'' and ''out'' count the number
+     +of records, in which banks of the name appeared.'/)
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

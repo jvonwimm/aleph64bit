@@ -1,0 +1,161 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.2
+	aleph304_5:1.2
+	aleph304_4:1.2
+	aleph304_3:1.1
+	aleph304_2:1.1
+	aleph304_1:1.1
+	aleph304:1.1
+	aleph303_3:1.1
+	aleph303_2:1.1
+	aleph303_1_mc1:1.1
+	aleph303_1:1.1
+	aleph303:1.1
+	aleph302_9:1.1
+	aleph302_8:1.1
+	aleph302_7:1.1
+	aleph302_6:1.1
+	aleph302_5:1.1
+	aleph302_4:1.1
+	aleph302_3:1.1
+	aleph302_2:1.1
+	aleph302_1:1.1
+	aleph302:1.1
+	aleph216:1.1
+	aleph215_3:1.1
+	aleph215_2:1.1
+	aleph215:1.1
+	aleph214:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.07.17.13.34.27;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.06.20.11.59.12;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@Mods to VDET error parametrisation
+@
+text
+@      SUBROUTINE VHERR1(IVIEW,PVEC,PH,VERR)
+C ---------------------------------------------------------------------
+C! Compute the VDET hit error, based on Monte Carlo
+C! returns the intrinsic VDET space resolution
+CKEY VDET TRACK
+C
+C   Based on VHERR by D.Brown - 8-9-94 but with different 
+C   error parametrisation
+C      Manoj Thulasidas 10-June-1996
+C   Modify the error parameterization (due to change in S/N in MC)
+C      Manoj Thulasidas 16-July-1997
+C
+C  INPUT;  IVIEW   = View flag; 1 = W, 2 = U
+C          PVEC(3) = track momentum vector at wafer in wafer frame
+C          PH      = Pulseheight in normalized units
+C OUTPUT;  VERR    = hit error
+C ------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+C
+C  IO variables
+C
+      INTEGER IVIEW
+      REAL PVEC(3),PH,VERR
+C
+C  Local variables
+C
+      REAL SINE
+      REAL NORM(2), POLY1(2), POLY2(2)
+      DATA NORM  /11.2E-04,   5.2E-04/
+      DATA POLY1 / 0.0E-04,   0.0E-04/
+      DATA POLY2 /33.8E-04,  29.4E-04/
+C
+C  Compute the sines
+C
+      IF (IVIEW .EQ. 1) THEN
+        SINE = ABS(PVEC(3)) / SQRT(PVEC(1)**2+PVEC(3)**2)
+      ELSE
+        SINE = ABS(PVEC(2)) / SQRT(PVEC(1)**2+PVEC(2)**2)
+      END IF
+C
+C  Error
+C
+      VERR = NORM(IVIEW) + POLY1(IVIEW)*SINE + POLY2(IVIEW)*SINE**2
+
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Renamve VHERR to VHERR1
+@
+text
+@d7 2
+a8 1
+C   Based on VHERR by D.Brown - 8-9-94 but with different error parametrisation
+d10 2
+d30 3
+a32 3
+      DATA NORM /0.98444E-03,6.50602E-04/
+      DATA POLY1 /-0.70720E-03,-1.43582E-04/
+      DATA POLY2 /0.33408E-02,9.23296E-04/
+@

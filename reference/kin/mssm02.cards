@@ -1,0 +1,254 @@
+NREF 9600
+*     RUN #      RUN TITLE                                             
+RUN    111      'MSSM02/SUSYGEN 1.5 - JETSET 7.4'                      
+*     FIRST EVENT    LAST EVENT    TO BE GENERATED                      
+TRIG     1           2000                                               
+TIME    100                                                            
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG                         
+DEBU  6     /      1         5                                      
+* Output epio file
+* FILO '/aleph/scweek/morawitz/mssmrpar.epio | EPIO '
+*                          
+* HSTO '/aleph/scweek/morawitz/mssmrpar.his'
+* Histogram file, containing x-section histos, Darlitz plots 
+* Mostly technical info, ordinary user does not need it.
+* PS: An additional histogram file mssmfsr.his will be created 
+*     if the FSR option is enabled (details on the FSR E-spectrum).
+* 
+*
+* use RANMAR generator for random numbers                               
+* INSEED : first seed (range assigned per institute)                    
+* LOSEED : second seed (incremented locally for new runs)               
+*      INSEED          LOSEED (1-30000)                                 
+RMAR     78             90                                           
+ENDQ
+KCAR 0 / $TEXT
+POFF
+* ECMS   Center of mass energy in Gev
+* IPRINT give debug info? 0=no,the higher the number the more debug  you get
+* WantHistos? Must be set to 1 if you want the o/p in of histos
+*       ECMS  IPRINT WantHistos?
+GENE    183.0    0        0
+* Enable TAUOLA for tau decays (Requires the libraries DIZET_W, KORL07,
+*  and PHOTOS  as definied in the .opt file)
+MSTJ 28 / 2     !  2= use this external library, 0= use standard JETSET
+*****************************************************************
+*      EW parameters to be used in the generator (not JETSET)
+*****************************************************************
+SW2   0.231243 ! sin2(theta_w)                                                
+ALPH 0.0078125 ! couplings: alpha_em: is not necessarily same as in LUND 
+*****************************************************************
+*                      SUSY parameters 
+*****************************************************************
+MODE 1
+* MODE: 1=GUT mode (all masses and mixing angles are calculated from GUT
+*                   relations from the parameters M2,mu,m0,tanb,A,M(Higgs m_a))
+*                   PS: Note: if you want sfermion mixing you must switch on
+*                             MIX 1
+*	                Note: In this mode the cards 
+*		(MLSQ,MRSQ,MLSL,MRSL,PMIX,GMAS,GMA2) are not used by the
+*			      generator
+*
+*       2=MSSM      Only M2,mu,tanb,M(Higgs m_a) are used to calculate the 
+*                   gaugino (+Higgs) masses. Sfermion masses and mixing angles 
+*                   are provided by the user by the cards 
+*                   (MLSQ,MRSQ,MLSL,MRSL,PMIX,GMAS,GMA2)
+* SUPA: basic supersymmetry parameters                                  
+*      M       mu      m0     tanBeta     A    Rscale   M(Higgs m_a)       
+SUPA 90.0     200.0   90.0     4.0        0.0   1.0     300.0 
+* LEPI ! use LEPI limit (if LEPI card is given)? (see susygen manual)
+*****************************************************************
+*                     Sfermion masses 
+*****************************************************************
+* masses of squarks (MLSQ= left-handed squarks, MRSQ=right-handed squarks)
+*        d       u       s       c       b       t                      
+MLSQ  1000.0  1000.0  1000.0  1000.0  1000.0  50.0                  
+MRSQ  1000.0  1000.0  1000.0  1000.0  1000.0  50.0                  
+*
+* masses of sleptons. The masses for right-handed sneutrinos set here   
+* have no effect (there are no right-handed sneutrinos).
+*        e      nu_e     mu    nu_mu   tau     nu_tau                   
+MLSL  50.0  1000.0      50.0  1000.0    50.0  1000.0                  
+MRSL  1000.0  10000.  1000.0  10000.  1000.0  10000.                  
+*
+MGLU 1000.  ! mass of gluino
+*
+*      new data cards - overwrite the higgs calcultation:
+*      mh    mH    mH+    cos(alpha) sin(alpha)
+* MHIG 1000. 1000.  1000.     1.         0.
+*****************************************************************
+*                     Sfermion Mixing
+*****************************************************************
+MIX 0  ! alow mixing of sfermions: 0=no,1=yes
+* specially option for the 3rd family, one can provide Stop,sbottom,stau masses
+* and mixing angles as calculated from the GUT RGEs (MODE=1).
+* for GMAS(I=1..3)=0.0 the option is inactive (for Stop,sbottom,stau
+* respectively), i.e. no overwrite!
+* mixing angles   stop sbottom stau  (in degree)
+PMIX               0.     0.     0.
+* mass of        stop_1 sbottom_1 stau_1
+GMAS                0.    0.       0. 
+* mass of        stop_2 sbottom_2 stau_2
+GMA2                0.    0.       0. 
+*****************************************************************
+*		      Production processes
+*****************************************************************
+* Production process, the following production channels are availabe        
+* in MSSM02, they are all open by default.                             
+*          process no.    e+e- --->   sparticle1  +  sparticle 2        
+*          ----------- neutralino production --------------------       
+*              1                        Z1SS            Z1SS            
+*              2                        Z2SS            Z1SS            
+*              3                        Z2SS            Z2SS            
+*              4                        Z3SS            Z1SS            
+*              5                        Z3SS            Z2SS            
+*              6                        Z3SS            Z3SS            
+*              7                        Z4SS            Z1SS            
+*              8                        Z4SS            Z2SS            
+*              9                        Z4SS            Z3SS            
+*             10                        Z4SS            Z4SS            
+*          ----------- chargino production   --------------------       
+*             11                        W1SS+           W1SS-           
+*             12                        W2SS+           W1SS-           
+*             13                        W2SS+           W2SS-           
+*          ----------- sneutrino production  --------------------       
+*             14                        NUEL            NUEL~           
+*             15                        NUML            NUML~           
+*             16                        NUTL            NUTL~           
+*          ----------- slepton production    --------------------       
+*             17                        EL-             EL+             
+*             18                        EL-             ER+             
+*             19                        ER-             ER+             
+*             20                        ML-             ML+             
+*             21                        MR-             MR+             
+*             22                        TL-             TL+             
+*             23                        TR-             TR+             
+*          ----------- squark  production    --------------------       
+*             24                        UL              UL~             
+*             25                        UR              UR~             
+*             26                        DL              DL~             
+*             27                        DR              DR~             
+*             28                        CL              CL~             
+*             29                        CR              CR~             
+*             30                        SL              SL~             
+*             31                        SR              SR~             
+*             32                        BL              BL~             
+*             33                        BR              BR~             
+*             34                        TopL            TopL~           
+*             35                        TopR            TopR~           
+*          -------------------------------------------------------      
+* You can switch on  a process as                                       
+* PROC  i / 1    ! switch on   process i                                
+* PROC  i / 0    ! switch off  process i                                
+*                                                                       
+PROC  1 / 1 
+PROC  2 / 1 
+PROC  3 / 1                                                              
+PROC  4 / 1                                                             
+PROC  5 / 1                                                             
+PROC  6 / 1                                                             
+PROC  7 / 1                                                             
+PROC  8 / 1                                                             
+PROC  9 / 1                                                             
+PROC 10 / 1                                                             
+PROC 11 / 1                                                             
+PROC 12 / 1                                                             
+PROC 13 / 1                                                             
+PROC 14 / 1                                                             
+PROC 15 / 1                                                             
+PROC 16 / 1                                                             
+PROC 17 / 1                                                             
+PROC 18 / 1                                                             
+PROC 19 / 1                                                             
+PROC 20 / 1                                                             
+PROC 21 / 1                                                             
+PROC 22 / 1                                                             
+PROC 23 / 1                                                             
+PROC 24 / 1                                                             
+PROC 25 / 1                                                             
+PROC 26 / 1                                                             
+PROC 27 / 1                                                             
+PROC 28 / 1                                                             
+PROC 29 / 1                                                             
+PROC 30 / 1                                                             
+PROC 31 / 1                                                             
+PROC 32 / 1                                                             
+PROC 33 / 1                                                             
+PROC 34 / 1                                                             
+PROC 35 / 1                                                             
+*****************************************************************
+*                     Topology / Decay mode switches 
+*****************************************************************
+* The following switches allow the user to select only certain
+* topos/decay modes. Note that the x-section quoted is the 
+* sigma_total, i.e. topology switch not considered in calc.
+*
+* switch 1=on/0=off virtual Z and W decay modes (see susygen manual)  
+DESC 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+*  topology switch for chi+1 chi-1 : Only allow the following decay modes:
+TOC1 4 ! 1=2l, 2=ljj, 3=4j 4=all, 5=only chi2 cascades
+*  topology switch for chi01 chi02 : Only allow the following decay modes:
+TON1 4  !  1=l lbar, 2=j jbar, 3=nu nubar  4=all
+*     switch on/off (1/0) the HIGGS decay channels (see susygen manual)
+HDES 1 1 1 1 1 
+*****************************************************************
+*                   ISR/FSR/Hadronisation switches 
+*****************************************************************
+IRAD 1 ! switch initial state radiation 1=on/0=off
+FRAD 1 ! switch final state radiation 1=on/0=off
+SHAD 0 ! hadronise your stops/sbottoms before decay? (=>SHAD 1) ?
+*****************************************************************
+*                  Rparity violation control cards
+*****************************************************************
+*        a b c d e 
+RPAR     0 2 3 1 1
+* switches for RPAR:
+*	  a=0,1   Rparity violation OFF/ON (0/1)
+*         b=1,2,3 Non-zero Rpv-Operator (1=LLE,2=LQD,3=UDD)
+*	  c,d,e=1..3 generation indices i,j,k of the non-zero 
+*		  Yukawa coupling lambda_ijk
+RLAM 0.3  !  RLAM reads the value of the Yukawa coupling lambda_ijk
+* Parameters for the direct two-body sfermion decays 
+*   RPW1,RPD1{i,j} (and RPW2,RPD2 for sfermion_R) specify 
+*   the width and the decay products for the decays   
+*   sfermion_L -> fermion_i fermion_j .
+*   Setting RPW1 to a large value is equivalent to giving the sfermion
+*   a 100% BR for the decay sfermion -> fermion_i fermion_j .
+*
+* widths of the Rpv-decays for particles in GeV (brspa_rpv)
+*
+*      Ul~ Dl~ nue~ el~ Cl~ Sl~ numu~ mul~ Tl~ Bl~ nutau~ TAUl~
+* RPW1 0.  0.  0.   0.  0.   0.  0.    0.   0.  0. 0.    0.
+*      Ur~ Dr~ 0    er~ Cr~ Sr~ 0     mur~ Tr~ Br~ 0      Taur~
+* RPW2 0.  0.  0.   0.  0.   0.  0.    0.   0.  0. 0.    0.
+*
+* decay products (in LUND codes, i.e. 1=d, 2=u 11=e 12=nu etc.)
+* of the above sparticles {rparsleptondecaymatrix(24,1..2)}
+*
+*      Ul~ Dl~ nue~ el~ Cl~ Sl~ numu~ mul~ Tl~ Bl~   nutau~ TAUl~
+* RPD1 0 0 0 0 0 0  0 0 0 0 0 0 0 0   0 0  0 0 0 0   0 0    0 0
+*      Ur~ Dr~ 0    er~ Cr~ Sr~ 0     mur~ Tr~ Br~ 0      Taur~
+* RPD1 0 0 0 0 0 0  0 0 0 0 0 0 0 0   0 0  0 0 0 0   0 0    0 0
+*****************************************************************
+*              Rparity violation topology switches
+*****************************************************************
+* RBOD card: Overwrites the Rpv calculation of the neutralino decays
+*            There are 4 final states for LLE and LQD, two for UDD. 
+*            RBOD reads in the width for the final states in GeV.
+* RBOD 1000. 1000. 1000. 1000.
+*
+* RBOD card: Overwrites the Rpv calculation of the direct chargino decays
+*            There are 2 final states for LLE, 4 for LQD, 3 for UDD. 
+*            RBO2 reads in the width for the final states in GeV.
+* RBO2 1000. 1000. 1000. 1000. 
+*
+* RBO3 card : Bodge for LLE - for LLE "mixed" acoplanar lepton topologies 
+*	      can arise. This is not in the calculation tho'. Adding the 
+*             RBO3 card will produce decays of charginos to emu,etau,mutau only
+*             It will also produce emu,etau,mutau final states (only) for the 
+*             sleptons.
+* RBO3 
+*
+* RBO4 card : Overwrite the mass of chi1 and chi+
+* RBO4 30.   80. ! *      mchi1 mchi1+
+END$                                                                    

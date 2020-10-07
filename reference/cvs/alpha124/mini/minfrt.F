@@ -1,0 +1,70 @@
+      SUBROUTINE MINFRT
+C
+CKEY MDST /USER
+C-----------------------------------------------------------------------
+C! Fill FRTL bank from DTRA.
+C
+C     Author: Stephen Haywood      03-Apr-90
+C
+C     The number of hits is available in the bit pattern stored in the
+C     DTRA bank. This word (or parts of it) is used as the index to a
+C     look up table, K, which contains the bit sums.
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+#include "dtrajj.h"
+#include "frtljj.h"
+C
+      COMMON / MINLOC / K(0:255)
+      LOGICAL FIRST
+      SAVE FIRST
+      DATA FIRST / .TRUE. /
+C
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+C
+C++   Initialisation of K array.
+C
+      IF(FIRST) THEN
+        DO 10 I=0,255
+   10   K(I) = JBIT(I,1) + JBIT(I,2) + JBIT(I,3) + JBIT(I,4) +
+     &         JBIT(I,5) + JBIT(I,6) + JBIT(I,7) + JBIT(I,8)
+        FIRST = .FALSE.
+      ENDIF
+C
+      KDTRA = NLINK('DTRA',100)
+      IF (KDTRA.LE.0) THEN
+         CALL MINUPD('DTRA')
+         KDTRA = NLINK('DTRA',100)
+         IF (KDTRA.LE.0) RETURN
+      ENDIF
+C
+C++   Create FRTL bank.
+C
+      NFRTL = LROWS(KDTRA)
+      IF(NFRTL.LE.0) RETURN
+      LEN = LMHLEN + LFRTLA * NFRTL
+      CALL AUBOS('FRTL',0,LEN, KFRTL,IGARB)
+      CALL BLIST(IW,'S+','FRTL')
+      IF(IGARB.GE.2) THEN
+         RETURN
+      ELSE IF(IGARB.NE.0) THEN
+         KDTRA = NLINK('DTRA',100)
+      ENDIF
+      IW(KFRTL+LMHCOL) = LFRTLA
+      IW(KFRTL+LMHROW) = NFRTL
+C
+C++   Fill FRTL bank from bit pattern in DTRA.
+C
+      DO 100 I=1,NFRTL
+         IH = ITABL(KDTRA,I,JDTRHO)
+         IW(KROW(KFRTL,I)+JFRTNV) = K(JBYT(IH, 1,2))
+         IW(KROW(KFRTL,I)+JFRTNI) = K(JBYT(IH, 3,8))
+         IW(KROW(KFRTL,I)+JFRTNT) = K(JBYT(IH,11,8)) + K(JBYT(IH,19,8))
+     &                            + K(JBYT(IH,27,5))
+  100 CONTINUE
+C
+      RETURN
+      END
+#endif

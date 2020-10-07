@@ -1,0 +1,11 @@
+      SUBROUTINE BCLASS(MASK,NCLASS)
+#include "boscom.h"
+      INTEGER NCLASS(30)
+      MASKCP=LMASK
+      MASK  =LMASK
+      DO 10 I=1,30
+      NCLASS(I)=IAND(MASKCP,1)
+      MASKCP=MASKCP/2
+   10 CONTINUE
+  100 RETURN
+      END

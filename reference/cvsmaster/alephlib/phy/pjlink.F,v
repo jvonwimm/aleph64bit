@@ -1,0 +1,169 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.43.15;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.43.16;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE PJLINK( KOLDPJ, NP, KJJ, NJ, KNEWPJ, ERROR )
+C----------------------------------------------------------------------
+CKEY PHYSICS JADE JETS
+C   Author   : C. Bowdery     10-JAN-1991    Update particle-jet links
+C
+C   Description
+C   ===========
+C!    Update links between particles and jets after further evolution
+C!    of jet clustering from standard y-cut to user-specified y-cut.
+C
+C
+C  input   : KOLDPJ    Old assoc. of original particles to old jets
+C            NP        Number of original particles (dim of KOLDPJ)
+C            KJJ       Assoc. of old jets to new jets
+C            NJ        Number of old jets (dim of KJJ)
+C
+C  output  : KNEWPJ    New assoc. of original particles to new jets
+C                      KNEWPJ can be the same as KOLDPJ if wanted.
+C            ERROR     .TRUE. if KOLDPJ has an illegal jet number
+C                      .FALSE. otherwise
+C
+C  The routine assumes the original particles are numbered 1..NP
+C  and that KOLDPJ(i) contains info on particle i
+C  and that the old jets are in the range 1..NJ
+C  and that KJJ(j) contains info on old jet j.
+C
+C-----------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+C
+      INTEGER  NP, NJ, I
+C
+      INTEGER  KOLDPJ(NP), KJJ(NJ), KNEWPJ(NP)
+C
+      LOGICAL  ERROR
+C
+C------------------------ C O D E --------------------------------------
+C
+C                            Examine the association of the original
+C                            particle I to jet JET. If JET exists in KJJ
+C                            list, copy assignment of old jet to new jet
+C                            for particle I.
+C
+      ERROR = .FALSE.
+C
+      DO  1000  I = 1,NP
+C
+        JET = KOLDPJ(I)
+        IF( JET .GT. 0  .AND.  JET .LE. NJ ) THEN
+          KNEWPJ(I) = KJJ(JET)
+        ELSE
+          ERROR = .TRUE.
+        ENDIF
+C
+ 1000 CONTINUE
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

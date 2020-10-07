@@ -1,0 +1,246 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	99.10.26.09.33.11;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.45.21;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.45.22;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@for Alephlib 313
+@
+text
+@      SUBROUTINE YD0NFN(VPRR,RADD,D00,FI00,CFF,XDNN,SIGND)
+C-----------------------------------------------
+C!Minimize the dist. in x-y  between track and vprr point
+C
+C   AUTHOR:   M.A.CIOCCI 2/04/90
+C   Modified: D.Smith   26/10/99  Double precision fixes for Linux
+CKEY YV0 MIN DISTANCE /USER
+C
+C     INPUT
+C            VPRR/R  POINT ASSUMED AS BEAM BEAM CROSSING
+C            RADD/R   RADIUS CURVATURE
+C            D00/R    -CHARGE*D0 (BANK-FRFT)
+C            FI00/R   FI0 (BANK FRFT)
+C            CFF/R    CHARGE
+C     OUTPUT
+C            SIGND /R  SIGN OF NEW D0
+C            XDNN(3)/R  COORDINATES OF POINT
+C
+C     CALLED:
+C             UPSIVE
+C     CALLS :
+C             NONE
+C
+C             DESCRIPTION
+C             ===========
+C
+C Finds the point coordinates minimizing the distance
+C between helix and vpr point
+C
+C--------------------------------------------------
+#ifndef DOC
+      SAVE
+        DOUBLE PRECISION VPR(3),XDN(3),RAD,D0,FI0,CF
+        DOUBLE PRECISION XCEN,YCEN,COST0,COST1,COST2,XX1,YY1
+        DOUBLE PRECISION XX2,YY2,DD,DIST1,DIST2
+        REAL VPRR(*),XDNN(*),RADD,D00,FI00,CFF,SIGND
+
+       DO 1 I=1,3
+         VPR(I)=VPRR(I)
+  1    CONTINUE
+       RAD=RADD
+       D0=D00
+       FI0=FI00
+       CF=CFF
+
+       XCEN=CF*(RAD-D0)*DSIN(FI0)
+       YCEN=-CF*(RAD-D0)*DCOS(FI0)
+       COST0=(VPR(1)-XCEN)/(VPR(2)-YCEN)
+       COST1=COST0**2+1.D0
+       COST2=DSQRT(RAD**2/COST1)
+       YY1=YCEN+COST2
+       YY2=YCEN-COST2
+       XX1=(YY1-YCEN)*COST0+XCEN
+       XX2=(YY2-YCEN)*COST0+XCEN
+       DIST1=DSQRT((VPR(1)-XX1)**2+(VPR(2)-YY1)**2)
+       DIST2=DSQRT((VPR(1)-XX2)**2+(VPR(2)-YY2)**2)
+       DD   =DSQRT((XCEN-VPR(1))**2+(YCEN-VPR(2))**2)
+       IF(DD.LT.RAD) THEN
+         SIGND = 1.
+       ELSE
+         SIGND =-1.
+       ENDIF
+       IF(DIST1.LE.DIST2)THEN
+         XDN(1)=XX1
+         XDN(2)=YY1
+       ELSE
+         XDN(1)=XX2
+         XDN(2)=YY2
+       ENDIF
+       DO 2 I=1,3
+         XDNN(I)=XDN(I)
+   2   CONTINUE
+C        WRITE(6,*)SQRT(XDNN(1)**2+XDNN(2)**2)
+
+       RETURN
+       END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d5 2
+a6 1
+C   AUTHOR: M.A.CIOCCI 2/4/90
+d10 6
+a15 5
+C            VPR/R  POINT ASSUMED AS BEAM BEAM CROSSING
+C            RAD/R   RADIUS CURVATURE
+C            D0/R    -CHARGE*D0 (BANK-FRFT)
+C            FI0/R   FI0 (BANK FRFT)
+C            CF/R    CHARGE
+d17 1
+a17 2
+C     OUTPUT
+C            XDN(3)/R  COORDINATES OF POINT
+d33 1
+a33 1
+        DOUBLE PRECISION VPR(3),XDN(3),RAD,D0,FI0,CF,SIGND0
+d37 2
+a38 1
+         DO 1 I=1,3
+d40 5
+a44 5
+  1      CONTINUE
+         RAD=RADD
+         D0=D00
+         FI0=FI00
+         CF=CFF
+d57 14
+a70 11
+          DD=DSQRT((XCEN-VPR(1))**2+(YCEN-VPR(2))**2)
+          IF(DD.LT.RAD)SIGND0=1.
+          IF(DD.GE.RAD)SIGND0=-1.
+         IF(DIST1.LE.DIST2)THEN
+       XDN(1)=XX1
+       XDN(2)=YY1
+         ELSE
+       XDN(1)=XX2
+       XDN(2)=YY2
+         ENDIF
+         DO 2 I=1,3
+d72 1
+a72 1
+   2     CONTINUE
+d74 3
+a76 3
+         SIGND=SIGND0
+         RETURN
+           END
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

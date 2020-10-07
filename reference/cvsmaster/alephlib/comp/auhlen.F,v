@@ -1,0 +1,151 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.40.46;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.40.47;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE AUHLEN(FIELD,CHAR,SLONG,V,VOUT)
+C----------------------------------------------------------------------
+C J. Hilgart 10/12/86
+C!give new position and direction cosines of helical
+C track, given the length of track and initial position and direction
+C cosines.
+C
+C      Input:  FIELD     in kG
+C              CHAR      particle charge
+C              V(1-7)    x0, y0, z0, dc1, dc2, dc3,ptot
+C              SLONG     path length
+C      OUTPUT: VOUT(1-6) XOUT,YOUT,ZOUT,DC1OUT,DC2OUT,DC3OUT
+C --------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "alcons.h"
+      DIMENSION V(7),VOUT(6)
+C
+      CHAR = CHAR*SIGN(1.,FIELD)
+      BF = ABS(FIELD)
+      RAD=V(7)/(CLGHT*1.E-5*BF*CHAR)
+C
+      PSI = SLONG/RAD
+      CPSI=COS(PSI)
+      SPSI=SIN(PSI)
+C
+      P4COS=V(4)*CPSI
+      P5COS=V(5)*CPSI
+      P4SIN=V(4)*SPSI
+      P5SIN=V(5)*SPSI
+C
+      VOUT(1) = V(1)+RAD*(P4SIN-P5COS+V(5))
+      VOUT(2) = V(2)+RAD*(P5SIN+P4COS-V(4))
+      VOUT(3) = V(3) + SLONG*V(6)
+      VOUT(4)=P4COS+P5SIN
+      VOUT(5)=P5COS-P4SIN
+      VOUT(6) = V(6)
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

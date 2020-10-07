@@ -1,0 +1,152 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.07.14.02.46;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.47;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK sihit
+      SUBROUTINE SIHIT
+C-------------------------------------------------------------
+C! Controls tracking in SCal
+C. - B.Bloch-Devaux 910115
+C. - Called by   GUSTEP                          from this .HLB
+C. - Calls       BDROP,BLIST                     from BOS lib
+C. - Calls       ALBOS                           from ALEPHLIB
+C. - Calls       SISHOW,SITRAK                   from this LIB
+C.
+C --------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "bcs.h"
+#include "trkcom.h"
+#include "jobcom.h"
+#include "sistat.h"
+#include "siparm.h"
+      PARAMETER ( LSROW = 100)
+      PARAMETER ( NOMOR = 3)
+#include "sihijj.h"
+      LOGICAL FSIAC ,FA,FB
+C   definition of the SICAL active area (crystal plane)
+      FSIAC = TRKVOL.EQ.'SSIL'
+C -------------------------------------------------------------
+      IF(FBEGJO(9)) THEN
+C - Drop existing banks
+         CALL BDROP (IW,'SIHI')
+C
+C - Book hit banks at the beginning of events
+C
+         LEN = LSROW *LSIHIA+LMHLEN
+         CALL ALBOS('SIHI',0,LEN,JSIHI,IGARB)
+         IW(JSIHI+LMHCOL) = LSIHIA
+C - Add to the 'E' list
+         CALL BLIST(IW,'E+','SIHI')
+C
+C - Set SI print flag
+         IF(FDEBJO) THEN
+            IF (IPRIJO(9) .NE. 0) NSIPRT = 1+ICSIJO(1)
+         ELSE
+            NSIPRT = 0
+         ENDIF
+C
+C - Count events with tracks hitting SCAL
+         NSICOU(1) = NSICOU(1) +1
+         FA = .TRUE.
+         FB = .TRUE.
+C - Set begin of event flag to false
+         FBEGJO(9) = .FALSE.
+      ENDIF
+C - Count events with tracks hitting SCAL in end A and B
+      IF ( TRKELE(3).GT.0.) THEN
+         IF ( FA) THEN
+            NSICOU(2) = NSICOU(2) +1
+            FA = .FALSE.
+         ENDIF
+      ELSE
+         IF ( FB) THEN
+            NSICOU(3) = NSICOU(3) +1
+            FB = .FALSE.
+         ENDIF
+      ENDIF
+C
+C - Parametrize electron/positron if parametrization has been selected
+C   otherwise track particle in active region
+      IF ( SIPARF .AND. ITRKEL(11).EQ.2) THEN
+        CALL SISHOW
+        ITRKEL(9) = NOMOR
+      ELSE IF (FSIAC) THEN
+        CALL SITRAK
+      ENDIF
+C
+  999 CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

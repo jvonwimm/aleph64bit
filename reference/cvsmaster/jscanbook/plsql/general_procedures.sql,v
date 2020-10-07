@@ -1,0 +1,908 @@
+head	1.10;
+access;
+symbols
+	V0060:1.10
+	V0059:1.10
+	V0058:1.10
+	V0057:1.10
+	V0056:1.10
+	V0055:1.10
+	V0054:1.10
+	V0053:1.10
+	V0052:1.9
+	V0051:1.9
+	V0050:1.9
+	V0049:1.9
+	V0048:1.9
+	V0047:1.9
+	V0046:1.9
+	V0045:1.9
+	V0044:1.9
+	V0043:1.9
+	V0042:1.9
+	V0041:1.9
+	V0040:1.9
+	V0039:1.9
+	V0038:1.9
+	V0037:1.9
+	V0036:1.9
+	V0035:1.9
+	V0034:1.9
+	V0033:1.9
+	V0032:1.9
+	V0031:1.9
+	V0030:1.9
+	V0029:1.9
+	V0028:1.9
+	V0027:1.9
+	V0026:1.9
+	V0025:1.8
+	V0024:1.7
+	V0023:1.6
+	V0022:1.6
+	V0021:1.5
+	V0020:1.4
+	V0019:1.3
+	V0018:1.2
+	V0017:1.1
+	V0016:1.1
+	V0015:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.10
+date	2001.04.19.13.35.43;	author jacotf;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	2000.04.04.15.49.28;	author jacotf;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	2000.04.04.13.31.38;	author jacotf;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	2000.04.04.07.35.15;	author jacotf;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	2000.03.22.19.35.48;	author jacotf;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	2000.03.22.19.32.28;	author jacotf;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	2000.03.22.19.23.39;	author jacotf;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	2000.03.22.18.06.14;	author jacotf;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	2000.03.22.17.11.57;	author jacotf;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2000.03.22.16.49.52;	author jacotf;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.10
+log
+@comment line deleted
+@
+text
+@CREATE or REPLACE PACKAGE general_procedures 
+IS
+   PROCEDURE GENERAL
+   ( procname      IN VARCHAR2 := NULL,
+     kingal_conds  IN VARCHAR2 := NULL,
+     kinlist       IN VARCHAR2 := NULL,
+     mcyear        IN VARCHAR2 := NULL, 
+     mcdatasets    IN VARCHAR2 := NULL,
+     specpar       IN VARCHAR2 := NULL,
+     institute     IN VARCHAR2 := NULL,
+     KinMass       IN VARCHAR2 := NULL,
+     wantwhat      IN VARCHAR2 := NULL,
+     data_type     IN VARCHAR2 := NULL, 
+     typedat       IN VARCHAR2 := NULL,
+     energy_lep    IN VARCHAR2 := NULL,
+     datayear      IN VARCHAR2 := NULL,
+     runorfill     IN VARCHAR2 := NULL,
+     runorcart     IN VARCHAR2 := NULL,
+     runquality    IN VARCHAR2 := NULL,
+     PhysGroups    IN VARCHAR2 := NULL,
+     selby         IN VARCHAR2 := NULL,
+     menutype      IN VARCHAR2 := NULL,
+     page_number   IN VARCHAR2 := NULL, 
+     processings   IN VARCHAR2 := NULL,
+     filisorted    IN VARCHAR2 := NULL,
+     OutputType    IN VARCHAR2 := NULL,
+     ediryesno     IN VARCHAR2 := NULL,
+     user_name     IN VARCHAR2 := NULL,
+     hardware      IN VARCHAR2 := NULL,
+     os_name       IN VARCHAR2 := NULL,
+     ip_address    IN VARCHAR2 := NULL,
+     navigator     IN VARCHAR2 := NULL,
+     stat_by       IN VARCHAR2 := NULL,
+     web_output    IN VARCHAR2 := NULL,
+     ProgVers      IN VARCHAR2 := ' ' ,
+     aledir        IN VARCHAR2 := NULL);
+
+END general_procedures;
+/
+show errors
+
+
+CREATE or REPLACE PACKAGE BODY general_procedures 
+/*
+|| !!!! If one wants to debug a procedure !!!!
+|| Before you can use dbms_output do:
+||    set serveroutput on; 
+|| The default buffer size can be too small and to increase 
+|| the size of the STUPID buffer doing:
+||    DBMS_OUTPUT.ENABLE (1000000);
+||
+|| To increase the linesize for the output (default=80 characters) do:
+||    set linesize 132;
+*/
+IS
+
+PROCEDURE print_error_messages
+   (menu IN INTEGER,
+    message IN VARCHAR2) 
+IS
+   print_msg VARCHAR2(200);
+BEGIN
+   IF menu = 99
+   THEN
+      print_msg := message;
+      htp.centerOpen;
+      htp.header(1,print_msg);
+      htp.print('<BR>');
+      htp.centerClose;
+   ELSE
+      print_msg := LTRIM(to_char(menu,'S9')|| ' ' || message); 
+      dbms_output.put_line(print_msg);
+      htp.print(print_msg);
+   END IF;
+END;
+
+FUNCTION give_menu_nb
+   (user_name IN VARCHAR2)
+/*
+|| Check if the user is a Scanbook expert (return -2) or not (return -1).
+*/
+   RETURN INTEGER
+IS
+   nrec INTEGER;
+
+BEGIN
+DECLARE
+
+   CURSOR us_cur
+   IS
+      SELECT UserName FROM SCANBOOKEXPERTS
+      WHERE UserName like LOWER(user_name)
+   ;  
+
+BEGIN   
+
+   nrec := 0;
+   FOR a_rec IN us_cur
+   LOOP
+      nrec := nrec + 1;
+   END LOOP;
+   
+   IF nrec = 0
+   THEN
+      RETURN -1;
+   ELSE
+      RETURN -2;
+   END IF;
+
+END;
+
+END;
+
+
+PROCEDURE check_Install
+    (user_name IN VARCHAR2,
+     web_output IN VARCHAR2,
+     stat OUT VARCHAR2)
+/*
+|| Verify if new programs installation is running. 
+|| If yes, send a message to the user and exit.
+|| don't exit if the user is a scanbook expert.
+||
+|| To do that execute the function give_Install of package
+|| scanbook_installation.
+|| This function will returns 'OK' if no installation is running. 
+|| This function will be replaced automaticly by tools installation in
+|| the package scanbook_installation. 
+*/ 
+IS	  
+   menu_nb INTEGER;
+   error_msg VARCHAR2(200);
+   prstat VARCHAR2(100);
+
+BEGIN   
+
+   stat := scanbook_installation.give_Install;
+   prstat := stat;
+
+   IF stat != 'OK'  
+   THEN
+      IF web_output IS NOT NULL
+      THEN
+         menu_nb := 99;
+      ELSE 
+         menu_nb := give_menu_nb(user_name);
+
+         IF menu_nb = -2
+         THEN
+            stat := 'OK';
+         END IF;
+      END IF;
+
+      error_msg := '';
+      print_error_messages(menu_nb,error_msg);
+      error_msg := '  **** ' || prstat || ' ****';
+      print_error_messages(menu_nb,error_msg);
+      error_msg := '';
+      print_error_messages(menu_nb,error_msg);
+      error_msg := '   Please try later';
+      print_error_messages(menu_nb,error_msg);
+
+   END IF;
+   
+END check_Install;
+
+
+PROCEDURE check_dataStatus
+   (user_name IN VARCHAR2,
+    web_output IN VARCHAR2,
+    stat OUT VARCHAR2)
+/*
+|| Verify if an Oracle Update is running. 
+|| If yes, send a message to the user and exit.
+|| don't exit if the user is a scanbook expert.
+||
+|| To do that execute the function give_dataStatus of package
+|| scanbook_dataStatus.
+|| This function will returns 'OK' if no Oracle update is running. 
+|| This function will be replaced automaticly by tools installation in
+|| the package scanbook_dataStatus. 
+*/ 
+IS	  
+   menu_nb INTEGER;
+   error_msg VARCHAR2(200);
+   prstat VARCHAR2(100);
+
+BEGIN
+
+   stat := scanbook_dataStatus.give_dataStatus;
+   prstat := stat;
+
+   IF stat != 'OK'  
+   THEN 
+      IF web_output IS NOT NULL
+      THEN
+         menu_nb := 99;
+      ELSE 
+         menu_nb := give_menu_nb(user_name);
+
+         IF menu_nb = -2
+         THEN
+            stat := 'OK';
+         END IF;
+      END IF;
+
+      error_msg := '';
+      print_error_messages(menu_nb,error_msg);
+      error_msg := '  **** ' || prstat || ' ****';
+      print_error_messages(menu_nb,error_msg);
+      error_msg := '';
+      print_error_messages(menu_nb,error_msg);
+      error_msg := '   Please try later';
+      print_error_messages(menu_nb,error_msg);
+
+   END IF;
+   
+END check_dataStatus;
+
+
+PROCEDURE check_Progversion
+   (ProgVers IN VARCHAR2,
+    user_name IN VARCHAR2,
+    iok OUT INTEGER)
+/*
+|| Verify if the user is using the official Programs Version 
+|| If not, send him a message and exit.
+||
+|| To do that execute the function give_ProgramsVersion of
+|| package scanbook_version.
+|| This function Returns the Java, fortran, oracle tables 
+|| and procedures Version number
+|| This function will be replaced automaticly by tools installation in
+|| the package scanbook_version. 
+*/ 
+IS	  
+   OfficProg VARCHAR2(100);
+   loc_sep INTEGER;
+   Official_progvers VARCHAR2(100);
+   update_date VARCHAR2(100);
+   menu_nb INTEGER;
+   error_msg VARCHAR2(200);
+
+BEGIN
+   
+   OfficProg := LTRIM(scanbook_version.give_ProgramsVersion);
+   loc_sep := INSTR(OfficProg, '|');
+   Official_progvers := SUBSTR(OfficProg,1,loc_sep-2);
+   update_date := SUBSTR(OfficProg,loc_sep+2,LENGTH(OfficProg)); 
+   
+   IF ProgVers != Official_progvers
+   THEN
+      menu_nb := give_menu_nb(user_name);
+
+      IF menu_nb = -1
+      THEN
+         iok := 1;    
+      ELSE
+         iok := 0;
+      END IF;
+
+      error_msg := '';
+      print_error_messages(menu_nb,error_msg);
+      error_msg := '  **** Incompatible program Versions  ****';
+      print_error_messages(menu_nb,error_msg);
+      error_msg := '';
+      print_error_messages(menu_nb,error_msg);
+      error_msg := '  Java:          ' || ProgVers;
+      print_error_messages(menu_nb,error_msg);
+      error_msg := '  Oracle PL/SQL: ' || Official_progvers;
+      print_error_messages(menu_nb,error_msg);
+      error_msg := '';
+      print_error_messages(menu_nb,error_msg);
+      error_msg := '  Version ' || Official_progvers || ' has been released on ' || 
+                   update_date;
+      print_error_messages(menu_nb,error_msg);
+      error_msg := '';
+      print_error_messages(menu_nb,error_msg);
+      error_msg := '  You need to use the latest Java client : ';
+      print_error_messages(menu_nb,error_msg);
+      error_msg := '  - If you run from AFS :                      Stop and Restart';
+      print_error_messages(menu_nb,error_msg);
+      error_msg := '  - If you have your own local copy of scanbook.jar : Reimport ';
+      print_error_messages(menu_nb,error_msg);
+      error_msg := '  - If you are running inside a browser:        Shift + Reload ';
+      print_error_messages(menu_nb,error_msg);
+
+   END IF;
+
+END check_Progversion;
+
+
+PROCEDURE GENERAL
+   ( procname      IN VARCHAR2 := NULL,
+     kingal_conds  IN VARCHAR2 := NULL,
+     kinlist       IN VARCHAR2 := NULL,
+     mcyear        IN VARCHAR2 := NULL, 
+     mcdatasets    IN VARCHAR2 := NULL,
+     specpar       IN VARCHAR2 := NULL,
+     institute     IN VARCHAR2 := NULL,
+     KinMass       IN VARCHAR2 := NULL,
+     wantwhat      IN VARCHAR2 := NULL,
+     data_type     IN VARCHAR2 := NULL, 
+     typedat       IN VARCHAR2 := NULL,
+     energy_lep    IN VARCHAR2 := NULL,
+     datayear      IN VARCHAR2 := NULL,
+     runorfill     IN VARCHAR2 := NULL,
+     runorcart     IN VARCHAR2 := NULL,
+     runquality    IN VARCHAR2 := NULL,
+     PhysGroups    IN VARCHAR2 := NULL,
+     selby         IN VARCHAR2 := NULL,
+     menutype      IN VARCHAR2 := NULL,
+     page_number   IN VARCHAR2 := NULL, 
+     processings   IN VARCHAR2 := NULL,
+     filisorted    IN VARCHAR2 := NULL,
+     OutputType    IN VARCHAR2 := NULL,
+     ediryesno     IN VARCHAR2 := NULL,
+     user_name     IN VARCHAR2 := NULL,
+     hardware      IN VARCHAR2 := NULL,
+     os_name       IN VARCHAR2 := NULL,
+     ip_address    IN VARCHAR2 := NULL,
+     navigator     IN VARCHAR2 := NULL,
+     stat_by       IN VARCHAR2 := NULL,
+     web_output    IN VARCHAR2 := NULL,
+     ProgVers      IN VARCHAR2 := ' ' ,
+     aledir        IN VARCHAR2 := NULL)
+IS
+   iok INTEGER;
+   status VARCHAR2(100);
+
+BEGIN
+
+/*
+|| Verify if a new program's installation is running. 
+|| If yes, send a mail to the user and exit.
+*/
+   check_Install(user_name,web_output,status);
+   IF status != 'OK'
+   THEN
+      RETURN;
+   END IF; 
+
+/*
+|| Verify if an Oracle update is in process.
+|| If yes, send a mail to the user and exit.
+*/
+   check_dataStatus(user_name,web_output,status);
+   IF status != 'OK'
+   THEN
+      RETURN;
+   END IF; 
+
+/*
+|| Verify if the user is using the official Programs Version 
+|| If not, send him a message.
+*/
+   iok := 0;
+   IF web_output IS NULL
+   THEN
+      check_Progversion(ProgVers,user_name,iok);
+      IF iok != 0
+      THEN
+         RETURN;
+      END IF; 
+    END IF;
+
+/*
+|| Execute the procedure COLONEL
+*/
+scanbook_procedures.COLONEL(
+     procname    ,
+     kingal_conds,
+     kinlist     ,
+     mcyear      , 
+     mcdatasets  ,
+     specpar     ,
+     institute   ,
+     KinMass     ,
+     wantwhat    ,
+     data_type   , 
+     typedat     ,
+     energy_lep  ,
+     datayear    ,
+     runorfill   ,
+     runorcart   ,
+     runquality  ,
+     PhysGroups  ,
+     selby       ,
+     menutype    ,
+     page_number , 
+     processings ,
+     filisorted  ,
+     OutputType  ,
+     ediryesno   ,
+     user_name   ,
+     hardware    ,
+     os_name     ,
+     ip_address  ,
+     navigator   ,
+     stat_by     ,
+     web_output  ,
+     ProgVers    );
+
+END GENERAL;
+
+END general_procedures;
+/
+show errors
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@
+
+
+1.9
+log
+@In general check_Progversion modified
+@
+text
+@a326 1
+--     header        INTEGER   )
+@
+
+
+1.8
+log
+@new removed
+@
+text
+@d274 2
+a275 1
+      error_msg := '  Please upgrade your scanbook client';
+d279 7
+a285 2
+      error_msg := '  Version ' || Official_progvers || ' has been released on ' || 
+                   update_date;
+@
+
+
+1.7
+log
+@Correct RunsInfo + web_output
+@
+text
+@d365 1
+a365 1
+new_scanbook_procedures.COLONEL(
+@
+
+
+1.6
+log
+@improve verification procedures
+@
+text
+@d63 12
+a74 3
+   print_msg := LTRIM(to_char(menu,'S9')|| ' ' || message); 
+   dbms_output.put_line(print_msg);
+   htp.print(print_msg);
+d117 2
+a118 1
+    stat OUT VARCHAR2)
+d141 2
+a142 4
+   THEN 
+      menu_nb := give_menu_nb(user_name);
+
+      IF menu_nb = -2
+d144 8
+a151 1
+         stat := 'OK';
+d170 1
+d195 1
+a195 3
+      menu_nb := give_menu_nb(user_name);
+
+      IF menu_nb = -2
+d197 8
+a204 1
+         stat := 'OK';
+d332 1
+a332 1
+   check_Install(user_name,status);
+d342 1
+a342 1
+   check_dataStatus(user_name,status);
+d352 2
+a353 2
+   check_Progversion(ProgVers,user_name,iok);
+   IF iok != 0
+d355 6
+a360 2
+      RETURN;
+   END IF; 
+d365 1
+a365 1
+scanbook_procedures.COLONEL(
+@
+
+
+1.5
+log
+@improve verification procedures
+@
+text
+@d241 2
+@
+
+
+1.4
+log
+@improve verification procedures
+@
+text
+@a105 64
+PROCEDURE check_Progversion
+   (ProgVers IN VARCHAR2,
+    user_name IN VARCHAR2,
+    iok OUT INTEGER)
+/*
+|| Verify if the user is using the official Programs Version 
+|| If not, send him a message and exit.
+||
+|| To do that execute the function give_ProgramsVersion of
+|| package scanbook_version.
+|| This function Returns the Java, fortran, oracle tables 
+|| and procedures Version number
+|| This function will be replaced automaticly by tools installation in
+|| the package scanbook_version. 
+*/ 
+IS	  
+   OfficProg VARCHAR2(100);
+   loc_sep INTEGER;
+   Official_progvers VARCHAR2(100);
+   update_date VARCHAR2(100);
+   menu_nb INTEGER;
+   error_msg VARCHAR2(200);
+
+BEGIN
+   
+   OfficProg := LTRIM(scanbook_version.give_ProgramsVersion);
+   loc_sep := INSTR(OfficProg, '|');
+   Official_progvers := SUBSTR(OfficProg,1,loc_sep-2);
+   update_date := SUBSTR(OfficProg,loc_sep+2,LENGTH(OfficProg)); 
+   
+   IF ProgVers != Official_progvers
+   THEN
+      menu_nb := give_menu_nb(user_name);
+
+      IF menu_nb = -1
+      THEN
+         iok := 1;    
+      ELSE
+         iok := 0;
+      END IF;
+
+      error_msg := '  **** Incompatible program Versions  ****';
+      print_error_messages(menu_nb,error_msg);
+      error_msg := '';
+      print_error_messages(menu_nb,error_msg);
+      error_msg := '  Java:          ' || ProgVers;
+      print_error_messages(menu_nb,error_msg);
+      error_msg := '  Oracle PL/SQL: ' || Official_progvers;
+      print_error_messages(menu_nb,error_msg);
+      error_msg := '';
+      print_error_messages(menu_nb,error_msg);
+      error_msg := '  Please upgrade your scanbook client';
+      print_error_messages(menu_nb,error_msg);
+      error_msg := '';
+      print_error_messages(menu_nb,error_msg);
+      error_msg := '  Version ' || Official_progvers || ' has been released on ' || 
+                   update_date;
+      print_error_messages(menu_nb,error_msg);
+
+   END IF;
+
+END check_Progversion;
+
+
+d200 64
+d306 2
+a307 2
+|| Verify if the user is using the official Programs Version 
+|| If not, send him a message.
+d309 2
+a310 2
+   check_Progversion(ProgVers,user_name,iok);
+   IF iok != 0
+d316 1
+a316 1
+|| Verify if a new program's installation is running. 
+d319 1
+a319 1
+   check_Install(user_name,status);
+d326 2
+a327 2
+|| Verify if an Oracle update is in process.
+|| If yes, send a mail to the user and exit.
+d329 2
+a330 2
+   check_dataStatus(user_name,status);
+   IF status != 'OK'
+d334 1
+@
+
+
+1.3
+log
+@minor improvment
+@
+text
+@d68 37
+d108 1
+d130 1
+a130 1
+   iok := 0;
+d138 8
+a145 1
+      menu_nb := -1;
+d164 1
+a164 1
+      iok := 1;    
+d167 1
+a167 1
+END;
+a184 1
+   nrec INTEGER;
+d187 1
+a187 8
+
+BEGIN
+DECLARE
+   CURSOR us_cur
+   IS
+      SELECT UserName FROM SCANBOOKEXPERTS
+      WHERE UserName like LOWER(user_name)
+   ;  
+a190 6
+   nrec := 0;
+   FOR a_rec IN us_cur
+   LOOP
+      nrec := nrec + 1;
+   END LOOP;
+   
+d192 1
+d196 3
+a198 1
+      IF nrec = 0
+d200 2
+a201 1
+         menu_nb := -1;
+d203 8
+a210 19
+         error_msg := '';
+         print_error_messages(menu_nb,error_msg);
+         error_msg := '  **** ' || stat || ' ****';
+         print_error_messages(menu_nb,error_msg);
+         error_msg := '';
+         print_error_messages(menu_nb,error_msg);
+         error_msg := '   Please try later';
+         print_error_messages(menu_nb,error_msg);
+      ELSE
+         menu_nb := -2;
+
+         error_msg := '';
+         print_error_messages(menu_nb,error_msg);
+         error_msg := '  **** ' || stat || ' ****';
+         print_error_messages(menu_nb,error_msg);
+         error_msg := '';
+         print_error_messages(menu_nb,error_msg);
+         error_msg := '   Please try later';
+         print_error_messages(menu_nb,error_msg);
+a211 3
+         stat := 'OK';
+
+      END IF;
+a213 2
+END;
+
+a231 1
+   nrec INTEGER;
+d234 1
+a236 6
+DECLARE
+   CURSOR us_cur
+   IS
+      SELECT UserName FROM SCANBOOKEXPERTS
+      WHERE UserName like LOWER(user_name)
+   ;  
+a237 8
+BEGIN   
+
+   nrec := 0;
+   FOR a_rec IN us_cur
+   LOOP
+      nrec := nrec + 1;
+   END LOOP;
+   
+d239 1
+d241 1
+a241 1
+   IF stat != 'OK'
+d243 3
+a245 1
+      IF nrec = 0
+a246 22
+         menu_nb := -1;
+
+         error_msg := '';
+         print_error_messages(menu_nb,error_msg);
+         error_msg := '  **** ' || stat || ' ****';
+         print_error_messages(menu_nb,error_msg);
+         error_msg := '';
+         print_error_messages(menu_nb,error_msg);
+         error_msg := '   Please try later';
+         print_error_messages(menu_nb,error_msg);
+      ELSE
+         menu_nb := -2;
+
+         error_msg := '';
+         print_error_messages(menu_nb,error_msg);
+         error_msg := '  **** ' || stat || ' ****';
+         print_error_messages(menu_nb,error_msg);
+         error_msg := '';
+         print_error_messages(menu_nb,error_msg);
+         error_msg := '   Please try later';
+         print_error_messages(menu_nb,error_msg);
+
+a247 1
+
+a248 1
+   END IF;
+d250 8
+a257 1
+END;
+d259 2
+d309 1
+a309 1
+   check_Progversion(ProgVers,iok);
+@
+
+
+1.2
+log
+@replace new_scab=nbook by scanbook
+@
+text
+@d175 1
+d186 1
+d248 1
+d259 1
+@
+
+
+1.1
+log
+@add new GENERAL
+@
+text
+@d340 1
+a340 1
+new_scanbook_procedures.COLONEL(
+@
+

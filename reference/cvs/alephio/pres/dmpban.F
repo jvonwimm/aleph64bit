@@ -1,0 +1,577 @@
+      INTEGER FUNCTION DMPBAN(BNAME)
+C-----------------------------------------------------------------------
+C!    Decompress all banks named BNAME
+CKEY PRESS DMPBAN DECOMPRESS /USER
+C!
+C!    AUTHOR: D.Harvatis        MAR 89
+C!
+C!    INPUT :  BNAME : name of bank to be decompressed
+C!
+C!    RETURN VALUE   : -2 -> No decompression for some or all banks.
+C!                           Either the information block was corrupted
+C!                           or, there was not enough space in the BOS
+C!                           array (even after garbage collection).
+C!                     -1 -> Check on some or all compressed banks
+C!                           failed. Decompressed banks still produced !
+C!                      0 -> SUCCESS !
+C!                     +1 -> Bank name does not exist.
+C!                           No decompressed bank produced.
+C!    Description :
+C!    On the VAX, if LMACHI = 0  convert from IBM to VAX format
+C!                if LMACHI = -1 convert from CRAY to VAX format.
+C!                if LMACHI = 1 convert from APOLLO to VAX format.
+C!    On IBM,     if LMACHI = 0  convert VAX to IBM format
+C!                if LMACHI = -1 convert from CRAY to IBM format.
+c!                if LMACHI = 1 convert from APOLLO to IBM format.
+C!    On CRAY,    if LMACHI = 0  convert from IBM to CRAY format
+C!                if LMACHI = -1 convert from VAX to CRAY format.
+c!                if LMACHI = 1 convert from APOLLO to CRAY format.
+C!    On APOLLO   if LMACHI = 0  convert from IBM to APOLLO format
+C!                if LMACHI = -1 convert from VAX to APOLLO format.
+C!                if LMACHI = 1 convert from CRAY to APOLLO format.
+C!    On DECS     if LMACHI = 0  convert from IBM to DECS format
+C!                if LMACHI = -1 convert from CRAY to DECS format.
+C!                if LMACHI = 1 convert from APOLLO to DECS format.
+C!
+C!    Calls : DMPCHR, DMPBL5, DMPBL4, DMPBL3, DMPCOP
+C-----------------------------------------------------------------------
+#ifndef DOC
+      CHARACTER*(*) BNAME
+      CHARACTER*800 LIST
+      CHARACTER*405 FMSTR
+      CHARACTER*4   BNAM2,COMP,HOST,CHAINT
+      CHARACTER*200 AFI
+      CHARACTER BLANK
+      LOGICAL       IBMFMT,VAXFMT,VALID,CRAFMT,APOFMT,FIRST
+      PARAMETER     (MAXCOL=200,MAXROW=10000)
+      INTEGER       ITYPE(MAXCOL),NBITS(MAXCOL),ILOW(MAXCOL)
+      INTEGER       JARR(MAXROW),TOLOWER
+      REAL          FACT(MAXCOL)
+#include "bcs.h"
+#if defined(CRAY)
+      INTEGER       IARR(MAXROW)
+#else
+      EQUIVALENCE   (COMP,ICOMP)
+      EQUIVALENCE   (BNAM2,IBNA2)
+#endif
+      SAVE
+      DATA BLANK / ' '/, IFI/0/
+C----------------------------------------------------------------------
+      IF (IFI.EQ.0) THEN
+#include "ctolow.h"
+#include "cmphost.h"
+#if defined(ALEPH_DEC) && defined(UNIX) || defined(ALEPH_LINUX)
+C      HOST is DECStation, but Floating point format on DECS is VAX
+         HOST = 'DECS'
+#endif
+         LIST = BLANK
+         IFI = 1
+      ENDIF
+C
+C- next entry
+      FMSTR=BLANK
+      AFI=BLANK
+C     Number Of Banks
+      NOB=0
+C     Number of Successfuly decompressed Banks
+      NSB=0
+C     Number of Decompressed Banks
+      NDB=0
+      FIRST=.TRUE.
+      NAMI=NAMIND(BNAME)
+      INEXT=IW(NAMI)
+C
+C     loop through all banks named BNAME
+   10     IND=INEXT
+          IF (IND.EQ.0) GO TO 99
+          INEXT=IW(IND-1)
+          NOB=NOB+1
+          NROW=IW(IND+2)
+C         Check if MAXROW, MAXCOL are big enough
+          IF (NROW.GT.MAXROW) GO TO 10
+          NCOL=IW(IND+1)
+          IF (NCOL.GT.MAXCOL) GO TO 10
+C         If size >= (cols * rows) + 2 then it is not a compressed bank
+          IF (IW(IND).GE.(NCOL*NROW+2)) GO TO 10
+          IN1=IND+4
+C         loop through every column to get column compression info
+C         do not decompress if info. is not valid
+          VALID=.TRUE.
+          DO  IC=1,NCOL
+              FACT(IC) = 0.
+              IC23=3+2*IC
+              ITYPE(IC)=IW(IN1)
+              IN1=IN1+1
+              IF (ITYPE(IC).EQ.3) THEN
+                  NBITS(IC)=IW(IN1)
+                  ILOW(IC)=IW(IN1+1)
+                  FACT(IC)=RW(IN1+2)
+                  IN1=IN1+3
+                  IF (FIRST) AFI(IC:IC)='F'
+               ELSE IF ((ITYPE(IC).EQ.4).OR.(ITYPE(IC).EQ.5)) THEN
+                  NBITS(IC)=IW(IN1)
+                  ILOW(IC)=IW(IN1+1)
+                  IN1=IN1+2
+                  IF (FIRST) AFI(IC:IC)='I'
+              ELSE IF (ITYPE(IC).EQ.2) THEN
+                  NBITS(IC)=0
+                  IF (FIRST) AFI(IC:IC)='F'
+              ELSE IF (ITYPE(IC).EQ.1) THEN
+                  NBITS(IC)=0
+                  IF (FIRST) AFI(IC:IC)='A'
+              ELSE
+                  VALID=.FALSE.
+              END IF
+             IF (NBITS(IC).LT.0 .OR. NBITS(IC).GT.31) VALID =.FALSE.
+          ENDDO
+C
+          IF (.NOT.VALID) GO TO 10
+C
+C the bank is a valid one . Get the origin computer.
+C
+          ICOMP=IW(IND+3)
+#if defined(CRAY)
+          COMP=CHAINT(ICOMP)
+#endif
+          IBMFMT=.FALSE.
+          VAXFMT=.FALSE.
+          CRAFMT=.FALSE.
+          APOFMT=.FALSE.
+          IF (COMP.NE.HOST) THEN
+#if defined(ALEPH_DEC) || defined(ALEPH_LINUX)
+#if defined(UNIX)
+              IF (COMP.EQ.'YARC') THEN
+                  CRAFMT=.TRUE.
+                  LMACHI = -1
+              ELSE IF (COMP.EQ.'VAX ') THEN
+                 VAXFMT=.TRUE.
+              ELSEIF (COMP.EQ.'LOPA') THEN
+                 APOFMT=.TRUE.
+                 LMACHI = 1
+              ELSE
+                 LMACHI=0
+                 CALL DMPCHR(ICOMP,LMACHI,1)
+                 IF (COMP.EQ.'IBM ') THEN
+                    IBMFMT=.TRUE.
+                 ELSE
+                    GO TO 10
+                 END IF
+              END IF
+#else
+             IF (COMP.EQ.'YARC') THEN
+                CRAFMT=.TRUE.
+                LMACHI = -1
+             ELSEIF (COMP.EQ.'LOPA') THEN
+                APOFMT=.TRUE.
+                LMACHI = 1
+             ELSE
+                LMACHI=0
+                CALL DMPCHR(ICOMP,LMACHI,1)
+                IF (COMP.EQ.'IBM ') THEN
+                   IBMFMT=.TRUE.
+                ELSE
+                   GO TO 10
+                END IF
+             END IF
+#endif
+#else
+#if defined(IBM)
+              LMACHI=0
+              CALL DMPCHR(ICOMP,LMACHI,1)
+              IF (COMP.EQ.'VAX ') THEN
+                  VAXFMT=.TRUE.
+              ELSE IF (COMP.EQ.'YARC') THEN
+                  CRAFMT=.TRUE.
+                  LMACHI = -1
+              ELSEIF (COMP.EQ.'LOPA') THEN
+                  APOFMT=.TRUE.
+                  LMACHI = 1
+              ELSE
+                  GO TO 10
+              ENDIF
+#else
+#if defined(CRAY)
+              IF (COMP.EQ.' XAV') THEN
+                  VAXFMT=.TRUE.
+                  LMACHI = -1
+              ELSEIF (COMP.EQ.'APOL') THEN
+                  APOFMT=.TRUE.
+                  LMACHI = 1
+              ELSE
+                  LMACHI=0
+                  CALL DMPCHR(ICOMP,LMACHI,1)
+                  COMP=CHAINT(ICOMP)
+                  IF (COMP.EQ.'IBM ') THEN
+                      IBMFMT=.TRUE.
+                  ELSE
+                      GO TO 10
+                  END IF
+              END IF
+#else
+#if defined(APOLLO) || defined(ALEPH_HP) || defined(RS6K) || defined(ALEPH_SGI)
+              IF (COMP.EQ.' XAV') THEN
+                 VAXFMT=.TRUE.
+                 LMACHI = -1
+              ELSEIF (COMP.EQ.'CRAY') THEN
+                 CRAFMT=.TRUE.
+                 LMACHI = 1
+              ELSE
+              LMACHI=0
+              CALL DMPCHR(ICOMP,LMACHI,1)
+                IF (COMP.EQ.'IBM ') THEN
+                  IBMFMT=.TRUE.
+                ELSE
+                  GO TO 10
+                ENDIF
+              ENDIF
+#endif
+#endif
+#endif
+#endif
+          END IF
+C
+C - get the name of the decompressed bank
+          IBNA2=IW(IND-3)-TOLOWER
+#if defined(CRAY)
+          BNAM2=CHAINT(IBNA2)
+#endif
+C
+C - at the first occurence of the bank define the BOS format
+          IF (FIRST) THEN
+              FIRST=.FALSE.
+              CALL DMPFMT(NCOL,AFI,FMSTR)
+C             format new (decompressed) bank
+              CALL BKFMT(BNAM2,FMSTR)
+          ENDIF
+C
+C - convert the FACTor of conversion of floating point to HOST format
+#if defined(ALEPH_DEC) || defined(ALEPH_LINUX)
+#if defined(UNIX)
+          IF (VAXFMT) THEN
+              CALL SXSDR(FACT,NCOL)
+          ELSE IF (IBMFMT.OR.CRAFMT.OR.APOFMT) THEN
+              CALL SIBSDR(FACT,NCOL)
+          END IF
+#else
+          IF (IBMFMT.OR.CRAFMT.OR.APOFMT) CALL SIBSX(FACT,NCOL)
+#endif
+#else
+#if defined(IBM)
+          IF (VAXFMT) CALL SVXSX(FACT,NCOL)
+#else
+#if defined(APOLLO) || defined(ALEPH_HP) || defined(RS6K) || defined(ALEPH_SGI)
+         IF (VAXFMT) THEN
+              DO 40 J=1,NCOL
+                  CALL CFRVAX(FACT(J),1)
+   40         CONTINUE
+          ELSE
+              CALL CFRIBM(FACT,NCOL,3)
+          END IF
+#endif
+#endif
+#endif
+C
+C - create the decompressed bank with the same bank #
+C   make a garbage collection if necessary
+C   do not decompress if not enough space
+          NR=IW(IND-2)
+          NSIZ2=NCOL*NROW+2
+          IND2=NBANK(BNAM2,NR,NSIZ2)
+          IF (IND2.EQ.0) THEN
+              CALL BGARB(IW)
+              INEXT=IW(NAMI)
+   11             IND=INEXT
+                  INEXT=IW(IND-1)
+                  IF (IW(IND-2).NE.NR) GO TO 11
+              IND2=NBANK(BNAM2,NR,NSIZ2)
+              IF (IND2.EQ.0) GO TO 10
+          END IF
+          IW(IND2+1)=NCOL
+          IW(IND2+2)=NROW
+C
+C - decompress one column at a time
+C
+#if defined(ALEPH_DEC) || defined(ALEPH_LINUX)
+#if defined(UNIX)
+C ================== start DECS ============== start DECS =========
+          DO  IC=1,NCOL
+             IN2=IND2+2+IC
+             IF (NBITS(IC).EQ.0) THEN
+C             column not compressed
+                IF ((ITYPE(IC).EQ.1) .AND.
+     &           (IBMFMT.OR.CRAFMT.OR.APOFMT)) THEN
+C                convert characters
+                   CALL DMPCHR(IW(IN1),LMACHI,NROW)
+                   DO IN1=IN1,IN1+NROW-1
+                      IW(IN2)=IW(IN1)
+                      IN2=IN2+NCOL
+                   END DO
+                ELSEIF ((ITYPE(IC).EQ.2) .AND.
+     &           (IBMFMT.OR.CRAFMT.OR.APOFMT)) THEN
+C                 convert floating point numbers to DECS format
+                   CALL SIBSDR(RW(IN1),NROW)
+                   DO IN1=IN1,IN1+NROW-1
+                      RW(IN2)=RW(IN1)
+                      IN2=IN2+NCOL
+                   ENDDO
+                ELSEIF ((ITYPE(IC).EQ.2) .AND. VAXFMT) THEN
+                   CALL SXSDR(RW(IN1),NROW)
+                   DO IN1=IN1,IN1+NROW-1
+                      RW(IN2)=RW(IN1)
+                      IN2=IN2+NCOL
+                   ENDDO
+                ELSE
+C               copy column - no conversion needed
+                   CALL DMPCOP(IW(IN1),IW(IN2),NCOL,NROW)
+                   IN1=IN1+NROW
+                ENDIF
+C
+C           column is compressed
+             ELSEIF (ITYPE(IC).EQ.3) THEN
+C             real
+                NWORDS=(NROW*NBITS(IC)+31)/32
+                CALL DMPBL3(IW(IN1),RW(IN2),NROW,NBITS(IC),
+     +                        NCOL,ILOW(IC),FACT(IC))
+                IN1=IN1+NWORDS
+             ELSE IF (ITYPE(IC).EQ.4) THEN
+C             integer
+                NWORDS=(NROW*NBITS(IC)+31)/32
+                CALL DMPBL4(IW(IN1),IW(IN2),NROW,NBITS(IC),
+     +                        NCOL,ILOW(IC))
+                IN1=IN1+NWORDS
+             ELSE
+C             positive integer
+                NWORDS=(NROW*NBITS(IC)+31)/32
+                CALL DMPBL5(IW(IN1),IW(IN2),NROW,NBITS(IC),NCOL)
+                IN1=IN1+NWORDS
+             ENDIF
+          ENDDO
+C ================= end DECS ================== end DECS =============
+#else
+C ======================= start VAX =========== start VAX ============
+          DO  IC=1,NCOL
+             IN2=IND2+2+IC
+             IF (NBITS(IC).EQ.0) THEN
+C             column not compressed
+                IF ((ITYPE(IC).EQ.1).AND.
+     $              (IBMFMT.OR.CRAFMT.OR.APOFMT)) THEN
+C                 convert characters
+                   CALL DMPCHR(IW(IN1),LMACHI,NROW)
+                   DO IN1=IN1,IN1+NROW-1
+                      IW(IN2)=IW(IN1)
+                      IN2=IN2+NCOL
+                   ENDDO
+                ELSEIF ((ITYPE(IC).EQ.2).AND.
+     +                    (IBMFMT.OR.CRAFMT.OR.APOFMT)) THEN
+C                convert reals to VAX format
+                   CALL SIBSX(RW(IN1),NROW)
+                   DO IN1=IN1,IN1+NROW-1
+                      RW(IN2)=RW(IN1)
+                      IN2=IN2+NCOL
+                   ENDDO
+                ELSE
+C                copy column - no conversion needed
+                   CALL DMPCOP(IW(IN1),IW(IN2),NCOL,NROW)
+                   IN1=IN1+NROW
+                ENDIF
+             ELSEIF (ITYPE(IC).EQ.3) THEN
+C             compressed real
+                NWORDS=(NROW*NBITS(IC)+31)/32
+C             call decompression routine
+                CALL DMPBL3(IW(IN1),RW(IN2),NROW,NBITS(IC),
+     +                      NCOL,ILOW(IC),FACT(IC))
+                IN1=IN1+NWORDS
+             ELSEIF (ITYPE(IC).EQ.4) THEN
+C             compressed integer
+                NWORDS=(NROW*NBITS(IC)+31)/32
+                CALL DMPBL4(IW(IN1),IW(IN2),NROW,NBITS(IC),
+     +                      NCOL,ILOW(IC))
+                IN1=IN1+NWORDS
+             ELSE
+C             positive integer
+                NWORDS=(NROW*NBITS(IC)+31)/32
+                CALL DMPBL5(IW(IN1),IW(IN2),NROW,NBITS(IC),NCOL)
+                IN1=IN1+NWORDS
+             ENDIF
+          ENDDO
+C ================end VAX =================== end VAX ===================
+#endif
+#else
+#if defined(IBM)
+C ================== start IBM ================== start IBM ===========
+          DO  IC=1,NCOL
+             IN2=IND2+2+IC
+             IF (NBITS(IC).EQ.0) THEN
+C             column not compressed
+                IF ((ITYPE(IC).EQ.1).AND.
+     +              (VAXFMT.OR.CRAFMT.OR.APOFMT)) THEN
+                   LMACHI=0
+                   CALL DMPCHR(IW(IN1),LMACHI,NROW)
+                   DO IN1=IN1,IN1+NROW-1
+                      IW(IN2)=IW(IN1)
+                      IN2=IN2+NCOL
+                   ENDDO
+                ELSE IF ((ITYPE(IC).EQ.2).AND.VAXFMT) THEN
+                   CALL SVXSX(RW(IN1),NROW)
+                   DO IN1=IN1,IN1+NROW-1
+                      RW(IN2)=RW(IN1)
+                      IN2=IN2+NCOL
+                   ENDDO
+                ELSE
+                   DO IN1=IN1,IN1+NROW-1
+                      IW(IN2)=IW(IN1)
+                      IN2=IN2+NCOL
+                   ENDDO
+                END IF
+C
+C            column is compressed
+              ELSE IF (ITYPE(IC).EQ.3) THEN
+C              real
+                  NWORDS=(NROW*NBITS(IC)+31)/32
+                  CALL BLOW(IW(IN1),JARR,NROW,NBITS(IC))
+                  IN1=IN1+NWORDS
+                  DO I=1,NROW
+                      RW(IN2)=REAL(ILOW(IC)+JARR(I))/FACT(IC)
+                      IN2=IN2+NCOL
+                  ENDDO
+              ELSE IF (ITYPE(IC).EQ.4) THEN
+C              integer
+                  NWORDS=(NROW*NBITS(IC)+31)/32
+                  CALL BLOW(IW(IN1),JARR,NROW,NBITS(IC))
+                  IN1=IN1+NWORDS
+                  DO I=1,NROW
+                      IW(IN2)=JARR(I)+ILOW(IC)
+                      IN2=IN2+NCOL
+                  ENDDO
+              ELSE
+C              positive integer
+                  NWORDS=(NROW*NBITS(IC)+31)/32
+                  CALL BLOW(IW(IN1),JARR,NROW,NBITS(IC))
+                  IN1=IN1+NWORDS
+                  DO I=1,NROW
+                      IW(IN2)=JARR(I)
+                      IN2=IN2+NCOL
+                  ENDDO
+             ENDIF
+          ENDDO
+C ==============end IBM ============= end IBM ====================
+#else
+#if defined(APOLLO) || defined(ALEPH_HP) || defined(RS6K) || defined(ALEPH_SGI)
+C ======= start APOLLO =========== start HP SGI======= start RS6K ==
+          DO  IC=1,NCOL
+             IN2=IND2+2+IC
+             IF (NBITS(IC).EQ.0) THEN
+C             column not compressed
+                IF (ITYPE(IC).EQ.1) THEN
+                   IF (COMP.NE.HOST) THEN
+                      IF (LMACHI.EQ.0.OR.LMACHI.EQ.-1)
+     +                CALL DMPCHR(IW(IN1),LMACHI,NROW)
+                   ENDIF
+                   DO IN1=IN1,IN1+NROW-1
+                      IW(IN2)=IW(IN1)
+                      IN2=IN2+NCOL
+                   ENDDO
+                ELSE IF (ITYPE(IC).EQ.2) THEN
+                   IF (VAXFMT) THEN
+                      CALL CFRVAX(RW(IN1),NROW)
+                      DO IN1=IN1,IN1+NROW-1
+                         RW(IN2) = RW(IN1)
+                         IN2=IN2+NCOL
+                      ENDDO
+                   ELSE
+                      CALL CFRIBM(RW(IN1),NROW,3)
+                      DO IN1=IN1,IN1+NROW-1
+                         RW(IN2)=RW(IN1)
+                         IN2=IN2+NCOL
+                      ENDDO
+                   END IF
+                ELSE
+                   DO IN1=IN1,IN1+NROW-1
+                      IW(IN2)=IW(IN1)
+                      IN2=IN2+NCOL
+                   ENDDO
+                END IF
+C
+C           the column is compressed
+             ELSEIF (ITYPE(IC).EQ.3) THEN
+C             real
+C               decompressed data will be placed in JARR array
+                NWORDS=(NROW*NBITS(IC)+31)/32
+                CALL BLOW(IW(IN1),JARR,NROW,NBITS(IC))
+                IN1=IN1+NWORDS
+                DO I=1,NROW
+                   RW(IN2)=REAL(ILOW(IC)+JARR(I))/FACT(IC)
+                   IN2=IN2+NCOL
+                ENDDO
+             ELSE IF (ITYPE(IC).EQ.4) THEN
+C             integer
+                NWORDS=(NROW*NBITS(IC)+31)/32
+                CALL BLOW(IW(IN1),JARR,NROW,NBITS(IC))
+                IN1=IN1+NWORDS
+                DO I=1,NROW
+                   IW(IN2)=JARR(I)+ILOW(IC)
+                   IN2=IN2+NCOL
+                ENDDO
+             ELSE
+C             positive integer
+                NWORDS=(NROW*NBITS(IC)+31)/32
+                CALL BLOW(IW(IN1),JARR,NROW,NBITS(IC))
+                IN1=IN1+NWORDS
+                DO I=1,NROW
+                   IW(IN2)=JARR(I)
+                   IN2=IN2+NCOL
+                ENDDO
+             ENDIF
+          ENDDO
+C =========end APOLLO ====== end HP SGI============ end RS6K ========
+#endif
+#endif
+#endif
+C
+C         increase Number of Decompressed Banks
+          NDB=NDB+1
+C         error checking :
+C         check if the size of the compressed bank matches the size
+C         of the data read and decompressed
+          IF ((IN1-1-IND).EQ.IW(IND)) THEN
+C             no check sum. drop compressed bank
+              IN=NDROP(BNAME,NR)
+C             increase Number of Successfuly decompressed Banks
+              NSB=NSB+1
+          ELSE IF ((IN1-IND).EQ.IW(IND)) THEN
+C             checksum existing
+              IF (COMP.EQ.HOST) THEN
+C                 the checksum is valid only if the compression was
+C                 done on the same machine.
+                  CALL CMPSUM(IW(IND2+1),NSIZ2,ISUM)
+              ELSE
+                  ISUM=IW(IN1)
+              END IF
+              IF (ISUM.EQ.IW(IN1)) THEN
+C                 if the checksum is OK,
+C                 the bank was Successfuly decompressed
+                  IN=NDROP(BNAME,NR)
+                  NSB=NSB+1
+              END IF
+          END IF
+          GO TO 10
+C     no more banks
+   99 IF (NOB.EQ.0) THEN
+C     bank doesn't exist
+          DMPBAN=1
+          RETURN
+      ELSE IF (NSB.EQ.NOB) THEN
+C     all banks OK
+          DMPBAN=0
+          RETURN
+      ELSE IF (NDB.EQ.NOB) THEN
+C     check failed in some banks
+          DMPBAN=-1
+          RETURN
+      ELSE
+C     some banks were not decompressed
+          DMPBAN=-2
+          RETURN
+      END IF
+      END
+#endif

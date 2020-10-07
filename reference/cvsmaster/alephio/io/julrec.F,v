@@ -1,0 +1,94 @@
+head	1.1;
+access;
+symbols
+	alio83:1.1
+	alio82:1.1
+	alio81:1.1
+	alio80:1.1
+	alio74:1.1
+	alio73:1.1
+	alio72:1.1
+	alio71:1.1
+	alio70:1.1
+	alio68:1.1
+	alio69:1.1
+	alio67:1.1
+	alio66:1.1
+	alio65:1.1
+	alio64:1.1
+	alio63:1.1
+	alio62:1.1
+	alio61:1.1
+	alio60:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.04.23.10.00.50;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@move alph, dbas, a part of alef and a part of c to alephio
+Modified Files:
+ 	version.h
+ Added Files:
+ 	adbrow.F adbrpn.F adbrun.F adbswp.F adbver.F agetdb.F agtfil.F
+	albos.F aldawr.F aldtyp.F aleveh.F alfind.F alfmt.F algtbk.F
+ 	algtdb.F algtlu.F algtro.F algtyp.F alinst.F alk7fil.F
+ 	alk7fru.F alk7op.F alk7tru.F alredb.F alrune.F alrunh.F
+ 	alrunr.F alseed.F alstho.F alstin.F alstri.F altabl.F alvsn.F
+ 	aopdbs.F aublis.F aubos.F aubprs.F bkcari.F bkinca.F bkrhab.F
+ 	bkrhal.F bkrhaw.F bktobk.F cafiht.F chahol.F dafrds.F gtdbas.F
+ 	gtstup.F igtfmt.F jhocha.F julrec.F junial.F junidb.F
+ 	kbytrec.F loctab.F nameru.F ubpack.F uclean.F uindxs.F usbos.F
+ 	usgtdb.F utcblk.F utccop.F utcofo.F utwocl.F utwoex.F
+Removed Files:
+	noibm.F
+@
+text
+@      FUNCTION JULREC (ATYP,CHDEVI)
+C --------------------------------------------------------------------
+CKEY ALEF USER LREC / USER
+C - F.Ranjard - 900307
+C! return the  record length
+C - Input     : ATYP  / CHAR     aleph type
+C               CHDEVI / CHAR    file device
+C - Output    : JULREC           record length in bytes
+C
+C Look for the keyword LREC in FDEVI
+C IF it is found decode the record length which follows and reduce
+C    the CHDEVI length
+C ELSE return the aleph record length for the ATYP type.
+C
+C -------------------------------------------------------------------
+#ifndef DOC
+      CHARACTER*(*) ATYP,CHDEVI
+C -------------------------------------------------------------------
+      ICHAR0 = ICHAR ('0')
+      LENDEV = LNBLNK (CHDEVI)
+      NUMB = 0
+      LR = INDEX (CHDEVI,'LREC')
+      IF (LR.GT.0) THEN
+         DO 69 I= LR+5,LENDEV
+            IF (CHDEVI(I:I).EQ.' ') GOTO 69
+            N = ICHAR(CHDEVI(I:I)) - ICHAR0
+            IF (N.GE.0 .AND. N.LE.9) NUMB = 10*NUMB + N
+ 69      CONTINUE
+         CHDEVI = CHDEVI (1:LR-2)
+         LREC = NUMB
+      ENDIF
+      IF (NUMB.EQ.0) LREC = KALREC(ATYP)
+C
+      JULREC = LREC
+C
+      END
+#endif
+@

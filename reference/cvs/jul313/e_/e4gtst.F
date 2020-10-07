@@ -1,0 +1,67 @@
+      SUBROUTINE E4GTST(ICOL1,ICOL2,JROW1,JROW2,KSTAK)
+C----------------------------------------------------------------------
+C!  - R2 ESTIMATOR : FILL E4PAL COMMON OF 3X4 STOREYS
+C!
+C!    AUTHOR  : D. PALLIN
+C!    MODIFIED:
+C?
+C!======================================================================
+#ifndef DOC
+#include "bcs.h"
+#include "e4com0.h"
+#include "ecnamc.h"
+#include "e4com1.h"
+#include "eclujj.h"
+#include "esdajj.h"
+#include "estojj.h"
+#include "rlunit.h"
+#include "rflags.h"
+#include "rparac.h"
+#include "bmacro.h"
+C
+C LOOK IF THERE IS DEAD STOREYS (BUILD DEAD STOREYS PATTERN)
+      CALL E4DEAD(JTRAK,ICOL1,ICOL2,JROW1,JROW2,KSTAK)
+C
+      INDDA=IW(NAESDA)
+      INDDAT=INDDA+2
+      JESTO=IW(NAESTO)
+      JESTO=JESTO+2
+      IECLU=IW(NAECLU)
+C
+C
+C
+      IF(NBE4ST(ITRCL).EQ.0)E4CLU(ITRCL)=0
+      JJ=ITABL(IECLU,ICLU,JECLES)
+C
+  100 FORMAT(1X,'I,J,ST E ',3(I3,1X),F8.3)
+  1   CONTINUE
+C
+      IF(JDBDRF(JULEC).GT.8.AND.KSTAK.EQ.1)WRITE(LDEBRL,100)
+     &IW(INDDAT+JESDTJ+LESDAA*(JJ-1))
+     &,IW(INDDAT+JESDFI+LESDAA*(JJ-1))
+     &,IW(INDDAT+JESDDK+LESDAA*(JJ-1))
+     &,RW(INDDAT+JESDME+LESDAA*(JJ-1))
+
+      KSTA=IW(INDDAT+JESDDK+LESDAA*(JJ-1))
+      IF(KSTA.NE.KSTAK)GOTO 11
+      ITETA=IW(INDDAT+JESDTJ+LESDAA*(JJ-1))
+      IF(ITETA.NE.ICOL1.AND.ITETA.NE.ICOL2)GOTO 11
+      IPHI=IW(INDDAT+JESDFI+LESDAA*(JJ-1))
+      IF(IPHI.NE.JROW1.AND.IPHI.NE.JROW2)GOTO 11
+      NBE4ST(ITRCL)=NBE4ST(ITRCL)+1
+      ESTO(ITRCL,NBE4ST(ITRCL))=RW(INDDAT+JESDME+LESDAA*(JJ-1))
+      ISTO(ITRCL,NBE4ST(ITRCL))=ITETA
+      JSTO(ITRCL,NBE4ST(ITRCL))=IPHI
+      KSTO(ITRCL,NBE4ST(ITRCL))=KSTA
+      E4CLU(ITRCL)=E4CLU(ITRCL)+ESTO(ITRCL,NBE4ST(ITRCL))
+      CALL E4GTSO(JJ,RESTIX,RESTIY,RESTIZ)
+      XSTO(ITRCL,NBE4ST(ITRCL))=RESTIX
+      YSTO(ITRCL,NBE4ST(ITRCL))=RESTIY
+      ZSTO(ITRCL,NBE4ST(ITRCL))=RESTIZ
+  11  CONTINUE
+      JJ=IW(INDDAT+JESDES+LESDAA*(JJ-1))
+      IF(JJ.NE.0)GOTO 1
+C
+      RETURN
+      END
+#endif

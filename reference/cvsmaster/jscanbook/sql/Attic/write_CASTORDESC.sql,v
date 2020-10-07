@@ -1,0 +1,67 @@
+head	1.2;
+access;
+symbols
+	V0050:1.1
+	V0049:1.1
+	V0048:1.1
+	V0047:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	2001.01.24.15.30.46;	author jacotf;	state dead;
+branches;
+next	1.1;
+
+1.1
+date	2000.11.15.12.28.58;	author jacotf;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@remove write_CASTORDESC.sql
+@
+text
+@DROP TABLE CASTORDESC;
+
+CREATE TABLE CASTORDESC  (
+                    TypeOfData        VARCHAR2(100) ,
+                    TypeOfData_key    VARCHAR2(100) ,
+                    Datatype          VARCHAR2(100) ,
+                    DataType_key      VARCHAR2(100) );
+
+INSERT into CASTORDESC values 
+ ( 'DATA' , 'D' , 'RAW' ,  '1');
+INSERT into CASTORDESC values 
+ ( 'DATA' , 'D' , 'POT' ,  '2');
+INSERT into CASTORDESC values 
+ ( 'DATA' , 'D' , 'DST' ,  '3');
+INSERT into CASTORDESC values 
+ ( 'DATA' , 'D' , 'MINI' , '4');
+INSERT into CASTORDESC values 
+ ( 'MCARLO' , 'M' , 'KINGAL' , '0');
+INSERT into CASTORDESC values 
+ ( 'MCARLO' , 'M' , 'RAW'    , '1');
+INSERT into CASTORDESC values 
+ ( 'MCARLO' , 'M' , 'POT'    , '2');
+INSERT into CASTORDESC values 
+ ( 'MCARLO' , 'M' , 'DST'    , '3');
+INSERT into CASTORDESC values 
+ ( 'MCARLO' , 'M' , 'MINI'   , '4');
+@
+
+
+1.1
+log
+@New table CASTORDESC
+@
+text
+@@
+

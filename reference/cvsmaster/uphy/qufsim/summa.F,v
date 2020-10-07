@@ -1,0 +1,332 @@
+head	1.2;
+access;
+symbols
+	uphy1-0:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.01.23.16.34.57;	author janot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.08.16.13.38.18;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.08.16.13.38.19;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@update
+@
+text
+@      SUBROUTINE SUMMA
+C--------------------------------------------------------------------
+C! Build the ALPHA environment for FSIM particles
+C
+C  G.Ganis  21 Mar 1991
+C  Modif -- 29 aug 1995 ( P.Janot ) Build EFOL and the 'EF' Section
+C--------------------------------------------------------------------
+#include "parcut.h"
+#include "fsimid.h"
+      COMMON / idtint / idflag(200), itkflg(200), nchflg
+      LOGICAL first
+      DATA first/.TRUE./
+#include "qcde.h"
+#include "qhac.h"
+      dimension imatch(200),jmatch(200)
+#include "qmacro.h"
+C
+      j1(j) = koqvec + isave * kcqvec + j
+      jr(i) = koqvec + itk * kcqvec + i
+      jqdet(i,n) = koqdet + (kffrd+i-1) * kcqdet + n
+      inm(i) = koqvec + i*kcqvec+jqvenm
+      iml(i) = koqvec + i*kcqvec+jqveml
+C
+      IF ( first ) THEN
+        ieflw = KPCOMP ('EFLW')
+        neflw = KFPADR(ieflw)
+        igale = NLINK('GALE',0)
+        first = .FALSE.
+      ENDIF
+C
+C Build the EFOL bank
+C
+      IF ( igale .GT. 0 ) GOTO 10
+      ind = ndrop('EFOL',3)
+      ind = ndrop('EJET',3)
+      nefolp = lkh
+      iefol = NBANK ('EFOL', 3, lmhlen + lefola*nefolp)
+      IF ( iefol .LE. 0 ) THEN
+        WRITE (6,*) ' **** SUMMA **** Unable to enlarge EFOL #3'
+        STOP 99
+      ENDIF
+      IW(iefol+lmhlen) = nefolp
+      IW(iefol+lmhcol) = lefola
+C
+C Fill EFOL
+C
+      nefol = 0
+      DO 100 ikpar = 1 , 5
+        itk = kpdir(prnam(ikpar),kreco)
+  150   IF ( itk .EQ. 0 ) GOTO 200
+        nefol = nefol + 1
+        IF ( nefol .GT. nefolp ) THEN
+          WRITE(6,*) ' +++ QUFSIM Warning +++ Run/Evt ',krun,kevt
+          WRITE(6,*) ' The size of EFOL is smaller than expected'
+          WRITE(6,*) ' Call an expert '
+          GOTO 200
+        ENDIF
+        jefol = iefol + lmhlen + lefola*(nefol-1)
+C
+        RW(jefol + jefopx) = qx(itk)
+        RW(jefol + jefopy) = qy(itk)
+        RW(jefol + jefopz) = qz(itk)
+        RW(jefol + jefoew) = qe(itk)
+        RW(jefol + jefowe) = 1.
+C
+        IF ( ikpar .EQ. 1 ) THEN
+          IW(jefol + jefolt) = ktn(itk)
+          IW(jefol + jefoty) = 0
+        ELSEIF ( ikpar .EQ. 2 ) THEN
+          IW(jefol + jefoty) = 3
+        ELSEIF ( ikpar .EQ. 3 ) THEN
+          IW(jefol + jefoty) = 4
+        ELSEIF ( ikpar .EQ. 4 ) THEN
+          IW(jefol + jefoty) = 5
+        ELSEIF ( ikpar .EQ. 5 ) THEN
+          IW(jefol + jefoty) = 6
+        ENDIF
+C
+        IW(jefol + jefole) = 0
+        IW(jefol + jefolh) = 0
+        IW(jefol + jefolh) = 0
+        IW(jefol + jefolj) = 0
+C
+        itk = kfollo(itk)
+        GOTO 150
+  200 CONTINUE
+  100 CONTINUE
+C
+C Build jets
+C
+      CALL enfjet(ier)
+C
+C Fill Section 'FSIM'
+C
+   10 CALL vzero(enechq(1),5)
+      CALL vzero(kfrtot(1),7)
+      CALL vzero(klstot(1),7)
+      kfrefw = 0
+      klsefw = 0
+      enetot = 0.
+      enetra = 0.
+      enelon = 0.
+      ene12= 0.
+      nchn = 0
+      DO 1000 ikpar = 1 , 5
+       itk = kpdir(prnam(ikpar),kreco)
+1500   IF ( itk .EQ. 0 ) GOTO 2000
+C
+C Section FSIM
+C
+        enechq(ikpar) = enechq(ikpar) + qe(itk)
+        enetra = enetra + qpt(itk)
+        enelon = enelon + ABS(qz(itk))
+        IF ( ( (ikpar .EQ. 3 .OR. ikpar .EQ. 4) .AND.
+     .   acos(abs(qct(itk)))*180./qqpi .LT. 13.) .OR.
+     .   ikpar .EQ. 5 ) ene12 = ene12 + qe(itk)
+C
+        isave = kvsave(itk,'FSIM')
+        IW(koqvec+isave*kcqvec+jqvepa)= ktpcod(itk)
+C
+        CALL vzero(IW(j1(jqvebm)),klockm)
+        CALL qsbitm(isave)
+C
+        IF ( kfrtot(ikpar) .EQ. 0 ) kfrtot(ikpar) = isave
+        IF ( kfrefw        .EQ. 0 ) kfrefw        = isave
+        klstot(ikpar) = isave
+        klsefw        = isave
+C
+        IW(j1(jqveqd)) = jqdet(isave-kfrefw+1,0)
+        IW(j1(jqvesp)) = isave
+        IW(j1(jqvetn)) = ktn(itk)
+C
+        itk = kfollo(itk)
+        GOTO 1500
+ 2000   enetot = enetot + enechq(ikpar)
+ 1000 CONTINUE
+C -- Fill ALPHA indices
+      IF ( kfrtot(1) .EQ. 0 ) THEN
+        kfrtot(1) = kfrefw
+        klstot(1) = kfrtot(1) - 1
+      ENDIF
+      DO ik = 2 , 5
+        IF ( kfrtot(ik) .EQ. 0 ) THEN
+          kfrtot(ik) = klstot(ik-1) + 1
+          klstot(ik) = klstot(ik-1)
+        ENDIF
+      ENDDO
+C
+C Fill section 'EF'
+C
+      IF ( igale .GT. 0 ) GOTO 11
+      kneft = nefol
+      kfeft = kffrt
+      kleft = kfeft + kneft - 1
+C
+      IF ( kleft .GE. klfrt )  CALL qsbank ('QVEC', kleft+200)
+      IF ( kffrd+kneft-1 .GE. IW(koqdet) )
+     &   CALL qsbank ('QDET', kffrd+kneft-1 + 100)
+C
+      itk = kfeft - 1
+      DO i = 1, kneft
+        itk  = itk + 1
+        itka = kfrefw + i - 1
+        IF ( itka .LE. klstot(1) ) THEN
+          jtyp = 0
+          IF ( idtflg(i) .EQ. 1 ) jtyp = 1
+          IF ( idtflg(i) .EQ. 3 ) jtyp = 2
+          jefol = iefol + lmhlen + lefola*(i-1)
+          IW(jefol + jefoty) = jtyp
+          nmatch = 1
+          ind = nchtot - (itka-kfrtot(1))
+          imatch(1) = imotch(ind)
+          jmatch(1) = qe(itka)*1000
+        ELSE IF (itka .le. klstot(2) ) THEN
+          nmatch = 1
+          ind = nv0tot - (itka-kfrtot(2))
+          imatch(1) = imotv0(ind)
+          jmatch(1) = qe(itka)*1000
+        ELSE IF (itka .le. klstot(3) ) THEN
+          ind = nphtot - (itka-kfrtot(3))
+          nmatch = nmotph(ind)
+          do imat = 1, nmatch
+            imatch(imat) = imotph(imat,ind)
+            jmatch(imat) = emotph(imat,ind)*1000
+          enddo
+        ELSE IF (itka .le. klstot(4) ) THEN
+          ind = nhatot - (itka-kfrtot(4))
+          nmatch = nmotha(ind)
+          do imat = 1, nmatch
+            imatch(imat) = imotha(imat,ind)
+            jmatch(imat) = emotha(imat,ind)*1000
+          enddo
+        ELSE IF(itka .le. klstot(5)) THEN
+          ind = nlutot - (itka-kfrtot(5))
+          nmatch = nmotlu(ind)
+          do imat = 1, nmatch
+            imatch(imat) = imotlu(imat,ind)
+            jmatch(imat) = emotlu(imat,ind)*1000
+          enddo
+        ENDIF
+        CALL qvcopy(itk,itka)
+C---store EFOL offset in QDET
+        IW(kjqdet(itka)+jqdeef) = iefol+lmhlen+(i-1)*lefola
+        IW(kjqdet(itka)+jqdepd) = kqzer
+C---store EFOL objects as 'EFLW'
+        RW(jr(jqveem)) = -1.
+        RW(jr(jqvecf)) = -1.
+        IW(jr(jqvepa)) = ieflw
+        IW(jr(jqvenp)) = IW(koqfpa+neflw*kcqfpa+1)
+        IW(koqfpa+neflw*kcqfpa+1) = itk
+C---store MC match relationship (eflow->MC)
+        if (nmatch.le.200) then
+            IW(jr(jqvenm)) = nmatch
+            IW(jr(jqveml)) = knqmtx
+            if (knqmtx+nmatch .ge. iw(koqmtl))
+     &          call qsbank('QMTX',KNQMTX+200)
+            do imat = 1, nmatch
+                knqmtx = knqmtx+1
+                ikin = imatch(imat)
+                iw(inm(ikin)) = iw(inm(ikin))+1
+                iw(koqmtl+knqmtx) = ikin
+                iw(koqmts+knqmtx) = jmatch(imat)
+            enddo
+        endif
+      ENDDO
+C---Update klocus pointers.
+      kfmy  = kfmct
+      klmy  = klmct
+      DO 20 n = kseft+1,ksmct-1
+        klocus(1,n) = klocus(2,kseft) + 1
+        klocus(2,n) = klocus(2,kseft)
+   20 CONTINUE
+      kffrt = klocus(2,kseft) + 1
+C
+C Fill section 'EJ'
+C
+      kefopt = 0
+      CALL qfjets
+C
+C Restore MC truth information pointers
+C
+      kfmct  = kfmy
+      klmct  = klmy
+C---store inverse MC match relationship (MC->eflow)
+      mccode = kscnew(kmonte)
+      lqvec = koqvec+kcqvec
+      do i=1,iw(koqvec+kcqvec)
+        if (iw(lqvec+jqvepa).ne.ieflw) then
+            iw(lqvec+jqveml) = knqmtx-iw(lqvec+jqvenm)
+            knqmtx = knqmtx+iw(lqvec+jqvenm)
+        endif
+        lqvec = lqvec+kcqvec
+      enddo
+      if (knqmtx.ge.iw(koqmtl)) call qsbank('QMTX',KNQMTX+200)
+      lqvec = koqvec+kfeft*kcqvec
+      do i = kfeft, kleft
+        do j = 1, iw(lqvec+jqvenm)
+            imc = iw(koqmtl+iw(lqvec+jqveml)+j)
+            iw(iml(imc)) = iw(iml(imc))+1
+            iw(koqmtl+iw(iml(imc))+iw(inm(imc))) = i
+            iw(koqmts+iw(iml(imc))+iw(inm(imc))) = 
+     &          iw(koqmts+iw(lqvec+jqveml)+j)
+        enddo
+        lqvec = lqvec + kcqvec
+      enddo
+C
+C -- Full listing ( if required )
+C
+      IF ( idbg .GE. 4 ) CALL prtabl('EFOL',3)
+      IF ( idbg .GE. 4 ) CALL prtabl('EJET',3)
+   11 IF ( idbg .GE. 4 ) CALL FSIMLIST(kreco)
+C
+      RETURN
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d9 1
+d15 1
+d21 2
+d170 30
+d211 14
+d244 22
+@
+
+
+1.1.1.1
+log
+@2nd try to import uphy
+@
+text
+@@

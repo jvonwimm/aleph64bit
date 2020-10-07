@@ -1,0 +1,47 @@
+#!/bin/csh
+#-----------------------------------------------------------------------
+# Script : sf_generator
+# Devel. : J. Closier
+# Date   : 20 April 1995
+# Goals  : Submit job to create library
+# Usage  : sf_generator name_of_the_generator
+# Modify :
+#-----------------------------------------------------------------------
+#  IF YOU HAVE ARGUMENTS KEEP THE NEXT LINE with the right parameters
+if ($#argv != 1) then
+   goto usage
+endif
+
+set generator=$1
+set jobname=/tmp/${generator}.job
+
+#
+# create the job 
+#
+cat >${jobname} <<END-OF-JOB
+#@\$-s /bin/csh
+#@\$-eo
+#@\$-lt 500
+#@\$-r $generator
+#@\$-mu alkin
+#@\$-me
+#
+date
+#
+make_generator ${generator}
+#
+END-OF-JOB
+
+#
+# submit the job on all the platform
+#
+qsub -h saga ${jobname}
+qsub -h shift9 ${jobname}
+qsub -h csf -q cpqS ${jobname}
+
+exit 0
+
+#  usage for the command
+usage:
+echo " Usage : $0 generator_name"
+exit 0

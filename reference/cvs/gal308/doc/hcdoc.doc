@@ -1,0 +1,670 @@
+*DK hcdoc
+#if defined(DOC)
+.chapter       HADRON CALORIMETER
+
+                                   version 1.0 15- march  -1987
+                                           2.0  1-december-1987
+
+         This is a short review of the Montecarlo Software
+    released for the HCAL.
+    For details about the content of I/O banks see BOS Banks Descri-
+    ption Long Write-Up (Aleph Note 86-57).
+
+    It'is possible simulate the response of the Hadron Calorimeter
+    using different levels of details in the geometry description
+    and different methods in the shower developement inside the
+    detector. In any case an Analog Signal and a Digital Pattern
+    are created in the same Row Data Format.
+    Trigger and History information are also available.
+
+.section        HCAL Analog and Digital Signal Generation
+
+
+             1)  Flowchart
+             2)  Hcal geometry description
+             3)  Tracking: . full generation of showers (GHEISHA)
+                           . parametrisation of showers
+             4)  Analog Signal Generation :
+                    . Track segment signal
+                    . Shower spot signal
+             5)  Digital Signal Generation
+             6)  Running Conditions
+
+.section Flowchart
+
+   Run initialisation
+   ------------------
+
+     HCIRUN initialize variables and read geometry data base for HCAL
+
+           ----- HRDDAF get HCAL banks and store the content in commons
+           ----- HCSECO Calculate Geometrical quantities from the D.B.
+                  ----- HCBOUN calculate theta boundaries of towers
+           ----- HRDTRI get trigger banks and store the content in
+                        common
+           ----- HRDGAL get HCAL banks used only in Galeph
+     IF the HCAL is set with "SET" Data Card:
+           ----- HCNAMI Define formats of HC Bos banks
+           ----- HCINIT Initialize local and counter commons
+           ----- HCINPA Load the parametrisation costants
+
+    Loop over the events
+    --------------------
+
+     event initialisation
+
+          HCIEVE initialize variables and counters
+
+     event tracking + hits
+
+         HCHIT steering routine process each track element
+               : 'track element'-> JDHCSE (temporary bank)
+
+ (1) = 'Average Medium' geometry Description
+              In the Debug case and if a new track begins
+              ----- HNEWTK add a new row in the HCTH work bank
+
+              ----- HCTRAK process track element in the AVERAGE MEDIUM case
+                          -----HCCYL trasform to cylindrical coordinates
+                          I-----------------------------------------------I
+                          I----- HCFITU find fired tubes                  I
+                          I            -----HCTKSP take in account spacersI
+                          I----- HCSTSE fill JDHCSE bank                  I
+                          I-----------------------------------------------I
+
+              IF interacting particle and parametrisation flag is on
+              THEN...
+
+              Select parametrisation type
+
+              IF "geantino" parametrisation
+                     if an interaction occours
+                              ----HHCUTG define parametrisation condition
+                              ----CATINO parametrize shower
+                     else
+                              ----HCSHOW trate a geantino step
+                     endif
+
+              IF "standard" parametrisation
+
+              ----- HCPARS parametrize a shower
+                          .initialisation of shower generation
+                          ------HCSETP evaluate starting coordinates
+                          ------HCPOTL evaluate shower potential length
+                          .loop on generated spots
+                          ------HCLEAV check if the shower leave the starting
+                                   module and in this case change step(HCCHST)
+                          ------HCPROJ find spot projection on nearest plane
+                          ------HCBACK find spot coordinates in plane R.S.
+                          I-----------------------------------------------I
+                          I----- HCFITU find fired tubes                  I
+                          I            -----HCTKSP take in account spacersI
+                          I----- HCSTSE fill JDHCSE bank                  I
+                          I-----------------------------------------------I
+              ENDIF
+
+    (2) = 'Detailed Geometry' Description
+
+              ----- HCCOIN process track element
+                          ----- HYTRSF trasform to plane coordinates
+                          I-----------------------------------------------I
+                          I----- HCFITU find fired tubes                  I
+                          I            -----HCTKSP take in account spacersI
+                          I----- HCSTSE fill JDHCSE bank                  I
+                          I-----------------------------------------------I
+
+
+     Analog signals + digital patterns
+
+    (1)+(2)
+
+             HCASIG create analog signals + digital pattern + trigger
+                           : Fill Hit and History Banks
+
+                   ------ HCGEST Generate streamers (function NHCSTR)
+                                 + saturation effects:JDHCSE -> JDHCHI
+                   ------ HCCRDI Create digital pattern + Fill Hit Wire bank
+                                 : JDHCHI + JDHCSE -> 'HWHT'
+                   ------ HCCRTO Create Tower signal and store informations
+                                 in Hit Tower bank: JDHCHI -> 'HTHT'
+                                 -----HCTOW evaluate tower coordinates
+                                 -----HCDEAD Take in to account dead zones
+                                 -----HCSTEN evaluate energy released
+                   ------ HCTRGA Create and fill Tower Trigger Signal
+                                 : 'HTHT' -> 'HTTR'
+                   ------ HCTRGD Create and fill Tube Trigger Signal
+                                 : 'HWHT' -> 'HWTR'
+                   ------ HCHISE Update JDHCSE bank with
+                                           History informations
+                   ------ HCHIST Fill History banks:
+                            'HWTD'=>track # -> fired tubes
+                            'HTTD'=>   "    -> fired storeys
+                            'HWDT'=>tube #  -> tracks
+                            'HTDT'=>tower # -> tracks
+                   ------ HCSTAT Do statistics
+                   ------ WDROP Drop JDHCSE+JDHCHI temporary banks
+
+     Digitisation
+
+            HCDIGI Create and Fill Digitisation Banks
+            ------ HCFORA Format Digit Tower Bank
+                          : 'HTHT' -> 'HTDI'
+            ------ HCFORD Format Digit Wire Bank
+                          : 'HWHT' -> 'HWDI'
+            ------ HCSTAT Do statistics
+                   ----- HCVRTX verify if the track vertex in inside HCAL
+                   ----- WDROP Drop JDHCTH,JDHCET History temporary banks
+   Close Run:
+   ---------
+            HCWSUM Print Statistics
+
+
+
+
+.section   HCAL  GEOMETRY DESCRIPTION
+
+   Two levels of geometry description have been implemented.
+    - Level one hereafter called 'average medium' (default)
+    - Level two hereafter called 'detailed geometry'
+
+   The level two can be chosen at compile time using the Historian flag
+   HCDETAIL .   The routines which must be recompiled are those
+   defined whit the Historian SET IFHCDET
+   To use  this level insert the following cards in your input file:
+   *DF HCDETAIL
+   *E IFHCDET
+
+.subsection AVERAGE MEDIUM DEFINITION IN GEANT3
+
+        The 'average medium' definition has been fully described in AGDOC.
+     It must be recalled that ,in this case, the barrel and the end-caps of the
+     Hadron Calorimeter are defined respectively as a tube called 'HCBL'
+     and two polycones called 'HCEA' (z>0) and 'HCEB' (z<0).
+     In the GEANT3 frame the description is done down to level
+     of modules ('HBMO') and sextants ('HCMO').
+     Finally to take in to account the regions crossed by the cables of inner
+     detectors, two insensitive box per barrel module called 'HBN1','HBN2'
+     have been defined.
+     The numerical values used to build the 'average medium' geometry
+     are contained in HCGEOM common.
+       The physical constant used to define the End-Cap 'average material'
+     and the Barrel 'average material' are given in the following table:
+
+           I----------I--------I----------I
+           I          I Barrel I  End-Cap I
+           I----------I--------I----------I
+           I    A     I  55.51 I  55.52   I
+           I    Z     I  25.85 I  25.85   I
+           I Density  I   5.46 I   5.52   I
+           I Rad.Len. I   2.55 I   2.52   I
+           I----------I--------I----------I
+       The description of sensitive planes inside each module or sextant
+     is done outside the GEANT3 frame.
+     The HCAL sampling is assumed to be 7.2 cm. The average cross dimension
+     of the tubes and the width of the tube sensitive plane are assumed to
+     be respectively 1.025 cm and .9 cm.
+
+.subsection DETAILED GEOMETRY DEFINITION IN GEANT3
+
+     The definition of streamer tube layers has been done
+   within Geant3 .
+   The barrel layers are defined as 23 volumes of type 'BOX' named
+   HBLA and positioned inside the volume 'HBMO'.
+   The end cap layers are defined as polycones and positioned inside
+   'HCMO' with name HCLA .
+   A layer is 1 cm. thick and is filled (at the moment) with air.
+   The numerical values used are stored in HCGEOM common
+
+
+.subsection  Geometrical definitions
+
+               .Axis systems  used in HCAL MonteCarlo
+
+                                'ALEPH' is the general system (OX,OY,OZ)
+                                       used for track segment processing
+                                   O theoritical interaction point
+                                  OZ beam direction (beam e-)
+                                  OX horizontal and pointing towards
+                                     the centre of LEP
+                                  OY third axis (almost vertical)
+
+                                 'CYLINDRICAL' is a general system with:
+                                 .O theoretical interaction point
+                                 .R SQRT(X**2 + Y**2)
+                                 .Theta  polar angle with OZ
+                                 .Phi  azimuthal angle around OZ axis
+                                       tan(Phi)= Y/X
+                                       where X,Y,Z are point coordinates in
+                                       Aleph system.
+
+                                'MODULE' is the local reference system of a
+                                         barrel module or an end-cap sextant
+                                         with the conventions defined in GEANT3
+
+                                'PLANE' is the local bidimensional system
+                                        defined on the tube layer used
+                                        for computation of fired tubes and
+                                        projections on wires of track segments
+                                   X is the axis parallel to the wires
+                                   Y is the normal one
+
+                                'SHOWER'   Shower local system used
+                                        for shower signal allocation.
+                                      . z axis is parallel to the shower axis
+                                      .theta polar angle with shower axis
+                                      .phi azimuthal angle with shower axis
+
+               .subcomponent #  IHCPOR = 1 end cap z>0
+                                IHCPOR = 2 Barrel
+                                IHCPOR = 3 end cap z<0
+
+               .Module #        IHCMOD = 1,24 in barrel
+                                IHCMOD = 1,6 in end-caps (sextants)
+
+               .Angular offsets
+                             -  There are no angular offsets in HCAL
+                                respect the Aleph Reference System
+
+               .Stacks          Each module contains 2 stacks
+                                     stack1 contains 11 planes
+                                     stack2    "     12   "    in barrel
+                                     stack2    "     11   "    in end-caps
+               .Planes
+                       Numbered from 1 to 23 in Barrel
+                       Numbered from 1 to 22 in End-Caps
+                       Plane #1 is close to inner face of HCAL
+                       The data concerning planes are stored in the
+                       HNG2 Bos bank.
+
+               .Rows     (Theta divisions)
+
+                     The theta bins are arranged in order to obtain
+                     constants the trasverse dimension of towers.
+                     The algorithm used is described in the
+                     HADCAL note 84/01
+                     Each portion is divided along Theta in rows
+                     numbered with index j increasing with Theta.
+                       End cap z>0   j=  1,17    ( 17 rows)
+                       Barrel        j= 14,49    ( 36 rows)
+                       End cap z<0   j= 46,62    ( 17 rows)
+                           Total 62 rows
+                     Remark: there are 4 rows overlapping in barrel and
+                             end cap z>0 (same for end cap z<0)
+
+               .Columns  (Phi divisions)
+
+
+                       Barrel contains 4 columns /module
+                               total = 96
+                  Numbering is done from 1 to 96 (index i) increasing
+                  with Phi.
+
+                  Each End cap portion is divided in 3 regions
+                           Region 1     4  columns   j= 1, 4 j=59,62
+                                  2     8            j= 5,10 j=53,58
+                                  3    16            j=11,17 j=46,57
+                        In each region columns are numbered conti-
+                  nuously in the whole end cap:
+                           Region 1    i=  1-->  24
+                                  2    i=  1-->  48
+                                  3    i=  1-->  96
+
+
+               .Tower
+                           A tower is an intersection of a row and
+             a column.A tower is completely defined when the two
+             indices i and j are specified (same definition of Ecal tower).
+             The total number of towers in Hcal is 4776.
+
+               .Tower storey
+                      Intersection of a tower and a stack.
+
+               .tube #
+                    Barrel
+                    -----
+                      The # of tubes contained in each plane
+                      is a variable number.
+                      A group of eigh tubes is build toghether in a
+                      'eighfold'. The # of eighfolds in a plane
+                      increase from 9 (inner part of barrel) to 13
+                      (outer part of barrel).
+                      The algorhitm to find fired tubes take in account
+                      the spacers inside the planes(routine HCTKSP).
+                      The positions and the dimensions of spacers are
+                      those of the final project. These informations are
+                      in the data_base in the HBAR common.
+
+                   End-Caps
+                   ________
+                       The # of tubes contained in each plane is:
+                              160 in the inner part (planes 1-7)
+                              320 in the outer part (planes 8-22)
+                       The tubes are groupped toghether in a 'double
+                       eightfold' which contain 16 tubes.
+                       The algorhitm to find fired tubes take in account
+                       the iron frames inside the planes(routine HCTKSP).
+                       The dimensions of iron frames are also the definitive
+                       ones and the numerical values are stored in the
+                       HEND common.
+
+              .Dead Zones
+
+                       The routine HCDEAD take in account the dead
+                       zones not described in GEANT3 frame and kill
+                       track elements and spots in these regions.
+                       A list of these dead zone is done in
+                       HADCAL note 84/05.
+                       The numerical values used follow the Aleph
+                       technical Report 1984 and are stored in
+                       HCGEOM COMMON.
+
+.section  TRACKING (Hits generation)
+
+
+        The particle tracking through the Hadron Calorimeter
+     is provided by GEANT3 .At each tracking step the control is
+     given to the routine HCHIT which drives the generation of
+     signals in HCAL.
+     At this level it is possible to choose between two different
+     approches:
+
+        1) if the flag HCDETAIL has been selected at compile time
+           the tracking is performed by the GHEISHA (hadronic interactions)
+           and EGS (electr. interactions) routines implemented
+           in GEANT3 (slower tracking).
+
+        2) if the 'average medium' geometry has been selected at
+           compile time then the developement of the showers can be done
+           either by parametrisation (default) (fast tracking) or by
+           full generator using Run Condition Data Card.
+
+.subsection Full Generator of showers (GHEISHA)
+
+                Each track entering a tube generates a # of streamers
+             proportional to the projection along the wire direction
+             in order to simulate HCAL.
+               In the HCHIT routine the following assumptions
+             are made:
+
+             a) the neutral particles are ignored
+             b) any track entering a new volume is ignored
+                 (in this case the length of the track segm. is 0.)
+
+                The routines HCCOIN (Detailed geometry) and HCTRAK
+             (average medium) evaluates the projection along the wire
+             direction of track elements.
+             In the 'detailed geometry' case HCCOIN is entered only
+             if the track elements in a sensitive volume and the
+             information about layer # is done by GEANT.
+             On the contrary,in the 'average medium' case, is the
+             routine HCTRAK which calculates (if they exist) the intersections
+             of track elements with active planes and finds also the
+             layer #.
+                In both cases a temporary bank JDHCSE is filled with
+             the information about the spazial localisation of the track
+             elem. (tube#,layer#,mod# ecc.) and the projection itself.
+             The spatial information is provided by HCFITU and HCTKSP
+             routines.
+
+.subsection PARAMETRISATION OF SHOWERS
+
+               When the run condition 'PARAMETRISATION ON' is active
+            the control of the program is given to the routine HCPARS
+            which parametrizes the longitudinal and lateral profile of
+            the shower if the following conditions are satisfied:
+
+            1) An interaction with matter occurred and such a # of secondaries
+               (NGKINE> 1) has been produced
+            2) The particle momentum P is greater than a fixed cutoff
+                (HSHEMN=8 GeV)
+            3) The particle is a hadron or a gamma or an electron.
+
+
+               The shower parametrization is obtained using an algorithm
+            'a la Della Negra' described in the HADCAL note 83/01.
+            At the shower starting  point the program evaluates some
+            quantities (potential length,visible energy ecc.)
+            and trasforms the coordinates in the 'SHOWER' ref. sys.
+            (HCPOTL,HCSETP).
+              The energy deposition,according to the longitudinal profile,
+            is obtained cutting the shower in slices of such a thickness
+            that each slice contains only one sensitive plane.
+            In each slice  a fraction delta(E) of the
+            shower energy (E) is deposited according to the formula:
+
+                  delta(E) = E [(1-C)*e(x) + C*h(y)]
+
+            where C is the fraction of the energy released by the
+            hadronic component of the shower(C=HCOEF0=0.716)
+
+           e(x) and h(y) are functions of the variables x=Be*(S-So)/Xo
+           and y=Bh*(S-So)/Lo.
+           (S-So) is the distance of the slice from the shower origin,
+           Xo and Lo are the radiation length and the interaction length
+           of the medium, Be and Bh are dimensionless coefficients which
+           depends logarithmically on E.
+
+          Finally to take in account the spread of energy in each
+          slice ,the energy delta(E) is divided in N spots of energy
+          delta(E)/N where N is choosen in such a way to ensure the
+          correct fluctuation on delta(E) by the statistical error
+          on N. The energy released in a single spot is a constant, and its
+          value is directly connected to the resolution of the calorimeter
+
+                   E(one spot) = (res**2) = 0.608 GeV
+
+          Since the energy associated to the spot is much greater than that
+          one associated to a single streamer (120 MeV), then the energy
+          of each spot is distributed equally into 4 sub-spots of energy:
+
+                   E (one sub-spot) = (res**2)/4 = 152 MeV
+
+          The sub-spots are then distributed laterally in space
+          according to a lateral profile parametrized assuming
+          an exponential law
+
+                   dE = K exp[-R/L(s)]*dR
+
+           where L(s) is a function of the distance from the shower
+           origin.
+
+             In order to obtain a digital pattern the spots are
+          projected onto the nearest sensitive plane (HCLEAV,HCPROJ).
+          The algorithms take into account every change in module #
+          or in portion # during the shower development.
+          If the projection is not found or falls in a not active
+          region (spacers,iron frames etc.) the spot is killed.
+          Finally the HCBACK routine trasforms the spot coordinates
+          back to the 'PLANE' ref.sys and allows the calculation of the
+          tube and layer address using HCFITU and HCTKSP routines.
+          Also in parametrisation case  the temporary bank JDHCSE
+          is filled. The bank content is the same as in the case of the full
+          generator but RW(JDHCSE+8) where
+
+               RW(JDHCSE+8) = projection on wire (full generator mode)
+
+
+               RW(JDHCSE+8) = spot energy        (parametrization mode)
+
+
+.section Analog Signal Generation
+
+            At the end of the event tracking througth the apparatus,
+            the information collected in the JDHCSE temporary bank
+            is used to create the Analog Signal.
+            This is done by the HCASIG routine which drives the
+            whole process.
+
+            The data coming from the parametrised showers ('shower
+            spot signal') contain just the information about the energy
+            released by each spot.
+            At this level, the program must only organize them in order
+            to assign the correct energy to each HCAL storey and to take
+            into account dead zones (HCDEAD routine).
+
+            On the contrary the data coming from the GEANT tracking
+            through the HCAL ('track segment signal') needs a further
+            step in order to obtain energy information.
+
+.subsection Track segment signal
+
+            The manipolation of track segments is performed in the
+            HCGEST routine, where the saturation effects related to the
+            presence of more than one track element in the same tube region
+            are taken into account.
+
+            In order to estimate the # of streamers produced in each tube,
+            the sum of the lengths of the different track segments projected
+            along the wire (DX) is used:
+
+                Nstreamer = 1                if DX<HCSTRE (HCSTRE=.34 cm)
+
+                Nstreamer = 1 + (DX-HCSTRE)/HCSTRE         if (DX>HCSTRE)
+
+            HCSTRE is an experimental value obtained from test run data
+            which represents the dead region along the wire due to
+            the space charge generated by the streamer process.
+            The number of streamers is calculated by the NHCSTR function
+            called in the HCGEST  routine.
+
+            The Energy (in GeV) associated to each streamer is obtained
+            by means of HCSTEN function using the experimental single
+            streamer distribution.
+            The values of the experimental distributions and the
+            conversion factors are stored into the HCCONG common.
+
+.section Fill Hit banks
+
+            When the analog signal is created, the routine HCTOW
+     calculates the tower adress i,j with the rules described
+     in the documentation (geometry part). The filling and the formatting
+     of the output banks is independent of the choosen algorithm
+     (parametrisation, full generator).
+     From this point onwards the program forgets the
+     definitions of 'track segment' and 'shower point'.
+
+
+    Tower information are in bank HTHT, NR=0
+    Wire planes information are in bank HWHT,NR=0
+    History information are in the HWTD,HTTD,HWDT,HTDT banks ,NR=0
+    Trigger information are in HTTR (towers) and HWTH (Wires)
+
+          (see Bank Description for details on this part)
+
+
+
+ .section DIGITAL SIGNAL GENERATION
+
+           The analog and digital signal outputs are stored
+           in HTDI and HWDI banks rispectively.
+           The input banks to make digitisation  are HTHT and
+           HWHT banks.
+           The Data Formatting is done in the HCDIGI routine
+           which drives:
+                HCFORA routine for the Tower signal
+                HCFORD routine for Wire  signal
+
+.subsection Digitize towers
+
+           The analog signal output contains:
+
+               .Tower address
+               .Energy in front stack (MeV)
+               .Energy in back stack (MeV)
+
+               .Tower address
+
+             Tower address is stored in a 32 bits word :
+
+                BIT#    0              15     23      31
+                range   <    1 - 96    >< 1-62><  1-3  >
+                        --------------------------------
+                        <      i       ><  j   ><reg.num>
+                             Phi          Theta
+
+             Adresses are sorted in increasing order.
+
+.subsection   Digitize wires
+
+     The wire signal output contains:
+
+     .cluster adress (32 bits word)
+
+                BIT#    0      7       15     23      31
+                range   < 0-255>< 1-15 >< 0-22><  1-36 >
+                        --------------------------------
+                        <   a  ><  b   ><  c  ><   d   >
+where
+
+        a.   adress of last tube in cluster (*)
+        b.   cluster width
+        c.   layer number
+        d.   electronic module number    1-12 end-cap A
+                                        13-24 barrel
+                                        25-36 end-cap B
+
+  (*) the range is 0-255 in barrel
+                   0-159 in end-caps
+
+
+.subsection Generate trigger banks
+
+     The trigger signals are generated first for Towers, and then for wires .
+  Also for the trigger signals the input are the hit banks HTHT,HWHT.
+
+           .HCTRGA routine creates the TOWER TRIGGER SIGNAL
+           .HCTRGD routine creates the TUBE  TRIGGER SIGNAL
+
+   The TOWER TRIGGER SIGNAL contains the energy released (in MeV)for each of
+   the 192 trigger regions in which the HCAL is sub-divided
+
+     The Trigger Regions   1-48  are in the END-CAP A
+      "     "       "     49-144 are in the BARREL
+      "     "       "    145-192 are in the END-CAP B
+
+   The TUBE TRIGGER SIGNAL contains the # of fired planes for each of
+   the 36 HCAL electronic modules
+
+
+.section   Run Conditions for HCAL
+
+      Only the first three Run conditions are defined (among the allowed 10)
+      The default values are 0.
+      Values can be changed via Steering Data Card :
+
+         RUNC 'HCAL'  N1 N2 .... N10 where Ni is  ICHCJO (i) new value.
+
+
+
+ CONDITIONS
+ **********
+  index in ICHCJO         value in ICHCJO() default = 0
+ /                       /
+ 1       0  'STANDARD PRINTOUT' (active if DEBUG flag is ON for the event)
+                         prints a run summary of the event
+         1  'BANKS PRINTOUT' (active if DEBUG flag is ON for the event)
+                         prints temporary and output banks for HCAL
+         2  'FULL PRINTOUT' (active if DEBUG flag is ON for the event)
+                          prints informations about each tracking step
+                         (slows execution)
+
+ 2       0  'PARAMETRISATION  ON' showers are parametrized
+         1  'PARAMETRISATION OFF' showers developed by GHEISHA
+             ***warning*** this run condition is not active within
+             HCDETAIL version .In this case no parametrization
+             algorithms are used!
+
+ 3       0 'DEAD ZONE ON ' the dead zones inside HCAL are taken in account
+         1 'DEAD ZONE OFF' the dead zones inside HCAL are neglected
+
+ 4       0 'INDUCT. EFFECT ON' the induction effect is taken in account
+         1 'INDUCT. EFFECT OFF' the induction effect is neglected
+
+ 5       0 'TUBE INEFF. ON' the tube inefficiency is taken in account
+         1 'TUBE INEFF. OFF' the tube inefficiency is neglected
+
+ 6       0 'DEAD TUBE ON' the dead tube is taken in account
+         1 'DEAD TUBE OFF' the dead tube is neglected
+
+
+#endif

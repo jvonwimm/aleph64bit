@@ -1,0 +1,148 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.1
+	gal302_2:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.01.25.13.43.22;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.06.30.14.08.25;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@put a ifndef DOC in gdray
+modify WRITE statment to please fpp on alpha/vms
+ Modified Files:
+ 	catino.F
+ Modified Files:
+	agchck.F
+ Modified Files:
+ 	gdray.F
+ Modified Files:
+ 	hchist.F hcshow.F hcstat.F hnewtk.F
+ Modified Files:
+ 	lcasig.F
+Modified Files:
+	sabook.F sahist.F sahit.F sawsum.F
+@
+text
+@*DK sabook
+      SUBROUTINE SABOOK
+C-----------------------------------------------------------------------
+C!    Histogram booking for the SATR
+#ifndef DOC
+      SAVE
+#include "iocom.h"
+#include "jobcom.h"
+#include "satrco.h"
+      CHARACTER CNUM*2
+      DATA ID/600/
+      EBEAM=0.5*(BKINJO(5)+BKINJO(6))
+      WRITE(LOUTIO,*)' SABOOK CALLED, SATR HIST. BOOK. STEP EBEAM= ',
+     &                 EBEAM
+      CALL HBOOK1(ID+1,'SATR CHARGED MULTIPLICITY',20,0.,20.,0)
+      CALL HBOOK1(ID+2,'SATR NEUTRAL  MULTIPLICITY',20,0.,20.,0)
+      CALL HBOOK1(ID+3,'SATR SEC. CHARGED MULT. ACCEPTED',20,0.,20.,0)
+      CALL HBOOK1(ID+4,'SATR NEUTRAL MULTIPLICITY ACCEPTED',20,0.,20.,0)
+      CALL HBOOK1(ID+5,'SATR PRIMARY ENER. DISTR',100,EBEAM-10.,EBEAM,0)
+      CALL HBOOK1(ID+6,'SATR CHARGED SECONDARY ENERGY DISTR.',
+     1            100,0.,0.2*EBEAM,0)
+      CALL HBOOK1(ID+7,'SATR CHARGED SECONDARY ENERGY DISTR. ACCEPTED',
+     1            100,0.,0.2*EBEAM,0)
+      CALL HBOOK1(ID+8,'SATR NEUTRAL SECONDARY ENERGY DISTR.',
+     1            100,0.,0.2*EBEAM,0)
+      CALL HBOOK1(ID+9,'SATR NEUTRAL SECONDARY ENERGY DISTR. ACCEPTED',
+     1            100,0.,0.2*EBEAM,0)
+      CTHMAX=COS(BKINJO(7))
+      CALL HBOOK1(ID+10,'SATR ORIGINAL COST DISTR.',10,.996,.999,0)
+      CALL HBOOK1(ID+16,'SATR NUM. CHAR SEC IN COST',10,.996,.999,0)
+      CALL HBOOK2(ID+11,'SATR DIST SEC-MAIN VS ENERGY AT LUMI ENTRANCE',
+     1            40,0.,20.,25,0.,.5*EBEAM,0)
+      CALL HBPRO(ID+11,0)
+      CALL HBOOK2(ID+12,
+     1 'SATR DIST SEC-MAIN IN THETA VS ENERGY AT LUMI ENTRANCE',
+     1            40,0.,8.,25,0.,.5*EBEAM,0)
+      CALL HBPRO(ID+12,0)
+      CALL HBOOK1(ID+13,'SATR THETA SEEN-ORIGINAL',100,-.001,.001,0)
+      CALL HBOOK2(ID+14,'SATR DIST NEUT SEC-MAIN VS ENER AT LUMI ENTR.',
+     1            40,0.,20.,25,0.,.5*EBEAM,0)
+      CALL HBPRO(ID+14,0)
+      CALL HBOOK2(ID+15,
+     1 'SATR DIST NEUT SEC-MAIN IN THETA VS ENERGY AT LUMI ENTRANCE$',
+     1            40,0.,8.,25,0.,.5*EBEAM,0)
+      CALL HBPRO(ID+15,0)
+      CALL HBOOK1(ID+26,'SATR HITS  PER EVENT',100,0.,100.,0)
+      CALL HBOOK1(ID+27,'SATR WIRES PER EVENT', 50,0.,50.,0)
+      CALL HBOOK1(ID+28,'SATR LOST HITS/EVENT', 50,0.,50.,0)
+      CALL HBOOK1(ID+29,'SATR ORED WIRES/EVENT',20,0.,20.,0)
+      DO 10 ILAY=1,9
+        WRITE(CNUM,'(I2)') ILAY
+        CALL HBOOK1(ID+30+ILAY,'SATR HITS PER LAYER  '//CNUM,
+     .       50,0.,50.,0)
+        CALL HBOOK1(ID+40+ILAY,'SATR WIRES PER LAYER '//CNUM,
+     .       25,0.,25.,0)
+   10 CONTINUE
+      END
+#endif
+@
+
+
+1.1
+log
+@release galeph 302.
+ Added Files:
+ saasig.F sabook.F sadigi.F sahist.F sahit.F sairun.F sawsum.F
+@
+text
+@d13 2
+a14 2
+      WRITE(LOUTIO,'(''0 SABOOK CALLED, SATR HIST. BOOK. STEP EBEAM='',
+     .   F12.4)') EBEAM
+@

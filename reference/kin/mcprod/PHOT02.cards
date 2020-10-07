@@ -1,0 +1,164 @@
+NREFCARD 
+DBVSCARD
+*  run title
+RUN   NUMRUN   'KEYWORD PRODUCTION'
+*     FIRST EVENT    LAST EVENT    TO BE GENERATED
+TRIG     1          NUMEVT
+*  events to be debugged
+DEBUG 6 /   1      5
+* event file to be written
+*FILO ' /aleph/scweek/alkin/testph2.epio | EPIO '
+FILOCARD
+*RANMAR initialisation  ( change for production)
+RMAR     RMAR1           RMAR2
+ENDQ
+KCAR 0 / $TEXT
+POFF
+*       x        y        z    vertex smearing x y z for yeear at CMSENE GeV
+SVRTCARD
+*   new card for large prods....   overwrites ebeam and itype from GCON 
+*    Ecm       jtype ( consistent with other generator definition..)
+GPRO CMSENE   IPROCESS
+*        ILUN   IHIS  ITYPE  EBEAM  WMIN   AMASS IPPART  WMAX
+GCON      -1      0    2     99.75  MINW     0.    0
+*
+* ILUN  0 :a map will written out to file (name in GMAP card)
+*       1 :a map will be read from file (name in GMAP card)
+*      -1 :a new map is created but not written out.
+*  When a map is read in , all variables controlling the physics which
+*  may have been set by another card are overwritten. This ensures that
+*  events are generated with the same conditions as  used in  the  map
+*  generation  step.Failure to do so would produce erroneous results.
+*  When  generating the map do not ask for events at the same time,
+*  better do it in the second step when reading the map back.
+* IHIS   1 (ON) or 0 (OFF),if 'ON'then histograms are booked and filled.
+* ITYPE    type of physics process choosen with following convention:
+*    1-16  'QED' type e+ e- -> e+ e- l+ l- where l is :
+*                  1  =       Electrons
+*                  2  =       Muons
+*                  3  =       Taus
+*                  10 =       u and d quark generation mixed correctly
+*                  11 =       u quarks
+*                  12 =       d quarks
+*                  13 =       s quarks
+*                  14 =       c quarks
+*                  15 =       b quarks
+*                  16 =       t quarks
+*    100='VDM' Multihadron generation e+ e- -> e+ e- X with a VDM cross
+*          section.
+*    101-110 = Pseudoscalar generation e+ e- -> e+ e- X where X is :
+*                  101  =   Pi0
+*                  102  =   Eta
+*                  104  =   Eta c
+*                  105  =   Eta b
+*                  110  =   F2 (1270)
+*     200    = User defined resonance production, requires GRES card
+* EBEAM  Beam energy in GEV/c
+* WMIN   minimum invariant mass of final state to be generated
+* AMASS  mass of the required final particle (if 0 default from LUND will
+*        be used. Ignored for VDM.
+* IPPART control flag to print PART bank (1=print out, 0= no print out)
+*     file name for the  MAP to be writen out or read in
+* WMAX   maximum invariant mass of final state to be generated
+*       set up to maximum allowed if absent
+*GMAP '/afs/cern.ch/user/a/alkin/dev/phot02/PHOTVDM.MAP | NATIVE '
+*  Further control for the VDM fragmentation.
+*  PTVDM    exponent for the Pt distribution
+*  If IWVDM  is 1 then a cross section constant with W is generated.
+*  If IWVDM is 2 then a cross section with a 1/W dependance is generated
+*  If IPLUTO is 1 then PLUTO style is used ( two quarks in final state )
+*                      otherwise RHORHO style ( four quarks )
+*      PTVDM  IWVDM   IPLUTO
+GVDM     5.00   2       1
+*   Geometrical cuts control
+* ICUT =0 NO restriction on scattered electron ('NOTAG')
+*       1 At least one electron between TMIN and TMAX(rad )('SINGLE TAG')
+*       2 Both electrons between TMIN and TMAX (double TAG )
+* TMIN    Minimum tag angle in radians , used when ICUT= 1 or 2
+* TMAX    Maximal tag angle in radians used when ICUT = 1 or 2.
+* The angle theta is measured between the electron's original direction
+* and its scattered direction.
+*        ICUT   TMIN   TMAX
+*GCUT     0     0.005   5.0
+GCUT      0       0.    1.5709
+*  extra control for the QED model
+*  PTCUT  -1  MEANS NO MINIMAL CUT APPLIED ON  PT OF FINAL STATE FERMION
+*             > 0 Pt cut applied to final state lepton
+* in the QED process e+e-->e+e-l+l-. i.e. all ITYPE less than 18
+*GQED   -1.
+GQED     MINPT
+* Control for parton shower
+* IF CARD IS PRESENT LUSHOW IS CALLED
+* IQMAX   CHOICE OF QMAX ( SCALE FOR SHOWER )
+*      0  USE PT SCALE OF INTERACTION - SJOSTRANDS RECOMENDATION
+*      1  USE W OF FINAL STATE - 'MODEL A' - FITS DATA BUT IT'S NOT VDM !
+*      2  USE A FIXED SCALE - PASSED AS SECOND ARGUMENT
+* QFIXED     Fixed QMAX
+*
+GPSH  0 1.0
+*
+* Control for integration steps of BASES
+*
+*   NCALL : CONTROLS HOW MANY TIMES BASES LOOPS ROUND IN ONE ITERATION
+*   ITMX1 : CONTROLS NUMBER OF ITERATIONS FOR 'GRID DEFINING' STEP
+*           INCREASE THESE TWO NUMBERS TO IMPROVE ACCURACY OF MONTE CARLO
+*            ESPECIALLY FOR E+E- FINAL STATE.
+*   ITMX2 : CONTROLS NUMBER OF ITERATIONS FOR  CROSS SECTION CALC. STEP
+*   ACC1  : ACCURACY REQUIRED IN STEP 1 ( STOPS IF ACHIEVED )
+*           EXPRESSED AS A PERCENTAGE ERROR ( THE COLUMN HEADED ACC WHEN
+*           BASES IS RUNNING ) I.E. ACC1 = 1.0 MEANS STOP IF
+*           ACCUMULATED ERROR IN GRID DEFINITION IS 1 PERCENT.
+*   ACC2  : ACCURACY REQUIRED IN STEP 2 ( STOPS IF ACHIEVED )
+*           EXPRESSED AS A PERCENTAGE ERROR ( THE COLUMN HEADED ACC WHEN
+*           BASES IS RUNNING ) I.E. ACC2 = 1.0 MEANS STOP IF
+*           ACCUMULATED ERROR IN CROSS SECTION CALCULATION IS 1 PERCENT.
+*
+* Requesting poor accuracy (i.e. ACCn large ), and/or small number of
+* iterations and low number for NCALL produces a  quick and rough answer.
+* For precision results increase ITMXn, and NCALL, and decrease ACCn.
+* The map will then take longer to generate though ! Note BASES will also
+* give up if it is not achieving any significant imprevement between
+*  steps, of if it runs out of time.
+*
+GBAS 3 50 50 1. 1.
+*GBAS 1 5 5 5.0 5.0
+*
+* Special Card for user defined resonance
+*  If ITYPE = 200 on GCON card, this card gives type of
+*   resonance to produce.
+*
+*    LUNTYP WIDTH SPIN
+GRES   25    1.0   0.0
+*
+* ALL THE STANDARD LUND CARDS MAY BE USED
+* HIGGS - GAMMA GAMMA ONLY
+*
+GMOB 25 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+        0. 0. 0. 1. 0. 0. 0.
+*
+*  include Aleph standard values for sin2theta, mz, gamz
+MSTJ 28 / 2   !   decay tau's through Tauola
+PMA3 20433 / 0.054   ! truncation after 54 mev to avoid infinite loops
+*  the following is given for free if one uses NREF 9600 card
+*  update JETSET parameters for fragmentation
+*  include Aleph standard values for sin2theta, mz, gamz
+PARU 102 / .232
+PARJ 123 /  91.182
+PARJ 124 / 2.484
+*  use Peterson's fragm. functions for c and b quarks
+MSTJ 11 / 3
+*   mod to lund fragm. functions params
+PARJ  21  /     0.371     ! sigma
+PARJ  41  /     0.4       ! a
+PARJ  42  /     0.805     ! B
+PARJ  81  /     0.291     ! Lambda LLA
+PARJ  82  /     1.52      ! M min
+*  mod Peterson's fragm. functions params
+PARJ  54  /     -0.040    ! epsilon c
+PARJ  55  /     -0.0035   ! epsilon b
+MSTJ 24 / 2 ! use non discrete masses for resonnances
+*  set next q family out of LEP1 range
+PMA1 7 / 250.
+PMA1 8 / 350.
+END$
+ENDQ

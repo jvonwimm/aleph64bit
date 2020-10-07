@@ -1,0 +1,166 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.29.16.08.47;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.01.59;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.00;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+@
+text
+@*DK capget
+      SUBROUTINE CAPGET
+C ------------------------------------------------------------------
+C - F.Ranjard - 880505
+C! Geantino track element : get CAPA bank
+C! IF 1st entry (bank does not exist) THEN
+C!    create the CAPA bank with the bank# = track# IGTRA
+C!    fill it with the shower parameters
+C! ELSE
+C!    increment the total rad. length and abs. length
+C!    copy the CAPA bank to common /CAPANO/
+C! ENDIF
+C - called by GUSTEP                                from this .HLB
+C - calls ALBOS, ALTELL                             from ALEPHLIB
+C         CAHPAR, CAEPAR, CAPSTO                    from this .HLB
+C ========================================================
+#ifndef DOC
+      SAVE
+#include "bcs.h"
+#include "capajj.h"
+#include "capano.h"
+#include "ehpash.h"
+#include "gcmate.h"
+#include "gckine.h"
+#include "gctrak.h"
+       CHARACTER*4 CHAINT
+       EXTERNAL CHAINT
+C -------------------------------------------------------------------
+         JCAPA = NLINK ('CAPA',IGTRA)
+         IF (JCAPA .EQ. 0.) THEN
+            CALL ALBOS ('CAPA',IGTRA,LCAPAA+LMHLEN,JCAPA,IGARB)
+            IW(JCAPA+LMHCOL) = LCAPAA
+            IW(JCAPA+LMHROW) = 1
+            CALL BLIST (IW,'T+','CAPA')
+            CALL CAHPAR (GETOT,IGPART)
+            CALL CAEPAR
+            CALL CAPSTO (IGTRA)
+         ELSE
+            KCAPA = JCAPA + LMHLEN
+C
+C-          TEST IF ELECTRON GEANTINO ABSORBED
+C
+            RW(KCAPA+JCAPTX) = RW(KCAPA+JCAPTX) + GSTEP/GRADL
+            RW(KCAPA+JCAPTL) = RW(KCAPA+JCAPTL) + GSTEP/GABSL
+C              fill common /CAPANO/
+            NATGER = IW(KCAPA+JCAPST)
+            METHCO = IW(KCAPA+JCAPPT)
+            TOTNRJ = RW(KCAPA+JCAPTE)
+            TINOX0 = RW(KCAPA+JCAPTX)
+            TINOL0 = RW(KCAPA+JCAPTL)
+            EMGNRJ = RW(KCAPA+JCAPEM)
+            EMALFA = RW(KCAPA+JCAPEA)
+            EMBETA = RW(KCAPA+JCAPEB)
+            EMALM1 = RW(KCAPA+JCAPA1)
+            EMAEXP = RW(KCAPA+JCAPER)
+            EMFACT = RW(KCAPA+JCAPEF)
+            EMUDP0 = RW(KCAPA+JCAPED)
+            EMUDP2 = RW(KCAPA+JCAPEZ)
+            HADNRJ = RW(KCAPA+JCAPHE)
+            HALPHA = RW(KCAPA+JCAPHA)
+            HABETA = RW(KCAPA+JCAPHB)
+            HADRAY = RW(KCAPA+JCAPHD)
+            HAPUIS = RW(KCAPA+JCAPHP)
+            HGAMMA = RW(KCAPA+JCAPGA)
+            EMNAME = CHAINT(IW(KCAPA+JCAPNA))
+            SMAXLR = RW(KCAPA+JCAPSX)
+            SMAXLA = RW(KCAPA+JCAPSA)
+            CALL CAABSB(EMGNRJ,EMBETA,EMALFA,TINOX0,IER)
+            IF ( IER.NE.0) THEN
+               IGSTOP = 3
+               GO TO 999
+            ENDIF
+         ENDIF
+ 999     CONTINUE
+         RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d16 1
+a16 1
+C -------------------------------------------------------------------
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

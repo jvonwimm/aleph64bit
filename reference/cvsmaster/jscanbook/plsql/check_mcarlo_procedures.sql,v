@@ -1,0 +1,355 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2004.01.15.10.53.48;	author jacotf;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Procedures used by Brigitte Bloch
+@
+text
+@SET ARRAYSIZE 1;
+set scan off
+CREATE or REPLACE PACKAGE check_mcarlo_procedures 
+IS
+
+   TYPE Char_Tab IS
+      TABLE of VARCHAR2(100) NOT NULL
+      INDEX BY BINARY_INTEGER;
+
+   TYPE prod_values IS
+      RECORD (
+          KinKeyWord     VARCHAR2(100),
+          Run            INTEGER      ,
+          DatType        VARCHAR2(10) ,
+          Tape           VARCHAR2(100),
+          File           VARCHAR2(10)
+      );
+
+   TYPE mcprod_table IS
+      TABLE of prod_values
+      INDEX BY BINARY_INTEGER;
+
+   TYPE tapes_values IS
+      RECORD (
+          KinKeyWord     VARCHAR2(100),
+          Nkin           INTEGER      ,
+          Npot           INTEGER      ,
+          Nmin           INTEGER      
+      );
+
+   TYPE mctapes_table IS
+      TABLE of tapes_values
+      INDEX BY BINARY_INTEGER;
+
+
+   PROCEDURE welcome;
+
+   PROCEDURE list_kinkey_tapes (kinkey_in IN VARCHAR2);
+  
+END check_mcarlo_procedures;
+/
+show errors
+
+
+CREATE or REPLACE PACKAGE BODY check_mcarlo_procedures 
+/*
+|| !!!! If one wants to debug a procedure !!!!
+|| Before you can use dbms_output do:
+||    set serveroutput on; 
+|| The default buffer size can be too small - Increase the size of the STUPID buffer doing:
+||    DBMS_OUTPUT.ENABLE (1000000);
+||
+|| To increase the linesize for the output (default=80 characters) do:
+||    set linesize 132;
+||
+*/
+IS
+
+PROCEDURE print_datime
+/*
+|| Print Date and Time
+*/
+IS
+   date_time VARCHAR2(60);
+   date      VARCHAR2(50);
+   time      VARCHAR2(50);
+
+BEGIN
+   date_time := SYSDATE;
+   htp.p(date_time);
+
+END print_datime;
+
+
+PROCEDURE header 
+   (title in VARCHAR2)
+/*
+|| To display a generic header
+*/
+IS
+BEGIN
+   htp.htmlopen;
+   htp.headopen;
+   htp.title(title);
+   htp.headclose;
+   htp.bodyopen;
+
+END header;
+
+
+PROCEDURE footer 
+/*
+|| To display a generic footer
+*/
+IS
+BEGIN
+   htp.bodyclose;
+   htp.line;
+
+   htp.print('Creation date : ');
+   print_datime;
+   htp.address('Francoise Loverre');
+   htp.htmlclose;
+END footer;
+
+
+PROCEDURE list_kinkey_tapes
+   (kinkey_in IN VARCHAR2)
+/*
+|| 
+|| MonteCarlo Data
+|| Procedure to check if the mcarlo production tapes are known by
+|| scanbook
+*/
+IS
+   my_line      VARCHAR2(300);   
+   nrec         INTEGER;
+   current_prod INTEGER;
+   nb_0         INTEGER;
+   my_file      VARCHAR2(10);
+   my_tape      VARCHAR2(10);
+   my_string    VARCHAR2(100);
+   all_prods    mcprod_table;
+
+BEGIN
+DECLARE
+
+   CURSOR mc_cur  
+   IS 
+      SELECT KingalKeyWord, RunNumb, Datatype, TapeId, TapeNumb, FileNumb 
+      FROM MCSETS 
+          WHERE KingalKeyWord = kinkey_in
+      ORDER by RunNumb, TapeNumb, FileNumb
+      ;
+      mc_rec mc_cur%ROWTYPE;
+
+BEGIN
+   htp.br;
+   my_string := 'Mcarlo tapes for KingalKeyWord = ' || kinkey_in;
+   htp.centerOpen;
+   htp.header(1,my_string);
+   htp.centerClose;
+   htp.line;
+
+   nrec := 0;
+   OPEN mc_cur;
+   LOOP
+      FETCH mc_cur INTO mc_rec;
+      EXIT WHEN mc_cur%NOTFOUND;
+      nrec := nrec + 1;
+      all_prods(nrec).KinKeyWord := mc_rec.KingalKeyWord;
+      all_prods(nrec).DatType := mc_rec.Datatype;
+      all_prods(nrec).Run := mc_rec.RunNumb;
+
+/* 
+|| Tape Number 
+*/
+      nb_0 := 4 - LENGTH(mc_rec.TapeNumb);
+      my_tape := to_char(mc_rec.TapeNumb);
+ 
+      FOR ij IN 1 .. nb_0
+      LOOP
+         my_tape := '0' || my_tape;
+      END LOOP;
+      all_prods(nrec).Tape := mc_rec.TapeId || my_tape;
+
+/* 
+|| File Number 
+*/
+      nb_0 := 3 - LENGTH(mc_rec.FileNumb);
+      my_file := to_char(mc_rec.FileNumb);
+
+      FOR ij IN 1 .. nb_0
+      LOOP
+         my_file := '0' || my_file;
+      END LOOP;
+      all_prods(nrec).File := my_file;  
+      
+   END LOOP;
+   CLOSE mc_cur;
+
+/*
+|| Print now
+*/
+   htp.tableOpen(' ','CENTER',' ',' ','BORDER=2');
+
+   htp.tableRowOpen;
+   htp.tableHeader('KinGalKeyWord','CENTER');
+   htp.tableHeader('&nbsp;&nbsp;&nbsp;Run&nbsp;&nbsp;&nbsp;','CENTER');
+   htp.tableHeader('&nbsp;&nbsp;&nbsp;Datatype&nbsp;&nbsp;&nbsp;','CENTER'); 
+   htp.tableHeader('&nbsp;&nbsp;&nbsp;Tape&nbsp;&nbsp;&nbsp;','CENTER'); 
+   htp.tableHeader('&nbsp;&nbsp;&nbsp;File&nbsp;&nbsp;&nbsp;','CENTER'); 
+   htp.tableRowClose;
+
+   current_prod := all_prods.FIRST;
+   LOOP
+      EXIT when current_prod is NULL;
+
+      htp.tableRowOpen;
+      htp.tableData(all_prods(current_prod).KinKeyWord,'LEFT');
+      htp.tableData(all_prods(current_prod).Run,'CENTER');
+      htp.tableData(all_prods(current_prod).DatType,'CENTER');
+      htp.tableData(all_prods(current_prod).Tape,'CENTER');
+      htp.tableData(all_prods(current_prod).File,'CENTER');
+
+      htp.tableRowClose;
+
+      current_prod := all_prods.NEXT(current_prod);
+
+   END LOOP;    
+
+   htp.tableClose; 
+
+END;
+END list_kinkey_tapes;
+
+
+PROCEDURE list_mcdata_tapes
+/*
+|| 
+|| MonteCarlo Data
+|| Procedure to check if the mcarlo production tapes are known by
+|| scanbook
+*/
+IS
+   nrec         INTEGER;
+   current_tape INTEGER;
+   all_tapes    mctapes_table;
+   my_string    VARCHAR2(200);
+   my_kinkey    MCKEYSTAT.KingalKeyWord%TYPE;
+
+BEGIN
+DECLARE
+   CURSOR kinkey_cur 
+   IS
+      SELECT mcp.KingalKey kinkey, mck.KingalKeyWord kinkeyw, mck.NumbKingal nbkin, mck.NumbPot nbpot, mck.NumbMini nbmin
+      FROM MCprod mcp, MCKEYSTAT mck
+      WHERE mck.KingalKeyWord = mcp.KingalKey 
+      ORDER BY kinkey
+      ;      
+      kinkey_rec kinkey_cur%ROWTYPE;
+
+BEGIN
+   nrec := 0;
+
+   OPEN kinkey_cur;
+   LOOP
+      FETCH kinkey_cur INTO kinkey_rec;
+      EXIT WHEN kinkey_cur%NOTFOUND;
+      nrec := nrec + 1;
+      all_tapes(nrec).KinKeyWord  := kinkey_rec.kinkey;
+      all_tapes(nrec).Nkin := kinkey_rec.nbkin;
+      all_tapes(nrec).Npot := kinkey_rec.nbpot;
+      all_tapes(nrec).Nmin := kinkey_rec.nbmin;
+ 
+   END LOOP;
+   CLOSE kinkey_cur;
+
+/*
+|| Print now
+*/
+   htp.tableOpen(' ','CENTER',' ',' ','BORDER=2');
+
+   htp.tableRowOpen;
+   htp.tableHeader('KinGalKeyWord','CENTER');
+   htp.tableHeader('&nbsp;&nbsp;Nbkingal&nbsp;&nbsp;','CENTER');
+   htp.tableHeader('&nbsp;&nbsp;&nbsp;NbPot&nbsp;&nbsp;&nbsp;','CENTER'); 
+   htp.tableHeader('&nbsp;&nbsp;&nbsp;NbMin&nbsp;&nbsp;&nbsp;','CENTER'); 
+   htp.tableRowClose;
+
+   current_tape := all_tapes.FIRST;
+   LOOP
+      EXIT when current_tape is NULL;
+
+      htp.tableRowOpen;
+      my_kinkey := all_tapes(current_tape).KinKeyWord;
+      my_string := '<A HREF=check_mcarlo_procedures.list_kinkey_tapes?kinkey_in=' || my_kinkey ||'>' || my_kinkey || '</A>';
+      htp.tableData(my_string);
+      htp.tableData(all_tapes(current_tape).Nkin,'CENTER');
+      htp.tableData(all_tapes(current_tape).Npot,'CENTER');
+      htp.tableData(all_tapes(current_tape).Nmin,'CENTER');
+
+      htp.tableRowClose;
+
+      current_tape := all_tapes.NEXT(current_tape);
+
+   END LOOP;    
+
+   htp.tableClose;
+
+END;
+END list_mcdata_tapes;
+
+
+PROCEDURE welcome
+IS
+   my_string VARCHAR2(200);
+BEGIN
+   header('Check Mcarlo production');
+   htp.br;
+
+   htp.centerOpen;
+   htp.tableOpen(' ','CENTER',' ',' ','BORDER=0 CELLPADDING=5 CELLSPACING=0');
+   my_string := '<IMG src=http://alephwww.cern.ch/ICONS/aleph3.xbm>';
+   htp.tableData(my_string,'CENTER',' ',' ',' ',' ','BGCOLOR="yellow"');
+   my_string := '<FONT SIZE=+3>List of Montecarlo production tapes</FONT>';
+   htp.tableData(my_string,'CENTER',' ',' ',' ',' ','BGCOLOR="yellow"');
+   my_string := '<IMG src=http://alephwww.cern.ch/ICONS/aleph3.xbm>';
+   htp.tableData(my_string,'CENTER',' ',' ',' ',' ','BGCOLOR="yellow"');
+   htp.tableClose;
+
+   htp.br;
+   htp.line;
+
+   list_mcdata_tapes;
+
+   htp.centerClose;
+   footer;
+
+END welcome;
+
+END check_mcarlo_procedures;
+/
+show errors
+
+
+
+
+
+
+
+
+@

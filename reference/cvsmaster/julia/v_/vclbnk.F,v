@@ -1,0 +1,162 @@
+head	1.1;
+access;
+symbols
+	jul313_3:1.1
+	jul313_2:1.1
+	jul313_1:1.1
+	jul313:1.1
+	jul312_1:1.1
+	jul312:1.1
+	jul311:1.1
+	jul310_1:1.1
+	jul310:1.1
+	jul309_1:1.1
+	jul309:1.1
+	jul308_6:1.1
+	jul308_5:1.1
+	jul308_4:1.1
+	jul308_3:1.1
+	jul308_2:1.1
+	jul308_1:1.1
+	jul308:1.1
+	jul307_4:1.1
+	jul307_3:1.1
+	jul307_2:1.1
+	jul307_1:1.1
+	jul307:1.1
+	jul306_3:1.1
+	jul306_2:1.1
+	jul306_1:1.1
+	jul306:1.1
+	jul305_4:1.1
+	jul305_3:1.1
+	jul305_2:1.1
+	jul305_1:1.1
+	jul305:1.1
+	jul304_3:1.1
+	jul304_2:1.1
+	jul304_1:1.1
+	jul304:1.1
+	jul303_7:1.1
+	jul303_6:1.1
+	jul303_5:1.1
+	jul303_4:1.1
+	jul303_3:1.1
+	jul303_2_mc1:1.1
+	jul303_2:1.1
+	jul303_1_mc1:1.1
+	jul303_1:1.1
+	jul303_v:1.1
+	jul303:1.1
+	jul302_6:1.1
+	jul302_5:1.1
+	jul302_4:1.1
+	jul302_3:1.1
+	jul302_2:1.1
+	jul302_1:1.1
+	jul302:1.1
+	jul285_1:1.1
+	jul285:1.1
+	jul284_1:1.1
+	jul284:1.1
+	jul283_1:1.1
+	jul283:1.1
+	jul282_1:1.1
+	jul282:1.1
+	jul281_3:1.1
+	jul281_2:1.1
+	jul281_1:1.1
+	jul281:1.1
+	jul280_1:1.1
+	jul280:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.05.06.15.51.47;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@re-installed jul280 from the historian source because some routines were missing.
+@
+text
+@      SUBROUTINE VCLBNK(
+     >      KVFHL,KVFPH,KVFLG,KVCOM,IFRS,ILS,ILAY,IPHI,IVIEW,IWAF,IWFF)
+C
+C----------------------------------------------------------------------
+C!  - Put Vdet cluster into banks
+C!
+C!   Inputs:
+C!        - KVFHL,KVFPH,KVFLG,KVCOM : Bank indices
+C!                    (necessary because they are members of families)
+C!        - IFRS first strip
+C!        - ILS  last strip
+C!        - ILAY layer
+C!        - IPHI face
+C!        - IVIEW view
+C!        - IWAF wafer in module
+C!        - IWFF wafer in face
+C
+C!  15-12-96 A. Bonissent
+C?
+C!======================================================================
+#ifndef DOC
+C      IMPLICIT NONE
+      SAVE FIRST, NAVCSG
+      INTEGER NAVCSG
+      INTEGER KVCSG,KVFHL,KVCOM,KVFLG,KVFPH
+      INTEGER NSIZ,ILS,IFRS,IADDR,ILAY,IWFF,IPHI,IVIEW
+      INTEGER JSTRP,IWAF
+C
+      INTEGER NAMIND
+C
+C      INTEGER JVFLFG,LVFLGA
+#include "vflgjj.h"
+C      INTEGER JVFHHA,LVFHLA
+#include "vfhljj.h"
+C      INTEGER JVFPPH,LVFPHA
+#include "vfphjj.h"
+C      INTEGER JVCOCM,LVCOMA
+#include "vcomjj.h"
+#include "vcsgjj.h"
+      LOGICAL FIRST
+      DATA FIRST/.TRUE./
+#include "bcs.h"
+C      INTEGER LCOLS,LROWS,ID,KNEXT,KROW,NRBOS,LFRWRD,LFRROW,ITABL,L
+C      REAL RTABL
+#include "bmacro.h"
+      IF(FIRST)THEN
+         FIRST=.FALSE.
+         NAVCSG=NAMIND('VCSG')
+      ENDIF
+      KVCSG=IW(NAVCSG)
+      NSIZ = ILS-IFRS+1
+      CALL VPKADD(IADDR,NSIZ,ILAY,IWFF,IPHI,IVIEW,IFRS)
+      IW(KNEXT(KVFHL)+JVFHHA)=IADDR
+      IW(KVFHL+LMHROW) = LROWS(KVFHL) + 1
+C
+C  Pack common mode word- use first strip of cluster
+C
+      IW(KNEXT(KVCOM)+JVCOCM) = ITABL(KVCSG,IFRS,JVCSCM)
+      IW(KVCOM+LMHROW) = LROWS(KVCOM) + 1
+C
+C  Pack strips and flags
+C
+      DO JSTRP=IFRS,ILS
+        IW(KNEXT(KVFPH)+JVFPPH) = RTABL(KVCSG,JSTRP,JVCSMP+IWAF-1)
+        IW(KNEXT(KVFLG)+JVFLFG) = ITABL(KVCSG,JSTRP,JVCSMF+IWAF-1)
+        IW(KVFPH+LMHROW) = LROWS(KVFPH) + 1
+        IW(KVFLG+LMHROW) = LROWS(KVFLG) + 1
+      END DO
+      RETURN
+      END
+#endif
+@

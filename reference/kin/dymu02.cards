@@ -1,0 +1,50 @@
+KCAR 0 / $TEXT                                                                  
+POFF                                                                            
+RUN  103    ' DYMU3 WITH mu+ mu- FINAL STATE - DYMU02'                          
+TRIG 1  1000                                                                    
+DEBUG 6/ 1 5                                                                    
+* VERTEX POSITION     SIGX      SIGY      SIGZ  CM                              
+SVRT                 .018      .0010     1.00                                   
+*  STORE EVENT FILE ON DISK                                                     
+*FILO  'SCWEEK:DYMU02.EPIO | EPIO '                                             
+* STORE HISTOS FILE ON DISK                                                     
+*HSTO 'SCWEEK:DYMU02.HIST | NATIVE '                                            
+* DYMUS CONTROL CARDS                                                           
+*  FTYPE   : fermion type  1=electron , 2 = muon  ,  3 = tau                    
+*                         11=u quark  ,12 = d quark,13 = s quark                
+*                         14=c quark  ,15 = b quark,16 = t quark                
+*                         10=quark mixture as indicated by NQUA,IFIRST          
+*  EBEAM   : Beam energy (Gev)                                                  
+*  ZMASS   : Z0 mass ( Gev)                                                     
+*  GAMM     Z0 width (Gev)                                                      
+*  SW2     : sin2 (tetha w)  effective value                                    
+*  IDEBUG  : level of debug 0=standard,1 = advanced ,2=PART BANK                
+*  ID2     : 1(on)/0(off) DII term contribution to D(x)                         
+*  TAU     : 1(on)/0(off) Polarised Tau decay into Pi neutrino                  
+*  FINEXP  : final state exponentiation                                         
+*                1=on, 0=off i.e. 1rst order,-1=no final state photon           
+*  POIDS   : 1= Unweighted events, 0 = weighted events                          
+*  XK0     : k0 value                                                           
+*  QCDFAC  : Multiplicative factor for quarks production                        
+*  NQUA    : Number of consecutive quarks to be considered in a mixture         
+*  IFIRST  : First quark flavor to be generated in the mixture                  
+*  NEVMA   : Number of events to be used to compute initial cross-sections      
+*         FTYPE   EBEAM  ZMASS  GAMM   SW2  IDEBUG                              
+GDYM       2.     45.6   91.18  2.48   .232     0                               
+* ID2    TAU    FINEXP   POIDS    XK0  QCDFAC    NQUA  IFIRST   NEVMA           
+   0.     0.      1.       1.    0.003  1.04       3    11      5000            
+*  use Peterson's fragm. functions for c and b quarks                           
+MST 4 / 3                                                                       
+*   mod to lund fragm. functions params                                         
+PAR 12 / 0.325                                                                  
+PAR 31 / 0.45                                                                   
+*  mod Peterson's fragm. functions params                                       
+PAR 44 / -0.025                                                                 
+PAR 45 / -0.015                                                                 
+*   put next q family away and top at 100Gev                                    
+PMAS 106 / 100.                                                                 
+PMAS 107 / 150.                                                                 
+PMAS 108 / 300.                                                                 
+*  RANMAR initialisation ( Change for production run)                           
+RMAR    90  23456                                                               
+ENDQ                                                                            

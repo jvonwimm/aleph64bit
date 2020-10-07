@@ -1,0 +1,105 @@
+head	1.2;
+access;
+symbols
+	look25:1.2
+	look24:1.2
+	look23:1.2
+	look22:1.2
+	look21:1.2
+	look20:1.2
+	v15:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.04.18.09.06.46;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.09.15.50.28;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.09.15.50.29;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@change VAX to DEC.AND..NOT.UNIX ==> version 20
+
+ Modified Files:
+ 	lkevt.h lkfil.h lklast.h lkunpk.h version.h
+ Removed Files:
+	lookend.h
+@
+text
+@      SUBROUTINE LKRDAF(COMAND)
+C ---------------------------------------------------------------
+C ---------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "lkfil.h"
+      CHARACTER COMAND*80,BNK*4,C
+C --------------------------------------------------------------
+      IF (.NOT.DIRFIL) THEN
+          WRITE(LOUT,*) '[Direct access file not opened]'
+          RETURN
+      ENDIF
+      CALL LKGTNAM(COMAND,BNK,*999)
+      IF (BNK.EQ.'*') THEN
+          WRITE(LOUT,*) '[Wild card not permitted for bankname]'
+          RETURN
+      ENDIF
+      LDBAS = JUNIDB(0)
+      CALL BDAPR(LDBAS,BNK)
+      CALL LKGTINT(COMAND,2,' ',NR,C)
+      IF (C.EQ.'A') GOTO 999
+      IF (C.EQ.' '.OR.C.EQ.'*') THEN
+          NR=NDANR(LDBAS,BNK,'LE',99999999)
+          IF (NR.LT.0) GOTO 998
+          WRITE(LOUT,*) '[Highest bank number will be used]'
+      ENDIF
+      IND=MDARD(IW,LDBAS,BNK,NR)
+      IF (IND.LE.0) THEN
+        WRITE(LOUT,FMT='(2A,I8,A)')' [Bank "',BNK,NR,'" does not exist]'
+      ELSE
+        CALL BLIST(IW,'T+',BNK)
+      ENDIF
+      RETURN
+ 998  WRITE(LOUT,*) '[Bank "',BNK,'" does not exist]'
+      RETURN
+ 999  WRITE(LOUT,*) '[Please enter with four character bank name ',
+     +            'and optional bank number]'
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK lkrdaf
+@
+
+
+1.1.1.1
+log
+@import look 15
+@
+text
+@@

@@ -1,0 +1,183 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.29.16.16.07;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.01.55;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.56;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+@
+text
+@*DK agmate
+      INTEGER FUNCTION AGMATE (NAME)
+C -------------------------------------------------------------
+C - F.Ranjard - 910121
+C! returns the GEANT material # known by its name
+CKEY GEOM MATERIAL
+C - Input :   - NAME   / CHA16     = material name
+C                                    if ' ' get all names in ALLNAM
+C - Output :  - AGMATE / I         = Geant tracking medium #
+C                                   = IAGMAT if NAME is ' '
+C                                   = 0  if NAME does not exist
+C                                   = -IAGMAT if ALLNAM too short
+C ---------------------------------------------------------------
+#ifndef DOC
+      SAVE
+      CHARACTER*(*) NAME
+      PARAMETER (NTMAT=200, LCHNAM=16, LALL=NTMAT*LCHNAM)
+      CHARACTER*3200 ALLNAM
+      CHARACTER*20 NAMG
+      CHARACTER*80 MSG
+      INTEGER INAME(5)
+#include "gcbank.h"
+#include "iocom.h"
+#include "agcons.h"
+C ---------------------------------------------------------
+      IF (NAME.EQ.' ') THEN
+C - get all existing materials , store them into ALLNAM
+C
+        IF (IAGMAT*LCHNAM.GT.LALL) THEN
+          ITMAT  = -IAGMAT
+          WRITE (LOUTIO,*) ' AGMATE NTMAT IAGMAT=',NTMAT,IAGMAT
+          CALL ALTELL ('AGMATE: ALLNAM is too short',0,'STOP')
+        ELSE
+          ALLNAM = ' '
+          DO 200 I=1,IAGMAT
+            IF (GVERSN.LT.3.15) THEN
+               CALL GFMATE (I,INAME,AD,ZD,DD,RD,AL,DUM,ND)
+               CALL ALSTHO (INAME,5,NAMG)
+            ELSE
+               CALL GFMATE (I,NAMG,AD,ZD,DD,RD,AL,DUM,ND)
+            ENDIF
+            L = LENOCC (NAMG)
+            IND = INDEX (NAMG,'$')
+            IF (IND.NE.0) L=IND-1
+            L = MIN (L,LCHNAM)
+            IC = (I-1)*LCHNAM
+            ALLNAM(IC+1:IC+L)  = NAMG(1:L)
+  200     CONTINUE
+          ITMAT = IAGMAT
+        ENDIF
+      ELSE
+C
+C - get the number from the name
+        IND = INDEX(ALLNAM,NAME)
+        IF (IND.EQ.0) THEN
+C         this material does not exist
+          ITMAT = 0
+          L = LENOCC(NAME)
+          MSG = ' AGMATE '//NAME(1:L)//' does not exist '
+          L = LENOCC(MSG)
+          CALL ALTELL (MSG(1:L),0,'STOP')
+        ELSE
+C        this material exists
+          ITMAT  = IND/LCHNAM + 1
+        ENDIF
+      ENDIF
+      AGMATE = ITMAT
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d15 1
+a15 1
+      SAVE  ALLNAM
+d22 1
+d36 7
+a42 2
+            CALL GFMATE (I,NAMG,AD,ZD,DD,RD,AL,DUM,ND)
+            L = LNBLNK (NAMG)
+d58 1
+a58 1
+          L = LNBLNK(NAME)
+d60 1
+a60 1
+          L = LNBLNK(MSG)
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

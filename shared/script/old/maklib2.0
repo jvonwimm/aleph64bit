@@ -1,0 +1,306 @@
+#! /bin/csh
+#
+#============================================================================
+#                             maklib
+#                                                       F.Ranjard
+#============================================================================
+# procedure to compile a new ALEPH source library on various UNIX machines
+#
+#============================================================================
+#
+# the /aleph/ directory of an ALEPH library is found in ${script_dir}/alib.dir
+# at the end ${prog_dir}/alib.log is updated with the new version number.
+#
+# compile options are taken from $FCOPT or $CCOPT
+#
+# source files are assumed to be stored on ${src_dir}/*
+# compilation is done on ${src_dir}/{OS} 
+# main program files and library files are stored on ${lib_dir}
+# usually ${prog_dir} and {lib_dir} are identical
+#
+#============================================================================
+# P1 -> prog_name i.e: alephlib
+# P2 -> cycle     i.e.: 154
+# P3 -> idir      i.e.: kin  (used only when the prog_name is not known from
+#                             script_dir/alib.dir)
+# when the prog_name is not part of script_dir all arguments must be given,
+# and the mnemonic is assumed to be the prog_name.
+#============================================================================
+# maklib1.0
+# 960411 - adaptation of newlib to export and compile
+# maklib1.1
+# 970214 - adapt to dbase: libdbase is stored on /aleph/lib and modules are
+#                          stored on /aleph/bin
+# maklib2.0
+# 970317 - adapt to different binary library disks on AFAL and SHIFT50
+#          remove adaptation for dbase since /aleph/dbase is no longer shared
+#          between shift9 and csf.
+#============================================================================
+# flag = OK .. always GOOD
+#===========================================================================
+#include "~/flr/bin/verbflr.h"
+#
+set exec_name = "maklib2.0"
+set verbflr = ""
+set nar = $#argv
+if (${nar} != 0) then
+  if ($argv[${nar}] == "-v") then
+     echo "${exec_name}"
+     set verbflr = "-v" 
+     set echo on
+     set argv[${nar}] = ""
+     @ nar = ${nar} - 1 
+  endif
+endif
+#
+if ( $?ENVIRONMENT ) then
+ if ( "$ENVIRONMENT" == "INTERACTIVE" && $1 == "-h" ) then
+   echo ""
+   echo "usage:"
+   echo " maklib <prog_name> <version no.> [<aleph_sub_dir>]"
+   echo ""
+   echo "an example:"
+   echo " maklib julia 281 "
+   echo " mkdir $ALROOT/jul281/$OS"
+   echo " from there compiles ../*/*.F with"
+   echo "      compile $ALROOT/jul281 [dbx]" 
+   echo " makes a library w/o dbx onto $ALEPH/jul/libjul281.a, _dbx.a"
+   echo " updates $ALEPH/jul/alib.log with the version number"
+   echo " stores aamain.o onto $ALEPH/jul/jmain281.o"
+   echo " builds $ALEPH/jul/jul281new module if $ALEPH/jul/Makefile exists"
+   echo ""
+   exit(1)
+ endif
+endif
+#
+unset noclobber
+set script_dir = "${SHARED}/script"
+set alib_dir = "${script_dir}/alib.dir"
+set flag = "OK"
+ 
+# =====================================================================
+#
+#------> get program name from 1st argument
+#
+if ($1 == "") then
+  echo -n "Enter Aleph program name [eg:alephlib <CR>=exit]-> "
+   set prog_name = $<
+   if (${prog_name} == "") goto exec_end
+else
+   set prog_name = $1
+endif
+#
+#-------> get version number from 2nd argument
+#
+if ($2 == "") then
+   set string_cr = "<CR>=exit"
+   echo -n "Enter version number[${string_cr}]-> "
+   set cycle = $<
+   if (${cycle} == "") goto exec_end
+else
+   set cycle = $2
+endif
+# 
+#-------> get idir, mnemonic and src_dir 
+#
+if (-e ${alib_dir}) then
+# - idir - from alib_dir or $3
+   if ($3 != "") then
+      set idir = $3
+   else 
+      set idir = `egrep ^" ${prog_name} " ${alib_dir} | awk '{print $2}'`
+      if (${idir} == "") then
+         set string_cr = "<CR>=exit"
+         echo -n "Enter sub-directory where to store library[${string_cr}]-> "
+         set idir = $<
+         if (${idir} == "") goto exec_end
+      endif
+   endif
+# - mnemonic - from alib_dir or prog_name  
+   set mnemonic = `egrep ^" ${prog_name} " ${alib_dir} | awk '{print $3}'`
+   if (${mnemonic} == "") then
+      set mnemonic = ${prog_name}
+   endif 
+# - src_name- from alib_dir or mnemonic and cycle
+   set src_name  = `egrep ^" ${prog_name} " ${alib_dir} | awk '{print $4}'`
+   if (${src_name} == "") then
+      set src_name = ${mnemonic}${cycle}
+   endif
+else
+   set flag = "${alib_dir} does not exist - STOP"
+   goto exec_end
+endif 
+#
+#-------> set prog_dir and src_dir
+#
+set prog_dir = "${ALEPH}/${idir}"
+#
+set src_dir  = "${ALROOT}/${src_name}"
+#
+set obj_dir  = "${src_dir}/${OS}"
+#
+set lib_dir  = "${prog_dir}"
+#
+set lib_name = "lib${mnemonic}${cycle}"
+#
+echo `date` "=== START ${exec_name} ${OS} ${prog_name} ${cycle} =======" >> ${prog_dir}/spy
+echo "${exec_name} ${user} lib=${lib_dir} src=${src_dir} obj=${obj_dir}" >> ${prog_dir}/spy
+ 
+# ======================= check existence of src_dir  ==============
+# if src_dir does not exist then STOP
+ 
+if ! (-d ${src_dir}) then
+   set flag =  "FATAL directory -> ${src_dir} does not exist "
+   goto spy
+endif
+ 
+# ===================================================================
+
+cd ${prog_dir}
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> begin_compile
+begin_compile:
+ 
+if (-d ${obj_dir}) then
+   cd ${obj_dir}
+   rm *
+else
+   mkdir ${obj_dir}
+endif
+
+set opt      = ""
+set debug    = ""
+#
+# ====================== compile and make a library========================
+compile:
+
+#*******> compile
+echo `date`" -> compile with optimization ${opt}" >> ${prog_dir}/spy
+
+cd ${src_dir}
+
+if (${prog_name} == "dbase") then
+   ${script_dir}/compile ${src_dir} "subr" ${opt} ${verbflr}
+else
+   ${script_dir}/compile ${src_dir} ${opt} ${verbflr}
+endif
+
+cd ${obj_dir}
+
+grep  'Error' comp${opt}.log > comp${opt}.Error
+#
+if !(-z comp${opt}.Error) then
+   set flag = "FATAL:compilation errors"
+   goto spy
+endif
+ 
+#******> remove existing library if any 
+if (-e ${lib_dir}/${lib_name}${debug}.a) rm ${lib_dir}/${lib_name}${debug}.a
+echo `date`" -> ar rsl ${lib_dir}/${lib_name}${debug}.a *.o" >> ${prog_dir}/spy
+
+#*******> ar 
+ar rsl ${lib_dir}/${lib_name}${debug}.a *.o | & tee ar${opt}.log 
+grep -i 'Error' ar${opt}.log > ar${opt}.Error
+ if !(-z ar${opt}.Error) then
+    set flag =  "FATAL ***> archive problems"
+    goto spy
+ endif
+
+#*************> remove all object files 
+rm *.o 
+
+#*************> compile in debug mode if not yet done
+if (${opt} == "") then
+   set opt = "dbx"
+   set debug = "_dbx"
+   goto compile
+endif
+ 
+# 
+# ============= get main program and alenflw if alpha ====================# 
+
+if (${prog_name} == "galeph") then
+   set main = "galeph"
+   set ini = "g"
+else if (${prog_name} == "julia") then
+   set main = "aamain"
+   set ini = "j"
+else if (${prog_name} == "alpha") then
+   set main = "qmain"
+   set ini = "q"
+   cat ${src_dir}/pack/queflo.F ${src_dir}/pack/qupec1.F ${src_dir}/util/qmunew.F \
+       ${src_dir}/util/qumupr.F > ${src_dir}/alenflw.F
+   ${FC} ${FCOPT} -I{src_dir}/inc -DALEPH_JULIA ${src_dir}/alenflw.F -o ${lib_dir}/alenflw.o
+else if (${prog_name} == "look") then
+   set main = "lkmain"
+   set ini = "l"
+else
+   set main = ""
+endif
+if (${main} != "") then
+   cd ${lib_dir}
+   ar x ${lib_name}.a ${main}.o
+   if (${main} != "qmain") mv ${main}.o ${ini}main${cycle}.o
+endif
+
+# 
+# ====================== update ${prog_dir}/alib.log =============
+#
+cd ${prog_dir}
+set dmyh = `date '+%d-%h-19%y %T'`
+echo `date`" -> update ${prog_dir}/alib.log" >> ${prog_dir}/spy
+if !(-e alib.log) then
+   echo " ${prog_name} newver ${cycle} ${dmyh}">>alib.log
+else
+   set pname = ""
+   set pname = `egrep ^" ${prog_name} " alib.log | awk '{print $1}'`
+   if (${pname} == "") then
+      echo " ${prog_name} newver ${cycle} ${dmyh}">>alib.log
+   else
+      set cold = `egrep ^" ${prog_name} " alib.log | awk '{print $3}'`
+      set dold = `egrep ^" ${prog_name} " alib.log | awk '{print $4}'`
+      set told = `egrep ^" ${prog_name} " alib.log | awk '{print $5}'`
+      set sold = " ${prog_name} newver ${cold} ${dold} ${told}"
+      set snew = " ${prog_name} newver ${cycle} ${dmyh}"
+      sed s/"${sold}"/"${snew}"/ alib.log > alib.tmp
+      mv -f alib.tmp alib.log
+   endif
+endif
+# 
+# =================== build a module if Makefile exists ============
+#
+if (${prog_name} == "dbase") then
+   goto endmake
+endif
+#
+set name = ${lib_dir}/${src_name}
+rm ${name}new 
+#
+if (-e ${prog_dir}/Makefile) then
+   echo `date`" -> make a new module" >> ${prog_dir}/spy
+   gmake VERSION=${cycle} SYS=new
+endif
+if !( -e ${name}new ) then
+  set flag = "cannot build a module  ${name}new"
+  goto spy
+endif
+
+echo " "
+echo " new module ${name}new exists , check it before you rename it"
+echo " ================================================================ "
+
+endmake:
+# 
+# ==================== spy ============================================
+# 
+spy:
+echo `date` " END of ${exec_name} ${OS} ${user} ${prog_name} ${cycle} ${flag}" >> ${prog_dir}/spy
+#
+# ====================copy on AFAL or SHIFT50 all files created =======
+#
+if (${SERVICE} == "AFAL" || ${SERVICE} == "SHIFTALEPH") copy2clone ${prog_dir}
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> exec_end
+exec_end:
+ exit
+ 

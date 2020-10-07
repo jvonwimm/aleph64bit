@@ -1,0 +1,2410 @@
+head	1.3;
+access;
+symbols
+	qnnwwtag_1:1.1.1.1
+	OSF1:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	97.02.10.10.25.32;	author guichene;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.01.13.16.09.11;	author guichene;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.12.19.14.30.48;	author jousset;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.12.19.14.30.48;	author jousset;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@update
+@
+text
+@C------------------------------------------------------------------------------C
+      SUBROUTINE QNNWTAG(IPRESEL,IPLOT,IENERGY,OUTNN,IERNNT)
+C------------------------------------------------------------------------------C
+C
+C     QQQ   N   N N   N W     W TTTTT  A    GGG
+C    Q   Q  NN  N NN  N W     W   T   A A  G                Version 1.2
+C    Q  QQ  N N N N N N W  W  W   T  A   A G  GG
+C     QQQQ  N  NN N  NN W W W W   T  AAAAA G   G         03th February 1997
+C         Q N   N N   N WW   WW   T  A   A  GGG
+C    -------------------------------------------
+C
+C
+C    Last Modified:    02/03/97 
+C
+C
+C           In case of problems, please contact :   guichene@@frcpn11.in2p3.fr
+C
+C
+C    The WW group of Clermont-Ferrand : 
+C    ----------------------------------
+C    (IN2P3 - CNRS - Blaise Pascal University - France) 
+C                   Z.  Ajaltouni                      P.   Henrard
+C                   G.  Chazelle                       J.   Jousset
+C                   A.  Falvard                        F.   Podlyski
+C                   C.  Guicheney                      J.M. Rossignol
+C
+C
+C
+C This package allows to tag WW events with an artificial neural network (NN) 
+C in the e+e- --> W+W- --> 4quarks final state at Lep2. The discrimination is 
+C done on the NN output variable. 
+C The architecture of the subroutine is :
+C             ---> preselection of each event with cuts on some variables
+C             ---> computation of the variables used as inputs of the NN
+C             ---> computation of the NN output
+C For more details with preselection and learning of the NN, read the abstract
+C concerning the version of QNNWTAG in use.
+C
+C
+C Description of parameters of the QNNWTAG routine :
+C ==================================================
+C
+C                   Call QNNWTAG(IPRESEL,IPLOT,IENERGY,OUTNN,IERNNT)
+C
+C
+C Inputs :
+C ========
+C
+C          * IPRESEL : = 1 The preselection @@ "IENERGY" Gev value is triggered
+C            -------   = 0 NOT preselection
+C                          !!! W A R N I N G !!!  : the learning of the NN is
+C                                                   done WITH the preselection       
+C                                                        ----
+C
+C          * IPLOT : Flag to print (= 1) or not (= 0) some histogramms
+C            -----  
+C                    ID = 1001 --> 1000+x : distribution of the x NN inputs.
+C                       The x value is provided with the version of QNNWTAG 
+C                       For example : @@ 161Gev (version 1.0) : x = 17 
+C
+C                    ID = 701 : output of th NN 
+C
+C
+C          * IENERGY : Containing the value of the running energy analysis.
+C            -------  
+C                      For the values : at the present time, the NN 
+C                      learning @@ 161 Gev and @@ 172 GeV are available. 
+C
+C
+C
+C Outputs :
+C =========
+C
+C          * OUTNN : Neural network output [-1., 1.]
+C            -----   OUTNN = 9999. means that the output has not been 
+C                    computed for the event. Check the corresponding
+C                    IERNNT value. 
+C
+C          * IERNNT : Error flag
+C            ------   = 0 : OK
+C                     = 1 : parameters (IPRESEL, IPLOT) are not available
+C                     = 2 : preselection cuts not satisfied
+C                     = 3 : error in computing the preselection variables  
+C                     = 4 : error in computing the NN inputs
+C                     = 5 : error in computing the NN output
+C                     = 6 : learning for the IENERGY desired is not available
+C
+C
+C
+C------------------------------------------------------------------------------C
+C
+C
+C
+C  Revision history: 
+C   ======>    Version 1.0 - 18th December 1996    <======
+C
+C                    * Initial version used @@ IENERGY = 161 Gev
+C                      This package can be used with IENERGY = 172 Gev too.
+C                      When running @@ 172 Gev, keep in mind that the NN
+C                      learning is optimized for 161 Gev.
+C                                    
+C                    * The NN is optimized for 161 Gev and its 
+C                      architecture is (17,15,1) : 
+C                        17 = inputs (corresponding variables are described
+C                                     below)
+C                        15 = hidden neurons
+C                         1 = output
+C                    * The preselection uses 5 cuts :
+C                           1)  EM < 50 Gev   : Missing Energy
+C                           2)  95 > OEF > 45 : Number of Energy Flow objects 
+C                           3)  NJET = 4      : events forced in 4 jets 
+C                           4)  SPH > 0.2     : Sphericity
+C                           5)  THR < 0.95    : Thrust
+C 
+C 
+C
+C   More informations about the NN inputs :
+C   ---------------------------------------
+C      The 17 variables used for the NN learning are :
+C            1) Fox Wolfram Moment : H2
+C            2) Fox Wolfram Moment : H3
+C            3) Fox Wolfram Moment : H4
+C            4) Missing mass : XM
+C            5) Transverse Momentum of all charged tracks : PTCH
+C            6) Transverse Momentum of Jet2 : XT2
+C            7) Invariant mass for a dijet combination (Jet3 <-> Jet4) : XA34
+C            8) Invariant mass for a dijet combination (Jet2 <-> Jet4) : XA24 
+C            9) Invariant mass for a dijet combination (Jet1 <-> Jet4) : XA14
+C           10) Number of objects for jet3 : OBJ3
+C           11) Number of objects for jet3 : OBJ4
+C           12) Energy of Jet1 : EJ1
+C           13) Asymmetry between Jet1 and Jet4 : ASY1
+C           14) Asymmetry between Jet3 and Jet4 : ASY6
+C           15) Angle between Jet1 and Jet2 : ANG1
+C           16) Angle between Jet1 and Jet3 : ANG2
+C           17) Angle between Jet2 and Jet3 : ANG4 
+C
+C
+C
+C   ======>    Version 1.1 - 30th January 1997    <=====
+C
+C                    * Version used @@ IENERGY = 161 GeV and 172 GeV
+C                      The NN learning used are optimized for each energy.
+C                          -----------
+C                      The preselection, the NN architecture (17,15,2)  
+C                      and the NN inputs are the same. 
+C                                    
+C
+C
+C   ======>    Version 1.2 - 03th February 1997    <=====
+C
+C                    * Version used @@ IENERGY = 161 GeV and 172 GeV
+C                      The NN learning and the preselection used are 
+C                                              ------------
+C                      optimized for each energy.
+C                      The NN architecture (15,17,2) and the 17 NN inputs
+C                      are the same.
+C
+C                    * The preselection @@ 172 GeV uses 6 cuts :
+C                           1)  EM < 40 Gev
+C                           2)  OEF > 45
+C                           3)  NJ005 >= 4
+C                           4)  NJET = 4
+C                           5)  IFTJT >= 2
+C                           6)  RELMAX < 0.9 
+C
+C
+C------------------------------------------------------------------------------C
+C
+#include "qcde.h"
+C 
+#include "qnnwini.h"     
+C
+      COMMON/NNETWORK/NEURON(3),WPOIDS(2,30,30),A2(30),B2(30),
+     &                XMIN2(30),XMAX2(30),SOMOY2(30),SOM2(30),NIVMAX                                        
+C
+      COMMON/TABJET/JJMAX(4),QEM(4),TAX(6),TT(4),TTB(4),TL(4)
+C
+      INTEGER IENERGY,IPRESEL,IERNNT,IPLOT
+      REAL OUTNN
+C
+#include "qmacro.h"
+C
+C
+C.....Initialize Error Flag : IERNNT
+C     ------------------------------
+      IERNNT = 0
+C
+C.....Initialize NN Output : OUTNNT
+C     -----------------------------
+      OUTNN = -9999.
+C
+C.....Clusterisation of Energy flow objects
+C     -------------------------------------
+      CALL QJOPTR('EF',' ')      
+C
+C
+C.....Initialization of histogramms
+C     -----------------------------
+      IF (.NOT.IFLAG1) THEN
+         IFLAG1 = .TRUE.    
+         CALL HISTOINI(IPLOT,IENERGY)
+      ENDIF       
+C
+C
+C
+C.....Test of QNNWTAG inputs validity
+C     -------------------------------
+      CALL TESTVALID(IPRESEL,IPLOT,IENERGY,IERNNT)
+      IF (IERNNT.NE.0) RETURN
+C
+C
+C*******************************************************************************
+C                                                                              *     
+C  Version 1.2 :  Learning and Preselection optimized for IENERGY = 161 GeV    *
+C  -------------                                and       IENERGY = 172 GeV    *
+C                                                                              *
+C*******************************************************************************
+C
+C
+C
+C.........Preselection 
+C         ============ 
+          IF (IPRESEL.EQ.1) THEN 
+             IF (IENERGY.EQ.161) CALL PRESEL161(IENERGY,IERNNT)
+             IF (IENERGY.EQ.172) CALL PRESEL172(IENERGY,IERNNT)
+          ENDIF
+          IF (IERNNT.NE.0) RETURN
+C
+C
+C
+C.........Compute the Neural Network Inputs
+C         =================================
+C         @@ IENERGY = 161 GeV and 172 GeV 
+C         ------------------------------- 
+          IF (IENERGY.EQ.161.OR.IENERGY.EQ.172)
+     &       CALL NNINPUT16172(XINPUT,IPLOT,IENERGY,IERNNT)
+          IF (IERNNT.NE.0) RETURN
+C
+C
+C
+C.........NN Initialization    
+C         =================
+          IF (.NOT.IFLAG2) THEN
+             IFLAG2 = .TRUE.   
+             CALL RESINI(IENERGY) 
+          ENDIF        
+C
+C
+C.........Compute NN Output
+C         =================
+          CALL RESNEUR(XINPUT,OUTNN)
+C
+C
+C.........Distribution of NN ouput
+C         ========================
+          IF (OUTNN.EQ.-9999.) RETURN
+          IF (IPLOT.EQ.1) THEN
+             CALL HFILL (701 , REAL(OUTNN) ,0.,1.)
+          ENDIF
+
+C
+C
+C
+C
+C*******************************************************************************
+C                                                                              *     
+C                             End  of  Version 1.2                             *
+C                             --------------------                             * 
+C                                                                              *
+C*******************************************************************************
+C
+C
+C
+C
+      RETURN                                                                    
+      END 
+C---------------------------------------------------------------------C    
+C                    End  of  subroutine  QNNWTAG                                                                       
+C=====================================================================C
+C
+C
+C
+C
+C
+C
+C
+C
+C
+C=====================================================================C         
+      LOGICAL FUNCTION PODTRCK(ITK)                                             
+C     This function returns : .TRUE. for "good" track                       
+C                             .FALSE. if not
+C                                                  
+C     A "good" track must satisfy cuts on these criteria :             
+C                QP,   QDB,  QZB,  KFRTNT,  QCOS                                                              
+C---------------------------------------------------------------------C         
+#include "qcde.h"                                            
+#include "qmacro.h"                                           
+C                                                                            
+C.....Values of cuts                                                     
+      DATA D0MAX,Z0MAX,MINHIT,COSMAX/ 3. , 7., 4 , 0.95 /                       
+      DATA PMIN/0.20/                                                           
+C                                                                               
+      PODTRCK = .FALSE.                                                         
+C.....Criterion of selection a "good" track                               
+      IF (QP(ITK).LT.PMIN)         RETURN                                       
+      IF (KFRTNT(ITK).LT.MINHIT)   RETURN                                       
+      IF (ABS(QCT(ITK)).GE.COSMAX) RETURN                                       
+      IF (ABS(QZB(ITK)).GE.Z0MAX)  RETURN                                       
+      IF (ABS(QDB(ITK)).GE.D0MAX)  RETURN                                       
+      PODTRCK = .TRUE.                                                          
+C                                                                               
+      RETURN                                                                    
+      END 
+C---------------------------------------------------------------------C    
+C                    End  of  FUNCTION PODTRCK                                                                       
+C=====================================================================C
+C
+C
+C
+C=====================================================================C         
+      SUBROUTINE TESTVALID(IPRESEL,IPLOT,IENERGY,IERNNT)   
+C     Test of QNNWTAG inputs validity                    
+C                                                                                   
+C---------------------------------------------------------------------C         
+#include "qcde.h" 
+C
+#include "qmacro.h"
+C
+C.....Test of IPRESEL :
+C     -----------------
+      IF (IPRESEL.NE.0.AND.IPRESEL.NE.1) IERNNT=1      
+C
+C.....Test of IPLOT :
+C     ---------------
+      IF (IPLOT.NE.0.AND.IPLOT.NE.1) IERNNT=1 
+C
+C.....Test of IENERGY :
+C     -----------------
+      IF (IENERGY.NE.161.AND.IENERGY.NE.172) IERNNT=6       
+C
+C                                                                               
+      RETURN                                                                    
+      END 
+C---------------------------------------------------------------------C    
+C                    End  of  subroutine TESTVALID                                                                       
+C=====================================================================C
+C
+C
+C
+C=====================================================================C         
+      SUBROUTINE PRESEL161(IENERGY,IERNNT)  
+C     Preselection @@ 161 GeV
+C     Input  : IENERGY
+C     Output : IERNNT                   
+C                                                                                   
+C---------------------------------------------------------------------C         
+#include "qcde.h" 
+C
+C
+      COMMON/TABJET/JJMAX(4),QEM(4),TAX(6),TT(4),TTB(4),TL(4)
+C
+#include "qmacro.h"
+C
+C
+C
+C
+C............Cut number 1 : EM < 50 Gev
+C                           (Missing Energy < 50 gev)
+C
+C            Compute the Missing Energy
+             CALL QJMISS(PMISS,'MISS-VECTOR',KRECO,0)                                  
+             IMISS = KPDIR('MISS-VECTOR',KRECO) 
+             IF (IMISS.NE.0) THEN                                       
+                EM=QE(IMISS)                                                                                                                  
+             ENDIF
+             IF (IMISS.EQ.0) THEN
+                IERNNT=3
+                RETURN
+             ENDIF   
+C 
+C            Cut on the Missing Energy
+             IF (EM.GE.50.00) THEN
+                IERNNT=2 
+                RETURN
+             ENDIF     
+C        
+C............End of Cut 1
+C
+C
+C
+C............Cut number 2 : 95 > OEF > 45
+C                           (95 > Number of Energy Flow Objects > 45)
+C
+C            Compute the total value of energy flow EFL
+             EFL= 0.                                                                   
+             DO 71 JP= KFEFT,KLEFT                                                     
+                EFL=EFL+QE(JP)                                                      
+71           CONTINUE  
+C      
+C            Cut on EFL L  
+             IF (EFL.GT.500.00) THEN
+                IERNNT=2 
+                RETURN
+             ENDIF
+C
+C            Compute the total energy of charged tracks ECHA
+             ECHA= 0.                                                                  
+             DO 771 JCH=KFCHT,KLCHT                                                    
+                ECHA=ECHA+QE(JCH)                                                   
+771          CONTINUE  
+C
+C            Cut on ECHA
+             IF (ECHA.GT.300.00) THEN
+                IERNNT=2
+                RETURN 
+             ENDIF
+C                                                                               
+C            Number of Energy Flow Objects OEF                                     
+             OEF=FLOAT(KNEFT)                                                          
+C 
+C            Cut on OEF
+             IF (OEF.LE.45.00.OR.OEF.GE.95.00) THEN
+                IERNNT=2 
+                RETURN
+             ENDIF     
+C        
+C............End of Cut 2
+C
+C
+C
+C
+C
+C............Cut number 3 : NJET = 4
+C                           (The event is forced in 4 jets) 
+C 
+C            Clusterisation with Jade algorithm to force in 4 jets                                                                                           
+             CALL CLUSJET4(IENERGY,NJET,'Jetdir')
+C  
+C            Cut on NJET
+             IF (NJET.NE.4) THEN
+                IERNNT=2 
+                RETURN
+             ENDIF
+C        
+C............End of Cut 3
+C
+C
+C
+C
+C............Cut number 4 : THR < 0.95
+C                           (Thrust < 0.95)
+C
+             CALL QJTHRU(THR,'thrust-axis',KRECO)     
+C
+C                                                                               
+C
+C            Cut on THRUST
+             IF (THR.GE.0.95) THEN
+                IERNNT=2 
+                RETURN
+             ENDIF
+C        
+C............End of Cut 4
+C
+C
+C
+C
+C............Cut number 5 : SPH > 0.2
+C                           (Sphericity > 0.2)
+C
+             CALL QJSPHE(SPH,'SPHERIAX',KRECO)     
+C
+C                                                                               
+C
+C            Cut on SPH
+             IF (SPH.LE.0.2) THEN
+                IERNNT=2 
+                RETURN
+             ENDIF
+C        
+C............End of Cut 5
+C
+C
+C
+C
+C                                                                               
+      RETURN                                                                    
+      END 
+C---------------------------------------------------------------------C    
+C                    End  of  subroutine PRESEL161                                                                       
+C=====================================================================C
+C
+C
+C
+C=====================================================================C         
+      SUBROUTINE PRESEL172(IENERGY,IERNNT)  
+C     Preselection @@ 172 GeV
+C     Input  : IENERGY
+C     Output : IERNNT                   
+C                                                                                   
+C---------------------------------------------------------------------C         
+#include "qcde.h" 
+C
+C
+      COMMON/TABJET/JJMAX(4),QEM(4),TAX(6),TT(4),TTB(4),TL(4)
+C
+#include "qmacro.h"
+C
+C
+C
+C
+C
+C............Cut number 1 : EM < 40 Gev
+C                           (Missing Energy < 40 gev)
+C
+C            Compute the Missing Energy
+             CALL QJMISS(PMISS,'MISS-VECTOR',KRECO,0)                                  
+             IMISS = KPDIR('MISS-VECTOR',KRECO) 
+             IF (IMISS.NE.0) THEN                                       
+                EM=QE(IMISS)                                                                                                                  
+             ENDIF
+             IF (IMISS.EQ.0) THEN
+                IERNNT=3
+                RETURN
+             ENDIF   
+C 
+C            Cut on the Missing Energy
+             IF (EM.GE.40.00) THEN
+                IERNNT=2 
+                RETURN
+             ENDIF     
+C        
+C............End of Cut 1
+C
+C
+C
+C............Cut number 2 : OEF > 45
+C                           (Number of Energy Flow Objects > 45)
+C                                                                               
+C            Number of Energy Flow Objects OEF                                     
+             OEF=FLOAT(KNEFT)                                                          
+C 
+C            Cut on OEF
+             IF (OEF.LE.45.00) THEN
+                IERNNT=2 
+                RETURN
+             ENDIF     
+C        
+C............End of Cut 2
+C
+C
+C
+C............Cut number 3 : NJ005 >= 4
+C                           (At least 4 jets required using the Jade 
+C                            clusterisation algorithm with Ycut=0.005)
+C
+C            Clusterisation with Ycut : Y005 = 0.005
+             Y005=0.005
+             EVIS=0.00  
+             CALL QJMMCL(NJ005,'N005',KRECO,Y005,EVIS)
+C  
+C            Cut on NJ005
+             IF (NJ005.LT.4) THEN
+                IERNNT=2 
+                RETURN
+             ENDIF
+C        
+C............End of Cut 3
+C
+C
+C
+C............Cut number 4 : NJET = 4
+C                           (The event is forced in 4 jets) 
+C 
+C            Clusterisation with Jade algorithm to force in 4 jets                                                                                           
+             CALL CLUSJET4(IENERGY,NJET,'Jetdir')
+C  
+C            Cut on NJET
+             IF (NJET.NE.4) THEN
+                IERNNT=2 
+                RETURN
+             ENDIF
+C        
+C............End of Cut 4
+C
+C
+C
+C............Cut number 5 : IFTJT >= 2
+C                           (At least 2 "good" tracks in a jet)
+C                                                                               
+C            Classification of jets : from the most energetic to the less
+C                                     energetic one 
+             CALL QEJJ4(NJET,'Jetdir')  
+C                                                                              
+C                                                                               
+C           Number of charged objects per jets    
+            CALL OBC14B
+C
+            NTJ = 0 
+            NTJB = 0
+            DO K = 1,4
+               IF (TT(K).EQ.0.0) NTJ = NTJ + 1
+               IF (TTB(K).EQ.0.0) NTJB = NTJB + 1
+            END DO    
+C
+C           One jet has 0 charged track                         
+            IF (NTJ.GT.0) IFTJT = 0
+C           All jets have at least one charged track   
+            IF (NTJ.EQ.0) IFTJT = 1
+C           All jets have one good charged track 
+            IF (NTJB.EQ.0) IFTJT = 2
+C
+C
+C
+C            Cut on IFTJT
+             IF (IFTJT.LT.2) THEN
+                IERNNT=2 
+                RETURN
+             ENDIF
+C        
+C............End of Cut 5
+C
+C
+C
+C............Cut number 6 : RELMAX < 0.9
+C                           (The maximum electromagnetic energy of jets)
+C
+C                                                                                                                 
+C            Jet energy                                                         
+             EJ1=QEM(1)                                                            
+             EJ2=QEM(2)                                                            
+             EJ3=QEM(3)                                                            
+             EJ4=QEM(4)                                                            
+C  
+C            Electromagnetic jet energy
+             EL1 = 0.00
+             EL2 = 0.00
+             EL3 = 0.00
+             EL4 = 0.00
+             ELMIN = 100.00
+             ELMAX = -100.00
+C
+             DO ITE = KFEFT,KLEFT
+                IF (XEFO(ITE)) THEN
+                   IF (KEFOTY(ITE).EQ.4) THEN
+                      IF (QE(ITE).GT.ELMAX) ELMAX = QE(ITE)
+                      IF (QE(ITE).LT.ELMIN) ELMIN = QE(ITE)
+C
+                      IF (XSAME(ITE,JJMAX(1))) EL1 = EL1 + QE(ITE)
+C
+                      IF (XSAME(ITE,JJMAX(2))) EL2 = EL2 + QE(ITE)
+C
+                      IF (XSAME(ITE,JJMAX(3))) EL3 = EL3 + QE(ITE)
+C
+                      IF (XSAME(ITE,JJMAX(4))) EL4 = EL4 + QE(ITE)
+C
+                   ENDIF
+                ENDIF        
+             END DO
+C
+             REL1 = -1.00
+             REL2 = -1.00
+             REL3 = -1.00
+             REL4 = -1.00
+             IF (EJ1.NE.0.00) REL1 = EL1/EJ1
+             IF (EJ2.NE.0.00) REL2 = EL2/EJ2
+             IF (EJ3.NE.0.00) REL3 = EL3/EJ3
+             IF (EJ4.NE.0.00) REL4 = EL4/EJ4
+C                                                                               
+             TL(1) = REL1
+             TL(2) = REL2
+             TL(3) = REL3
+             TL(4) = REL4
+             RELMAX = -100.00
+             RELMIN = 100.00
+             DO L=1,4
+                IF (TL(L).GT.RELMAX) RELMAX = TL(L)
+                IF (TL(L).LT.RELMIN) RELMIN = TL(L)
+             END DO
+C
+C 
+C
+C            Cut on RELMAX
+             IF (RELMAX.GE.0.9) THEN
+                IERNNT=2 
+                RETURN
+             ENDIF
+C        
+C............End of Cut 6
+C
+C
+C
+C                                                                               
+      RETURN                                                                    
+      END 
+C---------------------------------------------------------------------C    
+C                    End  of  subroutine PRESEL172                                                                       
+C=====================================================================C
+C
+C
+C
+C
+C=====================================================================C         
+      SUBROUTINE CLUSJET4(IENERGY,NJET,DIRJET)  
+C     Clusterisation with Jade algorithm to force in 4 jets  
+C     Outputs : NJET, DIRJET                    
+C                                                                                   
+C---------------------------------------------------------------------C         
+#include "qcde.h" 
+C
+      CHARACTER*2 SHEME
+      CHARACTER*6 VERSN
+      CHARACTER*7 DIRJET
+C      
+#include "qmacro.h"
+C
+C
+C.....Clusterisation with Jade algorithm and at first Ycut = 0.02
+      EVIS=0.                                                                
+      YCUT=0.02 
+C      
+      IF (IENERGY.EQ.161) THEN 
+         SHEME = 'E'
+         VERSN = 'JADE' 
+      ENDIF                                                               
+C      
+      IF (IENERGY.EQ.172) THEN 
+         SHEME = 'P'
+         VERSN = 'DURHAM' 
+      ENDIF 
+C      
+      CALL QGJMMC(NJET,DIRJET,KRECO,YCUT,EVIS,SHEME,VERSN)
+C
+C.....At this step, 4 jets are required                                             
+      IF (NJET.EQ.4) GOTO 9                                                     
+C 
+C.....For the remaining events, we iterate on the Ycut value to
+C     force them in 4 jets              
+      IF (NJET.NE.4) THEN                                      
+         ICOMPT=0                                                                     
+ 11      CONTINUE                                                              
+C........Iterate on the YCUT value                          
+         YJET=FLOAT(NJET)                                                       
+         YCUT=(YJET-4.)/2000.+YCUT                                              
+         CALL QGJMMC(NJET,DIRJET,KRECO,YCUT,EVIS,SHEME,VERSN)                                                              
+         ICOMPT = ICOMPT+1                                                      
+         IF (ICOMPT.EQ.50) GOTO 8                                               
+         IF (NJET.NE.4) GOTO 11                                                 
+      ENDIF                                                                     
+C                                                                               
+ 9    CONTINUE                                                                  
+C
+ 8    CONTINUE 
+C   
+C
+C       
+      RETURN                                                                    
+      END 
+C---------------------------------------------------------------------C    
+C                    End  of  subroutine CLUSJET4                                                                         
+C=====================================================================C
+C
+C
+C 
+C=====================================================================C         
+      SUBROUTINE QEJJ4(NJET,DIRJET)  
+C     Clusterisation with Jade algorithm to force in 4 jets  
+C     Inputs : NJET, 'Jetdir'                     
+C     Output  : JJMAX(1->4) : jet number 
+C                                                                                   
+C---------------------------------------------------------------------C         
+#include "qcde.h" 
+C
+C
+      COMMON/TABJET/JJMAX(4),QEM(4),TAX(6),TT(4),TTB(4),TL(4)
+C
+C
+      CHARACTER*7 DIRJET
+C
+#include "qmacro.h"
+C
+C
+C.....Initialisation of QEM :                    
+      DO I=1,4
+         QEM(I) = -10.
+      ENDDO                                                               
+C                                                                               
+C.....Classification of jets : from the most energetic to the less
+C                              energetic one                                                                                          
+      JJ = KPDIR(DIRJET,KRECO)                                                 
+      DO 2 J = 1,NJET                                                           
+         IF (J.GT.1) JJ = KFOLLO(JJ)                                            
+         IF (QE(JJ).GT.QEM(1)) THEN                                               
+            QEM(1) = QE(JJ)                                                       
+            JJMAX(1) = JJ                                                                                                 
+         ENDIF                                                                 
+ 2    CONTINUE                                                                  
+C                                                                               
+      JJ = KPDIR(DIRJET,KRECO)                                                 
+      DO 3 J = 1,NJET                                                           
+         IF (J.GT.1) JJ = KFOLLO(JJ)                                            
+         IF (JJ.EQ.JJMAX(1)) GOTO 3                                               
+         IF (QE(JJ).GT.QEM(2)) THEN                                               
+            QEM(2) = QE(JJ)                                                                                                      
+            JJMAX(2) = JJ                                                         
+         ENDIF                                                                  
+ 3    CONTINUE                                                                  
+C                                                                               
+      JJ = KPDIR(DIRJET,KRECO)                                                 
+      DO 4 J = 1,NJET                                                           
+         IF (J.GT.1) JJ = KFOLLO(JJ)                                            
+         IF ((JJ.EQ.JJMAX(1)).OR.(JJ.EQ.JJMAX(2))) GOTO 4                           
+         IF (QE(JJ).GT.QEM(3)) THEN                                               
+            QEM(3) = QE(JJ)                                                                                                       
+            JJMAX(3) = JJ                                                         
+         ENDIF                                                                  
+ 4    CONTINUE                                                                  
+C                                                                               
+      JJ = KPDIR(DIRJET,KRECO)                                                 
+      DO 5 J=1,NJET                                                             
+         IF (J.GT.1) JJ = KFOLLO(JJ)                                            
+         IF ((JJ.EQ.JJMAX(1)).OR.(JJ.EQ.JJMAX(2)).OR.
+     &       (JJ.EQ.JJMAX(3))) GOTO 5         
+         IF (QE(JJ).GT.QEM(4)) THEN                                               
+            QEM(4) = QE(JJ)                                                                                                      
+            JJMAX(4) = JJ                                                         
+         ENDIF                                                                  
+ 5    CONTINUE                                                                  
+C                          
+C
+C       
+      RETURN                                                                    
+      END 
+C---------------------------------------------------------------------C    
+C                    End  of  subroutine QEJJ4                                                                         
+C=====================================================================C
+C
+C
+C 
+C=====================================================================C         
+      SUBROUTINE OBC14B  
+C     Number of charged objects per jets   
+C     Input  : JJMAX(1->4) : jet number  
+C     Outputs: TT(1->4) 
+C              TTB(1->4)              
+C                                                                                   
+C---------------------------------------------------------------------C         
+#include "qcde.h" 
+C
+      COMMON/TABJET/JJMAX(4),QEM(4),TAX(6),TT(4),TTB(4),TL(4)
+C
+      LOGICAL PODTRCK
+C
+#include "qmacro.h"
+C
+C
+C.....Number of charged objects per jets                                          
+      ICOJ1 = 0                                                                 
+      ICOJ2 = 0                                                                 
+      ICOJ3 = 0                                                                 
+      ICOJ4 = 0                                                                 
+C                              
+      ICOJ1B = 0                                                                 
+      ICOJ2B = 0                                                                 
+      ICOJ3B = 0                                                                 
+      ICOJ4B = 0                                                                 
+C                                   
+      DO 81 ITK = KFCHT,KLCHT
+         ET = 0.00                                                   
+         IF (XSAME(JJMAX(1),ITK)) THEN
+            ICOJ1 = ICOJ1 + 1       
+            IF (PODTRCK(ITK)) ICOJ1B=ICOJ1B+1
+         ENDIF                        
+         IF (XSAME(JJMAX(2),ITK)) THEN
+            ICOJ2 = ICOJ2 + 1       
+            IF (PODTRCK(ITK)) ICOJ2B=ICOJ2B+1
+         ENDIF                        
+         IF (XSAME(JJMAX(3),ITK)) THEN 
+            ICOJ3 = ICOJ3 + 1 
+            IF (PODTRCK(ITK)) ICOJ3B=ICOJ3B+1
+         ENDIF                              
+         IF (XSAME(JJMAX(4),ITK)) THEN
+            ICOJ4 = ICOJ4 + 1       
+            IF (PODTRCK(ITK)) ICOJ4B=ICOJ4B+1
+         ENDIF                        
+C                    
+ 81   CONTINUE                                                                  
+C                                                                               
+      OBC1 = FLOAT(ICOJ1)                                                       
+      OBC2 = FLOAT(ICOJ2)                                                       
+      OBC3 = FLOAT(ICOJ3)                                                       
+      OBC4 = FLOAT(ICOJ4)                                                           
+C                                                                              
+      OBC1B = FLOAT(ICOJ1B)            
+      OBC2B = FLOAT(ICOJ2B)    
+      OBC3B = FLOAT(ICOJ3B)    
+      OBC4B = FLOAT(ICOJ4B)        
+C
+      TT(1) = OBC1
+      TT(2) = OBC2
+      TT(3) = OBC3
+      TT(4) = OBC4
+C                            
+      TTB(1) = OBC1B
+      TTB(2) = OBC2B
+      TTB(3) = OBC3B
+      TTB(4) = OBC4B
+C                          
+C
+C       
+      RETURN                                                                    
+      END 
+C---------------------------------------------------------------------C    
+C                    End  of  subroutine OBC14B                                                                        
+C=====================================================================C
+C
+C
+C 
+C=====================================================================C         
+      SUBROUTINE XADIJET(IERRX)  
+C     Number of charged objects per jets   
+C     Input  : JJMAX(1->4) : jet number  
+C     Outputs: TAX(1->6) : dijet combinations 
+C              IERR : Error flag              
+C                                                                                   
+C---------------------------------------------------------------------C         
+#include "qcde.h" 
+C
+C
+      COMMON/TABJET/JJMAX(4),QEM(4),TAX(6),TT(4),TTB(4),TL(4)
+C
+#include "qmacro.h"
+C
+C                          
+      IERRX = 0
+C.....Compute invariant masses for both dijet combination
+      TJOU12 = (QE(JJMAX(1))+QE(JJMAX(2)))**2
+     &        -(QX(JJMAX(1))+QX(JJMAX(2)))**2            
+     &        -(QY(JJMAX(1))+QY(JJMAX(2)))**2
+     &        -(QZ(JJMAX(1))+QZ(JJMAX(2)))**2            
+      TJOU34 = (QE(JJMAX(3))+QE(JJMAX(4)))**2
+     &        -(QX(JJMAX(3))+QX(JJMAX(4)))**2            
+     &        -(QY(JJMAX(3))+QY(JJMAX(4)))**2
+     &        -(QZ(JJMAX(3))+QZ(JJMAX(4)))**2            
+C                                                                               
+      TJOU13 = (QE(JJMAX(1))+QE(JJMAX(3)))**2
+     &        -(QX(JJMAX(1))+QX(JJMAX(3)))**2            
+     &        -(QY(JJMAX(1))+QY(JJMAX(3)))**2
+     &        -(QZ(JJMAX(1))+QZ(JJMAX(3)))**2            
+      TJOU24 = (QE(JJMAX(2))+QE(JJMAX(4)))**2
+     &        -(QX(JJMAX(2))+QX(JJMAX(4)))**2            
+     &        -(QY(JJMAX(2))+QY(JJMAX(4)))**2
+     &        -(QZ(JJMAX(2))+QZ(JJMAX(4)))**2            
+C                                                                               
+      TJOU14 = (QE(JJMAX(1))+QE(JJMAX(4)))**2
+     &        -(QX(JJMAX(1))+QX(JJMAX(4)))**2            
+     &        -(QY(JJMAX(1))+QY(JJMAX(4)))**2
+     &        -(QZ(JJMAX(1))+QZ(JJMAX(4)))**2            
+      TJOU23 = (QE(JJMAX(2))+QE(JJMAX(3)))**2
+     &        -(QX(JJMAX(2))+QX(JJMAX(3)))**2            
+     &        -(QY(JJMAX(2))+QY(JJMAX(3)))**2
+     &        -(QZ(JJMAX(2))+QZ(JJMAX(3)))**2            
+C                                 
+      IF (TJOU12.GE.0.0) THEN   
+         XA12 = SQRT(TJOU12)    
+      ELSE
+         IERRX=1
+         RETURN
+      ENDIF    
+      IF (TJOU34.GE.0.0) THEN                                               
+         XA34 = SQRT(TJOU34)    
+      ELSE
+         IERRX=1
+         RETURN
+      ENDIF
+C
+      IF (TJOU13.GE.0.0) THEN                                                   
+         XA13 = SQRT(TJOU13)    
+      ELSE
+         IERRX=1
+         RETURN
+      ENDIF
+      IF (TJOU24.GE.0.0) THEN                                                   
+         XA24 = SQRT(TJOU24) 
+      ELSE
+         IERRX=1
+         RETURN
+      ENDIF                                                   
+C                                                                               
+      IF (TJOU14.GE.0.0) THEN
+         XA14 = SQRT(TJOU14) 
+      ELSE 
+         IERRX=1
+         RETURN
+      ENDIF
+      IF (TJOU23.GE.0.0) THEN                    
+         XA23 = SQRT(TJOU23) 
+      ELSE 
+         IERRX=1
+         RETURN
+      ENDIF
+C
+C
+      TAX(1)=XA12
+      TAX(2)=XA34
+      TAX(3)=XA13
+      TAX(4)=XA24
+      TAX(5)=XA14
+      TAX(6)=XA23
+C
+C       
+      RETURN                                                                    
+      END 
+C---------------------------------------------------------------------C    
+C                    End  of  subroutine XADIJET                                                                         
+C=====================================================================C
+C
+C
+C
+C=====================================================================C         
+      SUBROUTINE HISTOINI(IPLOT,IENERGY)  
+C     Initialization of histogramms                       
+C                                                                                   
+C---------------------------------------------------------------------C         
+#include "qcde.h"      
+C       
+#include "qmacro.h"
+C
+C.....No print of histogramms
+C     =======================  
+      IF (IPLOT.NE.1) RETURN
+C
+C
+C
+C.....Print histogramms with Version 1.0
+C     ==================================
+      IF (IENERGY.EQ.161.OR.IENERGY.EQ.172) THEN
+C
+C........Distribution of the 17 NN inputs
+C        --------------------------------
+         CALL QBOOK1(1001,'H2  ',50,0.,1.,0.)
+         CALL QBOOK1(1002,'H3  ',50,0.,1.,0.)
+         CALL QBOOK1(1003,'H4  ',50,0.,1.,0.)
+         CALL QBOOK1(1004,'PTCH',50,0.,80.,0.)
+         CALL QBOOK1(1005,'XT2 ',50,0.,60.,0.)
+         CALL QBOOK1(1006,'XA34',50,0.,100.,0.)
+         CALL QBOOK1(1007,'XA24',50,0.,100.,0.)
+         CALL QBOOK1(1008,'XA14',50,0.,100.,0.)
+         CALL QBOOK1(1009,'OBJ3',50,0.,50.,0.)
+         CALL QBOOK1(1010,'OBJ4',50,0.,50.,0.)
+         CALL QBOOK1(1011,'EJ1 ',50,20.,100.,0.)
+         CALL QBOOK1(1012,'ASY6',50,0.,1.,0.)
+         CALL QBOOK1(1013,'ANG1',50,-1.,1.,0.)
+         CALL QBOOK1(1014,'ANG2',50,-1.,1.,0.)
+         CALL QBOOK1(1015,'ANG4',50,-1.,1.,0.)
+         CALL QBOOK1(1016,'XM  ',50,0.,50.,0.)
+         CALL QBOOK1(1017,'ASY1',50,0.,1.,0.)  
+C
+      ENDIF
+C
+C
+C     ============ End of the Version 1.0 ============
+C
+C
+C
+C.....Distribution of the NN output
+C     -----------------------------
+      CALL QBOOK1 (701 , 'NN output' ,50,-1.,1.,0.) 
+C
+C
+C       
+      RETURN                                                                    
+      END 
+C---------------------------------------------------------------------C    
+C                    End  of  subroutine HISTO_INI                                                                        
+C=====================================================================C
+C
+C
+C
+C=====================================================================C         
+      SUBROUTINE NNINPUT16172(XINPUT,IPLOT,IENERGY,IERNNT)  
+C     Compute NN inputs @@ 161 GeV and @@ 172 GeV                                                                 
+C                                                                                   
+C---------------------------------------------------------------------C        
+#include "qcde.h"  
+C
+      COMMON/TABJET/JJMAX(4),QEM(4),TAX(6),TT(4),TTB(4),TL(4)
+C
+      DIMENSION FOXWOL(5),XINPUT(17)
+C       
+#include "qmacro.h"
+C
+C
+C We use a 3-layered feed forward Neural Network trained by back propagation of 
+C the errors. Its architecture is 17, 15, 1 neurons in, respectively, the
+C first, second and last layer.
+C
+C
+C
+C............Compute the Neural Network inputs : 17 variables
+C
+C
+C............Variables number 1, 2 and 3 : Fox Wolfram Moments : H2, H3, H4
+             CALL QJFOXW(FOXWOL,KRECO)                                                                                                               
+             H2 = FOXWOL(3)                                                              
+             H3 = FOXWOL(4)                                                              
+             H4 = FOXWOL(5)                   
+C              
+C
+C............Variable number 4 : Missing Mass : XM
+             CALL QJMISS(PMISS,'MISS-VECTOR',KRECO,0)                                  
+             IMISS = KPDIR('MISS-VECTOR',KRECO) 
+             IF (IMISS.NE.0) THEN                                                                                              
+                XM = QM(IMISS) 
+             ELSE 
+                IERNNT=4 
+                RETURN                                                             
+             ENDIF  
+C
+C
+C
+C............Variable number 5 : Transverse Momentum of all charged tracks : PTCH
+             PXCHT=0.                                                                 
+             PYCHT=0.                                                                                                                        
+             DO 772 JCH=KFCHT,KLCHT                                                   
+                PXCHT=PXCHT+QX(JCH)                                                 
+                PYCHT=PYCHT+QY(JCH)                                                                                         
+ 772         CONTINUE                   
+             PTCH = SQRT((PXCHT)**2+(PYCHT)**2)   
+C
+C
+C
+C...............Variables number : 
+C                6 - Transverse Momentum of Jet 2 : XT2  
+C            7,8,9 - Invariant masses for 3 dijet combinations : XA34,XA24,XA14
+C            10,11 - Number of objects for jets 3 and 4 : OBJ3,OBJ4 
+C            13,14 - Asymetries : ASY1,ASY6
+C         15,16,17 - Angles between Jets : ANG1,ANG2,ANG4
+C
+             IF (IPRESEL.EQ.0) THEN
+C
+C...............Clusterisation with Jade algorithm to force in 4 jets                                                                                           
+                CALL CLUSJET4(IENERGY,NJET,'Jetdir')
+C  
+C               Cut on NJET
+                IF (NJET.NE.4) THEN
+                   IERNNT=4 
+                   RETURN
+                ENDIF
+C        
+C                                                    
+C...............Classification of jets : from the most energetic to the less
+C                                        energetic one 
+                CALL QEJJ4(NJET,'Jetdir')  
+C                                                          
+C                                                                               
+C                                     
+C                                                                                                                 
+C...............Compute invariant masses for both dijet combination
+                CALL XADIJET(IERRX)
+C     
+C
+C               Error flag
+                IF (IERRX.EQ.1) THEN
+                   IERNNT=4 
+                   RETURN
+                ENDIF
+C
+             ENDIF
+C
+             XT2 = QPT(JJMAX(2))
+             XA34 = TAX(2)
+             XA24 = TAX(4)
+             XA14 = TAX(5)
+C............Number of objects for jets 3 and 4 : OBJ3, OBJ4                                                                                                  
+             ICOJE3=0
+             ICOJE4=0                                                                                                                         
+             DO 31 J = KFEFT,KLEFT                                                                                
+                IF(XSAME(JJMAX(3),J)) ICOJE3 = ICOJE3 + 1                                
+                IF(XSAME(JJMAX(4),J)) ICOJE4 = ICOJE4 + 1                                             
+ 31          CONTINUE                                                                                                                                                                         
+             OBJ3=FLOAT(ICOJE3)                                                        
+             OBJ4=FLOAT(ICOJE4)                                                       
+C............Asymetries : ASY1 and ASY6
+             ASY1 = ABS((QP(JJMAX(1))-QP(JJMAX(4)))/
+     &                  (QP(JJMAX(1))+QP(JJMAX(4))))
+             ASY6 = ABS((QP(JJMAX(3))-QP(JJMAX(4)))/
+     &                  (QP(JJMAX(3))+QP(JJMAX(4))))
+C............Angles between Jets : ANG1, ANG2, ANG4
+             ANG1 = QCOSA(JJMAX(1),JJMAX(2))                                                
+             ANG2 = QCOSA(JJMAX(1),JJMAX(3))                                                                                     
+             ANG4 = QCOSA(JJMAX(2),JJMAX(3))                                               
+C              
+C
+C............Variable number 12 : Energy of Jet 1 : EJ1
+             EJ1 = QE(JJMAX(1))
+C
+C
+C
+C............Put these 17 variables into NN inputs
+             XINPUT(1) = H2
+             XINPUT(2) = H3
+             XINPUT(3) = H4
+             XINPUT(4) = XM
+             XINPUT(5) = PTCH
+             XINPUT(6) = XT2
+             XINPUT(7) = XA34
+             XINPUT(8) = XA24
+             XINPUT(9) = XA14
+             XINPUT(10) = OBJ3
+             XINPUT(11) = OBJ4
+             XINPUT(12) = EJ1
+             XINPUT(13) = ASY1
+             XINPUT(14) = ASY6
+             XINPUT(15) = ANG1
+             XINPUT(16) = ANG2
+             XINPUT(17) = ANG4
+C
+C
+C
+C............Distribution of NN inputs
+C     
+             IF (IPLOT.EQ.1) THEN
+                CALL HFILL (1000 +  1, XINPUT(1) ,0.,1.)
+                CALL HFILL (1000 +  2, XINPUT(2) ,0.,1.)
+                CALL HFILL (1000 +  3, XINPUT(3) ,0.,1.)
+                CALL HFILL (1000 +  4, XINPUT(4) ,0.,1.)
+                CALL HFILL (1000 +  5, XINPUT(5) ,0.,1.)
+                CALL HFILL (1000 +  6, XINPUT(6) ,0.,1.)
+                CALL HFILL (1000 +  7, XINPUT(7) ,0.,1.)
+                CALL HFILL (1000 +  8, XINPUT(8) ,0.,1.)
+                CALL HFILL (1000 +  9, XINPUT(9) ,0.,1.)
+                CALL HFILL (1000 + 10, XINPUT(10) ,0.,1.)
+                CALL HFILL (1000 + 11, XINPUT(11) ,0.,1.)
+                CALL HFILL (1000 + 12, XINPUT(12) ,0.,1.)
+                CALL HFILL (1000 + 13, XINPUT(13) ,0.,1.)
+                CALL HFILL (1000 + 14, XINPUT(14) ,0.,1.)
+                CALL HFILL (1000 + 15, XINPUT(15) ,0.,1.)
+                CALL HFILL (1000 + 16, XINPUT(16) ,0.,1.)
+                CALL HFILL (1000 + 17, XINPUT(17) ,0.,1.)
+             ENDIF
+C
+C
+C       
+      RETURN                                                                    
+      END 
+C---------------------------------------------------------------------C    
+C                    End  of  subroutine NNINPUT16172                                                                     
+C=====================================================================C
+C
+C
+C
+C=====================================================================C         
+      SUBROUTINE RESINI(IENERGY)  
+C     Version 1.0 Neural Network Initialization                                                                  
+C                                                                                   
+C---------------------------------------------------------------------C         
+#include "qcde.h"  
+C  
+      COMMON/NNETWORK/NEURON(3),WPOIDS(2,30,30),A2(30),B2(30),
+     &                XMIN2(30),XMAX2(30),SOMOY2(30),SOM2(30),NIVMAX                                        
+C
+#include "qmacro.h"                                           
+C                         
+C
+C                                                      
+C.....Initialization of NN parameters and NN weights : 
+C     ------------------------------------------------  
+C
+      IF (IENERGY.EQ.161) CALL RESINI161
+      IF (IENERGY.EQ.172) CALL RESINI172
+C
+C
+C.....Compute parameters for normalization : -1. < NN inputs < 1.
+      DO 447 K=1,NEURON(1)                                                      
+         A2(K)=2.00/(XMAX2(K)-XMIN2(K))                                                 
+         B2(K)=(XMAX2(K)+XMIN2(K))/(XMIN2(K)-XMAX2(K))                       
+ 447  CONTINUE 
+C 
+C                                                                               
+      RETURN                                                                    
+      END 
+C---------------------------------------------------------------------C    
+C                    End  of  Subroutine  RESINI                                                                      
+C=====================================================================C
+C
+C
+C
+C=====================================================================C                                                
+      SUBROUTINE RESNEUR(XINPUT,OUTNN)  
+C     This subroutine returns : OUTNN = NN output                       
+C                                                                                   
+C---------------------------------------------------------------------C         
+#include "qcde.h"  
+C
+      COMMON/NNETWORK/NEURON(3),WPOIDS(2,30,30),A2(30),B2(30),
+     &                XMIN2(30),XMAX2(30),SOMOY2(30),SOM2(30),NIVMAX                                        
+C
+      REAL OUTNN
+C
+      DIMENSION XINPUT(17)                             
+      DIMENSION X(3,18),Y(3,18)                                               
+      DIMENSION XINPUT2(18)                                 
+C                                           
+#include "qmacro.h"  
+C   
+C                                                                                  
+C.....Normalization of NN inputs between -1. and 1. 
+C     ---------------------------------------------                                                                         
+      DO 229 K=1,NEURON(1)+1                                                    
+         IF (K.EQ.NEURON(1)+1) THEN                                             
+            XINPUT2(K)=1.E+00                                                                                                                       
+         ELSE 
+            XINPUT(K)=(XINPUT(K)-SOMOY2(K))/SQRT(SOM2(K))                                                                 
+            IF (XINPUT(K).GT.XMAX2(K)) XINPUT(K)=XMAX2(K)                         
+            IF (XINPUT(K).LT.XMIN2(K)) XINPUT(K)=XMIN2(K)                         
+            XINPUT2(K)=A2(K)*XINPUT(K)+B2(K)                                                                 
+         ENDIF                                                                  
+ 229  CONTINUE                                                                  
+C 
+C                                                                              
+C..........Computation of NN                                                      
+C          =================                                                      
+C          Input layer                                                             
+C          -----------                                                             
+           DO 129 IM=1,NEURON(1)+1                                             
+              Y(1,IM)=XINPUT2(IM)                                            
+ 129       CONTINUE                                                             
+C                                                                               
+C          Hidden(s) and output layers                                                       
+C          ---------------------------                                                       
+           DO 149 NIV=1,NIVMAX-1                                                
+               DO 149 J=1,NEURON(NIV+1)                                         
+                  X(NIV+1,J)=0.E+00                                             
+                  DO 349 K=1,NEURON(NIV)+1                                      
+                     X(NIV+1,J)=X(NIV+1,J)+Y(NIV,K)*WPOIDS(NIV,K,J)             
+ 349              CONTINUE                                                                                                                         
+C                                                                                                                    
+                  Y(NIV+1,J)=(1.E+00-EXP(-X(NIV+1,J)))/                
+     &                       (1.E+00+EXP(-X(NIV+1,J)))                                                                           
+C                                                                                     
+                  IF (J.EQ.NEURON(NIV+1)) THEN                                  
+                     Y(NIV+1,J+1)=1.E+00                                        
+                  ENDIF                                                                                                               
+C                                                                               
+ 149       CONTINUE                                                             
+C                    
+C                                                                               
+C..........NN output                                                       
+C          ========= 
+           OUTNN = Y(NIVMAX,1)                                                            
+C                                                                                                                                                                                                                                                                                                                                            
+C                                                                               
+      RETURN                                                                    
+      END 
+C---------------------------------------------------------------------C    
+C                    End  of  Subroutine  RESNEUR                                                                      
+C=====================================================================C
+C
+C
+C
+C=====================================================================C         
+      SUBROUTINE RESINI161  
+C     Version 1.0 : Neural Network Initialization @@ 161 Gev                                                                 
+C                                                                                   
+C---------------------------------------------------------------------C         
+#include "qcde.h"  
+C  
+      COMMON/NNETWORK/NEURON(3),WPOIDS(2,30,30),A2(30),B2(30),
+     &                XMIN2(30),XMAX2(30),SOMOY2(30),SOM2(30),NIVMAX                                         
+C
+#include "weights161.h"  
+C
+#include "qmacro.h" 
+C                                                                               
+      RETURN                                                                    
+      END 
+C---------------------------------------------------------------------C    
+C                    End  of  Subroutine  RESINI161                                                                      
+C=====================================================================C
+C
+C
+C
+C=====================================================================C         
+      SUBROUTINE RESINI172  
+C     Version 1.1 : Neural Network Initialization @@ 172 Gev                                                                 
+C                                                                                   
+C---------------------------------------------------------------------C         
+#include "qcde.h"  
+C  
+      COMMON/NNETWORK/NEURON(3),WPOIDS(2,30,30),A2(30),B2(30),
+     &                XMIN2(30),XMAX2(30),SOMOY2(30),SOM2(30),NIVMAX                                         
+C
+#include "weights172.h"  
+C
+#include "qmacro.h" 
+C                                                                               
+      RETURN                                                                    
+      END 
+C---------------------------------------------------------------------C    
+C                    End  of  Subroutine  RESINI172                                                                      
+C=====================================================================C
+
+@
+
+
+1.2
+log
+@update
+@
+text
+@d6 1
+a6 1
+C    Q   Q  NN  N NN  N W     W   T   A A  G                Version 1.0
+d8 1
+a8 1
+C     QQQQ  N  NN N  NN W W W W   T  AAAAA G   G         18th December 1996
+d13 1
+a13 1
+C    Last Modified:    18/12/96
+d19 1
+a19 1
+C    The WW group of Clermont-Ferrand :
+d21 1
+a21 1
+C    (IN2P3 - CNRS - Blaise Pascal University - France)
+d29 3
+a31 3
+C This package allows to tag WW events with an artificial neural network (NN)
+C in the e+e- --> W+W- --> 4quarks final state at Lep2. The discrimination is
+C done on the NN output variable.
+d37 1
+a37 1
+C concerning the version of QNNWWTAG in use.
+d40 1
+a40 1
+C Description of parameters of the QNNWWTAG routine :
+d43 1
+a43 1
+C                   Call QNNWWTAG(IPRESEL,IPLOT,IENERGY,OUTNN,IERNNT)
+d52 1
+a52 1
+C                                                   done WITH the preselection
+d56 1
+a56 1
+C            -----
+d58 2
+a59 2
+C                       The x value is provided with the version of QNNWWTAG
+C                       For example : @@ 161Gev (version 1.0) : x = 17
+d61 1
+a61 1
+C                    ID = 701 : output of th NN
+d65 3
+a67 4
+C            -------
+C                      For the values : at the present time, only the NN
+C                      learning @@ 161 Gev is available but this package
+C                      can be used with IENERGY = 172 Gev too.
+d75 1
+a75 1
+C            -----   OUTNN = 9999. means that the output has not been
+d77 1
+a77 1
+C                    IERNNT value.
+d83 1
+a83 1
+C                     = 3 : error in computing the preselection variables
+d94 2
+a95 1
+C  Revision history: Version 1.0 - 18th December 1996
+d101 3
+a103 3
+C
+C                    * The NN is optimized for 161 Gev and its
+C                      architecture is (17,15,1) :
+d110 2
+a111 2
+C                           2)  95 > OEF > 45 : Number of Energy Flow objects
+C                           3)  NJET = 4      : events forced in 4 jets
+d114 2
+a115 2
+C
+C
+d127 1
+a127 1
+C            8) Invariant mass for a dijet combination (Jet2 <-> Jet4) : XA24
+d136 31
+a166 1
+C           17) Angle between Jet2 and Jet3 : ANG4
+d171 2
+a172 2
+C
+#include "qnnwini.h"
+d175 1
+a175 1
+     &                XMIN2(30),XMAX2(30),SOMOY2(30),SOM2(30),NIVMAX
+d177 1
+a177 1
+      COMMON/TABJET/JJMAX(4),TAX(6),TT(4),TTB(4)
+d195 1
+a195 1
+      CALL QJOPTR('EF',' ')
+d201 1
+a201 1
+         IFLAG1 = .TRUE.
+d203 1
+a203 1
+      ENDIF
+d207 1
+a207 1
+C.....Test of QNNWWTAG inputs validity
+d214 3
+a216 3
+C                                                                              *
+C      Version 1.0 :    Learning optimized for IENERGY = 161 Gev            *
+C      -------------                                                           *
+d222 6
+a227 3
+C.........Preselection
+C         ============
+          IF (IPRESEL.EQ.1) CALL PRESELECTION(IENERGY,IERNNT)
+d234 2
+a235 2
+C         @@ IENERGY = 161 Gev
+C         -------------------
+d237 1
+a237 1
+     &       CALL NNINPUT161(XINPUT,IPLOT,IERNNT)
+d242 1
+a242 1
+C.........NN Initialization
+d245 3
+a247 3
+             IFLAG2 = .TRUE.
+             CALL RESINI(IENERGY)
+          ENDIF
+d267 3
+a269 3
+C                                                                              *
+C                             End  of  Version 1.0                             *
+C                             --------------------                             *
+d276 4
+a279 4
+      RETURN
+      END
+C---------------------------------------------------------------------C
+C                    End  of  subroutine  QNNWWTAG
+d290 3
+a292 3
+C=====================================================================C
+      LOGICAL FUNCTION PODTRCK(ITK)
+C     This function returns : .TRUE. for "good" track
+d294 24
+a317 24
+C
+C     A "good" track must satisfy cuts on these criteria :
+C                QP,   QDB,  QZB,  KFRTNT,  QCOS
+C---------------------------------------------------------------------C
+#include "qcde.h"
+#include "qmacro.h"
+C
+C.....Values of cuts
+      DATA D0MAX,Z0MAX,MINHIT,COSMAX/ 3. , 7., 4 , 0.95 /
+      DATA PMIN/0.20/
+C
+      PODTRCK = .FALSE.
+C.....Criterion of selection a "good" track
+      IF (QP(ITK).LT.PMIN)         RETURN
+      IF (KFRTNT(ITK).LT.MINHIT)   RETURN
+      IF (ABS(QCT(ITK)).GE.COSMAX) RETURN
+      IF (ABS(QZB(ITK)).GE.Z0MAX)  RETURN
+      IF (ABS(QDB(ITK)).GE.D0MAX)  RETURN
+      PODTRCK = .TRUE.
+C
+      RETURN
+      END
+C---------------------------------------------------------------------C
+C                    End  of  FUNCTION PODTRCK
+d322 6
+a327 6
+C=====================================================================C
+      SUBROUTINE TESTVALID(IPRESEL,IPLOT,IENERGY,IERNNT)
+C     Test of QNNWWTAG inputs validity
+C
+C---------------------------------------------------------------------C
+#include "qcde.h"
+d333 1
+a333 1
+      IF (IPRESEL.NE.0.AND.IPRESEL.NE.1) IERNNT=1
+d337 1
+a337 1
+      IF (IPLOT.NE.0.AND.IPLOT.NE.1) IERNNT=1
+d341 1
+a341 1
+      IF (IENERGY.NE.161.AND.IENERGY.NE.172) IERNNT=6
+d343 5
+a347 5
+C
+      RETURN
+      END
+C---------------------------------------------------------------------C
+C                    End  of  subroutine TESTVALID
+d352 3
+a354 2
+C=====================================================================C
+      SUBROUTINE PRESELECTION(IENERGY,IERNNT)
+d356 4
+a359 4
+C     Output : IERNNT
+C
+C---------------------------------------------------------------------C
+#include "qcde.h"
+d362 1
+a362 1
+      COMMON/TABJET/JJMAX(4),TAX(6),TT(4),TTB(4)
+a367 1
+          IF (IENERGY.EQ.161.OR.IENERGY.EQ.172) THEN
+d373 4
+a376 4
+             CALL QJMISS(PMISS,'MISS-VECTOR',KRECO,0)
+             IMISS = KPDIR('MISS-VECTOR',KRECO)
+             IF (IMISS.NE.0) THEN
+                EM=QE(IMISS)
+d381 2
+a382 2
+             ENDIF
+C
+d385 1
+a385 1
+                IERNNT=2
+d387 2
+a388 2
+             ENDIF
+C
+d397 6
+a402 6
+             EFL= 0.
+             DO 71 JP= KFEFT,KLEFT
+                EFL=EFL+QE(JP)
+71           CONTINUE
+C
+C            Cut on EFL
+d404 1
+a404 1
+                IERNNT=2
+d409 4
+a412 4
+             ECHA= 0.
+             DO 771 JCH=KFCHT,KLCHT
+                ECHA=ECHA+QE(JCH)
+771          CONTINUE
+d417 1
+a417 1
+                RETURN
+d419 4
+a422 4
+C
+C            Number of Energy Flow Objects OEF
+             OEF=FLOAT(KNEFT)
+C
+d425 1
+a425 1
+                IERNNT=2
+d427 2
+a428 2
+             ENDIF
+C
+d436 5
+a440 5
+C                           (The event is forced in 4 jets)
+C
+C            Clusterisation with Jade algorithm to force in 4 jets
+             CALL CLUSJET4(NJET,'Jetdir')
+C
+d443 1
+a443 1
+                IERNNT=2
+d446 1
+a446 1
+C
+d455 1
+a455 2
+             CALL QJTHRU(THR,'thrust-axis',KRECO)
+C
+d457 1
+d461 1
+a461 1
+                IERNNT=2
+d464 1
+a464 1
+C
+d473 1
+a473 2
+             CALL QJSPHE(SPH,'SPHERIAX',KRECO)
+C
+d475 1
+d479 1
+a479 1
+                IERNNT=2
+d482 1
+a482 1
+C
+a486 1
+       ENDIF
+d488 5
+a492 5
+C
+      RETURN
+      END
+C---------------------------------------------------------------------C
+C                    End  of  subroutine PRESELECTION
+d497 8
+a504 4
+C=====================================================================C
+      SUBROUTINE CLUSJET4(NJET,DIRJET)
+C     Clusterisation with Jade algorithm to force in 4 jets
+C     Outputs : NJET, DIRJET
+a505 2
+C---------------------------------------------------------------------C
+#include "qcde.h"
+d507 1
+a507 3
+      CHARACTER*2 SHEME
+      CHARACTER*6 VERSN
+      CHARACTER*7 DIRJET
+a511 6
+C.....Clusterisation with Jade algorithm and at first Ycut = 0.02
+      EVIS=0.
+      YCUT=0.02
+      SHEME = 'E'
+      VERSN = 'JADE'
+      CALL QGJMMC(NJET,DIRJET,KRECO,YCUT,EVIS,SHEME,VERSN)
+a512 2
+C.....At this step, 4 jets are required
+      IF (NJET.EQ.4) GOTO 9
+a513 13
+C.....For the remaining events, we iterate on the Ycut value to
+C     force them in 4 jets
+      IF (NJET.NE.4) THEN
+         ICOMPT=0
+ 11      CONTINUE
+C........Iterate on the YCUT value
+         YJET=FLOAT(NJET)
+         YCUT=(YJET-4.)/2000.+YCUT
+         CALL QGJMMC(NJET,DIRJET,KRECO,YCUT,EVIS,SHEME,VERSN)
+         ICOMPT = ICOMPT+1
+         IF (ICOMPT.EQ.50) GOTO 8
+         IF (NJET.NE.4) GOTO 11
+      ENDIF
+d515 101
+a615 1
+ 9    CONTINUE
+d617 7
+a623 1
+ 8    CONTINUE
+d627 65
+a691 5
+      RETURN
+      END
+C---------------------------------------------------------------------C
+C                    End  of  subroutine CLUSJET4
+C=====================================================================C
+d695 5
+a700 4
+      SUBROUTINE QEJJ4(NJET,DIRJET)
+C     Clusterisation with Jade algorithm to force in 4 jets
+C     Inputs : NJET, 'Jetdir'
+C     Output  : JJMAX(1->4) : jet number
+a701 2
+C---------------------------------------------------------------------C
+#include "qcde.h"
+a703 1
+      COMMON/TABJET/JJMAX(4),TAX(6),TT(4),TTB(4)
+d705 7
+d713 2
+d716 3
+d720 15
+a734 1
+      DIMENSION QEM(4)
+d736 28
+a763 1
+#include "qmacro.h"
+d766 9
+a774 4
+C.....Initialisation of QEM :
+      DO I=1,4
+         QEM(I) = -10.
+      ENDDO
+a775 41
+C.....Classification of jets : from the most energetic to the less
+C                              energetic one
+      JJ = KPDIR(DIRJET,KRECO)
+      DO 2 J = 1,NJET
+         IF (J.GT.1) JJ = KFOLLO(JJ)
+         IF (QE(JJ).GT.QEM(1)) THEN
+            QEM(1) = QE(JJ)
+            JJMAX(1) = JJ
+         ENDIF
+ 2    CONTINUE
+C
+      JJ = KPDIR(DIRJET,KRECO)
+      DO 3 J = 1,NJET
+         IF (J.GT.1) JJ = KFOLLO(JJ)
+         IF (JJ.EQ.JJMAX(1)) GOTO 3
+         IF (QE(JJ).GT.QEM(2)) THEN
+            QEM(2) = QE(JJ)
+            JJMAX(2) = JJ
+         ENDIF
+ 3    CONTINUE
+C
+      JJ = KPDIR(DIRJET,KRECO)
+      DO 4 J = 1,NJET
+         IF (J.GT.1) JJ = KFOLLO(JJ)
+         IF ((JJ.EQ.JJMAX(1)).OR.(JJ.EQ.JJMAX(2))) GOTO 4
+         IF (QE(JJ).GT.QEM(3)) THEN
+            QEM(3) = QE(JJ)
+            JJMAX(3) = JJ
+         ENDIF
+ 4    CONTINUE
+C
+      JJ = KPDIR(DIRJET,KRECO)
+      DO 5 J=1,NJET
+         IF (J.GT.1) JJ = KFOLLO(JJ)
+         IF ((JJ.EQ.JJMAX(1)).OR.(JJ.EQ.JJMAX(2)).OR.
+     &       (JJ.EQ.JJMAX(3))) GOTO 5
+         IF (QE(JJ).GT.QEM(4)) THEN
+            QEM(4) = QE(JJ)
+            JJMAX(4) = JJ
+         ENDIF
+ 5    CONTINUE
+d777 1
+d780 1
+a780 5
+      RETURN
+      END
+C---------------------------------------------------------------------C
+C                    End  of  subroutine QEJJ4
+C=====================================================================C
+d782 1
+d785 53
+a838 5
+      SUBROUTINE OBC14B
+C     Number of charged objects per jets
+C     Input  : JJMAX(1->4) : jet number
+C     Outputs: TT(1->4)
+C              TTB(1->4)
+a839 2
+C---------------------------------------------------------------------C
+#include "qcde.h"
+d841 12
+a852 1
+      COMMON/TABJET/JJMAX(4),TAX(6),TT(4),TTB(4)
+d859 11
+a869 11
+C.....Number of charged objects per jets
+      ICOJ1 = 0
+      ICOJ2 = 0
+      ICOJ3 = 0
+      ICOJ4 = 0
+C
+      ICOJ1B = 0
+      ICOJ2B = 0
+      ICOJ3B = 0
+      ICOJ4B = 0
+C
+d871 1
+a871 1
+         ET = 0.00
+d873 1
+a873 1
+            ICOJ1 = ICOJ1 + 1
+d875 1
+a875 1
+         ENDIF
+d877 1
+a877 1
+            ICOJ2 = ICOJ2 + 1
+d879 3
+a881 3
+         ENDIF
+         IF (XSAME(JJMAX(3),ITK)) THEN
+            ICOJ3 = ICOJ3 + 1
+d883 1
+a883 1
+         ENDIF
+d885 1
+a885 1
+            ICOJ4 = ICOJ4 + 1
+d887 13
+a899 13
+         ENDIF
+C
+ 81   CONTINUE
+C
+      OBC1 = FLOAT(ICOJ1)
+      OBC2 = FLOAT(ICOJ2)
+      OBC3 = FLOAT(ICOJ3)
+      OBC4 = FLOAT(ICOJ4)
+C
+      OBC1B = FLOAT(ICOJ1B)
+      OBC2B = FLOAT(ICOJ2B)
+      OBC3B = FLOAT(ICOJ3B)
+      OBC4B = FLOAT(ICOJ4B)
+d905 1
+a905 1
+C
+d910 1
+d912 5
+a916 6
+C
+C
+      RETURN
+      END
+C---------------------------------------------------------------------C
+C                    End  of  subroutine OBC14B
+d920 10
+a929 10
+C
+C=====================================================================C
+      SUBROUTINE XADIJET(IERRX)
+C     Number of charged objects per jets
+C     Input  : JJMAX(1->4) : jet number
+C     Outputs: TAX(1->6) : dijet combinations
+C              IERR : Error flag
+C
+C---------------------------------------------------------------------C
+#include "qcde.h"
+d932 1
+a932 1
+      COMMON/TABJET/JJMAX(4),TAX(6),TT(4),TTB(4)
+d936 1
+a936 1
+C
+d940 1
+a940 1
+     &        -(QX(JJMAX(1))+QX(JJMAX(2)))**2
+d942 1
+a942 1
+     &        -(QZ(JJMAX(1))+QZ(JJMAX(2)))**2
+d944 1
+a944 1
+     &        -(QX(JJMAX(3))+QX(JJMAX(4)))**2
+d946 2
+a947 2
+     &        -(QZ(JJMAX(3))+QZ(JJMAX(4)))**2
+C
+d949 1
+a949 1
+     &        -(QX(JJMAX(1))+QX(JJMAX(3)))**2
+d951 1
+a951 1
+     &        -(QZ(JJMAX(1))+QZ(JJMAX(3)))**2
+d953 1
+a953 1
+     &        -(QX(JJMAX(2))+QX(JJMAX(4)))**2
+d955 2
+a956 2
+     &        -(QZ(JJMAX(2))+QZ(JJMAX(4)))**2
+C
+d958 1
+a958 1
+     &        -(QX(JJMAX(1))+QX(JJMAX(4)))**2
+d960 1
+a960 1
+     &        -(QZ(JJMAX(1))+QZ(JJMAX(4)))**2
+d962 1
+a962 1
+     &        -(QX(JJMAX(2))+QX(JJMAX(3)))**2
+d964 4
+a967 4
+     &        -(QZ(JJMAX(2))+QZ(JJMAX(3)))**2
+C
+      IF (TJOU12.GE.0.0) THEN
+         XA12 = SQRT(TJOU12)
+d971 3
+a973 3
+      ENDIF
+      IF (TJOU34.GE.0.0) THEN
+         XA34 = SQRT(TJOU34)
+d979 2
+a980 2
+      IF (TJOU13.GE.0.0) THEN
+         XA13 = SQRT(TJOU13)
+d985 2
+a986 2
+      IF (TJOU24.GE.0.0) THEN
+         XA24 = SQRT(TJOU24)
+d990 2
+a991 2
+      ENDIF
+C
+d993 2
+a994 2
+         XA14 = SQRT(TJOU14)
+      ELSE
+d998 3
+a1000 3
+      IF (TJOU23.GE.0.0) THEN
+         XA23 = SQRT(TJOU23)
+      ELSE
+d1013 5
+a1017 5
+C
+      RETURN
+      END
+C---------------------------------------------------------------------C
+C                    End  of  subroutine XADIJET
+d1022 7
+a1028 7
+C=====================================================================C
+      SUBROUTINE HISTOINI(IPLOT,IENERGY)
+C     Initialization of histogramms
+C
+C---------------------------------------------------------------------C
+#include "qcde.h"
+C
+d1032 1
+a1032 1
+C     =======================
+d1059 1
+a1059 1
+         CALL QBOOK1(1017,'ASY1',50,0.,1.,0.)
+d1070 1
+a1070 2
+      CALL QBOOK1 (701 , 'NN output' ,50,-1.,1.,0.)
+C
+d1073 5
+a1077 4
+      RETURN
+      END
+C---------------------------------------------------------------------C
+C                    End  of  subroutine HISTOINI
+d1082 6
+a1087 3
+C=====================================================================C
+      SUBROUTINE NNINPUT161(XINPUT,IPLOT,IERNNT)
+C     Compute NN inputs @@ 161 Gev
+d1089 1
+a1089 4
+C---------------------------------------------------------------------C
+#include "qcde.h"
+C
+      COMMON/TABJET/JJMAX(4),TAX(6),TT(4),TTB(4)
+d1092 1
+a1092 1
+C
+d1096 1
+a1096 1
+C We use a 3-layered feed forward Neural Network trained by back propagation of
+d1106 5
+a1110 5
+             CALL QJFOXW(FOXWOL,KRECO)
+             H2 = FOXWOL(3)
+             H3 = FOXWOL(4)
+             H4 = FOXWOL(5)
+C
+d1113 8
+a1120 8
+             CALL QJMISS(PMISS,'MISS-VECTOR',KRECO,0)
+             IMISS = KPDIR('MISS-VECTOR',KRECO)
+             IF (IMISS.NE.0) THEN
+                XM = QM(IMISS)
+             ELSE
+                IERNNT=4
+                RETURN
+             ENDIF
+d1124 8
+a1131 8
+C............Variable number 5 : Transverse Momentum of all charged tracks : PTC
+             PXCHT=0.
+             PYCHT=0.
+             DO 772 JCH=KFCHT,KLCHT
+                PXCHT=PXCHT+QX(JCH)
+                PYCHT=PYCHT+QY(JCH)
+ 772         CONTINUE
+             PTCH = SQRT((PXCHT)**2+(PYCHT)**2)
+d1135 2
+a1136 2
+C...............Variables number :
+C                6 - Transverse Momentum of Jet 2 : XT2
+d1138 1
+a1138 1
+C            10,11 - Number of objects for jets 3 and 4 : OBJ3,OBJ4
+d1144 3
+a1146 3
+C...............Clusterisation with Jade algorithm to force in 4 jets
+                CALL CLUSJET4(NJET,'Jetdir')
+C
+d1149 1
+a1149 1
+                   IERNNT=4
+d1152 2
+a1153 2
+C
+C
+d1155 6
+a1160 6
+C                                        energetic one
+                CALL QEJJ4(NJET,'Jetdir')
+C
+C
+C
+C
+d1163 1
+a1163 1
+C
+d1167 1
+a1167 1
+                   IERNNT=4
+d1177 1
+a1177 1
+C............Number of objects for jets 3 and 4 : OBJ3, OBJ4
+d1179 7
+a1185 7
+             ICOJE4=0
+             DO 31 J = KFEFT,KLEFT
+                IF(XSAME(JJMAX(3),J)) ICOJE3 = ICOJE3 + 1
+                IF(XSAME(JJMAX(4),J)) ICOJE4 = ICOJE4 + 1
+ 31          CONTINUE
+             OBJ3=FLOAT(ICOJE3)
+             OBJ4=FLOAT(ICOJE4)
+d1192 4
+a1195 4
+             ANG1 = QCOSA(JJMAX(1),JJMAX(2))
+             ANG2 = QCOSA(JJMAX(1),JJMAX(3))
+             ANG4 = QCOSA(JJMAX(2),JJMAX(3))
+C
+d1224 1
+a1224 1
+C
+d1246 5
+a1250 5
+C
+      RETURN
+      END
+C---------------------------------------------------------------------C
+C                    End  of  subroutine NNINPUT161
+d1255 7
+a1261 7
+C=====================================================================C
+      SUBROUTINE RESINI(IENERGY)
+C     Version 1.0 Neural Network Initialization
+C
+C---------------------------------------------------------------------C
+#include "qcde.h"
+C
+d1263 1
+a1263 4
+     &                XMIN2(30),XMAX2(30),SOMOY2(30),SOM2(30),NIVMAX
+C
+#include "qmacro.h"
+C
+d1265 2
+d1268 3
+a1270 2
+C.....Initialization of NN parameters and NN weights :
+C     ------------------------------------------------
+d1272 2
+a1273 1
+      IF (IENERGY.EQ.161.OR.IENERGY.EQ.172) CALL RESINI161
+d1277 10
+a1286 10
+      DO 447 K=1,NEURON(1)
+         A2(K)=2.00/(XMAX2(K)-XMIN2(K))
+         B2(K)=(XMAX2(K)+XMIN2(K))/(XMIN2(K)-XMAX2(K))
+ 447  CONTINUE
+C
+C
+      RETURN
+      END
+C---------------------------------------------------------------------C
+C                    End  of  Subroutine  RESINI
+d1291 6
+a1296 6
+C=====================================================================C
+      SUBROUTINE RESNEUR(XINPUT,OUTNN)
+C     This subroutine returns : OUTNN = NN output
+C
+C---------------------------------------------------------------------C
+#include "qcde.h"
+d1299 1
+a1299 1
+     &                XMIN2(30),XMAX2(30),SOMOY2(30),SOM2(30),NIVMAX
+d1303 70
+a1372 5
+      DIMENSION XINPUT(17)
+      DIMENSION X(3,18),Y(3,18)
+      DIMENSION XINPUT2(18)
+C
+#include "qmacro.h"
+d1374 1
+d1376 6
+a1381 50
+C.....Normalization of NN inputs between -1. and 1.
+C     ---------------------------------------------
+      DO 229 K=1,NEURON(1)+1
+         IF (K.EQ.NEURON(1)+1) THEN
+            XINPUT2(K)=1.E+00
+         ELSE
+            XINPUT(K)=(XINPUT(K)-SOMOY2(K))/SQRT(SOM2(K))
+            IF (XINPUT(K).GT.XMAX2(K)) XINPUT(K)=XMAX2(K)
+            IF (XINPUT(K).LT.XMIN2(K)) XINPUT(K)=XMIN2(K)
+            XINPUT2(K)=A2(K)*XINPUT(K)+B2(K)
+         ENDIF
+ 229  CONTINUE
+C
+C
+C..........Computation of NN
+C          =================
+C          Input layer
+C          -----------
+           DO 129 IM=1,NEURON(1)+1
+              Y(1,IM)=XINPUT2(IM)
+ 129       CONTINUE
+C
+C          Hidden(s) and output layers
+C          ---------------------------
+           DO 149 NIV=1,NIVMAX-1
+               DO 149 J=1,NEURON(NIV+1)
+                  X(NIV+1,J)=0.E+00
+                  DO 349 K=1,NEURON(NIV)+1
+                     X(NIV+1,J)=X(NIV+1,J)+Y(NIV,K)*WPOIDS(NIV,K,J)
+ 349              CONTINUE
+C
+                  Y(NIV+1,J)=(1.E+00-EXP(-X(NIV+1,J)))/
+     &                       (1.E+00+EXP(-X(NIV+1,J)))
+C
+                  IF (J.EQ.NEURON(NIV+1)) THEN
+                     Y(NIV+1,J+1)=1.E+00
+                  ENDIF
+C
+ 149       CONTINUE
+C
+C
+C..........NN output
+C          =========
+           OUTNN = Y(NIVMAX,1)
+C
+C
+      RETURN
+      END
+C---------------------------------------------------------------------C
+C                    End  of  Subroutine  RESNEUR
+d1386 7
+a1392 7
+C=====================================================================C
+      SUBROUTINE RESINI161
+C     Version 1.0 : Neural Network Initialization @@ 161 Gev
+C
+C---------------------------------------------------------------------C
+#include "qcde.h"
+C
+d1394 1
+a1394 3
+     &                XMIN2(30),XMAX2(30),SOMOY2(30),SOM2(30),NIVMAX
+C
+#include "weights161.h"
+d1396 1
+a1396 1
+#include "qmacro.h"
+d1398 6
+a1403 4
+      RETURN
+      END
+C---------------------------------------------------------------------C
+C                    End  of  Subroutine  RESINI161
+a1404 9
+
+
+
+
+
+
+
+
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d84 3
+a86 3
+C                     = 3 : incomputing the preselection variables
+C                     = 4 : incomputing the NN inputs
+C                     = 5 : incomputing the NN output
+a171 1
+CG         PRINT *,'COUCOU IFLAG'
+a202 1
+CG          IF (IENERGY.EQ.161) CALL NNINPUT161(XINPUT,IPLOT,IERNNT)
+a214 3
+CG          do I=1,3
+CG             WRITE(91,*) 'NEURON(',I,')=',NEURON(I)
+CG          enddo
+a219 1
+CG          WRITE(91,*) 'OUTNN QNNWWTAG=',OUTNN
+d308 1
+a308 1
+      IF (IENERGY.NE.161) IERNNT=6
+a333 1
+CG          IF (IENERGY.EQ.161) THEN
+a350 1
+CG             WRITE(91,*) 'EM=',EM
+a369 1
+CG             WRITE(91,*) 'EFL=',EFL
+a381 1
+CG             WRITE(91,*) 'ECHA=',ECHA
+a390 1
+CG             WRITE(91,*) 'OEF=',OEF
+a408 1
+CG             WRITE(91,*) 'NJET=',NJET
+a426 1
+CG             WRITE(91,*) 'THR=',THR
+a444 1
+CG             WRITE(91,*) 'SPH=',SPH
+a486 1
+CG      WRITE(91,*) 'NJET CLUS1=',NJET
+a494 1
+CG      WRITE(91,*) 'NJET CLUS2=',NJET
+a507 1
+CG      WRITE(91,*) 'NJET CLUS3=',NJET
+a791 1
+CG      IF (IENERGY.EQ.161) THEN
+a862 1
+CG             WRITE(91,*) 'H4=',H4
+a869 1
+CG                WRITE(91,*) 'XM=',XM
+a884 1
+CG             WRITE(91,*) 'PTCH=',PTCH
+a926 1
+CG             WRITE(91,*) 'XT2=',XT2
+a929 1
+CG             WRITE(91,*) 'XA14=',XA14
+a938 1
+             WRITE(91,*) 'OBJ4=',OBJ4
+a943 1
+CG             WRITE(91,*) 'ASY6=',ASY6
+a947 1
+CG             WRITE(91,*) 'ANG4=',ANG4
+a951 1
+CG             WRITE(91,*) 'EJ1=',EJ1
+d1025 1
+a1025 1
+      IF (IENERGY.EQ.161) CALL RESINI161
+a1031 2
+CG         WRITE(91,*) 'A2(',K,')=',A2(K)
+CG         WRITE(91,*) 'B2(',K,')=',B2(K)
+a1081 1
+CG              WRITE(91,*) 'Y(1,',IM,')=',Y(1,IM)
+a1085 1
+CG           WRITE(91,*) 'NIVMAX=',NIVMAX
+a1095 1
+CG                  WRITE(91,*) 'Y(',NIV+1,',',J,')=',Y(NIV+1,J)
+a1105 1
+CG           WRITE(91,*) 'OUTNN=',OUTNN
+@
+
+
+1.1.1.1
+log
+@import 
+@
+text
+@@

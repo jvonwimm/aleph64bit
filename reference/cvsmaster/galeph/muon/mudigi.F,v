@@ -1,0 +1,142 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.07.14.02.40;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.41;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK mudigi
+      SUBROUTINE MUDIGI
+C
+C*******************************************************************************
+C
+C T.Wang -860112
+C
+C       Routine to generate MU digitizing information.
+C       Track uncorreleted noises are generated in subroutine MUUNOI
+C       that is called once per event.
+C
+C       Called by ASDIGI
+C       CALLS     MUUNOI, MUDGTZ      in this .HLB
+C                 AUBPRS              in this .HLB
+C
+C*******************************************************************************
+C
+#ifndef DOC
+      SAVE
+#include "jobcom.h"
+#include "iocom.h"
+#include "bcs.h"
+#include "munamc.h"
+#include "mustat.h"
+#include "bmacro.h"
+C
+C       Initialize BOS banks
+C
+      IDRP = IW(NAMUDG)
+C
+      IF( IDRP .NE. 0 )CALL BDROP(IW,'MUDTMUTDMUDG')
+C
+C       Generate track uncorrelated noise
+C
+      IF( ICMUJO(3) .NE. 0 )CALL MUUNOI
+C
+C       Digitization of all signal in 'MUHT'
+C
+      CALL MUDGTZ
+C
+C       Reduce bank size to real one
+C
+C
+      CALL AUBPRS ('MUDGMUDTMUTD')
+C
+C       Fill histograms for MUON
+C
+      IF( FHISJO(8) )CALL MUFILL
+C
+C        Fill statistics for MUON
+C
+      JMUDG = IW(NAMUDG)
+      NQ = LROWS (JMUDG)
+      IF (NQ.GT.0) THEN
+         NEVMUH = NEVMUH + 1
+         NMXCLU = MAX (NMXCLU,NQ)
+         NTMCLU = NTMCLU + NQ
+      ENDIF
+C
+C - Debug
+C
+      IF (FDEBJO .AND. IPRIJO(8).EQ.1) THEN
+         CALL MUPRDI
+      ENDIF
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

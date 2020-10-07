@@ -1,0 +1,30 @@
+#!/bin/csh
+#-----------------------------------------------------------------------
+# Script : update_account
+# Devel. : J. Closier
+# Date   : 29 juin 1995
+# Goals  : Update the file /etc/account on ALOHA cluster from CORE
+# Usage  : update_account machine_name
+# Modify :
+#-----------------------------------------------------------------------
+#IF YOU HAVE ARGUMENTS KEEP THE NEXT LINE with the right parameters
+if ($#argv != 1) then
+   goto usage
+endif
+
+set machine_name=$1
+if ( "$machine_name" == "shift50" ) then
+   grep '$xu' /etc/account > /u/xu/closier/account
+else
+    cp /u/xu/aleph/account /etc/yp/src
+    cd /etc/yp/
+    make account
+#   cp /aleph/log/account /Config/skel/etc
+#   /Facilities/ALEPHupdate /etc/account
+endif
+exit 0
+
+#  usage for the command
+usage:
+echo " Usage : $0 machine_name"
+exit 0

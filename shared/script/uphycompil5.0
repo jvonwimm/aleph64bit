@@ -1,0 +1,142 @@
+#! /bin/csh -f
+#====================================================================================
+# 940712                                 F.Ranjard
+#                       UPHYCOMPIL
+# ==================================================================================
+# P1 = file name to be compiled
+# ===================================================================================
+# uphycompil1.0
+# 940712 - compile and create a library if required
+# uphycompil1.1
+# 940922 - use $ALEPH instead of /aleph
+# uphycompil1.2
+# 951128 - use $TOP instead of /al
+# uphycompil4.0
+# 960826 - adapt to cvs
+# uphycompil4.1
+# 970521 - copy2clone if SHIFTALEPH or ALOHA
+# uphycompil5.0
+# repository on /afs
+# ===================================================================================
+#
+set exec_name = "uphycompil5.0"
+set verbflr = ""
+set nar = $#argv
+if (${nar} != 0) then
+   if ($argv[${nar}] == "-v") then
+      echo "${exec_name}"
+      set verflr = "-v"
+      set echo on
+      set argv[${nar}] = ""
+      @ nar = ${nar} - 1
+   endif
+endif  
+if ($1 == "-h") then
+  echo " "
+  echo "usage: " 
+  echo " uphycompil <module>"
+  echo " "
+  echo " example"
+  echo " uphycompil obspos "
+  echo " will compile $ALROOT/uphy/obspos/*.F using current alpha version include files"
+  echo " and stored in $ALEPH/uphy/obspos.o or if more than one file a library will be "
+  echo " created and stored in $ALEPH/uphy/libobspos.a"
+  echo ""
+  exit(1)
+else
+  set module = $1
+  set flag = "nolib"
+  if (${nar} > 1) set flag = $2
+endif
+#
+if (${module} == "") then
+  echo " uphycompil : no module name given - exit"
+  exit(1)
+endif 
+#
+#********
+#
+set uphy_mod = "${ALROOT}/uphy/${module}"
+set obj_dir = "${uphy_mod}/${OS}"
+set lib_dir = "${ALEPH}/uphy"
+# 
+# ============================================< compile
+#
+compile:
+
+   if !(-d ${obj_dir}) then
+      mkdir ${obj_dir}
+   endif
+   cd ${obj_dir}
+   rm *
+#
+echo "compile ${uphy_mod}/*.F into ${obj_dir}"
+#
+# compile all .F
+   ${FC} ${FCOPT} -I${ALEPH}/src/alpha/inc ../*.F | & tee -a compile.log
+
+# check compile.log for 'ERROR'
+   grep -n 'ERROR' compile.log > error.log
+   grep -n 'Error' compile.log >> error.log
+   if !(-z error.log) then
+      echo " FATAL error(s) during compilation, look at "
+      echo "       ${obj_dir}/compile.log file"
+      goto error_end
+   endif 
+
+# if more than one file make a library
+  
+   set nfile = `ls *.o | wc -l `
+
+   if (${nfile} == "1") then
+      if (-e ${lib_dir}/${module}.o) mv ${lib_dir}/${module}.o ${lib_dir}/${module}.oold
+      mv ${module}.o ${lib_dir}/${module}.o
+      if !(-e ${lib_dir}/${module}.o) goto error_end
+   else
+      if (-e ${lib_dir}/lib${module}.a) mv ${lib_dir}/lib${module}.a ${lib_dir}/lib${module}.aold
+      ar rls ${lib_dir}/lib${module}.a *.o
+      if !(-e ${lib_dir}/lib${module}.a) goto error_end
+   endif
+#
+
+# ==========================================> normal exit
+#  remove temporary files
+cd ${uphy_mod}
+rm -r ${obj_dir}
+#
+# ============================
+cd ${lib_dir}
+rm -f ${module}.oold lib${module}.aold
+
+# ====================copy on COREHOME  all files created =======
+#
+if (${SERVICE} == "AFAL" || ${SERVICE} == "SHIFTALEPH" || ${SERVICE} == "CSF"\
+    || ${SERVICE} == "dxplus" || ${SERVICE} == "hpplus") then 
+#   cp2clone ${lib_dir}
+endif
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> exec_end
+
+#
+echo " ${exec_name} normal exit"
+exit
+#=============================================> abnormal exit
+error_end:
+echo "${exec_name} abnormal exit - restore previous files if any "
+cd ${lib_dir}
+if (-e ${module}.oold) mv ${module}.oold ${module}.o
+if (-e lib${module}.aold) mv lib${module}.aold lib${module}.a
+exit
+ 
+ 
+
+
+
+
+
+
+
+
+
+
+

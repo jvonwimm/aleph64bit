@@ -1,0 +1,172 @@
+      SUBROUTINE EDWDGT
+C-----------------------------------------------------------------------
+C
+C!    DIGITIZE WIRE SIGNALS
+C
+C     AUTHOR : B.MICHEL , D.PALLIN , 05/89
+C     REVISED: 06/06/90
+C
+C     Banks created : EWDI,EWHE
+C
+C     Called by : ECDIGI
+C     Calls ALBOS, BLIST from BOS lib.
+C-----------------------------------------------------------------------
+      SAVE
+C
+C
+C ----- Version du 16/03/87
+      COMMON / EHPASH /
+     1 RHODEP,PARGV1,ENMAX1,ENMAX2,PARGV2,NRAPID,RHOVIT(14),
+     2 FASTNR(14),FLUCT1(14),FLUCT2(14),EMINPI(14),EPICUT(14),
+     3 EMINLO,ETRANS,ASURB1(5),ASURB2(5),UNSRB1(5),UNSRB2(5),
+     4 SIGMA1(5),SIGMA2(5),SIGMB1(5),SIGMB2(5),SIGMA3(5),SIGMB3(5),
+     5 SEUSIG,USAMIN,USAMAX,BSUMIN,BETMIN,BETMAX,
+     6 ZONSH1,ZONSH2,DEPMIN,
+     7 EMINRA,EXPRD0,EXPRD1,RFACT0,RFACT1,KPAMAX,X1MAXI,EPSRAD,
+     8 EMFRAC,ALPHA0,ALPHA1,BETAH0,BETAH1,RAYHA0,RAYHA1,PUISH0,
+     9 PARGVH,NRJHAD,IPLMIN(14),IPLMAX(14),DESATU,FNFRAG,
+     + ECHMX,ECHDC,EKEVH,ECHDN,ERADMX,
+     + ERMAX,ETANG,ERHMX,EZMAX,EDSELM,EDSHAD,ECUTTE,
+     + ST3BA0,ST3EC0,ST3BA1,ST3EC1,ST3BA2,ST3EC2
+      COMMON / EHPADA /
+     1   CNRJDA,C1PRDA,C2PRDA,C3PRDA,PIMADA,ANRJDA,A1PRDA,A2PRDA,
+     2   A3PRDA,A4PRDA,A5PRDA,AMRJDA
+      PARAMETER (LPS1=6, LPS2=300)
+      COMMON /ECNAMC/   NAETHT, NAEWHT, NAETTD, NAEWTD, NAETDI, NAEWDI
+     &                , NAEWHE
+     &                , NAETTR, NAEWTR, NAENDI
+     &                , IDPSIG, IDEWTM, IDETTM
+     &                , NAESHI, NAEWHI
+C
+      INTEGER LMHLEN, LMHCOL, LMHROW
+      PARAMETER (LMHLEN=2, LMHCOL=1, LMHROW=2)
+C
+      COMMON /BCS/   IW(1000)
+      INTEGER IW
+      REAL RW(1000)
+      EQUIVALENCE (RW(1),IW(1))
+C
+      PARAMETER (LSTCK=3,LPHI=384,LTHET=228)
+      PARAMETER (LWPLA=45,LMODU=12,LCOMP=3)
+      PARAMETER (NTHSG=12,NPHSG=24)
+      PARAMETER(JEWDMN=1,JEWDPD=2,JEWDSS=47,LEWDIA=54)
+      PARAMETER(JEWHSD=1,JEWHNU=2,LEWHEA=2)
+      COMMON/EWTMCO/IWIRES(LWPLA+9,LMODU*LCOMP)
+C
+C CONPLA CONSUM = CONVERSION CONSTANTS IN KEV/ADC COUNT
+C SATPLA SATSUM = SATURATION LEVELS IN ADC COUNTS
+C ICUTMO        = MODULE THRESHOLD IN KEV
+      PARAMETER (NTMODU = LCOMP * LMODU)
+      PARAMETER (CONPLA=1600.,SATPLA=3500.,CONSUM=25600.,SATSUM=3000.)
+      PARAMETER ( ICUTMO=50000)
+      DIMENSION SWIRES(LEWDIA,NTMODU)
+      DIMENSION ISUMDG(LCOMP*LMODU),IMODH(LCOMP*LMODU)
+
+C - # of words/row in bank with index ID
+      LCOLS(ID) = IW(ID+1)
+C - # of rows in bank with index ID
+      LROWS(ID) = IW(ID+2)
+C - index of next row in the bank with index ID
+      KNEXT(ID) = ID + LMHLEN + IW(ID+1)*IW(ID+2)
+C - index of row # NRBOS in the bank with index ID
+      KROW(ID,NRBOS) = ID + LMHLEN + IW(ID+1)*(NRBOS-1)
+C - # of free words in the bank with index ID
+      LFRWRD(ID) = ID + IW(ID) - KNEXT(ID)
+C - # of free rows in the bank with index ID
+      LFRROW(ID) = LFRWRD(ID) / LCOLS(ID)
+C - Lth integer element of the NRBOSth row of the bank with index ID
+      ITABL(ID,NRBOS,L) = IW(ID+LMHLEN+(NRBOS-1)*IW(ID+1)+L)
+C - Lth real element of the NRBOSth row of the bank with index ID
+      RTABL(ID,NRBOS,L) = RW(ID+LMHLEN+(NRBOS-1)*IW(ID+1)+L)
+C
+C
+      DO 11 I=1,NTMODU
+   11 IMODH(I) = 0
+C Nber of hit modules : NMODH
+      NMODH=0
+      DO 1 J = 1,NTMODU
+      ISUMDG(J)=0
+C
+      DO 2 I = 2,LWPLA+1
+      IF(I.LT.35)    THEN
+        GAIN=8.
+      ELSE
+        GAIN=16.
+      ENDIF
+      SWIRES(I,J)=FLOAT(IWIRES(I,J))*GAIN/CONPLA
+      IF(SWIRES(I,J).GT.SATPLA)    THEN
+        GAIN=GAIN/8.
+        SWIRES(I,J)=SWIRES(I,J)/8.
+      ENDIF
+      IWIRES(I,J)=NINT(SWIRES(I,J))*IFIX(CONPLA/GAIN)
+C
+C  Correction for stack 3
+C  ST3BA2 and ST3EC2 are the values put in the ROC.
+      CONST  = 1.
+      IF ( I.GT.34 ) THEN
+         IF (J.GT.12. AND .J.LT.25) THEN
+            CONST = ST3BA2
+         ELSE
+            CONST = ST3EC2
+         ENDIF
+      ENDIF
+      IWIRES(I,J)=NINT(REAL(IWIRES(I,J))*CONST)
+    2 ISUMDG(J)=ISUMDG(J)+IWIRES(I,J)
+C
+C If IMODH(J)=1 module J above 50  MEV.
+      IF(ISUMDG(J).GT.ICUTMO)     THEN
+         IMODH(J)=1
+         NMODH=NMODH+1
+      ENDIF
+C Timing signals treatment
+      ISATUR=0
+      GAIN=8.
+      DO 3 I = JEWDSS,LEWDIA
+      SWIRES(I,J)=FLOAT(IWIRES(I,J))*GAIN/CONSUM
+    3 IF(SWIRES(I,J).GT.SATSUM)ISATUR=1
+C If saturation we change gain 8 to 1
+      IF(ISATUR.EQ.1)THEN
+         DO 4 I = JEWDSS,LEWDIA
+    4    SWIRES(I,J)=SWIRES(I,J)/GAIN
+      ENDIF
+C
+      DO 5 I = JEWDSS,LEWDIA
+    5 IWIRES(I,J)=NINT(SWIRES(I,J))
+    1 CONTINUE
+C
+C CREATE OUTPUT BANKS FOR WIRES
+C
+C  === Create bank EWDI,nr=0 for Wires digit output
+C
+      IF(NMODH.EQ.0)        GOTO 9
+      CALL ALBOS('EWDI',0,LMHLEN+NMODH*LEWDIA,JEWDI,IGARB)
+      CALL BLIST (IW,'E+','EWDI')
+      IW(JEWDI+LMHCOL) = LEWDIA
+      IW(JEWDI+LMHROW) = NMODH
+      IEW=0
+      DO 6 J=1,NTMODU
+      IF(IMODH(J).EQ.1)THEN
+          IEW=IEW+1
+          KLINE=KROW(JEWDI,IEW)
+          IW(KLINE+1)=IWIRES(1,J)
+          DO 7 I=2,LEWDIA
+ 7        IW(KLINE+I)=IWIRES(I,J)
+          ENDIF
+ 6    CONTINUE
+
+ 9    CONTINUE
+C
+C  === Create bank EWHE ,nr=0 :  Wires digits sum /module
+C
+      CALL ALBOS('EWHE',0,LMHLEN+NTMODU*LEWHEA,JEWHE,IGARB)
+      CALL BLIST (IW,'E+','EWHE')
+      IW(JEWHE+LMHCOL) = LEWHEA
+      IW( JEWHE+LMHROW) = NTMODU
+      DO 8 J=1,NTMODU
+      KLINE=KROW(JEWHE,J)
+      IW(KLINE+1)=ISUMDG(J)
+      IW(KLINE+2)=J
+ 8    CONTINUE
+C
+      RETURN
+      END

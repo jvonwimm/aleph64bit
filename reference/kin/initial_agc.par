@@ -1,0 +1,143 @@
+C
+C       reads couplings and parameters for ee--mu mu u d s c (higgs signal only)
+C
+        OPEN(1,FILE='PARAM.DAT',STATUS='UNKNOWN')
+C
+*
+*-----BOSON MASSES AND WIDTHS
+*
+         read(1,*)masshiggs(1)
+         read(1,*)massgaubosons(2)
+         massgaubosons(3)=massgaubosons(2)
+         read(1,*)massgaubosons(1)
+         read(1,*)widthhiggs(1)
+         read(1,*)widthgaubosons(2)
+         widthgaubosons(3)=widthgaubosons(2)
+         read(1,*)widthgaubosons(1)
+*
+*-----FERMION MASSES
+*
+         read(1,*)massfermion(1,4)
+         read(1,*)massfermion(2,4)
+         read(1,*)massfermion(3,4)
+         read(1,*)massfermion(1,1)
+         read(1,*)massfermion(1,2)
+         read(1,*)massfermion(2,1)
+         read(1,*)massfermion(2,2)
+         massfermion(1,3)=0.                !nu_e mass
+         massfermion(3,3)=0.                !nu_tau mass
+*
+*-----VECTOR AND AXIAL COUPLING
+*
+         read(1,*)vectorial(1,1,4,1,4)               ! Z e e vect.
+         vectorial(1,2,4,2,4)=vectorial(1,1,4,1,4)   ! Z mu mu vect.
+         vectorial(1,3,4,3,4)=vectorial(1,1,4,1,4)   ! Z tau tau vect.
+         read(1,*)assial(1,1,4,1,4)                  ! Z e e ass..
+         assial(1,2,4,2,4)=assial(1,1,4,1,4)         ! Z mu mu ass.
+         assial(1,3,4,3,4)=assial(1,1,4,1,4)         ! Z tau tau ass.
+         read(1,*)vectorial(1,1,3,1,3)               ! Z nu_e nu_e vect.
+         vectorial(1,2,3,2,3)=vectorial(1,1,3,1,3)   ! Z nu_m nu_m vect.
+         vectorial(1,3,3,3,3)=vectorial(1,1,3,1,3)   ! Z nu_tau nu_tau vect.
+         read(1,*)assial(1,1,3,1,3)                  ! Z nu_e nu_e ass.
+         assial(1,2,3,2,3)=assial(1,1,3,1,3)         ! Z nu_m nu_m ass.
+         assial(1,3,3,3,3)=assial(1,1,3,1,3)         ! Z nu_tau nu_tau ass.
+         read(1,*)vectorial(1,1,1,1,1)               ! Z u u vect.
+         read(1,*)assial(1,1,1,1,1)                  ! Z u u ass.
+         read(1,*)vectorial(1,1,2,1,2)               ! Z d d vect.
+         read(1,*)assial(1,1,2,1,2)                  ! Z d d ass.
+         vectorial(1,2,1,2,1)=vectorial(1,1,1,1,1)   ! Z c c vect
+         assial(1,2,1,2,1)=assial(1,1,1,1,1)        ! Z c c ass
+         vectorial(1,2,2,2,2)=vectorial(1,1,2,1,2)   ! Z s s vect
+         assial(1,2,2,2,2)=assial(1,1,2,1,2)        ! Z s s  ass
+         read(1,*)vectorial(2,1,1,1,2)               ! W^- u \bar d vect.
+         vectorial(3,1,2,1,1)=vectorial(2,1,1,1,2)   ! W^+ d \bar u vect.
+         vectorial(2,2,1,2,2)=vectorial(2,1,1,1,2)   ! W^- c \bar s vect.
+         vectorial(3,2,2,2,1)=vectorial(2,1,1,1,2)   ! W^+ s \bar c vect.
+         vectorial(2,1,3,1,4)=vectorial(2,1,1,1,2)   ! W^- e^+ \nu_e vect.
+         vectorial(3,1,4,1,3)=vectorial(2,1,1,1,2)   ! W^+ e^- \bar \nu_e vect.
+         vectorial(2,2,3,2,4)=vectorial(2,1,1,1,2)   ! W^- mu^+ \nu_m vect.
+         vectorial(3,2,4,2,3)=vectorial(2,1,1,1,2)   ! W^+ mu^- \bar \nu_m vect.
+         vectorial(2,3,3,3,4)=vectorial(2,1,1,1,2)   ! W^- tau^+ \nu_tau vect.
+         vectorial(3,3,4,3,3)=vectorial(2,1,1,1,2)   ! W^+ ta^- \bar \nu_tau vect.
+         read(1,*)assial(2,1,1,1,2)                  ! W^- u \bar d  ass.
+         assial(3,1,2,1,1)=assial(2,1,1,1,2)         ! W^- d \bar u  ass.
+         assial(2,2,1,2,2)=assial(2,1,1,1,2)         ! W^- c \bar s ass.
+         assial(3,2,2,2,1)=assial(2,1,1,1,2)         ! W^+ s \bar c ass.
+         assial(2,1,3,1,4)=assial(2,1,1,1,2)         ! W^- e^+ \nu_e ass.
+         assial(3,1,4,1,3)=assial(2,1,1,1,2)         ! W^+ e^- \bar \nu_e ass.
+         assial(2,2,3,2,4)=assial(2,1,1,1,2)         ! W^- mu^+ \nu_m vect.
+         assial(3,2,4,2,3)=assial(2,1,1,1,2)         ! W^+ mu^- \bar \nu_m vect.
+         assial(2,3,3,3,4)=assial(2,1,1,1,2)         ! W^- tau^+ \nu_tau ass.
+         assial(3,3,4,3,3)=assial(2,1,1,1,2)         ! W^+ tau^- \bar \nu_tau ass.
+         read(1,*)vectorial(10,1,1,1,1)              ! gamma u u 
+         read(1,*)vectorial(10,1,2,1,2)              ! gamma d d
+         vectorial(10,2,1,2,1)=vectorial(10,1,1,1,1) ! gamma c c
+         vectorial(11,1,1,1,1)=vectorial(10,1,1,1,1) ! gammastar u u
+         vectorial(11,2,1,2,1)=vectorial(10,1,1,1,1) ! gammastar c c
+         vectorial(10,2,2,2,2)=vectorial(10,1,2,1,2) ! gamma s s
+         vectorial(11,1,2,1,2)=vectorial(10,1,2,1,2) ! gammastar d d
+         vectorial(11,2,2,2,2)=vectorial(10,1,2,1,2) ! gammastar s s
+         read(1,*)vectorial(10,1,4,1,4)              ! gamma e e
+         vectorial(10,2,4,2,4)=vectorial(10,1,4,1,4) ! gamma mu mu 
+         vectorial(10,3,4,3,4)=vectorial(10,1,4,1,4) ! gamma tau tau 
+         vectorial(11,1,4,1,4)=vectorial(10,1,4,1,4) ! gammastar e e
+         vectorial(11,2,4,2,4)=vectorial(10,1,4,1,4) ! gammastar mu mu
+         vectorial(11,3,4,3,4)=vectorial(10,1,4,1,4) ! gammastar tau tau 
+C
+*
+*-----COUPLING HIGGS-GAUGE BOSONS
+*
+         read(1,*)higgsgauge(1,2,3)
+         read(1,*)higgsgauge(1,1,1)
+*
+*-----SELF TRILINEAR GAUGE BOSONS COUPLING 
+*
+         read(1,*)selfgauge(1,2,3)
+         read(1,*)selfgauge(10,2,3)
+*
+*-----SELF TRILINEAR GAUGE BOSONS COUPLING  AUXILIARY FIELDS FOR QUARTIC COUPLINGS
+*
+         read(1,*)selfgauge(4,2,3)
+         read(1,*)selfgauge(5,1,1)
+         read(1,*)selfgauge(5,1,10)
+         read(1,*)selfgauge(5,10,10)
+         read(1,*)selfgauge(5,2,3)
+         read(1,*)selfgauge(6,1,2)
+         read(1,*)selfgauge(6,10,2)
+         read(1,*)selfgauge(7,1,3)
+         read(1,*)selfgauge(7,10,3)
+         read(1,*)selfgauge(8,2,2)
+         read(1,*)selfgauge(9,3,3)
+         read(1,*)selfgauge(13,1,3)
+         read(1,*)selfgauge(14,1,2)
+         read(1,*)selfgauge(15,1,1)
+         selfgauge(15,1,1) = selfgauge(15,1,1)*sqrt(2.d0)
+         read(1,*)selfgauge(16,2,3)
+         read(1,*)selfgauge(17,10,10)
+         read(1,*)selfgauge(17,1,10)
+         read(1,*)selfgauge(18,1,2)
+         read(1,*)selfgauge(19,3,10)
+         read(1,*)selfgauge(19,10,3)
+         read(1,*)selfgauge(18,1,3)
+         read(1,*)selfgauge(19,2,10)
+         read(1,*)selfgauge(19,10,2)
+         read(1,*)selfgauge(20,1,1)
+         read(1,*)selfgauge(21,10,10)
+         read(1,*)selfgauge(22,1,1)
+         read(1,*)selfgauge(23,10,10)
+C
+         awwgg=awwgg/selfgauge(10,2,3)**2
+         awwgz=awwgz/selfgauge(10,2,3)/selfgauge(1,2,3)/2.d0
+         awpzfwfg=awpzfwfg/selfgauge(10,2,3)/selfgauge(1,2,3)
+         awmzfwfg=-awmzfwfg/selfgauge(10,2,3)/selfgauge(1,2,3)
+C 
+        close(1)
+
+
+
+
+
+
+
+
+

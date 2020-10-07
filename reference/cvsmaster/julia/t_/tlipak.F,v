@@ -1,0 +1,447 @@
+head	1.3;
+access;
+symbols
+	jul313_3:1.3
+	jul313_2:1.3
+	jul313_1:1.3
+	jul313:1.3
+	jul312_1:1.3
+	jul312:1.3
+	jul311:1.3
+	jul310_1:1.3
+	jul310:1.3
+	jul309_1:1.3
+	jul309:1.3
+	jul308_6:1.3
+	jul308_5:1.3
+	jul308_4:1.3
+	jul308_3:1.3
+	jul308_2:1.3
+	jul308_1:1.3
+	jul308:1.3
+	jul307_4:1.3
+	jul307_3:1.3
+	jul307_2:1.3
+	jul307_1:1.3
+	jul307:1.3
+	jul306_3:1.3
+	jul306_2:1.3
+	jul306_1:1.3
+	jul306:1.3
+	jul305_4:1.3
+	jul305_3:1.3
+	jul305_2:1.3
+	jul305_1:1.3
+	jul305:1.3
+	jul304_3:1.2
+	jul304_2:1.2
+	jul304_1:1.2
+	jul304:1.2
+	jul303_7:1.2
+	jul303_6:1.2
+	jul303_5:1.2
+	jul303_4:1.2
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2
+	jul280_1:1.2
+	jul280:1.2
+	jul279:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	97.11.07.11.19.40;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.03.12.15.42.13;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.20.04;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.20.05;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@Prepare Julia 305
+@
+text
+@      SUBROUTINE TLCONS(A,LIST)
+C
+C----------------------------------------------
+C! Add on top of a list
+C--
+C--   ADD A ON TOP OF LIST.
+C--     IF 'A' IS A LIST THEN A=0 ON EXIT.
+C
+C?
+C!======================================================================
+#ifndef DOC
+C
+#include "tlibuf.h"
+#include "bcs.h"
+C----------------------------------------------
+C
+        IF (LISFRE.EQ.0) RETURN
+        IW(IELEME+1+LISFRE)=A
+        ITEMP=IW(IELEME+LISFRE)
+        IW(IELEME+LISFRE)=-LIST
+        LIST=-LISFRE
+        IF(ITEMP.EQ.0) THEN
+          CALL TLOVFL(LISFRE)
+        ELSE
+          LISFRE=ITEMP
+        ENDIF
+        IF(A.LT.0) A=0
+        RETURN
+        END
+        SUBROUTINE TLDELM(LIST,ISTHS)
+C
+C----------------------------------------------
+C! Delete one element from a list
+C--
+C--   DELETES ONE IELEMET FROM LIST.
+C--   ISTHS POINTS TO THE DESIRED IELEMET.
+C--
+C----------------------------------------------
+C
+#include "tlibuf.h"
+#include "bcs.h"
+C
+C----------------------------------------------
+C
+        POINT=LIST
+        CALL TLNEXT(POINT,CONT)
+        IF(POINT.EQ.ISTHS) GO TO 20
+        PREPT=POINT
+ 10     CALL TLNEXT(POINT,CONT)
+        IF(POINT.EQ.ISTHS) GO TO 30
+        IF(POINT.EQ.0)RETURN
+        PREPT=POINT
+        GO TO 10
+ 20     LIST=-IW(IELEME+POINT)
+        IW(IELEME+POINT)=LISFRE
+        LISFRE=POINT
+        RETURN
+ 30     IW(IELEME+PREPT)=IW(IELEME+POINT)
+        IW(IELEME+POINT)=LISFRE
+        LISFRE=POINT
+        RETURN
+        END
+      SUBROUTINE TLADD(LIST1,LIST2)
+C
+C--------------------------------------
+C! Add two lists
+C
+C     AGGIUNGE LIST1 IN TESTA A LIST2
+C     SENZA CANCELLARE LIST1
+C--------------------------------------
+C
+      IMPLICIT INTEGER (A-Z)
+C
+      POINT=LIST1
+    1 CALL TLNEXT(POINT,VALUE)
+      IF(POINT.EQ.0) RETURN
+C
+      CALL TLCONS(VALUE,LIST2)
+C
+      GO TO 1
+      END
+      SUBROUTINE TLINIT
+C
+C----------------------------------------------
+C! Initialize the list package buffer
+C--
+C--   FREE CELL LIST IS CREATED.
+C--
+C----------------------------------------------
+C
+#include "tlibuf.h"
+#include "bcs.h"
+C
+C----------------------------------------------
+C
+C  set up IELEME workbank with initial
+C  dimension LISDIM:
+C
+        NTLMAX=LISDIM
+        IELEME=0
+        IW(1)=1
+        CALL WBANK(IW,IELEME,NTLMAX,*997)
+C
+        LISFRE=1
+        LISPT=1
+ 10     NEXT=LISPT+2
+        IF(NEXT.GT.NTLMAX) GO TO 20
+        IW(IELEME+LISPT)=NEXT
+        IW(IELEME+1+LISPT)=0
+        LISPT=NEXT
+        GO TO 10
+ 20     IW(IELEME+LISPT)=0
+        IW(IELEME+1+LISPT)=0
+        GOTO 999
+C
+C  warning printout if no bank space
+C
+ 997    CONTINUE
+        CALL RERROR('TLINIT',1,'No space for IELEME work bank')
+C
+ 999    RETURN
+        END
+      SUBROUTINE TLOVFL(LAST)
+C
+C-----------------------------------------------------
+C! Print list overflow warning
+C! and extend IELEME work bank if possible
+C-----------------------------------------------------
+C
+#include "tlibuf.h"
+#include "bcs.h"
+#include "rparac.h"
+#include "rcurnt.h"
+#include "rlunit.h"
+C
+      CHARACTER TEXT*105
+C
+      IXPND=LISDIM/10
+      IXPND=IXPND+MOD(IXPND,2)
+      LISFRE = NTLMAX + 1
+      NTLMAX=NTLMAX+IXPND
+      IW(1)=1
+      CALL WBANK(IW,IELEME,NTLMAX,*997)
+C
+      WRITE(TEXT,1000)  IXPND
+      CALL RERROR('TLOVFL',1,TEXT(1:105))
+C
+      LISPT = LISFRE
+ 10   NEXT=LISPT+2
+      IF(NEXT.GT.NTLMAX) GO TO 20
+      IW(IELEME+LISPT)=NEXT
+      IW(IELEME+1+LISPT)=0
+      LISPT=NEXT
+      GO TO 10
+ 20   IW(IELEME+LISPT)=0
+      IW(IELEME+1+LISPT)=0
+      GOTO 999
+C
+C  warning print if out of bank space
+C
+ 997  CONTINUE
+      NTLMAX=NTLMAX-IXPND
+      LISFRE = 0
+      WRITE(TEXT,1001) IXPND
+      CALL RERROR('TLOVFL',1,TEXT)
+ 999  CONTINUE
+      RETURN
+ 1000 FORMAT('L I S T   O V E R F L O W : in TPC list package:',
+     &       '&SIZE OF WORK BANK IELEME INCREASED BY ', I6,
+     &       ' elements.')
+ 1001 FORMAT('L I S T   O V E R F L O W : in TPC list package:',
+     &       '&NOT ENOUGH BANK SPACE FOR',I6,' MORE ELEMENTS',
+     &       ' in IELEME.')
+      END
+      SUBROUTINE TLNEXT(POINT,CONT)
+C
+C----------------------------------------------
+C! Return the value of the next element
+C--
+C--   RETURNS THE VALUE OF THE NEXT IELEMET.
+C--   POINT MAY BE A LIST (FIRST IELEMET RETURNED)
+C--   OR AN ABSOLUTE POINTER(NEXT IELEMET & POINTER RETURNED)
+C--   POINTER=0 AT END OF LIST
+C--
+C----------------------------------------------
+C
+#include "tlibuf.h"
+#include "bcs.h"
+C
+C----------------------------------------------
+C
+        IF(POINT) 10,20,30
+ 10     POINT=-POINT
+        CONT=IW(IELEME+1+POINT)
+        RETURN
+ 20     POINT=0
+        RETURN
+ 30     POINT=IW(IELEME+POINT)
+        CONT=IW(IELEME+1+POINT)
+        RETURN
+        END
+        SUBROUTINE TLPOP(LIST,CONT)
+C
+C----------------------------------------------
+C! Return value of 1st element and drop it
+C--
+C--   RETURNS THE VALUE OF THE FIRST IELEMET (CONT)
+C--   AND DROPS IT FROM THE LIST.
+C--
+C----------------------------------------------
+C
+#include "tlibuf.h"
+#include "bcs.h"
+C
+C----------------------------------------------
+C
+        IF(LIST.EQ.0)RETURN
+        POINT=LIST
+        CALL TLNEXT(POINT,CONT)
+        CALL TLDELM(LIST,POINT)
+        RETURN
+        END
+        SUBROUTINE TLSCRA(LIST)
+C
+C----------------------------------------------
+C! Scratch list and collect memory
+C
+C----------------------------------------------
+C
+#include "tlibuf.h"
+#include "bcs.h"
+C
+C----------------------------------------------
+C
+        IF(LIST.GE.0)RETURN
+        LISNW=LIST
+        LIST=0
+        LISLS=0
+ 1      POINT=-LISNW
+ 10     CONT=IW(IELEME+1+POINT)
+        IF(CONT.LT.0) CALL TLCONS(CONT,LISLS)
+        INEXT=IW(IELEME+POINT)
+        IF(INEXT.EQ.0) GO TO 20
+        POINT=INEXT
+        GO TO 10
+ 20     IW(IELEME+POINT)=LISFRE
+        LISFRE=-LISNW
+        IF(LISLS.EQ.0) RETURN
+        CALL TLPOP(LISLS,LISNW)
+        GO TO 1
+        END
+#endif
+@
+
+
+1.2
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+ 	gambnk.F gapeco.F gasteer.F
+ 	hcalib.F hcalrd.F hcatow.F hcbhis.F hcfclu.F hchist.F hclcra.F
+ 	hcltst.F hclufi.F hcos.F hcsimm.F hdgdeb.F hdgfil.F hdgpot.F
+ 	hdgsum.F hdprec.F hdspre.F hflnoi.F hinijo.F hiniru.F hmener.F
+ 	hmfind.F hmroad.F hnoise.F hnoisy.F hpatco.F hphnoi.F hplink.F
+ 	hprana.F hpranp.F hprdig.F hpreda.F hprpot.F hprsum.F hprunc.F
+ 	hrcomp.F hrcpat.F hrdcal.F hroad.F hslink.F hslowc.F hspare.F
+ 	hsptre.F hstofi.F htrack.F htubfi.F htwcr.F
+ 	iasign.F iattma.F ibnkin.F icaswt.F icftoi.F iclimb.F icrcco.F
+ 	ideadw.F idigpr.F ienang.F ifind1.F ifind2.F ifitp.F iftrak.F
+ 	igetti.F igettp.F igicha.F iheler.F iinijo.F iiniru.F iintrk.F
+ 	imatch.F inigap.F insect.F intrak.F ipakdi.F ipdsti.F iphcor.F
+ 	ipreda.F iprsum.F ipstat.F irefin.F ireopd.F isave.F ishuff.F
+ 	ishufl.F islowc.F isrch.F itbook.F itccut.F itcopr.F itcrec.F
+ 	itcrep.F itctpc.F itctrk.F itcxng.F iterr.F itextn.F ithist.F
+ 	itidy1.F itidy2.F itlnk1.F itlnk2.F itpcan.F itrak.F itrecf.F
+ 	itreci.F itree.F itrkci.F itrkeq.F itrkzr.F itrmca.F
+@
+text
+@d212 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK tlipak
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

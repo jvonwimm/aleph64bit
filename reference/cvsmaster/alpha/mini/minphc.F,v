@@ -1,0 +1,150 @@
+head	1.2;
+access;
+symbols
+	alpha126_22:1.2
+	alpha122_22:1.2
+	alpha126_21:1.2
+	alpha126_20:1.2
+	alpha126_19:1.2
+	alpha126_18:1.2
+	alpha126_17:1.2
+	alpha126_16:1.2
+	alpha126_15:1.2
+	alpha126_14:1.2
+	alpha126_13:1.2
+	alpha126_12:1.2
+	alpha126_11:1.2
+	alpha126_10:1.2
+	alpha126_09:1.2
+	alpha126_08:1.2
+	alpha126_07:1.2
+	alpha126_06:1.2
+	alpha126_05:1.2
+	alpha126_04:1.2
+	alpha126_03:1.2
+	alpha126_02:1.2
+	alpha126_1:1.2
+	alpha125_17:1.2
+	alpha125_16:1.2
+	alpha125_15:1.2
+	alpha125_14:1.2
+	alpha125_13:1.2
+	alpha125_12:1.2
+	alpha125_11:1.2
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	2000.10.17.13.01.03;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	99.03.22.14.07.17;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE MINPHC
+C
+CKEY MDST /USER
+C-----------------------------------------------------------------------
+C! Fill PHCO bank from DHCO.
+C
+C     Author: Stephen Haywood         03-Apr-90
+C     Modify: Agnieszka Jacholkowska  05-May-97
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+#include "dhcojj.h"
+#include "phcojj.h"
+#include "minfac.h"
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+C
+      IF (IW(NAMIND('PHCO')).GT.0) RETURN
+      KDHCO = NLINK('DHCO',0)
+      IF(KDHCO.LE.0) RETURN
+C
+C++   Create PHCO bank.
+C
+      NPHCO = LROWS(KDHCO)
+      IF(NPHCO.LE.0) RETURN
+      LEN = LMHLEN + LPHCOA * NPHCO
+      CALL AUBOS('PHCO',0,LEN, KPHCO,IGARB)
+      CALL BLIST(IW,'S+','PHCO')
+      IF(IGARB.GE.2) THEN
+         RETURN
+      ELSE IF(IGARB.NE.0) THEN
+         KDHCO = NLINK('DHCO',0)
+      ENDIF
+      IW(KPHCO+LMHCOL) = LPHCOA
+      IW(KPHCO+LMHROW) = NPHCO
+C
+C++   Fill PHCO bank.
+C
+      DO 100 I=1,NPHCO
+         RW(KROW(KPHCO,I)+JPHCEC) = FLOAT(ITABL(KDHCO,I,JDHCE0))/EFACTM
+         RW(KROW(KPHCO,I)+JPHCTH) = FLOAT(ITABL(KDHCO,I,JDHCTH))/AFACTM
+         RW(KROW(KPHCO,I)+JPHCPH) = FLOAT(ITABL(KDHCO,I,JDHCPH))/AFACTM
+         ICBN = ITABL(KDHCO,I,JDHCBN) 
+         IW(KROW(KPHCO,I)+JPHCRB) = JBYT(ICBN,10,2)
+         IW(KROW(KPHCO,I)+JPHCNF) = JBYT(ICBN,1,9)
+  100 CONTINUE
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@d19 1
+@
+

@@ -1,0 +1,281 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.2
+	aleph304_5:1.1
+	aleph304_4:1.1
+	aleph304_3:1.1
+	aleph304_2:1.1
+	aleph304_1:1.1
+	aleph304:1.1
+	aleph303_3:1.1
+	aleph303_2:1.1
+	aleph303_1_mc1:1.1
+	aleph303_1:1.1
+	aleph302:1.1
+	aleph303:1.1
+	aleph302_9:1.1
+	aleph302_8:1.1
+	aleph302_7:1.1
+	aleph302_6:1.1
+	aleph302_5:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.08.20.07.13.12;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.04.04.07.58.49;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@Alephlib 305
+@
+text
+@        SUBROUTINE YSPCUT(KYSVX,IT1,IT2)
+C------------------------------------------------------------------------------
+C!  Apply cuts to pair vertices and set vertex quality flag
+C
+C       Author:  D.Casper 08/07/1996
+C
+C------------------------------------------------------------------------------
+#ifndef DOC
+C
+        PARAMETER (R_ITC = 12.80)
+        PARAMETER (R_TPC = 28.50)
+#include "ysvxjj.h"
+#include "ystljj.h"
+#include "ys0ljj.h"
+#include "ysvcut.h"
+#include "alcons.h"
+#include "bcs.h"
+C
+        DIMENSION VX(3),P(3)
+        DATA NYSTL/0/
+        SAVE NYSTL, NYS0L
+C
+#include "bmacro.h"
+C
+        IF (NYSTL.EQ.0) THEN
+            NYSTL = NAMIND('YSTL')
+            NYS0L = NAMIND('YS0L')
+        ENDIF
+        KYSTL = IW(NYSTL)
+        KYS0L = IW(NYS0L)
+        IYSVX = KROW(KYSVX,LROWS(KYSVX))
+
+C
+C+  Chisq of this vertex must be good enough
+C
+        IF (RW(IYSVX+JYSVC2).GT.YSCTC2) THEN
+            IW(IYSVX+JYSVQU) = IOR(IW(IYSVX+JYSVQU),32)
+        ENDIF
+
+        VX(1) = RW(IYSVX+JYSVVX)
+        VX(2) = RW(IYSVX+JYSVVY)
+        VX(3) = RW(IYSVX+JYSVVZ)
+C
+C+  Radius must be above the minimum we care about
+C
+        RVXSQ = VX(1)**2 + VX(2)**2
+        IF (RVXSQ.LT.YSCTRL .OR. RVXSQ.GT.YSCTRH) THEN
+            IW(IYSVX+JYSVQU) = IOR(IW(IYSVX+JYSVQU),2)
+        ENDIF
+C
+C+  Both tracks must be inconsistent with the primary
+C
+        IF (IT1.GT.0) THEN
+            CHIP1 = RTABL(KYSTL,IT1,JYSTCP)
+            D0_1 = RTABL(KYSTL,IT1,JYSTH0+3)
+            IOBJ1 = 1
+        ELSE
+            CHIP1 = RTABL(KYS0L,-IT1,JYS0CP)
+            D0_1 = RTABL(KYS0L,-IT1,JYS0H0+3)
+            IOBJ1 = 3
+        ENDIF
+        IF (IT2.GT.0) THEN
+            CHIP2 = RTABL(KYSTL,IT2,JYSTCP)
+            D0_2 = RTABL(KYSTL,IT2,JYSTH0+3)
+            IOBJ2 = 1
+        ELSE
+            CHIP2 = RTABL(KYS0L,-IT2,JYS0CP)
+            D0_2 = RTABL(KYS0L,-IT2,JYS0H0+3)
+            IOBJ2 = 3
+        ENDIF
+        IF (MIN(CHIP1,CHIP2).LT.YSCTPV) THEN
+            IW(IYSVX+JYSVQU) = IOR(IW(IYSVX+JYSVQU),4)
+        ENDIF
+C
+C+  Vertex must be at radius greater than d0 for both tracks
+C
+        IF (RVXSQ.LT.MAX(D0_1**2,D0_2**2))THEN
+            IW(IYSVX+JYSVQU) = IOR(IW(IYSVX+JYSVQU),8)
+        ELSE
+C
+C+  Vertex must be at positive arclength for track most consistent with
+C+  primary. Only do the potentially tricky calculations for tracks
+C+  which might pass.
+C
+          IF (IW(IYSVX+JYSVQU) .EQ. 0) THEN
+            S1 = YSGETS(IYSVX,IT1,IOBJ1)
+            S2 = YSGETS(IYSVX,IT2,IOBJ2)
+            IF (CHIP1.LT.CHIP2) THEN
+                SMIN = S1
+            ELSE
+                SMIN = S2
+            ENDIF
+            IF (SMIN.LT.YSCTSM) THEN
+                IW(IYSVX+JYSVQU) = IOR(IW(IYSVX+JYSVQU),16)
+            ENDIF
+C
+C+  Momentum of both tracks from the vertex must somewhat forward
+C
+            RVX = SQRT(RVXSQ)
+            IF (RVX .LT. R_ITC) THEN
+                JHELIX = JYSTH0
+            ELSE IF (RVX .LT. R_TPC) THEN
+                JHELIX = JYSTH1
+            ELSE
+                JHELIX = JYSTH2
+            ENDIF
+C
+C+  Get momentum vector at vertex
+C
+            BFIELD = ALFIEL(DUM)
+            PCONV = BFIELD*CLGHT/1.E5
+            VX(1) = VX(1)/SQRT(RVXSQ+VX(3)**2)
+            VX(2) = VX(2)/SQRT(RVXSQ+VX(3)**2)
+            VX(3) = VX(3)/SQRT(RVXSQ+VX(3)**2)
+            IF (RVX.GT.3) THEN
+                IF (IT1.GT.0) THEN
+                    OMEGA = RW(KROW(KYSTL,IT1)+JHELIX)
+                    TANL = RW(KROW(KYSTL,IT1)+JHELIX+1)
+                    PHI0 = RW(KROW(KYSTL,IT1)+JHELIX+2)
+                    PT = PCONV/ABS(OMEGA)
+                    P(1) = PT*COS(OMEGA*S1+PHI0)
+                    P(2) = PT*SIN(OMEGA*S1+PHI0)
+                    P(3) = PT*TANL
+                ELSE
+                    PMOM = RW(KROW(KYS0L,-IT1)+JYS0H0)
+                    TANL = RW(KROW(KYS0L,-IT1)+JYS0H0+1)
+                    PHI0 = RW(KROW(KYS0L,-IT1)+JYS0H0+2)
+                    SECL = SQRT(1.+TANL**2)
+                    P(1) = PMOM*COS(PHI0)/SECL
+                    P(2) = PMOM*SIN(PHI0)/SECL
+                    P(3) = PMOM*TANL/SECL
+                ENDIF
+                PL = (P(1)*VX(1)+P(2)*VX(2)+P(3)*VX(3))
+                IF (PL .LT. -0.2) 
+     &               IW(IYSVX+JYSVQU) = IOR(IW(IYSVX+JYSVQU),64)
+                IF (IT2.GT.0) THEN
+                    OMEGA = RW(KROW(KYSTL,IT2)+JHELIX)
+                    TANL = RW(KROW(KYSTL,IT2)+JHELIX+1)
+                    PHI0 = RW(KROW(KYSTL,IT2)+JHELIX+2)
+                    PT = PCONV/ABS(OMEGA)
+                    P(1) = PT*COS(OMEGA*S2+PHI0)
+                    P(2) = PT*SIN(OMEGA*S2+PHI0)
+                    P(3) = PT*TANL
+                ELSE
+                    PMOM = RW(KROW(KYS0L,-IT2)+JYS0H0)
+                    TANL = RW(KROW(KYS0L,-IT2)+JYS0H0+1)
+                    PHI0 = RW(KROW(KYS0L,-IT2)+JYS0H0+2)
+                    SECL = SQRT(1.+TANL**2)
+                    P(1) = PMOM*COS(PHI0)/SECL
+                    P(2) = PMOM*SIN(PHI0)/SECL
+                    P(3) = PMOM*TANL/SECL
+                ENDIF
+                PL = (P(1)*VX(1)+P(2)*VX(2)+P(3)*VX(3))
+                IF (PL .LT. -0.2) 
+     &           IW(IYSVX+JYSVQU) = IOR(IW(IYSVX+JYSVQU),64)
+            ENDIF
+          ENDIF
+        ENDIF
+C
+C+  Chisq of this vertex must be good enough
+C
+C        IF (RW(IYSVX+JYSVC2).GT.YSCTC2) THEN
+C            IW(IYSVX+JYSVQU) = IOR(IW(IYSVX+JYSVQU),32)
+C        ENDIF
+C
+        RETURN
+        END
+#endif
+@
+
+
+1.1
+log
+@aleph302 corr.file no.5 add ysv package
+@
+text
+@d32 8
+d56 1
+d60 1
+d65 1
+d69 1
+d82 2
+a83 1
+C+  primary.
+d85 3
+a87 2
+            S1 = YSGETS(RW(IYSVX+JYSVVX),IT1)
+            S2 = YSGETS(RW(IYSVX+JYSVVX),IT2)
+d157 1
+d162 3
+a164 3
+        IF (RW(IYSVX+JYSVC2).GT.YSCTC2) THEN
+            IW(IYSVX+JYSVQU) = IOR(IW(IYSVX+JYSVQU),32)
+        ENDIF
+@

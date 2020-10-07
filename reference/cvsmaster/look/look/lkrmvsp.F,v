@@ -1,0 +1,48 @@
+head	1.1;
+access;
+symbols
+	look25:1.1
+	look24:1.1
+	look23:1.1
+	look22:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	97.08.18.10.55.10;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@new version look 22
+@
+text
+@      SUBROUTINE LKRMVSP(LLIN,NOUT)
+C --------------------------------------------------------------
+C - A.Bonissent
+C! Remove all spaces in a character string
+C --------------------------------------------------------------
+#ifndef DOC
+      CHARACTER*(*)LLIN
+      CHARACTER*132 LOCAL
+C --------------------------------------------------------------
+      NC=LEN(LLIN)
+      NOUT=0
+      DO 10 IC=1,NC
+      IF(LLIN(IC:IC).NE.' ')THEN
+         NOUT=NOUT+1
+         LOCAL(NOUT:NOUT)=LLIN(IC:IC)
+      ENDIF
+   10 CONTINUE
+      LLIN(1:NOUT)=LOCAL(1:NOUT)
+      RETURN
+      END
+#endif
+@

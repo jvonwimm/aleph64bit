@@ -1,0 +1,186 @@
+head	1.2;
+access;
+symbols
+	jul313_3:1.2
+	jul313_2:1.2
+	jul313_1:1.2
+	jul313:1.2
+	jul312_1:1.2
+	jul312:1.2
+	jul311:1.2
+	jul310_1:1.2
+	jul310:1.2
+	jul309_1:1.2
+	jul309:1.2
+	jul308_6:1.2
+	jul308_5:1.2
+	jul308_4:1.2
+	jul308_3:1.2
+	jul308_2:1.2
+	jul308_1:1.2
+	jul308:1.2
+	jul307_4:1.2
+	jul307_3:1.2
+	jul307_2:1.2
+	jul307_1:1.2
+	jul307:1.2
+	jul306_3:1.2
+	jul306_2:1.2
+	jul306_1:1.2
+	jul306:1.2
+	jul305_4:1.2
+	jul305_3:1.2
+	jul305_2:1.2
+	jul305_1:1.2
+	jul305:1.2
+	jul304_3:1.2
+	jul304_2:1.2
+	jul304_1:1.2
+	jul304:1.2
+	jul303_7:1.2
+	jul303_6:1.2
+	jul303_5:1.2
+	jul303_4:1.2
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2
+	jul280_1:1.2
+	jul280:1.2
+	jul279:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.12.14.42.19;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.17.31;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.17.32;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+ Modified Files:
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+@
+text
+@      SUBROUTINE CTRMIP(ITR,IFMIP)
+C***********************************************************************
+C!Find if track is MIP particle    (recons)                            *
+C!                                                                     *
+C!  AUTHOR   : A. BONISSENT  870505                                    *
+C!                                                                     *
+C!                                                                     *
+C!  BANKS :                                                            *
+C!    INPUT   : ecob,etck                                              *
+C!    OUTPUT  : NONE                                                   *
+C!    CREATED : NONE                                                   *
+C!                                                                     *
+C?       Say that track is MIP                                         *
+C?         get ecob associated with track itr                          *
+C?   loop :  on hypetheses for this ecob                               *
+C?         if hypothesis is mip then                                   *
+C?                track is mip; exit                                   *
+C?             endif                                                   *
+C?         endif                                                       *
+C?    endloop                                                          *
+C?         if all hypotheses have been scanned, and mip was not found, *
+C?         track is not MIP                                            *
+C!                                                                     *
+C***********************************************************************
+#ifndef DOC
+#include "ecnamc.h"
+#include "bcs.h"
+#include "ehypjj.h"
+#include "ecobjj.h"
+#include "etckjj.h"
+#include "bmacro.h"
+      KETCK=IW(NAETCK)
+      KECOB=IW(NAECOB)
+      KEHYP=IW(NAEHYP)
+      IFMIP=1
+      IECOB=ITABL(KETCK,ITR,JETCEC)
+      IF(IECOB.EQ.0)GO TO 999
+      IFHYP=ITABL(KECOB,IECOB,JECOEH)
+      IHYP=IFHYP
+   10 IF(IHYP.EQ.0)GO TO 20
+      ITYP=ITABL(KEHYP,IHYP,JEHYTY)
+      IF(ITYP.EQ.1)GO TO 999
+      IHYP=ITABL(KEHYP,IHYP,JEHYEH)
+      GO TO 10
+   20 CONTINUE
+      IFMIP=0
+  999 CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK ctrmip
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

@@ -1,0 +1,244 @@
+head	1.1;
+access;
+symbols
+	jul313_3:1.1
+	jul313_2:1.1
+	jul313_1:1.1
+	jul313:1.1
+	jul312_1:1.1
+	jul312:1.1
+	jul311:1.1
+	jul310_1:1.1
+	jul310:1.1
+	jul309_1:1.1
+	jul309:1.1
+	jul308_6:1.1
+	jul308_5:1.1
+	jul308_4:1.1
+	jul308_3:1.1
+	jul308_2:1.1
+	jul308_1:1.1
+	jul308:1.1
+	jul307_4:1.1
+	jul307_3:1.1
+	jul307_2:1.1
+	jul307_1:1.1
+	jul307:1.1
+	jul306_3:1.1
+	jul306_2:1.1
+	jul306_1:1.1
+	jul306:1.1
+	jul305_4:1.1
+	jul305_3:1.1
+	jul305_2:1.1
+	jul305_1:1.1
+	jul305:1.1
+	jul304_3:1.1
+	jul304_2:1.1
+	jul304_1:1.1
+	jul304:1.1
+	jul303_7:1.1
+	jul303_6:1.1
+	jul303_5:1.1
+	jul303_4:1.1
+	jul303_3:1.1
+	jul303_2_mc1:1.1
+	jul303_2:1.1
+	jul303_1_mc1:1.1
+	jul303_1:1.1
+	jul303:1.1
+	jul303_v:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	97.05.15.15.45.50;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Add vglob
+@
+text
+@      SUBROUTINE VM1TRK(FIELD, SelFlag, UseKal)
+C------------------------------------------------------------------------
+C! Find all reasonable combinations of VDET hits for each track.
+CKEY VGLOB VDET TRACK
+C
+C  Author      : D. Brown 3-11-94
+C                P. Rensing 
+C
+C This routine takes in the FRFT,0 bank and creates for each properly
+C     flagged track a set of all possible associated VDET hits. Patterns
+C     are kept whose change in chisquared for the kalman fit with the
+C     new hits is less than a given cut. Appropriate penalties are
+C     applied for missing hits.
+C
+C  INPUTS:
+C    READ FIELD       = Value of the magnetic field
+C    INTEGER SelFlag  = Track selection flag (col 4 in FXTR)
+C    LOGICAL UseKal   = if .FALSE., do not use Kalman
+C              
+C  OUTPUTS:
+C    VM5C bank  for each flagged track, bank # = FRFT row #
+C
+C-----------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+C
+C  IO variables
+C
+      REAL FIELD
+      INTEGER SelFlag
+      LOGICAL UseKal
+C
+C  Global includes
+C
+#include "bcs.h"
+#include "vglbcm.h"
+#include "vglbst.h"
+C
+#include "vtxtjj.h"
+#include "fxtrjj.h"
+C
+C  Function calls
+C
+      INTEGER NLINK, NAMIND
+      EXTERNAL NLINK, NAMIND
+C
+C  Local variables
+C
+      INTEGER NamFXTR
+      INTEGER IndFXTR, indVTXT, indVTER
+      INTEGER ITRK, view
+      INTEGER TrkFlag
+      INTEGER row
+      INTEGER VTLAY(4)
+      INTEGER ILAY,IWAF,IPHI,JVIEW, wafer
+      REAL ERRMAT(8,8)
+      REAL T1, T2
+CC      REAL T3, T4
+      INTEGER KVTDP,NVM5C,KVM5C,ITRKDP,JTRKDP,IRUN,IEVT
+C
+      SAVE NamFXTR
+C
+#include "bmacrod.h"
+C
+      DATA namFXTR/0/
+C
+C  Inline functions
+C
+#include "bmacro.h"
+C
+      If (NamFXTR .eq. 0) then
+         NamFXTR = NAMIND('FXTR')
+      end if
+C
+      Call TIMEX(T1)
+C
+C  Drop any previous banks
+C      
+      CALL BDROP(IW,'VMUCVMWCVMTC')
+C
+C  Start; find the FXTR bank
+C
+      IndFXTR = IW(NamFXTR)
+      IF (IndFXTR .le. 0) Then
+         call RERROR('VM1TRK', -1, ' Missing FXTR bank')
+         GOTO 999
+      end if
+C
+C  Loop over the tracks
+C
+      DO ITRK = 1, LROWS(indFXTR)
+C
+C  Check the flag word; also make sure that a VTXT bank exists
+C
+         TrkFlag = ITABL(indFXTR, itrk, JFXTVD)
+         indVTER = NLINK('VTER',ITRK)
+         indVTXT = NLINK('VTXT',ITRK)
+         IF (TrkFlag .EQ. SelFlag .AND.
+     $        indVTER .GT. 0 .AND. indVTXT .GT. 0) THEN
+C
+C Good track.
+C First, check if the VM5C bank exist. If so, update it to remove bad
+C     rows.
+C
+            if (NLINK('VM5C', itrk) .gt. 0) then
+               CALL VMUpDt(itrk)
+            else
+C
+C  First, expand the error matrix
+C
+               DO row = 1, LROWS(indVTXT)
+                  WAFER = ITABL(indVTXT, row, JVTXWI)
+                  CALL VADEWA(WAFER,ILAY,IWAF,IPHI,JVIEW)
+                  VTLAY(row) = ILAY
+               END DO
+               CALL VTEREX(RW(indVTER+LMHLEN+1),LROWS(indVTXT),
+     $              VTLAY,ERRMAT)
+C
+C loop over views
+C
+               do view = 1, 2
+C
+C  Find all the hits within the 5-sigma road
+C
+                  CALL VMCLLD(ITRK,VIEW,ERRMAT)
+C
+C  From these, calculate the simple chisquared for all possible
+C  combinations between the 2 layers
+C
+                  CALL VMCHIS(ITRK,VIEW,ERRMAT)
+               end do
+C
+C Evaluate with Kalman fit
+C
+               if (UseKal) then
+C one-pass Kalman chi^2
+                  CALL VMCHIP(FIELD, itrk)
+C full Kalman filter fit
+c                  CALL VMCHIK(FIELD, itrk)
+               end if
+            end if
+C
+         END IF
+      END DO
+C
+ 999  CONTINUE
+      CALL BDROP(IW,'VMTC')
+      if (UseKal) then
+         CALL BDROP(IW,'VMUCVMWC')
+      end if
+C
+      CALL ABRUEV(IRUN,IEVT)
+      KVTDP = NLINK('VTDP',IEVT)
+      IF (KVTDP.GT.0)THEN
+        NVM5C = NAMIND('VM5C')
+        DO ITRKDP = 1, IW(KVTDP)
+            JTRKDP = IW(KVTDP+ITRKDP)
+            TrkFlag = ITABL(indFXTR, jtrkdp, JFXTVD)
+            KVM5C = NLINK('VM5C',JTRKDP)
+            IF (KVM5C.GT.0 .and. TrkFlag.eq.SelFlag) THEN
+                write(iw(6),2) jtrkdp
+ 2              FORMAT(1X,'VM1TRK - VM5C dump for track ',I6)
+                CALL BPRTAB(NVM5C,KVM5C,1,LROWS(KVM5C))
+            ELSE
+                write(iw(6),1) jtrkdp
+ 1              format(1X,'VM1TRK - VM5C NR=',I6,' does not exist')
+            ENDIF
+        ENDDO
+      ENDIF
+      Call TIMEX(T2)
+      TimHit = TimHit + (T2 - T1)
+      RETURN
+      END
+#endif
+@

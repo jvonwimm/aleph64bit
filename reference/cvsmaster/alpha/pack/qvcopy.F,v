@@ -1,0 +1,288 @@
+head	1.2;
+access;
+symbols
+	alpha126_22:1.2
+	alpha126_21:1.2
+	alpha126_20:1.2
+	alpha126_19:1.2
+	alpha126_18:1.2
+	alpha126_17:1.2
+	alpha126_16:1.2
+	alpha126_15:1.2
+	alpha126_14:1.2
+	alpha126_13:1.2
+	alpha126_12:1.2
+	alpha126_11:1.2
+	alpha126_10:1.2
+	alpha126_09:1.2
+	alpha126_08:1.2
+	alpha126_07:1.2
+	alpha126_06:1.2
+	alpha126_05:1.2
+	alpha126_04:1.2
+	alpha126_03:1.2
+	alpha126_02:1.2
+	alpha126_1:1.2
+	alpha125_17:1.2
+	alpha125_16:1.2
+	alpha125_15:1.2
+	alpha125_14:1.2
+	alpha125_13:1.2
+	alpha125_12:1.2
+	alpha125_11:1.2
+	alpha125_10:1.2
+	alpha125_09:1.2
+	alpha125_08:1.2
+	alpha125_07:1.2
+	alpha125_06:1.2
+	alpha125_05:1.2
+	alpha125_04:1.2
+	alpha125_03:1.2
+	alpha125_02:1.2
+	alpha125_01:1.2
+	alpha124_19:1.2
+	alpha125:1.2
+	alpha124_18:1.2
+	alpha124_17:1.2
+	alpha124_16:1.2
+	alpha124_15:1.2
+	alpha124_14:1.2
+	alpha124_13:1.2
+	alpha124_12:1.2
+	alpha124_11:1.2
+	alpha124_10:1.2
+	alpha124_09:1.2
+	alpha124_08:1.2
+	alpha124_07:1.2
+	alpha124_7:1.2
+	alpha124_06:1.2
+	alpha124_05:1.2
+	alpha124_04:1.2
+	alpha124_03:1.2
+	alpha124_02:1.2
+	alpha124_01:1.2
+	alpha124:1.2
+	alpha123_12:1.2
+	alpha123_11:1.2
+	alpha123_10:1.2
+	alpha123_9:1.2
+	alpha123_8:1.2
+	alpha123_7:1.2
+	alpha123_6:1.2
+	alpha123_5:1.2
+	alpha123_4:1.2
+	alpha123_3:1.2
+	alpha123_2:1.2
+	alpha123:1.2
+	alpha122_48:1.2
+	alpha122_47:1.2
+	alpha122_46:1.2
+	alpha122_45:1.2
+	alpha122_44:1.2
+	alpha122_43:1.2
+	alpha122_42:1.2
+	alpha122_41:1.2
+	alpha122_40:1.2
+	alpha122_39:1.2
+	alpha122_38:1.2
+	alpha122_37:1.2
+	alpha122_36:1.2
+	alpha122_35:1.2
+	alpha122_34:1.2
+	alpha122_33:1.2
+	alpha122_32:1.2
+	alpha122_31:1.2
+	alpha122_30:1.2
+	alpha122_29:1.2
+	alpha122_28:1.1.1.1
+	alpha122_27:1.1.1.1
+	alpha122_26:1.1.1.1
+	alpha122_25:1.1.1.1
+	alpha122_24:1.1.1.1
+	alpha122_23:1.1.1.1
+	alpha122_22:1.1.1.1
+	alpha122_21:1.1.1.1
+	alpha122_20:1.1.1.1
+	alpha122_19:1.1.1.1
+	alpha122_18:1.1.1.1
+	alpha122_17:1.1.1.1
+	alpha122_16:1.1.1.1
+	alpha122_15:1.1.1.1
+	alpha122_14:1.1.1.1
+	alpha122_13:1.1.1.1
+	alpha122_12:1.1.1.1
+	alpha122_11:1.1.1.1
+	alpha122_10:1.1.1.1
+	alpha122_9:1.1.1.1
+	alpha122_8:1.1.1.1
+	alpha122_6:1.1.1.1
+	alpha122_5:1.1.1.1
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.05.13.11.54.56;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.03.14.12.41.57;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.41.58;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE QVCOPY (ITKTO,ITKFRO)
+CKEY VECTOR KINEMATICS COPY/USER
+C----------------------------------------------------------------------
+C! Copy track ITKFRO to ITKTO.
+C                                                    H.Albrecht  2.1.89
+C                                 Modified:          E.Blucher   2.9.92
+C Mod. I. Tomalin 9.5.97: So that two copies to same track don't mess up.
+C----------------------------------------------------------------------
+#ifndef DOC
+      SAVE IERR
+#include "qcdesh.h"
+      DATA IERR /0/
+C----------------------------------------------------------------------
+      JR(J) = KOQVEC + ITKTO  * KCQVEC + J
+      J1(J) = KOQVEC + ITKFRO * KCQVEC + J
+      JS(J) = KOQVEC + J * KCQVEC + JQVESP
+C----------------------------------------------------------------------
+C       basic track attributes :
+C
+      RW(JR(JQVEQX)) = RW(J1(JQVEQX))
+      RW(JR(JQVEQY)) = RW(J1(JQVEQY))
+      RW(JR(JQVEQZ)) = RW(J1(JQVEQZ))
+      RW(JR(JQVEQE)) = RW(J1(JQVEQE))
+      RW(JR(JQVEQM)) = RW(J1(JQVEQM))
+      RW(JR(JQVEQP)) = RW(J1(JQVEQP))
+      RW(JR(JQVECH)) = RW(J1(JQVECH))
+C
+      IF (ITKFRO .LE. KLUST .OR. ITKTO .LE. KLUST)  GO TO 90
+C
+C       particle code, class :
+C
+      IW(JR(JQVEPA)) = 0
+      IW(JR(JQVENP)) = 0
+      IW(JR(JQVECL)) = IW(J1(JQVECL))
+C
+C       energy flow weight
+C
+      IW(JR(JQVEEW)) = IW(J1(JQVEEW))
+C
+C       KSAME pointer :
+C
+      ITK = ITKTO
+    8 CONTINUE
+      NTK = IW(JS(ITK))
+      IF (NTK.NE.ITKTO) THEN
+        ITK = NTK  
+        GOTO 8
+      ELSE
+        IW(JS(ITK)) = IW(JS(ITKTO))
+      END IF
+C
+      IW(JS(ITKTO)) = IW(JS(ITKFRO))
+      IW(JS(ITKFRO)) = ITKTO
+C
+C       mother - daughter - mother relation, match :
+C
+      IW(JR(JQVEND)) = IW(J1(JQVEND))
+      IW(JR(JQVEDL)) = IW(J1(JQVEDL))
+      IW(JR(JQVENO)) = 0
+      IW(JR(JQVENM)) = IW(J1(JQVENM))
+      IW(JR(JQVEML)) = IW(J1(JQVEML))
+C
+C       bit masks :
+C
+      DO 9 IB=1,KLOCKM
+        IW(JR(JQVEBM+IB-1)) = IW(J1(JQVEBM+IB-1))
+ 9     CONTINUE
+      IW(JR(JQVELK)) = IW(J1(JQVELK))
+C
+C       vertices :
+C
+      IW(JR(JQVESC)) = IW(J1(JQVESC))
+      IW(JR(JQVEOV)) = IW(J1(JQVEOV))
+      IW(JR(JQVEEV)) = IW(J1(JQVEEV))
+      RW(JR(JQVEDB)) = RW(J1(JQVEDB))
+      RW(JR(JQVEZB)) = RW(J1(JQVEZB))
+      RW(JR(JQVESD)) = RW(J1(JQVESD))
+      RW(JR(JQVESZ)) = RW(J1(JQVESZ))
+      RW(JR(JQVECB)) = RW(J1(JQVECB))
+C
+C       other pointers etc.
+C
+      IW(JR(JQVETN)) = IW(J1(JQVETN))
+      IW(JR(JQVEQD)) = IW(J1(JQVEQD))
+      IW(JR(JQVEKS)) = IW(J1(JQVEKS))
+C
+C        error matrix :
+C
+      RW(JR(JQVEEM)) = RW(J1(JQVEEM))
+      IF (RW(JR(JQVEEM)) .GE. 0.)  THEN
+        RW(JR(JQVEEM+1)) = RW(J1(JQVEEM+1))
+        RW(JR(JQVEEM+2)) = RW(J1(JQVEEM+2))
+        RW(JR(JQVEEM+3)) = RW(J1(JQVEEM+3))
+        RW(JR(JQVEEM+4)) = RW(J1(JQVEEM+4))
+        RW(JR(JQVEEM+5)) = RW(J1(JQVEEM+5))
+        RW(JR(JQVEEM+6)) = RW(J1(JQVEEM+6))
+        RW(JR(JQVEEM+7)) = RW(J1(JQVEEM+7))
+        RW(JR(JQVEEM+8)) = RW(J1(JQVEEM+8))
+        RW(JR(JQVEEM+9)) = RW(J1(JQVEEM+9))
+      ENDIF
+C
+C     Copy user flags
+C
+      DO 10 I=1,KCQVEC-JQVEUS+1
+         RW(JR(JQVEUS+I-1))=RW(J1(JQVEUS+I-1))
+10    CONTINUE
+      RW(JR(JQVECF)) = RW(J1(JQVECF))
+C
+   90 IF (KFFILL .GT. 0 .AND.
+     &   ITKTO .GT. KLUST .AND. ITKTO .LE. KLMCT)  THEN
+        IERR = IERR + 1
+        IF (IERR .LE. 10)  CALL QWMESE
+     &    ('_QVCOPY_ Warning : Unviolable particle is modified')
+      ENDIF
+C
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d7 1
+d41 10
+@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

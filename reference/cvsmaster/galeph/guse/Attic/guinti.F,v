@@ -1,0 +1,166 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.07.14.02.14;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.15;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK guinti
+      SUBROUTINE GUINTI
+C-----------------------------------------------------------------------
+C  B. BLOCH-DEVAUX - 850910
+C
+C    Initialisation routine specific to the drawing version of the
+C        program
+C - modified by : B.Bloch-Devaux - 911015 -911210
+C                 introduce SCAL and SAMBA related calls
+C                 introduce ITC related calls   May 1993
+C
+C modified by : F.Ranjard - 911002
+C               change COIL component # to 13 instead of 9
+C Called by  GINTRI           from GEANT3 (interactive drawing version)
+C Called by ASIPAC            from this .HLB ( batch version with plots)
+C Calls GSATT                 from GEANT3
+C      AGGATT       from this Library
+C
+C ------------------------------------------------------------------------
+#ifndef DOC
+#include "jobcom.h"
+#include "alfgeo.h"
+#include "gcdraw.h"
+#include "gckine.h"
+C  Set user defaults
+C
+      IGKINE = 1
+C
+C Computes initial scaling factor according to fiducial volume
+C to allow space for a header
+C
+      SCU=8.5/ALRMAX
+      SCV=9.8/ALZMAX
+      GSCU=MIN(SCU,SCV)
+      GSCV=GSCU
+C
+C    Set artificial volumes to 'unseen'
+C
+      CALL GSATT('ALEF','SEEN',0)
+      IF (IGEOJO(10).GT.0) THEN
+         ISIBP = IGEOJO(10)
+         CALL AGGATT('BP',ISIBP)
+      ENDIF
+      IF (IGEOJO(1)+IGEOJO(2)+IGEOJO(3).GT.0)
+     1      CALL GSATT('CDET','SEEN',0)
+      IF (IGEOJO(1).GT.0) THEN
+      CALL GSATT('VDET','SEEN',0)
+      ENDIF
+      IF (IGEOJO(2).GT.0) THEN
+         ITSP = IGEOJO(2)
+         CALL AGGATT('IT',ITSP)
+      ENDIF
+      IF (IGEOJO(3).GT.0) THEN
+      CALL GSATT('TPCR','SEEN',0)
+      CALL GSATT('TPC ','SEEN',0)
+      ENDIF
+      IF (IGEOJO(4).GT.0) THEN
+      CALL GSATT('ECBL','SEEN',0)
+      CALL GSATT('EBAR','SEEN',0)
+      CALL GSATT('EBAL','SEEN',0)
+      CALL GSATT('ECMA','SEEN',0)
+      CALL GSATT('ECMB','SEEN',0)
+      CALL GSATT('ECPA','SEEN',0)
+      CALL GSATT('ECPB','SEEN',0)
+      ENDIF
+      IF (IGEOJO(4)+IGEOJO(5)+IGEOJO(6).GT.0) THEN
+      CALL GSATT('ECEA','SEEN',0)
+      CALL GSATT('ECEB','SEEN',0)
+      ENDIF
+      IF (IGEOJO(5).GT.0) THEN
+      CALL GSATT('LCEA','SEEN',0)
+      CALL GSATT('LCEB','SEEN',0)
+      ENDIF
+      IF (IGEOJO(6).GE.2) THEN
+         ISITP = IGEOJO(6)-1
+         CALL AGGATT('PS',ISITP)
+      ENDIF
+      IF (IGEOJO(13).GT.0) THEN
+      CALL GSATT('COIL','SEEN',0)
+      CALL GSATT('COIN','SEEN',0)
+      CALL GSATT('COUT','SEEN',0)
+      CALL GSATT('COEN','SEEN',0)
+      CALL GSATT('COBY','SEEN',0)
+      ENDIF
+      IF (IGEOJO(11).GT.0) THEN
+      CALL GSATT('QUEA','SEEN',0)
+      CALL GSATT('QUEB','SEEN',0)
+      ENDIF
+      IF (IGEOJO(7).GT.0)  THEN
+      CALL GSATT('HCBL','SEEN',0)
+      CALL GSATT('HCEA','SEEN',0)
+      CALL GSATT('HCEB','SEEN',0)
+      CALL GSATT('HBAR','SEEN',0)
+      CALL GSATT('HBAL','SEEN',0)
+      CALL GSATT('HCMA','SEEN',0)
+      CALL GSATT('HCMB','SEEN',0)
+      CALL GSATT('HCPA','SEEN',0)
+      CALL GSATT('HCPB','SEEN',0)
+      ENDIF
+      IF (IGEOJO(8).GT.0)  THEN
+      CALL GSATT('MUON','SEEN',0)
+      CALL GSATT('MUEA','SEEN',0)
+      CALL GSATT('MUEB','SEEN',0)
+      CALL GSATT('MMIA','SEEN',0)
+      CALL GSATT('MMIB','SEEN',0)
+      CALL GSATT('MMOA','SEEN',0)
+      CALL GSATT('MMOB','SEEN',0)
+      CALL GSATT('MCIA','SEEN',0)
+      CALL GSATT('MCIB','SEEN',0)
+      CALL GSATT('MMBA','SEEN',0)
+      CALL GSATT('MMBB','SEEN',0)
+      CALL GSATT('MCOA','SEEN',0)
+      CALL GSATT('MCOB','SEEN',0)
+      CALL GSATT('MUBO','SEEN',0)
+      ENDIF
+      IF (IGEOJO(9).GT.0) THEN
+         ISITP = IGEOJO(9)
+         CALL AGGATT('SI',ISITP)
+      ENDIF
+      IF (IGEOJO(12).GT.0) THEN
+         CALL GSATT('EPBA','SEEN',0)
+         CALL GSATT('EPBB','SEEN',0)
+      ENDIF
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

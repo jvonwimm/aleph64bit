@@ -1,0 +1,206 @@
+      SUBROUTINE AOPENW(LUN,ANAME,ATYPE,FDEVI,IER)
+C----------------------------------------------------------------------
+CKEY ALREAD OPEN WRITE
+C   Author     : D.SCHLATTER             29-SEP-1988
+C   modified by: F.Ranjard - 890302
+C
+C!   Open NEW BOS file according to ALEPH filetypes with write access
+C
+C    Inputs:  LUN      logical unit
+C             ANAME    characterstring for ALEPH filename
+C             ATYPE    character string for ALEPH filetype
+C                      if not given with FNAME
+C             FDEVI    character string for device name
+C                      (DISK if not given)
+C    N.B. UNIX:
+C    FDEVI may be given in the card file as 'DISPOSE' or as 'DISPOSE user'
+C    to return the file to the reader of the submitter or to user's reader
+C   (IBM).
+C    For Vax, FDEVI should be given as 'DISPOSE' or 'DISPOSE file-name'.
+C    Such options will appear here with 'DISK' in front of them courtesy of
+C    ACDARG
+C
+C    Outputs:  IER   = 0   successful opening
+C
+C    Calls:    AWRTAP,BUNIT,BDABF
+C!======================================================================
+#ifndef DOC
+#include "bcs.h"
+#include "alrcom.h"
+#include "albitw.h"
+#include "gtchdecl.h"
+C - UNIX local variables
+      INTEGER       SYSTEM
+      EXTERNAL      SYSTEM
+      CHARACTER     CRNAM*40, CRUSER*80, UXTYP*5
+C-----------------------------------------------------------------------
+C
+      SUBR = ' AOPENW '
+      FNAME = ANAME
+#include "prfname.h"
+C
+C =================================================================
+C             if TAPE or CARTridge is requested call AWRTAP
+C ===================================================================
+C
+      IF (INDEX (TAPPAR,FDEVI(1:4)) .GT. 0) THEN
+         CALL AWRTAP (LUN,ANAME,ATYPE,FDEVI,IER)
+         RETURN
+      ENDIF
+
+C ===================================================================
+C             now for disk files only
+C ===================================================================
+C
+      IER=0
+      IST=0
+C
+C -------------------------------------------------------------------
+C             get filetype and logical unit in characters
+C -------------------------------------------------------------------
+C
+#include "gtftyp.h"
+#include "gtchunit.h"
+C
+C ==================== MACHINE DEPENDENT PART =====================
+#if defined(ALEPH_DEC) &&  ! defined(UNIX)
+C         VAX   VAX   VAX   VAX   VAX   VAX   VAX   VAX   VAX   VAX
+C
+C ------------------------------------------------------
+C        open file
+C ------------------------------------------------------
+      IF (FTYP3.EQ.'DAF') THEN
+C      record length is in words
+        OPEN (LUN,STATUS='NEW',ACCESS='DIRECT',RECL=MRECL,
+     &        FILE=FNAME,ERR=98,IOSTAT=IST)
+        IW(1)=2
+        CALL BDABF (LUN,LWRDS,'    ','    ')
+C
+      ELSEIF (FTYP3.EQ.'CAR'.OR. FTYP3.EQ.'EDI') THEN
+         OPEN (LUN,STATUS='NEW',FILE=FNAME,ERR=98,IOSTAT=IST)
+C
+      ELSEIF (FTYP3.EQ.'NAT') THEN
+C      logical record length is given in words
+         OPEN (LUN,STATUS='NEW',FILE=FNAME,
+     &        FORM='UNFORMATTED',
+     &        ORGANIZATION='SEQUENTIAL',
+     &        RECORDTYPE='FIXED',
+     &        BLOCKSIZE=51*512,BUFFERCOUNT=4,RECL=MRECL,
+     &        ERR=98,IOSTAT=IST)
+C
+      ELSE
+C      EPIO file
+         OPEN (LUN,STATUS='NEW',FILE=FNAME,FORM='UNFORMATTED',
+     &        RECORDTYPE='FIXED',RECL=MRECL,ACCESS='SEQUENTIAL',
+     &        ERR=98,IOSTAT=IST)
+C
+      ENDIF
+C ======== END VAX ======== END VAX ======== END VAX ==================
+#endif
+#if defined(IBM)
+C
+C ===== IBM ===== IBM ===== IBM ===== IBM ===== IBM ===== IBM ===== IBM ==
+C
+C --------------------------------------------------------------------
+C                  FILEDEF
+C --------------------------------------------------------------------
+      IF (FNAME(1:1).NE.'  '.AND.FTYP3(1:1).NE.' ') THEN
+         IF (FTYP3.EQ.'EPI')  THEN
+            MSG = 'FILEDEF '//DSNAME//' DISK '//FNAME
+         ELSE
+            MSG = 'FILEDEF '//CHUNIT//' DISK '//FNAME
+         ENDIF
+         LE = LNBLNK(MSG)
+C
+         CHRECL = ' '
+         IF (FTYP3.EQ.'DAF') THEN
+            CALL CSETDI (LWRDS,CHRECL,1,5)
+            MSG = MSG(1:LE)//' (PERM XTENT 10000 RECFM F LRECL '//CHRECL
+         ELSE
+            CALL CSETDI (KRECL,CHRECL,1,5)
+           MSG = MSG(1:LE)//' (PERM RECFM F LRECL '//CHRECL
+        ENDIF
+C
+        LE = LNBLNK(MSG)
+        MSG = MSG(1:LE)
+C
+#include "prmsg.h"
+        CALL VMCMS (MSG,IST)
+        IF (IST.NE.0) THEN
+           WRITE (IW(6),*) ' *** AOPENW: FILEDEF error ',MSG(1:LE),
+     &                     ' IST=',IST
+           GOTO 98
+        ENDIF
+      ENDIF
+C
+C ---------------------------------------------------------------
+C            Open file if necessary
+C --------------------------------------------------------------
+C - DAF file is initialized by BOS but not opened
+C - EPIO file is opened by EPIO through BOS at the 1st BOS call
+C - TEXT and NATIVE files don't need to be opened
+      IF(FTYP3.EQ.'DAF') THEN
+        IW(1)=2
+        CALL BDABF(LUN,LWRDS,'    ','    ')
+      ENDIF
+C
+C ======== END IBM ======= END IBM ========= END IBM ===============
+#endif
+#if defined(UNIX)
+C ===== UNIX ==== UNIX ==== UNIX ==== UNIX ==== UNIX ==== UNIX ===
+C
+C----------------------------------------------------------------------
+C             open  file
+C----------------------------------------------------------------------
+C
+C     remove existing file
+      MSG = 'rm '//FNAME(1:LNBLNK(FNAME))
+      IST = SYSTEM (MSG(1:LNBLNK(MSG)))
+C
+      IF (FTYP3.EQ.'DAF') THEN
+        OPEN (LUN,STATUS='NEW',ACCESS='DIRECT',RECL=MRECL,
+     &       FILE=FNAME,ERR=98,IOSTAT=IST)
+        IW(1)=2
+        CALL BDABF(LUN,LWRDS,'    ','    ')
+C
+      ELSEIF (FTYP3.EQ.'CAR' .OR. FTYP3.EQ.'EDI') THEN
+          OPEN (LUN,STATUS='NEW',FILE=FNAME,ERR=98,IOSTAT=IST)
+C
+      ELSEIF (FTYP3.EQ.'EPI') THEN
+C        file is opened by rfio throug epio
+          CALL EPSETW (LUN,33,2,IST)
+          IF (IST.NE.0) GOTO 98
+C
+      ELSEIF (FTYP3.EQ.'NAT') THEN
+          OPEN (LUN,STATUS='NEW',FILE=FNAME,FORM='UNFORMATTED',
+     &          ACCESS='SEQUENTIAL',RECL=MRECL,ERR=98,IOSTAT=IST)
+      ENDIF
+C
+C --------------------------------------------------------------
+C     If DISPOSE given in FDEVI, record this fact for later
+C --------------------------------------------------------------
+      IF (INDEX(FDEVI,'DISP') .GT.0) THEN
+         CALL ADSPOS(LUN,FNAME,FTYP3,FDEVI,IST)
+         IF (IST.NE.0) GOTO 98
+      ENDIF
+C
+C ===== END UNIX ===== END UNIX ======== END UNIX ===== END UNIX ====
+#endif
+C ================= END OF MACHINE DEPENDANT CODE ===================
+C
+C -------------------------------------------------------------------
+C            define BOS file format FORT/EPIO/TEXT
+C ------------------------------------------------------------------
+C
+      BFORM2 = 'SEQ'
+#include "stbforma.h"
+C
+      RETURN
+C -----------------------------------------------------------------
+C          file cannot be opened
+C -----------------------------------------------------------------
+   98 CONTINUE
+      IER=-1
+      CALL PRSTAT ('AOPENW',FNAME,IST)
+      END
+#endif

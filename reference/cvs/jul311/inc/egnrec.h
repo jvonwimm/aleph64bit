@@ -1,0 +1,5 @@
+#if defined(DOC)
+C!              NUMREG(208) : COMMON TO DEFINE THE REGION(1...5) IN THET
+C!   GIVEN J(1..228)
+#endif
+      COMMON/EGNREC/NUMREG(228)

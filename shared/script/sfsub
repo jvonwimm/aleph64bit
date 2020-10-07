@@ -1,0 +1,64 @@
+#!/bin/csh -f
+#
+# U.Schafer 07-jul-94
+# set verbose;set echo
+ if ((($#argv == 1) && ("$1" == -h)) ||($#argv == 0) ) then
+   cat <<+
+Submit nqs++ jobs (c-shell script) to remote host.  
+Maintain ~/.nqsrc host and user name data base 
+`basename $0`   --   options:
+ -h  <host>
+ -u  <user>
+ -<qsub_switches>
+ <job>
++
+   exit
+ endif
+# qsub defaults:
+ set jobdefs="-eo -s /bin/csh" 
+#
+ set cmd="$*"
+ set nqsrc=""
+ if (-e $HOME/.nqsrc ) set nqsrc="`cat $HOME/.nqsrc`"
+# defaults for host name and user
+ set optf=""
+ set opth=`echo "$nqsrc" | cut -d'>' -f1`
+ set optu=`echo "$nqsrc" | cut -d'>' -f2`
+ if ("$opth" == "") set opth=$HOST
+ if ("$optu" == "") set optu=$USER
+ set hopt="-h $opth" 
+ set uopt="-u $optu" 
+# parse command string
+# qsub has 2-character switches. we can't use getopt. sorry.
+# we check for first " -h" and " -u" that appears in command string
+ while ("$1" != "")
+   if ( ( "$1" =~ \-h* ) || ( "$1" =~ \-u* ) ) then
+     set swit=`echo $1 |cut -c2`
+     if ("$optf" !~ "*${swit}*") then
+       set optf=$optf$swit
+       if ("$1" == "-$swit") then
+         shift 
+         set opt$swit="$1"
+       else
+         set option=`echo $1 | cut -c3-`
+         set opt$swit=$option
+         set cmd=`echo $cmd | sed s/$1/-$swit\ $option/`
+       endif
+       set ${swit}opt=""
+     endif    
+   endif    
+   shift 
+ end
+# parse done, now write .nqsrc if necessary
+ if ("${opth}>${optu}>" != "$nqsrc" && "$optf" != "" ) then
+   echo update .nqsrc \;  host ${opth}, user $optu ...
+#   qset $hopt $uopt
+   echo "${opth}>${optu}>" >! ~/.nqsrc
+ else
+   echo submit job to host ${opth}, user $optu ...
+ endif
+# now submit job
+# echo exec qtell -c qsub $jobdefs $hopt $uopt $cmd
+ exec qtell -c qsub -eo -s /bin/csh $hopt $uopt $cmd
+
+

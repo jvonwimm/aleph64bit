@@ -1,0 +1,113 @@
+#! /bin/csh
+#============================================================================
+#                             ALREMOVE
+#                                                       F.Ranjard 17/08/93
+#============================================================================
+# To remove from the current directory old version given by its version number 
+#============================================================================
+# P1 = ALEPH program name
+# ===========================================================================
+# alremove1.0
+# 17/08/93 remove directory src${mnemonic}${oldv}
+#          remove files *${oldv}*.*
+# alremove1.1
+# 14/09/93 write history on prog_dir/spy instead of prog_dir/alib.log
+# alremove1.2
+# 14/10/93 set echo on if last argument is "-v"
+# alremove1.3
+# 27/10/93 give the right list of existing versions
+#============================================================================
+# set echo on if last argument is "-v"
+#============================================================================
+set nar = $#argv
+if (nar != 0) then
+  if ($argv[${nar}] == "-v") then
+     set echo on
+     set argv[${nar}] = ""
+  endif
+endif
+#*******>
+unset noclobber
+set UNAME = `uname`
+set exec_name = "alremove"
+set alib_dir = "/aleph/alib"
+set prog_dir = `pwd`
+set cycle = ""
+set mnemonic = ""
+#===> first parameter
+if ($1 == "") then
+  echo -n "Enter Aleph program name [eg:alephlib <CR>=exit]-> "
+   set prog_name = $<
+   if (${prog_name} == "") goto exec_end
+else
+   set prog_name = $1
+endif
+ 
+set idir = `egrep ^" ${prog_name} " ${alib_dir}/pub/progl | awk '{print $2}'`
+
+set mnemonic = `egrep ^" ${prog_name} " ${alib_dir}/pub/progl | awk '{print $4}'`
+if (${idir} == "") then
+   echo "*** WARNING not official ALEPH program"
+   goto exec_end
+else
+   set prog_dir = "/aleph/${idir}"
+   set cycle = `egrep ^" ${prog_name} " ${prog_dir}/alib.log | awk '{print $3}'`
+endif
+ 
+echo " the ${prog_name} released version has the number ${cycle} "
+
+#******> remove old version if required
+
+cd ${prog_dir}
+
+set initial = `echo ${mnemonic} | awk '{print substr($0,1,1)}'`
+set ls1 = `ls -d ${initial}* lib${mnemonic}* src$mnemonic}*`
+set ls2 = `echo ${ls1} | tr -d '[a-z][A-Z]./#_~'`
+#*****
+@ i = 0
+@ k = 0
+foreach eli ( $ls2[*] )
+  @ i++
+  set eli = $ls2[$i]
+  if ( $eli != "" ) then
+  @ k++
+  @ j = $k
+  foreach elj ( $ls2[*] )
+    if ( $j > $i ) then
+       if ( $ls2[$j] == $eli ) then
+          set ls2[$j] = ""
+       endif
+    endif
+    @ j++
+  end
+  endif
+end
+#***********
+echo " The following versions are present on ${prog_dir} : ${ls2}"
+echo -n " Do you want to remove one of them. If yes give the number [CR=no remove]-> "  
+set oldv = $<
+if (${oldv} != "") then
+  if (${oldv} == ${cycle}) then
+     echo " you ask to remove the released version ${mnemonic}${oldv}"
+     echo -n " please confirm yes/no [CR=no]-> "
+     set answer = $<
+     set answer = `echo ${answer} | awk '{print substr($0,1,1)}'`
+     if (${answer} != "y") goto exec_end
+  endif   
+  rm -i ${initial}*${oldv}*.*
+  rm -i lib${mnemonic}${oldv}*
+  rm -r src${mnemonic}${oldv}*
+else
+  goto exec_end
+endif
+
+#*******> spy
+set dmyh = `date '+%d-%h-19%y %T'`
+echo "${exec_name} ${UNAME} ${user} ${dmyh} ${prog_name} ${oldv}" >> ${prog_dir}/spy
+ 
+#*******> exec_end
+exec_end:
+ exit
+ 
+ 
+

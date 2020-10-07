@@ -1,0 +1,95 @@
+KCAR 0 / $TEXT
+POFF
+*     RUN #             RUN'S TITLE
+RUN   1714      'WW:KORALW, 176 GEV, RUN 1714, RMAR 2401 1714'
+*     FIRST EVENT    LAST EVENT    TO BE GENERATED
+TRIG     1           1000
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG
+DEBU  6     /      1          3
+* requested time left at the end of job (in sec)
+TIME 120
+FDBA 'DBASE:ADBS190.DAF | DAF'
+*    to save event file (EPIO format)
+*FILO 'DAPAXA$DKA100:[ALEPH.PEREZ.PROD]KORTEST.EPIO'
+*    to save histograms
+*HSTO 'K7KORL07 HIST A'
+RMAR   401  1714
+*    smearing of the vertex  94 settings
+SVRT    0.0124 0.0005  0.72
+*  GKRW CARD.
+* KeyRad =  1000*KeyCul+100*KeyNLL+10*KeyFSR+KeyISR
+*     KeyCul=1  Coulomb corr. INACTIVE
+*     KeyNLL=0 sets Next-to Leading alpha/pi terms to zero
+*     KeyNLL=1 alpha/pi in YFS formfactor is kept
+*     KeyFSR   Fnitial State Radiation switch, INACTIVE
+*     KeyISR=0   Initial State Radiation OFF,
+*     KeyISR=1  Initial State Radiation ON.
+* KeyPhy = 10000*KeyRed+1000*KeySpn+100*KeyZet+10*KeyMas+KeyBra
+*     KeyBra= 0 Born branching ratios, no mixing
+*     KeyBra= 1 Branching ratios with mixing and QCD
+*     KeyMas= 0 Massles kinematics for W decay products
+*     KeyMas= 1 Massive kinematics for W decay products
+*     KeyZet= 0 Z width in Z propagator: s/M_Z *GAMM_Z
+*     KeyZet= 1 Z width in Z propagator:   M_Z *GAMM_Z
+*     KeyZet= 2 no (0) Z width in Z propagator.
+*     KeySpn= 0-off, 1-on for  spin effects in W decays
+*     KeyRed= Reduction of massive FS to massles Matr.El.
+*     KeyRed= 0 fine
+*     KeyRed= 1 crude, 4-mom. non conserving
+* KeyTek= 10*KeyRnd +KeyWgt
+*     KeyWgt =0, WTMOD=1 useful for apparatus Monte Carlo.
+*     KeyWgt =1, WTMOD varying, option faster and safer
+*     KeyRnd = not implemented ???????????
+* KeyMis= KeyMix
+*     miscelaneus auxiliarym key for tests
+*     actualy KeyMix=0 causes  sinw2 to be according LEP2 presription
+*     while   KeyMix=1 prowides sinw2 as in 1.00 version.
+* KeyDwm  decay channel of W-
+* KeyDwp  decay channel of W+
+*                 0-all chann. according to br. ratios
+*                 1-ud, 2-cd, 3-us, 4-cs, 5-ub, 6-cb, 7-e, 8-mu, 9-tau
+*          negative number is reset to some default value
+* CMSENE : CMS energy [GeV]
+* GFERMI : Fermi constant
+* ALFWIN : alpha QED at WW treshold scale (inverse)
+* AMAZ   : Z mass [GeV]
+* GAMMZ  : Z width [GeV]
+* AMAW   : W mass [GeV]
+* GAMMW  : W width [GeV], For GAMMW < 0 RE-CALCULATED inside program
+* VVMIN  : Photon spectrum parameter (dummy IR cut)
+* VVMAX  : Photon spectrum parameter (max generated v, v = 1-sprim/s)
+* WTMAX  : max wt used for rejection in non weighted mode
+*      KEYRAD  KEYPHY  KEYTEK  KEYMIS  KEYDWM  KEYDWP  
+GKRW        1    1011      10       0       0       0     
+*      CMSENE      GFERMI   ALFWIN
+         176.  1.16639E-5   128.07
+*        AMAZ    GAMZ    AMAW    GAMW   VVMIN   VVMAX   WTMAX
+        91.18  2.4974   80.25    2.08   1.E-6    0.99     -1.
+*  GTDK CARD. 
+* JAK1   : TAUOLA tau of W+ decay channel
+* JAK2   : TAUOLA tau of W- decay channel
+* ITDKRC : = 0 without radiative correction in tau decay,
+*          = 1 with
+* IFPHOT : PHOTOS activation switch
+* IFHADM : JETSET W- hadronisation activation switch
+* IFHADP : JETSET W+ hadronisation activation switch
+*               !!!! IFHADM and IFHADP are glued together (for now) !!!!
+*      JAK1   JAK2   ITDKRC  IFPHOT IFHADM IFHADP  
+GTDK     0       0        1       1      1      1
+*
+PMA1  20213 / 1.251         !  Set a1 mass
+* possibility to modify branching ratios. if br to electron is not 1.           
+*  then br's are renormalised to it                                             
+*   Fraction(a1 to charged) (K0 to Ks) (K0bar to Ks) ( K* to K0 pi-)            
+*                                                                               
+GKBR        0.5                  0.5         0.5      0.6667                   
+* next are br's of tau . First is electron . If not 1. they are renorm.         
+* look at documentation for decay modes definition                              
+1.     0.9732  0.6217  1.4221  1.0180                                          
+0.0405 0.0781  0.2414  0.0601  0.0281                                          
+0.0045 0.0010  0.0062  0.0096  0.0169                                          
+0.0056 0.0045  0.0219  0.0180  0.0096                                          
+0.0088 0.0146                                                                  
+PMA1  20213 / 1.251         !  Set a1 mass                                      
+PMA1 10221 / 1.    !  Set f0(975) mass to allow KK decays
+END$

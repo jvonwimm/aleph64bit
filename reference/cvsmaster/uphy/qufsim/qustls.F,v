@@ -1,0 +1,240 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	98.06.13.16.52.14;	author janot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@update
+@
+text
+@        SUBROUTINE QUSTLS(VEC,VHN,VPH,IHA,IPH,IER)
+C---------------------------------------------------------------------
+C  Generate satelites clusters
+C
+C  Input  VEC : Calorimeter object
+C
+C  Output VHN : hadron satelite 4-momenta
+C         VPH : photon satelite 4-momenta
+C         IHA : hadron satelite flag
+C         IPH : photon staelite flag
+C         IER : error flag
+C
+C  M. Kado october 1997
+C
+C-----------------------------------------------------------------------
+
+#include "qcde.h"
+#include "fkclstr.h"
+#include "parcut.h"
+
+       DIMENSION VHN(4),VPH(4)
+
+#include "qmacro.h"
+
+       IHA = 0
+       IPH = 0
+       IER = 0
+       ephot = 0.
+       esat = 0.
+       CALL vzero(VHN(1),4)
+       CALL vzero(VPH(1),4)
+
+C  Polar and azimuthal angle of the cal. object
+
+       pol = acos(VEC(3)/VEC(4))*(180./qqpi)
+       IF (VEC(1).eq.0.and.VEC(2).GE.0) THEN
+          azi = 90.
+       ELSEIF (VEC(1).eq.0.and.VEC(2).LT.0) THEN
+          azi =-90.
+       ELSE
+          azi = atan((VEC(2)/VEC(1)))*(180./qqpi)
+       ENDIF    
+       IF (azi .le. 0) THEN
+          IF (VEC(1).GE.0) THEN
+             azi = 360.+azi
+          ELSE
+             azi = 180.+azi
+          ENDIF
+       ELSEIF (VEC(1).LE.0) THEN
+          azi = 180.+azi
+       ENDIF
+        pstlc = 0.
+
+C  For the Barrel region ...
+
+       IF (pol .GT. 46 .AND. pol .LT. 134) THEN
+       prb = pstlf*(.338+.003*(vec(4)))*
+     .    (1.-exp(-.8*(vec(4))))+pstlc
+
+C  For the Endcaps ...
+
+       ELSEIF ((pol .LE. 36 .OR. pol .GE. 144)
+     .        .and.(pol .GE. 10 .OR. pol .LE. 170)) THEN
+       prb = pstlf*(.25+.002*(vec(4)))*
+     .       (1.-exp(-.9*(vec(4))))+.02
+
+C  For the Overlap ...
+
+       ELSE
+       prb = pstlf*(.52+.001*(vec(4)))*
+     .       (1.-exp(-.6*(vec(4))))+pstlc
+
+       ENDIF
+       IF (rndm(0.).gt.prb) goto 100
+ 
+C  Sort satelite energy 
+
+ 1     esat = -log(rndm(0.))/.7-.35
+       IF (vec(4).ge..36) THEN
+          IF ((esat.lt..35).or.(esat.ge.vec(4))) goto 1
+       ELSE
+          IF ((esat.lt..35)) goto 1
+       ENDIF
+
+C  Sort possibility of photon satelite
+
+C  Parameter of photon satelisation ...
+       IF (rndm(0.).gt. phstl*0.2) goto 10
+       IPH = IPH+1
+       
+C  Sort photon energy
+
+ 2      ephot = -log(rndm(0.))-.35
+
+        IF (ephot.lt..35 .or. ephot .ge. esat) goto 2
+
+C  Smearing angles (photon alphap,betap)
+
+ 3      alphap = 0.
+        betap = 360.*rndm(0.)
+        CALL rannor(rg1,rg2)
+        IF (rndm(0.).gt..458) THEN
+           alphap = 1.86+.688*rg1
+        ELSE
+           alphap = 2.946+1.05*rg2
+        ENDIF
+
+C  Compute the rotation yielding polar and azimuthal angles
+      
+       polp = pol*(qqpi/180.)
+       thetap = acos(cos(alphap*(qqpi/180.))*cos(polp)-
+     .         sin(polp)*sin(alphap*
+     .         (qqpi/180.))*sin(betap*(qqpi/180.)))
+       e1p    = ((sin(alphap*(qqpi/180.))*sin(azi*(qqpi/180.))*
+     .         cos(betap*(qqpi/180.))+
+     .         cos(azi*(qqpi/180.))*sin(betap*(qqpi/180.))*
+     .         sin(alphap*(qqpi/180.))*cos(polp)+
+     .         cos(alphap*(qqpi/180.))*cos(azi*(qqpi/180.))*
+     .         sin(polp))/
+     .         sin(thetap))
+       e2p    = ((-sin(alphap*(qqpi/180.))*cos(azi*(qqpi/180.))*
+     .         cos(betap*(qqpi/180.))+
+     .         sin(azi*(qqpi/180.))*sin(betap*(qqpi/180.))*
+     .         sin(alphap*(qqpi/180.))*cos(polp)+
+     .         cos(alphap*(qqpi/180.))*sin(azi*(qqpi/180.))*
+     .         sin(polp))/
+     .         sin(thetap))
+
+       IF ((e2p/e1p).le.0.) THEN
+          IF (e1p .LE. 0) THEN
+             phip = atan(e2p/e1p)+qqpi
+          ELSE
+             phip = atan(e2p/e1p)+2*qqpi
+          ENDIF
+       ELSE
+          IF (e1p .LE. 0) THEN
+             phip = atan(e2p/e1p)+qqpi
+          ELSE
+             phip = atan(e2p/e1p)
+          ENDIF
+       ENDIF
+
+ 10    continue
+
+
+C  Smearing angles (hadron alpha,beta)
+
+       beta = 360.*rndm(0.)
+ 4     alpha = 180.*rndm(0.)
+       IF (rndm(1.).gt.((exp(-.917-.213*alpha)*
+     .                 (18.8*alpha**2-22.2*alpha+7.93))
+     .                 /1371.))
+     . goto 4
+
+C  Compute the rotation yielding polar and azimuthal angle
+
+       polp = pol*(qqpi/180.)
+
+       theta = acos(cos(alpha*(qqpi/180.))*cos(polp)-
+     .         sin(polp)*sin(alpha*
+     .         (qqpi/180.))*sin(beta*(qqpi/180.)))
+       e1    = ((sin(alpha*(qqpi/180.))*sin(azi*(qqpi/180.))*
+     .         cos(beta*(qqpi/180.))+
+     .         cos(azi*(qqpi/180.))*sin(beta*(qqpi/180.))*
+     .         sin(alpha*(qqpi/180.))*cos(polp)+
+     .         cos(alpha*(qqpi/180.))*cos(azi*(qqpi/180.))*
+     .         sin(polp))/
+     .         sin(theta))
+       e2    = ((-sin(alpha*(qqpi/180.))*cos(azi*(qqpi/180.))*
+     .         cos(beta*(qqpi/180.))+
+     .         sin(azi*(qqpi/180.))*sin(beta*(qqpi/180.))*
+     .         sin(alpha*(qqpi/180.))*cos(polp)+
+     .         cos(alpha*(qqpi/180.))*sin(azi*(qqpi/180.))*
+     .         sin(polp))/
+     .         sin(theta))
+       IF ((e2/e1).le.0.) THEN
+          IF (e1 .LE. 0) THEN
+             phi = atan(e2/e1)+qqpi
+          ELSE
+             phi = atan(e2/e1)+2*qqpi
+          ENDIF
+       ELSE
+          IF (e1 .LE. 0) THEN
+             phi = atan(e2/e1)+qqpi
+          ELSE
+             phi = atan(e2/e1)
+          ENDIF
+       ENDIF
+ 
+       IF (phi.le.0) phi = qqpi-phi
+
+C  Compute satelites 4-momenta
+
+C  For hadron satelite
+
+       IHA = IHA + 1
+       ehad = esat - ephot
+
+       VHN(1) = ehad*sin(theta)*cos(phi) 
+       VHN(2) = ehad*sin(theta)*sin(phi) 
+       VHN(3) = ehad*cos(theta) 
+       VHN(4) = ehad
+
+ 20    continue
+
+C  For photon satelite
+
+       VPH(1) = ephot*sin(thetap)*cos(phip) 
+       VPH(2) = ephot*sin(thetap)*sin(phip) 
+       VPH(3) = ephot*cos(thetap)
+       VPH(4) = ephot
+
+ 100   CONTINUE
+       END
+
+
+      
+@

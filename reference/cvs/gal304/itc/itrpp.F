@@ -1,0 +1,274 @@
+*DK itrpp
+      SUBROUTINE ITRPP(IWIRS,TIMES,IRPBT,IZPBT,ISPBT,IRPHM)
+C.
+C...ITRPP  1.20  920213  13:22                        R.Beuselinck
+C.
+C!  Simulate the ITC R-phi and R-phi-Z trigger processors.
+C.
+C.  Calling arguments:
+C.  IWIRS - Index of hit wires. (data part of work bank).      (INPUT)
+C.  TIMES - Expanded time differences for 3D trigger.          (INPUT)
+C.  IRPBT - 3 words containing the 72 R-phi trigger bits.     (OUTPUT)
+C.  IZPBT - 3 words containing the 72 R-phi-Z trigger bits.   (OUTPUT)
+C.  ISPBT - 1 word containing the 24 'special' trigger bits.  (OUTPUT)
+C.  IRPHM - Array containing R-phi mask results for lev 3.    (OUTPUT)
+C.
+C-----------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "iocom.h"
+#include "itexpc.h"
+#include "itnamc.h"
+#include "ittrgc.h"
+#include "itwirc.h"
+#include "ixbwjj.h"
+#include "jobcom.h"
+      PARAMETER (LPSCT = 48, LPSEC=6, LPMSK=LPSCT*LPSEC)
+      INTEGER IWIRS(960), IRPBT(3), IZPBT(3), IBTT(8), NSEG(LPSCT)
+      INTEGER NHIT(8,0:145), ITRGR(LPMSK), ITRGZ(LPMSK), NW(8)
+      INTEGER IMSK(0:192), ISPBT
+      INTEGER IRPHM(*)
+      REAL    TMEXP(8,0:145), TIMES(3,*), TMZER(8*146)
+      EQUIVALENCE (TMEXP(1,0), TMZER(1))
+      CHARACTER*90 PATRN
+      LOGICAL DEBTR, BTEST, THETOK, RESLT
+      EXTERNAL RNDM
+      SAVE NW, IBTT
+      DATA NW/4*96, 4*144/
+      DATA IBTT/1,2,4,8,16,32,64,128/
+      PARAMETER (LP4PL=4*96, LP4PL1=LP4PL+1)
+#include "bmacro.h"
+C
+C--  Statement function for theta bin check.
+C--
+      THETOK(IB1,IB2) = (IB2.GE.ITBINS(1,IB1)) .AND.
+     +                  (IB2.LE.ITBINS(2,IB1))
+C
+      DEBTR = FDEBJO .AND. (ICITJO(2).NE.0)
+C
+C--  Set random clock start time w.r.t. the time of this event.
+C--
+      CLGOIT = CLOKIT*RNDM(0)
+C
+C--  Setup wire hit array for R-PHI mask routine and the associated
+C--  expanded time differences for the 3D trigger.
+C--
+      CALL VZERO(NHIT,8*146)
+      DO 5 I=1,8*146
+        TMZER(I) = 0.
+    5 CONTINUE
+      IWABS = 0
+      NWH = 0
+C
+C--  Set the bad wires from IXBW to be always ON for the trigger.
+C--
+      IXBW = IW(NAIXBW)
+      K = KROW(IXBW,1) + JIXBWN
+      DO 8 I=1,LROWS(IXBW)
+        IDUD = IW(K)
+        IF (IDUD .LE. LP4PL) THEN
+          LAY = (IDUD-1)/96 + 1
+        ELSE
+          LAY = (IDUD-LP4PL1)/144 + 5
+        ENDIF
+        NN  = IDUD - IWIRIT(LAY)
+        NHIT(LAY,NN) = 1
+        K = K + LIXBWA
+    8 CONTINUE
+C
+      DO 20 I=1,8
+        DO 10 J=1,NW(I)
+          IWABS = IWABS + 1
+          IF (IWIRS(IWABS).GT.0) THEN
+            NWH = NWH + 1
+            NHIT(I,J) = 1
+            TMEXP(I,J) = TIMES(1,NWH)
+          ENDIF
+   10   CONTINUE
+        NHIT(I,0)        = NHIT(I,NW(I))
+        NHIT(I,NW(I)+1)  = NHIT(I,1)
+        TMEXP(I,0)       = TMEXP(I,NW(I))
+        TMEXP(I,NW(I)+1) = TMEXP(I,1)
+   20 CONTINUE
+C
+      IF (DEBTR) WRITE(LOUTIO,1000) ((NHIT(I,J),J=1,96),I=1,4),
+     +                              ((NHIT(I,J),J=1,144),I=5,8)
+C
+C--  Test the LPMSK R-phi masks.  Count the hits in each and fill
+C--  ITRGR.  Simulate the 3D trigger by comparing the corresponding time
+C--  differences and fill ITRGZ with the theta bin number for masks
+C--  forming a satisfactory 3D trigger.
+C--
+      CALL ITPHIM(NHIT,TMEXP,ITRGR,ITRGZ)
+C
+C------------------ Evaluate the basic R-phi trigger. ------------------
+C
+C--  Fill the LPSCT R-phi sectors.  LPSEC masks are or-ed per sector.
+C--  Within each sector two pairs of masks are combined as in the
+C--  14-bit ram input: 1+2, 3, 4+5, 6.  This reduces the number of
+C--  distinguishable masks down to 192.  The 192 bit results are stored
+C--  for output in the IXRP bank which is used in the level 3 tracking.
+C--
+      CALL VZERO(NSEG,LPSCT)
+      CALL VZERO(IMSK,193)
+      IBT = 0
+      IBW = 1
+      IBR = 1
+      IRPHM(IBW) = 0
+      DO 40 I=1,LPSCT
+        DO 30 J=1,LPSEC
+          IJ = (I-1)*LPSEC + J
+          IF (J.EQ.1.OR.J.EQ.4) THEN
+            RESLT = ITMSKT(ITRGR(IJ))+ITMSKT(ITRGR(IJ+1)).NE.0
+          ELSE IF (J.EQ.2.OR.J.EQ.5) THEN
+            GO TO 30
+          ELSE
+            RESLT = ITMSKT(ITRGR(IJ)).EQ.1
+          ENDIF
+          IF (RESLT) THEN
+            NSEG(I) = 1
+            IRPHM(IBW) = IBSET(IRPHM(IBW),IBT)
+            IMSK(IBR) = 1
+          ENDIF
+          IBR = IBR + 1
+          IBT = IBT + 1
+          IF (IBT.EQ.32) THEN
+            IBT = 0
+            IBW = IBW + 1
+            IRPHM(IBW) = 0
+          ENDIF
+   30   CONTINUE
+   40 CONTINUE
+      IMSK(0) = IMSK(192)
+C
+C--  Fill the Special Trigger bits.
+C--
+      CALL ITRSB(NHIT,IMSK,ISPBT)
+C
+C--  Fill the correlation bits to provide the final trigger output.
+C--
+      IRPBT(1) = 0
+      IRPBT(2) = 0
+      IRPBT(3) = 0
+      NMEM = 255
+      CALL ITMSK1(NSEG, ITIB16, LBUS)
+      CALL ITMSK2(LBUS, NMEM, IRPBT)
+C
+C--  Debug printout of trigger results.
+C--
+      IF (DEBTR) THEN
+        WRITE(LOUTIO,1001) ITRGR
+        WRITE(LOUTIO,1002) NSEG
+        PATRN = '00000000  00000000  00'
+        J = 1
+        DO 50 I=1,18
+          IF (I.EQ.9.OR.I.EQ.17) J = J + 2
+          IF (BTEST(LBUS,I-1)) PATRN(J:J) = '1'
+          J = J + 1
+   50   CONTINUE
+        WRITE(LOUTIO,1003) PATRN(1:22)
+        PATRN = '  00000000  00000000  00000000  00000000  00000000'//
+     +          '  00000000  00000000  00000000  00000000'
+        J = 1
+        K = 1
+        DO 60 I=1,72
+          IF (MOD(I,8).EQ.1) J = J + 2
+          IF (I.EQ.33.OR.I.EQ.65) K = K + 1
+          II = I - 1
+          IF (I.GT.32) II = II - 32
+          IF (I.GT.64) II = II - 32
+          IF (BTEST(IRPBT(K),II)) PATRN(J:J) = '1'
+          J = J + 1
+   60   CONTINUE
+        WRITE(LOUTIO,1004) PATRN
+C
+        IBT = 1
+        IBW = 1
+        J = 1
+        PATRN = '00000000000000000000000000000000'//
+     +          '00000000000000000000000000000000'
+        WRITE(LOUTIO,1007)
+        DO 65 I=1,192
+          IF (BTEST(IRPHM(IBW),IBT-1)) PATRN(J:J) = '1'
+          IBT = IBT + 1
+          IF (IBT.GT.32) THEN
+            IBT = 1
+            IBW = IBW + 1
+            IF (MOD(IBW,2).NE.0) THEN
+            WRITE(LOUTIO,1008) PATRN(1:8)//'  '//
+     +      PATRN(9:16)//'  '//PATRN(17:24)//'  '//PATRN(25:32)//
+     +      '  '//PATRN(33:40)//'  '//PATRN(41:48)//'  '//PATRN(49:56)//
+     +      '  '//PATRN(57:64)
+            PATRN = '00000000000000000000000000000000'//
+     +              '00000000000000000000000000000000'
+            J = 0
+            ENDIF
+          ENDIF
+          J = J + 1
+   65   CONTINUE
+C
+        PATRN = '000000000000000000000000'
+        DO 66 I=1,24
+          IF(BTEST(ISPBT,I-1)) PATRN(I:I) = '1'
+   66   CONTINUE
+        WRITE(LOUTIO,1009) PATRN(1:24)
+      ENDIF
+C
+C------------------- Evaluate the R-phi-Z trigger. ---------------------
+C
+      IF (DEBTR) WRITE(LOUTIO,1006) ITRGZ
+C
+      IZPBT(1) = 0
+      IZPBT(2) = 0
+      IZPBT(3) = 0
+C
+C--  Loop over the 8 calorimeter theta bins.
+C--
+      DO 90 ITHET=1,8
+        CALL VZERO(NSEG,LPSCT)
+        DO 80 I=1,LPSCT
+          DO 70 J=1,LPSEC
+            IJ = (I-1)*LPSEC + J
+            IF (THETOK(ITHET,ITRGZ(IJ))) NSEG(I) = 1
+   70     CONTINUE
+   80   CONTINUE
+C
+C--  Fire the appropriate correlation bits for the current theta bin.
+C--  This is controlled by setting the appropriate mask bit in the
+C--  8 bit pattern cross-matched with the 18 bus-line bits.
+C--
+        NMEM = IBTT(ITHET)
+        CALL ITMSK1(NSEG, ITIB16, LBUS)
+        CALL ITMSK2(LBUS, NMEM, IZPBT)
+   90 CONTINUE
+C
+C--  Debug printout for the R-phi-Z trigger final result.
+C--
+      IF (DEBTR) THEN
+        PATRN = '  00000000  00000000  00000000  00000000  00000000'//
+     +          '  00000000  00000000  00000000  00000000'
+        J = 1
+        K = 1
+        DO 100 I=1,72
+          IF (MOD(I,8).EQ.1) J = J + 2
+          IF (I.EQ.33.OR.I.EQ.65) K = K + 1
+          II = I - 1
+          IF (I.GT.32) II = II - 32
+          IF (I.GT.64) II = II - 32
+          IF (BTEST(IZPBT(K),II)) PATRN(J:J) = '1'
+          J = J + 1
+  100   CONTINUE
+        WRITE(LOUTIO,1005) PATRN
+      ENDIF
+ 1000 FORMAT('0Wire hit flags (NHIT):'/4(/12(2X,8I1))/8(/9(2X,8I1)))
+ 1001 FORMAT('0R-Phi Trigger mask results (8-bit address):'/(30I4))
+ 1002 FORMAT('0ITC 48-phi sectors (NSEG):',6(2X,8I1))
+ 1003 FORMAT('0ITC 18 bus-line bits  = ',2X,A)
+ 1004 FORMAT('0Final 72 R-phi   trigger bits = ',A)
+ 1005 FORMAT('0Final 72 R-phi-Z trigger bits = ',A)
+ 1006 FORMAT('0R-Phi-Z Trigger mask results (theta bin no.):'/(30I4))
+ 1007 FORMAT('0192 ITC R-phi mask results (IXRP bank):')
+ 1008 FORMAT(1X,A)
+ 1009 FORMAT('0Final 24 Special trigger bits = ',A)
+      END
+#endif

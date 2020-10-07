@@ -1,0 +1,123 @@
+#!/usr/local/bin/perl 
+require "complete.pl"; 
+require "ctime.pl";
+############################################################################
+#                             stagein_stat
+# 01/03/98                                                     F.Blin
+############################################################################
+# time_search -> today default
+# rc_search   -> "(1 0)" default
+# with parameters any order:
+#    stagein_stat month/"time_search" "rc_search" 
+#    eg:    stagein_stat "1998 03 06" "(0" [warning quote obligatory]
+#        or stagein_stat "1)"
+#        or stagein_stat "(0" "1998 03"
+#        or stagein_stat 3 idem stagein_stat "1998 03" 
+############################################################################
+#$ALBOOK = $ENV{'ALBOOK'};
+$today = `date "+%Y %m %d"`;
+$today =~ s/\s+$//;
+$current_year = `date "+%Y"`;
+$current_year =~ s/\s+$//;
+$previous_year = $current_year - 1;
+$month = 0;
+$time_search = $today;
+$rc_search = "(1 0)";
+
+foreach $i (0..$#ARGV){
+       $arg = shift(@ARGV);
+       $rc_search = $arg if ($arg=~ /^\(/ || $arg=~ /\)$/);
+       if ($arg=~ /(^\d+)$/ && $arg < 13){
+          $month = $arg;
+          $month = sprintf("%02d",$month);
+       }
+       $time_search = $arg if ($arg=~ /^(1998 )/);
+}
+$time_search = "$current_year $month" if ($month > 0);
+$time_tms = $time_search;
+$time_tms =~ s/\s+//;
+$time_tms =~ s/\s+//;
+#print "time_tms=$time_tms time_search=$time_search rc_search=$rc_search\n";
+
+### sleep for crontab everyday at time 23H 59'
+$M = `date "+%M"`;
+$M=~ s/\s+$//;
+$H = `date "+%H"`;
+$H==~ s/\s+$//;
+system("sleep 60") if ($M == 59 && $H == 23);
+###
+$LOGFILE = "/afs/cern.ch/aleph/shared/log/stagein.log";
+$bkmbytes = "/afs/cern.ch/aleph/reference/book/bkmbytes.cerntaps";
+
+$MINI_MC = 0;
+$MINI = 0;
+$DST = 0;
+$POT_MC = 0;
+$POT_MC_PY = 0;
+$POT_MC_YEAR = 0;
+$POT = 0;
+$POT_PY = 0;
+$POT_YEAR = 0;
+@buffer = ();
+@buffer = `grep "$rc_search" $LOGFILE | grep "$time_search"`;
+$n_buffer = $#buffer + 1;
+&stat_exit if ($rc_search ne "(1 0)");
+
+foreach $i (0.. $#buffer){
+    ($year,$month,$day,$time1,$time2,$name,$tape,$last)= split(/\s+/,$buffer[$i]);
+#    print "$year $month $day tape=$tape \n";
+    $tape_file = substr($tape,0,index($tape,"."));
+    $n_len = length($tape_file);
+    $tape = $tape_file;
+    $file = "";
+    if ($n_len > 6){
+       $file = substr($tape,index($tape,"_")+1);
+       $file = sprintf("%02d",$file);
+       $tape = substr($tape,0,index($tape,"_"));
+    }
+    $tape_file = "${tape}${file}";
+#    print "\n$n_len tape1 = $tape tape_file=$tape_file\n";
+    $line_bkmbyte = `grep -i $tape_file $bkmbytes`;
+    next if ($line_bkmbyte eq "");
+    $line_bkmbyte =~ s/^\s+//;
+#    print "$line_bkmbyte";
+    ($t1,$type,$cat,$physic,$YEAR,$temp_last) = split(/\s+/,$line_bkmbyte);
+#    print "type=$type cat=$cat YEAR=$YEAR  \n";
+    $MINI_MC++ if ($type eq "MINI" && $cat eq "MC"); 
+    $MINI++ if ($type eq "MINI" && $cat ne "MC"); 
+    $DST++ if ($type eq "DST"); 
+    if ($type eq "POT"){
+	$POT++; 
+	if ($cat eq "MC"){
+           $POT_MC++; 
+           $POT_MC_YEAR++ if ($YEAR == $current_year);
+           $POT_MC_PY++ if ($YEAR == $previous_year);
+       }
+	else {
+           $POT_YEAR++ if ($YEAR == $current_year);
+           $POT_PY++ if ($YEAR == $previous_year);
+       }
+    }
+}
+&stat;
+@dlt_label = ('AR','AS','AU','AT','AV');
+print " Now DLT -> VAULT \n";
+for($j==0 ; $j<=$#dlt_label ; $j++){
+    $string_tms = "$dlt_label[$j]0001 - $dlt_label[$j]9999";
+    @buffer = ();
+    @buffer = `/usr/local/bin/sysreq tms q vid $string_tms \"(\" LIB LASTREAD | grep $time_tms | grep VAULT`;
+    print "@buffer" if ($#buffer > -1);
+}
+exit;
+##############################################################################
+sub stat{
+
+    print " ++++$time_search -> $n_buffer stagein with rc:$rc_search\n";
+    exit if ($rc_search ne "(1 0)");
+    print " MINI=$MINI MINI_MC=$MINI_MC \n"; 
+    print " DST=$DST \n";
+    print " total POT_MC=$POT_MC POT_MC_$current_year=$POT_MC_YEAR POT_MC_$previous_year=$POT_MC_PY\n";
+    print " total POT=$POT POT_$current_year=$POT_YEAR POT_$previous_year=$POT_PY\n";
+    return;
+}
+##############################################################################

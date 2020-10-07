@@ -1,0 +1,271 @@
+\chapter{\label{sec-EF}Energy Flow}
+\par
+Historically, three energy flow packages have been used in ALEPH:  the mask
+algorithm of M-N. Minard
+and M. Pepe-Altarelli,
+the PCPA$-$based energy flow of A. Bonissent, and
+the ENFLW package
+of P. Janot.
+Since ALPHA 115 (May 1993),
+the ENFLW package is fully integrated in ALPHA;                             
+all features of the other two packages are not maintained any more.
+Therefore, users are strongly advised to use the ENFLW energy flow.
+\par
+\section{\label{sec-EFLWJ}ENFLW Energy Flow}
+\par
+  The ENFLW algorithm is described in the Section 10 of the paper:
+ 
+   `` Performances of the ALEPH detector at LEP ''
+ 
+  Nucl. Inst. and Meth. {\bf A 360} (1995), pp. 481$-$506 .
+ 
+\par
+To use the ENFLW
+energy flow analysis, the EFLW card must be given in the ALPHA card
+file.
+If the EFLW card is present, the EFT section of ALPHA is filled with
+selected charged tracks and neutral ECAL and HCAL clusters.
+These objects can be accessed
+with DO loops
+(KFEFT, KLEFT, KNEFT -- see \ref{sec-altrack})
+or with the particle name `EFLW' using
+the functions KPDIR and KFOLLO (described in
+\ref{sec-AD}).
+
+
+The charged tracks that appear in the EFT section are copies of
+standard ALPHA charged tracks from the CHT section.
+Therefore, if a charged track in the CHT section is locked (using
+QLTRK or QLOCK), the corresponding track in the EFT section will be
+locked also (and vice versa).
+
+All statement functions providing information about charged tracks can be used
+directly with charged tracks in the EFT section .
+ 
+\subsection{\label{sec-EFLWS}Access to ENFLW informations}
+
+The following statement functions may be used to access
+additional information on EFLW objects:
+ 
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{XEFO (I)}{\bf .TRUE.} if energy flow 
+data are available for ``track'' I
+
+
+\newpage
+
+\indentitem{KEFOTY (I)}Type of energy flow objects (exclusive list, no double counting):
+\begin{itemize}
+\item 0 = Charged Track (Pion assumed, not identified either e or mu) 
+\item 1 = Electron
+\item 2 = Muon
+\item 3 = Track from a standard V0 (either $\Lambda, K^{0}_{s}$ or $\gamma$ conversion) from the YV0V package 
+\item 4 = Electromagnetic ($\gamma$ or $\pi^{0}$)
+\item 5 = ECAL hadron/residual
+\item 6 = HCAL element
+\item 7 = LCAL element (No Particle Identification available for LCAL)
+\item 8 = SICAL element (No Particle Identification available for SICAL)
+         
+\end{itemize}
+\indentitem{KEFOLE (I)}PECO number of associated ECAL object
+\indentitem{KEFOLT (I)}FRFT number of associated charged track
+\indentitem{KEFOLH (I)}PHCO number of associated HCAL object
+\indentitem{KEFOLC (I)}PCOB number of associated calorimeter object
+\indentitem{KEFOLJ (I)}EJET number of associated jet
+\end{indentlist}
+\par
+
+\subsection{\label{sec-EFLWT}Event topology routines and ENFLW}
+To use the event topology routines described in
+Chapter \ref{sec-QJ} with these energy-flow objects,
+use option {\bf 'EF'} with subroutine QJOPTR
+(see~\ref{sec-QJOP}):
+\begin{verbatim}
+      CALL QJOPTR('EF',' ')
+\end{verbatim}
+ 
+\noindent {\bf Example:}
+ 
+The following code calculates the total energy energy of an
+event and finds the thrust using energy flow objects.
+ 
+\begin{verbatim}
+      E=0.
+      DO 10 I = KFEFT, KLEFT
+         E=E + QE(I)
+   10 CONTINUE
+C---    Find thrust
+      CALL QJOPTR('EF', ' ')
+      CALL QJTHRU(THRU, 'THRU', KRECO)
+\end{verbatim}
+\par
+Jets based on energy flow objects using QJMMCL with YCUT = 0.003
+(see Sec.~\ref{sec-QJSIM})
+are
+stored in the EJET bank.
+If the EFLJ card is used instead of the EFLW card, the EFT section will
+be filled as described above, and these jets will be stored in the JET
+section.
+The jets may be accessed with DO loops (KFJET, KLJET, KNJET)
+or with the particle name 'EJET' using the functions KPDIR and KFOLLO.
+The energy flow objects making up these jets can be found with XSAME
+as described in Sec.~\ref{sec-TVATPSO}.
+To save time, these jets may be used as input for jet-finding with a
+higher YCUT (see~\ref{sec-QJSIM})
+by calling QJOPTR with the option EJ:
+\begin{verbatim}
+     CALL QJOPTR('EJ',' ').
+\end{verbatim}
+XSAME may be used to find the original energy flow objects
+(in the EFT section) making up the final jets.
+ 
+
+\subsection{\label{sec-EFLWR}Removing of SiCAL clusters in ENFLW}
+ 
+ A special data card:  NOSC  is foreseen to remove  the SiCAL clusters from ENFLW  objects.
+    This works on POT/DST/MINI.
+\par
+      However, be careful:
+   when writing  MINIs from DST/POT with NOSC,
+      the SiCAL clusters are NOT   saved on the MINIs and will not be recovered when reading these MINIs
+                                    even without NOSC. This is OK
+      for private productions; the official MINIs are
+         produced with the SICAL clusters in energy flow objects.
+
+\subsection{\label{sec-EFLSICL}Cleanup of bad SiCAL clusters in ENFLW}
+
+Since ALPHA 124.09 (May 1999) all bad SiCAL clusters are removed from the energy flow objects. This is done
+by calling the ALEPHLIB subroutine SICLID. This works for all POTs, but works only  for DSTs and MINIs processed with
+ JULIA version 309 and after.
+
+This cleanup may be inhibited by a special data card, NSID. 
+
+
+
+\subsection{\label{sec-EFLWMA}Matching ENFLW informations and true information}
+
+The code providing this information is available since ALPHA 122.30 (June 1997).
+
+For charged tracks, the matching between ENFLW objects and Monte Carlo true information
+(and {\it vice-versa}) is done by the standard KMTCH function
+(\ref{sec-AX} on p.~\pageref{sec-AX}).
+
+For ECAL objects, it is done using the PEMH, PECO and PCOB banks.  
+For HCAL objects, it is done using the PHMH, PHCO and PCOB banks for datasets generated with JULIA version 285.1 and after
+(March 1996 and after); for previous datasets a tight angular matching (100 mrad) is used as a substitute when PHMH is not
+available. For ECAL hadronic residuals (KEFOTY = 5) and SICAL clusters (KEFOTY = 8) the matching is not fully efficient, since
+the FKIN/PECO information is not stored for SICAL clusters.
+
+
+The matching information is provided through the following functions:
+
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{KNTRU (ITK)} Number of matches of ALPHA ``track" ITK                    
+
+                         The matching is ENFLW $\rightarrow$ Monte Carlo if ITK is between KFEFT and KLEFT
+  
+                         The matching is Monte Carlo $\rightarrow$  ENFLW if ITK is between KFMCT and KLMCT
+ 
+                         As for charged tracks, any ENFLW object may have more than one match, therefore  
+                         additional information is provided through the following functions:
+
+\indentitem{KTRU (ITK,I)} Ith match to  ALPHA ``track" ITK (I=1,.. KNTRU(ITK))
+
+\indentitem{QSTRU(ITK,I)} Matching quantity for the Ith match to  ALPHA ``track" ITK
+\begin{itemize}
+\item if QSTRU $<-1.0$:  (-QSTRU) is the number of shared VDET + ITC + TPC hits
+\item if $-1.0 < $ QSTRU $<0.$ (-QSTRU) is the matching angle (in radians) 
+                for HCAL/SICAL
+\item if QSTRU $>0.$ QSTRU is the shared energy (from PEMH or PHMH banks)   
+\end{itemize}
+
+\end{indentlist}
+
+
+\par
+\section{\label{sec-EFLWM}Mask Energy Flow}
+\par
+This algorithm is described in the report ALEPH 89$-110$ (PHYSIC 89$-$043).
+Its results are not written any more in ALEPH datasets.
+
+\par
+\section{\label{sec-EFLWP}PCPA-based Energy Flow}
+\par
+This algorithm is described in the report ALEPH 92$-055$ (PHYSIC 92$-$048).
+\par
+The PCPA-based energy flow uses neutral objects derived from the
+PCPA bank in addition to selected charged tracks. The logical
+function XFRIQF(ITK) may be used to test whether a track has been
+included for the PCPA energy-flow analysis.
+The PCPA neutral objects are stored in the NET section by default.
+(Filling of the NEOB section may be disabled by including the card
+NOPC in
+the ALPHA card file.)
+These objects can be accessed with DO loops
+(KFNET, KLNET, KNNET -- see \ref{sec-altrack})
+or with the particle name `NEOB' using
+the functions KPDIR and KFOLLO (described in
+\ref{sec-AD}).
+ 
+\par
+ 
+To use the event topology routines described in
+Chapter \ref{sec-QJ} with PCPA-based energy flow  (\ie,
+selected charged tracks plus PCPA neutral objects),
+use option {\bf 'PC'} with subroutine QJOPTR
+(see~\ref{sec-QJOP}):
+\begin{verbatim}
+      CALL QJOPTR('PC',' ').
+\end{verbatim}
+To use only NEOB objects:
+\begin{verbatim}
+      CALL QJOPTR('NO','NEOB').
+\end{verbatim}
+ 
+The following statement functions may be used to access
+additional information on NEOB objects:
+ 
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{XPCQ (I)}{\bf .TRUE.} if PCQA data are available for ``track'' I
+\indentitem{KPCQNA (I)}NAture of neutral object (see Sec.~\ref{sec-EFLWP})
+\begin{itemize}
+\item 1 Isolated gamma
+\item 2 Gamma from multi-gamma neutral cluster
+\item 3 Gamma from identified $\pi^0$
+\item 4 Gamma from electron bremsstrahlung
+\item 5 Gamma from electromagnetic charged cluster
+\item 10 Unresolved gamma-gamma
+\item 12 Residual electromagnetic energy from neutral cluster
+\item 13 Residual electromagnetic energy from charged cluster
+\item 17 Neutral hadron
+\item 18 Residual hadronic energy from neutral cal object
+\item 19 Residual hadronic energy from
+charged cal object with no HCAL component
+\item 20 Residual hadronic energy from
+charged cal object with HCAL component
+\item 21 contribution from an ECAL cluster for
+which EBNEUT was in error
+\item 22 contribution from an LCAL object
+ 
+\end{itemize}
+\end{indentlist}
+ 
+{\bf Example:}
+ 
+The following code calculates the total energy energy of an
+event and finds the sphericity using PCPA-based energy flow.
+ 
+\begin{verbatim}
+C---    First add up neutral energy
+    E = 0.
+    DO 10 I = KFNET, KLNET
+    E=E+QE(I)
+10  CONTINUE
+C---    Add energies of selected tracks
+    DO 20 I = KFCHT, KLCHT
+    IF(XFRIQF(I)) E = E + QE(I)
+20  CONTINUE
+C---    Find sphericity
+    CALL QJOPTR('PC', ' ')
+    CALL QJSPHE(SPHE, 'SPHE', KRECO)
+\end{verbatim}

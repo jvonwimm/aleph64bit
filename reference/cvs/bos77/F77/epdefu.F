@@ -1,0 +1,27 @@
+#if defined(ALEPH_DEC) &&  ! defined(UNIX)
+      SUBROUTINE EPDEFU(LUNIT,NAME,IERR)
+C --------------------------------------------------------------
+C standard fortran version EPIO 1.68 cernlib 92b
+C ----------------------------------------------------------------
+C.
+C. ALLOWS TO SPECIFY A FILE NAME OTHER THAN THE DEFAULT
+C. NAME FOR0$$.DAT  ($$ FOR UNIT NUMBER)
+C.
+C. INPUT
+C. LUNIT      LOGICAL UNIT NUMBER
+C. NAME       FILE NAME, TYPE CHARACTER
+C.
+C. OUTPUT
+C. IERR     ERROR FLAG. SEE SEPARATE LIST.
+C.
+C. THE NAME IS STORED IN EPVXUN, COMMON BLOCK EPFNAM
+C.
+      COMMON/EPCOMM/NMUNIT,NWUNIT,NCONT,ISTART,LASTUT,LREF,LIST(350)
+      EQUIVALENCE (NOUTUT,LIST(8))
+      COMMON/EPVAXN/EPVXUN(10)
+      CHARACTER*255 EPVXUN
+      CHARACTER NAME*(*)
+      CALL EPUNIT(LUNIT,IERR)
+      IF (IERR.EQ.0)  EPVXUN(LREF)=NAME
+      END
+#endif

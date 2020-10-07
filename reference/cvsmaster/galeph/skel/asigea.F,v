@@ -1,0 +1,214 @@
+head	1.3;
+access;
+symbols
+	gal309_3:1.3
+	gal309_2:1.3
+	gal309_1:1.3
+	gal309:1.3
+	gal308_2:1.3
+	gal308_1:1.3
+	gal308:1.3
+	gal307_2:1.3
+	gal307_1:1.3
+	gal307:1.3
+	gal306_3:1.3
+	gal306_2:1.3
+	gal306_1:1.3
+	gal306:1.3
+	gal305_3:1.3
+	gal305_2:1.3
+	gal305_1:1.3
+	gal305:1.3
+	gal304_11:1.3
+	gal304_10:1.3
+	gal304_9:1.3
+	gal304_8:1.3
+	gal304_7:1.3
+	gal304_6:1.3
+	gal304_5:1.3
+	gal304_4:1.3
+	gal304_3:1.3
+	gal304_2:1.3
+	gal304_1:1.3
+	gal304:1.3
+	gal303_3:1.3
+	gal303_2:1.3
+	gal303_1:1.3
+	v-303:1.3
+	gal302_2:1.3
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	95.07.04.07.46.36;	author algal;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.06.30.07.13.13;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.01.43;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.44;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@gal302 correction file no.1
+ Modified Files:
+ ijjpar.h siconst.h
+ asigea.F
+@
+text
+@*DK asigea
+      SUBROUTINE ASIGEA
+C ----------------------------------------------------------------------
+C. - F.Ranjard - 850306
+C! interface GALEPH_GEANT3
+C. - Fill GEANT3 common blocks
+C. - called by    ASIRUN                               from this .HLB
+C. - calls        GINIT , GZINIT                       from GEANT3.PAM
+C.                GDINIT                               from GEANG3.PAM
+C.                ASGPAR                               from this .HLB
+C ----------------------------------------------------------------------
+#ifndef DOC
+#include "gctrak.h"
+#include "gcbank.h"
+#include "gccuts.h"
+#include "gcflag.h"
+#include "gcphys.h"
+#include "alfgeo.h"
+#include "iocom.h"
+#include "jobcom.h"
+#include "bcs.h"
+C ----------------------------------------------------------------------
+C
+C - Fill GEANT3 common blocks with data read in ASREDC
+C
+      IGPAIR = 1
+      IGCOMP = 1
+      IGPHOT = 1
+      IGBREM = 1
+      IGHADR = 1
+      IGANNI = 1
+      IGDRAY = 1
+      IGLOSS = 1
+      IGDCAY = 1
+      IGMULS = 1
+      IGMUNU = 0
+      IGPFIS = 0
+      IGRAYL = 0
+C - set AUTO flag for GEANT version above 3.140
+      IF (GVERSN .GE. 3.14) THEN
+         IGAUTO = 0
+         IF (IW(NAMIND('AUTO')).GT.0) IGAUTO = 1
+         WRITE (LOUTIO,*) ' ****ASIGEA*** IGAUTO = ', IGAUTO
+C - set CUTHAD = cut on charged hadrons to 6 MeV when running with
+C   GEANT 315 and no TCUT card
+         IF (IW(NAMIND('TCUT')).EQ.0) TCUTJO(3) = 0.006
+      ENDIF
+      NGEVEN = 100000
+      IGDRUN = IRUNJO
+C
+      IF(TCUTJO(1).GT.0.) GCUTGA=TCUTJO(1)
+      IF(TCUTJO(2).GT.0.) GCUTEL=TCUTJO(2)
+      IF(TCUTJO(3).GT.0.) GCUTHA=TCUTJO(3)
+      IF(TCUTJO(4).GT.0.) GCUTNE=TCUTJO(4)
+      IF(TCUTJO(5).GT.0.) GCUTMU=TCUTJO(5)
+C
+C - Initialize ZEBRA structure
+C
+      CALL GZINIT
+C
+C - Fill 'PTYP' GEANT banks
+C
+      CALL ASGPAR
+C
+#if defined(DRAW)
+C - Initialize drawing package
+C
+      IF(LGRAIO.GT.0) CALL GDINIT
+C
+#endif
+      RETURN
+       END
+#endif
+@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ cahtra.h gmacro.h lccomc.h lcnamc.h ljjpar.h siconst.h
+ sigeco.h version.h
+ itmsk1.F itmsk2.F itnois.F itres.F itxtlk.F
+ lcadc.F lcamp.F lcasig.F lcbhab.F lcbkpr.F lcdigi.F lcfral.F
+ lchit.F lcirun.F lcnami.F lcnois.F lcpad.F lcroc.F lcsamp.F
+ lcsatu.F lcshow.F lcstrt.F lctrak.F lctrdi.F lctrht.F lcwire.F
+ lcwsum.F lcwtri.F
+ muasig.F mubook.F muirun.F muunoi.F muwsum.F
+ trignews.h
+ siasig.F sitrak.F siwsum.F
+ asasig.F asbook.F ascjob.F ascrun.F asctra.F asevst.F asfxxx.F
+ asieve.F asigea.F asijob.F asimod.F asinit.F asipac.F asirun.F
+ askine.F asksin.F asktrk.F aspeve.F asprun.F asread.F asredc.F
+ asreve.F asrkin.F asrtyp.F asrust.F astdeb.F astgea.F astrac.F
+ astrig.F aswkin.F aswrtp.F aswsum.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+ xtrcom.h
+ ecalnews.h geomnews.h lcalnews.h news.h skelnews.h vdetnews.h
+@
+text
+@d11 2
+a12 2
+C.
+C
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d23 1
+a23 1
+#ifndef DOC
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

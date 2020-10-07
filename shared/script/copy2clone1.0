@@ -1,0 +1,92 @@
+#! /bin/csh
+#
+# =======================================================================
+#                                                              FLR
+#                     copy2clone
+# =======================================================================
+# copy new files to a clone
+# =======================================================================
+# P1 -> directory to copy
+# P2 -> clone name
+# P3 -> number of days (def.=1)
+# ======================================================================
+# copy2clone1.0
+# 970409
+# ======================================================================
+
+set exec_name = "copy2clone1.0"
+set verbflr = ""
+set nar = $#argv
+if (${nar} != 0) then
+  if ($argv[${nar}] == "-v") then
+     echo "${exec_name}"
+     set verbflr = "-v" 
+     set echo on
+     set argv[${nar}] = ""
+     @ nar = ${nar} - 1 
+  endif
+endif
+#
+if ( $?ENVIRONMENT ) then
+ if ( "$ENVIRONMENT" == "INTERACTIVE" && $1 == "-h" ) then
+   echo ""
+   echo "usage:"
+   echo " copy2clone <prog_dir> [<clone>]"
+   echo ""
+   echo "an example:"
+   echo " copy2clone /aleph/phy "
+   echo " finds all files modified/created since yesterday on /aleph/phy"
+   echo " copy them onto afal01:/aleph/phy if you are SHIFTALEPH,"
+   echo " copy them onto shift50:/aleph/phy if you are on AFAL."
+   echo ""
+   echo " copy2clone /aleph/dbase csf"
+   echo " copy all new /aleph/dbase files to csf:/aleph/dbase."
+   echo ""
+   exit(1)
+ endif
+endif
+#
+unset noclobber
+
+set prog_dir = $1
+set arg2     = $2
+set arg3     = $3
+
+set clone    = ""
+if (${arg2} != "") set clone = ${arg2}
+set ndays    = "1"
+if (${arg3} != "") set ndays = ${arg3}
+# ================================================================================
+
+cd ${prog_dir}
+set list = `find . -mtime -${ndays} -print` 
+if ("${list}" == "") then
+   echo " nothing new on ${prog_dir} : EXIT"
+   goto script_end
+endif
+
+if (${clone} == "") then
+  if (${SERVICE} == "AFAL" || ${SERVICE} == "SHIFTALEPH") then
+     set clone = "afal01"
+     if (${SERVICE} == "AFAL" ) then 
+        set clone = "shift50"
+     endif
+  endif
+endif  
+
+echo " list of files to be copied from ${SERVICE} to ${clone}"
+echo " ${list}"
+
+if (${clone} != "") then
+  foreach file ( $list[*] )
+    if (${file} != ".") rcp -p ${file} ${clone}:${prog_dir}/.
+  end
+endif 
+
+# ------------------------------------------------
+
+script_end:
+
+exit
+
+

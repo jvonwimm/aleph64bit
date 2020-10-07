@@ -1,0 +1,166 @@
+      SUBROUTINE RINJOB(ISJOB)
+C----------------------------------------------------------------------
+C!  - Initialise the job
+C!
+C!  Author       J. Bunn
+C!
+C!  Modified     S. Orteu      25-FEB-1987
+C!   Modified :- E. Lancon             17-MAY-1993
+C!        ADD RLEP to SUMLIS
+C!               F. Ranjard            25-APR-1994
+C!        remove XSGE, XSHI, XSSC from SUMLIS
+C!               F.Ranjard             16-MAY-1994
+C!        remove JTDX from SUMLIS
+C!        add JHDX to SUMLIS
+C!  Modified     I. Tomalin            15-AUG-1995
+C!        add TVVD,TLAS,TDPV to SUMLIS
+C!  Modified     P. Comas
+C!        change LOUTRL to IW(6) instead of 6
+C!  Modified     M. Cattaneo           20-JUN-1996
+C!        add BLQP to SUMLIS
+C!  Modified     F. Ranjard            08-DEC-1999
+C!        exit if linked with non y2k compliant Alephlib or ADBS
+C!  Modified     B.Bloch                  May 2001
+C!        call ADBCHK to check against DB official production version  
+C!
+C!  Output
+C!        ISJOB = Status
+C!              = 0 O.K.
+C!              = 1 No runs or tapes specified
+C!              = 2 Error in processing flags
+C!
+C?
+C!======================================================================
+#ifndef DOC
+#include "rconds.h"
+#include "rparac.h"
+#include "rflags.h"
+#include "rlunit.h"
+#include "rtimes.h"
+#include "rblank.h"
+#include "rcurnt.h"
+#include "rjulver.h"
+#include "bcs.h"
+C--------------------------------------------------------------------
+C
+      ISJOB = 0
+      LOUTRL = IW(6)
+      LDEBRL =  LOUTRL
+C
+C?   Number events processed
+C?   Current Run and Evt Number
+C
+      ISQNRC = 0
+      IRUNRC = 0
+      IEVTRC = 0
+C
+C?   Run Initialised???
+C
+      INIRUC = .FALSE.
+C
+C?   Print title
+C
+      CALL RTITLE(LOUTRL)
+C
+C?   Initialise and zero the statistics arrays. Set default values
+C
+      CALL RZEJOB
+C
+C?   Input unit and MONI file unit
+C
+      LINPRL = JULINP
+      LMONRL = JULMON
+C
+C?   Sumr file output unit and list of bank written
+C
+      LSUMRL = 55
+      SUMLIS =
+     &'RUNRALPBLEHILUMILBAKLVHIJSUMSLUMRLEPJEDSJPASJTREJHDXJCON'//
+     &'TVVDTLASTDPVBLQP'
+C
+C?   PASS0 file output unit
+C
+      LPAS0L = 65
+      PASLIS = 'JPASTDPVVHOT'
+C
+C?   Read in command cards
+C
+      CALL RDCARD (IER)
+      IF ( IER.NE.0 ) GOTO 901
+C
+C?   Open data base
+C
+      CALL AOPDBS(' ',LEX)
+      IF (LEX.NE.0) THEN
+        WRITE(LOUTRL,'(A)') '0Data base not found'
+        GOTO 900
+      ENDIF
+      CALL ADBVER(IVERS,IDATE)
+      call adbchk(ivers)   ! check on version number for official prod
+C +y2k
+      IF (IVERS.LT.300) THEN
+        WRITE(LOUTRL,*) '0Data base ',IVERS,' is not Y2K compliant'
+     &                 ,' - please use DB>=300'
+        GOTO 900
+      ENDIF
+C
+C    Get Alephlib version number
+C 
+      CALL ALVERS(RVERS)
+      IF (RVERS.LT.314.) THEN
+         WRITE(LOUTRL,*) '0Alephlib ',IVERS,' is not Y2K compliant'
+     &                  ,' - please link with Alephlib>=314'
+         GOTO 900
+      ENDIF
+C -y2k
+C
+      LRCONS =  JUNIDB(0)
+      LRGEOM =  LRCONS
+C
+C?   Set detectors
+C
+      CALL RDETEC
+C
+C?   Initialise the HBOOK system
+C
+      CALL HLIMIT(LHBOO)
+C
+C book the histograms
+C
+      CALL RBKHIS
+C
+C Initialise the job for each subdetector
+C
+      IF (FDETRF(JULVD)) CALL VINIJO
+      IF (FDETRF(JULIT)) CALL IINIJO
+      IF (FDETRF(JULTP)) CALL TINIJO
+      IF (FDETRF(JULEC)) CALL EINIJO
+      IF (FDETRF(JULCA)) CALL CINIJO
+      IF (FDETRF(JULLC)) CALL LINIJO
+      IF (FDETRF(JULSA)) CALL SINIJO
+      IF (FDETRF(JULSI)) CALL SIINIJO
+      IF (FDETRF(JULHC)) CALL HINIJO
+      IF (FDETRF(JULMU)) CALL MINIJO
+      IF (FDETRF(JULBC)) CALL BINIJO
+      IF (FDETRF(JULBO)) CALL OINIJO
+      IF (FDETRF(JULYR).OR.FDETRF(JULYT)) CALL YINIJO
+      IF (FDETRF(JULEF)) CALL EFIJOB
+      IF (FDETRF(JULFA)) CALL RFALIJ
+C
+C Do the user's job initialisation
+C
+      CALL USIJOB
+C
+      GOTO 999
+C--------------------------------------------------------------------
+  900 WRITE(LOUTRL,'(A)') ' RINJOB --> Error in selected options'
+      ISJOB = 1
+      GOTO 999
+C
+  901 WRITE(LOUTRL,'(A)') ' RINJOB --> Error in I/O Definition'
+      ISJOB = 2
+      GOTO 999
+C
+  999 CONTINUE
+      END
+#endif

@@ -1,0 +1,572 @@
+#!/bin/sh
+#
+# stage tape in for ALEPH
+#
+#       @(#)stagein	1.5 10/8/91 CERN CN-SW/DC Les Robertson
+#       @(#)alstagein	3.0 11/3/93 CERN ALEPH Joel Closier
+#       @(#)alstagein	5.0 28/4/94 CERN ALEPH Joel Closier for Baud stager
+#       @(#)alstagein	5.1  3/5/94 CERN ALEPH Uli Schafer "exit 0" removed
+#                                              stageqry used instead 
+#       @(#)alstagein	5.2  3/5/94 CERN ALEPH Uli Schafer remote access ALWS
+#       @(#)alstagein	5.3  8/8/94 CERN ALEPH Ronald Hagelberg  Year for Log 
+#       @(#)alstagein	5.4 23/1/95 mod. to adapt to new stageqry
+#       @(#)alstagein	6.1 18/12/95  stage in background,  if DLT is "as" and
+#                                    -q 1,  for -q 1-20 -s 590
+#       @(#)alstagein	6.2  9/1/96         for -q 1-10 -s 590
+#       @(#)alstagein   6.3  9/1/96  repaired for 999, for -q 1-10 -s 590
+#       @(#)alstagein   6.4  16/1/96  stage q 1-10, q 11-20, q 21-30 -s 590, -T
+#       @(#)alstagein   6.5  14/2/96  -s 590 (default), ERRC=10 if 10 DLT-files
+#				      after stageqry no test on label
+#       @(#)alstagein   6.5  01/3/96  works for -q 3-5 and  makes  ln -s
+#                                     .epio links if no filename given
+#       @(#)alstagein   6.6  17/4/96  -l xl introduced,  
+#                                     multifiles not only for DLT's,
+#                  10 files at a time for -q 1,11,21,31,41,51,61,71,81,91,
+#                                     stageqry with -q , -s only once
+#       @(#)alstagein   6.7  7/6/96  Hag. ALWS ignored (2 changes)
+#       @(#)alstagein   6.8  18/10/96 FBLXU variable n_virgule introduced 
+#       @(#)alstagein   6.9  5/12/96  Hag. ALWS ignored (2 changes)
+#       @(#)alstagein   7.0  8/1/97   Hag. DPMUSER now STAGE_USER
+#                                          default DPMSIZE=200
+#       @(#)alstagein   6.9  24/3/97  Fbl. date in log YYYY MM DD for merge
+#       @(#)alstagein   7.1  7/5/97   Hag. copies to Redwood and Redwood Y1
+#                                          sysreq tms vidmap  command needed
+#  Copyright (C) 1992,1993 by ALEPH
+#  All rights reserved
+#
+########
+#alstagein calls stagein and rfstat 
+#     Defaults for Aleph, if environment variable are not defined
+#                       -p alephdata
+#			-F F   			($STAGERECFM)
+#                       -b 32040   		($STAGEBLKSIZ)
+#                       -L 32040   		($STAGELRECL)
+#			-u aleph          	($STAGE_USER)
+#			-s 200             	($DPMSIZE), 590 for AS,AU,Y1
+#                       -link /aleph/data  	($DPMLINKDIR)
+#			-l xl -> STAGELABEL taken from TMS  
+#                       -q 1          		($STAGEFSEQ)
+#		  fileprot  -rwxrwxr-x       
+#		  filename  VID_fseq.epio , if fseq=1  VID.epio
+#     (before 6.5 filename  VID.fseq.label)
+########
+#
+# calling seqence:
+#
+# alstagein 
+#   {stagein parameters}
+#         -v VSN  [-q sequence]   [ -s size ] 
+#         [-V VID] [-g {CART|TAPE|SMCF...}] [-l {sl|nl|al|blp}]
+#         [-d {38000|10GC....}] [-f fileid] [-F record-format]
+#         [-L record-length] [-b block-size]
+#         [-N block-count] [-G] [-t retention-period] [-S server]
+#         [-C charconv]   [ -E error_action ]  [ -T ] [ -o ]
+#         [ -h host ] [-X xparm ] [ -z ] [-U fun]
+#         [-p pool] [-u user] [-s size] filename
+#
+#    {other parameters}
+#         [ -x ]  debug mode
+#         [ -K ]  for Cray compatibility      (ignored)
+#         [ -t ]  for test (no STAGE, no log, but echo stagein commands)
+#
+#          
+###############################################################################
+# ERRC = 0   file already staged
+#        1   file will be staged from tape
+#        2   file found on ALWS 
+#       11   10 files staged at a time (AS and AU DLT's for file 1,11,21....)
+#       12   if e.g. -q 22-25 
+# ERR  = 0   status all OK (rc of alstagein)
+#     ne 0   problem   = rc of stagein 1,2,4,28,192...197
+#                      = rc of rfstat $ALWS_FNM  +500 
+#      for  stagein rc=1 ERR= 100+10*linkexisterr+tmserr
+# set defaults, initialise variables
+#
+CMD="alstagein"
+CMD_STAGE="/usr/local/bin/stagein"
+CMD_QRY="/usr/local/bin/stageqry"
+ALWS_DEV='alws:al$data'
+VER="7.1"
+VSNVID=FALSE
+FILENAME=""
+NODE=`uname -n`
+FILELOG="$ALEPH/log/stagein.log"
+#FILELOG="/u/xu/closier/dev/stagein.log"
+DLT="no"
+AY=""     #first letter of Tapenumber e.g. "Y" for redwood
+AYC=""    #e.g. "Y" for redwood Copies of 3480's
+CONCATENATION="no"
+STAGE="yes"
+ST_SIZE_CART="200"
+ST_SIZE_LONG="590"
+#    
+###############################################################################
+#
+#                  functions
+#
+###############################################################################
+#
+usage()
+{
+  echo "usage: $CMD [-V vid]" 1>&2
+  echo "   [-v vsn] [-g {CART|SMCF...}] [-l {sl|nl|al|blp}] [-d {38000|10GC...}]" 1>&2
+  echo "   [-q sequence] [-s size]" 1>&2
+  echo "   [-f fileid] [-F record-format] [-L record-length] [-b block-size]" 1>&2
+  echo "   [-N block-count] [-G] [-S server] [-U fun]" 1>&2
+  echo "   [-p pool] [-u user] " 1>&2
+  echo "   [-x] [-t]" 1>&2
+  echo "       filename" 1>&2
+  exit 5
+}
+###############################################################################
+#
+#
+#
+# STAGE defaults for ALEPH if not specified, taken from env-variable or :-
+#
+STAGELABEL="xl"
+STAGEFSEQ=${STAGEFSEQ:-"1"}
+STAGERECFM=${STAGERECFM:-"F"}
+STAGELRECL=${STAGELRECL:-"32040"}
+STAGEBLKSIZ=${STAGEBLKSIZ:-"32040"}
+STAGE_USER=${STAGE_USER:-"aleph"}
+STAGECLEAN=${STAGECLEAN:-"$ALEPH/script/stage_clean"}
+STAGEIN_POOL="alephdata"
+#
+#  DPM defaults for ALEPH
+#
+DPMSIZE=${DPMSIZE:-"200"}
+DPMLINKDIR=${DPMLINKDIR:-"$ALEPH/data"}
+
+para=""
+parm=""
+while [ $# -gt 0 ]
+do
+  case $1 in
+  -link) DPMLINKDIR="$2" ; shift ;; 
+      *) para="$para $1";;
+  esac
+  shift
+done
+# parse parameters
+#
+set -- `getopt xrGctKv:V:g:l:d:q:f:F:L:b:N:T:S:p:u:s:U: $para`
+#
+while [ $# -gt 0 ]
+do
+  case $1 in
+  -x) set -x ;;
+  -c) CONCATENATION="yes" ;;
+  -r) parm="$parm $1"  ;;
+  -t) STAGE="no"  ;;
+  -G) parm="$parm $1"  ;;
+  -K) parm="$parm $1" ;;
+  --) ;;
+  -?)
+#     remaining options require a value
+      if [ $# -lt 2 ]
+        then
+          usage
+      fi
+      case $1 in 
+#     look for a tpread/tpwrite parameters
+      -v)  VSNVID=TRUE
+           ALEPHFILENAME=$2
+           ALEPHFILENAME=`echo $ALEPHFILENAME | tr "[A-Z]" "[a-z]"`
+    	   parm="$parm $1 $ALEPHFILENAME" ; shift ;; 
+      -V)  VSNVID=TRUE
+           ALEPHFILENAME=$2
+           ALEPHFILENAME=`echo $ALEPHFILENAME | tr "[A-Z]" "[a-z]"`
+    	   parm="$parm $1 $ALEPHFILENAME" ; shift ;; 
+      -l)  STAGELABEL="$2" ; shift ;; 
+      -g)  tmpparm="$1 $2" ; shift ;;
+      -q)  STAGEFSEQ="$2" ; shift ;; 
+      -f)  if [ $2 != "NOCHECK" ]
+           then
+               parm="$parm $1 $2" 
+           fi
+           shift ;;
+      -F)  STAGERECFM="$2" ; shift ;; 
+      -b)  STAGEBLKSIZ="$2" ; shift ;; 
+      -L)  STAGELRECL="$2" ; shift ;; 
+# for -F F (fixed)  -b and -L ahave to be equal
+# for labeld tapes best is not to define -b resp -L and to take -b and -L from
+# the label exept for NTK, Redwood and DLT700 were the default block-size is
+# larger e.g. 262144 and not enough space is available in the the label block
+#      Now POOL parameters
+      -p)  STAGEIN_POOL="$2" ; shift ;; 
+      -s)  DPMSIZE="$2" ; shift ;; 
+      -u)  STAGE_USER="$2" ; shift ;; 
+      -?)  parm="$parm $1 $2" ; shift ;; 
+      *)   parm="$parm $1 $2" ;;
+      esac
+      ;;
+# must be the filename
+  *)
+       if [ "$FILENAME" != "" ]
+         then
+           usage
+       fi
+       FILENAME=$1
+       ;;
+  esac
+  shift
+done
+#
+TWO_LET=`echo $ALEPHFILENAME | awk '{print substr($0,1,2)}'`
+#
+#    size is defined in    group  setenv DPMSIZE
+#    Stager default is in /etc/STGCONFIG
+#    alstagein takes what is in   -s    except for
+#    Cartridges  ab, ac or am    $ST_SIZE_CART  (e.g. 200MBytes)
+#    DLT             as or au    $ST_SIZE_CART  (e.g. 590MBytes)
+if [ "$TWO_LET" = "ab" -o  "$TWO_LET" = "ac"  -o  "$TWO_LET" = "am" ]
+then
+     if [ $DPMSIZE -gt 205 ]
+     then
+           DPMSIZE=$ST_SIZE_CART
+     fi
+fi
+#
+#    check if copied to Redwood in Robot 
+#  generic shift because STK-Redwood service exists only on shift
+   STAG_MAP=`sysreq tms vidmap $ALEPHFILENAME q \(generic shift`
+   tmserr=$?
+#echo "RH.tmserr="$tmserr
+   if [ $tmserr -eq 0 ]
+   then 
+   AY=`echo $STAG_MAP | awk '{print substr($0,1,1)}'`
+   YFSEQ1=`echo $STAG_MAP | awk '{print $16}'`
+      if [ "$AY" = "Y" ] 
+      then
+         STAGEBLKSIZ="262144"
+         STAGELRECL="262144"
+         STAGELABEL=`echo $STAG_MAP | awk '{print $15}' | tr "[A-Z]" "[a-z]"`
+         if [ "$YFSEQ1" -ne "" ]
+         then 
+            AYC="YCOPY"
+            YTAPEN=`echo $STAG_MAP | awk '{print $1}' | tr "[A-Z]" "[a-z]"`
+            YFSEQ1=`expr ${YFSEQ1} + 0 `
+            YFSEQ2=`echo $STAG_MAP | awk '{print $17}'`
+            YFSEQ2=`expr ${YFSEQ2} \* 1`
+         fi
+      fi
+   fi
+#echo "RH.tmserr= "$tmserr $YTAPEN   $STAGELABEL   $YFSEQ1 $YFSEQ2
+
+#
+#    if label was not defined, by default it was put to  -l xl
+#    in this case the label should be taken from tms
+#echo "RH.STAGELABEL0=$STAGELABEL"
+if [ "$STAGELABEL" = "xl" ] 
+then
+#echo "RH.ALEPHFILENAME="$ALEPHFILENAME
+#echo "RH.STAGEL1="`sysreq tms q v $ALEPHFILENAME`
+   STAGEL1=`sysreq tms q v $ALEPHFILENAME`
+   tmserr=$?
+#echo "RH.tmserr="$tmserr
+   if [ $tmserr -eq 1 ]
+   then
+      if [ "$TWO_LET" = "as" -o  "$TWO_LET" = "at"  -o  "$TWO_LET" = "au" -o  "$TWO_LET" = "av" -o "$TWO_LET" = "y1" ]
+      then
+         STAGELABEL="al"
+      else
+         STAGELABEL="sl"
+      fi
+   else
+#STAGELABEL=`sysreq tms q v $ALEPHFILENAME | awk '{print $5}' | tr "[A-Z]" "[a-z]"`
+      STAGELABEL=`echo $STAGEL1 | awk '{print $5}' | tr "[A-Z]" "[a-z]"` 
+   fi  
+fi
+#echo "RH.STAGELABEL=" $STAGELABEL
+#
+if [ "$TWO_LET" = "as" -o  "$TWO_LET" = "au" ]
+then
+     DLT="yes"
+     DPMSIZE=$ST_SIZE_LONG
+fi
+if [ "$AY" = "Y" -a "$AYC" != "YCOPY" ]
+then
+     DPMSIZE=$ST_SIZE_LONG
+fi
+#
+#  if there is concatenation we consider that it is not a DLT
+if [ "$CONCATENATION" = "yes" ]
+then
+     DLT="no"
+     DPMSIZE=$ST_SIZE_CART
+fi 
+#
+#  test if there is one file or several to stage
+#
+
+#>>>>
+n_virgule=`echo $STAGEFSEQ | awk -F, '{print NF}'`
+#<<
+
+nb_file=`echo $STAGEFSEQ | awk -F- '{print NF}'`
+if [ $n_virgule -ne 1 ]
+then
+   nb_file=1
+fi
+if [ $nb_file -ne 1 ]
+then
+  FSEQMIN=`echo $STAGEFSEQ | awk -F- '{print $1}'`
+  FSEQMAX=`echo $STAGEFSEQ | awk -F- '{print $2}'`
+  FSEQNAME=$FSEQMIN
+else
+  FSEQNAME=$STAGEFSEQ
+fi
+#
+#  create the file name
+#
+if [ -z "$FILENAME" ]
+  then
+     if [ $FSEQNAME -eq 1 ]
+     then
+        FILENAME="${ALEPHFILENAME}.epio"
+     else
+        FILENAME="${ALEPHFILENAME}_$FSEQNAME.epio"
+     fi
+fi
+if [ "$VSNVID" = "FALSE" ]
+  then
+    echo $CMD: "{vsn or vid} and filename required" 1>&2
+    usage
+fi
+#
+##  test if we have to stage several files
+#
+  if [ "$STAGEFSEQ" = "1-" ]         #not yet implemented in stagein
+  then
+    i=1
+    FILENAMELONG="$DPMLINKDIR/${ALEPHFILENAME}.epio"
+    while [ "$i" -lt "100" ]
+    do
+      i=`expr $i + 1`
+      FILENAMELONG="$FILENAMELONG $DPMLINKDIR/${ALEPHFILENAME}_$i.epio"
+    done
+  else
+#
+#  construct filename when we have several files
+#
+    if [ $nb_file -ne 1 ]
+    then
+       i=$FSEQMIN
+       if [ $i -eq 1 ]
+       then
+          FILENAMELONG="$DPMLINKDIR/${ALEPHFILENAME}.epio"         
+       else
+          FILENAMELONG="$DPMLINKDIR/${ALEPHFILENAME}_$i.epio"          
+       fi       
+       BASE=`echo $FILENAME | awk -F. '{print $1}'`
+       while [ $i -ne $FSEQMAX ]
+       do
+          i=`expr $i + 1`
+#          FILENAMELONG="$FILENAMELONG $DPMLINKDIR/${BASE}_$i.epio"
+          FILENAMELONG="$FILENAMELONG $DPMLINKDIR/${ALEPHFILENAME}_$i.epio"
+       done
+    fi
+  fi
+#
+#
+STAGEFLS="-b $STAGEBLKSIZ -F $STAGERECFM -L $STAGELRECL -l $STAGELABEL"
+DPMSZ="-s $DPMSIZE"
+nm_file=1
+
+   if [ $nb_file -ne 1 ]
+   then
+      if [ "$CONCATENATION" = "yes" ]
+      then
+        STAGEFLAG="-q $STAGEFSEQ $STAGEFLS"
+      else
+        STAGEFLAG="-q $FSEQMIN $STAGEFLS"
+        STAGEFLAGLONG="$DPMSZ -q $FSEQMIN-$FSEQMAX $STAGEFLS $FILENAMELONG"
+      fi
+   else
+#>>>>>>
+      if [ $n_virgule -eq 1 ]
+      then
+
+
+         if [ "$DLT" = "yes" -o  "$AY" = "Y" ]
+         then
+            DPMSZ="-s $ST_SIZE_LONG"
+            if [ "$AYC" = "YCOPY" ]
+            then
+               STAGEFSEQ=`expr ${YFSEQ1} + $STAGEFSEQ - 1 `
+               if [ $STAGEFSEQ -gt $YFSEQ2 ]
+               then
+                  echo "alstagein, file $STAGEFSEQ not existing on $ALEPHFILENAME, rc=7"
+                  exit 7
+               fi
+               DPMSZ="-s $ST_SIZE_CART"
+            fi 
+#            if [ $STAGEFSEQ -eq 1 -o $STAGEFSEQ -eq 11 -o $STAGEFSEQ -eq 21 -o $STAGEFSEQ -eq 31 -o $STAGEFSEQ -eq 41 -o $STAGEFSEQ -eq 51 -o $STAGEFSEQ -eq 61 -o $STAGEFSEQ -eq 71 -o $STAGEFSEQ -eq 81 -o $STAGEFSEQ -eq 91  -o $STAGEFSEQ -eq 101 -o $STAGEFS -eq 111 -o $STAGEFSEQ -eq 121 -o $STAGEFSEQ -eq 131]
+# to stage 1o files at a time for  $STAGEFSEQ -eq 1 ..... (ST10=-1)
+            ST10=`expr ${STAGEFSEQ} / 10 \* 10 - ${STAGEFSEQ}`
+            if [ $ST10 -eq -1 ]
+            then  
+               nm_file=10
+               STAGEFLAGLONG="$DPMSZ -q $STAGEFSEQ-`expr ${STAGEFSEQ} + 10 - 1` $STAGEFLS" 
+            fi
+         fi
+
+      fi
+#<<<
+      STAGEFLAG="-q $STAGEFSEQ $STAGEFLS"
+   fi
+
+DPMFLAG="-p $STAGEIN_POOL -u $STAGE_USER"
+
+#
+#  test if the file exists, to avoid  tms
+#
+locallink=`echo $DPMLINKDIR | awk -F: '{print $2}'`
+linkexist=`ls $locallink/$FILENAME > /dev/null 2>&1`
+linkexisterr=$?
+if [ $linkexisterr -ne 0 ]
+then
+  tms=`sysreq tms q v $ALEPHFILENAME`
+  tmserr=$?
+  if [ $tmserr -eq 1 ]
+    then
+      parm="$parm $tmpparm" 
+  fi
+fi
+ERR=999
+ERRC=1 
+USE=`id | cut -f2 -d"(" | cut -f1 -d")"`
+DATE_LOG=`date "+%Y %m %d %H:%M:%S"`
+DATE=`date`
+#DATEA=`echo $DATE | awk '{print $6}'`
+DATEA=`date "+%Y"`
+DATEB=`echo $DATE | awk '{print $2}'`
+DATEC=`echo $DATE | awk '{print $3}'`
+DATEC=`expr ${DATEC} + 0`
+DATED=`echo $DATE | awk '{print $4}'`
+DATE=`echo $DATEA $DATEB $DATEC $DATED`
+
+STAGE_VID=$ALEPHFILENAME
+STAGE_QFSEQ=$FSEQNAME
+      if [ "$AYC" = "YCOPY" ]
+      then
+         STAGE_VID=`echo $YTAPEN | tr "[a-z]" "[A-Z]"`
+         STAGE_QFSEQ=$STAGEFSEQ
+      fi
+STAGE_VID=`echo $STAGE_VID |tr "[a-z]" "[A-Z]"`
+STAGE_FNSEQ="$STAGE_VID.$STAGE_QFSEQ"
+# check on availability on ALWS, -q u doesn't work except AA tapes on alws only
+#echo "RH. "$CMD_QRY -P -V $STAGE_VID -q $STAGE_QFSEQ \| grep $STAGE_FNSEQ
+$CMD_QRY -P -V $STAGE_VID -q $STAGE_QFSEQ | grep "/$STAGE_FNSEQ" >/dev/null && ERRC=0
+#if [ \( $? != 0 \) -a \( "$STAGEFSEQ" != "u" \) -a \( "$HOST" = "shift9" \) ]
+if [ \( $? != 0 \) -a \( "$STAGEFSEQ" != "u" \) ]
+  then
+  ALWS_FNM="$ALWS_DEV:${ALEPHFILENAME}_$FSEQNAME.$STAGELABEL"
+  rfstat $ALWS_FNM > /dev/null 2>&1 && ln -sf $ALWS_FNM $locallink/$FILENAME \
+   && ERRC=2 
+  ERR=$?
+  if [ $ERR -ne 0 ]
+  then
+     ERR=`expr $ERR + 500`
+  fi
+  if [ $ERRC -eq 2 ]
+  then
+     ERR=`expr $ERR + 500`
+  fi
+fi
+      if [ "$AYC" = "YCOPY" ]
+      then
+#echo "RH.parm= "$parm $YTAPEN  $ALEPHFILENAME $STAGELABEL   $YFSEQ1 $YFSEQ2 $STAGEFSEQ
+           parm=`echo $parm|sed s/"$ALEPHFILENAME"/"$YTAPEN"/`
+#echo "RH.parm= "$parm 
+      fi 
+#  ERRC -eq 2  if data exist on ALWS. 
+#  Today 6-6-96 access to ALWS data does not work because link is not solved
+#  Today 6-12-96 access to ALWS data does not work because link is not solved
+# if [ $ERRC -eq 1 -o $nb_file -ne 1 ] 
+if [ $ERRC -eq 1 -o $nb_file -ne 1 -o $ERRC -eq 2 ]
+then
+   if [ $nb_file -ne 1 ] 
+   then              # stage range of files requested
+      if [ "$STAGE" = "yes" ]     
+      then
+         $CMD_STAGE $parm $DPMFLAG $STAGEFLAGLONG
+         ERR=$?
+      else
+         echo $CMD_STAGE $parm $DPMFLAG $STAGEFLAGLONG   
+      fi
+      ERRC=12 
+   else          # one file requested, stage more in background
+      if [ $nm_file -ne 1 ]
+      then 
+         if [ "$STAGE" = "yes" ] 
+         then
+            $CMD_STAGE $parm $DPMFLAG $STAGEFLAGLONG &
+            sleep 10   #that next stagein starts after the bg stage
+         else
+            echo $CMD_STAGE $parm $DPMFLAG $STAGEFLAGLONG   
+         fi
+         ERRC=11 
+      fi 
+   fi
+fi
+#   stage of single file  -------------- 
+# if [ $ERRC -ne 2 -a $nb_file  -eq 1 ]  #   access to ALWS does not work
+if [ $nb_file  -eq 1 ] 
+then
+  if [ "$STAGE" = "yes" ]
+  then
+    if [ $n_virgule -ne 1 ]
+    then 
+       $CMD_STAGE $parm -s $DPMSIZE $DPMFLAG $STAGEFLAG 
+       ERR=$?
+    else
+       $CMD_STAGE $parm -s $DPMSIZE $DPMFLAG $STAGEFLAG $DPMLINKDIR/$FILENAME
+       ERR=$? 
+    fi
+  else
+    if [ $n_virgule -ne 1 ]
+    then 
+       echo $CMD_STAGE $parm -s $DPMSIZE $DPMFLAG $STAGEFLAG 
+    else
+       echo $CMD_STAGE $parm -s $DPMSIZE $DPMFLAG $STAGEFLAG $DPMLINKDIR/$FILENAME
+    fi
+  fi
+fi   
+#  write a log file for statistics and control
+DATE2=`echo $DATE | awk '{print $4}'`
+DATE1=`date`
+DATE1=`echo $DATE1 | awk '{print $4}'`
+DAYTIME=86400
+h1=`echo $DATE2 | awk -F: '{print $1}'`
+m1=`echo $DATE2 | awk -F: '{print $2}'`
+s1=`echo $DATE2 | awk -F: '{print $3}'`
+h1=`expr ${h1} \* 3600`
+m1=`expr ${m1} \* 60`
+SDATE=`expr ${h1} + ${m1} + ${s1}`
+h2=`echo $DATE1 | awk -F: '{print $1}'`
+m2=`echo $DATE1 | awk -F: '{print $2}'`
+s2=`echo $DATE1 | awk -F: '{print $3}'`
+h2=`expr ${h2} \* 3600`
+m2=`expr ${m2} \* 60`
+SDATE1=`expr ${h2} + ${m2} + ${s2}`
+ELAPSED=`expr ${SDATE1} - ${SDATE}`
+if [ $SDATE1 -lt $SDATE ]
+  then
+    ELAPSED=`expr ${DAYTIME} + ${ELAPSED}`
+fi
+he=`expr ${ELAPSED} / 3600 | awk -F. '{print $1}'`
+me=`expr ${ELAPSED} - 3600 \* ${he}`
+me=`expr ${me} / 60 | awk -F. '{print $1}'`
+se=`expr ${ELAPSED} - 3600 \* ${he} - 60 \* ${me}`
+if [ "$STAGE" = "yes" ]
+then
+  echo "$DATE_LOG $he:$me:$se $USE $FILENAME rc=($ERRC $ERR) $VER $NODE">> $FILELOG
+else
+  echo "$DATE_LOG $he:$me:$se $USE $FILENAME rc=($ERRC $ERR) $VER $NODE"
+fi 
+exit $ERR
+
+
+

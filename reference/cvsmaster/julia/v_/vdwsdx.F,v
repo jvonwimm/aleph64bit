@@ -1,0 +1,167 @@
+head	1.2;
+access;
+symbols
+	jul313_3:1.2
+	jul313_2:1.2
+	jul313_1:1.2
+	jul313:1.2
+	jul312_1:1.2
+	jul312:1.2
+	jul311:1.2
+	jul310_1:1.2
+	jul310:1.2
+	jul309_1:1.2
+	jul309:1.2
+	jul308_6:1.2
+	jul308_5:1.2
+	jul308_4:1.2
+	jul308_3:1.2
+	jul308_2:1.2
+	jul308_1:1.2
+	jul308:1.2
+	jul307_4:1.2
+	jul307_3:1.2
+	jul307_2:1.2
+	jul307_1:1.2
+	jul307:1.2
+	jul306_3:1.2
+	jul306_2:1.2
+	jul306_1:1.2
+	jul306:1.2
+	jul305_4:1.2
+	jul305_3:1.2
+	jul305_2:1.2
+	jul305_1:1.2
+	jul305:1.2
+	jul304_3:1.2
+	jul304_2:1.2
+	jul304_1:1.2
+	jul304:1.2
+	jul303_7:1.2
+	jul303_6:1.2
+	jul303_5:1.2
+	jul303_4:1.2
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2
+	jul280_1:1.1
+	jul280:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.06.03.10.29.14;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.05.06.15.54.09;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@Mods for julia 281 release. See news for details
+@
+text
+@      SUBROUTINE VDWSDX(IV,VUW,AVEC,TNG,DISP)
+C ----------------------------------------------------------------------
+C!  VDWSDX calculates the displacement in a hit (at VUW) in a
+C!         given view for a misalignment described by the alignment
+C!         quantities in AVEC for wafer JWAF.
+C!
+C - Author         Manoj Thulasidas  5-Nov-1994
+CKEY V_DECK VDET
+C
+C  Input :  IV    - view
+C           VUW   - local coordinates
+C           AVEC  - six dimensional vector of displacements in
+C                   the three alignment translations and three
+C                   rotations.
+C           TNG   - tangent of the track incident angle (= track slope)
+C  Output : DISP  - displacement in position (to be applied to either
+C                   U [view=1] or W [view=2] coordinate) by the
+C                   caller.
+C
+C -----------------------------------------------------------------------
+#ifndef DOC
+      REAL VUW(3), AVEC(6), TNG, DISP
+      INTEGER IV
+      REAL  JACOB(6), VDOT
+C-- get the jacobian
+      CALL VDJACB(IV,VUW,TNG,JACOB)
+C-- error disp = [jacob].[avec]
+      DISP = VDOT(AVEC,JACOB,6)
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@re-installed jul280 from the historian source because some routines were missing.
+@
+text
+@d1 1
+a1 1
+      SUBROUTINE VDWSDX(IV,VUW,AVEC,JWAF,TNG,DISP)
+a14 1
+C           JWAF  - global wafer number a la geometry package.
+d23 4
+a26 25
+      INTEGER IV, JWAF
+      REAL WCENT(3), JACOB(6), R0, Z0, V, U, W, VDOT
+      INTEGER VXYZWA, IERR
+      IERR = VXYZWA(JWAF,WCENT)
+      Z0 = WCENT(3)
+      R0 = SQRT(WCENT(1)**2+WCENT(2)**2)
+      V = VUW(1)
+      U = VUW(2)
+      W = VUW(3)
+C-- the jacobian of the displacements
+      IF (IV.EQ.1) THEN
+        JACOB(1) = TNG
+        JACOB(2) = 0.0
+        JACOB(3) = -1.0
+        JACOB(4) = -U
+        JACOB(5) = -(TNG*W)
+        JACOB(6) = -(TNG*U)
+      ELSEIF (IV.EQ.2) THEN
+        JACOB(1) = TNG
+        JACOB(2) = -1.0
+        JACOB(3) = 0.0
+        JACOB(4) = W
+        JACOB(5) = -(TNG*W)
+        JACOB(6) = -(TNG*U)
+      ENDIF
+@

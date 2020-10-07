@@ -1,0 +1,88 @@
+\chapter{\label{sec-MB}Modifying ALPHA banks}
+\par
+ALPHA subroutines provide protection against inadvertently
+overwriting data read from the
+input file. In this section, we describe how to modify the internal
+ALPHA
+banks (QVEC and QVRT) intentionally.
+For ``standard''
+operations (creating new tracks,
+vector operations, Lorentz transformations, etc.), ALPHA utility
+routines are available (see ch. \ref{sec-KI}). The tools described
+here
+can be used when
+standard utilities do not exist.
+ 
+\section{\label{sec-MBU}User track / vertex sections}
+\par
+The subroutines QSUSTR or QSUSVX may be used to reserve certain
+track / vertex numbers for your own exclusive usage; they will never
+be
+modified by any ALPHA utility routine unless explicitly required.
+These routines may be called from the user initialization routine QUINIT.
+ 
+\subsection{\label{sec-MBRST}Reserve user space for tracks}
+\par
+\fbox{CALL QSUSTR (NUSTR)}
+\par
+\par
+Note that ALPHA does not clear (zero) this user space after each event.
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{Input argument}
+\indentitem{NUSTR}number of user tracks in bank QVEC
+\end{indentlist}
+\begin{itemize}
+\item The track numbers reserved are 1 ... NUSTR.
+\item The first track number used in any ALPHA routine will be NUSTR+1.
+\end{itemize}
+User track space is allocated only if this routine is called.
+\newpage 
+\subsection{\label{sec-MBRSV}Reserve user space for vertices}
+\par
+\fbox{CALL QSUSVX (NUSVX)}
+\par
+\par
+Same as QSUSTR (\ref{sec-MBRST}) :
+Replace ``track'' by ``vertex'' and ``QVEC'' by ``QVRT''.
+ 
+Utility routines can be called with user tracks as arguments. For
+these
+tracks, only the basic attributes (columns 1 to 7) are
+modified : QX,QY,QZ,QE,QP,QM,QCH. All other
+columns are left unchanged (and NOT set to 0!).
+ 
+\section{\label{sec-MBTV}Modifying track / vertex attributes}
+\par
+All internal ALPHA banks are standard tabular BOS banks and can be
+modified like other banks. For the banks QVEC and QVRT, an additional
+possibility is foreseen: these banks are passed as arguments to
+subroutine QUEVNT and can be used as ordinary 2$-$dimensional arrays.
+\begin{verbatim}
+         SUBROUTINE QUEVNT (QT,KT,QV,KV)
+         DIMENSION QT(KCQVEC,1), KT(KCQVEC,1), QV(KCQVRT,1), KV(KCQVRT,1)
+         ...
+         QT(JQVEQP,ITK) = 1.
+         CALL ABC (QT,KT,QV,KV)
+         END
+         ...
+         SUBROUTINE ABC (QT,KT,QV,KV)
+\end{verbatim}
+\begin{indentlist}{ 3.75cm}{ 4.00cm}
+\indentitem{Remarks :}
+QT and KT (tracks) refer to the same array (integer / real*4)
+and actually to the address of the bank QVEC plus a 2$-$word
+offset for the bank header (LMHLEN). QV and KV are defined
+similarly for bank QVRT (vertices).
+ 
+\indentitem{Dimension :}
+Use the mnemonic symbols KCQVEC and KCQVRT
+(Fortran parameters defined in QCDE) for the number of
+columns. The number of rows can be set to any positive number.
+ 
+\indentitem{QT(JQVEQP,ITK) :}
+Row number = ALPHA track number.
+column number = attribute. For all attributes, parameters
+are available in QCDE. The parameter names follow the usual
+convention (see App. \ref{sec-BNKDES}).
+``J'' + 3 char. of the bank name + 2 char. attribute description.
+\end{indentlist}

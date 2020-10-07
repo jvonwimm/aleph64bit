@@ -1,0 +1,82 @@
+      SUBROUTINE ECPRLO(BSASTA,USASTA)
+C---------------------------------------------------------------------
+C!  COMPUTES THE BETA/ALPHA AND 1/ALPHA PARAMETERS OF THE EM SHOWER
+C!
+C!  AUTHOR : A. FALVARD
+C!  MODIFIED:
+C?
+C!======================================================================
+#ifndef DOC
+#include "etpinf.h"
+#include "ecmode.h"
+      DIMENSION SOM(5),SMOY(5),S2MOY(5),NSTA(3)
+      P=PTTP
+      ESTACT=0.
+      NSTAT=3
+      NSTA(1)=10
+      NSTA(2)=23
+      NSTA(3)=12
+      DO 1 I=1,LESTAC
+      ESTACT=ESTACT+ESTACK(I)
+ 1    CONTINUE
+C
+C  PARAMETRISATION BADIER BARDADIN SAADI
+C
+      BSASTA=1./(5.2093+2.77*ALOG10(P))
+      USASTA=BSASTA/0.538
+C
+C  PARAMETRISATION TRONQUEE POUR GERBE TRONQUEE
+C
+      BSASTA=0.182+0.0180*ALOG(1./P)
+      USASTA=0.316+0.0328*ALOG(1./P)
+      B=0.0184/P
+      ALPHA=1./USASTA
+      BETA=BSASTA/USASTA
+      ALPHA0=ALPHA
+      BETA0=BETA
+      NITERA=3
+      DO 2 K=1,NITERA
+      NPLAN=0
+      CALL VZERO(SOM,5)
+      CALL VZERO(SMOY,5)
+      CALL VZERO(S2MOY,5)
+      SMOYS=0.
+      S2MOYS=0.
+      DO 3 I=1,NSTAT
+      DO 4 J=1,NSTA(I)
+      NPLAN=NPLAN+1
+      IF (ECPLAN(NPLAN).LT.0.) THEN
+         CALL RERROR ('ECPRLO ' ,1,' negative radiation length')
+         GO TO 4
+      ENDIF
+      IF(ALPHA.GT.30.OR.ALPHA.LT.0.)GOTO 2
+      FI=PROLOT(ECPLAN(NPLAN),ALPHA,BETA,B)
+      SOM(I)=SOM(I)+FI
+      SMOY(I)=SMOY(I)+FI*ECPLAN(NPLAN)
+      S2MOY(I)=S2MOY(I)+FI*ECPLAN(NPLAN)**2
+ 4    CONTINUE
+      IF (SOM(I).EQ.0.) THEN
+        BSASTA=100.
+        USASTA=100.
+        RETURN
+      ENDIF
+      SMOY(I)=SMOY(I)/SOM(I)
+      S2MOY(I)=S2MOY(I)/SOM(I)
+      SMOYS=SMOYS+SMOY(I)*ESTACK(I)
+      S2MOYS=S2MOYS+S2MOY(I)*ESTACK(I)
+ 3    CONTINUE
+      SMOYS=SMOYS/ESTACT
+      S2MOYS=S2MOYS/ESTACT
+      BSASTA=1./SMOYS
+      USASTA=(S2MOYS-SMOYS**2)/SMOYS**2
+      ALPHA=1./USASTA
+      BETA=BSASTA/USASTA
+      IF(ALPHA.GT.2.*ALPHA0.OR.BETA.GT.2.*BETA0)THEN
+        BSASTA=100.
+        USASTA=100.
+        RETURN
+      ENDIF
+ 2    CONTINUE
+      RETURN
+      END
+#endif

@@ -1,0 +1,113 @@
+head	1.2;
+access;
+symbols
+	dbase22:1.2
+	dbase21:1.2
+	dbase20:1.2
+	dbase19:1.2
+	dbase18:1.2
+	dbase17:1.2
+	dbase04:1.2
+	dbase03:1.1.1.1
+	dbase02:1.1.1.1
+	dbase01:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	97.02.17.14.05.38;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.02.12.10.06.02;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.02.12.10.06.02;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@move *.c files to /c
+@
+text
+@$!========================================================================
+$!
+$! Name      : DBSLIB:[EXEC]DBSCOM.COM
+$!
+$! Purpose   : run any PROG program of DBSLIB
+$!             the program is assumed to read data cards on PROG.CARDS
+$!
+$! Arguments :
+$!   P1 = program name : EPTODA, DAFCAR, SBANK, CHKCRD, CARDAF, EPIOFMT, UPDDAF
+$!        OBJ            link, execute
+$!        EXE                  execute
+$!   P3   DEB   execute in debug mode
+$!        NODEB execute in nodebug mode
+$!
+$! Created  15-MAR-1990    F.Ranjard
+$!
+$!========================================================================
+$   ON ERROR     THEN $ GOTO EXIT
+$   ON CONTROL_Y THEN $ GOTO EXIT
+$!
+$ ASS 'P1'.CARDS FOR007
+$ if P2 .eqs. "EXE" then goto REXE
+$ if P2 .eqs. "OBJ" then goto ROBJ
+$ROBJ:
+$ CERNLIB
+$ LINK/'P3' -
+  DBSLIB:DBASE_D/LIB/INCLUDE=('P1'),-
+  ALE:ALEPHLIB_D/LIB/INCLUDE=(BABEND),-
+  ALE:BOS77_D/LIB/INCLUDE=(MDARD,DAFRDS),-
+  'LIB$'
+$REXE:
+$ ASS SYS$COMMAND SYS$INPUT
+$ RUN/'P3' 'P1'
+$EXIT:
+$ DEASS FOR006
+$ DEASS FOR007
+$ EXIT
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 1
+a3 1
+$! Name      : AL1$USER0:[RANJARD.DBASE]DBSCOM.COM
+d9 1
+a9 2
+$!   P1 = program name
+$!   P2 = FOR   compile, link, execute
+a23 3
+$ if P2 .eqs. "FOR" then goto RFOR
+$RFOR:
+$ FOR/DEB/NOOPT 'P1'
+d26 2
+a27 1
+$ LINK/'P3' 'P1',-
+@
+
+
+1.1.1.1
+log
+@1st release of dbase library
+@
+text
+@@

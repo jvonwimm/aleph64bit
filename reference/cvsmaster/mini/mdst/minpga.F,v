@@ -1,0 +1,151 @@
+head	1.2;
+access;
+symbols
+	mini202_9:1.2
+	mini202_8:1.2
+	mini202_7:1.2
+	mini202_6:1.2
+	mini202_5:1.2
+	mini202_4:1.2
+	mini202_2:1.2
+	mini202_1:1.2
+	mini202:1.2
+	mini201_1:1.2
+	mini104_1:1.2
+	mini103_1:1.2
+	mini102_7:1.2
+	mini102_5:1.2
+	mini102_4:1.2
+	mini102_3:1.2
+	mini102_2:1.2
+	mini102_1:1.2
+	mini102:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.08.22.09.23.33;	author jachol;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.08.15.11.09.43;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.08.15.11.09.44;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@update HAC minpga
+@
+text
+@      SUBROUTINE MINPGA
+C
+CKEY MDST /INTERNAL
+C-----------------------------------------------------------------------
+C! Fill PGAC bank from DGAC.
+C
+C     Author: Agnieszka Jacholkowska    17-Oct-94
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+C
+      PARAMETER (AFACTM=10000.,DFACTM=10000.,EFACTM=1000.)
+#include "pgacjj.h"
+#include "dgacjj.h"
+
+C!    set of intrinsic functions to handle BOS banks
+#include "bmacro.h"
+C
+C
+C++   Pick up DGAC bank.
+C
+      KDGAC = NLINK('DGAC',0)
+      IF (KDGAC.LE.0) RETURN
+      NDGAC = LROWS(KDGAC)
+      IF (NDGAC.LE.0) RETURN
+C
+C++   Create PGAC bank.
+C
+      NPGAC = NDGAC
+      LEN = LMHLEN + LPGACA * NDGAC
+      CALL AUBOS('PGAC',0,LEN, KPGAC,IGARB)
+      CALL BLIST(IW,'S+','PGAC')
+      IF (IGARB.GE.2) THEN
+         RETURN
+      ELSE IF (IGARB.NE.0) THEN
+         KDGAC = NLINK('DGAC',0)
+      ENDIF
+      IW(KPGAC+LMHCOL) = LPGACA
+      IW(KPGAC+LMHROW) = NDGAC
+C
+C++   Fill PGAC bank.
+C
+      DO 100 I=1,NDGAC
+         RW(KROW(KPGAC,I)+JPGAEC) = FLOAT(ITABL(KDGAC,I,JDGAEC))/EFACTM
+         RW(KROW(KPGAC,I)+JPGATC) = FLOAT(ITABL(KDGAC,I,JDGATC))/AFACTM
+         RW(KROW(KPGAC,I)+JPGAPC) = FLOAT(ITABL(KDGAC,I,JDGAPC))/AFACTM
+         RW(KROW(KPGAC,I)+JPGAR1) = FLOAT(ITABL(KDGAC,I,JDGAR1))/1000.
+         RW(KROW(KPGAC,I)+JPGAR2) = FLOAT(ITABL(KDGAC,I,JDGAR2))/1000.
+         RW(KROW(KPGAC,I)+JPGAF4) = FLOAT(ITABL(KDGAC,I,JDGAF4))/1000.
+         MDIST = ITABL(KDGAC,I,JDGADM)
+         IF (MDIST.EQ.-1) MDIST = +99990
+         RW(KROW(KPGAC,I)+JPGADM) = FLOAT(MDIST)/10.
+         IW(KROW(KPGAC,I)+JPGAST) = ITABL(KDGAC,I,JDGAST)
+         IW(KROW(KPGAC,I)+JPGAQU) = ITABL(KDGAC,I,JDGAQU)
+         RW(KROW(KPGAC,I)+JPGAQ1) = FLOAT(ITABL(KDGAC,I,JDGAQ1))/100.
+         RW(KROW(KPGAC,I)+JPGAQ2) = FLOAT(ITABL(KDGAC,I,JDGAQ2))/100.
+         RW(KROW(KPGAC,I)+JPGAM1) = FLOAT(ITABL(KDGAC,I,JDGAM1))/100.
+         RW(KROW(KPGAC,I)+JPGAM2) = FLOAT(ITABL(KDGAC,I,JDGAM2))/100.
+         RW(KROW(KPGAC,I)+JPGAMA) = FLOAT(ITABL(KDGAC,I,JDGAMA))/EFACTM
+         RW(KROW(KPGAC,I)+JPGAER) = FLOAT(ITABL(KDGAC,I,JDGAER))/EFACTM
+         RW(KROW(KPGAC,I)+JPGATR) = FLOAT(ITABL(KDGAC,I,JDGATR))/AFACTM
+         RW(KROW(KPGAC,I)+JPGAPR) = FLOAT(ITABL(KDGAC,I,JDGAPR))/AFACTM
+
+         RW(KROW(KPGAC,I)+JPGAEF) = FLOAT(ITABL(KDGAC,I,JDGAEF))/AFACTM
+         RW(KROW(KPGAC,I)+JPGAGC) = FLOAT(ITABL(KDGAC,I,JDGAGC))/AFACTM
+         RW(KROW(KPGAC,I)+JPGAZS) = FLOAT(ITABL(KDGAC,I,JDGAZS))/AFACTM
+         RW(KROW(KPGAC,I)+JPGAPL) = FLOAT(ITABL(KDGAC,I,JDGAPL))/AFACTM
+         RW(KROW(KPGAC,I)+JPGAPH) = FLOAT(ITABL(KDGAC,I,JDGAPF))/AFACTM
+         IW(KROW(KPGAC,I)+JPGAPN) = ITABL(KDGAC,I,JDGAPN)
+         IW(KROW(KPGAC,I)+JPGAFA) = ITABL(KDGAC,I,JDGAFA)
+
+         IW(KROW(KPGAC,I)+JPGAPE) = ITABL(KDGAC,I,JDGAPE)
+  100 CONTINUE
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d69 1
+a69 1
+         RW(KROW(KPGAC,I)+JPGAPF) = FLOAT(ITABL(KDGAC,I,JDGAPF))/AFACTM
+@
+
+
+1.1.1.1
+log
+@1st release of mini under cvs
+@
+text
+@@

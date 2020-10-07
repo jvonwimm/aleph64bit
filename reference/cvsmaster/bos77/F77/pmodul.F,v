@@ -1,0 +1,102 @@
+head	1.3;
+access;
+symbols
+	bos3489-1:1.3.0.2
+	bos3589:1.3
+	bos3489:1.3
+	bos3389:1.3
+	bos3289:1.3
+	bos3189:1.3
+	bos3089:1.3
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	96.03.11.12.56.30;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.01.19.16.51.00;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.36;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.37;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE PMODUL
+*     PRINT TABLE OF ALL SUBNAMS, HISTOGRAM OFFSETS ETC
+#include "concom.h"
+      CALL TMODUL(' ')
+      IF(NHN.EQ.0) GOTO 100
+      WRITE(ICPR,101)
+      DO 10 I=1,NHN,5
+      WRITE(ICPR,102) (IHB(7,J),IHB(8,J),IHB(2,J),IHB(1,J),J=I,MIN(I+4,
+     +   NHN))
+   10 CONTINUE
+      WRITE(ICPR,103)
+  100 RETURN
+  101 FORMAT('0  LIST OF MODULE NAMES'/
+     +       '0',5('  SUBNAM....CALLS...IHA  '))
+  102 FORMAT(1X ,5(2X,A4,A4,I7,I6,2X))
+  103 FORMAT('0','  IHA = OFFSET FOR HISTOGRAMS.',
+     +' HISTOGRAMMS SUPPRESSED FOR IHA = -1'/)
+      END
+@
+
+
+1.2
+log
+@change few print statments to please VAX fpp
+Modified Files:
+ 	bosrpt.F bosta.F bseqr.F pmodul.F
+@
+text
+@a0 1
+*DK pmodul
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d17 2
+a18 2
+  103 FORMAT('0','  IHA = OFFSET FOR HISTOGRAMS. HISTOGRAMMS SUPPRESSED
+     + FOR IHA = -1'/)
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

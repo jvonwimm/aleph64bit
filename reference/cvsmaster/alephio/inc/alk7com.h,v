@@ -1,0 +1,97 @@
+head	1.3;
+access;
+symbols
+	alio83:1.3
+	alio82:1.3
+	alio81:1.3
+	alio80:1.2
+	alio74:1.2
+	alio73:1.1
+	alio72:1.1
+	alio71:1.1
+	alio70:1.1
+	alio68:1.1
+	alio69:1.1
+	alio67:1.1
+	alio66:1.1
+	alio65:1.1
+	alio64:1.1
+	alio63:1.1
+	alio62:1.1
+	alio61:1.1
+	alio60:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	2000.08.18.13.54.26;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.12.14.08.39.27;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.04.30.09.53.47;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@v8.1 - increase # of segments in alk7com and fix precision priblem found by J.B.Hansen
+@
+text
+@C! keep content of RUNCARTS.LIST file
+C! keep content of RUNCARTS.LIST file
+      PARAMETER(MXLRUN=2500,MXSEG=6,MXTYP=5,LK7=9)
+      INTEGER K7LRUN
+C - 22500=MXLRUN*LK7 (9 characters per K7 for MXLRUN runs)
+      CHARACTER*22500 K7CART
+C - 5=MXTYP the number of various data types ('RPDMN')
+      CHARACTER*5 K7TYPE
+      COMMON/ALK7COM/ K7SEG,K7LINE(MXSEG),K7LRUN(MXLRUN,MXSEG),
+     &                K7CART(MXTYP,MXSEG),K7TYPE
+#if defined(DOC)
+      MXLRUN          maximum number of runs in a segment
+      MXSEG           maximum number of segments
+      MXTYPE          maximum number of data types
+      K7SEG           number of segments used by RUNCARTS.LIST
+      K7LINE (is)     number of runs in  segment # is
+      K7LRUN (il,is)  run number at line # il in segment # is
+      K7CART (it,is)  list of cartridges for data type # it in
+                      segment # is
+      K7TYPE          list of data types 'RPDMN'
+#endif
+@
+
+
+1.2
+log
+@increase number of segments in alk7com to allow 12500 runs
+@
+text
+@d3 1
+a3 1
+      PARAMETER(MXLRUN=2500,MXSEG=5,MXTYP=5,LK7=9)
+@
+
+
+1.1
+log
+@move some packages from alephlib to alephio
+Added Files:
+ 	abrcom.h adbrlist.h alk7com.h gtadbr.h
+@
+text
+@d3 1
+a3 1
+      PARAMETER(MXLRUN=2500,MXSEG=4,MXTYP=5,LK7=9)
+@

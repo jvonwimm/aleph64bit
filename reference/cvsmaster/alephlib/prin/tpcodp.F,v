@@ -1,0 +1,171 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.43.20;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.43.21;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE TPCODP(IUNIT)
+C----------------------------------------------------------------------
+C!    Dump BOS bank TPCO to IUNIT
+CKEY PRINT TPC
+C!
+C!    Author:    R. Johnson  23-10-86
+C!    Modified:  R. Johnson  18-06-90
+C!
+C!    Input:
+C!         - IUNIT   /I    Fortran output logical unit number
+C!
+C!---------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+C
+#include "tpcojj.h"
+#include "bcs.h"
+#include "evehjj.h"
+C
+C----------------------------------------------------------------------
+C
+#include "bmacro.h"
+C
+C----------------------------------------------------------------------
+C
+      KTPCO=IW(NAMIND('TPCO'))
+      IF (KTPCO.EQ.0) RETURN
+      NC=LROWS(KTPCO)
+      KEVEH=IW(NAMIND('EVEH'))
+      IF (KEVEH.NE.0) THEN
+        IRUN=IW(KEVEH+JEVERN)
+        IEVT=IW(KEVEH+JEVEEV)
+      ELSE
+        IRUN=0
+        IEVT=0
+      ENDIF
+      WRITE(IUNIT,103) NC,IRUN,IEVT
+  103 FORMAT(//' Dump of ',I4,' TPC coordinates for run ',I5,' event ',
+     &         I6)
+      WRITE(IUNIT,102)
+  102 FORMAT(/2X,' IC',2X,'sect',2X,' row',2X,' pad',5X,
+     &       'radius',5X,' phi',6X,
+     &       '   z',8X,'SigRPhi',5X,' SigZ ',3X,' Origin',
+     &       2X,'track',1X,'clus',1X,'twin',2X,'sect R*Phi',4X,
+     &       'sect Z')
+      DO 21 IC=1,NC
+        IROW=IW(KROW(KTPCO,IC)+JTPCIN)/100000
+        IPAD=MOD(IW(KROW(KTPCO,IC)+JTPCIN),1000)
+        ISEC=MOD(IW(KROW(KTPCO,IC)+JTPCIN),100000)/1000
+        WRITE(IUNIT,101) IC,ISEC,IROW,IPAD,(RTABL(KTPCO,IC,J),J=2,6),
+     &                   (ITABL(KTPCO,IC,J),J=7,10),
+     &                   (RTABL(KTPCO,IC,J),J=11,12)
+  101   FORMAT(1X,I3,2X,I4,2X,I4,2X,I4,1X,F10.4,1X,F10.6,
+     &         3(1X,F10.4),4X,I2,5X,3(2X,I3),2(1X,F10.4))
+   21 CONTINUE
+      WRITE(IUNIT,104)
+  104 FORMAT('-------------------------- End of TPCO dump',
+     &      ' ---------------------------------------------------'/)
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

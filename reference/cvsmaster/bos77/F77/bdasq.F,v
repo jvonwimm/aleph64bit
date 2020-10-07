@@ -1,0 +1,99 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.47.44;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.10;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.11;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE BDASQ(JW,LUN1,LUN2)
+*
+*     COPY BANKS FROM DA DATA SET TO SEQUENTIAL DATA SET
+*
+#include "boscom.h"
+#include "param.h"
+      INTEGER JW(*)
+      CHARACTER*4 NAME,CHAINT
+      N1=0
+      N2=0
+      IUB=NLINK('+BUF',LUN1)
+      IF(IUB.EQ.0) GOTO 100
+      IW(IUB+ 9)=0
+      IW(IUB+10)=0
+   10 IND=MDARS(JW,LUN1)
+      IF(JW(2).NE.0) GOTO 20
+      N1=N1+1
+      IF(IND.EQ.0) THEN
+         N2=N2+1
+      ELSE
+         NAME=CHAINT(JW(IND-3))
+         NR  =       JW(IND-2)
+         JW(1)=1
+         CALL BWRSB(JW,LUN2,NAME,NR)
+         CALL BGARB(JW)
+      END IF
+      GOTO 10
+   20 IF(JW(LUP).GT.0) WRITE(JW(LUP),101) LUN1,LUN2,N1,N2
+         CALL BRWND(LUN2)
+  100 RETURN
+  101 FORMAT(' ---- BDASQ   BANKS COPIED FROM DA-DATA SET',I3,
+     +   ' TO SEQ DATA SET',I3/
+     +   1X,I10,' BANKS READ',I3,' NOT COPIED (SPACE INSUFF.)')
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK bdasq
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

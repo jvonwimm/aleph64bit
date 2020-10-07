@@ -1,0 +1,240 @@
+\chapter{\label{sec-BNKDES}Bank description}
+\par
+All banks described here must not be written to an output file.
+ 
+\begin{verbatim}
+*------*
+| QVEC |              TRACKS
+*------*
+ 
+ 1   number of words / track
+ 2   maximum allowed number of tracks
+ 
+Basic attributes
+ 
+ 1   QX   F   PX
+ 2   QY   F   PY
+ 3   QZ   F   PZ
+ 4   QE   F   Energy
+ 5   QM   F   Mass
+ 6   QP   F   momentum
+ 7   CH   F   CHarge
+\end{verbatim}
+\begin{verbatim}
+Flags
+ 
+ 8   TN   I   JULIA / GALEPH Track Number
+ 9   SC   I   stability code
+10   KS   I   LUND status code
+11   CL   I   track CLass
+12   PA   I   ALEPH particle code
+13   QD   I   offset for corresponding row in QDET (NOT the row number !)
+ 
+14   NP   I   pointer to Next Particle / same particle code / same class
+15   SP   I   Same Particle, different hypothesis or Lorentz frame
+16   OV   I   Origin Vertex no
+17   EV   I   End Vertex no
+ 
+\end{verbatim}
+ 
+\begin{verbatim}
+18   ND   I   Number of Decay particles
+19   DL   I   offset of 1st daughter in particle List QLIN
+20   NO   I   Number of mother particles
+21   OL   I   offset of 1st mother in particle List QLIN
+22   NM   I   Number of Matches
+23   ML   I   Match list = row offset in banks QMTL and QMTS
+ 
+24   BM   I   Lock Bit masks ( up to 448 tracks allowed )
+38   LK   I   QLITK flag
+ 
+39   DB   F   Distance of closest approach to beam axis (if track pointing
+              to the main vertex) or to the corresponding secondary vertex.
+40   ZB   F   Z coordinate of point where DB is measured.
+41   SD   F   Error**2 on DB
+42   SZ   F   Error**2 on DZ
+43   CB   F   Chi**2 corresponding do DB and DZ.
+ 
+\end{verbatim}
+\begin{verbatim}
+Error Matrix
+ 
+44-53 EM  F   triangular covariance matrix
+ 
+54    CF  F   chi**2 from last kinematical fit
+55    EW  F   weight from energy flow analysis
+ 
+56-73 US      User space
+ 
+\end{verbatim}
+\par
+\begin{verbatim}
+*------*
+| QDET |              DETECTOR INFORMATION
+*------*
+ 
+ 1   number of words / track
+ 2   maximum allowed number of tracks
+ 
+ 1   AF   I   offset for corresponding row in bank FRFT (NOT row number !)
+ 2   AL   I   offset for corresponding row in bank FRTL
+ 3   NT   I   number of segments in bank TEXS
+ 4   AT   I   offset for corresponding rows in bank TEXS (MAX : 5)
+ 8   LT   I   last allowed AT address
+ 
+\end{verbatim}
+ 
+\begin{verbatim}
+ 9   AE   I   offset for corresponding row in bank EIDT
+10   AH   I   offset for corresponding row in bank HMAD
+11   AM   I   offset for corresponding row in bank MCAD
+ 
+12   CF   I   calorimeter flag (<0 : ass, > 0 : isol, abs=1 : ECAL; =2 : HCAL)
+13   EC   I   offset for corresponding row in bank PECO
+14   HC   I   offset for corresponding row in bank PHCO
+15   ET   I   offset for corresponding row in bank PEPT
+16   FI   I   offset for corresponding row in bank FRID
+17   NF   I   number of associated charged tracks
+18   FL   I   offset of 1st ass. ch. track in list QLIN
+19   NE   I   number of associated ECAL objects
+20   EL   I   offset of 1st ass. ECAL object in list QLIN
+21   NH   I   number of associated HCAL objects
+22   HL   I   offset of 1st ass. HCAL object in list QLIN
+23   LH   I   overlap - associated
+24   EF   I   offset for corresponding row in bank EFOL
+25   PC   I   offset for corresponding row in bank PCQA
+26   EG   I   offset for corresponding row in bank EGPC
+27   MU   I   offset for corresponding row in bank MUID
+28   DX   I   offset for corresponding row in bank
+29   PG   I   offset for corresponding row in bank PGPC
+30   PD   I   offset for corresponding row in bank PDLT
+31   PM   I   offset for corresponding row in bank PMLT
+ 
+\end{verbatim}
+ 
+\begin{verbatim}
+*------*
+| QVRT |              VERTICES
+*------*
+ 
+ 1   number of words / vertex
+ 2   maximum allowed number of vertices
+ 
+ 1   VX   F   XPosition
+ 2   VY   F   YPosition
+ 3   VZ   F   ZPosition
+ 4   VN   I   JULIA /GALEPH Vertex number
+ 5   TY   B   vertex TYpe
+ 
+\end{verbatim}
+ 
+\begin{verbatim}
+ 6   IP   I   track number of Incoming Particle
+ 7   ND   I   Number of Decay particles
+ 8   DL   I   offset for decay particle list
+ 9   AY   I   offset for corresponding row in YV0V
+10   AF   I   offset for corresponding row in FVER
+ 
+11-16 EM  F   triangular error matrix
+ 
+17    CF  F   chi**2 for vertex fit -- filled by KVFITN, KVFITV
+18-25 ET  F   track-vertex error matrix
+26-30         User space
+ 
+\end{verbatim}
+\begin{verbatim}
+*------*
+| QFPA |              FIRST PARTICLE (FOR DIRECT ACCESS)
+*------*
+ 
+ 1   number of track classes = 8
+ 2   maximum number of rows
+ 
+ 1   xx   I   ALPHA track number
+              each row contains the 1st particle for a given class
+              in order KRECO , KMONTE , Lorentz frames
+              1 row per particle , pointed by QPLI
+ 
+\end{verbatim}
+ 
+\begin{verbatim}
+*------*
+| QLIN |              ONE - TO MANY PARTICLE RELATIONS
+*------*                (e.g. : daughter -> mother)
+ 
+ 1   number of words / row = 1
+ 2   maximum allowed number of relations
+ 
+ 1   xx   I   ALPHA track number
+ 
+\end{verbatim}
+\begin{verbatim}
+*------*
+| QMTL |              MATCH LIST
+*------*
+ 
+ 1   number of columns = 1
+ 2   maximum allowed number of track matches
+ 
+ 1   xx   I   ALPHA Track number
+ 
+\end{verbatim}
+\begin{verbatim}
+*------*
+| QMTS |              NUMBER OF SHARED HITS IN MATCH LIST
+*------*
+ 
+ 1   number of columns = 1
+ 2   maximum allowed number of track matches
+ 
+ 1   xx   I   Number of shared hits
+ 
+\end{verbatim}
+\begin{verbatim}
+*------*
+| QPAR |              INTERNAL PARTICLE TABLE
+*------*
+ 
+ 1   number of words / particle = 10
+ 2   maximum allowed number of particles
+ 
+     The attributes are exactly the same as in the PART bank.
+ 
+\end{verbatim}
+\begin{verbatim}
+*------*
+| QPBT |              PARTICLE FLAGS FOR BOOKKEEPING
+*------*              (Parallel to QPAR bank)
+ 
+ 1   number of columns = 1
+ 2   maximum allowed number of particles
+ 
+ 1   xx   I   bit flag
+              bit 1 : used in function KPC
+              bit 2 : particle attributes set by a data card
+              bit 3 : particle attributes set by MC table
+              bit 4 : pseudo-particle
+              bit 5 : particle defined on a PTRA card
+ 
+\end{verbatim}
+\begin{verbatim}
+*------*
+| QPLI |              POINTERS FROM QPAR TO QFPA
+*------*
+ 
+ 1   number of columns = 1
+ 2   maximum allowed number of particles
+ 
+ 1   xx   I   pointer to QFPA row for this particle
+ 
+\end{verbatim}
+\begin{verbatim}
+*------*
+| QTRA |              MC PARTICLE TRANSLATION TABLE
+*------*
+ 
+ 1   number of columns = 1
+ 2   maximum allowed number of particles in MC table
+ 
+ 1   xx   I   internal particle code
+\end{verbatim}

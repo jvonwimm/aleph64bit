@@ -1,0 +1,579 @@
+head	1.18;
+access;
+symbols
+	jul313_3:1.18
+	jul313_2:1.18
+	jul313_1:1.18
+	jul313:1.18
+	jul312_1:1.18
+	jul312:1.18
+	jul311:1.17
+	jul310_1:1.16
+	jul310:1.16
+	jul309_1:1.15
+	jul309:1.15
+	jul308_6:1.14
+	jul308_5:1.14
+	jul308_4:1.14
+	jul308_3:1.14
+	jul308_2:1.13
+	jul308_1:1.13
+	jul308:1.13
+	jul307_4:1.13
+	jul307_3:1.13
+	jul307_2:1.13
+	jul307_1:1.12
+	jul307:1.12
+	jul306_3:1.12
+	jul306_2:1.12
+	jul306_1:1.12
+	jul306:1.12
+	jul305_4:1.12
+	jul305_3:1.11
+	jul305_2:1.11
+	jul305_1:1.10
+	jul305:1.9
+	jul304_3:1.7
+	jul304_2:1.7
+	jul304_1:1.7
+	jul304:1.7
+	jul303_7:1.6
+	jul303_6:1.6
+	jul303_5:1.6
+	jul303_4:1.6
+	jul303_3:1.6
+	jul303_2_mc1:1.6
+	jul303_2:1.6
+	jul303_1_mc1:1.6
+	jul303_1:1.6
+	jul303_v:1.6
+	jul303:1.6
+	jul302_6:1.6
+	jul302_5:1.6
+	jul302_4:1.6
+	jul302_3:1.6
+	jul302_2:1.6
+	jul302_1:1.5
+	jul302:1.6
+	jul285_1:1.5
+	jul285:1.5
+	jul284_1:1.5
+	jul284:1.5
+	jul283_1:1.5
+	jul283:1.5
+	jul282_1:1.5
+	jul282:1.5
+	jul281_3:1.5
+	jul281_2:1.4
+	jul281_1:1.3
+	jul281:1.3
+	jul280_1:1.3
+	jul280:1.3
+	jul279:1.2
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.18
+date	2000.03.20.12.52.49;	author cattanem;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	99.12.09.11.41.26;	author cattanem;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	99.10.27.12.27.12;	author cattanem;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	99.04.26.13.39.47;	author cattanem;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	98.11.11.17.43.18;	author cattanem;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	98.06.05.12.45.57;	author cattanem;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	98.02.26.09.18.26;	author cattanem;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	97.12.09.11.30.21;	author cattanem;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	97.12.05.13.40.00;	author cattanem;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	97.11.13.16.15.38;	author cattanem;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	97.11.07.11.19.19;	author cattanem;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	97.09.09.12.18.40;	author cattanem;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	97.03.20.17.26.16;	author cattanem;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.07.11.15.58.09;	author cattanem;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.07.01.08.08.40;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.03.12.15.28.44;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.11.29.17.18.12;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.17.16;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.17.17;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.18
+log
+@Julia 312
+@
+text
+@#if defined(DOC)
+C! 1st entry in S_set
+ ! JULIA 312
+    SICAOK : uses XLUM2K instead of XLUMOK to compute Luminosity
+             whatever status has the Energy stability bit       (B.Bloch)
+    SILUAD : stores two luminosities in 2000 in SLUM
+             with XLUMOK = including only Energy stability bit ON events
+             with XLUM2K = ignoring Energy stability bit
+             backward compatible for previous years/MC/Z runs.. (B.Bloch)
+    SICLEAN: makes use of the Alephlib routine SIBKCL           (B.Bloch)
+    SIESUM : SIFSUM moved to Alephlib                           (M.Cattaneo)
+
+ ! JULIA 311
+    SIPEDFX: Bug fix to correction of julia 31.0 - units are MeV, 
+		   not ADC counts                                    (B.Bloch)
+
+ ! JULIA 310
+    SICLUS : Apply better calibration in delayed timing mode    (B.Bloch)
+    SIEPCR : Introduce bunch dependent phi modulation           (B.Bloch)
+    SIINIRU: Load SCBP instead of SCPH when runnning in HE mode (B.Bloch)
+    SIPEDFX: Correct wrong pedestals in runs 50118-50122        (B.Bloch) 
+    SICLC2,SRFIT0,SRFIT2,SRSELO,SRUPAR : 
+             Double precision fixes for Linux                   (D.Smith)
+
+ ! JULIA 309
+    SICLEAN: Extend background identification to other types,
+             create and fill SIID  bank                       (B.Bloch)
+    SICRPOT: Update pointer to PECO bank in SIID. 
+             All clusters are transmitted                     (B.Bloch)
+    SILUMI : Update pointer to SILU bank in SIID. Only valid
+             clusters are considered to build the SILU bank   (B.Bloch)
+    SICLUS : Move call to SICLEAN to the end                  (B.Bloch)
+
+ * corr file 308.3
+    SIPEDFX: New - Fix pedestal of specific runs          (B.Bloch)
+    SIPREDA: Call SIPEDFX to fix pedestal problem if any  (B. Bloch)
+
+ * corr file 307.2
+    SICLEAN: NEW. Checks for quality flag of SiCAL cluster     (B.Bloch)
+    SICLUS : Extend LMAXL to 400, 
+             Compute quality flag for each cluster             (B.Bloch)
+    SICRPOT: Exclude from PECO/PCRL clusters identified as
+             electronic noise                                  (B.Bloch)
+    SIINIRU: Load SNOI bank from database                      (B.Bloch)
+    SILUMI : Skip identified electronic noise                  (B.Bloch)
+    SIPREDA: Apply bunch dependent calibration also after 1997 (B.Bloch)
+
+ * corr file 305.4
+    SICREC : Skip if setup code is zero (< 9209)                   (M.Cattaneo)
+
+ * corr file 305.2
+    SIINIRU: Suppress error message for missing SECT when setup<7  (M.Cattaneo)
+
+ * corr file 305.1
+    SICAOK : use XLUMOK from alephlib (>306) for complete checks   (B.Bloch)
+
+ ! JULIA 305
+    SIBUN.H: New common block                                      (B.Bloch)
+    SICLUS : In 1997 correct for time dependent gain if not 
+             already done in SIPREDA                               (B.Bloch)
+    SIINIRU: Load SECT bank                                        (B.Bloch)
+    SIPREDA: Apply a bunch dependant calibration for delayed 
+             timimg in 1997                                        (B.Bloch)
+    SILHCR : Store XTBP,XTCN,X1SC name indices locally          (M.Cattaneo)
+    STMASK,STRIGF : Deleted from Julia library. Identical routines
+                    exist in Alephlib                           (M.Cattaneo)
+
+ ! JULIA 304
+    SIINIRU,SIINIJO : Move booking of SSTA internal bank from siiniru to
+                      siinijo, to avoid problems when processing multiple
+                      runs with different bunch train setups.   (M.Cattaneo)
+
+ * corr file 302.2
+    SIPREDA : Apply bunch train correction only to 1995 data (B.Bloch)
+
+ * corr file 281.3
+   SILUMI : Fix energy cuts for high energy data (B.Bloch 11-Jul-96)
+
+ * corr file 281.2
+   SILUMI : Add protection for new acceptance cuts (M.Cattaneo 30-Jun-96)
+
+ ! JULIA 280
+   SICLUS,SIPREDA : opening "'" should have a closing "'" within
+           the same line for cvs (F. Ranjard, Feb 96)
+
+ * corr file 279.1
+   ALGTWA : fix number of wagons for some fills (B. Bloch, Nov 95)
+ ! JULIA 279
+   SILUAD : automatise the energy dependence of the Lumi x-section
+           (B. Bloch, Nov 95)
+   SIEVST : pick up a better curve from the Data Base if available
+           (E. Lancon, Nov 95)
+   SIINIRU: get SHLD bank from Data Base (B. Bloch, Nov 95)
+   SHLDJJ : new comdeck added (B. Bloch, Nov 95)
+
+ * corr file 278.2
+   SICAL modifications for the high energy run and 95 reprocessing
+   SECAJJ, SIBXJJ : new comdecks added (B. Bloch, Nov 95)
+   SIEVST : new routine: returns the energy at a given time along
+           the Hold timing curve (E. Lancon, Nov 95)
+   SIJUKE : new routine: decode juke box configuration (E. Lancon,
+           Nov 95)
+   SIGTWA : decode SICAL Hold number from SILH or SCHU bank (B. Bloch,
+           Nov 95)
+   ALGTWA : for the 140 Gev , SICAL will be set with one Hold except
+           for 4 runs (B. Bloch, Nov 95)
+   SIINIRU: get from Data base SECB and SIBX banks (B. Bloch, Nov 95)
+   SILUMI : in Lumi anlysis of 1995 consider only in-time clusters
+           (B. Bloch, Nov 95)
+   SIPREDA: correct energy of SICAL in physics triggers according to
+           bunch number (B. Bloch, Nov 95)
+ ! JULIA 278
+   ALGTWA : The 95 scan is done with 3 wagons (B.Bloch, P.Comas, Aug 95)
+
+ * corr file 277.2
+   ALGTWA : integer function to get the number of Sical wagons per train
+   SIINIRU: use ALGTWA instead of RQBUNC
+   SIPRLUM: use ALGTWA instead of RQBUNC
+   SILUAD : fix the statistical error on Lumi when bunch train operation
+ ! JULIA 277
+
+ * corr file 276.1
+   SIPREDA: Allow reprocessing from POT to POT when SIDI not available
+            apply overall energy scale factor in calibration mode only
+   SILHCR : Allow reprocessing from POT to POT
+   SILUMI : Allow reprocessing from POT to POT
+   SINAMC : add SCHU namindex to common
+   SIGTWA : integer function to get the current wagon number in the train
+   SIINIRU: Extend length of SLUM for maximum number of bunches
+   SIINIJO: Extend Statistics info to maximum number of bunches
+   SILHCR : Append wagon info as 15th word in SILH
+   SILUAD : Modification for Bunch train running
+   SILUMI : Modification for Bunch train running
+   SINAMX : Modification for Bunch train bank
+   SIPRLUM: Print Luminosity summary per wagon in the train
+   SIPRSUM: Print reconstruction summary per wagon in the train
+   SISTAT : Cumulate reconstruction statistics per wagon in the train
+ ! JULIA 276
+
+ * corr file 275.4
+   SIPREDA: Process next pad in case of 'Invalid SIDI Address' (B.Bloch,
+           Feb 1995)
+ ! JULIA 275
+
+ ! JULIA 274
+ * corr file 273.3
+   SILUAD : Take into account the downscaling factor of the coincidence
+            trigger when computing the preliminary Luminosity
+ * corr file 273.1
+   SICAOK: fix usage of new trigger banks X1RG, X1TT, X1HI
+   SILHCR: adapt to new trigger banks
+ ! JULIA 273
+
+ * corr file 272.3
+   SICLUS: apply new cluster correction instead of old one.
+   SILUMI: use planes 3 and 4 for loose side selection as for tight side
+   SICLC2: new routine
+ ! JULIA 272
+
+ * corr file 271.4
+   SIPVOI : array of energies in 9 pads in 5 first layers.
+ * corr file 271.1
+   SILHCR : Keep integrated SICAL scalers content in SILH
+   SILUMI : Make Luminosity energy cuts depend upon CMS energy
+   SIBOOK : HBPRO was called with a wrong number of arguments
+#endif
+@
+
+
+1.17
+log
+@Julia 311, including y2k fixes
+@
+text
+@d3 10
+@
+
+
+1.16
+log
+@For julia 310
+@
+text
+@d3 4
+@
+
+
+1.15
+log
+@Mods for Sical noise
+@
+text
+@d3 8
+@
+
+
+1.14
+log
+@prepare julia 308.3
+@
+text
+@d3 9
+@
+
+
+1.13
+log
+@Mods for julia 307.2
+@
+text
+@d3 4
+@
+
+
+1.12
+log
+@Mods for julia 305.4
+@
+text
+@d3 10
+@
+
+
+1.11
+log
+@suppress fake error message in siiniru
+@
+text
+@d3 3
+@
+
+
+1.10
+log
+@Changes in Julia for xlum
+@
+text
+@d3 3
+@
+
+
+1.9
+log
+@Sical fixes for 1997 timing
+@
+text
+@d3 3
+@
+
+
+1.8
+log
+@Prepare Julia 305
+@
+text
+@d4 6
+@
+
+
+1.7
+log
+@modifs to siiniru, siinijo
+@
+text
+@d4 5
+@
+
+
+1.6
+log
+@Brigitte corrections to jul302
+@
+text
+@d3 5
+d9 1
+a9 1
+   SIPREDA : Apply bunch train correction only to 1995 data (B.Bloch)
+@
+
+
+1.5
+log
+@Fixes for LCAL and Sical lumi at 161 GeV
+@
+text
+@d3 3
+@
+
+
+1.4
+log
+@Bug fix in silumi
+@
+text
+@d3 3
+@
+
+
+1.3
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+ 	gambnk.F gapeco.F gasteer.F
+ 	hcalib.F hcalrd.F hcatow.F hcbhis.F hcfclu.F hchist.F hclcra.F
+ 	hcltst.F hclufi.F hcos.F hcsimm.F hdgdeb.F hdgfil.F hdgpot.F
+ 	hdgsum.F hdprec.F hdspre.F hflnoi.F hinijo.F hiniru.F hmener.F
+ 	hmfind.F hmroad.F hnoise.F hnoisy.F hpatco.F hphnoi.F hplink.F
+ 	hprana.F hpranp.F hprdig.F hpreda.F hprpot.F hprsum.F hprunc.F
+ 	hrcomp.F hrcpat.F hrdcal.F hroad.F hslink.F hslowc.F hspare.F
+ 	hsptre.F hstofi.F htrack.F htubfi.F htwcr.F
+ 	iasign.F iattma.F ibnkin.F icaswt.F icftoi.F iclimb.F icrcco.F
+ 	ideadw.F idigpr.F ienang.F ifind1.F ifind2.F ifitp.F iftrak.F
+ 	igetti.F igettp.F igicha.F iheler.F iinijo.F iiniru.F iintrk.F
+ 	imatch.F inigap.F insect.F intrak.F ipakdi.F ipdsti.F iphcor.F
+ 	ipreda.F iprsum.F ipstat.F irefin.F ireopd.F isave.F ishuff.F
+ 	ishufl.F islowc.F isrch.F itbook.F itccut.F itcopr.F itcrec.F
+ 	itcrep.F itctpc.F itctrk.F itcxng.F iterr.F itextn.F ithist.F
+ 	itidy1.F itidy2.F itlnk1.F itlnk2.F itpcan.F itrak.F itrecf.F
+ 	itreci.F itree.F itrkci.F itrkeq.F itrkzr.F itrmca.F
+@
+text
+@d3 3
+@
+
+
+1.2
+log
+@julia version 279
+@
+text
+@a0 1
+*CD s_news
+d3 6
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+d4 57
+d69 1
+d75 1
+d82 1
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

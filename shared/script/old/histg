@@ -1,0 +1,37 @@
+#!/bin/sh
+# **********************************************************************
+# * HISTG SHELL v1.01                                                  *
+# *                                                                    *
+# * CERN Program Library driver to HISTG                               *
+# *                                                                    *
+# * Author: M.Marquina 91/02/16                                        *
+# * Mods       Date   Commments                                        *
+# * MARQUINA 91/12/14 Take executables from bin                        *
+# *                                                                    *
+# **********************************************************************
+  USE=`id | cut -f2 -d"(" | cut -f1 -d")"`
+  DATE=`date`
+  LOGFILE="/aleph/log/histg.log"
+  NODE=`uname -n`
+ 
+  SHOPT="v:"
+#SEQ,GETOPTD.
+  [ -z "$CERN"       ] && CERN="/cern"
+  [ -z "$CERN_LEVEL" ] && ver="pro" || ver="$CERN_LEVEL"
+ 
+  while [ $# -gt 0 ]
+  do case $1 in
+       -v) ver=$2 ; shift      ;;
+       --) shift ; break       ;;
+        *)         break       ;;
+     esac
+     shift
+  done
+ 
+  if [ "$ver" != "pro" ] ; then
+     echo
+     echo " Calling $ver version of HISTG"
+     echo
+  fi
+  echo "$DATE $USE $NODE" >> $LOGFILE
+  $CERN/historian/$ver/bin/histg $*

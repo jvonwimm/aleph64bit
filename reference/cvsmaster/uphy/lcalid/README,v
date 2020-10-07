@@ -1,0 +1,93 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  lcalid_1:1.1.1.1 OSF1:1.1.1;
+locks    ; strict;
+comment  @# @;
+
+
+1.1
+date     99.08.25.13.10.33;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     99.08.25.13.10.33;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@
+  New routine to identify Lcal clusters
+  =====================================
+  To match the routine SICLID, identifying a Sical cluster, there
+  is now a routine LCALID in the UPHY area identifying a Lcal
+  cluster. The calling sequence is shown below. More detailed 
+  documentation is found in the header of the routine.
+  
+                                        Peter Hansen
+
+      SUBROUTINE LCALID(ICLU,ITYP,IFLAG)
+C----------------------------------------------------------------------
+C!  - Returns identification of Lcal cluster
+C!
+C!    Author   :- P.H. Hansen          25-Aug-1999
+C!
+C!    Input:      - iclu = cluster number in bank
+C!                  ityp = 1 bank is PECO,
+C!                         2 bank is LUPA
+C!                        10 bank is PECO - Debug print
+C!                        11 bank is LUPA - Debug print
+C!    Output:
+C!                - iflag quality flag 0 = OK,
+C!                                     1= shower starts in Sical
+C!                                     2= leakage through back
+C!                                     3= leakage through cracks
+C!                                     4= shower near dowels
+C!                                     5= MIP punch through
+C!                                     6= electronic noise
+C!                                     7= off mom. beam particle
+C!                                     8= spark
+C!                                    -1= not a lcal cluster
+C!                                    -2= not enough info
+C?     Usage:
+C?     This routine can be called from ALPHA when reading MINI or
+C?     POT. It is applicable to all LEPII data.
+C?
+C?     In loops over Energyflow objects, itk, the input variable
+C?     iclu can be obtained from iclu=KEFOLE(itk).
+C?
+C?     Clusters with iflag >= 7 can be dismissed - BUT if the general
+C?     event kinematics is consistent with gamma-gamma or Z return,
+C?     then iflag=7 will certainly be wrong. Beam particles in Lcal
+C?     are exceedingly rare.
+C?     Clusters with 1 <= iflag <= 6 should be dismissed only if
+C?     a precise energy measurement of this particular cluster
+C?     is important.
+C?     In case of iflag=2, 3 and 6, a correction is already applied
+C?     in the energyflow, but iflag=6 is a more efficient noise
+C?     filter than the one applied in the energyflow.
+C?     For iflag=1, 2 and 4 some of the lost energy may in fact be
+C?     picked up by Sical or Hcal.
+C?
+C?     
+C----------------------------------------------------------------------
+@
+
+
+1.1.1.1
+log
+@import 
+@
+text
+@@

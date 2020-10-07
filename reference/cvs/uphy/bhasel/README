@@ -1,0 +1,36 @@
+      SUBROUTINE BHASEL(IDATA,IPRINT,IWRITE,IHISTO,LFLACC,LFLC15,LFLBHA)
+C
+C -------------------------------------------------------------------
+C
+C   Author         E. Locci     89/08/04  revisited 91/05/07
+C                            this new version can also be used for MINIS
+C
+C   Input argument :
+C                   IDATA  = 0 for MC, 1 for real data
+C                   IPRINT = 0, 1 print flag
+C                   IWRITE = 0, 1 write flag
+C                   IHISTO = 0, 1 histo flag
+C
+C   Output argument :
+C                   LFLACC = .TRUE. for events in acceptance
+C                   LFLC15 = .TRUE. for events class 15 (FALSE for data)
+C                   LFLBHA = .TRUE. for a Bhabha candidate
+C
+C   Description
+C   ===========
+C
+C   The selected large angle Bhabhas fulfill the following conditions:
+C        CLASS 15 EVENTS
+C        NHITTPC > 4 & Z0 < 5 CM
+C        AT LEAST 1 TRACK  WITH D0 < 2 CM
+C        AT LEAST 2 TRACKS WITH D0 < 5 CM
+C        AT MOST  6 TRACKS WITH D0 < 5 CM
+C        COS THESTAR     = 0.90
+C        ACOL            = 20 DEGREES
+C        DPHI & DTHETA   = 20 DEGREES
+C        P1 + P2         > 0.05 SQRT(S)
+C        E1 + E2         > 0.20 SQRT(S)
+C        SUM(P) + SUM(E) > 1.20 SQRT(S)
+C   More details can be found in a ALEPHnote PHYSIC 90-107
+C -------------------------------------------------------------------
+C

@@ -1,0 +1,155 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.30.07.08.57;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.37;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.38;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ cahtra.h gmacro.h lccomc.h lcnamc.h ljjpar.h siconst.h
+ sigeco.h version.h
+ itmsk1.F itmsk2.F itnois.F itres.F itxtlk.F
+ lcadc.F lcamp.F lcasig.F lcbhab.F lcbkpr.F lcdigi.F lcfral.F
+ lchit.F lcirun.F lcnami.F lcnois.F lcpad.F lcroc.F lcsamp.F
+ lcsatu.F lcshow.F lcstrt.F lctrak.F lctrdi.F lctrht.F lcwire.F
+ lcwsum.F lcwtri.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+ xtrcom.h
+@
+text
+@*DK lcstrt
+      SUBROUTINE LCSTRT(ZABS,ISTMN,LAYMN,LMIN,ZWIRE)
+C--------------------------------------------------------------
+C! Convert z-coordinate to plane no.
+C. - J.Dines Hansen & P.Hansen - 860513
+C. - Finds first storey and layer for track/shower
+C. - Called by LCSHOW, LCTRAK                    from this .HLB
+C. - Input:  ZABS   = z-distance from entrance
+C. - Output:
+C.           ISTMN =  storey no. [1,3]
+C.           LAYMN =  layer no.  [1,38]
+C.           LMIN  =  layer no. within the storey
+C.           ZWIRE =  Z of preceeding wire-plane
+C -------------------------------------------------
+#ifndef DOC
+#include "lccomc.h"
+C -------------------------------------------------------------
+C
+C Find the wire-plan preceeding the storey starting the shower
+      IF (ZABS .LE. Z123LC(1)) THEN
+        ISTMN = 1
+        LAYMN = 0
+        ZSTEP  = 0.
+      ELSEIF (ZABS.LE.Z123LC(1)+Z123LC(2)) THEN
+        ISTMN = 2
+        LAYMN = LCNLAY(1)
+        ZSTEP  = Z123LC(1)
+      ELSE
+        ISTMN = 3
+        LAYMN = LCNLAY(1) + LCNLAY(2)
+        ZSTEP  = Z123LC(1)+Z123LC(2)
+      ENDIF
+      LMIN = 1
+      LMAX = LCNLAY(ISTMN)
+      DO 100 L = 1,LMAX
+       LAYMN = LAYMN + 1
+       ZWIRE = ZSTEP-DWIRLC
+       ZSTEP = ZSTEP + ZSTPLC(ISTMN)
+       IF (ZSTEP .GT. ZABS)                            GOTO 999
+  100 LMIN = LMIN + 1
+  999 RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d14 1
+a15 1
+      SAVE
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

@@ -1,0 +1,103 @@
+head	1.1;
+access;
+symbols
+	jul313_3:1.1
+	jul313_2:1.1
+	jul313_1:1.1
+	jul313:1.1
+	jul312_1:1.1
+	jul312:1.1
+	jul311:1.1
+	jul310_1:1.1
+	jul310:1.1
+	jul309_1:1.1
+	jul309:1.1
+	jul308_6:1.1
+	jul308_5:1.1
+	jul308_4:1.1
+	jul308_3:1.1
+	jul308_2:1.1
+	jul308_1:1.1
+	jul308:1.1
+	jul307_4:1.1
+	jul307_3:1.1
+	jul307_2:1.1
+	jul307_1:1.1
+	jul307:1.1
+	jul306_3:1.1
+	jul306_2:1.1
+	jul306_1:1.1
+	jul306:1.1
+	jul305_4:1.1
+	jul305_3:1.1
+	jul305_2:1.1
+	jul305_1:1.1
+	jul305:1.1
+	jul304_3:1.1
+	jul304_2:1.1
+	jul304_1:1.1
+	jul304:1.1
+	jul303_7:1.1
+	jul303_6:1.1
+	jul303_5:1.1
+	jul303_4:1.1
+	jul303_3:1.1
+	jul303_2_mc1:1.1
+	jul303_2:1.1
+	jul303_1_mc1:1.1
+	jul303_1:1.1
+	jul303_v:1.1
+	jul303:1.1
+	jul302_6:1.1
+	jul302_5:1.1
+	jul302_4:1.1
+	jul302_3:1.1
+	jul302_2:1.1
+	jul302_1:1.1
+	jul302:1.1
+	jul285_1:1.1
+	jul285:1.1
+	jul284_1:1.1
+	jul284:1.1
+	jul283_1:1.1
+	jul283:1.1
+	jul282_1:1.1
+	jul282:1.1
+	jul281_3:1.1
+	jul281_2:1.1
+	jul281_1:1.1
+	jul281:1.1
+	jul280_1:1.1
+	jul280:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	96.05.06.15.49.07;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@re-installed jul280 from the historian source because some routines were missing.
+@
+text
+@      PARAMETER (MNPDTP = 2, MXPDTP = 4)
+      COMMON/TPADCL/ PNRMCL(LTSECT),JPTRCL, MNSPTP
+#if defined(DOC)
+C!    Calibration constants for TPC pad dE/dx.
+C     These come from database banks TC1X and TP1X
+C
+C       MNPDTP  =   Minimum number of required pads in subcluster
+C       MXPDTP  =   Maximum number of allowed pads in subcluster
+C       PNRMCL  =   Sector normalization factor
+C       JPTRCL  =   percentage of samples at high end to truncate
+C       MNSPTP  =   minimum number of samples for pad dE/dx
+#endif
+@

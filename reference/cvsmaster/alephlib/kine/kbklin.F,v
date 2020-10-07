@@ -1,0 +1,184 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.42.27;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.42.28;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      INTEGER FUNCTION KBKLIN (IPART,IUGEN)
+C -----------------------------------------------------------
+C - J.Boucrot - F.Ranjard - 870423
+C
+C! Book and fill KLIN bank
+CKEY KINE KINGAL FILL BANK /   INTERNAL
+C  the KLIN bank contains the user particle# IUGEN of an ALEPH particle#
+C  IPART
+C
+C - structure : INTEGER FUNCTION subprogram
+C               User Entry Names : KBKLIN
+C               External References: AUBOS (ALEPHLIB)
+C                                    BLIST/BKFMT(BOS77)
+C               Comdecks referenced: BCS, KIPARA, BMACRO
+C
+C - usage:  JKLIN = KBKLIN (IPART,IUGEN)
+C - input:  IPART = ALEPH particle# (row# in PART bank)
+C           IUGEN = user generator particle#
+C - output: KBKLIN= index of KLIN bank
+C                   0  means : PART or KLIN bank missing
+C                   -N means : cannot extend KLIN after row# N
+#ifndef DOC
+      SAVE
+#include "bcs.h"
+#include "kipara.h"
+      DATA NAPAR /0/
+#include "bmacro.h"
+C ---------------------------------------------------------
+C
+      KBKLIN = 0
+C
+#include "kiparlin.h"
+C
+C - Get PART index
+C
+      JPART = IW(NAPAR)
+      IF (JPART.EQ.0) GOTO 999
+      NPART = LROWS (JPART)
+C
+C - Get KLIN index
+C
+      JKLIN = IW(NAKLI)
+      IF (JKLIN .EQ.0) THEN
+C     Create the KLIN bank
+         CALL AUBOS ('KLIN',0,LCKLIN*NPART+LMHLEN,JKLIN,IGARB)
+         IF (JKLIN.EQ.0) GOTO 999
+         IW(JKLIN+LMHCOL) = LCKLIN
+         IW(JKLIN+LMHROW) = NPART
+         CALL BKFMT ('KLIN','I')
+         CALL BLIST (IW,'C+','KLIN')
+      ELSE
+C     KLIN exists, test the length
+         NKLIN = LROWS(JKLIN)
+         IF (IPART .GT. NKLIN) THEN
+            CALL AUBOS ('KLIN',0,LCKLIN*NPART+LMHLEN,JKLIN,IGARB)
+            IF (JKLIN .EQ. 0) THEN
+               KBKLIN = - NKLIN
+               GOTO 999
+            ELSE
+               IW(JKLIN+LMHROW) = NPART
+            ENDIF
+         ENDIF
+      ENDIF
+C
+C - Fill KLIN bank
+C
+      KKLIN = KROW(JKLIN,IPART)
+      IW(KKLIN+1) = IUGEN
+C
+      KBKLIN = JKLIN
+C
+ 999  RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

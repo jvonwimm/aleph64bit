@@ -1,0 +1,390 @@
+head	1.4;
+access;
+symbols
+	aleph316_2:1.4
+	aleph316_1:1.4
+	aleph316:1.4
+	aleph315_7:1.4
+	aleph315_6:1.4
+	aleph315_5:1.4
+	aleph315_4:1.4
+	aleph315_3:1.4
+	aleph315_2:1.4
+	aleph315_1:1.4
+	aleph315:1.4
+	aleph314_2:1.4
+	aleph314_1:1.4
+	aleph314:1.4
+	aleph313_1:1.4
+	aleph313:1.4
+	aleph312_1:1.4
+	aleph312:1.4
+	aleph311_1:1.4
+	aleph311:1.4
+	aleph310_3:1.4
+	aleph310_2:1.4
+	aleph310_1:1.4
+	aleph310:1.4
+	aleph309_1:1.4
+	aleph309:1.4
+	aleph308_3:1.4
+	aleph308_2:1.4
+	aleph308_1:1.4
+	aleph308:1.4
+	aleph307_6:1.4
+	aleph307_5:1.4
+	aleph307_4:1.4
+	aleph307_2:1.4
+	aleph307_1:1.4
+	aleph307:1.4
+	aleph306:1.4
+	aleph305_4:1.4
+	aleph305_3:1.4
+	aleph305_2:1.4
+	aleph305_1:1.4
+	aleph305:1.4
+	aleph304_5:1.4
+	aleph304_4:1.4
+	aleph304_3:1.4
+	aleph304_2:1.4
+	aleph304_1:1.4
+	aleph304:1.4
+	aleph303_3:1.4
+	aleph303_2:1.4
+	aleph303_1_mc1:1.4
+	aleph303_1:1.4
+	aleph303:1.4
+	aleph302_9:1.4
+	aleph302_8:1.4
+	aleph302_7:1.4
+	aleph302_6:1.4
+	aleph302_5:1.4
+	aleph302_4:1.4
+	aleph302_3:1.4
+	aleph302_2:1.4
+	aleph302_1:1.4
+	aleph302:1.4
+	aleph216:1.4
+	aleph215_3:1.4
+	aleph215_2:1.4
+	aleph215:1.4
+	aleph214:1.4
+	aleph213:1.3
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.4
+date	96.06.14.09.43.16;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.05.29.08.24.30;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.05.21.07.30.52;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.41.40;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.41.41;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@First test of alephlib 214
+@
+text
+@      SUBROUTINE SELEMU (IFLAHM,IFLAMC,IFLACA,CLAS19)                           
+C----------------------------------------------------------------------         
+CKEY EDIR DEF CLASS19                                                           
+C! Muon identification class 19 code.                                           
+C-                                                                              
+C   Input  : None                                                               
+C   Output : IFLAHM = Muon flag from HMAD bank                                  
+C            IFLAMC = Muon flag from MCAD bank                                  
+C            IFLACA = Muon flag based on QMUIDO analysis                        
+C            CLAS19 = class 19 logical flag                                     
+C-                                                                              
+C   Called by   : SELEVT                                                        
+C   Calls  : MUCATR                                                             
+C   Input banks : HMAD,MCAD,MUID                                                
+C-                                                                              
+C                                       Author: R. Tenchini January 90          
+C                                       Modified : G. Bagliesi April 96
+C----------------------------------------------------------------------         
+#ifndef DOC
+      SAVE                                                                      
+C --                                                                            
+#include "bcs.h"
+#include "hmadjj.h"
+#include "mcadjj.h"
+#include "muidjj.h"
+C --                                                                            
+      COMMON/MUEFF/NHMAD,NHMAMB,NHMPOS,NMCAD,NMBOTH,NMSING,                     
+     &             NMCALO,NHMEVT,NMCEVT,NCAEVT,NMUEVT,NMUAND                    
+      PARAMETER(LENMAX=1000)                                                    
+      DIMENSION IPLIS(LENMAX),ICLIS(LENMAX),ITLIS(LENMAX)                       
+      PARAMETER(MAXL=100)                                                       
+      DIMENSION NCAVEC(MAXL)                                                    
+      DIMENSION ENER(1000),PT(1000)                                             
+      DIMENSION LISTEJ(300)                                                     
+      CHARACTER*8 CNAM                                                          
+      LOGICAL CLAS19                                                            
+C --                                                                            
+#include "bmacro.h"
+C --                                                                            
+      IFLAHM=0                                                                  
+      IFLAMC=0                                                                  
+      IFLACA=0                                                                  
+      CLAS19 = .FALSE.                                                          
+C --                                                                            
+      KHMAD=IW(NAMIND('HMAD'))                                                  
+      IF(KHMAD.LE.0) GOTO 888                                                   
+C --                                                                            
+      NMATRK = LROWS(KHMAD)                                                     
+C --                                                                            
+C   Loop on charged tracks linked to HMAD                                       
+C --                                                                            
+      DO 10 NMT = 1,NMATRK                                                      
+        IFMU = ITABL(KHMAD,NMT,JHMAIF)                                          
+        IF(IFMU.EQ.1) THEN                                                      
+          IFLAHM = 1                                                            
+          GOTO 999                                                              
+        ENDIF                                                                   
+   10 CONTINUE                                                                  
+C --                                                                            
+  888 CONTINUE                                                                  
+      KMCAD=IW(NAMIND('MCAD'))                                                  
+      IF(KMCAD.LE.0) GOTO 889                                                   
+C --                                                                            
+      NMATRK = LROWS(KMCAD)                                                     
+C --                                                                            
+C   Loop on charged tracks linked to MCAD                                       
+C --                                                                            
+      DO 20 NMT = 1,NMATRK                                                      
+        MCAD1 = ITABL(KMCAD,NMT,JMCANH)                                         
+        MCAD2 = ITABL(KMCAD,NMT,JMCANH+1)                                       
+        IF(MCAD1.GE.1 .OR. MCAD2.GE.1) THEN                                     
+          IFLAMC = 1                                                            
+          GOTO 999                                                              
+        ENDIF                                                                   
+   20 CONTINUE                                                                  
+C --                                                                            
+  889 CONTINUE                                                                  
+C --
+C     QMUIDO
+C --
+      KMUID=IW(NAMIND('MUID'))
+      IF(KMUID.LE.0) GOTO 999
+C
+      NMUID = LROWS(KMUID)
+      DO 30 NMT = 1,NMUID
+        IFLAG = ITABL(KMUID,NMT,JMUIIF)
+        IF(IFLAG.GE.1.AND.IFLAG.LE.15) THEN
+          IFLACA = 1
+          GOTO 999
+        ENDIF
+   30 CONTINUE
+C --
+999   CONTINUE
+C --
+      IF(IFLAHM.EQ.1 .OR. IFLAMC.EQ.1 .OR. IFLACA.EQ.1)
+     &  CLAS19 = .TRUE.
+C --
+      RETURN                                                                    
+      END                                                                       
+#endif
+
+@
+
+
+1.3
+log
+@Remove change to SELEMU, postponed to next version
+@
+text
+@d1 18
+a18 17
+      SUBROUTINE SELEMU (IFLAHM,IFLAMC,IFLACA,CLAS19)
+C----------------------------------------------------------------------
+CKEY EDIR DEF CLASS19
+C! Muon identification class 19 code.
+C-
+C   Input  : None
+C   Output : IFLAHM = Muon flag from HMAD bank
+C            IFLAMC = Muon flag from MCAD bank
+C            IFLACA = Muon flag based on MUCALO analysis
+C            CLAS19 = class 19 logical flag
+C-
+C   Called by   : SELEVT
+C   Calls  : MUCATR
+C   Input banks : HMAD,MCAD,PFRF
+C-
+C                                       Author: R. Tenchini January 90
+C----------------------------------------------------------------------
+d20 2
+a21 2
+      SAVE
+C --
+d25 13
+a37 12
+C --
+      COMMON/MUEFF/NHMAD,NHMAMB,NHMPOS,NMCAD,NMBOTH,NMSING,
+     &             NMCALO,NHMEVT,NMCEVT,NCAEVT,NMUEVT,NMUAND
+      PARAMETER(LENMAX=1000)
+      DIMENSION IPLIS(LENMAX),ICLIS(LENMAX),ITLIS(LENMAX)
+      PARAMETER(MAXL=100)
+      DIMENSION NCAVEC(MAXL)
+      DIMENSION ENER(1000),PT(1000)
+      DIMENSION LISTEJ(300)
+      CHARACTER*8 CNAM
+      LOGICAL CLAS19
+C --
+d39 49
+a87 49
+C --
+      IFLAHM=0
+      IFLAMC=0
+      IFLACA=0
+      CLAS19 = .FALSE.
+C --
+      KHMAD=IW(NAMIND('HMAD'))
+      IF(KHMAD.LE.0) GOTO 888
+C --
+      NMATRK = LROWS(KHMAD)
+C --
+C   Loop on charged tracks linked to HMAD
+C --
+      DO 10 NMT = 1,NMATRK
+        IFMU = ITABL(KHMAD,NMT,JHMAIF)
+        IF(IFMU.EQ.1) THEN
+          IFLAHM = 1
+          GOTO 999
+        ENDIF
+   10 CONTINUE
+C --
+  888 CONTINUE
+      KMCAD=IW(NAMIND('MCAD'))
+      IF(KMCAD.LE.0) GOTO 889
+C --
+      NMATRK = LROWS(KMCAD)
+C --
+C   Loop on charged tracks linked to MCAD
+C --
+      DO 20 NMT = 1,NMATRK
+        MCAD1 = ITABL(KMCAD,NMT,JMCANH)
+        MCAD2 = ITABL(KMCAD,NMT,JMCANH+1)
+        IF(MCAD1.GE.1 .OR. MCAD2.GE.1) THEN
+          IFLAMC = 1
+          GOTO 999
+        ENDIF
+   20 CONTINUE
+C --
+  889 CONTINUE
+      KPFRF=IW(NAMIND('PFRF'))
+      IF(KPFRF.LE.0) GOTO 999
+C --
+      NMATRK = LROWS(KPFRF)
+C --
+C   MUCATR analysis
+C --
+      DO 30 NMT = 1,NMATRK
+        CALL MUCATR(NMT,PR1OUT,PR2OUT,IFLAG)
+        IF(IFLAG.EQ.1) THEN
+d98 2
+a99 2
+      RETURN
+      END
+d101 1
+@
+
+
+1.2
+log
+@ ! ALEPHLIB 21.3
+   SELEMU  - use QMUIDO instead of MUCALO for class 19 muon ID (G.Bagliesi)
+@
+text
+@d9 1
+a9 1
+C            IFLACA = Muon flag based on QMUIDO analysis
+d14 1
+a14 1
+C   Input banks : HMAD,MCAD,MUID
+d16 1
+a16 2
+C                                       Author   : R. Tenchini January 90
+C                                       Modified : G. Bagliesi April 96
+a23 1
+#include "muidjj.h"
+d76 2
+d79 1
+a79 1
+C     QMUIDO
+d81 5
+a85 7
+      KMUID=IW(NAMIND('MUID'))
+      IF(KMUID.LE.0) GOTO 999
+C
+      NMUID = LROWS(KMUID)
+      DO 30 NMT = 1,NMUID
+        IFLAG = ITABL(KMUID,NMT,JMUIIF)
+        IF(IFLAG.GE.1.AND.IFLAG.LE.15) THEN
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d9 1
+a9 1
+C            IFLACA = Muon flag based on MUCALO analysis
+d14 1
+a14 1
+C   Input banks : HMAD,MCAD,PFRF
+d16 2
+a17 1
+C                                       Author: R. Tenchini January 90
+d25 1
+a77 2
+      KPFRF=IW(NAMIND('PFRF'))
+      IF(KPFRF.LE.0) GOTO 999
+d79 1
+a79 1
+      NMATRK = LROWS(KPFRF)
+d81 7
+a87 5
+C   MUCATR analysis
+C --
+      DO 30 NMT = 1,NMATRK
+        CALL MUCATR(NMT,PR1OUT,PR2OUT,IFLAG)
+        IF(IFLAG.EQ.1) THEN
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

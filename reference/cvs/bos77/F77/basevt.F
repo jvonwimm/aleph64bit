@@ -1,0 +1,228 @@
+      SUBROUTINE BASEVT (JW, IRUN, IEVT, IRET)
+C-----------------------------------------------------------------------
+CKEY ALPHARD READ BOS
+C  AUTHOR :      H. Albrecht            Nov 89
+C
+C!    Event selection according to SEVT, SRUN, IRUN, NEVT, TIME cards.
+C
+C  Called from BINSEL, could be called from BSEQR
+C  Calls : none.
+C
+C  Input : IRUN    run,
+C          IEVT    event number
+C  Output:
+C        IRET =  0   event to be skipped
+C             =  1   event to be accepted
+C             =  7   end of selected data (NEVT)
+C             =  8   end of selected data (SEVT/SRUN)
+C             =  9   time limit
+C
+C  Special call (useful only if it is the very first call to BASEVT) :
+C     CALL BASEVT (JW, 0, 0, IRET)
+C     checks syntax of SEVT, SRUN, IRUN, NEVT, TIME, and CLASS cards
+C        IRET = 0 or 1 : syntax ok
+C             = 11 :     syntax error detected
+C
+C-----------------------------------------------------------------------
+#ifndef DOC
+      INTEGER JW(*)
+      SAVE NASEVT, NASRUN, NAIRUN, NANEVT
+      LOGICAL START, SELE, RUNS
+      DATA IGNRUN /0/, MAXRUN /0/, MAXEVT /0/, START /.TRUE./,
+     +     SELE /.TRUE./, NNEVT /0/, NNMIN /0/, NNMAX /99999999/
+C
+C       init
+C
+      IRET = 0
+C
+      IF (.NOT.START)  GO TO 200
+      START = .FALSE.
+      NASEVT = NAMIND ('SEVT')
+      NASRUN = NAMIND ('SRUN')
+      NAIRUN = NAMIND ('IRUN')
+      NANEVT = NAMIND ('NEVT')
+C
+C       get largest run / event number and check syntax
+C
+C       SRUN and IRUN are mutually exclusive :
+      IF (JW(NASRUN) .NE. 0 .AND. JW(NAIRUN) .NE. 0)  IRET = 11
+C
+C       loop over SRUN and IRUN :
+C
+      INS = NASRUN + 1
+      DO 40 J=1,2
+   10   INS = JW(INS-1)
+        IF (INS .EQ. 0)  GO TO 40
+        IF (JW(INS) .GT. 0)  GO TO 20
+C       syntax error : SRUN without argumnts :
+        IRET = 11
+        GO TO 10
+C       syntax error : SRUN -15 (1st number must be positive)
+   20   IF (JW(INS+1) .LE. 0)  IRET = 11
+        IF (J .EQ. 1)  MAXRUN = MAX0 (MAXRUN, JW(INS+1))
+        DO 30 I=2,JW(INS)
+C       syntax error : SRUN 0 (run number must be non-zero) :
+          IF (JW(INS+I) .EQ. 0)  IRET = 11
+          IF (JW(INS+I) .GT. 0)  GO TO 30
+C       syntax error : SRUN -10 -12 (two consecutive neg. numbers)
+C       syntax error : SRUN 12 -10  (not a range)
+          IF (JW(INS+I-1) .LT. 0 .OR. JW(INS+I) + JW(INS+I-1) .GT. 0)
+     +  IRET = 11
+   30   IF (J .EQ. 1)  MAXRUN = MAX0 (MAXRUN, IABS(JW(INS+I)))
+        GO TO 10
+   40 INS = NAIRUN + 1
+C
+C       SEVT cards :
+C
+      INS = NASEVT + 1
+  110 INS = JW(INS-1)
+      IF (INS .EQ. 0)  GO TO 150
+      IF (JW(INS) .GT. 1)  GO TO 120
+C       syntax error : give one run number and at least one event number
+      IRET = 11
+      GO TO 110
+C       syntax : run number and 1st event number must be positive :
+  120 IF (JW(INS+1) .LE. 0 .OR. JW(INS+2) .LE. 0)  IRET = 11
+      IF (MAXRUN .GE. JW(INS+1))  GO TO 130
+      MAXRUN = JW(INS+1)
+      MAXEVT = JW(INS+2)
+  130 DO 140 I=3,JW(INS)
+C       syntax : event number must be non-zero
+        IF (JW(INS+I) .EQ. 0)  IRET = 11
+        IF (JW(INS+I) .GT. 0)  GO TO 140
+C       syntax error : SEVT 15 -10 -12 (two consecutive neg. numbers)
+C       syntax error : SEVT 15 12 -10  (not a range)
+        IF (JW(INS+I-1) .LT. 0 .OR. JW(INS+I) + JW(INS+I-1) .GT. 0)
+     +  IRET = 11
+  140 IF (MAXRUN .EQ. JW(INS+1))
+     +  MAXEVT = MAX0 (MAXEVT, IABS(JW(INS+I)))
+      GO TO 110
+C
+  150 IF (MAXRUN .EQ. 0)  MAXRUN = 99999999
+      IF (MAXEVT .EQ. 0)  MAXEVT = 99999999
+      IF (JW(NASRUN) .EQ. 0 .AND. JW(NAIRUN) .EQ. 0 .AND.
+     +    JW(NASEVT) .EQ. 0 .AND. JW(NANEVT) .EQ. 0)  SELE = .FALSE.
+C
+C       NEVT card
+C
+      INS = JW(NANEVT)
+      IF (INS .NE. 0)  THEN
+C         syntax error : NEVT 12 13 14 (more than 2 numbers)
+C                        NEVT -15 (1st number must be non-negative)
+C                        more than one NEVT card is not allowed.
+        IF (JW(INS) .GT. 2 .OR. JW(INS+1) .LT. 0 .OR.
+     +      JW(INS-1) .NE. 0)  IRET = 11
+        NNMAX = JW(INS+1)
+        IF (JW(INS) .EQ. 2)  THEN
+C         syntax error : NEVT 12 -10 (not a range)
+C                        NEVT 15 16 (2nd number must be neg. if given)
+          IF (JW(INS+2) .GE. 0 .OR. JW(INS+1) + JW(INS+2) .GT. 0)
+     +      IRET = 11
+          NNMIN = JW(INS+1)
+          NNMAX = -JW(INS+2)
+        ENDIF
+      ENDIF
+C
+C       CLAS card
+C
+      INS = JW(NAMIND ('CLAS'))
+      IF(INS .NE. 0)  THEN
+C       syntax error : only one CLAS card allowed
+        IF (JW(INS-1) .NE. 0)  IRET = 11
+        DO 160 I=1,JW(INS)
+C       syntax error : arguments must be in the range 1 ... 30
+  160   IF (JW(INS+I) .LE. 0 .OR. JW(INS+I) .GT. 30)  IRET = 11
+C       no need to call BCLASR here, it will be overwritten anyway !!
+      ENDIF
+C
+C       TIME card
+C
+      INS = JW(NAMIND ('TIME'))
+      IF(INS .NE. 0)  THEN
+C       syntax error : only one TIME card with one parameter allowed
+        IF (JW(INS-1) .NE. 0 .OR. JW(INS) .NE. 1)  IRET = 11
+C       syntax error : argument must be non-negative integer
+        IF (JW(INS+1) .LT. 0 .OR. JW(INS+1) .GT. 500 .OR.
+     +    JW(INS+1) .NE. IFIX(FLOAT(JW(INS+1))))  IRET = 11
+      ENDIF
+C
+      IF (IRUN .EQ. 0 .AND. IEVT .EQ. 0)  GO TO 900
+      IRET = 0
+C
+C       end of initialization.
+C
+  200 IF (.NOT. SELE)  GO TO 890
+C
+C       NEVT card
+C
+      IF (NNEVT .GE. NNMAX)  THEN
+        IRET = 7
+        GO TO 900
+      ENDIF
+C
+      IF (IEVT .EQ. 0)  GO TO 300
+      IF (IRUN - MAXRUN)  300, 210, 220
+  210 IF (IEVT .LE. MAXEVT)  GO TO 300
+  220 IRET = 8
+      GO TO 900
+C
+  300 IF (IRUN .EQ. IGNRUN)  GO TO 900
+C
+C       SEVT cards
+C
+      INS = JW(NASEVT)
+      IF (INS .EQ. 0)  GO TO 400
+      RUNS = .FALSE.
+  310 IF (JW(INS+1) .NE. IRUN)  GO TO 330
+      RUNS = .TRUE.
+C       accept run records for runs specified on SEVT cards :
+      IF (IEVT .EQ. 0)  GO TO 890
+      DO  I=2,JW(INS)
+        IF (IEVT .EQ. JW(INS+I))  GO TO 800
+        IF (IEVT .LE. -JW(INS+I) .AND. IEVT .GE. JW(INS+I-1)) GOTO 800
+      ENDDO
+  330 INS = JW(INS-1)
+      IF (INS .NE. 0)  GO TO 310
+C       if SEVT selects the run but NOT the event : skip unconditionally
+C       if no SEVT card for this run : accept if SRUN card given.
+      IF (RUNS .OR. JW(NASRUN) .EQ. 0)  GO TO 900
+C
+C       IRUN cards
+C
+  400 INS = JW(NAIRUN)
+      IF (INS .EQ. 0)  GO TO 500
+  410 DO  I=1,JW(INS)
+        IF (IRUN .EQ. JW(INS+I))  GO TO 550
+        IF (IRUN .LE. -JW(INS+I) .AND. IRUN .GE. JW(INS+I-1)) GOTO 550
+      ENDDO
+      INS = JW(INS-1)
+      IF (INS .NE. 0)  GO TO 410
+C
+C       SRUN cards
+C
+  500 INS = JW(NASRUN)
+      IF (INS .EQ. 0)  GO TO 800
+  510 DO  I=1,JW(INS)
+        IF (IRUN .EQ. JW(INS+I))  GO TO 800
+        IF (IRUN .LE. -JW(INS+I) .AND. IRUN .GE. JW(INS+I-1)) GOTO 800
+      ENDDO
+      INS = JW(INS-1)
+      IF (INS .NE. 0)  GO TO 510
+C
+C       skip the run
+C
+  550 IGNRUN = IRUN
+      GO TO 900
+C
+C       NEVT card
+C
+  800 IF (IEVT .EQ. 0)  GO TO 890
+      NNEVT = NNEVT + 1
+      IF (NNEVT .LT. NNMIN)  GO TO 900
+C
+C       accept the event
+C
+  890 IRET = 1
+  900 RETURN
+      END
+#endif

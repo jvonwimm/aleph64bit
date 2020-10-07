@@ -1,0 +1,199 @@
+From BLOCH@alws.cern.ch Fri Feb 13 12:57:31 2004
+Date: Fri, 13 Feb 2004 12:52:42 +0100
+From: BLOCH@alws.cern.ch
+To: BLOCH@alws.cern.ch
+
+TIME       50                         ! reserve 150sec for 1 event       
+FIDU   185.  310.   15.
+NEVT  100                                                         
+DEBU  1 5                                                               
+RMAR  123  456                     ! restart TRAC with these seeds    
+DISPLAY 0 /                           ! no display MUST BE THERE         
+TPCSIM                                ! fast tpcsim                      
+PROCESS 'KINE' 'TRAC' 'HITS' 'DIGI'  ! 'TRIG' ! process all modules, not 
+DATE 96                                                                
+TCUT 0.00001 0.00001                                                  
+*     gamma   electron tracking cuts                                     
+SETS 'VDET' 'ITC ' 'TPC ' 'HCAL' 'MUON'  'SICA' 'LCAL' ! no ECAL         
+PRINT 'INPU' 'TREL' 'OUTP'! INPUT AND OUTPUT BANKS                       
+*    PART= single particle sigx sigy sigz  part type pmin pmax costmin costmax 
+*KINE  'PART' 0. 0. 0.  1.   0.000050 0.000050 0.34 0.35                 
+*    USER= user generator sigx sigy sigz
+KINE  'USER' 0. 0. 0.                                                                        
+************************************************************************ 
+*   BMPHOT GENERATOR CARDS                                               
+*                                                                        
+RUN  101        'BEAM PHOTON BACKGROUND GENERATOR'                       
+*                                                                        
+* BMPHOT generator data cards                                            
+* EGEN --- Energy spectrum GENerators                                    
+*   Word 1:  IGEN -- Energy spectrum (sets theta also)                   
+*     0:  'FLAT'     -- flat spectrum between EMIN , EMAX from EBPH card 
+*     8:  'COPPER'   -- flat spectrum with photon origin inside TPC gas.
+*    11:  ' I,35 nm' -- LEP I, 35 nm physics 's05m46'                    
+*    12:  ' I,40 nm' -- LEP I, 40 nm physics 's05m46'                    
+*    21:  'II,np '   -- LEP II, nominal physics 'W05V5'                  
+*    31:  '11.92, 31 mm' -- Nov.92 scan of (8.5,120) m collimators @(31, 
+*    32:  '11.92, 40 mm' -- Nov.92 scan of (8.5,120) m collimators @(40, 
+*    Beam spectra overrides the photon energy, phi, theta from EBPH      
+*                                                                        
+*   Word 2: FWBW -- forward or backward scattering                       
+*     0:  full mixture of forward and backward scattering  (not for 31,3 
+*     1:  forward scattering  ==> 10 mrad incident angle (8.5 m coll)    
+*     2:  backward scattering ==> 2  mrad incident angle (57 m vacuum ch 
+*     3:  backward scattering ==> 10 mrad incident angle (only gen. 31,3 
+*                                                                        
+*   Word 3: ANGMIX -- mix of multiple scattering sources or single angle 
+*     =0   use mixture scattering sources in proportion to prediction    
+*     >0   specified theta of only one scattering source -- (radians)    
+*                                                                        
+*        IGEN     FWBW    ANGMIX                                         
+EGEN     0.       1.       0                                            
+*FILO 'AX4BKG:MC_050K_02MR.EPIO | EPIO'         
+*                                                                        
+* EBPH --- Energy of Beam PHoton (GeV)  (only for flat energy spectrum)  
+*        EMIN     EMAX                                                   
+EBPH   0.000050   0.000050                                               
+*                                                                        
+* KIBP --- Kinematics of Impact on BeamPipe  (phi,theta only used in fla 
+*   ZMIN,ZMAX (cm) -- range of impact points along the beampipe, MUST be 
+*   PHIMIN,PHIMAX (rad) -- range of azimuth angle of impact points       
+*                          if PHIMAX<PHIMIN, clockwise range is used     
+*   THMIN,THMAX (rad) -- range of incident polar angle of photon on pipe 
+*                        only absolute value used  (min = 0.002 rad,max= 
+*   THBEAM (+1,0,-1)  -- beam which radiates (NOTE: backsc. inverts dire 
+*                       +1: e- beam (+z), -1: e+ beam (-z), 0 either bea 
+*  Example: 50 keV photons nearly identical to that of KINE 'PART' card  
+*      ZMIN   ZMAX  PHIMIN  PHIMAX   THMIN   THMAX   THBEAM              
+*KIBP    1.938   1.938  0     6.3      1.21     1.22    -1.              
+*FILO ' PUBBKGRAW:BMPHOT_50KEV.EPIO'                                     
+*                                                                        
+*      ZMIN   ZMAX  PHIMIN  PHIMAX   THMIN   THMAX   THBEAM              
+KIBP  -274.  274.   0.      6.3      0.002   0.002     -1.                
+*GEOM 'VDET' 0                                                           
+************************************************************************ 
+BTME -1/ 16 6 
+'BEAM VACUUM  MEDVACUUM          ' 6. 0. 0. 0.01 0.05 0 0  3 
+'COMPENSATORS MEDCOMPENSATOR AVRG' 20. 0.5 0.1 0.05 0.1 0 0 3 
+'ALU PARTS    MEDALUMINIUM       ' 20. 0.5 0.1 0.01 0.05 0 0 3 
+'BERIL. PIPE  MEDBERILLIUM       ' 20. 0.5 0.1 0.01 0.05 0 0 3 
+'GLASS FIBER  MEDGLASS FIBER     ' 20. 0.1 0.1 0.01 0.05 0 0 3                
+'TUNGSTEN     MEDTUNGSTEN        ' 20. 0.1 0.1 0.01 0.05 0 0 3
+BVOL -1/ 9 23
+'BTUBTUBE' -1 3 0. 5.65 262.5 0. 0. 
+'BTUPTUBE' -1 3 0. 8.5 26.25 0. 0. 
+'BVACTUBE' 1 3 0. 5.3 262.5 0. 0. 
+'BPIPTUBE' -1 3 5.3  5.65 44. 0. 0. 
+'BPBYTUBE' -1 3 5.3 5.65 38. 0. 0. 
+'BPBETUBE' 4 3 5.3  5.41 38. 0. 0. 
+'BPSOTUBS' 4 5 5.41 5.57 38. 268.835 271.165 
+'BBALTUBS' 3 5 5.41 5.65 0.125 1.165 358.835 
+'BPNDTUBE' 3 3 5.3 5.65 3. 0. 0.      
+'BAIRTUBE' -1 3 5.45 5.65 1.25 0. 0. 
+'BXALTUBE' 3 3 5.2 5.3 1.2 0. 0.  
+'BPALTUBE' 3 3 5.3 5.45 111.5 0. 0. 
+'BRIBTUBE' 3 3 5.45 5.65 0.75 0. 0. 
+'BCOMTUBE' 2 3 0. 8.5 24. 0. 0. 
+'BVCOTUBE' 1 3 0. 6. 24. 0. 0.  
+'BENDTUBE' -1 3 5.3 7.3 2.25 0. 0. 
+'BRIDTUBE' 3 3 5.3 5.5 1.15 0. 0.     
+'BRINTUBE' 3 3 5.3 7.3 1.1 0. 0. 
+'BVCITUBE' 1 3 0. 5.3 2.25 0. 0. 
+'BPSPTUBE' 5 3 5.65 6.3 0.55 0. 0.                                         
+'BMSKPCON' 6 3 0. 360. 4. 0. 0.
+'BSH1PCON' 6 3 0. 360. 2. 0. 0.
+'BSH2PCON' 6 3 0. 360. 2. 0. 0.
+BPOS -1/ 8 35 
+'BTUBALEFONLY' 0 1 0. 0. 0.       
+'BTUPALEFONLY' 0 1 0. 0. 288.75 'BTUPALEFONLY' -2 2 0. 0. -288.75 
+'BPIPBTUBONLY' 0 1 0. 0. 0.   
+'BPBYBPIPONLY' 0 1 0. 0. 0.       'BPBEBPBYONLY' 0 1 0. 0. 0. 
+'BPSOBPBYONLY' -3 1 0. 0. 0.      'BBALBPBYONLY' 1 1 0. 0. 37.875 
+'BBALBPBYONLY' 1 2 0. 0. -37.875  'BPNDBPIPONLY' 0 1 0. 0. 41. 
+'BPNDBPIPONLY' -2 2 0. 0. -41.    'BAIRBPNDONLY' 0 1 0. 0. 1.75 
+'BPALBTUBONLY' 0 1 0. 0. 155.5    'BPALBTUBONLY' 0 2 0. 0. -155.5 
+'BRIBBTUBONLY' 0 1 0. 0. 231.75   'BRIBBTUBONLY' 0 2 0. 0. -156.65 
+'BRIBBTUBONLY' 0 3 0. 0. -231.75  'BVACBTUBONLY' 0 1 0. 0. 0. 
+'BXALBVACONLY' 0 1 0. 0. 39.2     'BXALBVACONLY' 0 2 0. 0. -39.2 
+'BCOMBTUPONLY' 0 1 0. 0. 2.25     'BVCOBCOMONLY' 0 1 0. 0. 0.   
+'BENDBTUPONLY' 0 1 0. 0. -24.     'BRIDBENDONLY' 0 1 0. 0. -1.1 
+'BRINBENDONLY' 0 1 0. 0. 1.15     'BVCIBENDONLY' 0 1 0. 0. 0. 
+'BPSPPASVONLY' 0 1 0. 0. 43.7     'BPSPPASWONLY' 0 1 0. 0. 43.7 
+'BPSPPASWONLY' 0 2 0. 0. -31.6    'BMSKBVACONLY' 0 1 0. 0. 0.
+'BMSKBVACONLY' -2 2 0. 0. 0.      'BSH1PASVONLY' 0 1 0. 0. 5.35
+'BSH1PASWONLY' 0 1 0. 0. 5.35     'BSH2PASVONLY' 0 1 0. 0. 44.75
+'BSH2PASWONLY' 0 1 0. 0. 44.75                                     
+BPCO -1/ 4 8 
+21 230.25 4.95 5.2 21 232.25 4.25 5.2 
+21 242.25 4.1  5.2 21 243.15 5.   5.2 
+22 0.     6.   6.3 22  37.3  6.   7.9  
+23 0.     6.   7.9 23   7.5  6.   8.3
+PPOS -1/ 8 40 
+'SMBAPASVONLY' 0 1 0. 0. 4.5 'SMBAPASWONLY' 0 1 0. 0. 4.5 
+'SMINSMBAONLY' 0 1 0. 0. -0.793 
+'SMBRSMBAONLY' 0 1 8.037 22.083 0.15 
+'SMO1SMBAONLY' 0 1 0. 0. -0.543 
+'SMO2SMBAONLY' 0 1 0. 0. -1.043   
+'SMPISMBAONLY' 0 1 0. 0. -1.3465 
+'SMPISMBAONLY' 0 2 0. 0. -0.2395      
+'SMPOSMBAONLY' 0 1 0. 0. -1.0965 
+'SMALSMBAONLY' 0 1 0. 18.5 -0.493     
+'SMALSMBAONLY' 0 2 0. -18.5 -0.493 
+'SMSSSMBAONLY' 0 1 0. 18.5 -1.55    
+'SMSSSMBAONLY' 0 2 0. -18.5 -1.55 
+'SMS1SMBAONLY' 0 1 0. 0. -1.55 
+'SMS2SMBAONLY' 0 1 0. 0. -1.55 
+'SMS3SMBAONLY' 0 1 0. 0. -1.55 
+'SMBRPASVONLY' 0 1 8.037 22.083 42.35 
+'SMB1PASVONLY' 0 1 0. 0. 44.4 
+'SMBRPASVONLY' 0 2 -8.037 22.083 42.35 
+'SMB2PASVONLY' 0 1 0. 0. 44.4 
+'SMBRPASVONLY' 0 3 9.931 -21.298 42.35 
+'SMB3PASVONLY' 0 1 0. 0. 44.4 
+'SMBRPASWONLY' 0 1 8.037 22.083 42.35 
+'SMB1PASWONLY' 0 1 0. 0. 44.4 
+'SMBRPASWONLY' 0 2 -8.037 22.083 42.35 
+'SMB2PASWONLY' 0 1 0. 0. 44.4 
+'SMBRPASWONLY' 0 3 9.931 -21.298 42.35 
+'SMB3PASWONLY' 0 1 0. 0. 44.4 
+'SMBRSMBAONLY' 0 2 -8.037 22.083 0.15 
+'SMELSMPOONLY' 0 1 18.3 0. 0. 
+'SMBRSMBAONLY' 0 3 9.931 -21.298 0.15 
+'SMELSMPOONLY' 0 2 -18.3 0. 0. 
+'SMHOSMPOONLY' 0 1 16.89 9.75 0. 
+'SMHOSMPOONLY' 0 2 9.75 16.89 0. 
+'SMHOSMPOONLY' 0 3 -9.75 16.89 0. 
+'SMHOSMPOONLY' 0 4 -16.89 9.75 0. 
+'SMHOSMPOONLY' 0 5 -16.89 -9.75 0. 
+'SMHOSMPOONLY' 0 6 -9.75 -16.89 0. 
+'SMHOSMPOONLY' 0 7 9.75 -16.89 0. 
+'SMHOSMPOONLY' 0 8 16.89 -9.75 0.        
+PVOL -1/ 9 17 
+'SMBATUBE' 1 3 5.81 24. 1.7 0. 0. 'SMINTUBE' 2 3 5.81 6. 0.5 0. 0. 
+'SMO1TUBE' 2 3 14.7 15.5 0.25 0. 0. 
+'SMO2TUBE' 2 3 14.7 16. 0.25 0. 0. 
+'SMPITUBE' 3 3 5.81 16. 0.0535 0. 0. 
+'SMPOTUBE' 4 3 16. 23. 0.3035 0. 0. 
+'SMALBOX ' 5 3 2. 2. 0.3 0. 0. 'SMSSBOX ' 6 3 2. 2. 0.15 0. 0. 
+'SMELBOX ' 7 3 2.3 5.65 0.3035 0. 0. 
+'SMHOTUBE' 1 3 0. 3. 0.3035 0. 0. 
+'SMS1TUBS' 5 5 21.8 24. 0.15 68.75 71.25 
+'SMS2TUBS' 5 5 21.8 24. 0.15 108.75 111.25 
+'SMS3TUBS' 5 5 21.8 24. 0.15 288.75 291.25 
+'SMBRTUBE' 8 3 0. 0.5 1.55 0. 0. 
+'SMB1TUBS' 8 5 23. 31. 0.5 68.75 71.25    
+'SMB2TUBS' 8 5 23. 31. 0.5 108.75 111.25 
+'SMB3TUBS' 8 5 23. 31. 0.5 293.75 296.25                                      
+PTME -1/ 16 8 
+'SAMBA VOLUME    AIR             ' 20. 0.05 0.05 0.05 0.05 0 0 3 
+'SAMBA G10 RINGS G10 PC BOARD    ' 20. 0.05 0.05 0.05 0.05 0 0 3 
+'SAMBA PAD PLANESSAMBA PAD PLANE ' 20. 0.05 0.05 0.05 0.05 0 0 3 
+'SAMBA OUTER PLANSAMBA PAD/G10 AV' 20. 0.05 0.05 0.05 0.05 0 0 3 
+'SAMBA ALU PLATESALUMINIUM       ' 20. 0.05 0.05 0.05 0.05 0 0 3 
+'SAMBA INOX PLATEINOX            ' 20. 0.05 0.05 0.05 0.05 0 0 3 
+'SAMBA ELECTRONICAVG SAMBA ELECT.' 20. 0.05 0.05 0.05 0.05 0 0 3 
+'SAMBA BRACKETS  SAMBA BRACKETS  ' 20. 0.05 0.05 0.05 0.05 0 0 3        
+PMAT -1/ 9 1 'AVG SAMBA ELECT.' 26.75 12.89 1.22 22.5 53.45             
+ENDQ                                                                     
+
+ENDQ                                                                     

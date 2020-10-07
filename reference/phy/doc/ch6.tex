@@ -1,0 +1,336 @@
+\chapter{\label{sec-M}Mnemonic symbols}
+\par
+Mnemonic symbols are Fortran variables, arrays, parameters, functions,
+or
+statement functions.
+Mnemonic symbols which
+give access to information for specific reconstructed or Monte Carlo
+objects are described in Chapter \ref{sec-TVA}.
+When possible, the names of the mnemonic symbols
+follow the same convention as the HAC parameters.
+ 
+The units used in ALPHA are  cm, sec, GeV, GeV/c, GeV/c$^2$, kG.
+ 
+\section{\label{sec-MCP}Mathematical and physical constants}
+\par
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{QQE}e = 2.718282
+\indentitem{QQPI}$\pi$ = 3.141593
+\indentitem{QQ2PI}$2\pi$
+\indentitem{QQPIH}$\pi/2$
+\indentitem{QQRADP}$180/\pi$
+\indentitem{QQC}speed of light = 2.997925E10 cm/sec
+\indentitem{QQIRP}speed of light in units cm / KGauss
+(inverse track bending radius $\rightarrow$ track momentum)
+\indentitem{QQH}Planck constant / 2$\pi$ = 6.582173E$-$25 GeV sec
+\indentitem{QQHC}QQH * QQC
+\end{indentlist}
+Note: The standard ALEPH constants (ALCONS) are also available.
+\section{\label{sec-MR}Run information}
+\par
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{KRINNE }number of events in run (with HV on)
+\indentitem{KRINLF }LEP fill number
+\indentitem{KRINDQ }data quality (see bank description for RLUM variable RQ)
+\indentitem{XIOKLU }Logical flag,  .TRUE. if Luminosity obtained from LCAL
+(for LEP I runs before 16600 , and all LEP II runs )
+\indentitem{QRINLU }Luminosity from LCAL in nb**-1 , from database , if XIOKLU = .TRUE.
+\indentitem{XIOKSI }Logical flag,  .TRUE. if Luminosity obtained from SiCAL
+(for LEP I runs after 16600 ; always .FALSE. for LEP II runs )
+\indentitem{QRSLLU }Luminosity from SiCAL in nb**-1 , from database , if XIOKSI = .TRUE.
+\indentitem{KRINNZ }number of Z $\to$ hadrons  (from database if available) .
+                    This is only an estimation obtained using CLAS 16 events with XLUMOK = .TRUE.
+\indentitem{KRINNB }number of Bhabhas (from database if available)
+
+\indentitem{QMFLD  }magnetic field (best estimate), in kGauss. Taken from
+data card FIEL (if given),
+run header bank RALE, or run header bank AFID for MC events.
+If ABS(QMFLD) $>$ 20 QMFLD is set to 15.
+
+\indentitem{QVXNOM, QVYNOM, QVZNOM }run-by run mean position of interaction
+point;
+taken from the database bank LFIL (see KBPSTA below).\\
+{\bf Important warning: These quantities are to be considered as obsolete, except for 1989-1990 data.}
+
+ For all other years of data taking, and for all Monte Carlo datasets, they are strictly equivalent to
+ QVTXBP(I) described in the next paragraph, \ref{sec-CHUNKINF} on p. ~\pageref{sec-CHUNKINF}.
+
+\indentitem{QVXNSG, QVYNSG, QVZNSG }(Statistical error) $^2$ on QVXNOM
+etc.;
+
+ {\bf Obsolete, kept only for backward-compatibility}.
+
+\indentitem{KBPSTA}Beam Position Status: method used to determine
+QVXNOM, QVYNOM, etc.
+
+ {\bf Obsolete, kept only for backward-compatibility}.
+\begin{itemize}
+\item KBPSTA = 0:  No mean beam position for the run
+\item  KBPSTA = 1:  Mean beam position computed with VDET, per RUN
+(most of  runs taken from 1991 to 1994)
+\item  KBPSTA = 2:  Mean beam position computed with VDET, per FILL
+(this happens when the run has too few events)
+\item  KBPSTA = 3:  Mean beam position computed WITHOUT VDET, per FILL
+(this is the status of all runs in 1989/1990 and
+of the runs in 1991 which do not have a working VDET)
+\end{itemize}
+
+\indentitem{QDBOFS }average systematic offset of D0.
+
+ {\bf Obsolete, kept only for backward-compatibility}.
+
+\end{indentlist}
+
+\par
+\section{\label{sec-CHUNKELEP}LEP c.m.s. energy  QELEP}
+\par
+The ALPHA variable {\bf QELEP} gives the best available value of the LEP c.m.s. energy, in GeV.
+
+This is intermediate between a Run information and an event-by-event information.
+
+                    Since ALPHA 123.08 (October 1998) this value is obtained as follows:
+
+\begin{itemize}
+
+\item                    For Monte Carlo events, QELEP is the generated LEP energy.
+
+\item                    For about 99\% of LEP2 events
+                     QELEP is  obtained from the 15 minutes time-chunk determinations
+                    of the LEP c.m.s energy in ALEPH, as given by the LEP Energy Group (values stored in the database bank RNL2).
+                    See the note ALEPH 97-029 (PHYSIC 97-24) for more details.
+
+\item                    For LEP1 events, or for a tiny fraction of LEP2 events without time-chunk, QELEP is
+                    obtained from run-averaged energies (values stored in the database bank RNR2).
+
+           
+\item               If none of the above values is available (in general because the run is too short), QELEP is taken as the
+                    average LEP energy over the corresponding LEP fill (values stored in the database bank RNF2).
+
+\end{itemize}
+
+                    For a given event, to know how the LEP energy was obtained, please use the subroutine QWHICH$\_$EN
+                    described in \ref{sec-ELEP2} on p.~\pageref{sec-ELEP2}.
+
+                    {\bf Important: Please DO NOT call any more the subroutines  QELEP2 or QELEP1}.
+  
+
+
+\par
+\section{\label{sec-CHUNKINF}Chunk-by-chunk luminous region information}
+\par
+ The quantities described below are used internally by the QFNDIP package
+  (sec. \ref{sec-DCQFND} on page ~\pageref{sec-DCQFND}). They give the best possible precision
+ and  should therefore
+ be preferred, when available, to  QVXNOM,QVYNOM,
+QVZNOM described above.
+\par
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+ 
+\indentitem{XGETBP}
+ = .TRUE. if the event-chunk beam information from QFGET$\_$BP
+           is available.  The quantities listed below are defined only if:\\
+            XGETBP = .TRUE.
+ 
+\indentitem{QVTXBP(I)}  I=1,2,3: x,y,z position of luminous region centroid (cm).
+           Notice: QVTXBP(3) is always equal to zero.
+ 
+\indentitem{QVTEBP(I)}  I=1,2,3: Estimated uncertainty on QVTXBP(I) (cm).
+           Notice: QVTEBP(3) is always equal to 1.
+ 
+\indentitem{QVTSBP(I)}  I=1,2,3: x,y,z rms size of luminous region (cm), averaged
+           over the year (or run period). The routine QBEAMX
+           (see section \ref{sec-OAQBEAM}) provides access to the metachunk-by-metachunk
+           values of sigma$\_$x.
+ 
+\indentitem{Real data:}
+The beam position x and y and their uncertainties returned in QVTXBP
+and QVTEBP are taken from the ALPB bank in the run record, or from the
+beam.position file if the dataset was produced by JULIA version $<$  275.03 .  The sizes of the luminous
+region returned in QVTSBP are taken from the ALRP database bank and are
+average values for the year (or run period).
+ 
+\indentitem{Monte Carlo:}
+The beam position x and y returned in QVTXBP are generated so as to
+simulate the desired beam size distribution.  The primary vertex position
+of the event is extracted from truth information and an offset is added
+according to the size of the luminous region.  The smearing corresponding
+to the average chunk-by-chunk beam position uncertainty (QVTEBP) is
+included.
+ 
+ The ``desired'' beam size distribution is by default taken from
+measurements of the actual LEP conditions for the geometry year of the
+Monte Carlo file.  This default may be changed by means of data cards ( BPER,BPWT,BSIZ,SIBE) as
+explained in section \ref{sec-DCHUNK}.
+ 
+The horizontal size of the luminous region
+$\sigma_x$  is thrown at random from the measured distribution, which is
+parametrized as the sum of two Gaussians (not a delta function).  The
+uncertainties in x and y returned in QVTEBP, as well as the three sizes
+returned in QVTSBP, are taken from the ALRP database bank and are average
+values for the year (or run period).
+\end{indentlist}
+
+
+{\bf Important remarks:}
+
+To know how the beam position information was obtained for a given event, use the
+subroutine QWHICH$\_$BP (see Sec \ref{sec-EBSPOT} on p.~\pageref{sec-EBSPOT}).
+
+Another way of obtaining the beam position is to use the LEP BOMs (for LEP2 data only). See
+the description of the data card BOBS in Sec \ref{sec-EBSPOT} on p.~\pageref{sec-EBSPOT})
+and the subroutine QFILBP$\_$STATUS to know how the beam spot was found for a given event in
+Sec \ref{sec-BOMSTAT} on p.~\pageref{sec-BOMSTAT}.
+ 
+\section{\label{sec-MH}Event information}
+\par
+\subsection{\label{sec-MHE}Event header: from bank EVEH}
+\par
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{KRUN         }Run Number
+\indentitem{KEVT         }Event Number 
+\indentitem{KEVEDA       }DAte
+\indentitem{KEVETI       }TIme
+\indentitem{KEVEMI(I)    }trigger Mask I, I = 1 to 4
+\indentitem{KEVETY       }event TYpe
+\indentitem{KEVEES       }Error Status
+\end{indentlist}
+\subsection{\label{sec-MED}Event directory information}
+\par
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{KCLASW       }EDIR class word.
+                          See App. G for the definition of event classes.
+
+\end{indentlist}
+\subsection{\label{sec-MHK}Event generator status: from bank KEVH}
+\par
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{KKEVID       }process ID
+\indentitem{QKEVWT       }WeighT
+\end{indentlist}
+\subsection{\label{sec-MHR}Detector HV status: from banks REVH, LOLE}
+\par
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{XHVTRG   }=.TRUE. if XLUMOK checks are satisfied. (To
+save time,
+XHVTRG should be used rather than calling the function XLUMOK.)
+\indentitem{KREVDS   }Detector status word from REVH bank
+\indentitem{XVLCAL   }= .TRUE. if the LCAL is OK (i.e., the LOLE bank
+is present and
+there is no error condition)
+\indentitem{XVSATR   }= .TRUE. if SATR HV is OK
+\indentitem{XVITC    }= .TRUE. if ITC HV is OK
+\indentitem{XVTPC    }= .TRUE. if TPC HV is OK  (bit 15)
+\indentitem{XVTPCD   }= .TRUE. if all TPC HV is OK (dE/dx bit $-$
+bit 4)
+\indentitem{XVECAL   }= .TRUE. if ECAL HV is OK (i.e., all ECAL HV
+bits are on)
+\indentitem{XVHCAL   }= .TRUE. if HCAL HV is OK (i.e., all HCAL HV
+bits are on)
+\end{indentlist}
+\noindent Note: For VDET HV status, see Sec.~\ref{sec-XVDEOK}.
+\par
+\subsection{\label{sec-TRIG}Trigger Information: from XTEB or XTRB,
+XTCN}
+\par
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{KXTET1 }Level 1 trigger bit pattern
+\indentitem{KXTET2 }Level 2 trigger bit pattern
+\indentitem{KXTEL2 }Level 2 bit pattern after applying the enabled
+trigger mask
+\indentitem{KXTCGC }Number of GBXs since the last event readout
+\indentitem{KXTCLL }Number of level 1 yes conditions since the last
+event readout
+\indentitem{KXTCBN }$e^-$ bunch number
+\indentitem{KXTCCL }level 1 control word
+\indentitem{KXTCHV }HV status word (equivalent to KREVDS above)
+\indentitem{KXTCEN }mask of enabled triggers
+\end{indentlist}
+\par
+\subsection{\label{sec-BOM}Beam position from BOM system: from bank BOMB}
+\par
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{QVXBOM       }$x$ beam position from BOM
+\indentitem{QVYBOM       }$y$ beam position from BOM
+\indentitem{KERBOM       }Error code for BOM
+\begin{itemize}
+\item $<$ 0 fatal error, QVXBOM and QVYBOM are filled with QVXNOM and QVYNOM
+\item = 0 BOM data good
+\item = 1 BOM data in $x$ disagrees with VDET average
+\item = 2 BOM data in $y$ disagrees with VDET average
+\item = 3 BOM data in both $x$ and $y$ disagrees with VDET average
+\end{itemize}
+\end{indentlist}
+\section{\label{sec-ECWI}ECAL Wire Energies}
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\par
+\indentitem{QEECWI(IMOD) }ECAL wire energy summed over the whole module IMOD in GeV.
+Modules 1 $-$ 12 refer to endcap A, 13 $-$ 24 to the barrel, and 25
+$-$ 36 to endcap
+B.
+\end{indentlist}
+
+Please refer to subroutine QEWSUM (see \ref{sec-EWSU2} on p.~\pageref{sec-EWSU2}) to get
+the separate wire energies on even/odd planes of the ECAL modules.
+
+\section{\label{sec-MC}ALPHA Internal Constants, Variables}
+\par
+\subsection{\label{sec-MCN}Event counts}
+\par
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{KNEVT}Total number of events read in
+\indentitem{KNEFIL}Number of events read from the current input file
+\indentitem{KNREIN}Number of records read from the current input file
+(including run records)
+\indentitem{KNEOUT}Number of events written to the output file
+\end{indentlist}
+\subsection{\label{sec-MCS}Program status}
+\par
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{KSTATU}$-$1: program initialization;
+0: event processing;
+1: program termination
+\indentitem{KDEBUG}debug level (see \ref{sec-DCDEBU})
+\end{indentlist}
+\subsection{\label{sec-MCE}Event status}
+\par
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{XMINI}{\bf = .TRUE.} if event read from Mini-DST
+{\bf = .FALSE.} if event read from POT or DST
+\indentitem{XNANO}{\bf = .TRUE.} if event read from Nano-DST
+{\bf = .FALSE.} if event read from POT or DST or MINI
+\indentitem{XMCEV}{\bf = .TRUE.} if MC truth available for the event
+\end{indentlist}
+\subsection{\label{sec-MCU}Input / output units}
+\par
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{KUINPU}event input = 20, 21
+\indentitem{KUOUTP}event output = 50
+\indentitem{KUEDIN}EDIR (event directory) input = 30
+\indentitem{KUEDOU}EDIR (event directory) output = 60
+\indentitem{KUCONS}data base = 4
+\indentitem{KUPRNT}log file = 6
+\indentitem{KUPTER}terminal = 76 or 0 (see Ch.~\ref{sec-GS})
+\indentitem{KUCARD}card input =  7
+\indentitem{KUCAR2}second card input = 8
+\indentitem{KUHIST}histogram output unit = 15
+\indentitem{KURTOX}EXCH format histogram output on UNIX machines = 16
+\end{indentlist}
+Note: Units 90, 91, 92, and 93 are always free for
+private output files.
+\subsection{\label{sec-MCT}Timing}
+\par
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{QTIMEL}time remaining before time limit
+\indentitem{QTIME}seconds given on the TIME card (see \ref{sec-DCTIME})
+\end{indentlist}
+On all CERN computers, the time units are
+IBM 370/168 seconds.
+\subsection{\label{sec-MCC}Character variables}
+\par
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{CQVERS}ALPHA version number e.g. 121.01 (6 char)
+\indentitem{CQDATE}date at start of job (8 char)
+\indentitem{CQTIME}time at start of job (8 char)
+\indentitem{CQFOUT}data set name of event output file
+= ` ' if no output file given
+\end{indentlist}

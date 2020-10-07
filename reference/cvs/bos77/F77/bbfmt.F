@@ -1,0 +1,20 @@
+      SUBROUTINE BBFMT(NAMJ,IFMT,N)
+#include "boscom.h"
+      INTEGER IFMT(N)
+      ID=IDFMT+NAMJ-NSYST
+      IF(IW(ID).NE.0) THEN
+         IF(IFMT(2).LE.IW(IW(ID)+2)) GOTO 100
+      END IF
+      CALL WBANC(IW,IW(ID),N,*90)
+      IW(IW(ID)-3)=INTCHA('+FMT')
+      CALL UCOPY(IFMT,IW(IW(ID)+1),N)
+C
+C     FORMAT FLAG IEFMT  = -1   ERROR IN BKFMT CALL
+C                        >  0   NUMBER OF DEFINED FORMATS
+C
+C
+      IF(IEFMT.GE.0) IEFMT=IEFMT+1
+      GOTO 100
+   90 CALL BBSPC(IW,'BBFMT')
+  100 RETURN
+      END

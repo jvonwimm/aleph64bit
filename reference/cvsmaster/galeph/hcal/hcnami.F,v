@@ -1,0 +1,159 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.29.16.22.37;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.20;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.21;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+@
+text
+@*DK hcnami
+      SUBROUTINE HCNAMI
+C--------------------------------------------------------------------
+C
+C!   Define formats and name indices of HC Bos Banks
+C!
+C!                                Author:G.Catanesi 87/09/15
+C!          Called from :HCIRUN
+C!          Calls       :NAMIND,BFKFMT from BOS77.hlb
+C --------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "bcs.h"
+#include "hcnamc.h"
+C         define name-index
+C
+      NAHTHT = NAMIND('HTHT')
+      NAHWHT = NAMIND('HWHT')
+      NAHTTR = NAMIND('HTTR')
+      NAHWTR = NAMIND('HWTR')
+      NAHTDI = NAMIND('HTDI')
+      NAHWDI = NAMIND('HWDI')
+      NAHTDT = NAMIND('HTDT')
+      NAHTTD = NAMIND('HTTD')
+      NAHWDT = NAMIND('HWDT')
+      NAHWTD = NAMIND('HWTD')
+      NAHPDI = NAMIND('HPDI')
+      NAHPHT = NAMIND('HPHT')
+      NAHLWD = NAMIND('HLWD')
+C
+C       define formats
+C
+      CALL BKFMT ('HTHT','2I,(3I,F)')
+      CALL BKFMT ('HWHT','(I)')
+      CALL BKFMT ('HTTR','(I)')
+      CALL BKFMT ('HWTR','(I)')
+      CALL BKFMT ('HTDI','(I)')
+      CALL BKFMT ('HWDI','(I)')
+      CALL BKFMT ('HTDT','(I)')
+      CALL BKFMT ('HWDT','(I)')
+      CALL BKFMT ('HTTD','(I)')
+      CALL BKFMT ('HWTD','(I)')
+      CALL BKFMT ('HPDI','(I)')
+      CALL BKFMT ('HPHT','2I,(I,F)')
+      CALL BKFMT ('HLWD','2I,(I,F)')
+C
+C      Set to zero pointers to Work banks
+C
+      JDHCSE = 0
+      JDHCHI = 0
+      JDHCTH = 0
+C
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d10 1
+a10 1
+C -------------------------------------------------------------------
+d12 1
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

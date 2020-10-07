@@ -1,0 +1,108 @@
+ "Accepted" and "Rejected" runs for a given Physics Tools group in SCANBOOK:  
+ ==========================================================================
+
+ 1 - General principles:
+     ------------------
+
+ By default all runs are considered as "Rejected" in the SCANBOOK database for
+ all the Physics Tools groups. To get runs as "Accepted", or to downgrade
+ some runs to "Rejected" if they were previously "Accepted", one has to tell 
+ it explicitely to the program updating the database. To do this, for each
+ Physics Tools groups separately, one has: 
+ 
+  - to build a file containing the list of runs, with a format defined below;
+
+  - to send this file by e-mail to the alsoft account on aloha (see below).
+    This e-mail will be processed by the program which updates the SCANBOOK
+    database everyday at 4h00 a.m.
+
+ If a run has been declared one day as "Accepted", it may be changed afterwards
+ to "Rejected", using a new file sent at least one day later.
+ The same is valid for changing a run from "Rejected" to "Accepted".
+
+                                              
+ 2 - How to build a file to update the SCANBOOK database for a given group:
+     ---------------------------------------------------------------------
+
+     These are ASCII files whose content may be in upper or lower case, or in
+     any mixture of lower/upper. The number of blank spaces between two words
+     or two run numbers is irrelevant as long as it is at least 1 blank space.
+
+     Examples are available:
+       on aloha in  ~boucrot/phystools     BMODTPHY.*  files
+       on alws  in al2$user2:[boucrot.phystools]BMODTPHY.*
+
+     One example is displayed below:
+
+Physics Tools Group MI                                        
+Runs Accepted                                   
+SRUN  43296                   43303 43305       43310 43311 43312 43313
+      43314
+Runs Rejected
+SRUN                    43302             43307
+
+
+  Remarks :
+
+  **  The first line of the file must contain the Physics Tools group two-letter
+      identifier (which is MI in the example above), as defined below :
+
+           EW  Electroweak                              
+           VD  VDET                                      
+           EA  Eweak Asymmetries                        
+           EF  Energy Flow                        
+           DX  dE/dX
+           EI  Electron Id                      
+           MI  Muon Id                            
+           LX  Lumi Cross Section                  
+           LV  Lumi as Veto                       
+           GA  Photons                            
+           IT  ITC                                
+
+
+
+
+
+
+  **  Then comes a line telling that the following lines will give a list of
+      "Accepted" runs for the Physics Tools group.
+
+  **  Then comes the list of "Accepted" runs. To build it, the best way is to
+      use SCANBOOK to get a sruncard file of all PERF/MAYB runs in the run
+      range of interest, then edit this file to suppress the unwanted runs.
+      The presence of the SRUN keyword on the first line of the run list is
+      not mandatory.  
+
+  **  Then comes a line telling that the following lines will give a list of
+      "Rejected" runs for the Physics Tools group, if runs previously "Accepted"
+      have now to be declared as "Rejected".
+    
+  **  Then comes the list of "Rejected" runs. 
+
+  A file may contain only accepted runs, or only rejected runs, or both.
+  It cannot contain updating instructions for more than 1 Physics Tools group. 
+
+
+ 3 - How to send the file to update the SCANBOOK database:
+     ----------------------------------------------------
+  
+     The file name must be  BMODTPHY.XXXX 
+     BMODTPHY is the keyword needed by the program updating the SCANBOOK
+     database to know what to do  with this file.
+     The file name must be UPPER CASE, even on UNIX machines. 
+     XXXX is whatever you want (UPPER CASE!).
+
+     When the file is ready, you have simply to send it by e-mail as follows:
+
+  ** on UNIX machines (Beware of using Mail and not mail ... ):
+
+  Mail -s BMODTPHY.XXXX alsoft@aloha.cern.ch < BMODTPHY.XXXX
+                                                                           
+  ** on ALWS:
+
+  mail/subject="BMODTPHY.XXXX"  BMODTPHY.XXXX  mint::"""alsoft@aloha.cern.ch"""
+
+
+  Please verify one day after if your update has been taken into account
+  correctly.
+

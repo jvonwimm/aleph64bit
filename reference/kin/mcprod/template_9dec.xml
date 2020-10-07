@@ -1,0 +1,1662 @@
+   
+<templates>
+  <substitutions>
+     <rule name="CMSENE" replaceBy="lepEnergy"/>
+
+     <rule name="MASSW" replaceBy="Wmass"/>
+     <rule name="WIDTHW" replaceBy="Wwidth"/>
+
+     <rule name="MHIGGS" replaceBy="Hmass"/>
+
+     <rule name="DBVSCARD" changeTo="DBVS 313"/>
+
+     <rule name="DATECARD" index="lepEnergy,Geometry">
+       DATE  9200     ! 91.2 !   1992
+       DATE  9300     ! 91.2 !   1993
+       DATE  9400     ! 91.2 !   1994
+       DATE  9500     ! 91.2 !   1995
+       DATE  9700     ! 91.2 !   1997
+       DATE  9800     ! 91.2 !   1998
+       DATE  9900     ! 91.2 !   1999     
+       DATE  9901     ! 91.2 !   1999-191.6 
+       DATE  9902     ! 91.2 !   1999-195.5 
+       DATE  9903     ! 91.2 !   1999-199.5 
+       DATE  9904     ! 91.2 !   1999-201.6 
+       DATE  2000     ! 91.2 !   2000
+
+       DATE  9600     !  161.3 
+       DATE  9600     !  172.1 
+       DATE  9700     !  130.0
+       DATE  9700     !  136.0
+       DATE  9700     !  182.6 
+       DATE  9800     !  188.6
+       DATE  9800     !  188.1
+       DATE  9800     !  187.6
+       DATE  9800     !  189.1
+       DATE  9800     !  189.6
+       DATE  9905     !  191.6
+       DATE  9906     !  195.5
+       DATE  9908     !  199.5
+       DATE  9910     !  201.6
+       DATE  2000     !  204.9
+       DATE  2000     !  206.5
+       DATE  2000     !  208.0
+       DATE  2000     !  205.5
+       DATE  2000     !  206.0
+       DATE  2000     !  207.5
+       DATE  2000     !  207.0
+     </rule>
+
+     <rule name="ECALCARD" index="ECAL">
+       *                                 ! Para
+       RUNC 'ECAL' 0 0 0 0 0 0 0 0 0 0   ! Full
+     </rule>
+
+     <rule name="CARDECCA" index="ECAL">
+     ECCA  $FMT '2I,(F)'                               ! Full
+     ECCA  -1 / 2 36                                   ! Full
+        1.018   1.020   1.018   1.020   1.018   1.020  ! Full
+        1.018   1.020   1.018   1.020   1.018   1.020  ! Full
+        1.018   1.020   1.018   1.020   1.018   1.020  ! Full
+        1.018   1.020   1.018   1.020   1.018   1.020  ! Full
+        1.014   1.015   1.014   1.015   1.014   1.015  ! Full
+        1.014   1.015   1.014   1.015   1.014   1.015  ! Full
+        1.014   1.015   1.014   1.015   1.014   1.015  ! Full
+        1.014   1.015   1.014   1.015   1.014   1.015  ! Full
+        1.018   1.020   1.018   1.020   1.018   1.020  ! Full
+        1.018   1.020   1.018   1.020   1.018   1.020  ! Full
+        1.018   1.020   1.018   1.020   1.018   1.020  ! Full
+        1.018   1.020   1.018   1.020   1.018   1.020  ! Full
+     * no mod to ECCA                                  ! Para
+     </rule>
+
+     <rule name="SVRTCARD" index="lepEnergy,Geometry">
+       SVRT  0.0114   0.0005   0.71       ! 91.2 !   1992
+       SVRT  0.0159   0.0005   0.74       ! 91.2 !   1993 
+       SVRT  0.0124   0.0005   0.72       ! 91.2 !   1994
+       SVRT  0.0146   0.0005   0.79       ! 91.2 !   1995
+       SVRT  0.0140   0.0005   0.79       ! 91.2 !   1997
+       SVRT  0.0127   0.0005   0.71       ! 91.2 !   1998
+       SVRT  0.0120   0.0005   0.665      ! 91.2 !   1999
+       SVRT  0.0150   0.0005   0.686      ! 91.2 !   2000
+
+       SVRT  0.0150   0.0005   0.66       !  161.3 
+       SVRT  0.0150   0.0005   0.66       !  172.1
+       SVRT  0.0140   0.0005   0.79       !  130.0
+       SVRT  0.0140   0.0005   0.79       !  136.0
+       SVRT  0.0140   0.0005   0.79       !  182.6 
+       SVRT  0.0113   0.0005   0.79       !  188.6
+       SVRT  0.0113   0.0005   0.79       !  189.6
+       SVRT  0.0113   0.0005   0.79       !  189.1
+       SVRT  0.0113   0.0005   0.79       !  188.1
+       SVRT  0.0113   0.0005   0.79       !  187.6
+       SVRT  0.0102   0.0005   0.714      !  191.6
+       SVRT  0.0108   0.0005   0.768      !  195.5
+       SVRT  0.0117   0.0005   0.752      !  199.5
+       SVRT  0.0119   0.0005   0.738      !  201.6
+       SVRT  0.0143   0.0005   0.679      !  204.9
+       SVRT  0.0155   0.0005   0.689      !  206.5
+       SVRT  0.0155   0.0005   0.689      !  208.0
+       SVRT  0.0155   0.0005   0.689      !  205.5
+       SVRT  0.0155   0.0005   0.689      !  206.0
+       SVRT  0.0155   0.0005   0.689      !  207.5
+       SVRT  0.0155   0.0005   0.689      !  207.0
+     </rule>
+
+     <rule name="XVRTCARD" index="lepEnergy,Geometry">
+
+       XVRT -0.100    0.038   -0.004      ! 91.2 ! 1992 
+       XVRT -0.044    0.030   -0.007      ! 91.2 ! 1993 
+       XVRT -0.060    0.023    0.010      ! 91.2 ! 1994 
+       XVRT -0.075    0.018   -0.141      ! 91.2 ! 1995 
+
+       XVRT  0.052    0.052    0.010      !  130.0
+       XVRT  0.052    0.052    0.010      !  136.0
+       XVRT  0.052    0.052    0.010      !  182.6 
+       XVRT  0.061    0.031    0.005      !  188.6
+       XVRT  0.057    0.038    0.000      !  191.6
+       XVRT  0.057    0.035    0.000      !  195.5
+       XVRT  0.063    0.030    0.000      !  199.5
+       XVRT  0.062    0.023    0.000      !  201.6
+     </rule>
+
+     <rule name="NREFCARD" index="Process">
+       NREF 9701   !   qqbar    
+       NREF 9700   !   ddbar    
+       NREF 9700   !   uubar     
+       NREF 9700   !   ssbar    
+       NREF 9700   !   ccbar    
+       NREF 9700   !   bbbar     
+       NREF 9700   !   nunubar 
+       NREF 9700   !   udmix
+       NREF 9700   !   gg-notag
+       NREF 9700   !   gg-tag
+       NREF 9700   !   gg-loosetag
+       NREF 9700   !   mu+mu-
+       NREF 9700   !   Tau+Tau-
+       NREF 9700   !   e+e- 
+       NREF 9702   !   W+W-      
+       NREF 9702   !   ZZ
+       NREF 9702   !   ZZ-NC02        
+       NREF 9702   !   Wenu     
+       NREF 9702   !   Zee
+       NREF 9702   !   Zeeqq
+       NREF 9702   !   Zeemm  
+       NREF 9702   !   Znn      
+       NREF 9711   !   WW-CC03  
+       NREF 9711   !   WW-4f 
+       NREF 9711   !   ZZ-4f     
+       NREF 9711   !   WZ-4f 
+       NREF 9711   !   Zee-bkg
+       NREF 9713   !   WWZ
+     </rule>
+
+     <rule name="MSUBCARD" index="Process">
+       MSUB  1 / 1  !    qqbar     
+       MSUB 25 / 1  !    W+W-      
+       MSUB 36 / 1  !    Wenu      
+       MSUB 22 / 1  !    ZZ        
+       MSUB 35 / 1  !    Zee 
+       * No msub    !    gg-notag
+       * No msub    !    gg-loosetag
+       * No msub    !    gg-tag
+       MSUB 22 / 1  !    ZZ-NC02
+       MSTP 43 / 2  !    ZZ-NC02       
+     </rule>
+
+     <rule name="CKINCARD" index="CKIN">
+       CKIN 3 / 0.01  !  High  
+       CKIN 5 / 0.01  !  High
+       CKIN 41 / 12.  !  High
+       CKIN 43 / 12.  !  High
+       CKIN 45 / 12.  !  High
+       CKIN 47 / 12.  !  High
+
+       CKIN 3 / 0.01  !  Low   
+       CKIN 5 / 0.01  !  Low
+       CKIN 41 / 2.   !  Low 
+       CKIN 43 / 2.   !  Low 
+       CKIN 45 / 0.2  !  Low
+       CKIN 47 / 0.2  !  Low
+       PARP 42 / 0.2  !  Low
+     </rule>
+
+     <rule name="MINW" index="Cut">
+        2.5    !  Loose
+        9.5    !  Tight
+     </rule>
+
+     <rule name="MINPT" index="Cut">
+        0.15    !  Loose
+        0.35    !  Tight
+     </rule>
+
+     <rule name="IPROCESS" index="Process">
+      10   !    qqbar     
+       1   !    ddbar   
+       2   !    uubar   
+       3   !    ssbar    
+       4   !    ccbar    
+       5   !    bbbar
+      10   !    udmix   
+      11   !    e+e-
+      13   !    mu+mu-   
+      15   !    Tau+Tau-   
+      12   !    nunubar
+    19000  !    gg-tag
+    19000  !    gg-loosetag
+       10    0   !    WW-CC03    
+      110   10   !    WW-4f   
+     </rule>
+
+     <rule name="PYTYPE" index="Process">
+       99  ! qqbar
+       99  ! W+W-
+       99  ! Wenu
+       99  ! ZZ 
+       99  ! Zee
+       99  ! ZZ-NC02
+       16  ! gg-notag
+       16  ! gg-tag
+     </rule>
+
+     <rule name="GGTAGCARD" index="Process">
+     * no change     ! qqbar  
+     * no change     ! W+W-      
+     * no change     ! Wenu      
+     * no change     ! ZZ        
+     * no change     ! Zee 
+     * no change     ! ZZ-NC02
+     * no change     ! gg-notag
+     GCUT    1   0.030  0.200                ! gg-tag
+     ETAG   10.                              ! gg-tag
+     TKCU    2   0.001                       ! gg-tag
+     GGQ2    2.  3. 3000.   0.     2    1.0  ! gg-tag
+     GGEN    0. 10.         0.    1.  0.  1. ! gg-tag 
+     GCUT    1   0.020  3.15                 ! gg-loosetag
+     ETAG    2.                              ! gg-loosetag
+     TKCU    2   0.001                       ! gg-loosetag
+     GGQ2    2.  6. 43000.  0.     2    1.0  ! gg-loosetag 
+     GGEN    0.  6.     0.  1.  0.  1.       ! gg-loosetag
+     </rule>
+
+     <rule name="GGNOTAGCARD" index="Process">
+     * no change     ! qqbar  
+     * no change     ! W+W-      
+     * no change     ! Wenu      
+     * no change     ! ZZ        
+     * no change     ! Zee 
+     * no change     ! ZZ-NC02
+     *  gg setup in PYTH05 ! gg-notag
+     PARJ 101 / 0.6  ! gg-notag
+     PARJ 102 / 1.0  ! gg-notag
+     PARJ 103 / 0.1  ! gg-notag 
+     PARJ 104 / 1.5  ! gg-notag
+     PARP 81 /  2.3  ! gg-notag
+     PARP 99 / 1.5   ! gg-notag
+     PARP 100 / 6.0  ! gg-notag
+     MSTU 112  /    4   ! gg-notag 
+     MSTJ  47  /    3   ! gg-notag 
+     PARJ  11  / 0.500  ! gg-notag
+     PARJ  12  / 0.600  ! gg-notag
+     PARJ  13  / 0.750  ! gg-notag
+     PARJ  14  /  0.00  ! gg-notag
+     PARJ  15  /  0.00  ! gg-notag
+     PARJ  16  /  0.00  ! gg-notag
+     PARJ  17  /  0.00  ! gg-notag
+     PARJ  19  /  1.00  ! gg-notag 
+     PARJ  26  / 0.400  ! gg-notag 
+     PARU 112  / 0.232  ! gg-notag 
+     MSTJ  11  /    4   ! gg-notag 
+     PARJ  54  / -0.500E-01  !  gg-notag 
+     PARJ   1  / 0.100  !  gg-notag 
+     PARJ   2  / 0.300  !  gg-notag 
+     PARJ   3  / 0.400  !  gg-notag 
+     *  gg setup in PYTH05 ! gg-tag
+     PARJ 101 / 0.6  ! gg-tag
+     PARJ 102 / 1.0  ! gg-tag
+     PARJ 103 / 0.1  ! gg-tag 
+     PARJ 104 / 1.5  ! gg-tag
+     PARP 81 /  2.3  ! gg-tag
+     PARP 99 / 1.5   ! gg-tag
+     PARP 100 / 6.0  ! gg-tag
+     MSTU 112  /    4   ! gg-tag 
+     MSTJ  47  /    3   ! gg-tag 
+     PARJ  11  / 0.500  ! gg-tag
+     PARJ  12  / 0.600  ! gg-tag
+     PARJ  13  / 0.750  ! gg-tag
+     PARJ  14  /  0.00  ! gg-tag
+     PARJ  15  /  0.00  ! gg-tag
+     PARJ  16  /  0.00  ! gg-tag
+     PARJ  17  /  0.00  ! gg-tag
+     PARJ  19  /  1.00  ! gg-tag 
+     PARJ  26  / 0.400  ! gg-tag 
+     PARU 112  / 0.232  ! gg-tag 
+     MSTJ  11  /    4   ! gg-tag 
+     PARJ  54  / -0.500E-01  !  gg-tag 
+     PARJ   1  / 0.100  !  gg-tag 
+     PARJ   2  / 0.300  !  gg-tag 
+     PARJ   3  / 0.400  !  gg-tag
+     </rule>
+
+     <rule name="PDFCARD" index="pdf">
+      GPDF   8    1          8   1   !  SaS
+      GPDF   5    3          5   3   !  GRV
+      * PDF setup in PYTH05 GRV-LO   !  GRV
+      MSTP  14 / 25                  !  GRV
+      MSTP  56 / 2                   !  GRV
+      MSTP  55 / 5003                !  GRV
+      * PDF setup in PYTH05 SaS-1D   !  SaS 
+      MSTP  55 / 9                   !  SaS
+     </rule>
+
+     <rule name="WTMAX" index="Process">
+       5.E5  !    WW-CC03   
+      30.E6  !    WW-4f    
+     </rule>
+
+
+     <rule name="ZZON" index="Process">
+         1     !  WZ-4f
+         1     !  ZZ-4f
+         0     !  WW-CC03
+         0     !  WW-4f
+         1     !  Wenu
+         1     !  Zee
+         1     !  Zeeqq
+         1     !  Zeemm
+         1     !  Zee-bkg
+     </rule>
+
+     <rule name="WWON" index="Process">
+         1     !  WZ-4f
+         1     !  ZZ-4f
+         1     !  WW-CC03
+         1     !  WW-4f
+         1     !  Wenu
+         1     !  Zee
+         1     !  Zeeqq
+         1     !  Zeemm
+         1     !  Zee-bkg
+     </rule>
+
+     <rule name="KEY4F" index="Process">
+         1     !  WZ-4f
+         1     !  ZZ-4f
+         0     !  WW-CC03
+         1     !  WW-4f
+         1     !  Wenu
+         1     !  Zee
+         1     !  Zeeqq
+         1     !  Zeemm
+         1     !  Zee-bkg
+     </rule>
+
+     <rule name="YFSWCARD" index="Process">
+        YFSW  !  WZ-4f
+        YFSW  !  WW-CC03
+        YFSW  !  WW-4f
+        YFSW  !  Wenu
+        *YFSW  ! ZZ-4f
+        *YFSW  ! Zee 
+        *YFSW  ! Zeeqq
+        *YFSW  ! Zeemm 
+        *YFSW  ! Zee-bkg
+     </rule>
+
+     <rule name="MSKCARD" index="Process">
+         *     !  WW-CC03
+         *     !  WW-4f
+         *     !  WZ-4f
+         *  no generation of ww like states             !  ZZ-4f
+         MSKW 0    0    0    0    0    0    0    0    0 !  ZZ-4f
+              0    0    0    0    0    0    0    0    0 !  ZZ-4f
+              0    0    0    0    0    0    0    0    0 !  ZZ-4f
+              0    0    0    0    0    0    0    0    0 !  ZZ-4f
+              0    0    0    0    0    0    0    0    0 !  ZZ-4f
+              0    0    0    0    0    0    0    0    0 !  ZZ-4f
+              0    0    0    0    0    0    0    0    0 !  ZZ-4f
+              0    0    0    0    0    0    0    0    0 !  ZZ-4f
+              0    0    0    0    0    0    0    0    0 !  ZZ-4f
+         * suppress WW-like final states                !  ZZ-4f
+         MSKZ 1    0    0    0    0    0    0    0    0    0    0 !  ZZ-4f
+              0    1    0    0    0    0    0    0    0    0    0 !  ZZ-4f
+              1    0    1    0    0    0    0    0    0    0    0 !  ZZ-4f
+              0    1    0    1    0    0    0    0    0    0    0 !  ZZ-4f
+              1    0    1    0    1    0    0    0    0    0    0 !  ZZ-4f
+              1    1    1    1    1    1    0    0    0    0    0 !  ZZ-4f
+              1    1    1    1    1    1    1    0    0    0    0 !  ZZ-4f
+              1    1    1    1    1    1    1    1    0    0    0 !  ZZ-4f
+              1    1    1    1    1    0    1    1    1    0    0 !  ZZ-4f
+              1    1    1    1    1    1    0    1    1    1    0 !  ZZ-4f
+              1    1    1    1    1    1    1    0    1    1    1 !  ZZ-4f
+         *  generation of Wenu like states              ! Wenu
+         MSKW 0    0    0    0    0    0    1    0    0 ! Wenu
+              0    0    0    0    0    0    1    0    0 ! Wenu
+              0    0    0    0    0    0    1    0    0 ! Wenu
+              0    0    0    0    0    0    1    0    0 ! Wenu
+              0    0    0    0    0    0    1    0    0 ! Wenu
+              0    0    0    0    0    0    1    0    0 ! Wenu
+              1    1    1    1    1    1    1    1    1 ! Wenu
+              0    0    0    0    0    0    1    0    0 ! Wenu
+              0    0    0    0    0    0    1    0    0 ! Wenu 
+         MSKZ 0    0    0    0    0    0    0    0    0    0    0 ! Wenu 
+              0    0    0    0    0    0    0    0    0    0    0 ! Wenu
+              0    0    0    0    0    0    0    0    0    0    0 ! Wenu
+              0    0    0    0    0    0    0    0    0    0    0 ! Wenu
+              0    0    0    0    0    0    0    0    0    0    0 ! Wenu
+              0    0    0    0    0    0    0    0    0    0    0 ! Wenu
+              0    0    0    0    0    0    0    0    0    0    0 ! Wenu
+              0    0    0    0    0    0    0    0    0    0    0 ! Wenu
+              0    0    0    0    0    0    0    0    0    0    0 ! Wenu
+              0    0    0    0    0    0    0    0    0    0    0 ! Wenu
+              0    0    0    0    0    0    0    0    0    0    0 ! Wenu
+         MSTJ 28 / 0                                              ! Wenu
+         *  generation of Zee  like states              ! Zee 
+         MSKW 0    0    0    0    0    0    0    0    0 ! Zee 
+              0    0    0    0    0    0    0    0    0 ! Zee 
+              0    0    0    0    0    0    0    0    0 ! Zee 
+              0    0    0    0    0    0    0    0    0 ! Zee 
+              0    0    0    0    0    0    0    0    0 ! Zee 
+              0    0    0    0    0    0    0    0    0 ! Zee 
+              0    0    0    0    0    0    0    0    0 ! Zee 
+              0    0    0    0    0    0    0    0    0 ! Zee 
+              0    0    0    0    0    0    0    0    0 ! Zee
+         MSKZ 0    0    0    0    0    0    0    0    0    0    0 ! Zee 
+              0    0    0    0    0    0    0    0    0    0    0 ! Zee 
+              0    0    0    0    0    0    0    0    0    0    0 ! Zee
+              0    0    0    0    0    0    0    0    0    0    0 ! Zee
+              0    0    0    0    0    0    0    0    0    0    0 ! Zee
+              1    1    1    1    1    0    0    0    0    0    0 ! Zee
+              0    0    0    0    0    1    0    0    0    0    0 ! Zee
+              0    0    0    0    0    1    0    0    0    0    0 ! Zee
+              0    0    0    0    0    0    0    0    0    0    0 ! Zee
+              0    0    0    0    0    0    0    0    0    0    0 ! Zee
+              0    0    0    0    0    0    0    0    0    0    0 ! Zee
+         MSTJ 28 / 0                                              ! Zee
+         *  generation of Zee qq  like states              ! Zeeqq 
+         MSKW 0    0    0    0    0    0    0    0    0 ! Zeeqq 
+              0    0    0    0    0    0    0    0    0 ! Zeeqq 
+              0    0    0    0    0    0    0    0    0 ! Zeeqq 
+              0    0    0    0    0    0    0    0    0 ! Zeeqq 
+              0    0    0    0    0    0    0    0    0 ! Zeeqq 
+              0    0    0    0    0    0    0    0    0 ! Zeeqq 
+              0    0    0    0    0    0    0    0    0 ! Zeeqq 
+              0    0    0    0    0    0    0    0    0 ! Zeeqq 
+              0    0    0    0    0    0    0    0    0 ! Zeeqq
+         MSKZ 0    0    0    0    0    0    0    0    0    0    0 ! Zeeqq 
+              0    0    0    0    0    0    0    0    0    0    0 ! Zeeqq 
+              0    0    0    0    0    0    0    0    0    0    0 ! Zeeqq
+              0    0    0    0    0    0    0    0    0    0    0 ! Zeeqq
+              0    0    0    0    0    0    0    0    0    0    0 ! Zeeqq
+              1    1    1    1    1    0    0    0    0    0    0 ! Zeeqq
+              0    0    0    0    0    0    0    0    0    0    0 ! Zeeqq
+              0    0    0    0    0    0    0    0    0    0    0 ! Zeeqq
+              0    0    0    0    0    0    0    0    0    0    0 ! Zeeqq
+              0    0    0    0    0    0    0    0    0    0    0 ! Zeeqq
+              0    0    0    0    0    0    0    0    0    0    0 ! Zeeqq
+         MSTJ 28 / 0                                              ! Zeeqq 
+         *  generation of Zee mumu  like states              ! Zee 
+         MSKW 0    0    0    0    0    0    0    0    0 ! Zeemm 
+              0    0    0    0    0    0    0    0    0 ! Zeemm 
+              0    0    0    0    0    0    0    0    0 ! Zeemm 
+              0    0    0    0    0    0    0    0    0 ! Zeemm 
+              0    0    0    0    0    0    0    0    0 ! Zeemm 
+              0    0    0    0    0    0    0    0    0 ! Zeemm 
+              0    0    0    0    0    0    0    0    0 ! Zeemm 
+              0    0    0    0    0    0    0    0    0 ! Zeemm 
+              0    0    0    0    0    0    0    0    0 ! Zeemm
+         MSKZ 0    0    0    0    0    0    0    0    0    0    0 ! Zeemm 
+              0    0    0    0    0    0    0    0    0    0    0 ! Zeemm 
+              0    0    0    0    0    0    0    0    0    0    0 ! Zeemm
+              0    0    0    0    0    0    0    0    0    0    0 ! Zeemm
+              0    0    0    0    0    0    0    0    0    0    0 ! Zeemm
+              0    0    0    0    0    0    0    0    0    0    0 ! Zeemm
+              0    0    0    0    0    1    0    0    0    0    0 ! Zeemm
+              0    0    0    0    0    0    0    0    0    0    0 ! Zeemm
+              0    0    0    0    0    0    0    0    0    0    0 ! Zeemm
+              0    0    0    0    0    0    0    0    0    0    0 ! Zeemm
+              0    0    0    0    0    0    0    0    0    0    0 ! Zeemm
+         MSTJ 28 / 0                                              ! Zeemm
+         *  generation of ZZ as background to Zee qq and mumu ! Zee-bkg
+         MSKW 0    0    0    0    0    0    0    0    0   !  Zee-bkg
+              0    0    0    0    0    0    0    0    0   !  Zee-bkg
+              0    0    0    0    0    0    0    0    0   !  Zee-bkg
+              0    0    0    0    0    0    0    0    0   !  Zee-bkg
+              0    0    0    0    0    0    0    0    0   !  Zee-bkg
+              0    0    0    0    0    0    0    0    0   !  Zee-bkg
+              0    0    0    0    0    0    0    0    0   !  Zee-bkg
+              0    0    0    0    0    0    0    0    0   !  Zee-bkg
+              0    0    0    0    0    0    0    0    0   !  Zee-bkg
+         * suppress WW-like final states                !  Zee-bkg
+         MSKZ 1    0    0    0    0    0    0    0    0    0    0 ! Zee-bkg 
+              0    1    0    0    0    0    0    0    0    0    0 ! Zee-bkg 
+              1    0    1    0    0    0    0    0    0    0    0 ! Zee-bkg 
+              0    1    0    1    0    0    0    0    0    0    0 ! Zee-bkg 
+              1    0    1    0    1    0    0    0    0    0    0 ! Zee-bkg 
+              1    1    1    1    1    0    0    0    0    0    0 ! Zee-bkg 
+              1    1    1    1    1    1    1    0    0    0    0 ! Zee-bkg 
+              1    1    1    1    1    1    1    1    0    0    0 ! Zee-bkg 
+              1    1    1    1    1    0    1    1    0    0    0 ! Zee-bkg 
+              1    1    1    1    1    0    0    1    0    0    0 ! Zee-bkg 
+              1    1    1    1    1    0    1    0    0    0    0 ! Zee-bkg 
+         MSTJ 28 / 0                                              ! Zee-bkg
+     </rule>
+
+     <rule name="KEYAC" index="TGC">
+         0     !  None
+         1     !  I42M
+         1     !  I42P
+         1     !  I44M
+         1     !  I44P
+         1     !  I52M
+         1     !  I52P
+         1     !  I54M
+         1     !  I54P
+         1     !  I62M
+         1     !  I62P
+         1     !  I64M
+         1     !  I64P
+         1     !  I72M
+         1     !  I72P
+         1     !  I74M
+         1     !  I74P
+         1     !  R13M
+         1     !  R13P
+         1     !  R41M
+         1     !  R41P
+         1     !  R43M
+         1     !  R43P
+         1     !  R51M
+         1     !  R51P
+         1     !  R53M
+         1     !  R53P
+         1     !  R61M
+         1     !  R61P
+         1     !  R63M
+         1     !  R63P
+         1     !  R71M
+         1     !  R71P
+         1     !  R73M
+         1     !  R73P
+         1     !  R31M
+         1     !  R31P
+         1     !  R21M
+         1     !  R21P
+         1     !  R21P31M
+         1     !  R21P13P
+     </rule>
+
+ 
+     <rule name="GCUTCARD" index="Process">
+      GCE1      1.      -1.       1.      -1.     !    WW-CC03   
+      GCE2      0.       0.       0.       0.     !    WW-CC03 
+      GCUU      0.       0.                       !    WW-CC03
+
+      GCE1      0.998   -0.998    0.998   -0.998  !    WW-4f    
+      GCE2      0.       0.       2.       2.     !    WW-4f
+      GCUU      0.       0.270                    !    WW-4f
+     </rule> 
+
+     <rule name="GCE1CARD" index="Process">
+      GCE1 1. 0.998 -0.998 -1. -0.98  0.98 !   Wenu
+      *  no GCE1 card                      !   WW-4f
+      *  no GCE1 card                      !   WW-CC03
+      *  no GCE1 card                      !   WZ-4f
+      *  no GCE1 card                      !   ZZ-4f
+      *  no GCE1 card                      !   Zee
+      *  no GCE1 card                      !   Zeeqq
+      *  no GCE1 card                      !   Zeemm
+      *  no GCE1 card                      !   Zee-bkg
+     </rule> 
+
+     <rule name="GCEECARD" index="Process">
+     *  no GCEE card                      !   WW-4f
+     *  no GCEE card                      !   WW-CC03
+     *  no GCEE card                      !   WZ-4f
+     *  no GCEE card                      !   ZZ-4f
+     *  no GCEE card                      !   Zee-bkg
+     *  no GCEE card                      !   Wenu
+     GCEE   3.        3.        0.        0.  !   Zee
+            0.        0.        0.        0.  !   Zee
+            0.       55.        0.        0.  !   Zee
+           0.97815   -0.5      -1.       -1.  !   Zee
+            1.    0.97815       1.        1.  !   Zee
+           -1.       -1.        1.        1.  !   Zee
+            0.        0.       -1.        1.  !   Zee
+     GCEE   3.        3.        0.        0.  !   Zeeqq
+            0.        0.        0.        0.  !   Zeeqq
+            0.       55.        0.        0.  !   Zeeqq
+           0.97815   -0.5      -1.       -1.  !   Zeeqq
+            1.    0.97815       1.        1.  !   Zeeqq
+           -1.       -1.        1.        1.  !   Zeeqq
+            0.        0.       -1.        1.  !   Zeeqq
+     GCEE   3.        3.        0.        0.  !   Zeemm
+            0.        0.        0.        0.  !   Zeemm
+            0.       55.        0.        0.  !   Zeemm
+           0.97815   -0.5      -1.       -1.  !   Zeemm
+            1.    0.97815       1.        1.  !   Zeemm
+           -1.       -1.        1.        1.  !   Zeemm
+            0.        0.       -1.        1.  !   Zeemm
+     </rule> 
+
+      <rule name="PT2MIN" index="Process">
+       XPAR 14 / 25.       !   Wenu
+       XPAR 14 / 25.       !   Zee
+       XPAR 14 / 25.       !   Zeeqq
+       XPAR 14 / 25.       !   Zeemm
+       *                   !   WW-4f
+       *                   !   WW-CC03
+       *                   !   WZ-4f
+       *                   !   ZZ-4f
+       XPAR 15 /  3.       !   Zee-bkg
+      </rule> 
+
+      <rule name="GPT2CARD" index="Pt2">
+       GPT2  25.   600.   3.   8.   ! Low
+       XPAR 14 / 25.      ! Low  
+       *                  ! None
+      </rule>
+
+     <rule name="GKACCARD" index="Process,TGC">
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !  WW-CC03 ! None
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !  WW-CC03 ! None
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !  WW-CC03 ! None
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !  WW-CC03 ! None
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WZ-4f ! None
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WZ-4f ! None
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WZ-4f ! None
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WZ-4f ! None
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-4f ! None
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-4f ! None
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-4f ! None
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-4f ! None
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    ZZ-4f ! None
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    ZZ-4f ! None
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    ZZ-4f ! None
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    ZZ-4f ! None
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    Zee-bkg ! None
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    Zee-bkg ! None
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    Zee-bkg ! None
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    Zee-bkg ! None
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    Wenu  ! None
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    Wenu  ! None
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    Wenu  ! None
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    Wenu  ! None
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I42M
+            0.0   0.0   0.0 -0.25   0.0  0.0  0.0 !    WW-CC03 ! I42M
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I42M
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I42M
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I42P
+            0.0   0.0   0.0  0.25   0.0  0.0  0.0 !    WW-CC03 ! I42P
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I42P
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I42P
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I44M
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I44M
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I44M
+            0.0   0.0   0.0 -0.25   0.0  0.0  0.0 !    WW-CC03 ! I44M  
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I44P
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I44P
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I44P
+            0.0   0.0   0.0  0.25   0.0  0.0  0.0 !    WW-CC03 ! I44P
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I52P
+            0.0   0.0   0.0   0.0   0.25 0.0  0.0 !    WW-CC03 ! I52P
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I52P
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I52P
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I52M
+            0.0   0.0   0.0   0.0  -0.25 0.0  0.0 !    WW-CC03 ! I52M
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I52M
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I52M
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I54P
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I54P
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I54P
+            0.0   0.0   0.0   0.0   0.25 0.0  0.0 !    WW-CC03 ! I54P
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I54M
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I54M
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I54M
+            0.0   0.0   0.0   0.0  -0.25 0.0  0.0 !    WW-CC03 ! I54M
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I62P
+            0.0   0.0   0.0   0.0   0.0  0.25 0.0 !    WW-CC03 ! I62P
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I62P
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I62P
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I62M
+            0.0   0.0   0.0   0.0   0.0 -0.25 0.0 !    WW-CC03 ! I62M
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I62M
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I62M
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I64P
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I64P
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I64P
+            0.0   0.0   0.0   0.0   0.0  0.25 0.0 !    WW-CC03 ! I64P
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I64M
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I64M
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! I64M
+            0.0   0.0   0.0   0.0   0.0 -0.25 0.0 !    WW-CC03 ! I64M
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0  !    WW-CC03 ! I72P
+            0.0   0.0   0.0   0.0   0.0  0.0  0.25 !    WW-CC03 ! I72P
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0  !    WW-CC03 ! I72P
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0  !    WW-CC03 ! I72P
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0  !    WW-CC03 ! I72M
+            0.0   0.0   0.0   0.0   0.0  0.0 -0.25 !    WW-CC03 ! I72M
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0  !    WW-CC03 ! I72M
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0  !    WW-CC03 ! I72M
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0  !    WW-CC03 ! I74P
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0  !    WW-CC03 ! I74P
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0  !    WW-CC03 ! I74P
+            0.0   0.0   0.0   0.0   0.0  0.0  0.25 !    WW-CC03 ! I74P
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0  !    WW-CC03 ! I74M
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0  !    WW-CC03 ! I74M
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0  !    WW-CC03 ! I74M
+            0.0   0.0   0.0   0.0   0.0  0.0 -0.25 !    WW-CC03 ! I74M
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R13M
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R13M 
+            0.75  0.75  0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R13M 
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R13M
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R13P
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R13P 
+            1.25  1.25  0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R13P 
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R13P
+  
+      GKAC  1.0   1.0   0.0  -0.25  0.0  0.0  0.0 !    WW-CC03 ! R41M
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R41M 
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R41M 
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R41M 
+
+      GKAC  1.0   1.0   0.0   0.25  0.0  0.0  0.0 !    WW-CC03 ! R41P
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R41P 
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R41P 
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R41P 
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R43M
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R43M
+            1.0   1.0   0.0  -0.25  0.0  0.0  0.0 !    WW-CC03 ! R43M 
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R43M
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R43P
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R43P
+            1.0   1.0   0.0   0.25  0.0  0.0  0.0 !    WW-CC03 ! R43P 
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R43P
+
+      GKAC  1.0   1.0   0.0   0.0   0.25 0.0  0.0 !    WW-CC03 ! R51P
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R51P 
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R51P 
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R51P
+
+      GKAC  1.0   1.0   0.0   0.0  -0.25 0.0  0.0 !    WW-CC03 ! R51M
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R51M 
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R51M 
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R51M
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R53P
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R53P
+            1.0   1.0   0.0   0.0   0.25 0.0  0.0 !    WW-CC03 ! R53P 
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R53P
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R53M
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R53M
+            1.0   1.0   0.0   0.0  -0.25 0.0  0.0 !    WW-CC03 ! R53M
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R53M
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.25 0.0 !    WW-CC03 ! R61P
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R61P 
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R61P 
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R61P
+
+      GKAC  1.0   1.0   0.0   0.0   0.0 -0.25 0.0 !    WW-CC03 ! R61M
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R61M 
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R61M 
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R61M
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R63P
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R63P
+            1.0   1.0   0.0   0.0   0.0  0.25 0.0 !    WW-CC03 ! R63P 
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R63P
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R63M
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R63M
+            1.0   1.0   0.0   0.0   0.0 -0.25 0.0 !    WW-CC03 ! R63M 
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R63M
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.25 !    WW-CC03 ! R71P
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R71P 
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R71P 
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R71P
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0 -0.25 !    WW-CC03 ! R71M
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R71M 
+            1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R71M 
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R71M
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R73P
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R73P
+            1.0   1.0   0.0   0.0   0.0  0.0  0.25 !    WW-CC03 ! R73P 
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R73P
+
+      GKAC  1.0   1.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R73M
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R73M
+            1.0   1.0   0.0   0.0   0.0  0.0 -0.25 !    WW-CC03 ! R73M 
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R73M
+
+      GKAC  1.0   1.0  -0.25  0.0   0.0  0.0  0.0 !    WW-CC03 ! R31M
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R31M 
+            1.0   1.0  -0.25  0.0   0.0  0.0  0.0 !    WW-CC03 ! R31M 
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R31M
+
+      GKAC  1.0   1.0   0.25  0.0   0.0  0.0  0.0 !    WW-CC03 ! R31P
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R31P 
+            1.0   1.0   0.25  0.0   0.0  0.0  0.0 !    WW-CC03 ! R31P 
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R31P
+
+      GKAC  1.0   0.75  0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R21M
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R21M 
+            1.0   1.076 0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R21M 
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R21M
+
+      GKAC  1.0   1.25  0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R21P
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R21P 
+            1.0   0.924 0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R21P 
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R21P
+
+      GKAC  1.0   1.2  -0.2   0.0   0.0  0.0  0.0 !    WW-CC03 ! R21P31M
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R21P31M 
+            1.0   0.94 -0.2   0.0   0.0  0.0  0.0 !    WW-CC03 ! R21P31M 
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R21P31M
+
+      GKAC  1.0   1.2   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R21P13P
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R21P13P 
+            1.2   1.14  0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R21P13P 
+            0.0   0.0   0.0   0.0   0.0  0.0  0.0 !    WW-CC03 ! R21P13P 
+
+     </rule>
+
+     <rule name="KEYFSRINT" index="Process">
+       1.       2.   !  mu+mu-
+       1.       2.   !  Tau+Tau-
+       0.       0.   !  qqbar
+       0.       0.   !  ddbar
+       0.       0.   !  uubar
+       0.       0.   !  ssbar
+       0.       0.   !  ccbar
+       0.       0.   !  bbbar
+       0.       2.   !  nunubar
+     </rule>
+
+     <rule name="NPHO" index="QGC">
+         0.96       2.     ! Yes
+         0.9659     2.     ! GPV
+         0.96       1.     ! No
+     </rule>
+
+     <rule name="IPS" index="Hadronization">
+       1     ! Jetset 
+       2     ! Ariadne 
+      13     ! Herwig
+       4     ! Pythia
+     </rule>
+
+     <rule name="ICR" index="ColRec">
+      11     ! SKI
+       1     ! SKI2
+      12     ! SKII
+       2     ! SKII2
+      13     ! SKIIp
+       3     ! SKIIp2
+       4     ! GAL
+       4     ! GAL2 
+       1     ! AR1 
+       1     ! AR2 
+       1     ! 11%
+       0     ! None
+     </rule>
+
+     <rule name="IBE" index="BE">
+       1     ! Between 
+       1     ! Inside
+       0     ! None
+       0     ! All
+       0     ! IntraW
+       0     ! InterW
+       0    1 ! Full
+     </rule>
+
+     <rule name="IHAD" index="Had">
+       1     ! Yes
+       0     ! No
+     </rule>
+
+     <rule name="EXFILE" index= "Hadronization,ColRec,BE ">
+      jetset_sk     ! Jetset  !  SKI    !  None
+      jetset_sk     ! Jetset  !  SKII   !  None
+      jetset_sk     ! Jetset  !  SKIIp  !  None
+      jetset_sk     ! Jetset  !  SKI2   !  None
+      jetset_sk     ! Jetset  !  SKII2  !  None
+      jetset_sk     ! Jetset  !  SKIIp2 !  None
+      jetset_sk     ! Jetset  !  None  !  None 
+      jetset_gal    ! Jetset  !  GAL   !  None
+      jetset_gal2   ! Jetset  !  GAL2  !  None
+      herwig62_nocr ! Herwig  !  None  !  None
+      herwig62_cr   ! Herwig  !  11%   !  None
+      ariadne_nocr  ! Ariadne !  None  !  None
+      ariadne_cr1   ! Ariadne !   AR1  !  None
+      ariadne_cr2   ! Ariadne !   AR2  !  None
+      ariadne_cr3   ! Ariadne !   AR3  !  None
+      newbe3i       ! Jetset  !  None  !  Between
+      newbe3b       ! Jetset  !  None  !  Inside
+      jetset_sk     ! Jetset  !  None  !  Full
+      jetset_BE32all   ! Pythia !  None  !  All
+      jetset_BE32intra ! Pythia !  None  !  IntraW
+      jetset_BE32inter ! Pythia !  None  !  InterW
+     </rule>
+  </substitutions>
+</templates>
+
+<prods>
+<!-- Z peak energy 91.2 Gev , one has to choose GEOMETRY -->
+
+ <keyword name="KqqZ97"  generator="KK2F02" lepEnergy="91.2" Geometry="1997"      Process="qqbar"/>
+ <keyword name="KqqZ94BE32"  generator="KK2F02" lepEnergy="91.2" Geometry="1994"   Process="qqbar" BE="BE32"/>
+ <keyword name="KqqZ94BE32b" generator="KK2F02" lepEnergy="91.2" Geometry="1994" Process="qqbar" BE="BE32b"/> 
+ <keyword name="KqqZ94BE32c" generator="KK2F02" lepEnergy="91.2" Geometry="1994" Process="qqbar" BE="BE32c"/> 
+ <keyword name="HqqZ94"  generator="HVFL05" lepEnergy="91.2" Geometry="1994"      Process="qqbar"/>
+ <keyword name="HqqZ94HC0" generator="Kinagain" Primkwd="HqqZ94" Primarygene="HVFL05" lepEnergy="91.2" Geometry="1994" Process="qqbar" Hadronization="Herwig" ColRec="None" BE="None" Had="No"/>
+ <keyword name="HqqZ94HC1" generator="Kinagain" Primkwd="HqqZ94" Primarygene="HVFL05" lepEnergy="91.2" Geometry="1994" Process="qqbar" Hadronization="Herwig" ColRec="11%" BE="None" Had="No"/>
+ <keyword name="HqqZ94AC0" generator="Kinagain" Primkwd="HqqZ94" Primarygene="HVFL05" lepEnergy="91.2" Geometry="1994" Process="qqbar" Hadronization="Ariadne" ColRec="None" BE="None" Had="No"/>
+ <keyword name="HqqZ94AC1" generator="Kinagain" Primkwd="HqqZ94" Primarygene="HVFL05" lepEnergy="91.2" Geometry="1994" Process="qqbar" Hadronization="Ariadne" ColRec="AR1" BE="None" Had="No"/>
+ <keyword name="HqqZ94JC4" generator="Kinagain" Primkwd="HqqZ94" Primarygene="HVFL05" lepEnergy="91.2" Geometry="1994" Process="qqbar" Hadronization="Jetset" ColRec="GAL" BE="None" Had="No"/>
+ <keyword name="HqqZ94JC42" generator="Kinagain" Primkwd="HqqZ94" Primarygene="HVFL05" lepEnergy="91.2" Geometry="1994" Process="qqbar" Hadronization="Jetset" ColRec="GAL2" BE="None" Had="No"/>
+ <keyword name="HqqZ97"  generator="HVFL05" lepEnergy="91.2" Geometry="1997" Process="qqbar"/>
+ <keyword name="HqqZ98"  generator="HVFL05" lepEnergy="91.2" Geometry="1998" Process="qqbar"/>
+ <keyword name="HqqZ98F" generator="Kinagain" Primkwd="HqqZ98" Primarygene="HVFL05" lepEnergy="91.2" Geometry="1998" Process="qqbar" Hadronization="Jetset" ColRec="None" BE="Full" Had="No" ECAL="Full"/>
+ <keyword name="HqqZ98FJ" generator="Kinagain" Primkwd="HqqZ98" Primarygene="HVFL05" lepEnergy="91.2" Geometry="1998" Process="qqbar" Hadronization="Jetset" ColRec="None" BE="Full" Had="No" ECAL="Full"/>
+ <keyword name="HqqZ99"  generator="HVFL05" lepEnergy="91.2" Geometry="1999"      Process="qqbar"/> 
+ <keyword name="HqqZ2k"  generator="HVFL05" lepEnergy="91.2" Geometry="2000"      Process="qqbar"/>
+ <keyword name="KmmZ94"  generator="KK2F02" lepEnergy="91.2" Geometry="1994"      Process="mu+mu-"/>
+ <keyword name="KmmZ97"  generator="KK2F02" lepEnergy="91.2" Geometry="1997"      Process="mu+mu-"/>
+ <keyword name="KmmZ98"  generator="KK2F02" lepEnergy="91.2" Geometry="1998"      Process="mu+mu-"/>
+ <keyword name="KmmZ99"  generator="KK2F02" lepEnergy="91.2" Geometry="1999"      Process="mu+mu-"/>
+ <keyword name="KmmZ2k"  generator="KK2F02" lepEnergy="91.2" Geometry="2000"      Process="mu+mu-"/>
+ <keyword name="KttZ94"  generator="KK2F02" lepEnergy="91.2" Geometry="1994"      Process="Tau+Tau-"/> 
+ <keyword name="KttZ97"  generator="KK2F02" lepEnergy="91.2" Geometry="1997"      Process="Tau+Tau-"/>
+ <keyword name="KttZ98"  generator="KK2F02" lepEnergy="91.2" Geometry="1998"      Process="Tau+Tau-"/>
+ <keyword name="KttZ98F" generator="Kinagain" Primkwd="KttZ98" Primarygene="KK2F02" lepEnergy="91.2" Geometry="1998" Process="Tau+Tau-" Hadronization="Jetset" ColRec="None" BE="Full" Had="No" ECAL="Full"/>  
+ <keyword name="KttZ99"  generator="KK2F02" lepEnergy="91.2" Geometry="1999"      Process="Tau+Tau-"/> 
+ <keyword name="KttZ2k"  generator="KK2F02" lepEnergy="91.2" Geometry="2000"      Process="Tau+Tau-"/>
+ <keyword name="BeeZ94"  generator="BHWI01" lepEnergy="91.2" Geometry="1994"      Process="e+e-"/>
+ <keyword name="BeeZ94F" generator="Kinagain" Primkwd="BeeZ94" Primarygene="BHWI01" lepEnergy="91.2" Geometry="1994" Process="e+e-" Hadronization="Jetset" ColRec="None" BE="None" Had="No" ECAL="Full"/>
+ <keyword name="BeeZ97"  generator="BHWI01" lepEnergy="91.2" Geometry="1997"      Process="e+e-"/>
+ <keyword name="BeeZ98"  generator="BHWI01" lepEnergy="91.2" Geometry="1998"      Process="e+e-"/>
+ <keyword name="BeeZ98F" generator="Kinagain" Primkwd="BeeZ98" Primarygene="BHWI01" lepEnergy="91.2" Geometry="1998" Process="e+e-" Hadronization="Jetset" ColRec="None" BE="None" Had="No" ECAL="Full"/>
+ <keyword name="BeeZ98FJ" generator="Kinagain" Primkwd="BeeZ98" Primarygene="BHWI01" lepEnergy="91.2" Geometry="1998" Process="e+e-" Hadronization="Jetset" ColRec="None" BE="Full" Had="No" ECAL="Full"/>
+ <keyword name="BeeZ99"  generator="BHWI01" lepEnergy="91.2" Geometry="1999"      Process="e+e-"/>
+ <keyword name="BeeZ2k"  generator="BHWI01" lepEnergy="91.2" Geometry="2000"      Process="e+e-"/>
+
+ <keyword name="BeeZ991" generator="BHWI01" lepEnergy="91.2" Geometry="1999-191.6" Process="e+e-"/>
+ <keyword name="BeeZ992" generator="BHWI01" lepEnergy="91.2" Geometry="1999-195.5" Process="e+e-"/>
+ <keyword name="BeeZ993" generator="BHWI01" lepEnergy="91.2" Geometry="1999-199.5" Process="e+e-"/>
+ <keyword name="BeeZ994" generator="BHWI01" lepEnergy="91.2" Geometry="1999-201.6" Process="e+e-"/>
+<keyword name="PggZ92not" generator="PYTH05" lepEnergy="91.2" Geometry="1992" Process="gg-notag" ECAL="Para"/>
+<keyword name="PggZ93not" generator="PYTH05" lepEnergy="91.2" Geometry="1993" Process="gg-notag" ECAL="Para"/>
+<keyword name="PggZ94not" generator="PYTH05" lepEnergy="91.2" Geometry="1994" Process="gg-notag" ECAL="Para"/>
+<keyword name="PggZ95not" generator="PYTH05" lepEnergy="91.2" Geometry="1995" Process="gg-notag" ECAL="Para"/>
+
+<!-- 1996 average energy 161.3 GeV -->
+ <keyword name="Kqq961"  generator="KK2F02" lepEnergy="161.3" Process="qqbar"/>
+ <keyword name="PZe961H" generator="PYTH05" lepEnergy="161.3" Process="Zee" CKIN="High"/>
+ <keyword name="PZZ961"  generator="PYTH05" lepEnergy="161.3" Process="ZZ"/>
+ <keyword name="KWZ9614fM0G0" generator="KRLW03" lepEnergy="161.3" Process="WZ-4f" Wmass="80.35" Wwidth="-2.03" TGC="None"/>
+ <keyword name="Kww9614fM0G0" generator="KRLW03" lepEnergy="161.3" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" TGC="None"/>
+ <keyword name="KZZ9614fM0G0" generator="KRLW03" lepEnergy="161.3" Process="ZZ-4f" Wmass="80.35" Wwidth="-2.03" TGC="None"/>
+ <keyword name="Bee961"  generator="BHWI01" lepEnergy="161.3" Process="e+e-"/>
+ <keyword name="Kmm961"  generator="KK2F02" lepEnergy="161.3" Process="mu+mu-"/>
+ <keyword name="Ktt961"  generator="KK2F02" lepEnergy="161.3" Process="Tau+Tau-"/>
+
+<!-- 1996 average energy 172.1 GeV -->
+ <keyword name="Kqq962"  generator="KK2F02" lepEnergy="172.1" Process="qqbar"/>
+ <keyword name="PZe962H" generator="PYTH05" lepEnergy="172.1" Process="Zee" CKIN="High"/>
+ <keyword name="PZZ962"  generator="PYTH05" lepEnergy="172.1" Process="ZZ"/>
+ <keyword name="KWZ9624fM0G0" generator="KRLW03" lepEnergy="172.1" Process="WZ-4f" Wmass="80.35" Wwidth="-2.03" TGC="None"/>
+ <keyword name="Kww9624fM0G0" generator="KRLW03" lepEnergy="172.1" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" TGC="None"/>
+ <keyword name="KZZ9624fM0G0" generator="KRLW03" lepEnergy="172.1" Process="ZZ-4f" Wmass="80.35" Wwidth="-2.03" TGC="None"/>
+ <keyword name="Bee962"  generator="BHWI01" lepEnergy="172.1" Process="e+e-"/>
+ <keyword name="Kmm962"  generator="KK2F02" lepEnergy="172.1" Process="mu+mu-"/>
+ <keyword name="Ktt962"  generator="KK2F02" lepEnergy="172.1" Process="Tau+Tau-"/>
+
+<!-- 1997 average energy 130.0 GeV --> 
+ <keyword name="Kqq971" generator="KK2F02" lepEnergy="130.0" Process="qqbar"/>
+ <keyword name="Kmm971" generator="KK2F02" lepEnergy="130.0" Process="mu+mu-"/>
+ <keyword name="Ktt971" generator="KK2F02" lepEnergy="130.0" Process="Tau+Tau-"/>
+ <keyword name="Bee971" generator="BHWI01" lepEnergy="130.0" Process="e+e-"/>
+
+<!-- 1997 average energy 136.0 GeV --> 
+ <keyword name="Kqq972" generator="KK2F02" lepEnergy="136.0" Process="qqbar"/>
+ <keyword name="Kmm972" generator="KK2F02" lepEnergy="136.0" Process="mu+mu-"/>
+ <keyword name="Ktt972" generator="KK2F02" lepEnergy="136.0" Process="Tau+Tau-"/>
+ <keyword name="Bee972" generator="BHWI01" lepEnergy="136.0" Process="e+e-"/>
+
+<!-- 1997 average energy 182.6 GeV --> 
+ <keyword name="Kqq97"  generator="KK2F02" lepEnergy="182.6" Process="qqbar"/>
+ <keyword name="Kdd97"  generator="KK2F02" lepEnergy="182.6" Process="ddbar"/>
+ <keyword name="Kuu97"  generator="KK2F02" lepEnergy="182.6" Process="uubar"/>
+ <keyword name="Kss97"  generator="KK2F02" lepEnergy="182.6" Process="ssbar"/>
+ <keyword name="Kcc97"  generator="KK2F02" lepEnergy="182.6" Process="ccbar"/>
+ <keyword name="Kbb97"  generator="KK2F02" lepEnergy="182.6" Process="bbbar"/>
+ <keyword name="Kmm97"  generator="KK2F02" lepEnergy="182.6" Process="mu+mu-"/>
+ <keyword name="Ktt97"  generator="KK2F02" lepEnergy="182.6" Process="Tau+Tau-"/>
+ <keyword name="Knn97"  generator="KK2F03" lepEnergy="182.6" Process="nunubar" QGC="No"/>
+ <keyword name="Knn972g"  generator="KK2F03" lepEnergy="182.6" Process="nunubar" QGC="Yes"/>
+ <keyword name="Bee97"  generator="BHWI01" lepEnergy="182.6" Process="e+e-"/>
+ <keyword name="Znn97"  generator="ZNNB01" lepEnergy="182.6" Process="Znn"/>
+
+ <!--keyword name="Pqq97"  generator="PYTH05" lepEnergy="182.6" Process="qqbar"/-->
+ <keyword name="PWe97"  generator="PYTH05" lepEnergy="182.6" Process="Wenu"/> 
+ <keyword name="PZZ97"  generator="PYTH05" lepEnergy="182.6" Process="ZZ"/>   
+ <keyword name="PZZ97NC2"  generator="PYTH05" lepEnergy="182.6" Process="ZZ-NC02" ECAL="Para"/>
+ <!-- keyword name="PWW97" generator="PYTH05" lepEnergy="182.6" Process="W+W-"/ -->  
+ <keyword name="PZe97L" generator="PYTH05" lepEnergy="182.6" Process="Zee" CKIN="Low" ECAL="Para"/>
+ <keyword name="PZe97H" generator="PYTH05" lepEnergy="182.6" Process="Zee" CKIN="High" ECAL="Para"/>
+<keyword name="Pgg97not" generator="PYTH05" lepEnergy="182.6" Process="gg-notag" ECAL="Para"/>
+ <keyword name="Hgg97ltagSaS" generator="HRWG12" lepEnergy="182.6" Process="gg-loosetag" pdf="SaS"  ECAL="Para"/>
+ <keyword name="Gee97"  generator="PHOT02" lepEnergy="182.6" Process="e+e-" Cut="Loose"/>
+ <keyword name="Gmm97"  generator="PHOT02" lepEnergy="182.6" Process="mu+mu-" Cut="Loose"/>
+ <keyword name="Gtt97"  generator="PHOT02" lepEnergy="182.6" Process="Tau+Tau-" Cut="Loose"/>
+ <keyword name="Gee97T"  generator="PHOT02" lepEnergy="182.6" Process="e+e-" Cut="Tight"/>
+ <keyword name="Gmm97T"  generator="PHOT02" lepEnergy="182.6" Process="mu+mu-" Cut="Tight"/>
+ <keyword name="Gtt97T"  generator="PHOT02" lepEnergy="182.6" Process="Tau+Tau-" Cut="Tight"/>
+ <keyword name="Gud97"  generator="PHOT02" lepEnergy="182.6" Process="udmix" Cut="Loose"/>
+ <keyword name="Gss97"  generator="PHOT02" lepEnergy="182.6" Process="ssbar" Cut="Loose"/>
+ <keyword name="Gcc97"  generator="PHOT02" lepEnergy="182.6" Process="ccbar" Cut="Loose"/>
+ <keyword name="Gbb97"  generator="PHOT02" lepEnergy="182.6" Process="bbbar" Cut="Loose"/>
+
+ <keyword name="Kww97CCM0G0" generator="KRLW03" lepEnergy="182.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/> 
+ <keyword name="Kww974fM0G0" generator="KRLW03" lepEnergy="182.6" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="KZZ974fM0G0" generator="KRLW03" lepEnergy="182.6" Process="ZZ-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="KWe974fM0G0" generator="KRLW03" lepEnergy="182.6" Process="Wenu" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None"/>
+<keyword name="KZe97mmM0G0" generator="KRLW03" lepEnergy="182.6" Process="Zeemm" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+<keyword name="KZe97qqM0G0" generator="KRLW03" lepEnergy="182.6" Process="Zeeqq" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+ <keyword name="Kww974fM0G0L" generator="KRLW03" lepEnergy="182.6" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="Low"/>
+ <keyword name="Kww97CCM0G0JC1" generator="Kinagain" Primkwd="Kww97CCM0G0" Primarygene="KRLW03" lepEnergy="182.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="None" Hadronization="Jetset" ColRec="SKI" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww97CCM0G0JC12" generator="Kinagain" Primkwd="Kww97CCM0G0" Primarygene="KRLW03" lepEnergy="182.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKI2" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww97CCM0G0JC2" generator="Kinagain" Primkwd="Kww97CCM0G0" Primarygene="KRLW03" lepEnergy="182.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKII" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww97CCM0G0JC3" generator="Kinagain" Primkwd="Kww97CCM0G0" Primarygene="KRLW03" lepEnergy="182.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKIIp" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww97CCM0G0JC4" generator="Kinagain" Primkwd="Kww97CCM0G0" Primarygene="KRLW03" lepEnergy="182.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="GAL" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww97CCM0G0PBA" generator="Kinagain" Primkwd="Kww97CCM0G0" Primarygene="KRLW03" lepEnergy="182.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="None" Hadronization="Pythia" ColRec="None" BE="All"  Had="No"/>
+ <keyword name="Kww97CCM0G0PBB" generator="Kinagain" Primkwd="Kww97CCM0G0" Primarygene="KRLW03" lepEnergy="182.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="None" Hadronization="Pythia" ColRec="None" BE="InterW"  Had="No"/>
+ <keyword name="Kww97CCM0G0PBI" generator="Kinagain" Primkwd="Kww97CCM0G0" Primarygene="KRLW03" lepEnergy="182.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="None" Hadronization="Pythia" ColRec="None" BE="IntraW" Had="No"/>
+ <keyword name="Kww97CCM0G0AC0" generator="Kinagain" Primkwd="Kww97CCM0G0" Primarygene="KRLW03" lepEnergy="182.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="None" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww97CCM0G0AC2" generator="Kinagain" Primkwd="Kww97CCM0G0" Primarygene="KRLW03" lepEnergy="182.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="AR2" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww97CCM0G0HC0" generator="Kinagain" Primkwd="Kww97CCM0G0" Primarygene="KRLW03" lepEnergy="182.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Herwig" ColRec="None" BE="None" Had="No" ECAL="Para"/> 
+ <keyword name="Kww97CCM0G0HC1" generator="Kinagain" Primkwd="Kww97CCM0G0" Primarygene="KRLW03" lepEnergy="182.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Herwig" ColRec="11%" BE="None" Had="No" ECAL="Para"/> 
+
+ <!-- keyword name="Kww974fM0G0H" generator="Kinagain" Primkwd="Kww974fM0G0" Primarygene="KRLW03" lepEnergy="182.6" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" Hadronization="Herwig" Had="No" ColRec="None" BE="None" Had="No"/ --> 
+ <!-- keyword name="Kww974fM0G0A" generator="Kinagain" Primkwd="Kww974fM0G0" Primarygene="KRLW03" lepEnergy="182.6" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="None" BE="None" Had="No"/ --> 
+ <keyword name="Kww974fMMMG0" generator="KRLW03" lepEnergy="182.6" Process="WW-4f" Wmass="79.85" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="Kww974fMMG0" generator="KRLW03" lepEnergy="182.6" Process="WW-4f" Wmass="80.10" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="Kww974fMPG0" generator="KRLW03" lepEnergy="182.6" Process="WW-4f" Wmass="80.60" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="Kww974fMPPG0" generator="KRLW03" lepEnergy="182.6" Process="WW-4f" Wmass="80.85" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="Kww974fM0GPP" generator="KRLW03" lepEnergy="182.6" Process="WW-4f" Wmass="80.35" Wwidth="2.7" TGC="None"  Pt2="None"/>
+ <keyword name="Kww974fM0GP" generator="KRLW03" lepEnergy="182.6" Process="WW-4f" Wmass="80.35" Wwidth="2.4" TGC="None" Pt2="None"/>
+ <keyword name="Kww974fM0GM" generator="KRLW03" lepEnergy="182.6" Process="WW-4f" Wmass="80.35" Wwidth="1.8" TGC="None" Pt2="None"/>
+ <keyword name="Kww974fM0GMM" generator="KRLW03" lepEnergy="182.6" Process="WW-4f" Wmass="80.35" Wwidth="1.5" TGC="None" Pt2="None"/>
+
+<!-- 1998 is average energy 188.6 GeV -->
+
+ <keyword name="Kqq98"  generator="KK2F02" lepEnergy="188.6" Process="qqbar" Hadronization="Jetset" />
+ <keyword name="Kdd98"  generator="KK2F02" lepEnergy="188.6" Process="ddbar"/>
+ <keyword name="Kuu98"  generator="KK2F02" lepEnergy="188.6" Process="uubar"/>
+ <keyword name="Kss98"  generator="KK2F02" lepEnergy="188.6" Process="ssbar"/>
+ <keyword name="Kcc98"  generator="KK2F02" lepEnergy="188.6" Process="ccbar"/>
+ <keyword name="Kbb98"  generator="KK2F02" lepEnergy="188.6" Process="bbbar"/>
+ <keyword name="Kmm98"  generator="KK2F02" lepEnergy="188.6" Process="mu+mu-"/>
+ <keyword name="Kmm98PP" generator="KK2F02" lepEnergy="189.6" Process="mu+mu-"/>
+ <keyword name="Kmm98P" generator="KK2F02" lepEnergy="189.1" Process="mu+mu-"/>
+ <keyword name="Kmm98M" generator="KK2F02" lepEnergy="188.1" Process="mu+mu-"/>
+ <keyword name="Kmm98MM" generator="KK2F02" lepEnergy="187.6" Process="mu+mu-"/>
+
+ <keyword name="Ktt98"  generator="KK2F02" lepEnergy="188.6" Process="Tau+Tau-"/>
+ <keyword name="Knn98"  generator="KK2F03" lepEnergy="188.6" Process="nunubar" QGC="No"/>
+ <keyword name="Knn982g"  generator="KK2F03" lepEnergy="188.6" Process="nunubar" QGC="Yes"/>
+ <keyword name="Bee98" generator="BHWI01" lepEnergy="188.6" Process="e+e-"/>
+ <keyword name="Bee98FJ" generator="Kinagain" Primkwd="Bee98" Primarygene="BHWI01" lepEnergy="188.6" Process="e+e-" Hadronization="Jetset" ColRec="None" BE="Full" Had="No" ECAL="Full"/> 
+ <keyword name="Znn98" generator="ZNNB01" lepEnergy="188.6" Process="Znn"/>
+
+ <keyword name="Kqq98PP" generator="KK2F02" lepEnergy="189.6" Process="qqbar"/>
+ <keyword name="Kqq98P"  generator="KK2F02" lepEnergy="189.1" Process="qqbar"/>
+ <keyword name="Kqq98M"  generator="KK2F02" lepEnergy="188.1" Process="qqbar"/>
+ <keyword name="Kqq98MM" generator="KK2F02" lepEnergy="187.6" Process="qqbar"/>
+
+ <keyword name="Kqq98H"  generator="Kinagain" Primkwd="Kqq98" Primarygene="KK2F02" lepEnergy="188.6" Process="qqbar" Hadronization="Herwig" ColRec="None" BE="None" Had="No"/>
+ <keyword name="Kqq98F"  generator="Kinagain" Primkwd="Kqq98" Primarygene="KK2F02" lepEnergy="188.6" Process="qqbar" Hadronization="Jetset" ColRec="None" BE="Full" Had="No" ECAL="Full"/>
+ <keyword name="Kqq98FJ"  generator="Kinagain" Primkwd="Kqq98" Primarygene="KK2F02" lepEnergy="188.6" Process="qqbar" Hadronization="Jetset" ColRec="None" BE="Full" Had="No" ECAL="Full"/>
+ <keyword name="Ktt98F" generator="Kinagain" Primkwd="Ktt98" Primarygene="KK2F02" lepEnergy="188.6" Process="Tau+Tau-" Hadronization="Jetset" ColRec="None" BE="Full" Had="No" ECAL="Full"/>
+ <keyword name="Kqq98BE"  generator="Kinagain" Primkwd="Kqq98" Primarygene="KK2F02" lepEnergy="188.6" Process="qqbar" Hadronization="Jetset" ColRec="None" BE="BE32" Had="No"/>
+ <!-- keyword name="Pqq98" generator="PYTH05" lepEnergy="188.6" Process="qqbar"/-->
+ <keyword name="PWe98"  generator="PYTH05" lepEnergy="188.6" Process="Wenu"/> 
+ <keyword name="PZZ98"  generator="PYTH05" lepEnergy="188.6" Process="ZZ"/>   
+ <keyword name="PZZ98NC2"  generator="PYTH05" lepEnergy="188.6" Process="ZZ-NC02"/> 
+ <!--keyword name="PWW98"  generator="PYTH05" lepEnergy="188.6" Process="W+W-"/ -->   
+ <keyword name="PZe98L" generator="PYTH05" lepEnergy="188.6" Process="Zee" CKIN="Low"/>
+ <keyword name="PZe98H" generator="PYTH05" lepEnergy="188.6" Process="Zee" CKIN="High"/>
+ <keyword name="Gee98"  generator="PHOT02" lepEnergy="188.6" Process="e+e-" Cut="Loose"/>
+ <keyword name="Gmm98"  generator="PHOT02" lepEnergy="188.6" Process="mu+mu-" Cut="Loose"/>
+ <keyword name="Gtt98"  generator="PHOT02" lepEnergy="188.6" Process="Tau+Tau-" Cut="Loose"/>
+ <keyword name="Gee98T"  generator="PHOT02" lepEnergy="188.6" Process="e+e-" Cut="Tight"/>
+ <keyword name="Gmm98T"  generator="PHOT02" lepEnergy="188.6" Process="mu+mu-" Cut="Tight"/>
+ <keyword name="Gtt98T"  generator="PHOT02" lepEnergy="188.6" Process="Tau+Tau-" Cut="Tight"/>
+<keyword name="Pgg98not" generator="PYTH05" lepEnergy="188.6" Process="gg-notag" ECAL="Para"/>
+ <keyword name="Gud98"  generator="PHOT02" lepEnergy="188.6" Process="udmix" Cut="Loose"/>
+ <keyword name="Gss98"  generator="PHOT02" lepEnergy="188.6" Process="ssbar" Cut="Loose"/>
+ <keyword name="Gcc98"  generator="PHOT02" lepEnergy="188.6" Process="ccbar" Cut="Loose"/>
+ <keyword name="Gbb98"  generator="PHOT02" lepEnergy="188.6" Process="bbbar" Cut="Loose"/> 
+
+ <keyword name="Hgg98tagGRV" generator="HRWG12" lepEnergy="188.6" Process="gg-tag" pdf="GRV"  ECAL="Para"/>
+ <keyword name="Hgg98tagSaS" generator="HRWG12" lepEnergy="188.6" Process="gg-tag" pdf="SaS"  ECAL="Para"/>
+ <keyword name="Hgg98ltagSaS" generator="HRWG12" lepEnergy="188.6" Process="gg-loosetag" pdf="SaS"  ECAL="Para"/>
+
+ <keyword name="KWW98CCM0G0" generator="KRLW02" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="None"/>
+ <keyword name="KWW98CCM0G0JC1" generator="Kinagain" Primkwd="KWW98CCM0G0" Primarygene="KRLW02" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKI" BE="None" Had="Yes"/>
+ <keyword name="KWW98CCM0G0JC2" generator="Kinagain" Primkwd="KWW98CCM0G0" Primarygene="KRLW02" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKII" BE="None" Had="Yes"/>
+ <keyword name="KWW98CCM0G0JC3" generator="Kinagain" Primkwd="KWW98CCM0G0" Primarygene="KRLW02" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKIIp" BE="None" Had="Yes"/>
+ <keyword name="KWW98CCM0G0JC4" generator="Kinagain" Primkwd="KWW98CCM0G0" Primarygene="KRLW02" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="GAL" BE="None" Had="No"/>
+ <keyword name="KWW98CCM0G0JBB" generator="Kinagain" Primkwd="KWW98CCM0G0" Primarygene="KRLW02" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="None" BE="Between"  Had="Yes"/>
+ <keyword name="KWW98CCM0G0JBI" generator="Kinagain" Primkwd="KWW98CCM0G0" Primarygene="KRLW02" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="None" BE="Inside" Had="No"/>
+ <keyword name="KWW98CCM0G0AC0FH" generator="Kinagain" Primkwd="KWW98CCM0G0" Primarygene="KRLW02" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="None" BE="None" Had="Yes"/>
+ <keyword name="KWW98CCM0G0AC0" generator="Kinagain" Primkwd="KWW98CCM0G0" Primarygene="KRLW02" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="None" BE="None" Had="No"/>
+ <keyword name="KWW98CCM0G0AC2FH" generator="Kinagain" Primkwd="KWW98CCM0G0" Primarygene="KRLW02" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="AR2" BE="None" Had="Yes"/>
+ <keyword name="KWW98CCM0G0AC2" generator="Kinagain" Primkwd="KWW98CCM0G0" Primarygene="KRLW02" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="AR2" BE="None" Had="No"/>
+ <keyword name="KWW98CCM0G0HC0" generator="Kinagain" Primkwd="KWW98CCM0G0" Primarygene="KRLW02" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Herwig" ColRec="None" BE="None" Had="No"/>
+ <keyword name="KWW98CCM0G0HC1" generator="Kinagain" Primkwd="KWW98CCM0G0" Primarygene="KRLW02" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Herwig" ColRec="11%" BE="None" Had="No"/>
+ <keyword name="Kww98CCM0G0" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+ <keyword name="Kww98CCM0G0JC1" generator="Kinagain" Primkwd="Kww98CCM0G0" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKI" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww98CCM0G0JC12" generator="Kinagain" Primkwd="Kww98CCM0G0" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKI2" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww98CCM0G0JC2" generator="Kinagain" Primkwd="Kww98CCM0G0" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKII" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww98CCM0G0JC22" generator="Kinagain" Primkwd="Kww98CCM0G0" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKII2" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww98CCM0G0JC3" generator="Kinagain" Primkwd="Kww98CCM0G0" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKIIp" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww98CCM0G0JC32" generator="Kinagain" Primkwd="Kww98CCM0G0" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKIIp2" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww98CCM0G0JC4" generator="Kinagain" Primkwd="Kww98CCM0G0" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="GAL" BE="None" Had="No"/>
+ <keyword name="Kww98CCM0G0PBA" generator="Kinagain" Primkwd="Kww98CCM0G0" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Pythia" ColRec="None" BE="All"  Had="No"/>
+ <keyword name="Kww98CCM0G0PBI" generator="Kinagain" Primkwd="Kww98CCM0G0" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Pythia" ColRec="None" BE="IntraW" Had="No"/>
+ <keyword name="Kww98CCM0G0AC0" generator="Kinagain" Primkwd="Kww98CCM0G0" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="None" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww98CCM0G0AC2" generator="Kinagain" Primkwd="Kww98CCM0G0" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="AR2" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww98CCM0G0HC0" generator="Kinagain" Primkwd="Kww98CCM0G0" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Herwig" ColRec="None" BE="None" Had="No" ECAL="Para" />
+ <keyword name="Kww98CCM0G0HC1" generator="Kinagain" Primkwd="Kww98CCM0G0" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Herwig" ColRec="11%" BE="None" Had="No" ECAL="Para"/>
+
+ <keyword name="KWZ984fM0G0" generator="KRLW03" lepEnergy="188.6" Process="WZ-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None"/>
+
+ <keyword name="Kww984fM0G0" generator="KRLW03" lepEnergy="188.6" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+ <keyword name="KWe984fM0G0" generator="KRLW03" lepEnergy="188.6" Process="Wenu" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None"/>
+<keyword name="KZe98mmM0G0" generator="KRLW03" lepEnergy="188.6" Process="Zeemm" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+<keyword name="KZe98qqM0G0" generator="KRLW03" lepEnergy="188.6" Process="Zeeqq" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+<keyword name="KZZ98bkM0G0" generator="KRLW03" lepEnergy="188.6" Process="Zee-bkg" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="Low" ecal="Para"/>
+ <keyword name="KZZ984fM0G0" generator="KRLW03" lepEnergy="188.6" Process="ZZ-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ecal="Para"/>
+ <keyword name="Kww984fM0G0L" generator="KRLW03" lepEnergy="188.6" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="Low" ecal="Para"/>
+ <keyword name="Kww984fM0G0H" generator="Kinagain" Primkwd="Kww984fM0G0" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" Hadronization="Herwig" ColRec="None" BE="None" Had="No"/> 
+ <keyword name="Kww984fM0G0A" generator="Kinagain" Primkwd="Kww984fM0G0" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="None" BE="None" Had="No"/> 
+ <keyword name="Kww984fM0G0F" generator="Kinagain" Primkwd="Kww984fM0G0" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="None" BE="Full" Had="No" ECAL="Full"/>
+ <keyword name="KZZ984fM0G0Lo" generator="KRLW03" lepEnergy="188.6" Process="ZZ-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" Stat="Low" ECAL="Para"/>
+ <keyword name="KWW98CCI42M" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I42M" Pt2="None"/>
+ <keyword name="KWW98CCI42P" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I42P" Pt2="None"/>
+ <keyword name="KWW98CCI44M" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I44M" Pt2="None"/>
+ <keyword name="KWW98CCI44P" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I44P" Pt2="None"/>
+ <keyword name="KWW98CCI52M" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I52M" Pt2="None"/>
+ <keyword name="KWW98CCI52P" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I52P" Pt2="None"/>
+ <keyword name="KWW98CCI54M" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I54M" Pt2="None"/>
+ <keyword name="KWW98CCI54P" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I54P" Pt2="None"/>
+ <keyword name="KWW98CCI62M" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I62M" Pt2="None"/>
+ <keyword name="KWW98CCI62P" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I62P" Pt2="None"/>
+ <keyword name="KWW98CCI64M" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I64M" Pt2="None"/>
+ <keyword name="KWW98CCI64P" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I64P" Pt2="None"/>
+ <keyword name="KWW98CCI72M" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I72M" Pt2="None"/>
+ <keyword name="KWW98CCI72P" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I72P" Pt2="None"/>
+ <keyword name="KWW98CCI74M" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I74M" Pt2="None"/>
+ <keyword name="KWW98CCI74P" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I74P" Pt2="None"/>
+ <keyword name="KWW98CCR13M" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R13M" Pt2="None"/>
+ <keyword name="KWW98CCR13P" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R13P" Pt2="None"/>
+ <keyword name="KWW98CCR41M" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R41M" Pt2="None"/>
+ <keyword name="KWW98CCR41P" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R41P" Pt2="None"/>
+ <keyword name="KWW98CCR43M" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R43M" Pt2="None"/>
+ <keyword name="KWW98CCR43P" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R43P" Pt2="None"/>
+ <keyword name="KWW98CCR51M" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R51M" Pt2="None"/>
+ <keyword name="KWW98CCR51P" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R51P" Pt2="None"/>
+ <keyword name="KWW98CCR53M" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R53M" Pt2="None"/>
+ <keyword name="KWW98CCR53P" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R53P" Pt2="None"/>
+ <keyword name="KWW98CCR21M" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R21M" Pt2="None"/>
+ <keyword name="KWW98CCR21P" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R21P" Pt2="None"/>
+ <keyword name="KWW98CCR31M" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R31M" Pt2="None"/>
+ <keyword name="KWW98CCR31P" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R31P" Pt2="None"/>
+ <keyword name="KWW98CCR61M" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R61M" Pt2="None"/>
+ <keyword name="KWW98CCR61P" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R61P" Pt2="None"/>
+ <keyword name="KWW98CCR63M" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R63M" Pt2="None"/>
+ <keyword name="KWW98CCR63P" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R63P" Pt2="None"/>
+ <keyword name="KWW98CCR71M" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R71M" Pt2="None"/>
+ <keyword name="KWW98CCR71P" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R71P" Pt2="None"/>
+ <keyword name="KWW98CCR73M" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R73M" Pt2="None"/>
+ <keyword name="KWW98CCR73P" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R73P" Pt2="None"/>
+ <keyword name="KWW98CCR21P31M" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R21P31M" Pt2="None"/>
+ <keyword name="KWW98CCR21P13P" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R21P13P" Pt2="None"/>
+
+ <keyword name="Kww984fMMMG0" generator="KRLW03" lepEnergy="188.6" Process="WW-4f" Wmass="79.85" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="Kww984fMMG0" generator="KRLW03" lepEnergy="188.6" Process="WW-4f" Wmass="80.10" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="Kww984fMPG0" generator="KRLW03" lepEnergy="188.6" Process="WW-4f" Wmass="80.60" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="Kww984fMPPG0" generator="KRLW03" lepEnergy="188.6" Process="WW-4f" Wmass="80.85" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="Kww984fM0GPP" generator="KRLW03" lepEnergy="188.6" Process="WW-4f" Wmass="80.35" Wwidth="2.7" TGC="None" Pt2="None"/>
+ <keyword name="Kww984fM0GP" generator="KRLW03" lepEnergy="188.6" Process="WW-4f" Wmass="80.35" Wwidth="2.4" TGC="None" Pt2="None"/>
+ <keyword name="Kww984fM0GMM" generator="KRLW03" lepEnergy="188.6" Process="WW-4f" Wmass="80.35" Wwidth="1.5" TGC="None" Pt2="None"/>
+ <keyword name="Kww984fM0GM" generator="KRLW03" lepEnergy="188.6" Process="WW-4f" Wmass="80.35" Wwidth="1.8" TGC="None" Pt2="None"/>
+
+<!-- 1999 are 4  average energies 191.6/195.5/199.5/201.6 GeV --> 
+<!-- 1999-1 is average energy 191.6 GeV -->
+ <!-- keyword name="Pqq991"  generator="PYTH05" lepEnergy="191.6" Process="qqbar"/ -->
+ <keyword name="PWe991"  generator="PYTH05" lepEnergy="191.6" Process="Wenu"/> 
+ <keyword name="PZZ991"  generator="PYTH05" lepEnergy="191.6" Process="ZZ"/>   
+ <keyword name="PZZ991NC2" generator="PYTH05" lepEnergy="191.6" Process="ZZ-NC02"/>
+ <!-- keyword name="PWW991"  generator="PYTH05" lepEnergy="191.6" Process="W+W-"/ -->
+ <!-- keyword name="PZe991L" generator="PYTH05" lepEnergy="191.6" Process="Zee" CKIN="Low"/ -->
+ <keyword name="PZe991H" generator="PYTH05" lepEnergy="191.6" Process="Zee" CKIN="High"/>
+ <keyword name="Kqq991" generator="KK2F02" lepEnergy="191.6" Process="qqbar"/>
+ <keyword name="Kdd991" generator="KK2F02" lepEnergy="191.6" Process="ddbar"/>
+ <keyword name="Kuu991" generator="KK2F02" lepEnergy="191.6" Process="uubar"/>
+ <keyword name="Kss991" generator="KK2F02" lepEnergy="191.6" Process="ssbar"/>
+ <keyword name="Kcc991" generator="KK2F02" lepEnergy="191.6" Process="ccbar"/>
+ <keyword name="Kbb991" generator="KK2F02" lepEnergy="191.6" Process="bbbar"/>
+ <keyword name="Kmm991" generator="KK2F02" lepEnergy="191.6" Process="mu+mu-"/>
+ <keyword name="Ktt991" generator="KK2F02" lepEnergy="191.6" Process="Tau+Tau-"/>
+ <keyword name="Knn991"  generator="KK2F03" lepEnergy="191.6" Process="nunubar" QGC="No"/>
+ <keyword name="Knn9912g"  generator="KK2F03" lepEnergy="191.6" Process="nunubar" QGC="Yes"/>
+ <keyword name="Bee991" generator="BHWI01" lepEnergy="191.6" Process="e+e-"/>
+ <keyword name="Znn991" generator="ZNNB01" lepEnergy="191.6" Process="Znn"/>
+
+ <keyword name="Gee991"  generator="PHOT02" lepEnergy="191.6" Process="e+e-" Cut="Loose"/>
+ <keyword name="Gmm991"  generator="PHOT02" lepEnergy="191.6" Process="mu+mu-" Cut="Loose"/>
+ <keyword name="Gtt991"  generator="PHOT02" lepEnergy="191.6" Process="Tau+Tau-" Cut="Loose"/>
+ <keyword name="Gee991T"  generator="PHOT02" lepEnergy="191.6" Process="e+e-" Cut="Tight"/>
+ <keyword name="Gmm991T"  generator="PHOT02" lepEnergy="191.6" Process="mu+mu-" Cut="Tight"/>
+ <keyword name="Gtt991T"  generator="PHOT02" lepEnergy="191.6" Process="Tau+Tau-" Cut="Tight"/>
+<keyword name="Pgg991not" generator="PYTH05" lepEnergy="191.6" Process="gg-notag" ECAL="Para"/>
+ <keyword name="Hgg991ltagSaS" generator="HRWG12" lepEnergy="191.6" Process="gg-loosetag" pdf="SaS"  ECAL="Para"/>
+ <keyword name="Gud991"  generator="PHOT02" lepEnergy="191.6" Process="udmix" Cut="Loose"/>
+ <keyword name="Gss991"  generator="PHOT02" lepEnergy="191.6" Process="ssbar" Cut="Loose"/>
+ <keyword name="Gcc991"  generator="PHOT02" lepEnergy="191.6" Process="ccbar" Cut="Loose"/>
+ <keyword name="Gbb991"  generator="PHOT02" lepEnergy="191.6" Process="bbbar" Cut="Loose"/>
+
+ <keyword name="Kww991CCM0G0" generator="KRLW03" lepEnergy="191.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03"  TGC="None" Pt2="None" ECAL="Para"/> 
+ <keyword name="Kww991CCM0G0JC1" generator="Kinagain" Primkwd="Kww991CCM0G0" Primarygene="KRLW03" lepEnergy="191.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKI" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww991CCM0G0JC12" generator="Kinagain" Primkwd="Kww991CCM0G0" Primarygene="KRLW03" lepEnergy="191.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKI2" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww991CCM0G0JC2" generator="Kinagain" Primkwd="Kww991CCM0G0" Primarygene="KRLW03" lepEnergy="191.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKII" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww991CCM0G0JC3" generator="Kinagain" Primkwd="Kww991CCM0G0" Primarygene="KRLW03" lepEnergy="191.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKIIp" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww991CCM0G0JC4" generator="Kinagain" Primkwd="Kww991CCM0G0" Primarygene="KRLW03" lepEnergy="191.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="GAL" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww991CCM0G0PBA" generator="Kinagain" Primkwd="Kww991CCM0G0" Primarygene="KRLW03" lepEnergy="191.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Pythia" ColRec="None" BE="All" Had="No"/>
+ <keyword name="Kww991CCM0G0PBB" generator="Kinagain" Primkwd="Kww991CCM0G0" Primarygene="KRLW03" lepEnergy="191.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Pythia" ColRec="None" BE="InterW" Had="No"/>
+ <keyword name="Kww991CCM0G0PBI" generator="Kinagain" Primkwd="Kww991CCM0G0" Primarygene="KRLW03" lepEnergy="191.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Pythia" ColRec="None" BE="IntraW" Had="No"/>
+ <keyword name="Kww991CCM0G0AC0" generator="Kinagain" Primkwd="Kww991CCM0G0" Primarygene="KRLW03" lepEnergy="191.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="None" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww991CCM0G0AC2" generator="Kinagain" Primkwd="Kww991CCM0G0" Primarygene="KRLW03" lepEnergy="191.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="AR2" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww991CCM0G0HC0" generator="Kinagain" Primkwd="Kww991CCM0G0" Primarygene="KRLW03" lepEnergy="191.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Herwig" ColRec="None" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww991CCM0G0HC1" generator="Kinagain" Primkwd="Kww991CCM0G0" Primarygene="KRLW03" lepEnergy="191.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Herwig" ColRec="11%" BE="None" Had="No" ECAL="Para"/>
+
+ <keyword name="Kww9914fM0G0" generator="KRLW03" lepEnergy="191.6" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="KZZ9914fM0G0" generator="KRLW03" lepEnergy="191.6" Process="ZZ-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="KWe9914fM0G0" generator="KRLW03" lepEnergy="191.6" Process="Wenu" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None"/>
+<keyword name="KZe991mmM0G0" generator="KRLW03" lepEnergy="191.6" Process="Zeemm" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+<keyword name="KZe991qqM0G0" generator="KRLW03" lepEnergy="191.6" Process="Zeeqq" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+ <keyword name="Kww9914fM0G0L" generator="KRLW03" lepEnergy="191.6" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="Low"/>
+
+<!-- 1999-2 is average energy 195.5 GeV -->
+ <!-- keyword name="Pqq992" generator="PYTH05" lepEnergy="195.5" Process="qqbar"/ -->
+ <keyword name="PWe992" generator="PYTH05" lepEnergy="195.5" Process="Wenu"/>
+ <keyword name="PZZ992" generator="PYTH05" lepEnergy="195.5" Process="ZZ"/>
+ <keyword name="PZZ992NC2" generator="PYTH05" lepEnergy="195.5" Process="ZZ-NC02"/>
+ <!-- keyword name="PWW992" generator="PYTH05" lepEnergy="195.5" Process="W+W-"/ -->
+ <!-- keyword name="PZe992L" generator="PYTH05" lepEnergy="195.5" Process="Zee" CKIN="Low"/ -->
+ <keyword name="PZe992H" generator="PYTH05" lepEnergy="195.5" Process="Zee" CKIN="High"/>
+
+ <keyword name="Kqq992" generator="KK2F02" lepEnergy="195.5" Process="qqbar"/>
+ <keyword name="Kmm992" generator="KK2F02" lepEnergy="195.5" Process="mu+mu-"/>
+ <keyword name="Ktt992" generator="KK2F02" lepEnergy="195.5" Process="Tau+Tau-"/>
+ <keyword name="Knn992"  generator="KK2F03" lepEnergy="195.5" Process="nunubar" QGC="No"/>
+ <keyword name="Knn9922g"  generator="KK2F03" lepEnergy="195.5" Process="nunubar" QGC="Yes"/>
+ <keyword name="Knn9922gGPV"  generator="KK2F03" lepEnergy="195.5" Process="nunubar" QGC="GPV"/>
+ <keyword name="Bee992"  generator="BHWI01" lepEnergy="195.5" Process="e+e-"/>
+ <keyword name="Znn992"  generator="ZNNB01" lepEnergy="195.5" Process="Znn"/>
+ <keyword name="Gee992"  generator="PHOT02" lepEnergy="195.5" Process="e+e-" Cut="Loose"/>
+ <keyword name="Gmm992" generator="PHOT02" lepEnergy="195.5" Process="mu+mu-" Cut="Loose"/>
+ <keyword name="Gtt992" generator="PHOT02" lepEnergy="195.5" Process="Tau+Tau-" Cut="Loose"/>
+ <keyword name="Gee992T"  generator="PHOT02" lepEnergy="195.5" Process="e+e-" Cut="Tight"/>
+ <keyword name="Gmm992T" generator="PHOT02" lepEnergy="195.5" Process="mu+mu-" Cut="Tight"/>
+ <keyword name="Gtt992T" generator="PHOT02" lepEnergy="195.5" Process="Tau+Tau-" Cut="Tight"/>
+<keyword name="Pgg992not" generator="PYTH05" lepEnergy="195.5" Process="gg-notag" ECAL="Para"/>
+ <keyword name="Hgg992ltagSaS" generator="HRWG12" lepEnergy="195.5" Process="gg-loosetag" pdf="SaS"  ECAL="Para"/>
+ <keyword name="Gud992"  generator="PHOT02" lepEnergy="195.5" Process="udmix" Cut="Loose"/>
+ <keyword name="Gss992"  generator="PHOT02" lepEnergy="195.5" Process="ssbar" Cut="Loose"/>
+ <keyword name="Gcc992"  generator="PHOT02" lepEnergy="195.5" Process="ccbar" Cut="Loose"/>
+ <keyword name="Gbb992"  generator="PHOT02" lepEnergy="195.5" Process="bbbar" Cut="Loose"/>
+
+ <keyword name="Hgg992tagGRV" generator="HRWG12" lepEnergy="195.5" Process="gg-tag" pdf="GRV"  ECAL="Para"/>
+ <keyword name="Hgg992tagSaS" generator="HRWG12" lepEnergy="195.5" Process="gg-tag" pdf="SaS"  ECAL="Para"/>
+
+ <keyword name="KWW992CCM0G0" generator="KRLW02" lepEnergy="195.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="None"/> 
+ <keyword name="Kww992CCM0G0" generator="KRLW03" lepEnergy="195.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/> 
+ <keyword name="Kww992CCM0G0JC1" generator="Kinagain" Primkwd="Kww992CCM0G0" Primarygene="KRLW03" lepEnergy="195.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKI" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww992CCM0G0JC12" generator="Kinagain" Primkwd="Kww992CCM0G0" Primarygene="KRLW03" lepEnergy="195.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKI2" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww992CCM0G0JC2" generator="Kinagain" Primkwd="Kww992CCM0G0" Primarygene="KRLW03" lepEnergy="195.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKII" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww992CCM0G0JC3" generator="Kinagain" Primkwd="Kww992CCM0G0" rimarygene="KRLW03" lepEnergy="195.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKIIp" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww992CCM0G0JC4" generator="Kinagain" Primkwd="Kww992CCM0G0" Primarygene="KRLW03" lepEnergy="195.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="GAL" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww992CCM0G0PBA" generator="Kinagain" Primkwd="Kww992CCM0G0" Primarygene="KRLW03" lepEnergy="195.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Pythia" ColRec="None" BE="All" Had="No"/>
+ <keyword name="Kww992CCM0G0PBB" generator="Kinagain" Primkwd="Kww992CCM0G0" Primarygene="KRLW03" lepEnergy="195.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Pythia" ColRec="None" BE="InterW" Had="No"/>
+ <keyword name="Kww992CCM0G0PBI" generator="Kinagain" Primkwd="Kww992CCM0G0" Primarygene="KRLW03" lepEnergy="195.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Pythia" ColRec="None" BE="IntraW" Had="No"/>
+ <keyword name="Kww992CCM0G0AC0" generator="Kinagain" Primkwd="Kww992CCM0G0" Primarygene="KRLW03" lepEnergy="195.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="None" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww992CCM0G0AC2" generator="Kinagain" Primkwd="Kww992CCM0G0" Primarygene="KRLW03" lepEnergy="195.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="AR2" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww992CCM0G0HC0" generator="Kinagain" Primkwd="Kww992CCM0G0" Primarygene="KRLW03" lepEnergy="195.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Herwig" ColRec="None" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww992CCM0G0HC1" generator="Kinagain" Primkwd="Kww992CCM0G0" Primarygene="KRLW03" lepEnergy="195.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Herwig" ColRec="11%" BE="None" Had="No" ECAL="Para"/>
+
+ <keyword name="Kww9924fM0G0" generator="KRLW03" lepEnergy="195.5" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None"/>  
+ <keyword name="KZZ9924fM0G0" generator="KRLW03" lepEnergy="195.5" Process="ZZ-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="KWe9924fM0G0" generator="KRLW03" lepEnergy="195.5" Process="Wenu" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None"/>
+<keyword name="KZe992mmM0G0" generator="KRLW03" lepEnergy="195.5" Process="Zeemm" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+<keyword name="KZe992qqM0G0" generator="KRLW03" lepEnergy="195.5" Process="Zeeqq" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+ <keyword name="Kww9924fM0G0L" generator="KRLW03" lepEnergy="195.5" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="Low"/>
+
+<!-- 1999-3 is average energy 199.5 GeV -->
+ <!-- keyword name="Pqq993" generator="PYTH05" lepEnergy="199.5" Process="qqbar"/ -->
+ <keyword name="Kqq993" generator="KK2F02" lepEnergy="199.5" Process="qqbar"/>
+ <keyword name="Kmm993" generator="KK2F02" lepEnergy="199.5" Process="mu+mu-"/>
+ <keyword name="Ktt993" generator="KK2F02" lepEnergy="199.5" Process="Tau+Tau-"/>
+
+ <keyword name="Bee993" generator="BHWI01" lepEnergy="199.5" Process="e+e-"/>
+ <keyword name="Znn993" generator="ZNNB01" lepEnergy="199.5" Process="Znn"/>
+<keyword name="Pgg993not" generator="PYTH05" lepEnergy="199.5" Process="gg-notag" ECAL="Para"/>   
+ <keyword name="Hgg993ltagSaS" generator="HRWG12" lepEnergy="199.5" Process="gg-loosetag" pdf="SaS"  ECAL="Para"/>
+<keyword name="Gud993"  generator="PHOT02" lepEnergy="199.5" Process="udmix" Cut="Loose"/>
+ <keyword name="Gss993"  generator="PHOT02" lepEnergy="199.5" Process="ssbar" Cut="Loose"/>
+ <keyword name="Gcc993"  generator="PHOT02" lepEnergy="199.5" Process="ccbar" Cut="Loose"/>
+ <keyword name="Gbb993"  generator="PHOT02" lepEnergy="199.5" Process="bbbar" Cut="Loose"/>
+ <keyword name="Gee993T"  generator="PHOT02" lepEnergy="199.5" Process="e+e-" Cut="Tight"/>
+ <keyword name="Gmm993T" generator="PHOT02" lepEnergy="199.5" Process="mu+mu-" Cut="Tight"/>
+ <keyword name="Gtt993T" generator="PHOT02" lepEnergy="199.5" Process="Tau+Tau-" Cut="Tight"/>
+ <keyword name="Gee993"  generator="PHOT02" lepEnergy="199.5" Process="e+e-" Cut="Loose"/>
+ <keyword name="Gmm993" generator="PHOT02" lepEnergy="199.5" Process="mu+mu-" Cut="Loose"/>
+ <keyword name="Gtt993" generator="PHOT02" lepEnergy="199.5" Process="Tau+Tau-" Cut="Loose"/>
+
+ <keyword name="Hgg993tagGRV" generator="HRWG12" lepEnergy="199.5" Process="gg-tag" pdf="GRV"  ECAL="Para"/>
+ <keyword name="Hgg993tagSaS" generator="HRWG12" lepEnergy="199.5" Process="gg-tag" pdf="SaS"  ECAL="Para"/>
+ <keyword name="Knn993"  generator="KK2F03" lepEnergy="199.5" Process="nunubar" QGC="No"/>
+ <keyword name="Knn9932g"  generator="KK2F03" lepEnergy="199.5" Process="nunubar" QGC="Yes"/>
+ <keyword name="PZZ993"  generator="PYTH05" lepEnergy="199.5" Process="ZZ"/>
+<keyword name="PZZ993NC2" generator="PYTH05" lepEnergy="199.5" Process="ZZ-NC02"/>
+ <keyword name="PWe993" generator="PYTH05" lepEnergy="199.5" Process="Wenu"/>
+ <!--keyword name="PZe993L" generator="PYTH05" lepEnergy="199.5" Process="Zee" CKIN="Low"/ -->
+ <keyword name="PZe993H" generator="PYTH05" lepEnergy="199.5" Process="Zee" CKIN="High"/>
+ <keyword name="KWW993CCM0G0" generator="KRLW02" lepEnergy="199.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="None"/>
+ <keyword name="Kww993CCM0G0" generator="KRLW03" lepEnergy="199.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+ <keyword name="Kww993CCM0G0JC1" generator="Kinagain" Primkwd="Kww993CCM0G0" Primarygene="KRLW03" lepEnergy="199.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKI" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww993CCM0G0JC12" generator="Kinagain" Primkwd="Kww993CCM0G0" Primarygene="KRLW03" lepEnergy="199.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKI2" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww993CCM0G0JC2" generator="Kinagain" Primkwd="Kww993CCM0G0" Primarygene="KRLW03" lepEnergy="199.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKII" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww993CCM0G0JC3" generator="Kinagain" Primkwd="Kww993CCM0G0" Primarygene="KRLW03" lepEnergy="199.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKIIp" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww993CCM0G0JC4" generator="Kinagain" Primkwd="Kww993CCM0G0" Primarygene="KRLW03" lepEnergy="199.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="GAL" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww993CCM0G0PBA" generator="Kinagain" Primkwd="Kww993CCM0G0" Primarygene="KRLW03" lepEnergy="199.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Pythia" ColRec="None" BE="All" Had="No"/>
+ <keyword name="Kww993CCM0G0PBB" generator="Kinagain" Primkwd="Kww993CCM0G0" Primarygene="KRLW03" lepEnergy="199.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Pythia" ColRec="None" BE="InterW" Had="No"/>
+ <keyword name="Kww993CCM0G0PBI" generator="Kinagain" Primkwd="Kww993CCM0G0" Primarygene="KRLW03" lepEnergy="199.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Pythia" ColRec="None" BE="IntraW" Had="No"/>
+ <keyword name="Kww993CCM0G0AC0" generator="Kinagain" Primkwd="Kww993CCM0G0" Primarygene="KRLW03" lepEnergy="199.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="None" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww993CCM0G0AC2" generator="Kinagain" Primkwd="Kww993CCM0G0" Primarygene="KRLW03" lepEnergy="199.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="AR2" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww993CCM0G0HC0" generator="Kinagain" Primkwd="Kww993CCM0G0" Primarygene="KRLW03" lepEnergy="199.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Herwig" ColRec="None" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww993CCM0G0HC1" generator="Kinagain" Primkwd="Kww993CCM0G0" Primarygene="KRLW03" lepEnergy="199.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Herwig" ColRec="11%" BE="None" Had="No" ECAL="Para"/> 
+ <keyword name="Kww9934fM0G0" generator="KRLW03" lepEnergy="199.5" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="Kww9934fM0G0L" generator="KRLW03" lepEnergy="199.5" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="Low"/>  
+ <keyword name="KZZ9934fM0G0" generator="KRLW03" lepEnergy="199.5" Process="ZZ-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="KZZ9934fM0G0Lo" generator="KRLW03" lepEnergy="199.5" Process="ZZ-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" Stat="Low" ECAL="Para"/>
+ <keyword name="KWe9934fM0G0" generator="KRLW03" lepEnergy="199.5" Process="Wenu" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None"/>
+<keyword name="KZe993mmM0G0" generator="KRLW03" lepEnergy="199.5" Process="Zeemm" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+<keyword name="KZe993qqM0G0" generator="KRLW03" lepEnergy="199.5" Process="Zeeqq" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+ <keyword name="Kww9934fMMMG0" generator="KRLW03" lepEnergy="199.5" Process="WW-4f" Wmass="79.85" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="Kww9934fMMG0" generator="KRLW03" lepEnergy="199.5" Process="WW-4f" Wmass="80.10" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="Kww9934fMPG0" generator="KRLW03" lepEnergy="199.5" Process="WW-4f" Wmass="80.60" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="Kww9934fMPPG0" generator="KRLW03" lepEnergy="199.5" Process="WW-4f" Wmass="80.85" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="Kww9934fM0GPP" generator="KRLW03" lepEnergy="199.5" Process="WW-4f" Wmass="80.35" Wwidth="2.7" TGC="None" Pt2="None"/>
+ <keyword name="Kww9934fM0GP" generator="KRLW03" lepEnergy="199.5" Process="WW-4f" Wmass="80.35" Wwidth="2.4" TGC="None" Pt2="None"/>
+ <keyword name="Kww9934fM0GM" generator="KRLW03" lepEnergy="199.5" Process="WW-4f" Wmass="80.35" Wwidth="1.8" TGC="None" Pt2="None"/>
+ <keyword name="Kww9934fM0GMM" generator="KRLW03" lepEnergy="199.5" Process="WW-4f" Wmass="80.35" Wwidth="1.5" TGC="None" Pt2="None"/>
+
+<!-- 1999-4 is average energy 201.6 GeV -->
+ <!-- keyword name="Pqq994" generator="PYTH05" lepEnergy="201.6" Process="qqbar"/ -->
+ <keyword name="Kqq994" generator="KK2F02" lepEnergy="201.6" Process="qqbar"/>
+ <keyword name="Kmm994" generator="KK2F02" lepEnergy="201.6" Process="mu+mu-"/>
+ <keyword name="Ktt994" generator="KK2F02" lepEnergy="201.6" Process="Tau+Tau-"/>
+ <keyword name="Knn994"  generator="KK2F03" lepEnergy="201.6" Process="nunubar" QGC="No"/>
+ <keyword name="Knn9942g"  generator="KK2F03" lepEnergy="201.6" Process="nunubar" QGC="Yes"/>
+ <keyword name="Bee994"  generator="BHWI01" lepEnergy="201.6" Process="e+e-"/> 
+ <keyword name="Znn994"  generator="ZNNB01" lepEnergy="201.6" Process="Znn"/>
+<keyword name="Pgg994not" generator="PYTH05" lepEnergy="201.6" Process="gg-notag" ECAL="Para"/>
+ <keyword name="Hgg994ltagSaS" generator="HRWG12" lepEnergy="201.6" Process="gg-loosetag" pdf="SaS"  ECAL="Para"/>
+ <keyword name="Gud994"  generator="PHOT02" lepEnergy="201.6" Process="udmix" Cut="Loose"/>
+ <keyword name="Gss994"  generator="PHOT02" lepEnergy="201.6" Process="ssbar" Cut="Loose"/>
+ <keyword name="Gcc994"  generator="PHOT02" lepEnergy="201.6" Process="ccbar" Cut="Loose"/>
+ <keyword name="Gbb994"  generator="PHOT02" lepEnergy="201.6" Process="bbbar" Cut="Loose"/>
+ <keyword name="Gee994"  generator="PHOT02" lepEnergy="201.6" Process="e+e-" Cut="Loose"/>
+ <keyword name="Gmm994" generator="PHOT02" lepEnergy="201.6" Process="mu+mu-" Cut="Loose"/>
+ <keyword name="Gtt994" generator="PHOT02" lepEnergy="201.6" Process="Tau+Tau-" Cut="Loose"/>
+ <keyword name="Gee994T"  generator="PHOT02" lepEnergy="201.6" Process="e+e-" Cut="Tight"/>
+ <keyword name="Gmm994T" generator="PHOT02" lepEnergy="201.6" Process="mu+mu-" Cut="Tight"/>
+ <keyword name="Gtt994T" generator="PHOT02" lepEnergy="201.6" Process="Tau+Tau-" Cut="Tight"/>
+
+ <keyword name="PZZ994"  generator="PYTH05" lepEnergy="201.6" Process="ZZ"/>
+ <keyword name="PZZ994NC2" generator="PYTH05" lepEnergy="201.6" Process="ZZ-NC02"/>
+ <keyword name="PWe994" generator="PYTH05" lepEnergy="201.6" Process="Wenu"/>
+ <!-- keyword name="PZe994L" generator="PYTH05" lepEnergy="201.6" Process="Zee" CKIN="Low"/ -->
+ <keyword name="PZe994H" generator="PYTH05" lepEnergy="201.6" Process="Zee" CKIN="High"/>
+ <keyword name="Kww994CCM0G0" generator="KRLW03" lepEnergy="201.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/> 
+ <keyword name="Kww994CCM0G0JC1" generator="Kinagain" Primkwd="Kww994CCM0G0" Primarygene="KRLW03" lepEnergy="201.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKI" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww994CCM0G0JC12" generator="Kinagain" Primkwd="Kww994CCM0G0" Primarygene="KRLW03" lepEnergy="201.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKI2" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww994CCM0G0JC2" generator="Kinagain" Primkwd="Kww994CCM0G0" Primarygene="KRLW03" lepEnergy="201.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKII" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww994CCM0G0JC3" generator="Kinagain" Primkwd="Kww994CCM0G0" Primarygene="KRLW03" lepEnergy="201.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKIIp" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww994CCM0G0JC4" generator="Kinagain" Primkwd="Kww994CCM0G0" Primarygene="KRLW03" lepEnergy="201.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="GAL" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww994CCM0G0PBA" generator="Kinagain" Primkwd="Kww994CCM0G0" Primarygene="KRLW03" lepEnergy="201.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Pythia" ColRec="None" BE="All" Had="No"/>
+ <keyword name="Kww994CCM0G0PBB" generator="Kinagain" Primkwd="Kww994CCM0G0" Primarygene="KRLW03" lepEnergy="201.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Pythia" ColRec="None" BE="InterW" Had="No"/>
+ <keyword name="Kww994CCM0G0PBI" generator="Kinagain" Primkwd="Kww994CCM0G0" Primarygene="KRLW03" lepEnergy="201.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Pythia" ColRec="None" BE="IntraW" Had="No"/>
+ <keyword name="Kww994CCM0G0AC0" generator="Kinagain" Primkwd="Kww994CCM0G0" Primarygene="KRLW03" lepEnergy="201.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="None" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww994CCM0G0AC2" generator="Kinagain" Primkwd="Kww994CCM0G0" Primarygene="KRLW03" lepEnergy="201.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="AR2" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww994CCM0G0HC0" generator="Kinagain" Primkwd="Kww994CCM0G0" Primarygene="KRLW03" lepEnergy="201.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Herwig" ColRec="None" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww994CCM0G0HC1" generator="Kinagain" Primkwd="Kww994CCM0G0" Primarygene="KRLW03" lepEnergy="201.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Herwig" ColRec="11%" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww9944fM0G0" generator="KRLW03" lepEnergy="201.6" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="Kww9944fM0G0L" generator="KRLW03" lepEnergy="201.6" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="Low"/>
+ <keyword name="KZZ9944fM0G0" generator="KRLW03" lepEnergy="201.6" Process="ZZ-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="KWe9944fM0G0" generator="KRLW03" lepEnergy="201.6" Process="Wenu" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None"/>
+<keyword name="KZe994mmM0G0" generator="KRLW03" lepEnergy="201.6" Process="Zeemm" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+<keyword name="KZe994qqM0G0" generator="KRLW03" lepEnergy="201.6" Process="Zeeqq" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+
+<!-- y2k are 2  average energies 205/207 GeV --> 
+<!-- y2k-1 is average energy 205 GeV  (204.9) -->
+ <keyword name="HWWZ2k1M115" generator="HZHA03" lepEnergy="204.9" Process="WWZ" Hmass="115."/>
+ <keyword name="HWWZ2k1M100" generator="HZHA03" lepEnergy="204.9" Process="WWZ" Hmass="100."/>
+ <keyword name="HWWZ2k1M110" generator="HZHA03" lepEnergy="204.9" Process="WWZ" Hmass="110."/>
+ <keyword name="HWWZ2k1M113" generator="HZHA03" lepEnergy="204.9" Process="WWZ" Hmass="113."/>
+ <keyword name="HWWZ2k1M116" generator="HZHA03" lepEnergy="204.9" Process="WWZ" Hmass="116."/> 
+ <keyword name="HWWZ2k1M117" generator="HZHA03" lepEnergy="204.9" Process="WWZ" Hmass="117."/>
+ <!-- keyword name="Pqq2k1"  generator="PYTH05" lepEnergy="204.9" Process="qqbar"/ -->
+ <keyword name="PWe2k1" generator="PYTH05" lepEnergy="204.9" Process="Wenu"/> 
+ <keyword name="PZZ2k1"  generator="PYTH05" lepEnergy="204.9" Process="ZZ"/>   
+ <keyword name="PZZ2k1NC2" generator="PYTH05" lepEnergy="204.9" Process="ZZ-NC02"/>
+ <!-- keyword name="PWW2k1"  generator="PYTH05" lepEnergy="204.9" Process="W+W-"/ -->
+ <!-- keyword name="PZe2k1L" generator="PYTH05" lepEnergy="204.9" Process="Zee" CKIN="Low"/ -->
+ <keyword name="PZe2k1H" generator="PYTH05" lepEnergy="204.9" Process="Zee" CKIN="High"/>
+ <keyword name="Kqq2k1" generator="KK2F02" lepEnergy="204.9" Process="qqbar"/>
+ <keyword name="Kdd2k1" generator="KK2F02" lepEnergy="204.9" Process="ddbar"/>
+ <keyword name="Kuu2k1" generator="KK2F02" lepEnergy="204.9" Process="uubar"/>
+ <keyword name="Kss2k1" generator="KK2F02" lepEnergy="204.9" Process="ssbar"/>
+ <keyword name="Kcc2k1" generator="KK2F02" lepEnergy="204.9" Process="ccbar"/>
+ <keyword name="Kbb2k1" generator="KK2F02" lepEnergy="204.9" Process="bbbar"/>
+ <keyword name="Kmm2k1" generator="KK2F02" lepEnergy="204.9" Process="mu+mu-"/>
+<keyword name="Ktt2k1" generator="KK2F02" lepEnergy="204.9" Process="Tau+Tau-"/>
+ <keyword name="Knn2k1"  generator="KK2F03" lepEnergy="204.9" Process="nunubar" QGC="No"/> 
+ <keyword name="Knn2k12g"  generator="KK2F03" lepEnergy="204.9" Process="nunubar" QGC="Yes"/>
+ <keyword name="Bee2k1" generator="BHWI01" lepEnergy="204.9" Process="e+e-"/>
+ <keyword name="Znn2k1" generator="ZNNB01" lepEnergy="204.9" Process="Znn"/>
+<keyword name="Pgg2k1not" generator="PYTH05" lepEnergy="204.9" Process="gg-notag" ECAL="Para"/>
+ <keyword name="Gud2k1"  generator="PHOT02" lepEnergy="204.9" Process="udmix" Cut="Loose"/>
+ <keyword name="Gss2k1"  generator="PHOT02" lepEnergy="204.9" Process="ssbar" Cut="Loose"/>
+ <keyword name="Gcc2k1"  generator="PHOT02" lepEnergy="204.9" Process="ccbar" Cut="Loose"/>
+ <keyword name="Gbb2k1"  generator="PHOT02" lepEnergy="204.9" Process="bbbar" Cut="Loose"/>
+ <keyword name="Gee2k1"  generator="PHOT02" lepEnergy="204.9" Process="e+e-" Cut="Loose"/>
+ <keyword name="Gmm2k1" generator="PHOT02" lepEnergy="204.9" Process="mu+mu-" Cut="Loose"/>
+ <keyword name="Gtt2k1" generator="PHOT02" lepEnergy="204.9" Process="Tau+Tau-" Cut="Loose"/>
+ <keyword name="Gee2k1T"  generator="PHOT02" lepEnergy="204.9" Process="e+e-" Cut="Tight"/>
+ <keyword name="Gmm2k1T" generator="PHOT02" lepEnergy="204.9" Process="mu+mu-" Cut="Tight"/>
+ <keyword name="Gtt2k1T" generator="PHOT02" lepEnergy="204.9" Process="Tau+Tau-" Cut="Tight"/>
+
+ <keyword name="Hgg2k1tagGRV" generator="HRWG12" lepEnergy="204.9" Process="gg-tag" pdf="GRV"  ECAL="Para"/>
+ <keyword name="Hgg2k1tagSaS" generator="HRWG12" lepEnergy="204.9" Process="gg-tag" pdf="SaS"  ECAL="Para"/>
+ <keyword name="Hgg2k1ltagSaS" generator="HRWG12" lepEnergy="204.9" Process="gg-loosetag" pdf="SaS"  ECAL="Para"/>
+ <keyword name="Pgg2k1tagGRV" generator="PYTH05" lepEnergy="204.9" Process="gg-tag" pdf="GRV"  ECAL="Para"/>
+
+ <keyword name="Kww2k1CCM0G0" generator="KRLW03" lepEnergy="204.9" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+ <keyword name="Kww2k1CCM0G0JC1" generator="Kinagain" Primkwd="Kww2k1CCM0G0" Primarygene="KRLW03" lepEnergy="204.9" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKI" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww2k1CCM0G0JC12" generator="Kinagain" Primkwd="Kww2k1CCM0G0" Primarygene="KRLW03" lepEnergy="204.9" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKI2" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww2k1CCM0G0JC2" generator="Kinagain" Primkwd="Kww2k1CCM0G0" Primarygene="KRLW03" lepEnergy="204.9" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKII" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww2k1CCM0G0JC3" generator="Kinagain" Primkwd="Kww2k1CCM0G0" Primarygene="KRLW03" lepEnergy="204.9" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKIIp" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww2k1CCM0G0JC4" generator="Kinagain" Primkwd="Kww2k1CCM0G0" Primarygene="KRLW03" lepEnergy="204.9" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="GAL" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww2k1CCM0G0PBA" generator="Kinagain" Primkwd="Kww2k1CCM0G0" Primarygene="KRLW03" lepEnergy="204.9" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Pythia" ColRec="None" BE="All" Had="No"/>
+ <keyword name="Kww2k1CCM0G0PBB" generator="Kinagain" Primkwd="Kww2k1CCM0G0" Primarygene="KRLW03" lepEnergy="204.9" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Pythia" ColRec="None" BE="InterW" Had="No"/>
+ <keyword name="Kww2k1CCM0G0PBI" generator="Kinagain" Primkwd="Kww2k1CCM0G0" Primarygene="KRLW03" lepEnergy="204.9" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Pythia" ColRec="None" BE="IntraW" Had="No"/>
+ <keyword name="Kww2k1CCM0G0AC0" generator="Kinagain" Primkwd="Kww2k1CCM0G0" Primarygene="KRLW03" lepEnergy="204.9" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="None" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww2k1CCM0G0AC2" generator="Kinagain" Primkwd="Kww2k1CCM0G0" Primarygene="KRLW03" lepEnergy="204.9" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="AR2" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww2k1CCM0G0HC0" generator="Kinagain" Primkwd="Kww2k1CCM0G0" Primarygene="KRLW03" lepEnergy="204.9" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Herwig" ColRec="None" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww2k1CCM0G0HC1" generator="Kinagain" Primkwd="Kww2k1CCM0G0" Primarygene="KRLW03" lepEnergy="204.9" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Herwig" ColRec="11%" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww2k14fM0G0" generator="KRLW03" lepEnergy="204.9" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+ <keyword name="Kww2k14fM0G0L" generator="KRLW03" lepEnergy="204.9" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="Low" ECAL="Para"/>
+ <keyword name="KZZ2k14fM0G0" generator="KRLW03" lepEnergy="204.9" Process="ZZ-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+ <keyword name="KWe2k14fM0G0" generator="KRLW03" lepEnergy="204.9" Process="Wenu" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+<keyword name="KZe2k1mmM0G0" generator="KRLW03" lepEnergy="204.9" Process="Zeemm" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+<keyword name="KZe2k1qqM0G0" generator="KRLW03" lepEnergy="204.9" Process="Zeeqq" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+<!-- y2k-2 is average energy 207 GeV (206.5) -->  
+
+ <keyword name="HWWZ2k2M115" generator="HZHA03" lepEnergy="206.5" Process="WWZ" Hmass="115."/>
+ <keyword name="HWWZ2k2M100" generator="HZHA03" lepEnergy="206.5" Process="WWZ" Hmass="100."/>
+ <keyword name="HWWZ2k2M110" generator="HZHA03" lepEnergy="206.5" Process="WWZ" Hmass="110."/>
+ <keyword name="HWWZ2k2M113" generator="HZHA03" lepEnergy="206.5" Process="WWZ" Hmass="113."/>
+ <keyword name="HWWZ2k2M116" generator="HZHA03" lepEnergy="206.5" Process="WWZ" Hmass="116."/> 
+ <keyword name="HWWZ2k2M117" generator="HZHA03" lepEnergy="206.5" Process="WWZ" Hmass="117."/>
+ <keyword name="Kww2k2CCM0G0" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+ <keyword name="Kww2k2CCM0G0JC1" generator="Kinagain" Primkwd="Kww2k2CCM0G0" Primarygene="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKI" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww2k2CCM0G0JC12" generator="Kinagain" Primkwd="Kww2k2CCM0G0" Primarygene="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKI2" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww2k2CCM0G0JC2" generator="Kinagain" Primkwd="Kww2k2CCM0G0" Primarygene="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKII" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww2k2CCM0G0JC22" generator="Kinagain" Primkwd="Kww2k2CCM0G0" Primarygene="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKII2" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww2k2CCM0G0JC32" generator="Kinagain" Primkwd="Kww2k2CCM0G0" Primarygene="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKIIp2" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww2k2CCM0G0JC3" generator="Kinagain" Primkwd="Kww2k2CCM0G0" Primarygene="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKIIp" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="Kww2k2CCM0G0JC4" generator="Kinagain" Primkwd="Kww2k2CCM0G0" Primarygene="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="GAL" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww2k2CCM0G0PBA" generator="Kinagain" Primkwd="Kww2k2CCM0G0" Primarygene="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Pythia" ColRec="None" BE="All" Had="No"/>
+ <keyword name="Kww2k2CCM0G0PBB" generator="Kinagain" Primkwd="Kww2k2CCM0G0" Primarygene="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Pythia" ColRec="None" BE="InterW" Had="No"/>
+ <keyword name="Kww2k2CCM0G0PBI" generator="Kinagain" Primkwd="Kww2k2CCM0G0" Primarygene="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Pythia" ColRec="None" BE="IntraW" Had="No"/>
+ <keyword name="Kww2k2CCM0G0AC0" generator="Kinagain" Primkwd="Kww2k2CCM0G0" Primarygene="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="None" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww2k2CCM0G0AC2" generator="Kinagain" Primkwd="Kww2k2CCM0G0" Primarygene="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="AR2" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww2k2CCM0G0AC1" generator="Kinagain" Primkwd="Kww2k2CCM0G0" Primarygene="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="AR1" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww2k2CCM0G0HC0" generator="Kinagain" Primkwd="Kww2k2CCM0G0" Primarygene="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Herwig" ColRec="None" BE="None" Had="No" ECAL="Para"/>
+ <keyword name="Kww2k2CCM0G0HC1" generator="Kinagain" Primkwd="Kww2k2CCM0G0" Primarygene="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Herwig" ColRec="11%" BE="None" Had="No" ECAL="Para"/>
+
+ <keyword name="Kww2k24fM0G0" generator="KRLW03" lepEnergy="206.5" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+ <keyword name="Kww2k24fM0G0L" generator="KRLW03" lepEnergy="206.5" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="Low" ECAL="Para"/>
+ <keyword name="KZZ2k24fM0G0" generator="KRLW03" lepEnergy="206.5" Process="ZZ-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None"  ECAL="Para"/>
+ <keyword name="KZZ2k24fM0G0Lo" generator="KRLW03" lepEnergy="206.5" Process="ZZ-4f" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" Stat="Low" ECAL="Para"/>
+ <keyword name="KWe2k24fM0G0" generator="KRLW03" lepEnergy="206.5" Process="Wenu" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/> 
+<keyword name="KZe2k2mmM0G0" generator="KRLW03" lepEnergy="206.5" Process="Zeemm" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+<keyword name="KZe2k2qqM0G0" generator="KRLW03" lepEnergy="206.5" Process="Zeeqq" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None" ECAL="Para"/>
+ <keyword name="Kww2k24fM0G0H" generator="Kinagain" Primkwd="Kww2k24fM0G0" Primarygene="KRLW03" lepEnergy="206.5" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" Hadronization="Herwig" ColRec="None" BE="None" Had="No"/> 
+ <keyword name="Kww2k24fM0G0A" generator="Kinagain" Primkwd="Kww2k24fM0G0" Primarygene="KRLW03" lepEnergy="206.5" Process="WW-4f" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="None" BE="None" Had="No"/> 
+ <keyword name="Kww2k24fMMMG0" generator="KRLW03" lepEnergy="206.5" Process="WW-4f" Wmass="79.85" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="Kww2k24fMMG0" generator="KRLW03" lepEnergy="206.5" Process="WW-4f" Wmass="80.10" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="Kww2k24fMPG0" generator="KRLW03" lepEnergy="206.5" Process="WW-4f" Wmass="80.60" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="Kww2k24fMPPG0" generator="KRLW03" lepEnergy="206.5" Process="WW-4f" Wmass="80.85" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="Kww2k24fM0GPP" generator="KRLW03" lepEnergy="206.5" Process="WW-4f" Wmass="80.35" Wwidth="2.7" TGC="None" Pt2="None"/>
+ <keyword name="Kww2k24fM0GP" generator="KRLW03" lepEnergy="206.5" Process="WW-4f" Wmass="80.35" Wwidth="2.4" TGC="None" Pt2="None"/>
+ <keyword name="Kww2k24fM0GM" generator="KRLW03" lepEnergy="206.5" Process="WW-4f" Wmass="80.35" Wwidth="1.8" TGC="None" Pt2="None"/>
+ <keyword name="Kww2k24fM0GMM" generator="KRLW03" lepEnergy="206.5" Process="WW-4f" Wmass="80.35" Wwidth="1.5" TGC="None" Pt2="None"/>
+ <keyword name="KWW2k2CCI42M" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I42M" Pt2="None"/>
+ <keyword name="KWW2k2CCI42P" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I42P" Pt2="None"/>
+ <keyword name="KWW2k2CCI44M" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I44M" Pt2="None"/>
+ <keyword name="KWW2k2CCI44P" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I44P" Pt2="None"/>
+ <keyword name="KWW2k2CCI52M" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I52M" Pt2="None"/>
+ <keyword name="KWW2k2CCI52P" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I52P" Pt2="None"/>
+ <keyword name="KWW2k2CCI54M" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I54M" Pt2="None"/>
+ <keyword name="KWW2k2CCI54P" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I54P" Pt2="None"/>
+ <keyword name="KWW2k2CCI62M" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I62M" Pt2="None"/>
+ <keyword name="KWW2k2CCI62P" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I62P" Pt2="None"/>
+ <keyword name="KWW2k2CCI64M" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I64M" Pt2="None"/>
+ <keyword name="KWW2k2CCI64P" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I64P" Pt2="None"/>
+ <keyword name="KWW2k2CCI72M" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I72M" Pt2="None"/>
+ <keyword name="KWW2k2CCI72P" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I72P" Pt2="None"/>
+ <keyword name="KWW2k2CCI74M" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I74M" Pt2="None"/>
+ <keyword name="KWW2k2CCI74P" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="I74P" Pt2="None"/>
+ <keyword name="KWW2k2CCR13M" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R13M" Pt2="None"/>
+ <keyword name="KWW2k2CCR13P" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R13P" Pt2="None"/>
+ <keyword name="KWW2k2CCR41M" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R41M" Pt2="None"/>
+ <keyword name="KWW2k2CCR41P" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R41P" Pt2="None"/>
+ <keyword name="KWW2k2CCR43M" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R43M" Pt2="None"/>
+ <keyword name="KWW2k2CCR43P" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R43P" Pt2="None"/>
+ <keyword name="KWW2k2CCR51M" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R51M" Pt2="None"/>
+ <keyword name="KWW2k2CCR51P" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R51P" Pt2="None"/>
+ <keyword name="KWW2k2CCR53M" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R53M" Pt2="None"/>
+ <keyword name="KWW2k2CCR53P" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R53P" Pt2="None"/>
+ <keyword name="KWW2k2CCR21M" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R21M" Pt2="None"/>
+ <keyword name="KWW2k2CCR21P" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R21P" Pt2="None"/>
+ <keyword name="KWW2k2CCR31M" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R31M" Pt2="None"/>
+ <keyword name="KWW2k2CCR31P" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R31P" Pt2="None"/>
+ <keyword name="KWW2k2CCR61M" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R61M" Pt2="None"/>
+ <keyword name="KWW2k2CCR61P" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R61P" Pt2="None"/>
+ <keyword name="KWW2k2CCR63M" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R63M" Pt2="None"/>
+ <keyword name="KWW2k2CCR63P" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R63P" Pt2="None"/>
+ <keyword name="KWW2k2CCR71M" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R71M" Pt2="None"/>
+ <keyword name="KWW2k2CCR71P" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R71P" Pt2="None"/>
+ <keyword name="KWW2k2CCR73M" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R73M" Pt2="None"/>
+ <keyword name="KWW2k2CCR73P" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R73P" Pt2="None"/>
+ <keyword name="KWW2k2CCR21P31M" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R21P31M" Pt2="None"/>
+ <keyword name="KWW2k2CCR21P13P" generator="KRLW03" lepEnergy="206.5" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="R21P13P" Pt2="None"/>
+
+
+ <keyword name="Kqq2k2" generator="KK2F02" lepEnergy="206.5" Process="qqbar"/>
+ <keyword name="Kqq2k2PP" generator="KK2F02" lepEnergy="207.5" Process="qqbar"/>
+ <keyword name="Kqq2k2P" generator="KK2F02" lepEnergy="207.0" Process="qqbar"/>
+ <keyword name="Kqq2k2M" generator="KK2F02" lepEnergy="206.0" Process="qqbar"/>
+ <keyword name="Kqq2k2MM" generator="KK2F02" lepEnergy="205.5" Process="qqbar"/>
+ <keyword name="Kqq2k2H"  generator="Kinagain" Primkwd="Kqq2k2" Primarygene="KK2F02" lepEnergy="206.5" Process="qqbar" Hadronization="Herwig" ColRec="None" BE="None" Had="No"/>
+ <keyword name="Kqq2k2BE"  generator="Kinagain" Primkwd="Kqq2k2" Primarygene="KK2F02" lepEnergy="206.5" Process="qqbar" Hadronization="Jetset" ColRec="None" BE="BE32" Had="No"/>
+
+ <keyword name="Kmm2k2" generator="KK2F02" lepEnergy="206.5" Process="mu+mu-"/>
+ <keyword name="Kmm2k2PP" generator="KK2F02" lepEnergy="207.5" Process="mu+mu-"/>
+ <keyword name="Kmm2k2P" generator="KK2F02" lepEnergy="207.0" Process="mu+mu-"/>
+ <keyword name="Kmm2k2M" generator="KK2F02" lepEnergy="206.0" Process="mu+mu-"/>
+ <keyword name="Kmm2k2MM" generator="KK2F02" lepEnergy="205.5" Process="mu+mu-"/>
+<keyword name="Ktt2k2" generator="KK2F02" lepEnergy="206.5" Process="Tau+Tau-"/>
+ <keyword name="Knn2k2"  generator="KK2F03" lepEnergy="206.5" Process="nunubar" QGC="No"/>
+ <keyword name="Knn2k22g"  generator="KK2F03" lepEnergy="206.5" Process="nunubar" QGC="Yes"/>
+ <keyword name="Bee2k2"  generator="BHWI01" lepEnergy="206.5" Process="e+e-"/>
+ <keyword name="Znn2k2"  generator="ZNNB01" lepEnergy="206.5" Process="Znn"/>
+<keyword name="Pgg2k2not" generator="PYTH05" lepEnergy="206.5" Process="gg-notag" ECAL="Para"/>
+ <keyword name="Gud2k2"  generator="PHOT02" lepEnergy="206.5" Process="udmix" Cut="Loose"/>
+ <keyword name="Gss2k2"  generator="PHOT02" lepEnergy="206.5" Process="ssbar" Cut="Loose"/>
+ <keyword name="Gcc2k2"  generator="PHOT02" lepEnergy="206.5" Process="ccbar" Cut="Loose"/>
+ <keyword name="Gbb2k2"  generator="PHOT02" lepEnergy="206.5" Process="bbbar" Cut="Loose"/>
+ <keyword name="Gee2k2"  generator="PHOT02" lepEnergy="206.5" Process="e+e-" Cut="Loose"/>
+ <keyword name="Gmm2k2" generator="PHOT02" lepEnergy="206.5" Process="mu+mu-" Cut="Loose"/>
+ <keyword name="Gtt2k2" generator="PHOT02" lepEnergy="206.5" Process="Tau+Tau-" Cut="Loose"/>
+ <keyword name="Gee2k2T"  generator="PHOT02" lepEnergy="206.5" Process="e+e-" Cut="Tight"/>
+ <keyword name="Gmm2k2T" generator="PHOT02" lepEnergy="206.5" Process="mu+mu-" Cut="Tight"/>
+ <keyword name="Gtt2k2T" generator="PHOT02" lepEnergy="206.5" Process="Tau+Tau-" Cut="Tight"/>
+ <keyword name="Hgg2k2tagGRV" generator="HRWG12" lepEnergy="206.5" Process="gg-tag" pdf="GRV"  ECAL="Para"/>
+ <keyword name="Hgg2k2tagSaS" generator="HRWG12" lepEnergy="206.5" Process="gg-tag" pdf="SaS"  ECAL="Para"/>
+ <keyword name="Hgg2k2ltagSaS" generator="HRWG12" lepEnergy="206.5" Process="gg-loosetag" pdf="SaS"  ECAL="Para"/>
+ <keyword name="Pgg2k2tagGRV" generator="PYTH05" lepEnergy="206.5" Process="gg-tag" pdf="GRV"  ECAL="Para"/>
+ <!-- keyword name="Pqq2k2"  generator="PYTH05" lepEnergy="206.5" Process="qqbar"/ -->
+ <keyword name="PWe2k2"  generator="PYTH05" lepEnergy="206.5" Process="Wenu"/> 
+ <keyword name="PZZ2k2"  generator="PYTH05" lepEnergy="206.5" Process="ZZ"/>   
+ <keyword name="PZZ2k2NC2" generator="PYTH05" lepEnergy="206.5" Process="ZZ-NC02"/>
+ <!-- keyword name="PWW2k2"  generator="PYTH05" lepEnergy="206.5" Process="W+W-"/ -->
+ <keyword name="PZe2k2H" generator="PYTH05" lepEnergy="206.5" Process="Zee"  CKIN="High"/>
+ <!-- keyword name="PZe2k2L" generator="PYTH05" lepEnergy="206.5" Process="Zee"  CKIN="Low"/ -->
+ <!--  special for Higgs analyses at the highest 2k3 energy 208.0 Gev -->
+ <keyword name="HWWZ2k3M115" generator="HZHA03" lepEnergy="208.0" Process="WWZ" Hmass="115."/>
+ <keyword name="HWWZ2k3M100" generator="HZHA03" lepEnergy="208.0" Process="WWZ" Hmass="100."/>
+ <keyword name="HWWZ2k3M110" generator="HZHA03" lepEnergy="208.0" Process="WWZ" Hmass="110."/>
+ <keyword name="HWWZ2k3M113" generator="HZHA03" lepEnergy="208.0" Process="WWZ" Hmass="113."/>
+ <keyword name="HWWZ2k3M116" generator="HZHA03" lepEnergy="208.0" Process="WWZ" Hmass="116."/> 
+ <keyword name="HWWZ2k3M117" generator="HZHA03" lepEnergy="208.0" Process="WWZ" Hmass="117."/>
+
+ <!-- keyword for Cetraro files purposes only --> 
+ <keyword name="CetraJref" generator="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" TGC="None" Pt2="None"/>
+ <keyword name="CetraJSKI" generator="Kinagain" Primkwd="CetraJref" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKI" BE="None" Had="No"/>
+ <keyword name="CetraJC12" generator="Kinagain" Primkwd="CetraJref" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Jetset" ColRec="SKI2" BE="None" Had="Yes" ECAL="Para"/>
+ <keyword name="CetraPBA" generator="Kinagain" Primkwd="CetraJref" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Pythia" ColRec="None" BE="All"  Had="No"/>
+ <keyword name="CetraPBI" generator="Kinagain" Primkwd="CetraJref" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Pythia" ColRec="None" BE="IntraW" Had="No"/>
+ <keyword name="CetraPBB" generator="Kinagain" Primkwd="CetraJref" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Pythia" ColRec="None" BE="InterW" Had="No"/>
+ <keyword name="CetraAC0" generator="Kinagain" Primkwd="CetraJref" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="None" BE="None" Had="No"/>
+ <keyword name="CetraAC2" generator="Kinagain" Primkwd="CetraJref" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Ariadne" ColRec="AR2" BE="None" Had="No"/>
+ <keyword name="CetraHC0" generator="Kinagain" Primkwd="CetraJref" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Herwig" ColRec="None" BE="None" Had="No"/>
+ <keyword name="CetraHC1" generator="Kinagain" Primkwd="CetraJref" Primarygene="KRLW03" lepEnergy="188.6" Process="WW-CC03" Wmass="80.35" Wwidth="-2.03" Hadronization="Herwig" ColRec="11%" BE="None" Had="No"/>
+
+
+ <!-- keyword for test purposes only --> 
+ <keyword name="TestMC"  generator="BHWI01" lepEnergy="91.2" Geometry="1997"      Process="Test" ECAL="Para"/>
+ <keyword name="TestMCL"  generator="BHWI01" lepEnergy="91.2" Geometry="1997"      Process="TestL" ECAL="Para"/>
+</prods>
+
+
+
+
+

@@ -1,0 +1,197 @@
+      SUBROUTINE UHIST(ID,X)
+      COMMON/HCS/KW(100)
+      REAL XW(1)
+      EQUIVALENCE (XW(1),KW(1))
+#include "bosmdl.h"
+#include "concom.h"
+      REAL H(120)
+      CHARACTER*(*) TEXT
+      CHARACTER*72 COMT
+C
+C     BANK HIST,NA WITH NW = 150 DATA WORDS
+C
+C       1   SUBNAM (FIRST PART)      OR ZERO
+C       2   SUBNAM (SECOND PART)
+C       3   TEXT
+C       .   ...
+C      20   TEXT
+C      21   NA
+C      22   NUMBER OF ENTRIES
+C      23   LOWER CHANNEL LEFT EDGE
+C      24   BIN SIZE
+C      25   ENTRIES OUTSIDE LOW
+C      26   ENTRIES OUTSIDE HIGH
+C      27   MIN X
+C      28   MAX X
+C      29
+C      30   =0 NO BINSIZE DEFINED, =1 BINSIZE DEFINED, =2 PRINTED
+C      31   HISTOGRAM OR ENTRY VALUES
+C     ...   ...
+C     150   ...
+C     ...
+C
+      IF(IBS.LT.0.OR.ID.LT.0) GOTO 100
+      NA=ID
+      IF(IBS.EQ.0) THEN
+         IF(NA.GT.999999999) GOTO 100
+      ELSE
+         IF(NA.GT.99) GOTO 100
+         NA=NA+IBS
+      END IF
+
+      IND=MLINK(KW,'HIST',NA)
+      IF(IND.EQ.0) THEN
+         IND=MBANK(KW,'HIST',NA,150)
+         IF(IND.EQ.0) GOTO 100
+         CALL BKFMT('HIST','20A,2I,7F,I,120F')
+         IF(IBS.NE.0) THEN
+            KW(IND+1)=IHE(7)
+            KW(IND+2)=IHE(8)
+         END IF
+      END IF
+      N=KW(IND+22)
+      IF(N.EQ.0) THEN
+         KW(IND+21)=NA
+         XW(IND+27)=X
+         XW(IND+28)=X
+      END IF
+      N=N+1
+      KW(IND+22)=N
+      XW(IND+27)=MIN(XW(IND+27),X)
+      XW(IND+28)=MAX(XW(IND+28),X)
+      IF(KW(IND+30).NE.0) THEN
+         K=(X-XW(IND+23))/XW(IND+24)+31
+         IF(K.LE.30) THEN
+            K=25
+         ELSE IF(K.GT.150) THEN
+            K=26
+         END IF
+         XW(IND+K)=XW(IND+K)+1.0
+         KW(IND+30)=1
+      ELSE
+         XW(IND+30+N)=X
+         IF(N.GE.120) GOTO 30
+      END IF
+      GOTO 100
+C
+      ENTRY DHIST(ID,XL,XH)
+      IF(IBS.LT.0.OR.ID.LE.0) GOTO 100
+      NA=ID
+      IF(IBS.EQ.0) THEN
+         IF(NA.GT.999999999) GOTO 100
+      ELSE
+         IF(NA.GT.99) GOTO 100
+         NA=NA+IBS
+      END IF
+
+      IND=MLINK(KW,'HIST',NA)
+      IF(IND.EQ.0) THEN
+         IND=MBANK(KW,'HIST',NA,150)
+         IF(IND.EQ.0) GOTO 100
+         CALL BKFMT('HIST','20A,2I,7F,I,120F')
+            IF(IBS.NE.0) THEN
+               KW(IND+1)=IHE(7)
+               KW(IND+2)=IHE(8)
+            END IF
+      ELSE
+         IF(KW(IND+30).NE.0) GOTO 100
+         IF(KW(IND+22).NE.0) GOTO 100
+      END IF
+      KW(IND+21)=NA
+      XW(IND+23)=AMIN1(XL,XH)
+      ST=ABS(XL-XH)/120.0
+      IF(ST.EQ.0.0) ST=0.01
+      XW(IND+24)=ST
+      KW(IND+30)=1
+      GOTO 100
+C
+C
+C
+      ENTRY PHIST(ID)
+      IF(KW(6).EQ.0) GOTO 100
+      CALL DLUNP(KW(6))
+      IF(ID.LT.0) GOTO 100
+      IF(ID.NE.0) THEN
+         IF(IBS.LT.0) GOTO 100
+         NA=ID
+         IF(IBS.EQ.0) THEN
+            IF(NA.GT.999999999) GOTO 100
+         ELSE
+            IF(NA.GT.99) GOTO 100
+            NA=NA+IBS
+         END IF
+         IND= MLINK(KW,'HIST',NA)
+      ELSE
+         IND=KW(NAMIND('HIST'))
+      END IF
+   10 IF(IND.EQ.0) GOTO 100
+      IF(KW(IND+30).GE.2) GOTO 20
+      IF(KW(IND+30).EQ.0) THEN
+         KW(IND+30)=1
+         GOTO 30
+      END IF
+      CALL PTITLB(IND)
+      NLOW=XW(IND+25)+0.5
+      NHIG=XW(IND+26)+0.5
+      NENIN=KW(IND+22)-NLOW-NHIG
+      WRITE(KW(6),101) KW(IND+22),NENIN,NLOW,NHIG,XW(IND+27),XW(IND+28)
+C     CALL MHISTQ(XW(IND+31),120,XW(23),XW(23)+120.0*XW(IND+24),Q)
+C     WRITE(KW(6),102) Q
+      CALL HPR(XW(IND+31),120,XW(IND+23),XW(IND+23)+120.0*XW(IND+24),5)
+      KW(IND+30)=3
+   20 IND=KW(IND-1)
+      IF(ID.EQ.0) GOTO 10
+      GOTO 100
+C
+C     DEFINE BINSIZE AND STORE DATA AS A HISTOGRAM
+C
+   30 CALL BINSX(XW(IND+31),KW(IND+22),120,XW(IND+23),XW(IND+24))
+      XW(IND+24)=(XW(IND+24)-XW(IND+23))/120.0
+      N=KW(IND+22)
+      DO 40 I=1,N
+      H(I)=XW(IND+30+I)
+   40 XW(IND+30+I)=0
+      DO 50 I=1,N
+      K=(H(I)-XW(IND+23))/XW(IND+24)+31
+      IF(K.LE.30) THEN
+         K=25
+      ELSE IF(K.GT.150) THEN
+         K=26
+      END IF
+   50 XW(IND+K)=XW(IND+K)+1.0
+      IF(KW(IND+30).EQ.1) GOTO 10
+      KW(IND+30)=1
+      GOTO 100
+
+      ENTRY THIST(ID,TEXT)
+      IF(IBS.LT.0.OR.ID.LE.0) GOTO 100
+      NA=ID
+      IF(IBS.EQ.0) THEN
+         IF(NA.GT.999999999) GOTO 100
+      ELSE
+         IF(NA.GT.99) GOTO 100
+         NA=NA+IBS
+      END IF
+
+      IND=MLINK(KW,'HIST',NA)
+      IF(IND.EQ.0) THEN
+         IND=MBANK(KW,'HIST',NA,150)
+         IF(IND.EQ.0) GOTO 100
+         CALL BKFMT('HIST','20A,2I,7F,I,120F')
+         IF(IBS.NE.0) THEN
+            KW(IND+1)=IHE(7)
+            KW(IND+2)=IHE(8)
+         END IF
+      END IF
+      COMT=TEXT
+      DO 70 I=1,18
+   70 KW(IND+2+I)=INTCHA(COMT(4*I-3:4*I))
+  100 RETURN
+  101 FORMAT(20X,
+     +'ENTRIES  INSIDE  OUTLOW OUTHIGH     MIN X          MAX X'/
+     +  19X,4I8,2X,G12.4,3X,G12.4)
+C 102 FORMAT('0      MEAN     TRMEAN     MEDIAN       2 PC      16 PC',
+C    1   6X,'27 PC      50 PC      73 PC      84 PC      98 PC'/
+C    2   4X,10G11.4/10X,'SIGMA',G11.4,' AV/LFT/RHT',3G11.4,
+C    3   '   SKEWNESS',G11.4,'   KURTOSIS',G11.4/)
+      END

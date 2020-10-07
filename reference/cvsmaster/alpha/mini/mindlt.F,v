@@ -1,0 +1,147 @@
+head	1.1;
+access;
+symbols
+	alpha126_22:1.1
+	alpha122_22:1.1
+	alpha126_21:1.1
+	alpha126_20:1.1
+	alpha126_19:1.1
+	alpha126_18:1.1
+	alpha126_17:1.1
+	alpha126_16:1.1
+	alpha126_15:1.1
+	alpha126_14:1.1
+	alpha126_13:1.1
+	alpha126_12:1.1
+	alpha126_11:1.1
+	alpha126_10:1.1
+	alpha126_09:1.1
+	alpha126_08:1.1
+	alpha126_07:1.1
+	alpha126_06:1.1
+	alpha126_05:1.1
+	alpha126_04:1.1
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	99.03.22.14.06.53;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE MINDLT
+C
+CKEY MDST /INTERNAL
+C-----------------------------------------------------------------------
+C! Fill Reconstructed tagged lepton bank DDLT for Mini-DST.
+C
+C     Author: Agnieszka Jacholkowska    24-Oct-94
+C
+C     Input  : PDLT bank
+C     Output : DDLT bank
+C
+C     Called by MINDST
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+C
+      PARAMETER (AFACTM=100000.,DFACTM=100000.,EFACTM=10000.)
+#include "pdltjj.h"
+#include "ddltjj.h"
+C!    set of intrinsic functions to handle BOS banks
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+C++   Pick up PDLT bank.
+C
+      KPDLT = NLINK('PDLT',0)
+      IF (KPDLT.LE.0) RETURN
+      NPDLT = LROWS(KPDLT)
+      IF (NPDLT.LE.0) RETURN
+C
+C++   Create the DDLT bank.
+C
+      NDDLT = NPDLT
+      LEN = LMHLEN + LDDLTA * NDDLT
+      CALL AUBOS('DDLT',0,LEN, KDDLT,IGARB)
+      IF (IGARB.GE.2) THEN
+         WRITE(IW(6),'('' MINDLT: Cannot create DDLT bank'')')
+         RETURN
+      ELSE IF (IGARB.NE.0) THEN
+         KPDLT = NLINK('PDLT',0)
+      ENDIF
+      IW(KDDLT+LMHCOL) = LDDLTA
+      IW(KDDLT+LMHROW) = NDDLT
+C
+C++   Loop over PDLT storing information in DDLT.
+C
+      DO 100 I=1,NDDLT
+         IW(KROW(KDDLT,I)+JDDLPA) = ITABL(KPDLT,I,JPDLPA)
+         IW(KROW(KDDLT,I)+JDDLJT) = ITABL(KPDLT,I,JPDLJT)
+         IW(KROW(KDDLT,I)+JDDLPI) = NINT(AFACTM * RTABL(KPDLT,I,JPDLPI))
+         IW(KROW(KDDLT,I)+JDDLPE) = NINT(AFACTM * RTABL(KPDLT,I,JPDLPE))
+         IW(KROW(KDDLT,I)+JDDLVP) = ITABL(KPDLT,I,JPDLVP)
+
+         IW(KROW(KDDLT,I)+JDDLFR) = ITABL(KPDLT,I,JPDLFR)
+  100 CONTINUE
+C
+C++   Add the bank to the Mini list.
+C
+      CALL MINLIS('DDLT')
+C
+      RETURN
+      END
+#endif
+@

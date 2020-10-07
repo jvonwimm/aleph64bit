@@ -1,0 +1,52 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  v1:1.1.1.1 flr:1.1.1;
+locks    ; strict;
+comment  @ * @;
+
+
+1.1
+date     94.12.07.13.41.48;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     94.12.07.13.41.49;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*CD joberr
+      PARAMETER (LERR=20)
+      COMMON /JOBERR/   ITELJO,KERRJO,NERRJO(LERR)
+      INTEGER ITELJO, KERRJO, NERRJO
+      COMMON /JOBCAR/   TACTJO
+      CHARACTER*6 TACTJO
+C
+#if defined(DOC)
+      ITELJO         =  1 if TAXION = STOP, END or FATAL
+      KERRJO         =  error code
+      NERRJO(1-lerr) =  error counters
+      TACTJO         =  action to be taken: RETURN, NEXT, STOP, END, FATAL
+                                            INIT
+#endif
+@
+
+
+1.1.1.1
+log
+@import hac+general include files
+@
+text
+@@

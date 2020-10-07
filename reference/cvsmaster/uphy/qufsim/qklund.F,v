@@ -1,0 +1,63 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  uphy1-0:1.1.1.1 flr:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.08.16.13.38.16;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.08.16.13.38.17;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      INTEGER FUNCTION QKLUND(KALPHA)
+C----------------------------------------------------------------
+C G. Ganis. Give the LUND Code correspondind to an stable particle
+C           Input : KALPHA, the ALEPH internal code
+C           Output: QKLUND, the LUND code
+C
+C Modifications :
+C   o Patrick Janot -- 21 Oct 1993. Interface with JETSET 7.3
+C----------------------------------------------------------------
+#include "coddat.h"
+C
+      qklund= 0
+      DO l1=1,istab
+        IF ( kalpha .EQ. kcoal(l1) ) THEN
+          qklund= kcolu1(l1)
+          GOTO 10
+        ENDIF
+      ENDDO
+10    CONTINUE
+C
+      IF ( qklund .EQ. 0)
+     .WRITE(6,*) ' *** QKLUND *** Unknown stable particle',kalpha
+C
+      RETURN
+      END
+@
+
+
+1.1.1.1
+log
+@2nd try to import uphy
+@
+text
+@@

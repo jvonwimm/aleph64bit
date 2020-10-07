@@ -1,0 +1,44 @@
+      PROGRAM RWALEPH
+C ----------------------------------------------------------
+C! read/write aleph data in native or epio format.
+C - F.Ranjard - 920414
+C - cards file name : alpha.cards on ALWS
+C                     $ALPHACARDS on UNIX
+C
+C - data cards : FILI, FILO, SRUN, SEVT, IRUN, CLAS, UNPK, COMP
+C                READ  another data cards file
+C                FDBA read a data base file (not ADBSCONS)
+C                FFMT read bank format file (not BANKALFMT)
+C                DEBUG rec1 rec2 ! debug evt record# rec1 to
+C                                        evt record# rec2,
+C                                        slow control record# rec1 to
+C                                        slow control rcord# rec2,
+C                                        all run records.
+C                for each of them print the sequential record#,
+C                                       the evt# and run# if relevant,
+C                                       the number of banks,
+C                                       the record length.
+C
+C - some examples:
+C   * example #1
+C   * Select class 16 events in the first 1000 event records
+C   * write them onto DATA:P41283.EPIO
+C   FILI 'AL$DATA:P0041283.EPIO'
+C   FILO 'DATA:P41283_16.EPIO'
+C   CLASS 16
+C   NEVT 1000 
+C   ENDQ
+C
+C   * example #2
+C   * concatenate SOR file, EOR file and triggers 9781 and 14196
+C   * from run 41352.
+C   * write the output file in EPIO format
+C   FILI 'DISK$FALCON17:[RAW]R0041352.SOR | NATIVE'
+C   FILI 'DISK$FALCON17:[RAW]R0041352.EOR | NATIVE'
+C   FILI 'DISK$FALCON17:[RAW]R0041352.DAT | NATIVE'
+C   FILO 'R0041352.EPIO'
+C   SRUN 41352
+C   SEVT 41352 9781 14196
+C   ENDQ
+C
+C --------------------------------------------------------------------

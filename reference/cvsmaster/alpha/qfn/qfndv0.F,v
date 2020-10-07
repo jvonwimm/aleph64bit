@@ -1,0 +1,626 @@
+head	1.3;
+access;
+symbols
+	alpha126_22:1.3
+	alpha126_21:1.3
+	alpha126_20:1.3
+	alpha126_19:1.3
+	alpha126_18:1.3
+	alpha126_17:1.3
+	alpha126_16:1.3
+	alpha126_15:1.3
+	alpha126_14:1.3
+	alpha126_13:1.3
+	alpha126_12:1.3
+	alpha126_11:1.3
+	alpha126_10:1.3
+	alpha126_09:1.3
+	alpha126_08:1.3
+	alpha126_07:1.3
+	alpha126_06:1.3
+	alpha126_05:1.3
+	alpha126_04:1.3
+	alpha126_03:1.3
+	alpha126_02:1.3
+	alpha126_1:1.3
+	alpha125_17:1.3
+	alpha125_16:1.3
+	alpha125_15:1.3
+	alpha125_14:1.3
+	alpha125_13:1.3
+	alpha125_12:1.3
+	alpha125_11:1.3
+	alpha125_10:1.3
+	alpha125_09:1.3
+	alpha125_08:1.3
+	alpha125_07:1.3
+	alpha125_06:1.3
+	alpha125_05:1.3
+	alpha125_04:1.3
+	alpha125_03:1.3
+	alpha125_02:1.3
+	alpha125_01:1.2
+	alpha124_19:1.2
+	alpha125:1.2
+	alpha124_18:1.2
+	alpha124_17:1.2
+	alpha124_16:1.2
+	alpha124_15:1.2
+	alpha124_14:1.2
+	alpha124_13:1.2
+	alpha124_12:1.2
+	alpha124_11:1.2
+	alpha124_10:1.2
+	alpha124_09:1.2
+	alpha124_08:1.2
+	alpha124_07:1.2
+	alpha124_7:1.2
+	alpha124_06:1.2
+	alpha124_05:1.2
+	alpha124_04:1.2
+	alpha124_03:1.2
+	alpha124_02:1.2
+	alpha124_01:1.2
+	alpha124:1.2
+	alpha123_12:1.2
+	alpha123_11:1.2
+	alpha123_10:1.2
+	alpha123_9:1.2
+	alpha123_8:1.2
+	alpha123_7:1.2
+	alpha123_6:1.2
+	alpha123_5:1.2
+	alpha123_4:1.2
+	alpha123_3:1.2
+	alpha123_2:1.2
+	alpha123:1.2
+	alpha122_48:1.2
+	alpha122_47:1.2
+	alpha122_46:1.2
+	alpha122_45:1.2
+	alpha122_44:1.2
+	alpha122_43:1.2
+	alpha122_42:1.2
+	alpha122_41:1.2
+	alpha122_40:1.2
+	alpha122_39:1.2
+	alpha122_38:1.2
+	alpha122_37:1.2
+	alpha122_36:1.2
+	alpha122_35:1.2
+	alpha122_34:1.2
+	alpha122_33:1.2
+	alpha122_32:1.2
+	alpha122_31:1.2
+	alpha122_30:1.2
+	alpha122_29:1.2
+	alpha122_28:1.2
+	alpha122_27:1.2
+	alpha122_26:1.2
+	alpha122_25:1.2
+	alpha122_24:1.2
+	alpha122_23:1.2
+	alpha122_22:1.2
+	alpha122_21:1.2
+	alpha122_20:1.2
+	alpha122_19:1.2
+	alpha122_18:1.2
+	alpha122_17:1.2
+	alpha122_16:1.2
+	alpha122_15:1.2
+	alpha122_14:1.2
+	alpha122_13:1.2
+	alpha122_12:1.2
+	alpha122_11:1.2
+	alpha122_10:1.2
+	alpha122_9:1.2
+	alpha122_8:1.2
+	alpha122_6:1.2
+	alpha122_5:1.1.1.1
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	2000.02.01.09.04.37;	author boucrot;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.06.27.15.15.04;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.03.14.12.42.37;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.42.38;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE QFNDV0(IP,IPERR,
+     & NFND,V0TYPE,V0PAIR,V0PAT,V0DK,V0DERR,V0PROB,V0PAR,V0ERR)
+CKEY   QIPBTAG / INTERNAL
+C ------------------------------------------------------------------------------
+C! Find V0s for the QIPBTAG package
+C  Called from QIPBTAG
+C  Author                                            Dave Brown, 13-4-92
+C  mod : replace QDEDXM -> QDEDX                  Stefan Schael, 23-7-95
+C ------------------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+#include "qdecl.h"
+#include "qcde.h"
+C
+C  Input variables; Primary vertex
+C
+      REAL IP(3),IPERR(3,3)
+C
+C  Output variables
+C
+      INTEGER NFND,V0TYPE(*),V0PAIR(2,*),V0PAT(*)
+      REAL V0DK(3,*),V0PROB(*),V0DERR(3,3,*)
+      REAL V0PAR(5,*),V0ERR(5,5,*)
+C
+C  Local variables
+C
+#include "maxtrk.h"
+      INTEGER MAXCAN
+      PARAMETER ( MAXCAN = 200 )
+      INTEGER NFRFT,IFRFT
+      INTEGER ICOR,JCOR,ICAN,JCAN,IAMB
+      INTEGER IALTRK,IPART,JALTRK,ITRK,JTRK,KTRK
+      INTEGER IV0,JPART,IVX,IHYP,IROW(2)
+      INTEGER IERROR,IERR,NS
+      INTEGER IFLAG(MAXTRK)
+      INTEGER NDOF,NCHI,NCHII,NCAN,NAMB
+      INTEGER CIROW(2,MAXCAN),CPART(MAXCAN)
+      INTEGER IVO,VDPAT
+      INTEGER VDHITP(MAXTRK)
+      REAL CHI,MAXPROB,RADIUS(2)
+      REAL V0MOM(3,2),PV0(3),VMOM,DOT,DIST
+      REAL TMOM(3,2),TERR(3,3,2)
+      REAL DTRAN,DIST_ERR,DTRAN_ERR,TRANS(3)
+      REAL CPROB(MAXCAN),CDK(3,MAXCAN),CDERR(3,3,MAXCAN)
+      REAL CTMOM(3,2,MAXCAN),CMOM(3,MAXCAN),RI,TL,RIEXP(3),SIGMAR(3)
+      REAL CHIDEDX(3,MAXTRK),CHII,PROBI,CHARGE(3)
+      REAL DK(3,2),VCOS(2),ENE(2),VMASS
+      REAL POINT(3),DERR(3,3),M2(3),MM2(2,3),MOM(2),SUMCHI,SUMPROB
+      REAL CHISQ,RHO,MINSEP,BETA,COST
+      REAL EPSIL  / 1.E-10 /
+C
+C  Masses and other parameters
+C
+      INTEGER NTPC(2)/0,4/
+      INTEGER IMHYP(2,3)/1,1,2,2,3,2/
+      REAL MASS(3)/0.0013,0.497671,1.11563/
+      REAL SMASS(2,3)/0.00051099906,0.00051099906,
+     &      0.1395679,0.1395679,0.93827231,0.1395679/
+      REAL MLIST(3)/0.000511,.139568,.938272/
+      REAL MINP(2)/0.4,0.2/,MAXCHI/6./
+      REAL PROBI_CUT/0.001/,PROB_CUT/0.005/
+      REAL DIST_CUT/5.0/,NEG_CUT/-5.0/
+      REAL NSEP/3./,NTRAN/20./,NCOR/3./,MCUT/0.04/
+      REAL RHOMAX/1000./,SEPCUT/10./
+      LOGICAL FIRST,HITS
+      DATA FIRST /.TRUE./ 
+C
+C  External functions
+C
+      INTEGER NAMIND
+      REAL PROB
+C
+C  Inline functions
+C
+#include "btaginl.h"
+#include "qmacro.h"
+C ------------------------------------------------------------------------------
+      IF(FIRST)THEN
+        FIRST = .FALSE.
+        DO IPART=1,3
+          M2(IPART) = MASS(IPART)**2
+          DO JPART=1,2
+            MM2(JPART,IPART) = SMASS(JPART,IPART)**2
+          END DO
+        END DO
+        NFRFT = NAMIND('FRFT')
+      END IF
+C
+C  Find FRFT; accept only FRFT2
+C
+      NFND = 0
+      IFRFT = IW(NFRFT)
+      DO WHILE(IFRFT.GT.0.AND.IW(IFRFT-2).NE.2)
+        IFRFT = IW(IFRFT-1)
+      END DO
+      IF(IFRFT.EQ.0)RETURN
+      IF (LROWS(IFRFT).GT.MAXTRK) RETURN
+C
+C  Find the VDET hit pattern
+C
+      CALL BTVDHITS(VDHITP)
+C
+C  Get DEDX information about tracks (if available), and establish
+C  basic quality cuts
+C
+      DO IALTRK=KFCHT,KLCHT
+        ITRK=IALTRK+1-KFCHT
+        DO IPART=1,3
+          CHARGE(IPART) = QCH(IALTRK)
+        END DO
+        DO IHYP=1,3
+           CHIDEDX(IHYP,ITRK) = -1.0
+        END DO
+         CALL QDEDX(IALTRK,3,MLIST,CHARGE,
+     .              RI,NS,TL,RIEXP,SIGMAR,IERR)
+        IF(IERR.EQ.0)THEN
+          DO IHYP=1,3
+            IF (ABS(SIGMAR(IHYP)).GT.EPSIL)
+     +      CHIDEDX(IHYP,ITRK) = ((RI-RIEXP(IHYP))/SIGMAR(IHYP))**2
+          END DO
+        END IF
+C
+C  set quality cut flags
+C
+        CHI = QFRFC2(IALTRK)
+        NDOF = KFRFDF(IALTRK)
+        VDPAT = VDHITP(ITRK)
+        HITS = (ONEHIT(VDPAT).AND.KFRTNT(IALTRK).GE.NTPC(1)).OR.
+     &        (KFRTNT(IALTRK).GE.NTPC(2))
+        IF(NDOF.GT.10.AND.CHI.LT.MAXCHI*NDOF.AND.
+     &        QP(IALTRK).GT.MINP(1).AND.HITS)THEN
+          IFLAG(ITRK) = 2
+        ELSE IF(NDOF.GT.5.AND.CHI.LT.MAXCHI*NDOF.AND.
+     &          QP(IALTRK).GT.MINP(2).AND.KFRTNT(IALTRK).GE.NTPC(1))THEN
+          IFLAG(ITRK) = 1
+        ELSE
+          IFLAG(ITRK) = 0
+        END IF
+      END DO
+C ------------------------------------------------------------------------------
+C  Loop over track pairs
+C
+      DO IALTRK=KFCHT,KLCHT
+        ITRK = IALTRK-KFCHT+1
+C
+C  Quality cut
+C
+        IF(IFLAG(ITRK).LT.2)GOTO 1234
+        NCAN = 0
+C
+C  2nd track loop
+C
+        DO JALTRK=IALTRK+1,KLCHT
+          JTRK = JALTRK-KFCHT+1
+C
+C  Quality cut, and Opposite charge
+C
+          IF(IFLAG(JTRK).LT.1.OR.QCH(IALTRK).EQ.QCH(JALTRK))GOTO 1235
+C
+C  Set the particle masses flags
+C
+          IF(QP(IALTRK).GT.QP(JALTRK))THEN
+            IROW(1) = ITRK
+            IROW(2) = JTRK
+          ELSE
+            IROW(1) = JTRK
+            IROW(2) = ITRK
+          END IF
+C
+C  Crude topological decay point; this can be ambiguous
+C
+          CALL V0DKPT(IFRFT,IROW,NAMB,DK,VCOS)
+C
+C  Reject pairs obviously coming from the primary vertex
+C
+          MINSEP = 10000.
+          DO IAMB=1,NAMB
+            DIST = 0.0
+            DIST_ERR = 0.0
+            DO ICOR=1,3
+              DIST = DIST + (DK(ICOR,IAMB)-IP(ICOR))**2
+              DO JCOR=1,3
+                DIST_ERR = DIST_ERR +
+     &                IPERR(JCOR,ICOR)*
+     &                  (DK(ICOR,IAMB)-IP(ICOR))*
+     &                  (DK(JCOR,IAMB)-IP(JCOR))
+              END DO
+            END DO
+            IF (DIST.GT.0..AND.DIST_ERR.GT.0.) THEN
+               DIST = SQRT(DIST)
+               IF (DIST.GE.EPSIL) THEN
+                  DIST_ERR = SQRT(DIST_ERR)/DIST
+                  IF (DIST_ERR.GE.EPSIL)
+     +                MINSEP = MIN(MINSEP,DIST/DIST_ERR)
+               ENDIF
+            ENDIF
+          END DO
+          IF(MINSEP.LT.2.0)GOTO 1235
+C
+C  Loop over V0 hyptheses
+C
+          DO IPART=1,3
+C
+C  Initialize variables
+C
+            NCHI = 0
+            SUMCHI = 0.0
+            SUMPROB = -1.0
+C
+C  loose cut on DEDX
+C
+            DO KTRK=1,2
+              CHII = CHIDEDX(IMHYP(KTRK,IPART),IROW(KTRK))
+              IF(CHII.GT.0.0)THEN
+                SUMCHI = SUMCHI + CHII
+                NCHI = NCHI + 1
+              END IF
+            END DO
+            IF(NCHI.GT.0)THEN
+              IF(SUMCHI/NCHI.GT.10.0)GOTO 1236
+              PROBI = PROB(MAX(0.,SUMCHI),NCHI)
+              IF(PROBI.LT.PROBI_CUT)GOTO 1236
+            END IF
+            CHII = SUMCHI
+            NCHII = NCHI
+C
+C  Correct the track momenta for DEDX effects
+C
+            DO KTRK=1,2
+              MOM(KTRK) = QP(KFCHT-1+IROW(KTRK))
+              ENE(KTRK) = SQRT(MOM(KTRK)**2+MM2(KTRK,IPART))
+              IF (ABS(ENE(KTRK)) .GT. EPSIL) THEN
+                 BETA = MOM(KTRK)/ENE(KTRK)
+                 COST = ABS(QCT(KFCHT-1+IROW(KTRK)))
+                 MOM(KTRK) = MOM(KTRK)+
+     &               0.08027-0.1701*BETA+0.08924*BETA**2 +
+     &               0.003959-0.002058*COST+0.00716*COST**2
+                 ENE(KTRK) = SQRT(MOM(KTRK)**2+MM2(KTRK,IPART))
+              ENDIF
+            END DO
+C
+C  Loop over ambiguity
+C
+            DO IAMB=1,NAMB
+C
+C  Reject pairs where the mass isn't close
+C
+              VMASS = SQRT(MAX(0.0,
+     &              (ENE(1)+ENE(2))**2-(MOM(1)**2+MOM(2)**2+
+     &              2.*MOM(1)*MOM(2)*VCOS(IAMB))) )
+              IF(ABS(VMASS-MASS(IPART)).GT.MCUT)GOTO 1237
+C
+C  Compute the chisquared
+C
+              CALL CHIV0(IFRFT,IROW,MOM,DK(1,IAMB),
+     &              M2(IPART),MM2(1,IPART),
+     &              CHISQ,POINT,DERR,PV0,TMOM,IERROR)
+              IF(IERROR.EQ.0.AND.CHISQ.GT.0.0)THEN
+C
+C  Make up the full chisquared and compute the probability
+C
+                SUMCHI = CHII+CHISQ
+                NCHI   = NCHII+2
+                IF(SUMCHI/NCHI.GT.10.0)THEN
+                  SUMPROB=0.0
+                ELSE
+                  SUMPROB = PROB(MAX(0.,SUMCHI),NCHI)
+                END IF
+              ELSE
+                SUMPROB = -1.0
+              END IF
+C
+C  Cut on probability
+C
+              IF(SUMPROB.LT.PROB_CUT)GOTO 1237
+C
+C  Calculate the distance and distance error to the primary
+C
+              DIST = 0.0
+              DIST_ERR = 0.0
+              DOT = 0.0
+              VMOM = 0.0
+              DO ICOR=1,3
+                DIST = DIST + (POINT(ICOR)-IP(ICOR))**2
+                DOT = DOT + (POINT(ICOR)-IP(ICOR))*PV0(ICOR)
+                VMOM = VMOM + PV0(ICOR)**2
+                DO JCOR=1,3
+                  DIST_ERR = DIST_ERR +
+     &                  (DERR(JCOR,ICOR)+IPERR(JCOR,ICOR))*
+     &                  (POINT(ICOR)-IP(ICOR))*
+     &                  (POINT(JCOR)-IP(JCOR))
+                END DO
+              END DO
+              IF (DIST.LE.0.) GO TO 1237
+              DIST = SQRT(DIST)
+              IF (DIST.LT.EPSIL.OR.DIST_ERR.LE.0.)  GO TO 1237
+              DIST_ERR = SQRT(DIST_ERR)/DIST
+C
+C  Reject candidates too close, or on the wrong side of the primary
+C
+              IF(DIST.LT.NSEP*DIST_ERR .OR. DOT.LT.0.0)GOTO 1237
+C
+C  Now compute the projected transverse distance and error
+C  to the primary.
+C
+              DTRAN = 0.0
+              DTRAN_ERR = 0.0
+              IF (ABS(VMOM).LT.EPSIL)  GO TO 1237
+              DO ICOR=1,3
+                TRANS(ICOR) = POINT(ICOR)-IP(ICOR)-PV0(ICOR)*DOT/VMOM
+              END DO
+              DO ICOR=1,3
+                DTRAN = DTRAN + TRANS(ICOR)**2
+                DO JCOR=1,3
+                  DTRAN_ERR = DTRAN_ERR +
+     &                  (DERR(JCOR,ICOR)+IPERR(JCOR,ICOR))*
+     &                  TRANS(JCOR)*TRANS(ICOR)
+                END DO
+              END DO
+              IF (DTRAN.LE.0.) GO TO 1237
+              DTRAN = SQRT(DTRAN)
+              IF (DTRAN.LT.EPSIL.OR.DTRAN_ERR.LE.0.)  GO TO 1237
+              DTRAN_ERR = SQRT(DTRAN_ERR)/DTRAN
+C
+C  Cut on transverse distance.  This also exploits the fact that
+C  Fake V0s have a correlated displacement along and transverse
+C
+              IF (ABS(DTRAN_ERR).LT.EPSIL)  GO TO 1237
+              IF (ABS(DIST_ERR-NCOR).LT.EPSIL)  GO TO 1237
+              IF(DTRAN.GT.NTRAN*DTRAN_ERR .OR.
+     &              DTRAN/DTRAN_ERR.GT.DIST/DIST_ERR-NCOR)GOTO 1237
+C
+C  Save the candidates that pass
+C
+              NCAN = NCAN + 1
+              CPROB(NCAN) = SUMPROB
+              CIROW(1,NCAN) = IROW(1)
+              CIROW(2,NCAN) = IROW(2)
+              CPART(NCAN) = IPART
+              DO ICOR=1,3
+                CDK(ICOR,NCAN) = POINT(ICOR)
+                CMOM(ICOR,NCAN) = PV0(ICOR)
+                DO JCOR=1,3
+                  CDERR(ICOR,JCOR,NCAN) = DERR(ICOR,JCOR)
+                END DO
+                CTMOM(ICOR,1,NCAN) = TMOM(ICOR,1)
+                CTMOM(ICOR,2,NCAN) = TMOM(ICOR,2)
+              END DO
+C
+C  End of ambiguity loop
+C
+ 1237         CONTINUE
+            END DO
+C
+C  End of V0 type loop
+C
+ 1236       CONTINUE
+          END DO
+C
+C  End of second track loop
+C
+ 1235     CONTINUE
+        END DO
+C
+C  If more than 1 candidate was found for this track, take the
+C  one with the highest probability
+C
+        MAXPROB = -10.0
+        DO ICAN=1,NCAN
+          IF(CPROB(ICAN).GT.MAXPROB)THEN
+            MAXPROB = CPROB(ICAN)
+            JCAN = ICAN
+          END IF
+        END DO
+C
+C  Cut on the probability
+C
+        IF(MAXPROB.GT.PROB_CUT)THEN
+C
+C  Here we have a final V0 candidate.  Pack the vertex position
+C  and error matrix.
+C
+          NFND = NFND + 1
+          V0TYPE(NFND) = CPART(JCAN)
+          V0PROB(NFND) = MAXPROB
+          V0PAIR(1,NFND) = CIROW(1,JCAN)
+          V0PAIR(2,NFND) = CIROW(2,JCAN)
+          DO ICOR=1,3
+            V0DK(ICOR,NFND) = CDK(ICOR,JCAN)
+            DO JCOR=1,3
+              V0DERR(ICOR,JCOR,NFND) = CDERR(ICOR,JCOR,JCAN)
+            END DO
+          END DO
+C
+C  Flag off the used tracks
+C
+          IFLAG(CIROW(1,JCAN)) = 0
+          IFLAG(CIROW(2,JCAN)) = 0
+C
+C  Pack the necessary arrays
+C
+          DO KTRK=1,2
+            JALTRK = V0PAIR(KTRK,NFND)+KFCHT-1
+            IF (ABS(QFRFIR(JALTRK)).LT.EPSIL)  GO TO 1234
+            RADIUS(KTRK) = 1./QFRFIR(JALTRK)
+            DO ICOR=1,3
+              DO JCOR=1,3
+                TERR(ICOR,JCOR,KTRK) = QFRFEM(JALTRK,ICOR,JCOR)
+              END DO
+            END DO
+          END DO
+C
+C  Compute the track parameters and error matrix
+C
+          CALL V0TPAR(V0DK(1,NFND),V0DERR(1,1,NFND),CTMOM(1,1,JCAN),
+     &          RADIUS,TERR,V0PAR(1,NFND),V0ERR(1,1,NFND))
+C
+C  Define the hit pattern of the V0 as the sum of the
+C  patterns from the two tracks.  The sum has to be made
+C  separately for the views and layers
+C
+          V0PAT(NFND) = MIN(3,IAND(VDHITP(V0PAIR(1,NFND)),3)+
+     &          IAND(VDHITP(V0PAIR(2,NFND)),3)) +
+     &          ISHFT(MIN(3,IAND(ISHFT(VDHITP(V0PAIR(1,NFND)),-2),3)+
+     &          IAND(ISHFT(VDHITP(V0PAIR(2,NFND)),-2),3)),2) +
+     &          ISHFT(MIN(3,IAND(ISHFT(VDHITP(V0PAIR(1,NFND)),-4),3)+
+     &          IAND(ISHFT(VDHITP(V0PAIR(2,NFND)),-4),3)),4) +
+     &          ISHFT(MIN(3,IAND(ISHFT(VDHITP(V0PAIR(1,NFND)),-6),3)+
+     &          IAND(ISHFT(VDHITP(V0PAIR(2,NFND)),-6),3)),6)
+        END IF
+C
+C  End of first track loop
+C
+ 1234   CONTINUE
+      END DO
+      RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@remove underscore in file names
+@
+text
+@d65 2
+a66 1
+      LOGICAL FIRST/.TRUE./,HITS
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d74 1
+a74 1
+#include "btag_inl.h"
+@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

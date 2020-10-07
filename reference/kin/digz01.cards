@@ -1,0 +1,62 @@
+From BLOCH@alws.cern.ch Fri Feb 13 16:20:14 2004
+Date: Fri, 13 Feb 2004 16:16:11 +0100
+From: BLOCH@alws.cern.ch
+To: BLOCH@alws.cern.ch
+
+KCAR 0 / $TEXT                                                                  
+POFF                                                                            
+*   RUN #               RUN'S TITLE                                             
+RUN  101        'TWO PHOTONS PRODUCTION DIGZ01 '                                
+*     FIRST EVENT   LAST EVENT TO BE GENERATED                                  
+TRIG       1          200                                                       
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG                                 
+DEBU    6   /      1            10                                              
+*    UNIT # / FORMAT                                                            
+*FILO 'SCWEEK:DIGZ01.EPIO  | EPIO '                                             
+*       sigma-x   sigma-y  sigma-z  (cm)                                        
+SVRT     0.018    0.0010    1.00                                                
+* EB      BEAM ENERGY (GEV)                                                     
+* ITYPE   EVENT TYPE REQUESTED (2 DIGITS, ONE PER LEPTON PAIR)                  
+*                    1=electron,  2 = muon   , 3 = tau                          
+*   so 11 = e+ e- e+ e-,   12 = e+ e- mu+ mu- etc...                            
+* IREJ    REJECTION ALGORYTHM FLAG (1 OR 2)                                     
+* ESWE    ESTIMATED MAXIMUM WEEV WEIGHT                                         
+* ESFT    ESTIMATED MAXIMUM FT WEIGHT                                           
+* INFO    DEBUG FLAG LEVEL (1 TO 5)                                             
+* THETA0  CENTRAL DETECTOR THETA ANGLE                                          
+* ZMAS    Z0 MASS (GEV)                                                         
+* ZWID    Z0 Width (GEV)                                                        
+* SIN2    sin2( Theta)                                                          
+*      EB   ITYPE  IREJ ESWE   ESFT  INFO    THETA0  ZMAS   ZWID   SIN2         
+GENE    45.6   11    2   1.1     1.5    3      15.   91.182 2.484 0.232         
+* W1MIN  MINIMUM INVARIANT MASS FOR PARTICLES 1                                 
+* W1MAX  MAXIMUM INVARIANT MASS FOR PARTICLES 1 (0 MEANS NO CUT)                
+* W2MIN  MINIMUM INVARIANT MASS FOR PARTICLES 2                                 
+* W2MAX  MAXIMUM INVARIANT MASS FOR PARTICLES 2 (0 MEANS NO CUT)                
+* E1PCUT MINIMUM ENERGY FOR PARTICLE 1 POSITIVE                                 
+* E1MCUT MINIMUM ENERGY FOR PARTICLE 1 NEGATIVE                                 
+* C1PCUT MINIMUM TETHA ANGLE (DEG) FOR PARTICLE 1 POSITIVE                      
+* C1MCUT MINIMUM TETHA ANGLE (DEG) FOR PARTICLE 1 NEGATIVE                      
+* E2PCUT MINIMUM ENERGY FOR PARTICLE 2 POSITIVE                                 
+* E2MCUT MINIMUM ENERGY FOR PARTICLE 2 NEGATIVE                                 
+* C2PCUT MINIMUM TETHA ANGLE (DEG) FOR PARTICLE 2 POSITIVE                      
+* C2MCUT MINIMUM TETHA ANGLE (DEG) FOR PARTICLE 2 NEGATIVE                      
+*    W1MIN  W1MAX  W2MIN  W2MAX                                                 
+GCUT   0.0    0.0    0.0    0.0                                                 
+*   E1PCUT  E1MCUT  C1PCUT C1MCUT                                               
+       0.0   0.0     0.0   0.0                                                  
+*   E2PCUT  E2MCUT C2PCUT C2MCUT                                                
+       0.0   0.0     0.0   0.0                                                  
+* WAP(1:4)  RELATIVE IMPORTANCE FACTORS FOR SUBGENERATORS A,B,C,D.              
+* IDUMP(1:4)  DUMPING LEVEL FOR EACH ONE                                        
+* WBP(1:4)  IMPORTANCE FACTORS FOR SUBGENERATORS A,B,C,D                        
+*     WAP(1..................4)        IDUMP(1...........4)                     
+GIMP 1.        1.      1.       1.00    0    0    0    0                        
+* WBP(A)    WBP(B)    WBP(C)    WBP(D)                                          
+  1.        1.        2.31      4.39                                            
+*  use RANMAR generator for random numbers                                      
+*  INSEED : first seed (range assigned per institute)                           
+*  LOSEED : second seed (incremented locally for new runs)                      
+*      INSEED          LOSEED (1-30000)                                         
+RMAR     78             12349                                                   
+ENDQ                                                                            

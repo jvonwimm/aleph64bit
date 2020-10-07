@@ -1,0 +1,219 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.44.40;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.44.41;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      INTEGER FUNCTION VWDIST (XYZ,JWAF,ABC,DABC,DIST)
+C ----------------------------------------------------------------------
+CKEY VDETDES WAFER / USER
+C!  Find distance from a given point to a given wafer
+C - Steve Wasserbaech, January 1994
+C
+C   Note: this function does not check for empty slots.
+C
+C - Input:
+C   XYZ(3)  / R  Coordinates of point in ALEPH system (cm)
+C   JWAF    / I  Global index of wafer
+C
+C - Output:
+C   VWDIST  / I  = VDOK if successful
+C                = VDERR if an error occurs
+C   ABC(3)  / R  Coordinates of point in local wafer system
+C                in JWAF local system
+C   DABC(3) / R  DABC(I) = Signed distance from point to limit of wafer
+C                along I dimension [I=1,2,3 for a,b,c];
+C                DABC(I) = ABS(ABC(I)) - Wafer_Dimension(I)/2;
+C                        < 0 if coordinate I lies within limits of
+C                            wafer along I dimension;
+C                        > 0 if coordinate I lies outside limits of
+C                            wafer along I dimension.
+C   DIST    / R  Signed distance between the point and the nearest
+C                corner, edge, or surface of the wafer;
+C                  <0 if inside the wafer,
+C                  >0 if outside.
+C ----------------------------------------------------------------------
+#ifndef DOC
+C     IMPLICIT NONE
+#include "vglobl.h"
+#include "vwgeco.h"
+C
+C     Arguments:
+      INTEGER JWAF
+      REAL XYZ(3), ABC(3), DABC(3), DIST
+C
+C     Local variables
+      INTEGER IRET
+      REAL DMIN, DMED, DMAX
+C
+C     External references:
+      INTEGER VXYZAB
+C
+C ----------------------------------------------------------------------
+C
+C     Initialize:
+C
+      VWDIST = VDERR
+      CALL VZERO(ABC,3)
+      CALL VZERO(DABC,3)
+      DIST = 0.
+C
+C     Convert point coordinates to JWAF local system:
+C
+      IRET = VXYZAB(XYZ,JWAF,ABC)
+C
+C     Check for valid wafer index:
+C
+      IF (IRET .NE. VDOK) GO TO 1000
+C
+C     Find offsets with respect to edges of wafer:
+C
+      DABC(1) = ABS(ABC(1)) - WSIZEA/2.
+      DABC(2) = ABS(ABC(2)) - WSIZEB/2.
+      DABC(3) = ABS(ABC(3)) - WTHICK/2.
+C
+C     Find smallest, largest, and median components:
+C
+      DMIN = AMIN1(DABC(1), DABC(2), DABC(3))
+      DMAX = AMAX1(DABC(1), DABC(2), DABC(3))
+      DMED = DABC(1) + DABC(2) + DABC(3) - DMIN - DMAX
+C
+C     Compute distance to nearest point on wafer:
+C
+      IF (DMAX .LE. 0.) THEN
+C
+C     We are inside the wafer:
+        DIST = DMAX
+C
+      ELSEIF (DMED .LE. 0.) THEN
+C
+C     We are outside the wafer in one direction only;
+C     find the distance to the nearest surface:
+        DIST = DMAX
+C
+      ELSEIF (DMIN .LE. 0.) THEN
+C
+C     We are outside the wafer in two directions;
+C     find the distance to the nearest edge:
+        DIST = SQRT(DMED**2 + DMAX**2)
+C
+      ELSE
+C
+C     We are outside the wafer in all three directions;
+C     find the distance to the nearest corner:
+        DIST = SQRT(DMIN**2 + DMED**2 + DMAX**2)
+C
+      ENDIF
+C
+C     Success!
+C
+      VWDIST = VDOK
+C
+ 1000 CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

@@ -1,0 +1,524 @@
+head	1.17;
+access;
+symbols
+	jul313_3:1.17
+	jul313_2:1.17
+	jul313_1:1.17
+	jul313:1.17
+	jul312_1:1.16
+	jul312:1.16
+	jul311:1.16
+	jul310_1:1.16
+	jul310:1.15
+	jul309_1:1.14
+	jul309:1.14
+	jul308_6:1.14
+	jul308_5:1.14
+	jul308_4:1.14
+	jul308_3:1.14
+	jul308_2:1.14
+	jul308_1:1.13
+	jul308:1.13
+	jul307_4:1.13
+	jul307_3:1.13
+	jul307_2:1.13
+	jul307_1:1.13
+	jul307:1.13
+	jul306_3:1.12
+	jul306_2:1.12
+	jul306_1:1.12
+	jul306:1.12
+	jul305_4:1.12
+	jul305_3:1.12
+	jul305_2:1.12
+	jul305_1:1.10
+	jul305:1.10
+	jul304_3:1.9
+	jul304_2:1.9
+	jul304_1:1.9
+	jul304:1.8
+	jul303_7:1.8
+	jul303_6:1.8
+	jul303_5:1.7
+	jul303_4:1.7
+	jul303_3:1.7
+	jul303_2_mc1:1.7
+	jul303_2:1.7
+	jul303_1_mc1:1.7
+	jul303_1:1.7
+	jul303_v:1.7
+	jul303:1.7
+	jul302_6:1.7
+	jul302_5:1.7
+	jul302_4:1.7
+	jul302_3:1.7
+	jul302_2:1.7
+	jul302_1:1.7
+	jul302:1.7
+	jul285_1:1.6
+	jul285:1.6
+	jul284_1:1.6
+	jul284:1.6
+	jul283_1:1.6
+	jul283:1.5
+	jul282_1:1.5
+	jul282:1.5
+	jul281_3:1.4
+	jul281_2:1.4
+	jul281_1:1.4
+	jul281:1.4
+	jul280_1:1.4
+	jul280:1.3
+	jul279:1.2
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.17
+date	2000.10.26.09.04.17;	author cattanem;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	99.11.10.10.47.47;	author cattanem;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	99.10.27.12.27.07;	author cattanem;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	98.10.14.16.23.14;	author cattanem;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	98.04.29.12.35.48;	author cattanem;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	97.12.18.08.02.00;	author cattanem;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	97.12.17.17.36.58;	author cattanem;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	97.11.07.11.19.12;	author cattanem;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	97.10.01.07.09.23;	author cattanem;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	97.07.16.15.16.18;	author cattanem;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	97.03.06.09.54.58;	author cattanem;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	96.10.07.14.18.04;	author cattanem;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.07.22.13.18.02;	author cattanem;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.05.31.12.39.04;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.03.12.15.28.21;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.11.29.17.17.45;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.17.14;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.17.15;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.17
+log
+@Mods for julia 313
+@
+text
+@C! 1st entry in E_set
+ ! JULIA 313
+    ENIGHB : Protect against ISTO out of range (M.Cattaneo)
+    EPRTPC : Protect against divide by zero    (M.Cattaneo)
+
+ * corr file 310.1
+    EFIXI99: Drop run header bank EDDB at start of 1999 (M.-N.Minard)
+
+ ! JULIA 310
+    EFOLMK,ESVETO : Increase energy cut to 250 GeV  (M.-N.Minard)
+
+ * corr file 308.02
+    EPRTPC : Protect against divide by zero (M.Cattaneo)
+
+ ! JULIA 307
+    ECSW94 : EXIT JULIA if EAGC cards are missing when required
+             (1994 raw data, run range 25000-25893)                (M.Cattaneo)
+
+ * corr file 305.02
+    ECLAMP : Rescale cut to effective threshold. Affects MC only (M.N.Minard)
+    ECMOD  : Bug fix for overlap region (G.Taylor)
+
+ ! JULIA 305
+    EINIRU : Remove 'Temporary' (since before 1993!) call to EFIX  (M.Cattaneo)
+    EFIX   : DELETED from library (was supposed to be temporary fix pending
+             Alephlib fix, and did not have intended effect)       (M.Cattaneo)
+    ETHRES : Rename 'LOCAL' common for work bank indices to 
+             something more unique (CMETHR)                        (M.Cattaneo)
+    E4BARY,E4FDIJ,EFIJOB : fix variable type inconsistencies in 
+                           function calls, for Linux               (A.Waananen)
+
+ * corr file 304.01
+    EBOXHI : Remove CALL from function references, for Linux. (A.Waananen)
+
+ * corr file 303.06
+    EPRTPC : Comment call to UFITQL (results are never used!!) (M.Cattaneo)
+
+ ! JULIA 302 (Tracking upgrade)
+    EPRTPC : Extrapolate to ECAL from outermost TPC coordinate. (D.Casper)
+             Do not extrapolate incoming tracks of kink.
+             Can be disabled with ENKF card.
+
+ * corr file 283.01
+   ECCLUS : Change level of error 1 from Fatal to Warning
+
+ ! JULIA 282
+   EGETDS : Replace LENOCC by LNBLNK (M.Cattaneo, July 1996)
+
+ * corr file 280.01
+   E4FNEC : protect against divide by A(1)=0.   (D.Pallin, Mar 96)
+   ECGFLW : protect against bad MonteCarlo data (M.Cattaneo, Mar 96)
+   EPADCL : protect against bad MonteCarlo data (M.Cattaneo, Mar 96)
+
+ ! JULIA 280
+
+   EIDEDX : call TPDHYP('WIRE', instead of TIDHYP. (FLR)
+   ECSW94,ECBOOK,ELECID : opening "'" should have a closing "'" within
+           the same line for cvs (F. Ranjard, Feb 96)
+ ! JULIA 279
+
+ * corr file 278.1
+   ECSW1093 : move DATA statement just before BMACRO to allow
+             compilation in Linox (P. Comas, Oct 95)
+ ! JULIA 278
+
+ * corr file 277.3
+   ECFIBT : PWEI bank corrected for calibration and change fatal
+           error by warning error when EWDI does not exist
+           (M.N.Minard, Aug 95)
+   ECFILS : change fatal error by warning error when EWDI does not
+           exist (M.N.Minard, Aug 95)
+   ECHEDC : bug fix when applying calibration (M.N. Minard, Aug 95)
+ ! JULIA 277
+ * corr file 276.4
+   EDWIJJ,PWEIJJ : new common decks added (M.N. Minard, May 95)
+   EWDIFP : addapt to bunch trains and use of PWEI
+                  (M.N. Minard, Apr 95)
+   ECERAS,CPADWR : use of PWEI (M.N. Minard, Apr 95)
+   ECFILS : check the Pastis configuration - 1995 and call ECFIBT
+           (M.N. Minard, Apr 95)
+   EPADCL,EWIRCL,ETDIFP,ECHEDC,ECHICA : addapt to bunch trains
+                                (M.N. Minard, Apr 95)
+   ECFIBT : new routine for wires banks analysis in bunch trains
+           (M.N. Minard, Apr 95)
+ ! JULIA 276
+   EFIXI94: artificially built EKLS bank of zero length to put to
+           zero the number of killed channels (M.N.Minard, Apr 1994)
+
+ * corr file 275.4
+   ECCLUS : ESDA internal storey bank used in clusterisation is dropped
+           when cluster bank is dropped (M.N. Minard, Feb 1995)
+ ! JULIA 275
+   EAGCJJ : new common deck added (M.N. Minard, Oct 1994)
+   EGETDS : for 94 running drop EKLS EKPL wrong on the header (same)
+   EPREDA : in case of raw data from run range 1994 (<25854)
+           swap gain map of endcap A (same)
+   EFIXI94: new subroutine to drop EKLS EKPL banks (same)
+   ECSW94 : new subroutine to swap gain for ETDI, active only on 1994
+           raw data run<25894 (same)
+ ! JULIA 274
+ * corr file 273.1
+   EQRUNQ : changes due to new ECAL banks (May 1994)
+   EFERRR : changes due to new ECAL banks (May 1994)
+   EPREDA : changes due to new ECAL banks (May 1994)
+   EAUTOP : new subroutine to decode banks EHWI and EHPA and
+           summarize (condense) into arrays NAUTO and NAUTOW
+   ECXMOD : (new) decode the EHPA data word and convert into a module
+           number
+ ! JULIA 273
+ ! JULIA 272
+ * corr file 271.8
+   ERCUPI : initialize ICOR=0 which means returns from ERCUPR
+            without correcting ETDI energies.
+   ERCUPR : returns immediately when ICOR=0
+   ESWPST : returns immediately if MC data
+ * corr file 271.7
+   ECSW1093 : new routine to fix ETDI swapping in end-cap for runs
+              22793-22880.
+   EPREDA   : call ECSW1093.
+ * corr file 271.6
+   ECTRAP : protection against invalid storey address.
+ * corr file 271.5
+   ECLONGI : new stuff.
+@
+
+
+1.16
+log
+@Fix for julia 310.01
+@
+text
+@d2 4
+@
+
+
+1.15
+log
+@For julia 310
+@
+text
+@d2 3
+@
+
+
+1.14
+log
+@julia 308.02
+@
+text
+@d2 3
+@
+
+
+1.13
+log
+@Mods for julia 307
+@
+text
+@d2 3
+@
+
+
+1.12
+log
+@Mod to eclamp for jul305.2
+@
+text
+@d2 5
+a6 1
+ * corr file 304.02
+@
+
+
+1.11
+log
+@Add TPC smearing routines
+@
+text
+@d3 1
+@
+
+
+1.10
+log
+@Prepare Julia 305
+@
+text
+@d2 3
+@
+
+
+1.9
+log
+@Fixes for Linux
+@
+text
+@d2 9
+@
+
+
+1.8
+log
+@julia 303.06
+@
+text
+@d2 3
+@
+
+
+1.7
+log
+@Tracking upgrade
+@
+text
+@d2 3
+@
+
+
+1.6
+log
+@julia corr file 283.01
+@
+text
+@d2 5
+@
+
+
+1.5
+log
+@Replace LENOCC by LNBLNK
+@
+text
+@d2 3
+@
+
+
+1.4
+log
+@Update news for julia version 280.01
+@
+text
+@d2 3
+@
+
+
+1.3
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+ 	gambnk.F gapeco.F gasteer.F
+ 	hcalib.F hcalrd.F hcatow.F hcbhis.F hcfclu.F hchist.F hclcra.F
+ 	hcltst.F hclufi.F hcos.F hcsimm.F hdgdeb.F hdgfil.F hdgpot.F
+ 	hdgsum.F hdprec.F hdspre.F hflnoi.F hinijo.F hiniru.F hmener.F
+ 	hmfind.F hmroad.F hnoise.F hnoisy.F hpatco.F hphnoi.F hplink.F
+ 	hprana.F hpranp.F hprdig.F hpreda.F hprpot.F hprsum.F hprunc.F
+ 	hrcomp.F hrcpat.F hrdcal.F hroad.F hslink.F hslowc.F hspare.F
+ 	hsptre.F hstofi.F htrack.F htubfi.F htwcr.F
+ 	iasign.F iattma.F ibnkin.F icaswt.F icftoi.F iclimb.F icrcco.F
+ 	ideadw.F idigpr.F ienang.F ifind1.F ifind2.F ifitp.F iftrak.F
+ 	igetti.F igettp.F igicha.F iheler.F iinijo.F iiniru.F iintrk.F
+ 	imatch.F inigap.F insect.F intrak.F ipakdi.F ipdsti.F iphcor.F
+ 	ipreda.F iprsum.F ipstat.F irefin.F ireopd.F isave.F ishuff.F
+ 	ishufl.F islowc.F isrch.F itbook.F itccut.F itcopr.F itcrec.F
+ 	itcrep.F itctpc.F itctrk.F itcxng.F iterr.F itextn.F ithist.F
+ 	itidy1.F itidy2.F itlnk1.F itlnk2.F itpcan.F itrak.F itrecf.F
+ 	itreci.F itree.F itrkci.F itrkeq.F itrkzr.F itrmca.F
+@
+text
+@d2 5
+d8 1
+@
+
+
+1.2
+log
+@julia version 279
+@
+text
+@a0 1
+*CD e_news
+d2 4
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 33
+a35 5
+  ! JULIA 300
+   1st version maintained under cvs
+   clean code
+   assume that raw data run in the range <4001-4838> will not be
+   reprocessed, remove routines ERCUPI, ERCUPR, ECPAD.
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

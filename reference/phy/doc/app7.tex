@@ -1,0 +1,264 @@
+\chapter{\label{sec-SED}Definition of Event Directory Classes}
+\par
+ 
+\bf{EDIR classes for LEP1 and LEP 1.5 Data and Monte Carlo:}
+\par
+\begin{verbatim}
+ 
+ Class # 1:  More than 2 Ecal modules with energy(wires) >=2.5 GeV in each
+ 
+ Class # 2:  Hcal energy(pads) + Ecal energy(wires) > 15 GeV
+ 
+ Class # 3:  End cap A and End cap B both with energy(wires) > 2. GeV
+             or Barrel with energy > 6 GeV
+ 
+ Class # 4:  Hcal energy(pads) > 3 GeV + HCW(4 planes) * ITC trigger
+ 
+ Class # 5:  1-->7 tracks with >=4 TPC hits, D0 <5 cm and Z0 <20 cm
+ 
+ Class # 6:  >=8 tracks with the same cuts
+ 
+ Class # 7:  LUM A and LUM B, both with E >15 GeV
+ 
+ Class # 8:  LUM A or LUM B, with E >15 GeV
+ 
+ Class # 9:  Muon (HMAD flag) with energy >3 GeV
+ 
+ Class #10:  Electron with momentum >=2 GeV
+             electron candidates based on (-3.5>R2 , -3.5<R3<4.0)
+ 
+ Class #11:  ECAL high voltage ON
+ 
+ Class #12:  TPC high voltage ON (Logical or between bits 4 and 15
+             of the high voltage word)
+ 
+ Class #13:  ITC  high voltage ON
+ 
+ Class #14:  LCAL high voltage ON
+ 
+ Class #15:  Dilepton candidates
+ ---------
+                   Selections based on TPC tracks only
+ 
+     The requirements are less strict than those used in the common
+     lepton analysis.
+ 
+1. Only tracks with >= 4 TPC hits, |z_0| < 10 cm, |p| > 0.1 GeV/c are used.
+   Their numbers are counted separately for |d_0| < 5 cm (including |d_0| <
+   2 cm), and for |d_0| < 2 cm.
+ 
+2. a) If there are exactly 2 such tracks with |d_0| < 5 cm, they are declared
+      as good tracks, and the selection continues.
+   b) If there are between 2 and 8 such tracks with |d_0| < 2 cm, they are
+      declared as good tracks, and the selection continues. Any track with
+      2 cm < |d_0| < 5 cm is declared as bad.
+ 
+3. The thrust axis is calculated using a routine from JETSET. Then, each of
+   the two hemispheres as defined by the thrust axis is required to contain
+   at least one good track.
+ 
+4. It is required that at least one track with |d_0| < 2 cm has a momentum
+   exceeding 3 GeV/c. IT IS HERE WHERE 2 TRACK EVENTS, BOTH TRACKS HAVING
+   2cm < |d_0| < 5 cm, ARE LOST. It seems to me that this was not the ori-
+   ginal intention.
+ 
+5. If there are more than 4 good tracks, each of them is required to have an
+   opening angle eta with respect to the axis of the corresponding jet
+   which fulfills cos(eta) > 0.85.
+ 
+      Events surviving all these requirements are flagged as class 15.
+ 
+ Class #16:  QQbar candidates (based on TPC tracks information)
+ ---------
+ 
+                  Selections based on TPC tracks only
+ 
+     Class 16 contains events with :
+ 
+     - At least 5 TPC tracks satisfying the following cuts :
+       |D0| < 2 cm
+       |Z0| < 10 cm
+       TPC coordinates >= 4
+       |cos(theta)| < 0.95
+     - in addition the total energy of all TPC tracks satisfying
+       the cuts above, should have more than 10% of C.M. energy.
+ 
+ Class #17:  QQbar candidates (based on calorimetry information)
+ ---------
+ 
+               Selections based on Calorimetry information
+ 
+       Class #17 candidats are:
+       - Events satisfying the Total Electromagnetic trigger:
+         3 GeV in odd and even wire planes of Barrel or 0.75 GeV
+         in odd and even wire of each electromagnetic End cap.
+       - They should be in time with beam crossing :
+         T0 from Ecal wires used (abs(T0)<120 ns in End caps,
+         abs(T0)<100 ns in Barrel)
+       - They should satisfy the total Energy cuts :
+         Ecal wire energy + Hcal analog energy (matching with
+         digital) being defined as total energy should be > 20 GeV
+       - Cosmics are rejected using pattern of fired modules :
+         2 modules distant by at least 1 should have wire energy > 3 GeV
+       - Bhabhas are rejected using fraction of energy deposited in
+         the 2 most energetic clusters.
+ 
+ Class #18:  Events in time with beam crossing:
+             selection based on T0 information from ECAL wires:
+             abs(T0)<120 ns in End caps and abs(T0)<100 ns in Barrel
+ 
+ Class #19:  Muon candidates of all energies:
+             based on HMAD or MCAD flags or Mucalo(proba.>.80)
+ 
+ Class #20:  Bhabha candidates (selection based on Ecal only):
+             -at least 2 non adjecent modules with E(wires)> 35 GeV each
+             -2 Ecal clusters with E(pads)> 35 GeV and |cos(theta)|<0.95
+ 
+ Class #21:   Single photon candidates
+ ---------
+ 
+       This class flags events with at least one photon with an
+      energy > 1.0 GeV and no charged tracks. To be flagged the
+      event must have TPC HT bit ON, no good (i.e. 4 or more
+      space points) TPC tracks and the SNG_N_EM trigger bit must
+      be set in the Level 1 trigger word. In addition, the event
+      must have at least one cluster with pad energy greater than
+      1.0 GeV, stack 2 pad energy greater than 0.1 GeV, more than
+      0.1 GeV in either of the other two stacks and the theta of
+      the cluster must lie in the range 13 to 167 degrees.
+      The final requirement is that if such a cluster exists then
+      there must be 1.0 GeV or more on the wires for the module
+      in which the cluster lies.
+ 
+ Class #22:  Coincidence in Sical A AND B (E >= 20 GeV)
+ 
+ Class #23:  Single arm  in Sical A OR  B (E >= 20 GeV)
+ 
+ Class #24:   Di-Lepton Extended Class 15 candidates
+ ---------
+ 
+                   Selections based on TPC and GAMPEK photons
+ 
+     The requirements are less strict than those used in the common
+     lepton analysis.
+ 
+1. Only tracks with >= 4 TPC hits, |z_0| < 10 cm, |p| > 0.1 GeV/c are used.
+   Their numbers are counted separately for |d_0| < 5 cm (including |d_0| <
+   2 cm), and for |d_0| < 2 cm.
+ 
+2. a) If there are exactly 2 such tracks with |d_0| < 5 cm, they are declared
+      as good tracks, and the selection continues.
+   b) If there are between 2 and 8 such tracks with |d_0| < 2 cm, they are
+      declared as good tracks, and the selection continues. Any track with
+      2 cm < |d_0| < 5 cm is declared as bad.
+ 
+3. It is required that at least one track with |d_0| < 2 cm or at least
+   one GAMPEK photon has a momentum exceeding 2 GeV/c.
+ 
+4. If there are more than 4 good tracks, each of them is required to have an
+   opening angle eta with respect to the axis of the corresponding jet
+   which fulfills cos(eta) > 0.85.
+ 
+      Events surviving all these requirements are flagged as class 24.
+ 
+ Class #25:  Slow control records
+ 
+ Class #26:  Events to be used for alignement and calibration purposes
+             Muon events selected by mean of trigger bits
+             Bhabha events selected from two ecal modules with wire
+             energies above 30 GeV
+ 
+ Class #27:  Two different possible definitions but never on the same dataset :
+     POT     VDET Laser events for VDET alignment / calibration
+     MINI    electron selection from QSELEP (Rt>-3, -3>Rl>3)   MINI >= 10 only
+ 
+ Class #28:  Heavy Flavour muon flag , defined on MINIs only
+     MINI    muon selection from QSELEP (QMUIDO flag 13 or 14) MINI >= 10 only
+ 
+ Class #29:  Random trigger events
+ 
+ Events which do not satisfy any of the preceeding selections are put in
+ class #30
+ 
+\end{verbatim}
+
+\newpage
+ 
+\bf{EDIR classes for LEP 2 Data and Monte Carlo:}
+\par
+\begin{verbatim}
+ 
+ Class # 1:  >= 1 Ecal cluster with energy(wires) >= 1.5 GeV
+             + 1 module with Ewire > 0.5 Gev, |T0| < 200ns.
+ 
+ Class # 2:  Hcal energy(pads) + Ecal energy(wires) > 15 GeV
+ 
+ Class # 3:  Cosmics passing through VDET
+ 
+ Class # 4:  Hcal energy(pads) > 3 GeV + HCW(4 planes) * ITC trigger
+ 
+ Class # 5:  1-->7 tracks with >=4 TPC hits, D0 <5 cm and Z0 <20 cm
+ 
+ Class # 6:  >=8 tracks with the same cuts as in Class 5
+ 
+ Class # 7:  LUM A and LUM B, both with E >30 GeV
+ 
+ Class # 8:  LUM A or LUM B, with E >30 GeV
+ 
+ Class # 9:  2-photon: >= 3 tracks, Ecal/ELEP < 0.5, Echarged/ELEP < 0.4
+ 
+ Class #10:  Spare
+ 
+ Class #11:  Low multiplicity W W A: >= 1 track of each sign
+ 
+ Class #12:  Low multiplicity W W B: all tracks of same sign
+ 
+ Class #13:  Spare
+ 
+ Class #14:  Spare
+ 
+ Class #15:  Dilepton candidates (e+e-, mu+ mu-, tau+ tau-).
+ 
+                   Selections based on TPC tracks only
+ 
+ Class #16:  QQbar candidates (based on TPC tracks information)
+ 
+ Class #17:  QQbar candidates (based on calorimetry information)
+ 
+ Class #18:  Spare
+ 
+ Class #19:  Muon candidates of all energies:
+             based on HMAD or MCAD flags or QMUIDO
+ 
+ Class #20:  Bhabha candidates (selection based on Ecal only):
+             -at least 2 non adjacent modules with E(wires)> 35 GeV each
+             -2 Ecal clusters with E(pads)> 35 GeV and |cos(theta)|<0.95
+ 
+ Class #21:  Single photon candidates
+ 
+ Class #22:  Sical A (E >= 20 Gev) AND Sical B (E >= 20*ELEP/91.2 GeV)
+ 
+ Class #23:  Spare
+ 
+ Class #24:   Di-Lepton Extended Class 15 candidates
+ 
+ Class #25:  Slow control records
+ 
+ Class #26:  Events to be used for alignement and calibration purposes
+             Muon events selected by mean of trigger bits
+             Bhabha events selected from two ecal modules with wire
+             energies above 30 GeV
+ 
+ Class #27:  Two different possible definitions but never on the same dataset :
+     POT     VDET Laser events for VDET alignment / calibration
+     MINI    electron selection from QSELEP (Rt>-3, -3>Rl>3)   MINI >= 10 only
+ 
+ Class #28:  Heavy Flavour muon flag , defined on MINIs only
+     MINI    muon selection from QSELEP (QMUIDO flag 13 or 14) MINI >= 10 only
+ 
+ Class #29:  Random trigger events
+ 
+ Events which do not satisfy any of the preceeding selections are put in
+ class #30
+ 
+\end{verbatim}

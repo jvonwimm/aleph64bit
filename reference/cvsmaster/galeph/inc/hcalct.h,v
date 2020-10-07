@@ -1,0 +1,73 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.08.21.15.09.11;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.07.03.14.47.34;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@gal307.1 see ChangeLog
+@
+text
+@C
+      REAL CALTUB, CALTUE, CALIMB(24), CALIME(12), CALBA(24),
+     &     CALEC(12), CALMCB(24), CALMCE(12), CT0MCB, CT0MCE,
+     &     CT0DAB, CT0DAE, CALTBA, CALTEC
+C
+      COMMON /HCALCT/ CALTUB, CALTUE, CALIMB, CALIME, CALBA,
+     &     CALEC, CALMCB, CALMCE, CT0MCB, CT0MCE, CT0DAB,
+     &     CT0DAE, CALTBA, CALTEC
+C
+#if DOC
+C! HCAL calibration constants
+    CALTUB, CALTUE = online calibration constant
+    CALIMB(24), CALIME(12) = calibration constants on the FIC
+    CALBA(24), CALEC(12) = intermodule calibration (HIMC)
+    CALMCB(24), CALMCE(12) = Monte Carlo intermodule calibration
+    CT0MCB, CT0MCE, CT0DAB, CT0DAE = global calibration constants (HT0C)
+    CALTBA, CALTEC = time dependent global calibration constants (HSTD)
+#endif
+@
+
+
+1.1
+log
+@gal307 look at galeph/news/news.h
+@
+text
+@d3 2
+a4 2
+     &     CALEC(12), CT0MCB, CT0MCE, CT0DAB, CT0DAE, CALTBA,
+     &     CALTEC
+d7 2
+a8 2
+     &     CALEC, CT0MCB, CT0MCE, CT0DAB, CT0DAE, CALTBA,
+     &     CALTEC
+d15 1
+@

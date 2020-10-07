@@ -1,0 +1,305 @@
+head	1.2;
+access;
+symbols
+	alpha126_22:1.2
+	alpha126_21:1.2
+	alpha126_20:1.2
+	alpha126_19:1.2
+	alpha126_18:1.2
+	alpha126_17:1.2
+	alpha126_16:1.2
+	alpha126_15:1.2
+	alpha126_14:1.2
+	alpha126_13:1.2
+	alpha126_12:1.2
+	alpha126_11:1.2
+	alpha126_10:1.2
+	alpha126_09:1.2
+	alpha126_08:1.2
+	alpha126_07:1.2
+	alpha126_06:1.2
+	alpha126_05:1.2
+	alpha126_04:1.2
+	alpha126_03:1.2
+	alpha126_02:1.2
+	alpha126_1:1.2
+	alpha125_17:1.2
+	alpha125_16:1.2
+	alpha125_15:1.2
+	alpha125_14:1.2
+	alpha125_13:1.2
+	alpha125_12:1.2
+	alpha125_11:1.2
+	alpha125_10:1.2
+	alpha125_09:1.2
+	alpha125_08:1.2
+	alpha125_07:1.2
+	alpha125_06:1.2
+	alpha125_05:1.2
+	alpha125_04:1.2
+	alpha125_03:1.2
+	alpha125_02:1.2
+	alpha125_01:1.2
+	alpha124_19:1.2
+	alpha125:1.2
+	alpha124_18:1.2
+	alpha124_17:1.2
+	alpha124_16:1.2
+	alpha124_15:1.2
+	alpha124_14:1.2
+	alpha124_13:1.2
+	alpha124_12:1.2
+	alpha124_11:1.2
+	alpha124_10:1.2
+	alpha124_09:1.2
+	alpha124_08:1.2
+	alpha124_07:1.2
+	alpha124_7:1.2
+	alpha124_06:1.2
+	alpha124_05:1.2
+	alpha124_04:1.1.1.1
+	alpha124_03:1.1.1.1
+	alpha124_02:1.1.1.1
+	alpha124_01:1.1.1.1
+	alpha124:1.1.1.1
+	alpha123_12:1.1.1.1
+	alpha123_11:1.1.1.1
+	alpha123_10:1.1.1.1
+	alpha123_9:1.1.1.1
+	alpha123_8:1.1.1.1
+	alpha123_7:1.1.1.1
+	alpha123_6:1.1.1.1
+	alpha123_5:1.1.1.1
+	alpha123_4:1.1.1.1
+	alpha123_3:1.1.1.1
+	alpha123_2:1.1.1.1
+	alpha123:1.1.1.1
+	alpha122_48:1.1.1.1
+	alpha122_47:1.1.1.1
+	alpha122_46:1.1.1.1
+	alpha122_45:1.1.1.1
+	alpha122_44:1.1.1.1
+	alpha122_43:1.1.1.1
+	alpha122_42:1.1.1.1
+	alpha122_41:1.1.1.1
+	alpha122_40:1.1.1.1
+	alpha122_39:1.1.1.1
+	alpha122_38:1.1.1.1
+	alpha122_37:1.1.1.1
+	alpha122_36:1.1.1.1
+	alpha122_35:1.1.1.1
+	alpha122_34:1.1.1.1
+	alpha122_33:1.1.1.1
+	alpha122_32:1.1.1.1
+	alpha122_31:1.1.1.1
+	alpha122_30:1.1.1.1
+	alpha122_29:1.1.1.1
+	alpha122_28:1.1.1.1
+	alpha122_27:1.1.1.1
+	alpha122_26:1.1.1.1
+	alpha122_25:1.1.1.1
+	alpha122_24:1.1.1.1
+	alpha122_23:1.1.1.1
+	alpha122_22:1.1.1.1
+	alpha122_21:1.1.1.1
+	alpha122_20:1.1.1.1
+	alpha122_19:1.1.1.1
+	alpha122_18:1.1.1.1
+	alpha122_17:1.1.1.1
+	alpha122_16:1.1.1.1
+	alpha122_15:1.1.1.1
+	alpha122_14:1.1.1.1
+	alpha122_13:1.1.1.1
+	alpha122_12:1.1.1.1
+	alpha122_11:1.1.1.1
+	alpha122_10:1.1.1.1
+	alpha122_9:1.1.1.1
+	alpha122_8:1.1.1.1
+	alpha122_6:1.1.1.1
+	alpha122_5:1.1.1.1
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	99.04.19.14.04.48;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.03.14.12.42.39;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.42.40;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE QVSTVA(ITK,PVTX,DJET,SVTX,JET,IVX)
+CKEY  QVSRCH / INTERNAL
+C ----------------------------------------------------------------------
+C
+C! Track-Jet-Vertex association
+C  Author : T. MATTISON  U.A.BARCELONA/SLAC  1 DECEMBER 1992
+C  Modified : I.TOMALIN  24/3/94 to also output DCHI2.
+C  Modified : G.Graefe   25-MAR-1995 adapted to NanoDst
+C
+C  Input Arguments :
+C   * ITK IS ALPHA TRACK NUMBER
+C   * PVTX() IS PRIMARY VERTEX IN ALEPH COORDINATES
+C   * DJET(,) IS TWO NORMALIZED JET DIRECTIONS IN ALEPH COORDINATES
+C   * SVTX(,) IS TWO SECONDARY VERTICES IN TRANSLATED-ROTATED COORDINATES
+C       ORIGIN AT PVTX, 3D AXIS IN DJET DIRECTIONS
+C  Output Arguments :
+C   * JET=1 OR 2 ACCORDING TO JET DIRECTION
+C   * IVX=1 FOR PRIMARY,
+C   * IVX=2 FOR SECONDARY (IN ABOVE JET)
+C   * IVX=0 FOR TRACK PASSING CUTS BUT NOT CLOSE TO EITHER VERTEX
+C   * IVX=-1 FOR TRACK FAILING CUTS
+C  Entry point : QVSTCHI2 (DCHI2)
+C   * DCHI2 IS CHI**2 FOR TRACK TO COME FROM PRIMARY VERTEX MINUS
+C              CHI**2 TO COME FROM SECONDARY.
+C
+C ------------------------------------------------------------------------------
+#ifndef DOC
+      SAVE DCHI2
+      REAL DCHI2
+      DIMENSION PVTX(3),DJET(3,2),SVTX(3,2)
+      DIMENSION EPVTX(3),ESVTX(3)
+      LOGICAL QVSGTK2
+#include "nancom.h"
+C ------------------------------------------------------------------------------
+C  IF NANO, CALL NVSTVA
+C
+      IF (XNANO) THEN
+        CALL NVSTVA(ITK,JET,IVX)
+        RETURN
+      ENDIF
+C
+C  CHECK WHICH JET
+      CALL QVSTKJ(ITK,DJET,JET)
+C
+C  ASSUME IT FAILS CUTS
+      IVX=-1
+C
+C  CHECK (LOOSE) TRACK CUTS
+      DKL=ABS(SVTX(3,JET))
+      IF (.NOT. QVSGTK2(ITK,PVTX,DKL)) RETURN
+C
+C  MAKE UP SOME NOMINAL VERTEX ERRORS
+      EPVTX(1)=.0050
+      EPVTX(2)=.0020
+      EPVTX(3)=.0050
+      ESVTX(1)=.0050
+      ESVTX(2)=.0050
+      ESVTX(3)=.0350
+C
+C  GET NORMALIZED AND SIGNED IMPACT PARAMETERS
+C  RELATIVE TO BOTH VERTICES
+      CALL QVSIMP(ITK,PVTX,DJET(1,JET),SVTX(1,JET),EPVTX,ESVTX,
+     > DXP,DZP,DTP,DXS,DZS,DTS)
+C
+C  NORMALIZED DISTANCE CUT
+      SIGCUT=3.0
+C
+C  WE WON'T USE SIGN INFORMATION
+      DXP=ABS(DXP)
+      DZP=ABS(DZP)
+      DXS=ABS(DXS)
+      DZS=ABS(DZS)
+C
+      IF (MIN(DXP,DZP,DXS,DZS) .GT. SIGCUT) THEN
+C  TRACK IS FAR FROM EVERYTHING
+        IVX=0
+        DCHI2 = 0.0
+      ELSEIF (MIN(DZP,DZS) .GT. SIGCUT) THEN
+C  FAR FROM BOTH IN Z, BUT X IS OK
+        IF (DXS .LT. DXP) THEN
+          IVX=2
+        ELSE
+          IVX=1
+        ENDIF
+        DCHI2 = DXP**2 - DXS**2
+      ELSEIF (MIN(DXP,DXS) .GT. SIGCUT) THEN
+C  FAR FROM BOTH IN X, BUT Z IS OK
+        IF (DZS .LT. DZP) THEN
+          IVX=2
+        ELSE
+          IVX=1
+        ENDIF
+        DCHI2 = DZP**2 - DZS**2
+      ELSE
+C  WITHIN SIGCUT IN BOTH X AND Z TO ONE VERTEX OR THE OTHER
+C  (ALTHOUGH NOT NECESSARILY THE SAME ONE!)
+C  THIS IS THE NORMAL (AND PREFERRED) PATH
+C
+C  CALCULATE CHI SQUARE TO BOTH VERTICES
+        CHI2P=DXP**2+DZP**2
+        CHI2S=DXS**2+DZS**2
+C
+C  ASSIGN ACCORDING TO CHI SQUARE
+        IF (CHI2S .LT. CHI2P) THEN
+          IVX=2
+        ELSE
+          IVX=1
+        ENDIF
+        DCHI2 = CHI2P - CHI2S
+      ENDIF
+C
+      RETURN
+C
+      ENTRY QVSTCHI2 (TCHI2)
+      TCHI2 = DCHI2
+C
+      END
+#endif
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 1
+a3 1
+C ------------------------------------------------------------------------------
+d7 2
+a8 1
+C  Modified : G.Graefe                       25-MAR-1995 adapted to NanoDst
+d22 3
+d28 2
+a34 1
+C
+d41 1
+d77 1
+d85 1
+d93 1
+d109 1
+d113 4
+d119 1
+@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

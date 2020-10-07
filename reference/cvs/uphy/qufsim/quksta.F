@@ -1,0 +1,40 @@
+      SUBROUTINE quksta
+C-----------------------------------------------------------------------
+C! Restore stability codes in exotic cases
+C  Input      :  none
+C  Output     :  none
+C
+C  Patrick Janot - 04 Jan 1994
+C-----------------------------------------------------------------------
+#include "qcde.h"
+#include "coddat.h"
+#include "qmacro.h"
+C
+C
+C  Loop over MC particles
+C
+      DO 1 itk = kfmct, klmct
+C
+C  1) Unstable charged particles that decay in the TPC
+C           or neutral particles that decay in the CALorimeters
+C
+        IF ( kstabc(itk) .EQ. 2 ) THEN
+C
+          IF ( .NOT.ASTAB(ktpcod(itk)) .AND.
+     .         .NOT.KINS( ktpcod(itk)) .AND.
+     .         .NOT.KAPI( ktpcod(itk)) )
+     .    IW(koqvec+itk*kcqvec+jqvesc) = -1
+C
+C  2) Loop over daugthers, grandaugthers, etc.
+C
+          DO 2 jtk = itk+1, klmct
+            IF ( XSAME(itk,jtk)    .AND.
+     .           kndau(jtk) .EQ. 0 .AND.
+     .           kstabc(jtk) .EQ. 0 )
+     .      IW(koqvec+jtk*kcqvec+jqvesc) = 1
+    2     CONTINUE
+        ENDIF
+    1 CONTINUE
+C
+      RETURN
+      END

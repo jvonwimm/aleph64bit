@@ -1,0 +1,23 @@
+
+
+      These days shift9 is very loaded. We don't know yet, what the reason is.
+CN and SGI are investigating. We recommend for a faster turnaround to use
+saga.
+
+      On top of that high load on shift9 we had several problems since the 
+introduction of the new Cern-library. Some were already mentioned in the 
+minutes of the last offline meeting on 6th of June. New ones have been 
+discovered.
+
+The problem accessing ALWS files is a bug in the new RFIO in the new
+Cern-library. This bug is present on all our unix machines. You got
+    error in CFOPEN : Host not known
+
+
+It is now cured at the price of ignoring ALWS data in alstagein  and staging
+them again on the Unix stage disks. This will somehow shorten our stage-disk 
+space on the unix systems.
+
+I hope that we get a real fix of RFIO soon.
+ 
+                               Ronald

@@ -1,0 +1,130 @@
+head	1.2;
+access;
+symbols
+	alpha126_22:1.2
+	alpha122_22:1.2
+	alpha126_21:1.2
+	alpha126_20:1.2
+	alpha126_19:1.2
+	alpha126_18:1.2
+	alpha126_17:1.2
+	alpha126_16:1.2
+	alpha126_15:1.2
+	alpha126_14:1.2
+	alpha126_13:1.2
+	alpha126_12:1.2
+	alpha126_11:1.2
+	alpha126_10:1.2
+	alpha126_09:1.2
+	alpha126_08:1.2
+	alpha126_07:1.2
+	alpha126_06:1.2
+	alpha126_05:1.2
+	alpha126_04:1.2
+	alpha126_03:1.2
+	alpha126_02:1.2
+	alpha126_1:1.2
+	alpha125_17:1.2
+	alpha125_16:1.2
+	alpha125_15:1.2
+	alpha125_14:1.2
+	alpha125_13:1.2
+	alpha125_12:1.2
+	alpha125_11:1.2
+	alpha125_10:1.2
+	alpha125_09:1.2
+	alpha125_08:1.2
+	alpha125_07:1.2
+	alpha125_06:1.2
+	alpha125_05:1.2
+	alpha125_04:1.2
+	alpha125_03:1.2
+	alpha125_02:1.2
+	alpha125_01:1.2
+	alpha124_19:1.2
+	alpha125:1.2
+	alpha124_18:1.2
+	alpha124_17:1.2
+	alpha124_16:1.2
+	alpha124_15:1.2
+	alpha124_14:1.2
+	alpha124_13:1.2
+	alpha124_12:1.2
+	alpha124_11:1.2
+	alpha124_10:1.2
+	alpha124_09:1.2
+	alpha124_08:1.2
+	alpha124_07:1.2
+	alpha124_7:1.2
+	alpha124_06:1.2
+	alpha124_05:1.2
+	alpha124_04:1.2
+	alpha124_03:1.2
+	alpha124_02:1.2
+	alpha124_01:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	99.03.24.09.30.47;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	99.03.22.14.07.30;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE MQUSREC
+CKEY RUN /INTERNAL
+C ----------------------------------------------------------------------
+C MINI-DST official production : Store KSEC and RUNE banks
+C A. Jacholkowska 7-Jan-1999
+C Put in ALPHA 11-Jan-1999
+C Called from QMSREC
+C ----------------------------------------------------------------------
+#ifndef DOC
+#include "minprd.h"
+#include "bcs.h"
+#include "bmacro.h"
+C ----------------------------------------------------------------------
+C Do-nothing if not official MINI production :
+      IF (IMIPRD.NE.1) GO TO 999
+C++   Add KSEC and RUNE banks to Mini list.
+C
+      KKSEC = iw(namind('KSEC'))
+      KRUNE = iw(namind('RUNE'))
+C
+      IF(KKSEC.GT.0) CALL MINLIS('KSEC')
+      IF(KRUNE.GT.0) CALL MINLIS('RUNE')
+      IF(KKSEC.GT.0.AND.KRUNE.GT.0) THEN
+        ICOUNT = ICOUNT + 1
+        CALL MINOUT
+      ENDIF
+C
+ 999  RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@d15 1
+a15 1
+      IF (IMIPRD.EQ.1) GO TO 999
+@

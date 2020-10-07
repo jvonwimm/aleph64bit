@@ -1,0 +1,110 @@
+# gmake specific variables
+
+version_h   = version.h
+
+ifeq ($(NAME),alook)
+#########  alook
+   DIR      = look
+   PSRC     = $(ALEPH)/src/alook
+   PLIB     = $(ALEPH)/src/alook/$(OS)
+   v_depend = lkmain.F
+   main     = $(PLIB)/lkmain.o
+   clib     =
+   LDFLAGS  = -L$(ALEPH)/lib -L$(ALEPH)/gen
+   alib     = -lalephlib -lbos77
+endif
+
+#
+
+ifeq ($(NAME),alephlib)
+########## alephlib
+   DIR      = alephlib
+   PSRC     = $(ALEPH)/src$(ALEPH)lib
+   PLIB     = $(ALEPH)/src$(ALEPH)lib/$(OS)
+   v_depend = alkjob.F alvers.F
+   main     =
+   clib     =
+endif
+
+#
+
+ifeq ($(NAME),alephio)
+########## alephio
+   DIR      = alephio
+   PSRC     = $(ALEPH)/src$(ALEPH)io
+   PLIB     = $(ALEPH)/src$(ALEPH)io/$(OS)
+   v_depend = iovers.F
+   main     =
+   clib     =
+endif
+
+#
+
+ifeq ($(NAME),bos77)
+########## bos77
+   DIR      = bos77
+   PSRC     = $(ALEPH)/src/bos77
+   PLIB     = $(ALEPH)/src/bos77/$(OS)
+   version_h= date.h
+   v_depend = bosta.F
+   main     =
+   clib     =
+endif
+
+#
+
+ifeq ($(NAME),alpha)
+########## alpha
+   DIR      = alpha
+   PSRC     = $(ALEPH)/src/alpha
+   PLIB     = $(ALEPH)/src/alpha/$(OS)
+   v_depend = qdata.F
+   main     = $(PLIB)/qmain.o
+   clib     =
+   alib     =
+endif
+
+#
+
+ifeq ($(NAME),galeph)
+########## galeph
+   DIR      = galeph
+   PSRC     = $(ALEPH)/src/galeph
+   PLIB     = $(ALEPH)/src/galeph/$(OS)
+   v_depend = asinit.F asrust.F aswsum.F
+   main     = $(PLIB)/galeph.o
+   clib     = geant321/new graflib/X11
+   LDFLAGS  = -L$(ALEPH)/lib -L$(ALEPH)/gal -L$(ALEPH)/gen
+   alib     = -ltpcsim -lalephlib -lbos77
+endif
+
+#
+
+ifeq ($(NAME),julia)
+########## julia
+   DIR      = julia
+   PSRC     = $(ALEPH)/src/julia
+   PLIB     = $(ALEPH)/src/julia/$(OS)
+   v_depend = aamain.F
+   main     = $(PLIB)/aamain.o     
+   clib     =
+   LDFLAGS  = -L$(ALEPH)/lib -L$(ALEPH)/jul
+   alib     = -ljulia -lalephlib -lbos77
+endif
+
+#
+
+ifeq ($(NAME),tpcsim)
+########## tpcsim
+   DIR      = tpcsim
+   PSRC     = $(ALEPH)/src/tpcsim
+   PLIB     = $(ALEPH)/src/tpcsim/$(OS)
+   v_depend = tpcver.F
+   main     =
+   clib     =
+   alib     =
+endif
+
+#  
+
+

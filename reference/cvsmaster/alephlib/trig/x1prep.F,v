@@ -1,0 +1,201 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.2
+	aleph304_5:1.2
+	aleph304_4:1.2
+	aleph304_3:1.2
+	aleph304_2:1.2
+	aleph304_1:1.2
+	aleph304:1.2
+	aleph303_3:1.2
+	aleph303_2:1.2
+	aleph303_1_mc1:1.2
+	aleph303_1:1.2
+	aleph303:1.2
+	aleph302_9:1.2
+	aleph302_8:1.2
+	aleph302_7:1.2
+	aleph302_6:1.2
+	aleph302_5:1.2
+	aleph302_4:1.2
+	aleph302_3:1.2
+	aleph302_2:1.2
+	aleph302_1:1.2
+	aleph302:1.2
+	aleph216:1.2
+	aleph215_3:1.2
+	aleph215_2:1.2
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.09.03.13.06.17;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.44.55;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.44.56;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@add missing #ifdef DOCs
+@
+text
+@      SUBROUTINE X1PREP(IERR)
+C----------------------------------------------------------------------
+C!  - Prepare the bank XTDI used for the trigger analysis
+C.
+C.   Author   :- Alois Putzer           4-AUG-1989
+C.               Martin Wunsch          4-AUG-1989
+C.               Yves A. Maumary       20-DEC-1989 Adapted for ALEPHLIB
+C!   Modified :- Yves A. Maumary       16-MAR-1990 for '90 run
+C.
+C.   Inputs:
+C.        - none
+C.
+C.   Outputs:
+C.        - IERR : INTEGER = 0 : creation and preparation of the bank
+C.                               successful
+C.                         = 1 : creation or preparation of the bank
+C.                               failed
+C.
+C.   Libraries required: ALEPHLIB, BOS77, CERNLIB
+C.
+C.   Calls: ALTELL, AUBOS, BKFMT
+C.
+C?   Description
+C?   ===========
+C?   Creates the XTDI bank and prepares it (fill in names and set
+C?   'filled' tag = 0)
+C?
+C.======================================================================
+#ifndef DOC
+      SAVE
+      EXTERNAL INTCHA,NAMIND
+#include "bcs.h"
+#include "x1namc.h"
+#include "x1para.h"
+#include "xtdijj.h"
+      CHARACTER*4 RNAME
+      LOGICAL FIRST
+      DATA FIRST /.TRUE./
+C
+      IERR = 0
+      IF(FIRST)THEN
+C - fill strings CHXTD and CHX1S from PARAMETER statement
+C   CHXTDI and CHX1SC and then use these strings to please
+C   IBM compiler
+        CHXTD = CHXTDI
+        CHX1S = CHX1SC
+        FIRST = .FALSE.
+      ENDIF
+C
+C - Create bank XTDI
+      LTDI = LXTDIA*LROWDI + LMHLEN
+      CALL AUBOS('XTDI',1,LTDI,INDXS,IGARB)
+      IF(IGARB.EQ.2)THEN
+        CALL ALTELL('X1PREP: no space to book XTDI',0,'RETURN')
+        IERR = 1
+        RETURN
+      ENDIF
+      CALL BKFMT('XTDI','2I,(A,4I)')
+C - Prepare bank XTDI
+      NAXTDI = NAMIND('XTDI')
+      INDXS = IW(NAXTDI)
+      IF(INDXS.NE.0)THEN
+        IW(INDXS+LMHCOL) = LXTDIA
+        IW(INDXS+LMHROW) = LROWDI
+        IPOIN = INDXS + LMHLEN
+C -- Fill row names for bank XTDI and reset fill tag
+        DO 10 J = 1,LROWDI
+          RNAME = CHXTD((J-1)*4+1:J*4)
+          IW(IPOIN+JXTDNA) = INTCHA(RNAME)
+          IW(IPOIN+JXTDFI) = 0
+          IPOIN = IPOIN + LXTDIA
+   10   CONTINUE
+      ELSE
+        IERR = 1
+      ENDIF
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d29 1
+d78 1
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

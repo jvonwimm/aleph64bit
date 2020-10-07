@@ -1,0 +1,75 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  aleph212:1.1.1.1 ALEPH212:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.02.07.11.40.41;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.02.07.11.40.42;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      FUNCTION JULREC (ATYP,CHDEVI)
+C --------------------------------------------------------------------
+CKEY ALEF USER LREC / USER
+C - F.Ranjard - 900307
+C! return the  record length
+C - Input     : ATYP  / CHAR     aleph type
+C               CHDEVI / CHAR    file device
+C - Output    : JULREC           record length in bytes
+C
+C Look for the keyword LREC in FDEVI
+C IF it is found decode the record length which follows and reduce
+C    the CHDEVI length
+C ELSE return the aleph record length for the ATYP type.
+C
+C -------------------------------------------------------------------
+#ifndef DOC
+      CHARACTER*(*) ATYP,CHDEVI
+C -------------------------------------------------------------------
+      ICHAR0 = ICHAR ('0')
+      LENDEV = LNBLNK (CHDEVI)
+      NUMB = 0
+      LR = INDEX (CHDEVI,'LREC')
+      IF (LR.GT.0) THEN
+         DO 69 I= LR+5,LENDEV
+            IF (CHDEVI(I:I).EQ.' ') GOTO 69
+            N = ICHAR(CHDEVI(I:I)) - ICHAR0
+            IF (N.GE.0 .AND. N.LE.9) NUMB = 10*NUMB + N
+ 69      CONTINUE
+         CHDEVI = CHDEVI (1:LR-2)
+         LREC = NUMB
+      ENDIF
+      IF (NUMB.EQ.0) LREC = KALREC(ATYP)
+C
+      JULREC = LREC
+C
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

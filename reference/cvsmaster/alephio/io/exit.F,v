@@ -1,0 +1,89 @@
+head	1.2;
+access;
+symbols
+	alio83:1.2
+	alio82:1.2
+	alio81:1.2
+	alio80:1.2
+	alio74:1.2
+	alio73:1.2
+	alio72:1.2
+	alio71:1.2
+	alio70:1.2
+	alio68:1.2
+	alio69:1.2
+	alio67:1.2
+	alio66:1.2
+	alio65:1.2
+	alio64:1.2
+	alio63:1.2
+	alio62:1.2
+	alio61:1.2
+	alio60:1.2
+	alephio53:1.2
+	v4:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.13.15.01.28;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.52.32;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.52.33;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import alephio 52 from historian. Modify aclose.F to NOT call brwnd twice
+for the same file. update version.h to 5.3
+@
+text
+@#if defined(RS6K)
+      SUBROUTINE EXIT
+C --------------------------------------------------
+CKEY IO EXIT RS6000
+C - R.Johnson - 920327
+C! IBMRS6000 has no EXIT subroutine
+C -------------------------------------------------
+#ifndef DOC
+      WRITE (6,1)
+ 1    FORMAT(' EXIT called. Do-nothing RS6000 version')
+      STOP
+      END
+#endif
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK exit
+@
+
+
+1.1.1.1
+log
+@import alephio 4
+@
+text
+@@

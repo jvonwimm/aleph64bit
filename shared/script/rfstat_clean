@@ -1,0 +1,63 @@
+#!/bin/csh 
+#=============================================================================
+#                             rfstat_clean
+#
+#  This script looks if there are  rfstat  processes hanging with the command
+#  ps -ef | grep rfstat
+#  This are rfstat processes e.g. towards alws:al$data fro alstagein .
+#  The processes are killed (root priviledge needed) if older then 60 minutes.
+#  A mail is send to the person responsable. The operations are logged.
+#
+# 20/06/95  F.Blin     procedure to test -> kill in root??             
+#=============================================================================
+# 09/07/95 R.Hagelberg modified, add TMP_EXEC, kill 
+# 01/08/95 F.Blin replace HOST by uname -n 
+#                 replace aleph/tmp/ by /tmp
+# 04/09/95 R.Hagelberg reduced to one log-line if nothing to kill
+#=============================================================================
+#set echo on
+set TMP = "/tmp/rfstat_clean_tmp"
+set TMP_EXEC = "/tmp/rfstat_clean_tmp_exec"
+set TMP_MAIL = "/tmp/rfstat_clean_tmp_mail"
+set LOG = $ALEPH/log/rfstat_clean.log
+if (-e ${TMP}) \rm -f ${TMP}
+if (-e ${TMP_EXEC}) \rm -f ${TMP_EXEC}
+if (-e ${TMP_MAIL}) \rm -f ${TMP_MAIL}
+#
+set today = `date '+%y %m %d %H %M'`
+set today_H = `echo ${today} | awk '{print $4}'`
+set today_M = `echo ${today} | awk '{print $5}'`
+@ check_mm = (((${today_H}) * 60) + ${today_M}) - 60
+echo "`date` `uname -n` `whoami`" >> ${TMP_MAIL}
+
+#### find all  rfstat  processes  and put information into $TMP 
+####>kill rfstat process with older then 60 minutes
+#### for test before run rfstat_clean -> rfstat axal02:'al$data':am1737_1.sl
+ps -ef | grep rfstat | grep -v rfstat_clean | grep -v grep > ${TMP}
+if (-z ${TMP}) goto END
+ awk '\
+      BEGIN { check_mm = '$check_mm'; \
+              today_H = '$today_H'} \
+      { mm[NR] = 0; H[NR] = 0;\
+        line[NR] = $0; \
+        process[NR] = $2; \
+        cha[NR] = substr($5,3,1); \
+        if (cha[NR] == ":") \
+           { H[NR] = substr($5,1,2); \
+             M[NR] = substr($5,4,2); \
+             mm[NR] = (H[NR] * 60) + M[NR] ;\
+ if (mm[NR] <= check_mm || H[NR] > today_H) print " kill -9 " process[NR]}}' ${TMP} >>& ${TMP_EXEC}
+EXEC:
+#### now execute kill commands, if there is somthing to kill
+if (-z ${TMP_EXEC}) goto END
+  cat ${TMP} >> ${TMP_MAIL} 
+  cat ${TMP_EXEC} >> ${TMP_MAIL}
+  chmod +x ${TMP_EXEC}
+  ${TMP_EXEC} >>&  ${TMP_MAIL}
+  cat ${TMP_MAIL} | Mail -s "rfstat_clean" hag@aloha.cern.ch,system@aloha.cern.ch
+END:
+cat ${TMP_MAIL} >> ${LOG}
+\rm -f ${TMP}
+\rm -f ${TMP_EXEC}
+\rm -f ${TMP_MAIL}
+exit

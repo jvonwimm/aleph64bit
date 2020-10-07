@@ -1,0 +1,114 @@
+head	1.2;
+access;
+symbols
+	dbase01:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.02.13.10.50.22;	author flr;	state dead;
+branches;
+next	1.1;
+
+1.1
+date	97.02.12.10.06.04;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.02.12.10.06.04;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release dbase02
+@
+text
+@        PROGRAM DBTOEP
+C.----------------------------------------------------------------------
+C Author M.Rumpf (RUMPF at FRCPN11)  22/06/89
+C Runs interactively on IBM VM
+C Writes BOS sequential file in EPIO format on unit 20
+C BOS77 and ALEPHLIB libraries needed
+C ADAMO Tables COL2 and TAB2 are written on EPIO file.
+C - data cards :
+C               FDBA  'data base name | DAF'
+C               FEPI  'epio name      | EPIO'
+C               ENDQ
+C.---------------------------------------------------------------------
+#ifndef DOC
+#include "lbos.h"
+C --------------------------------------------------------------------
+C Define units for files
+       LUNEP = 20
+       LUDAF = JUNIDB(0)
+       LREC  = NALREC(3600)
+C
+       CALL BNAMES (NAMAX)
+       CALL BOS(IW,LBOS)
+       IW(5) = 7
+       IW(7) = 100000
+       CALL BREADC
+C
+C Open DAF
+       CALL AOPDBS (' ',IER)
+       IF (IER.NE.0) THEN
+          CALL AWERRC (IW(6),'AOPDBS',' ',IER)
+          GOTO 998
+       ENDIF
+C
+C Open EPIO file if runs on VAX
+C Call ad hoc routine from ALEPHLIB
+C
+       CALL AGTFIL ('FEPI','WRIT',LUNEP,IER)
+       IF (IER.NE.0) GOTO 998
+C
+C Print list of banks found on DAF
+C
+       CALL BDAPR(LUDAF,'    ')
+C
+C Compute banks format from ADAMO tables
+C Write them on BOS/EPIO file
+C
+       CALL DATOEP (LUDAF,LUNEP,IFLAG)
+C
+C Write last buffer
+C
+       CALL BWRITE (IW,LUNEP,'0')
+C
+C Flag = 0  OK.
+C
+       PRINT * ,'IFLAG',IFLAG
+       CALL BOSIO
+       STOP
+C
+  998  WRITE(6,1998) LUDAF
+ 1998  FORMAT(1X,' DAF not found on unit ',I5)
+       END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@@
+
+
+1.1.1.1
+log
+@1st release of dbase library
+@
+text
+@@

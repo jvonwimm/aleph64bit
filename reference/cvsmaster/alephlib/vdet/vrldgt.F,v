@@ -1,0 +1,187 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.44.47;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.44.48;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE VRLDGT( IER)
+C!-------------------------------------------------------------------
+C! fill /VRLDCOM/ from VRLD data base bank
+C! Extract the parameters dealing with the effects of multiple
+C! scattering from the data base bank VRLD
+CKEY VDET TRACK
+C!
+C!    AUTHOR: G. Taylor   22/6/95
+C!
+C!    OUTPUT: See description of VRLD bank for details
+C!            IER= 0  ok
+C!            IER=-1 database bank not found
+C!-------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+C --
+#include "vrldjj.h"
+#include "vrldcom.h"
+C --
+      INTEGER GTSTUP, ALGTDB
+      INTEGER NVDRL,IROLD,IVDOLD
+      DATA NVDRL,IROLD,IVDOLD/0,0,-9/
+#include "bmacro.h"
+C
+C ----------------------------------------------------------------
+C-
+C get the multiple scattering  material description from the database
+C-
+      IER=0
+      IF (NVRLD .EQ.0) NVRLD = NAMIND('VRLD')
+      CALL ABRUEV (IRUN,IEVT)
+C
+      IF (IRUN.NE.IROLD) THEN
+       IROLD = IRUN
+       IVDSTP = GTSTUP ('VD',IRUN)
+C
+       IF (IVDSTP.NE.IVDOLD) THEN
+        IVDOLD = IVDSTP
+        IRET= ALGTDB(JUNIDB(0),'VRLD',-IVDSTP)
+        JVRLD = IW(NVRLD)
+C
+        IF(JVRLD.LE.0) THEN
+         CALL ALTELL('VRLDGT:  Needs a VRLD bank - JOB SHOULD STOP',0,
+     &               'RETURN')
+         IER=-1
+        ELSE
+C
+C beam pipe
+C
+          UKRVAC     = RTABL(JVRLD,1,JVRLBR)
+          UKSVAC     = RTABL(JVRLD,1,JVRLBL)
+C
+C ITC/TPC part
+C
+          UKRITC     = RTABL(JVRLD,1,JVRLIR)
+          UKSITC     = RTABL(JVRLD,1,JVRLIL)
+          UKSPITC    = RTABL(JVRLD,1,JVRLIG)
+          UKRTPC     = RTABL(JVRLD,1,JVRLIT)
+          UKSTPC     = RTABL(JVRLD,1,JVRLTL)
+          UKSPTPC    = RTABL(JVRLD,1,JVRLTG)
+C
+C vdet
+C
+          UKZICA     = RTABL(JVRLD,1,JVRLZI)
+          UKZOCA     = RTABL(JVRLD,1,JVRLZO)
+          UKRIICA    = RTABL(JVRLD,1,JVRLII)
+          UKRIOCA    = RTABL(JVRLD,1,JVRLIO)
+          UKROICA    = RTABL(JVRLD,1,JVRLOI)
+          UKROOCA    = RTABL(JVRLD,1,JVRLOO)
+          UKSICA     = RTABL(JVRLD,1,JVRLSI)
+          UKSOCA     = RTABL(JVRLD,1,JVRLSO)
+        ENDIF
+       ENDIF
+      ENDIF
+C
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

@@ -1,0 +1,38 @@
+
+#!/bin/ksh                                                                      
+#=========================================================================
+# 
+#  Name      : run_qual
+# 
+#  Purpose   : To search through the RUN_QUAL  files for information
+#              on specific runs
+# 
+#  The user may give : 1 run number    nrun
+#                      or a list of run numbers separated by commas
+#                                  nrun1 , nrun2 , nrun3
+#                      or a range of runs given as nrun1 - nrun2
+# 
+#  Created  25-Jul-1996    J. Boucrot
+# Modified  13-Sep-1999    for afs
+#=========================================================================
+#  User's selection :                     
+   rm -f run_qual.output
+   rm -f run_qual.parameters
+    echo              "Please enter a run number : nrun "
+    echo              "or several runs separated by commas : nrun1,nrun2,..."
+    echo              "or a range of runs :  nrun1-nrun2"
+    read bak   
+    echo "$bak"  >> run_qual.parameters
+#=========================================================================
+#   run the job :
+    /afs/cern.ch/aleph/OSF1/bin/runqualexe
+#
+#=========================================================================  
+#   end :            
+  echo    "       -  run_qual end  -                    "
+  echo    "  The results are written on run_qual.output "
+  echo    "     in your working directory .                 "
+
+# remove the temporary file :
+  rm -f run_qual.parameters
+exit

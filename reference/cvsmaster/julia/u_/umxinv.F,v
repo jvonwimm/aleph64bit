@@ -1,0 +1,313 @@
+head	1.3;
+access;
+symbols
+	jul313_3:1.3
+	jul313_2:1.3
+	jul313_1:1.3
+	jul313:1.3
+	jul312_1:1.3
+	jul312:1.3
+	jul311:1.3
+	jul310_1:1.3
+	jul310:1.3
+	jul309_1:1.2
+	jul309:1.2
+	jul308_6:1.2
+	jul308_5:1.2
+	jul308_4:1.2
+	jul308_3:1.2
+	jul308_2:1.2
+	jul308_1:1.2
+	jul308:1.2
+	jul307_4:1.2
+	jul307_3:1.2
+	jul307_2:1.2
+	jul307_1:1.2
+	jul307:1.2
+	jul306_3:1.2
+	jul306_2:1.2
+	jul306_1:1.2
+	jul306:1.2
+	jul305_4:1.2
+	jul305_3:1.2
+	jul305_2:1.2
+	jul305_1:1.2
+	jul305:1.2
+	jul304_3:1.2
+	jul304_2:1.2
+	jul304_1:1.2
+	jul304:1.2
+	jul303_7:1.2
+	jul303_6:1.2
+	jul303_5:1.2
+	jul303_4:1.2
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2
+	jul280_1:1.2
+	jul280:1.2
+	jul279:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	99.10.27.12.27.51;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.03.12.15.47.11;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.20.26;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.20.27;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@For julia 310
+@
+text
+@      SUBROUTINE UMXINV(A,L,M,N,IFAIL)
+C----------------------------------------------------------------------
+C!  - MODIFIED BY JOE FROM CERNLIB ROUTINE SYMINV TO BE DOUBLE PRECISION
+C     Modified: D.Smith    991027  Double precision fixes for Linux
+C?
+C!======================================================================
+#ifndef DOC
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+      DIMENSION A(L,M),P(100),Q(100)
+C      REAL*8 B(30,30),C(30,30)
+      INTEGER R(100)
+C
+      IFAIL=0
+      EPSILN=1.D-14
+      IF(L.LT.N) GO TO 95
+      IF(M.LT.N) GO TO 96
+C
+C                   CONSTRUCT TRUTH TABLE
+C
+      DO 10 I=1,N
+   10 R(I)=1
+C
+C                   BEGIN PROGRAMME
+C
+      DO 65 I=1,N
+      K=0
+C
+C                   SEARCH FOR PIVOT
+C
+      BIG=0D0
+      DO 37 J=1,N
+      TEST=ABS(A(J,J))
+      IF(TEST-BIG)37,37,31
+   31 CONTINUE
+      IBOMB=1
+      IF(R(J))100,37,32
+   32 BIG=TEST
+      K=J
+   37 CONTINUE
+C
+C                   TEST FOR ZERO MATRIX
+C
+      IBOMB=2
+      IF(K)100,100,38
+C
+C                   TEST FOR LINEARITY
+C
+   38 IF(I.EQ.1) PIVOT1=A(K,K)
+      IBOMB=3
+      IF(ABS(A(K,K)/PIVOT1)-EPSILN) 100,39,39
+C
+C                   PREPARATION FOR ELIMINATION STEP1
+C
+   39 R(K)=0
+      Q(K)=1D0/A(K,K)
+      P(K)=1D0
+      A(K,K)=0D0
+      KP1=K+1
+      KM1=K-1
+      IBOMB=4
+      IF(KM1)100,50,40
+   40 DO 49 J=1,KM1
+      P(J)=A(J,K)
+      Q(J)=A(J,K)*Q(K)
+      IF(R(J))100,49,42
+   42 Q(J)=-Q(J)
+   49 A(J,K)=0D0
+   50 IBOMB=5
+      IF(K-N)51,60,100
+   51 DO 59 J=KP1,N
+      P(J)=A(K,J)
+      Q(J)=-A(K,J)*Q(K)
+      IBOMB=6
+      IF(R(J))100,52,59
+   52 P(J)=-P(J)
+   59 A(K,J)=0D0
+C
+C                   ELIMINATION PROPER
+C
+   60 DO 65 J=1,N
+      DO 65 K=J,N
+   65 A(J,K)=A(J,K)+P(J)*Q(K)
+C
+C                   ELEMENTS OF LEFT DIAGONAL
+C
+      DO 70 J=2,N
+      JM1=J-1
+      DO 70 K=1,JM1
+   70 A(J,K)=A(K,J)
+C
+      RETURN
+C
+C                   FAILURE RETURN
+C
+   95 CONTINUE
+   96 CONTINUE
+  100 IFAIL=1
+      RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+ 	gambnk.F gapeco.F gasteer.F
+ 	hcalib.F hcalrd.F hcatow.F hcbhis.F hcfclu.F hchist.F hclcra.F
+ 	hcltst.F hclufi.F hcos.F hcsimm.F hdgdeb.F hdgfil.F hdgpot.F
+ 	hdgsum.F hdprec.F hdspre.F hflnoi.F hinijo.F hiniru.F hmener.F
+ 	hmfind.F hmroad.F hnoise.F hnoisy.F hpatco.F hphnoi.F hplink.F
+ 	hprana.F hpranp.F hprdig.F hpreda.F hprpot.F hprsum.F hprunc.F
+ 	hrcomp.F hrcpat.F hrdcal.F hroad.F hslink.F hslowc.F hspare.F
+ 	hsptre.F hstofi.F htrack.F htubfi.F htwcr.F
+ 	iasign.F iattma.F ibnkin.F icaswt.F icftoi.F iclimb.F icrcco.F
+ 	ideadw.F idigpr.F ienang.F ifind1.F ifind2.F ifitp.F iftrak.F
+ 	igetti.F igettp.F igicha.F iheler.F iinijo.F iiniru.F iintrk.F
+ 	imatch.F inigap.F insect.F intrak.F ipakdi.F ipdsti.F iphcor.F
+ 	ipreda.F iprsum.F ipstat.F irefin.F ireopd.F isave.F ishuff.F
+ 	ishufl.F islowc.F isrch.F itbook.F itccut.F itcopr.F itcrec.F
+ 	itcrep.F itctpc.F itctrk.F itcxng.F iterr.F itextn.F ithist.F
+ 	itidy1.F itidy2.F itlnk1.F itlnk2.F itpcan.F itrak.F itrecf.F
+ 	itreci.F itree.F itrkci.F itrkeq.F itrkzr.F itrmca.F
+@
+text
+@d4 1
+d14 1
+a14 2
+C      EPSILN=1.E-6
+      EPSILN=1.E-14
+d30 1
+a30 1
+      BIG=0.
+d55 3
+a57 3
+      Q(K)=1./A(K,K)
+      P(K)=1.
+      A(K,K)=0.0
+d67 1
+a67 1
+   49 A(J,K)=0.
+d76 1
+a76 1
+   59 A(K,J)=0.0
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK umxinv
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

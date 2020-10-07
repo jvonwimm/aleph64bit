@@ -1,0 +1,236 @@
+\chapter{\label{sec-ZB}Where to find ALPHA at CERN}
+ 
+All the ALPHA code and documentation (the present user's guide) may be found on www in the ALEPH home page,
+( http://alephwww.cern.ch/ ):
+click on Offline Software, then on ALPHA Source Code Index (for the source code of ALPHA subroutines) or on
+ALPHA User's Manual (the present user's guide).
+ 
+{\bf Important warning: It is strongly recommended to use always the current ALPHA production version, as given
+automatically by the alpharun facilities (see below). Using old versions may be dangerous: there may be incompatibilities, bugs
+or obsolete features which may be difficult to discover at first glance.}  
+
+
+ 
+ 
+\section{\label{sec-ONVAX}ALPHA on ALWS}
+ 
+Since version 122, ALPHA is not maintained any more on type VAX machines. All what follows refers to AXP machines only.
+Since the same version, there is no correction file any more: all modified routines are directly put into the binary library.
+ 
+Most files needed to run ALPHA on ALWS are in the PHY directory:
+ 
+ALEPH\$GENERAL:[PHY]
+ 
+\begin{itemize}
+ 
+\item ALPHA source code:
+
+Since August 1996, ALPHA is maintained under CVS. The reference source code of ALPHA subroutines can be found
+as CVS files with name XXXXX.F  in subdirectories of:
+
+ ALIBROOT:[000000.PHY.ALPHAvsn]
+
+The relevant subdirectories for subroutines are: PACK, UTIL, QFN, ENFL, QVS, QLEP, QPI0, NANO.
+
+For the sample user routines QUINIT, QUEVNT, QUTERM, the subdirectory is PACK.
+ 
+For include files (QCDE,QMACRO,QDECL,QHAC) the subdirectory is INC.
+ 
+
+\item Fortran files, if you still want to use them:
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+
+\indentitem{PHY:QUUSER.FOR}Fortran code of the routines
+ 
+QUINIT,QUEVNT,QUTERM
+ 
+(model routines which have to be filled)
+\end{indentlist}
+
+\item 
+Include files for Fortran:
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{PHYINC:QCDE.INC}
+\indentitem{PHYINC:QDECL.INC}
+\indentitem{PHYINC:QHAC.INC}
+\indentitem{PHYINC:QMACRO.INC}
+\end{indentlist}
+ 
+\item ALPHA binary libraries:
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{PHY:ALPHAvsn.OLB}ALPHA binary library.
+\indentitem{PHY:ALPHAvsn\_D.OLB}with /DEBUG option.
+\end{indentlist}
+ 
+\item ALPHA card file (sample)
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{PHY:ALPHA.CARDS}\hspace*{1in}
+\end{indentlist}
+ 
+\item ALPHARUN command file (see Ch. \ref{sec-GS})
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{PHY:ALPHARUN.COM}
+options stored in ALFPARAM.OPTB (by default)
+\end{indentlist}
+ 
+ALPHARUN is invoked directly by typing  alpharun. 
+It allows to build  an ALPHA job, either interactive or BATCH, and links
+automatically the user's program with all necessary libraries (ALPHA, BOS, ALEPHLIB, JULIA, CERNLIB).
+
+ALPHARUN also facilitates the use of a set of debugger command files which
+simplify ALPHA program debugging.
+\begin{indentlist}{ 4.75cm}{ 5.00cm}
+\indentitem{Examples}
+\indentitem{EXAMINE IW(512:515)}Standard VAX debug command;
+to be used for all
+Fortran variables and arrays.
+\indentitem{EVALUATE LMHLEN}LMHLEN is a parameter and NOT a variable;
+use EVA instead of EXA.
+\indentitem{QP(ITK)}Debugger commands are defined for almost all mnemonic
+symbols which have one or more arguments (see Ch.
+\ref{sec-M}). In
+this context,  ``QP'' is a debugger command which has to be
+followed by the same argument(s) (given as numbers or
+variable names) as the mnemonic symbol QP in Fortran.
+\end{indentlist}
+ 
+\item ALPHA documentation and News
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{ALEPH\$GENERAL:$[$PHY.DOC$]$ALGUIDE.PS}PostScript file to print the present document
+\indentitem{ALEPH\$GENERAL:$[$PHY.DOC$]$ALGUIDE.TEX}\LaTeX source for this document
+\indentitem{PHY:ALPHAvsn.NEWS}Description of changes in ALPHA version vsn
+\indentitem{PHY:ALPHA.VERSIONS}Short description of the various versions of ALPHA and related ALEPHLIB / MINI versions
+\end{indentlist}
+\end{itemize}
+ 
+ 
+\section{\label{sec-ONUNIX}ALPHA on SHIFT,CSF,ALPHA OSF}
+ 
+ 
+\par
+ Reminder : 
+
+ 1 - since ALPHA version 122, all corrections to the current default version are put directly in the ALPHA library;
+   there is therefore  no source or compiled correction file.
+
+ 2 - since ALPHA version 124 (May 1999) the MINI code is fully integrated within ALPHA, both for reading and for writing MINIs.
+
+\par
+To run ALPHA on UNIX machines,
+it is {\bf strongly} recommended to use\\ 
+{\bf alpharun}, which is described below (Sec \ref{sec-alphar}).
+  It allows either to run ALPHA interactively or to send it in Batch on a
+given machine, as did previouly SFALPHA which is now obsolete.
+ 
+The following files refer to the current ALPHA version.
+ 
+\begin{itemize}
+\item ALPHA source code:
+ 
+Since August 1996, ALPHA is maintained under CVS. The reference source code of ALPHA subroutines can be found
+as CVS files with name xxxxx.F (Caution! xxxxx must be lower case!) in subdirectories of:
+ 
+\$ALROOT/alphavsn (e.g. for ALPHA 124 vsn=124 and the directory is \$ALROOT/alpha124)
+ 
+The relevant subdirectories are:
+ inc,news,pack,util,qfn,enfl,qvs,qlep,qpi0,mini,nano.
+ 
+
+\item ALPHA include files: 
+
+The reference source code of ALPHA include files is available as CVS files with name yyyy.h (Caution! yyyy must be lower case!)
+ in \$ALROOT/alphavsn/inc  (for ALPHA 124, vsn=124)
+ 
+ 
+To find e.g. the path to the source code of QMACRO for ALPHA 124:
+ 
+   cd \$ALROOT/alpha124
+
+   find . -name ``qmacro.h" 
+ 
+\item Binary library:
+ 
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{\$ALEPH/phy/libalpha.a}
+
+Since May 1999 (ALPHA124) this library contains all MINI routines.
+
+There is no ALPHA debug library any more on UNIX machines (too big!). 
+
+\end{indentlist} 
+
+\item ALPHA card file (sample)
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{\$ALEPH/phy/alpha.cards}\hspace*{1in}
+\end{indentlist}
+ 
+\item alpharun (see Ch. \ref{sec-GS})
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{alpharun}shell file on all UNIX machines
+\par
+ See more details on alpharun just below. 
+\end{indentlist}
+
+\item ALPHA documentation and News
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{\$REFERENCE/phy/doc/alguide.ps}PostScript file to print the present document
+\indentitem{\$REFERENCE/phy/doc/alguide.tex}\LaTeX source for this document, and all related files
+\indentitem{\$ALEPH/phy/alpha.news}Description of changes in the current version of ALPHA
+\indentitem{\$ALEPH/phy/README}Short description of the various versions of ALPHA and related ALEPHLIB / MINI versions
+\end{indentlist}
+\end{itemize}
+ 
+\section{\label{sec-alphar}alpharun: run ALPHA on UNIX platforms:}
+\par
+{\bf alpharun} is a facility intended for people who want to run ALPHA on UNIX machines.
+ It compiles your program with the adequate compiler options,
+generates automatically the appropriate links to all needed libraries
+ (BOS, ALEPHLIB, JULIA, MINI etc.), and builds the executable through a makefile which you can edit afterwards.
+Then {\bf alpharun} executes your ALPHA job either interactively or in batch. 
+
+\par
+To execute {\bf alpharun}, you have just to prepare your Fortran analysis program and your Cards file, then to
+type {\bf alpharun} and
+answer the questions.
+
+If you choose to run in Batch, your job will be sent to the machine you have chosen; the OUTPUT logfile is returned to the original
+computer in your working directory. If you create an output EPIO file through a FILO data card,
+ it will be also returned to the 
+original computer if you have put the DISP parameter in the FILO card (see description of the FILO card, 
+sec \ref{sec-DCFILO} on p. ~\pageref{sec-DCFILO}). 
+Similarly, if you create an output .HIS histogram file through a HIST data card,
+ it will be also returned to the
+original computer if you have put the DISP parameter in the HIST card (see description of the HIST card,
+sec \ref{sec-HISTW} on p. ~\pageref{sec-HISTW}).
+
+{\bf Warning!} If you write yourself a private output file, you must take care yourself of getting it back from the  
+computer where your job has run in Batch.
+\par
+It is also possible to run {\bf alpharun} with options, which are described in the {\bf man alpharun} and are summarised below:
+\par
+\begin{verbatim}
+           alpharun [-F filename]
+           alpharun [-f fortran_file] [-c c_file] [-C card_file] [-g] [-j]
+            [-v version] [-o obj_file] [-s file_opt] [-p] [-r]
+            [-I include_path] [-m machine] [-t time_limit] <binary_name>
+ 
+    Where:
+         -help             get this (h)elp
+         -F <string>       expected (F)ilename which alpharun options
+         -f <string>       expected (f)ortran file  (my_fortran.f)
+         -c <string>       expected (C) file  (my_cfile.c)
+         -o <string>       expected (o)bject file  (my_objfile.o)
+         -C <string>       expected  C ard file  (my_cards.cards)
+         -g                for debug options to compile
+         -j                (j)ulia is used
+         -I <string>       expected (I)nclude path
+         -b                to run in (b)atch
+         -m <string>       expected machine to submit your job to
+         -t <number>       (t)ime limit of your batch job in seconds
+         -p                (P)VM is used
+         -v <number>       (v)ersion of alpha
+         -s <string>       expected name of the file to (s)ave the options
+         -r                (r)uns the binary after creating it
+           <binary_name>   expected name for the binary
+\end{verbatim}
+ 

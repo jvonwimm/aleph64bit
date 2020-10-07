@@ -1,0 +1,106 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	tpc300_1:1.1.1.1
+	tpc300:1.1.1.1
+	tpc218:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.09.14.29.59;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.09.14.30.00;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK tpdpar
+      SUBROUTINE TPDPAR(PRIMP,PRMVC,DLRAD,DLZLN,DLBET)
+C-----------------------------------------------------------------------
+C!  Calculate parameters to be used in making clusters for delta-rays
+C
+C  Called from:  TSDEDX
+C
+C  Inputs:   PASSED:      --PRIMP,  the scalar momentum of the delta at
+C                                   time of creation
+C                         --PRMVC,  the normalized momentum vector of
+C                                   the delta at time of creation
+C            /TPCONS/     --RADFAC, a scaling factor to account for
+C                                   multiple scattering by increasing
+C                                   the radius of the circle which would
+C                                   define the X-Y projection of the
+C                                   delta's path if it didn't interact
+C                         --CYLFAC, a similar factor to decrease the pat
+C                                   length due to multiple scattering
+C  A. Caldwell, D. DeMille
+C  M. Mermikides                    In case of no magnet field we just
+C                                   take a fixed large radius of
+C                                   curvature for the delta electron
+C  Modifications:
+C     D. Cowen 1-Nov-88             Account for possibility that beta=0
+C                                   due to precision problems.
+C-----------------------------------------------------------------------
+#include "tpcons.h"
+#include "tpcond.h"
+C
+      DIMENSION PRMVC(3)
+C
+C  Get the nominal radius of curvature
+C
+      IF (ABS(CFIELD).LT.0.001) THEN
+         DLRAD = 100.
+      ELSE
+         DLRAD = PRIMP*SQRT(PRMVC(1)**2 + PRMVC(2)**2)/ABS(BCFMEV)
+      ENDIF
+C
+C  Multiply by the 'safety' factor from TPCOND.INC
+C
+      DLRAD = DLRAD*RADFAC
+C
+C  Determine the total path length from the momentum
+C
+      DLM3 = PRIMP**3
+      DLTLN = 100.*DLM3
+      GAMMA = 1. + .65*DLM3
+      DLBET= SQRT( GAMMA*GAMMA - 1.) / GAMMA
+      IF (DLBET .LE. 0.0) DLBET = 1.0E-6
+C
+C  Get the corresponding length in z
+C
+      DLZLN = ABS( DLTLN * PRMVC(3) )
+C
+C  Multiply by reduction factor to somehow account for multiple
+C  scattering.  CYLFAC is in /TPCONS/
+C
+      DLZLN = DLZLN/CYLFAC
+C
+      RETURN
+      END
+@
+
+
+1.1.1.1
+log
+@import tpcsim 300
+@
+text
+@@

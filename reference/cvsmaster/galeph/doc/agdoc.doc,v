@@ -1,0 +1,947 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	94.12.07.14.03.05;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.03.06;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK agdoc
+#if defined(DOC)
+.chapter GEOMETRY   implementation using GEANT3
+
+     The detector geometry is described  in  terms  of  volumes  in  which  the
+  tracking  is  performed  according  to  the  tracking parameters of the media
+  filling the volumes.  The basic concepts needed to define a  volume  are  the
+  following:
+
+       -SHAPE identification specifying the geometrical shape (tube,cone,box..)
+              and its dimensions in the attached local reference system  LRS.
+       -TRACKING MEDIUM  parameters  to be associated with a particular volume.
+       -PHYSICAL PROPERTIES of the material which fills the volume.
+
+     Furthemore, as long as it is not positionned in the ALEPH reference system
+  ARS, a volume is an entity  without  any  spatial  relation  with  the  ALEPH
+  set-up.
+
+     Full details about the GEOMETRY package of GEANT3 can  be  found  in  the
+  GEANT3 users guide (DD/EE/84-1).
+
+
+.section VOLUME   definition and position
+
+     Each detector or component of a detector has to be defined as a VOLUME
+ qualified by:
+      NAME :   unique 4-character name
+     SHAPE :   4-character name of a system supplied shape
+               if necessary,one can add new shapes
+      NMED :   tracking medium number corresponding to this volume
+       PAR :   array containing the volume parameters
+      NPAR :   number of parameters to be used (may be 0)
+
+     By convention , a unique initial volume is defined as a TUBE  named  ALEF,
+  matching  the  outside boundaries of the entire set-up.  The reference system
+  attached to this volume is the ALEPH reference system ARS.
+
+     Inside this initial volume , contents  will  be  positionned  ,  becoming
+  daughters of the mother volume.
+     The daughters can become ,in the same way, a mother  for  their  contents
+  and  so  on...  These operations will develop a tree structure of volumes at
+  deeper and deeper levels (up to 15 are allowed).
+     The tracking medium properties of the contents replace the  ones  of  the
+  mother within the region they occupy.
+
+     Each shape has a local reference system LRS  whose  origin  and  axes  are
+  those defined for this particular shape :
+        - polycone   : cylindrical coord., the origin can be chosen by the user
+                       along the z-axis.
+        - tube       : cylindrical coord., the origin is at the center.
+        - box        : cartesian coord.,   the origin is at the center.
+        - trapezoide : cartesian coord.,   the origin is at the center.
+
+     In order to position a volume of given  shape  and  dimensions  inside  a
+  mother  volume, the user must specify the translation and the rotation of the
+  local reference system with respect to the mother reference system.
+  x,y,z :  position of the origin of the local reference system in the mother
+           reference system
+  irot  :  rotation matrix number describing the orientation of the local
+           reference system with respect to the mother reference system.
+           If no rotation is needed,irot can be set to 0.
+
+.section THE ALEF TREE
+
+     Here is a description of the tree implemented in this primary version
+ of the program.
+
+  Naming convention : all volume names should start with the two letters code
+ of the detector they are connected to ,that is to recall them:
+   VD  : for Vertex detector
+   IT  : for ITC detector
+   TP  : for TPC detector
+   EC  : for e-gamma detector
+   HC  : for hadron detector
+   LC  : for Luminosity calorimeter detector
+   SI  : for Silicon calorimeter detector
+   MU  : for Muon detector
+   CO  : for Coil components
+   BP  : for Beam pipe elements
+   QU  : for Super quadrupole elements
+   PM  : for Passive material ( cables, electronics,...)
+   TS  : for trigger scintillator elements
+
+     The first level (ALEF mother volume) and  the  second  level  (artificial
+  volumes  containing real detectors) are described in the main routine of the
+  geometry package :AGEOME .
+
+.subsection AGEOME   Overall geometry
+
+     LEVEL 1 :  The MOTHER volume is defined as a TUBE named ALEF filled  with
+  air inside coil field (AIF).
+
+     LEVEL 2 :  Real detectors are grouped into artificial  volumes  to  reduce
+  the  search through the ALEF tree at tracking time.  Each of them corresponds
+  roughly to a part of the  apparatus.   The  contents  of  these  volumes  are
+  defined  in routines specific to the detector involved (i.e.  content VDET of
+  volume CDET will be defined in routine AGVDET).
+  These artificial volumes are of type 'polycone'  or  'tube' .
+  Their z-axis  coincides  with the ALEF tube axis.  Their LRS origin coincides
+  (for the moment) with the ARS origin.
+  The artificial volumes containing the end-caps B are  positionned  by  a  180
+  degrees rotation around Y axis of the corresponding end-caps A.
+
+      DAUGHTER # 1 :  beam  pipe  region.
+     Tube named BTUB .Tracking medium is called ' Beam pipe region '(AIF).
+     RMIN = 0.
+     RMAX = maximum extension of the compensators region
+     ZMAX = maximum extension of the compensators region
+     This volume has 4  different types of contents positionned inside BTUB :
+        1 - BPIP corresponding to the central part of the beam pipe.
+        2 - BCON corresponding to the conical end of the beam pipe (2 copies).
+        3 - BCOM corresponding to the compensators region connecting the beam
+                 pipe to the standard LEP tube ( 2 copies ).
+        4 - BPSP corresponding to the supports of VERTEX ( 2 copies ) and ITC
+                 (4 copies ) attached to the pipe.
+
+      DAUGHTER # 2 :  central detector region.
+     Tube named CDET. Tracking medium ' Central det.region ' (AIF)
+     RMIN = BTUB RMAX in the intersection region
+     RMAX = e-gamma barrel RMIN
+     ZMAX = e-gamma barrel ECBL ZMAX
+     This volume has 3  contents positionned inside CDET :
+        1 - VDET corresponding to the vertex detector
+        2 - ITCR corresponding to the ITC region up to the TPC inner wall.
+        3 - TPCR corresponding to the TPC region up to the e-gamma
+
+      DAUGHTER # 3 :  e-gamma barrel region.
+     Tube named ECBL. Tracking medium 'EC barrel region ' (AIF)
+     RMIN = e-gamma RMIN
+     RMAX = COIL RMIN
+     ZMAX = ECBL module ZMAX
+     This volume has 12  identical contents positionned inside ECBL :
+        1 - EBAR corresponding to one e-gamma barrel region ,i.e. one barrel
+            module and the corresponding rail to support it.
+
+      DAUGHTER # 4 :  e-gamma end cap A region.
+     Polycone named ECEA . Tracking medium 'EC endcap region' (AIF)
+     RMIN = BTUB RMAX
+     RMAX = COIL RMIN
+     ZMIN = ECBL ZMAX
+     ZMAX = Hadron cal. end-cap HCEA ZMIN
+     This volume has 5  contents positionned inside ECEA :
+        1 - ECPA corresponding to the e-gamma end-cap A
+        2 - LCEA corresponding to the Luminosity calorimeter detector  A
+        3 - SATR corresponding to the Luminosity track detector   A
+        4 - EPBM corresponding to the Passive Material between barrel and endcap
+                 modules
+        5 - EPAA corresponding to the Passive Material Above end cap A
+
+      DAUGHTER # 5 :  e-gamma end cap B region ECEB   (see ECEA for definition )
+     ECEA and ECEB are two  different  volumes  instead  of  the  same  volume
+     positionned  twice,to allow different relative positions of ECPA (ECPB) ,
+     LCEA (LCEB),SATR , EPBM, EPAB inside the volume.
+
+      DAUGHTER # 6 :  coil   region
+     Tube named COIL . Tracking medium called 'Coil region' (AIF).
+     RMIN = COIL RMIN
+     RMAX = Had. barrel HCBL RMIN
+     ZMAX = HCBL ZMAX
+     This volume has 3 contents positionned inside COIL :
+        1 - COBY corresponding to the coil central part .
+        2 - COEN corresponding to the coil end parts.Two copies are positionned
+                 symetrically at each end.
+
+      DAUGHTER # 7 :  Beam forward region.
+     Polycone named QUEA . Tracking medium called 'Quadrupole region ' (AIF)
+     RMIN = 0.
+     RMAX = HCEA RMIN
+     ZMIN = BTUB ZMAX
+     ZMAX = fiducial volume ZMAX
+     This volume has 2 contents positionned inside QUEA :
+        1 - QUAA corresponding to the forward region outside the coil
+        2 - QUPU corresponding to the forward pumping station region
+
+      DAUGHTER # 8 :  Beam   backward   region QUEB   (see QUEA for definition )
+     QUEA and QUEB are 2 different volumes to allow different relative positions
+     inside the volume.
+     Similarly , QUEB has 2 contents QUAB and QUPU.
+
+      DAUGHTER # 9 :  hadron  calorimeter  barrel region.
+     Tube named HCBL . Tracking medium called 'Hadron bl region ' (AOF)
+     RMIN = Had. cal. barrel RMIN
+     RMAX = Muon inner barrel plane  RMAX
+     ZMAX = Had. cal. barrel ZMAX
+     This volume has 12 identical  contents positionned into HCBL at different
+      phi locations:
+        1 - HBAR corresponding to one hadron barrel detector region
+
+      DAUGHTER # 10 : hadron calorimeter end cap A region
+     Polycone named HCEA . Tracking medium called 'Hadron ec region ' (AIF)
+     RMIN = Had. end-cap RMIN
+     RMAX = COIL RMIN  then Had. end-cap RMAX
+     ZMIN = ECEA ZMAX
+     ZMAX = MUON inner end cap plane ZMIN
+     This volume has 2 contents positionned inside HCEA :
+        1 - HCPA corresponding to the hadron end cap A
+        2 - EPBX corresponding to passive material lying above the inner part
+                 of the endcap. It is mainly the second part of the ECAL barrel
+                 electronic boxes, the  Ecal and HCAL endcap electronic boxes.
+                 Contributions from inner detectors cables appear also here.
+
+      DAUGHTER # 11 : hadron calorimeter end cap B HCEB (see HCEA  definition )
+          It contains similarly HCPB for the HCAL  endcap B and EPBX  for the
+          passive part.
+
+      DAUGHTER # 12 : muon detector region
+     Polycone named MUON . Tracking medium called 'Muon region ' (AOF)
+     RMIN = varying with RMAX of all defined volumes.
+     RMAX = ALEF RMAX
+     ZMAX = ALEF ZMAX  (fiducial volume)
+     This volume has 3 contents positionned inside MUON :
+        1 - MUBO corresponding to the barrel outer muon detector
+        2 - MUEA corresponding to the end cap A muon detector.
+        3 - MUEB corresponding to the end cap B muon detector.
+
+.subsection AGBEAM   Beam pipe geometry
+
+  materials:
+   1 - Compensator average material, mixture of stainless steel and air
+
+  tracking media:
+   1 - Beam vacuum :vacuum (material #16),not sensitive,inside field
+   2 - Beam pipe   :aluminum  (material #9),not sensitive,inside field
+   3 - Beam pipe end : stainless steel (material #20),not sensitive,inside field
+   4 - Compensators : average material ,not sensitive,inside field
+
+   volumes:
+       -BPIP : tube filling  space  from  the beam line  to the beam pipe
+     included in the central region,filled with medium # 2, positionned inside
+     BTUB  with LRS =ARS
+     It has 1 content:
+       -BPVA :tube filling space from  beam  line  to  inner  beam pipe ,
+     filled with medium # 1 positionned inside  BPIP  with LRS = ARS .
+       -BCON : polycone filling  space  from  the beam line  to the beam pipe
+     included in the conical end part,filled with medium # 3 ,positionned inside
+     BTUB with its LRS translated compared to the ARS.Two copies are positionned
+     symetrically at each edge of the central part.
+     It has 1 content:
+       -BCVA :polycone filling space from  beam  line  to  inner  beam pipe
+     in the end part region ,filled with medium # 1 ,positionned inside
+     BCON  with LRS = ARS .
+       -BCOM : tube filling  space  from  the beam line  to the BTUB RMAX in
+     the compensators region,filled with medium # 4 ,positionned inside  BTUB
+     with its LRS tranlated compared to the ARS. Two copies are positionned
+     symetrically at each edge.
+     It has 1 content:
+       -BVAC :tube filling space from  beam  line  to  inner  beam pipe
+     filled with medium # 1 positionned inside  BCOM  with LRS = ARS .
+       -BPSP : tube corresponding to one support ring for the Vertex detector
+     or the ITC ,filled with medium # 2 , positionned six times in BTUB ( 2
+     copies for the VDET supports, 4 copies for the ITC supports) with its
+     LRS translated compared to the ARS.
+
+.subsection AGCOIL   Coil geometry
+
+  materials:
+    1 - Coil body average material, mixture of air and aluminum
+
+  tracking media:
+    1 - COIL body :average material,not sensitive,inside uniform field
+    2 - COIL body :average material,not sensitive,inside non uniform field
+    3 - COIL body :average material,not sensitive,outside field
+    4 - COIL reinforcements region:air (mat #15),not sensitive,in uniform field
+    5 - COIL reinforcements region:air (mat #15),not sensitive,outside field
+    6 - COIL reinforcements rings:alu (mat #9),not sensitive,in uniform field
+    7 - COIL reinforcements rings:alu (mat #9),not sensitive,outside field
+    8 - COIL reinforcements rings:alu (mat #9),not sensitive,in nonuniform field
+    9 - COIL end plates:inox (material #20),not sensitive,in non uniform field
+
+   volumes:
+       -COBY:tube filling the body (conductor,insulator..)central region, filled
+    with medium air outside field, positionned inside COIL with LRS identical to
+    Aleph Reference System (LRS = ARS).It has 4 contents strictly overlapping
+    the mother:
+       -COBI:tube filling the body (conductor,insulator..) central region up to
+    the conductor , filled with medium# 1 (see above), positionned inside COBY
+    with LRS identical to ARS.
+       -COBO: tube filling the body (insulator..) central region above the
+    conductor, filled with medium# 3 (see above), positionned inside COBY with
+    LRS identical to ARS.
+       -COIN  :tube  filling  the  inner  region  of  the  reinforcements and
+    junctions, filled with medium# 4 , positionned inside COBY with LRS =ARS
+       -COUT  :tube  filling  the  outer  region  of  the  reinforcements and
+    junctions, filled with medium# 5 , positionned inside COBY with LRS = ARS
+       -COCI :tube filling the central inner junction of the the two halves of
+    the COIL ,filled with medium# 6 , positionned inside COIN with LRS = ARS
+       -COCO :tube filling the central outer junction of the the two halves of
+    the COIL ,filled with medium# 7 , positionned inside COUT with LRS = ARS
+       -COMI :tube filling the intermediate  inner  reinforcement  ring filled
+    with  medium#  6  , positionned inside COIN with the LRS translated along z
+    compared to the ARS .  6 copies are positionned symetrically in  each half
+    of the coil in COIN.
+       -COII :tube filling the inner part of inner  reinforcement  ring filled
+    with medium #4 , positionned inside COMI with the LRS identical to COMI LRS.
+       -COMO :tube filling the intermediate outer  reinforcement  ring, filled
+    with  medium#  7  , positionned inside COUT with the LRS translated along z
+    compared to the ARS.  6 copies are positionned symetrically in each half of
+    the coil in COUT.
+       -COIO :tube filling the inner part of outer  reinforcement  ring filled
+    with  medium #5 ,positionned inside COMO with the LRS identical to COMO LRS.
+       -COEN :tube filling the end part of the COIL , filled with medium air in
+    non uniform field.Two copies are positionned symetrically at each edge of
+    the COIL ,with the LRS translated  along z compared to COIL ARS.
+       -COBE: tube filling the body (insulator,cryostat..) end region , filled
+     with medium# 2 (see above), positionned inside COEN with  LRS translated
+    along z compared to COEN LRS.
+       -COEP :tube filling the end plate closing the  coil  edges ,filled with
+    medium#  9  ,  positionned  inside  COEN  with  the  LRS translated along z
+    compared to the COEN LRS .
+       -COEI :tube filling  the  edge  inner  reinforcement  ring  filled with
+    medium#  8  ,  positionned  inside  COEN  with  the  LRS translated along z
+    compared to the COEN LRS .
+       -COEO :tube filling the  edge  outer  reinforcement  ring,  filled with
+    medium#  8  ,  positionned  inside  COEN  with  the  LRS translated along z
+    compared to the COEN LRS .
+
+.subsection AGECAL   E-gamma geometry
+
+  materials:
+    1 - PVC    Mixture defined from its elementary components
+    2 - ECAL   Barrel light average material for stack 1+2
+    3 - ECAL   Barrel dense average material for stack 3
+    4 - ECAL   Barrel average material around the stacks defined as a mixture
+    5 - ECAL   Barrel end stack average material defined as a mixture
+    6 - ECAL   Endcap light average material for stacks 1+2
+    7 - ECAL   Endcap dense average material for stack 3
+    8 - ECAL   resin pressure bag in endcap petal defined as a compound mixture
+    9 - ECAL   Endcap average material on left of stack,defined as a mixture
+   10 - ECAL   Endcap average material on right of satck,defined as a mixture
+   11 - ECAL   average material for electronic boxes of barrel and petal modules
+      All compound mixture properties are determined using EGS formulae.
+
+  tracking media:
+      All tracking media related to ECAL are in the uniform field of the coil.
+    1 - ECAL barrel or endcap module:air(material #15),not sensitive
+    2 - ECAL aluminum frame:aluminum (material #9),not sensitive
+    3 - ECAL barrel average medium around the stack(see #4 above),not  sensitive
+    4 - ECAL barrel average medium at end of stack(see #5 above),not  sensitive
+    5 - ECAL barrel average medium for stack 1+2(#2 above),sensitive if required
+    6 - ECAL barrel average medium for stack 3 (#3 above),sensitive if required
+    7 - ECAL endcap average medium for stack 1+2(#6 above),sensitive if required
+    8 - ECAL endcap average medium for stack 3 (#7 above),sensitive if required
+    9 - ECAL endcap passive average on left of stack(#9 above),not sensitive
+   10 - ECAL endcap passive average on right of stack(#10 above),not sensitive
+   11 - ECAL pressure bag medium in petals(#8 above), not sensitive
+   12 - ECAL electronic box medium (#11 above), not sensitive
+
+   volumes:
+        The overall structure of the barrel is made of 12 artificial volumes :
+       -EBAR:tube section filling one barrel module region,filled with medium #1
+    (see above), positionned  inside  ECBL  with  the  Local  Reference  System
+    translated and rotated according to their relative position in the ECBL .
+       The overall structure of a module region is made of 2 volumes:
+       -EBMO :trapezoide  representing  one  module,  filled  with  medium#  2,
+    positionned into EBAR.
+       -EBRA :trapezoide representing the rail attached  to  a  module  ,filled
+    with medium# 2, positionned into EBAR.
+       A module EBMO has one content :
+       -EBIN :trapezoide filling the inner space of a  module,leaving  out  the
+    front and back plates,as well as the overall alu box,filled with medium # 3
+    positionned inside a EBMO with its LRS translated along the 3 axes compared
+    to the corresponding EBMO reference system.
+       The inner part of a module EBIN is made of 3 volumes:
+       -EBND :trapezoide filling  the end part of a module  at the edge of the
+    stack,filled with medium#4.Two copies are positionned symetrically at each
+    edge of EBIN with the LRS translated along the 3 axes of the EBIN.
+     It has one content:
+       -EBEP :box filling the end plate of a module, filled with medium# 2. One
+    copy is positionned in EBND with the LRS translated along the y axis of EBND
+       -EB12 :trapezoide filling the active stacks (1+ 2)  regions  filled with
+    medium#  5  ,  positionned with LRS translated along the 3 axis of EBIN.
+       -EBS3 :trapezoide filling the third stack region  of  a  barrel  module
+    filled  with  medium#  6  , positionned as EB12.
+       An end-cap region is made of one volume:
+       -ECPA(ECPB) :polycone filling  the end cap region,filled with medium # 1,
+     positionned inside ECEA (resp.  ECEB) with the LRS translated if necessary
+    along x,y and z-axis of the ECEA/ECEB and rotated according to the offset.
+       -ECMO :polygone filling one end cap petal filled  with  medium#  2.   12
+    copies  are  positionned  inside ECPA( ECPB ) with their LRS translated and
+    rotated according to their relative position in the ECPA ( ECPB ).
+       A module ECMO is made of 3 volumes:
+       -ECIN :trapezoide filling the inner space of a  module,leaving  out  the
+    front and back plates,as well as the overall alu box, filled with medium# 10
+    positionned inside a ECMO with its LRS translated along the 3 axes compared
+    to the corresponding ECMO reference system.
+       -ECEX :trapezoide filling the empty space of the gas seal regions,filled
+    with medium #1 and positionned inside ECMO with the LRS tranlated along z
+    in mother LRS.Two copies of different depth are positionned (front and back)
+       The inner part of a module ECIN is made of 3 volumes:
+       -EC12 :trapezoide filling the active stacks 1+2 region filled with medium
+    #  7  , positionned with their LRS translated along the 3 axis of ECIN .Due
+    to its complex shape,two copies of EC12, with different dimensions, are used
+    to describe the full sensitive volume of stacks 1+2.
+       -ECS3 :trapezoide filling the stack 3  region of an endcap module,filled
+    with  medium#  8  , positionned as EC12.
+       As for stack 1+2 , two copies of ECS3,with different dimensions, are used
+    to described the whole stack 3.
+       -ECRB :trapezoide filling the resin pressure bag behind the front plate,
+    filled with medium #11,positionned inside ECIN with its LRS translated along
+    the Y axis compared to the corresponding ECIN reference system LRS.
+
+.subsection AGHCAL   Hadron calorimeter geometry
+
+  materials:
+    1 - HCAL  average material in the barrel part, computed from a mixture of
+              the components (iron,plastic tube , gas)
+    2 - HCAL average material in the end cap part, computed in the same way.
+
+  tracking media:
+    1 - HCAL  barrel or encap module region :air,not sensitive,outside field.
+    2 - HCAL  barrel medium :average (material #1), sensitive,outside field
+    3 - HCAL end cap medium:average (material #2), sensitive,outside field
+
+   volumes:
+        The overall structure of the barrel HCBL is made of 12 volumes:
+       -HBAR corresponding to one double-barrel region, filled with medium #1,
+           positionned inside HCBL with the LRS rotated compared to the ARS.
+           Each volume HBAR contains 2 volumes HBMO and 2 volumes HBME:
+       -HBMO:trapezoide representing one module ,  filled  with  medium #2 (see
+    above),  2 copies are positionned  inside  HBAR with  their Local Reference
+    System (LRS) rotated and translated according to  their  relative  position
+    into HBAR.
+       -HBME:trapezoide representing the last plate of a module,filled  with a
+    medium in plain iron.Two copies are positionned inside HBAR with their LRS
+    rotated and translated according to  their  relative  position inside HBAR.
+       -HBN1,HBN2:box(para) filling the space left for cables at each edge of
+    the modules,  filled  with  medium # 1 (AOF ) ( this medium will be modified
+    for cables), 2 copies are positionned symetrically at each  edge  of  HBMO,
+    their LRS are translated along the 3 axes of the HBMO.
+    Two more copies of different sizes are also positionned inside HBME to build
+    the full notches.
+       -HCPA(HCPB) :polycone filling the Hadron end cap detector,filled with
+    medium #1,positionned inside HCEA (resp. HCEB ) with the  LRS translated (if
+    necessary) compared to the ARS.
+    An  HCPA (HCPB)volume  contains  6  identical  sectors :
+       -HCMO :polycone corresponding to one sector,filled with medium #3 .
+       6 copies are positionned inside HCPA ( HCPB) , their LRS are rotated
+      according to their relative positions in the HCAP.
+    Each HCMO has one content:
+       -HCME :polycone corresponding to the last iron plane of a sector,filled
+       as volume HBME.
+    In case of detailled geometry,two extra volumes are defined.
+       -HBLA :box corresponding to a streamer plane.23 copies of increasing size
+       are positionned inside HBMO.They are filled with a compound material made
+       of a mixture of argon gas and PVC walls, sensitive in the non uniform
+       field.
+       -HCLA : polycone corresponding to a streamer layer of the endcap sector.
+       22 copies (filled with same material as HBLA) are positionned inside HCMO
+           Furthermore , in this case , the material used to build HBMO and HCMO
+       does not include the streamer gas mixture.
+
+.subsection AGITCH   ITC geometry
+
+  materials:
+   1 - ITC mixture of gas and wires inside chamber body
+   2 - ITC average material for inner wall
+   3 - ITC average material for connectors and electronics parts
+   4 - ITC average material for outer wall
+   5 - ITC average material for cables
+
+  tracking media:
+   1 - ITC region     :air, not sensitive, inside field (tracking parameters may
+                       be different from those of AIF medium).
+   2 - ITC gas medium :mixture(average # 1), sensitive,inside field
+   3 - ITC inner wall medium :mixture  (average  #2),not sensitive,inside field
+   4 - ITC electronics parts medium:mixture(average #3),not sensitive,in field
+   5 - ITC outer wall medium :mixture (average  #4),not sensitive,inside field
+   6 - ITC end plates medium: aluminum (material #9),not sensitive,inside field
+   7 - ITC cables medium :mixture (average  #9),not sensitive,inside field
+
+   volumes:
+       -ITCR:tube filling the space from the inner wall of the ITC to the inner
+    wall of the TPC,and up to the TPC edges along z, filled with medium# 1 (see
+    above), positionned inside CDET with the Local Reference  System  identical
+    to the Aleph Reference System (LRS = ARS).
+         ITCR has two contents : ITC and ITND
+       -ITC :tube filling the whole region of the ITC including the  inner  and
+    out  walls  but  not  the  end  parts ,  filled with medium# 2, positionned
+    inside ITCR with the LRS = ARS.
+         ITC has two contents : ITWI and ITWO
+       -ITWI :tube filling the inner  wall  region  of  the  ITC,  filled  with
+    medium# 3, positionned inside ITC with the LRS =ARS.
+       -ITWO :tube filling the outer wall region of the ITC filled with medium#
+    5, positionned inside ITC with the LRS = ARS.
+       -ITND :tube filling the end part region of the ITC filled with medium #1,
+    positionned inside ITCR with the LRS translated along z compared to the ARS.
+    2 copies are placed symetrically at each edge of ITC.
+     ITND has 3 contents : ITEP , ITSP , ITRG
+       -ITEP :tube filling the end plate region of the ITC filled with  medium#
+    6,  positionned  inside  ITND  with  the  LRS  translated  along the z axis
+    compared to the ARS.
+       -ITSP :polycone filling the support region of the ITC filled with medium
+    #6 ,positionned inside ITND with the LRS identical to ITND LRS.
+       -ITRG :tube filling the outer ring support region of the ITC filled with
+    medium #6 ,positionned inside ITND with the LRS translated along z   .
+     ITSP has 2 contents : ITEL , ITCA
+       -ITEL :tube filling the connector and electronic region of the ITC filled
+    with medium #4 ,positionned inside ITSP with the LRS translated along z.
+       -ITCA :polycone filling the cable region of the ITC filled with medium
+    #7 ,positionned inside ITSP with the LRS identical to the ITSP LRS.
+
+.subsection AGLCAL   Luminosity calorimeter geometry
+
+  materials:
+
+   1 - LCAL Xe-CO2 mixture defined according to percentages of components.
+   2 - LCAL light average material for stacks 1+2
+   3 - LCAL dense average material for stack 3
+
+  tracking media:
+   1 - LCAL calorimeter volume           :air ,not sensitive,inside field
+   2 - LCAL alu frame medium             :aluminum,not sensitive,inside field
+   3 - LCAL passive gas medium           :gas mixture,not sensitive,inside field
+   4 - LCAL back plate                   :iron, not sensitive,inside field
+   5 - LCAL average medium for stack 1+2 :sensitive if required,inside field
+   6 - LCAL average medium for stack 3   :sensitive if required,inside field
+
+   volumes:
+       -LCEA (LCEB):tube filling the overall LCAL region , filled with  medium
+    #1 (AIF),  positionned  inside  ECEA  (resp.   ECEB)  with  the Local
+    Reference System (LRS) translated according to the relative position in the
+    Aleph Reference System (ARS).
+       -LCMO :tube section filling one  module,  filled  with  medium#  2 (see
+    above),  2  copies  are positionned inside LCEA (LCEB)with the LRS translate
+    and rotated ( 180 deg.  around z-axis for one copy ) according to their
+    reletive position in the LCAL .
+       -LCIN :tube section filling the inner space of a module,leaving out  the
+    front  plate,the  inner and outer walls of the tube but not the side walls.
+    filled with medium# 3, positionned inside  LCMO  with  the  LRS  translated
+    along the z-axis of the LCMO.
+       -LCBP :tube section filling the back plate  volume  of  a  LCAL  module,
+    filled  with  medium#  4,  positionned  inside LCMO with the LRS translated
+    along the z-axis of the LCMO.
+       -LCSI :box filling the side  inner  wall  region  along  the  sides  but
+    outside  the  stacks  ,close  to  the  inner  wall  filled  with medium #2
+    positionned inside LCIN with the LRS translated along the  3  axis  of  the
+    LCIN.  Two copies are positionned symetrically in Y.
+       -LCSO :box filling the side  outer  wall  region  along  the  sides but
+    outside  the  stacks  ,close  to  the  outer  wall  filled  with medium # 2
+    positionned inside LCIN with the LRS translated along the  3  axis  of  the
+    LCIN.  Two copies are positionned symetrically in Y.
+       -LC12 :tube section filling the active stacks 1+ 2 regions  filled  with
+    medium# 5, positionned inside LCIN with the LRS translated along the Z axis
+    of the LCIN.
+       -LCS3 :tube section filling the third stack region , filled with medium#
+    6, positionned inside LCIN with the LRS translated along z-axis of the LCIN.
+       -LCCA :tube section filling the region between stack 3 and the iron back
+    plate, filled with medium #2, positionned inside LCIN with the LRS translate
+    along z-axis of the LCIN.
+       -LCSW :box filling the side inner wall region along  the  stacks  filled
+    with   medium#  2,  positionned  inside  LC12  (resp.   LCS3) with  the LRS
+    translated along x- and y-axis of the LC12/LCS3.  2 copies are  positionned
+    symetrically in Y.
+       -LCSG :box filling the side gas gap region along the stacks filled  with
+    medium#  3,  positionned  inside  LC12 (resp.  LCS3)with the LRS translated
+    along  x-  and  y-axis  of  the  LC12/LCS3.   Two  copies  are  positionned
+    symetrically in Y.
+       -LCDL :tube filling the supporting rods through the stacks  filled  with
+    medium#  2,  positionned  inside  LC12 (resp.  LCS3)with the LRS translated
+    along  x-  and  y-axis  of  the  LC12/LCS3.   Two  copies  are  positionned
+    symetrically in Y.
+
+.subsection AGMUCH   Muon chamber geometry
+
+  tracking media:
+    1 - MUON chamber medium   :air,sensitive,whithout field
+    2 - MUON overall region : air,unsensitive , outside field
+
+   volumes:
+       -MUBO :tube filling the region of the barrel outer layer, filled
+    with medium #2, positioned inside MUON with its LRS same as MUON's.
+       -MUEA :polycone filling the region of the end A, filled with
+    medium #2, positioned inside MUON with its LRS same as MUON's.
+       -MUEB :polycone filling the region of the end B, filled with
+    medium #2, positioned inside MUON with its LRS same as MUON's.
+       -MMIA :tube section filling the region of the inner middle angle
+    modules of A side, filled with medium #2, positioned inside MUEA
+    with its LRS translated along with Z axis to the center of these
+    modules.
+       -MMOA :tube section filling the region of the outer middle angle
+    modules of A side, filled with medium #2, positioned inside MUEA
+    with its LRS translated along with Z axis to the center of these
+    modules.
+       -MMBA :box filling the region of the bottom one of the middle
+    angle modules of A side, filled with medium #2, positioned inside
+    MUEA with its LRS translated along with Z axis to the center of
+    this module and rotated according to its relative orientation.
+       -MCIA :box filling the region of the inner endcap modules of A
+    side, filled with medium #2, positioned inside MUEA with its LRS
+    translated along with Y and Z axis to the center of these modules.
+       -MCOA :box filling the region of the outer endcap modules of A
+    side, filled with medium #2, positioned inside MUEA with its LRS
+    translated along with Y and Z axis to the center of these modules.
+       -MMIB :tube section filling the region of the inner middle angle
+    modules of B side, filled with medium #2, positioned inside MUEB
+    with its LRS translated along with Z axis to the center of these
+    modules.
+       -MMOB :tube section filling the region of the outer middle angle
+    modules of B side, filled with medium #2, positioned inside MUEB
+    with its LRS translated along with Z axis to the center of these
+    modules.
+       -MMBB :box filling the region of the bottom one of the middle
+    angle modules of B side, filled with medium #2, positioned inside
+    MUEB with its LRS translated along with Z axis to the center of
+    this module and rotated according to its relative orientation.
+       -MCIB :box filling the region of the inner endcap modules of B
+    side, filled with medium #2, positioned inside MUEB with its LRS
+    translated along with Y and Z axis to the center of these modules.
+       -MCOB :box filling the region of the outer endcap modules of B
+    side, filled with medium #2, positioned inside MUEB with its LRS
+    translated along with Y and Z axis to the center of these modules.
+       -MUB1 :box filling the physical modules of the inner layer of the
+    barrel, filled with medium #1 (sensitive), positioned inside HBAR
+    with its LRS translated and rotated according to its relative
+    position.
+       -MUB2 :box filling the physical modules of the outer layer of the
+    barrel, filled with medium #1 (sensitive), positioned inside MUBO
+    with their LRS translated and rotated according to their relative
+    position.
+       -MUM1 :box filling the physical modules of the inner layer of the
+    middle angle, filled with medium #1 (sensitive), positioned inside
+    MMIA, MMBA, MMIB and MMBB with their LRS translated and rotated
+    according to their relative position.
+       -MUM2 :box filling the physical modules of the outer layer of the
+    middle angle, filled with medium #1 (sensitive), positioned inside
+    MMOA and MMOB with their LRS translated and rotated according to
+    their relative position.
+       -MUC1 :box filling the physical module of the inner layer of the
+    endcap, (the actual shapes of the physical modules are not boxes)
+    filled with medium #1 (sensitive), positioned inside MCIA and MCIB
+    with their LRS translated and rotated according to their relative
+    position.
+       -MUC2 :box filling the physical module of the outer layer of the
+    endcap, (the actual shapes of the physical modules are not boxes)
+    filled with medium #1 (sensitive), positioned inside MCOA and MCOB
+    with their LRS translated and rotated according to their relative
+    position.
+
+.subsection AGECPM   Passive Material geometry
+
+  materials:
+    1 - TPC  horizontal feet average (mixture of aluminum and air)
+    2 - TPC  vertical feet average (mixture of aluminum,stainless steel,air)
+    3 - TPC  cables  average (mixture of copper,PVC, air)
+    4 - IPC  cables  average (another mixture of copper,PVC,air)
+    5 - Electronics boxes average(mixture of copper,aluminum PVC and air)
+
+  tracking media:
+      All tracking media are obviously unsensitive.
+    1 - TPC  horizontal feet : average material,inside field
+    2 - TPC  vertical feet : average material,inside field
+    3 - TPC  cables medium :average material, inside uniform field
+    4 - TPC  cables medium : average material, in non uniform field
+    5 - ITC  cables medium :average material, inside uniform field
+    6 - ITC  cables medium : average material, in non uniform field
+    7 - Electronic boxes medium :average material, inside uniform field
+    8 - Electrinic boxes medium: average material, in non uniform field
+
+   volumes:
+       -EPBM:tube filling the region between the Ecal barrel and petal modules,
+    filled with air in field.
+    EPBM  has 12 contents :
+       -ETHF:tube section filling the region of the TPC horizontal foot filled
+    with medium #1 (see above),positionned inside EPBM with the LRS identical to
+    EPBM LRS,and angular range depending on copy #(#1 around 0 degree,#2 around
+    180 deg).
+       -ETVF: similar to ETHF but for vertical TPC feet(medium #2), with angular
+    ranges around 90 deg for copy#1 and 270 deg for copy #2.
+       -ETCA: tube section,filling the TPC cables phi region,filled with medium
+    #3 ,positionned inside EPBM with the LRS identical to the (EPBM) LRS ,the
+    angular range depending on the copy # (#1 around 30 deg,#2 around 60 deg,#3
+    around 120 deg ,#4 around 210 deg ,#5 around 240 deg and #6 around 330 deg )
+       -EICA: tube section,filling the ITC cables phi region,filled with medium
+    #5 ,positionned inside EPBM with the LRS identical to (EPBM) LRS,the angular
+    range depending on the copy # (#1 around 150 deg,#2 around 300 deg ).
+
+       -EPAA(EPAB): tube,filling the passive part above Ecal petal modules but
+    below the Coil.As it is filled by the 24 electronic boxes of the barrel
+    modules, 12 calibration boxes ( on side B only )  , 8 cables bunches from
+    inner detectors and 4 slots from TPC pipings,it was choosen to fill it with
+    the most frequent material, i.e. electronic box medium defined as # 7 above.
+    Then it is partly overwritten by volumes made of other materials.Up to now
+    20 contents are defined:
+       -EPCA: tube section corresponding to the space between two electronic
+    boxes of a barrel module (in EPAA case) or to the space left at the end of
+    the calibration boxes ( in EPAB case).12 copies are positionned in each case
+    with the LRS identical to the EPAA(EPAB) LRS, the angular range depending on
+    the copy # (#1 is centered around 15 deg,the next ones obtained by adding 30
+    degrees each ).
+       -ETCA: same volume as above , but with different dimensions along R and z
+    axis.As well, 6 copies are positionned with angular ranges as explained
+    before.
+       -EICA:same volume as above, with different dimensions along R and z axis.
+    As above , 2 copies are positionned with angular ranges as explained before.
+
+       -EPBX: tube,filling the passive part above Hcal inner endcap modules but
+    below the Coil.As it is filled by the 24 electronic boxes of the Ecal petal
+    modules, Hcal electronic boxes, end part of the 24 electronic boxes of the
+    Ecal barrel modules, 8 cables bunches from the inner detectors and 4 slots
+    from TPC pipings,it was choosen to fill it with the most frequent material,
+    i.e. electronic box medium defined as #8 above.Then it is partly overwritten
+    by volumes made of other materials.Up to now 20 contents are defined:
+       -EPCB: tube section corresponding to the space between two electronic
+    boxes of a barrel module,filled with air in non uniform field.12 copies are
+    positionned with the LRS  identical to the EPBX LRS , the angular range
+    depending on  the copy # ( #1 is centered around 15 degrees,the next ones
+    obtained by adding 30 degrees each).
+       -ETCB: same volume as above ETCA, but filled with medium # 4.
+    6 copies are positionned with angular ranges as explained  before.
+       -EICB:same volume as above EICA,but filled with medium #6. 2 copies are
+    positionned with angular ranges as explained before.
+
+.subsection AGQUAD   Quadrupole geometry
+
+  materials:
+    1 - QUAD body average material
+    2 - Pumping stations and valves average material
+
+  tracking media:
+    1 - QUAD tube volume          :air ,not sensitive,outside field
+    2 - QUAD body average medium  :QUAD body material,not sensitive,inside field
+    3 - Pumps and valves medium   :material as above,not sensitive ,ouside field
+    4 - vacuum in quad medium     :vacuum (#16),not sensitive, in quad field
+    5 - vacuum in pumps medium    :vacuum (#16),not sensitive, outside field
+
+   volumes:
+    QUEA ( QUEB) has two contents :
+       -QUAA:tube filling the end A quadrupole body ,filled  with  medium # 2
+    (see  above), positionned  inside QUEA with the LRS translated according to
+    the relative position in QUEA.
+       -QUAB: same as QUAA for the end B region.
+       -QUPU: tube,filling the pumping station and valves region, filled with
+    medium #3 ,positionned inside QUEA(QUEB) with the LRS translated relative to
+    the ARS.
+    QUAA ( QUAB) has one content :
+       -QUVI: tube,filling the vacuum part of the quadrupole,filled with medium
+    #4 ,positionned with the LRS identical to the QUAA(B) LRS.
+    QUPU has one content :
+       -QUVA: tube,filling the vacuum part of pumps region,filled with medium
+    #5 ,positionned with the LRS identical to the QUPU LRS.
+
+.subsection AGSCAL   SiCAL detector geometry
+
+.subsection AGTPCH   TPC geometry
+
+  materials:
+    1 - TPC average material for the inner cage
+    2 - TPC average material for outer cage
+    3 - TPC average material for end plates computed from mixture of components
+                              (equivalent to air and aluminum mixture)
+
+  tracking media:
+    1 - TPC inner cage : average material ,not sensitive,inside field
+    2 - TPC gas medium : argon  (material #19), sensitive,inside field
+    3 - TPC outer cage : average material , not sensitive, inside field
+    4 - TPC end plates : equivalent average material,not sensitive,inside field
+
+   volumes:
+       -TPC :tube filling the active region of the TPC ,filled with medium #2
+    (see above), positionned inside TPCR with the Local Reference Systeme (LRS)
+    identical to the Aleph Reference System (LRS = ARS).
+       -TPHF :tube obtained by automatic division of TPC along z to cut it into
+    two halves.
+       -TPWI :tube filling the inner  wall  region  of  the  TPC,  filled  with
+    medium# 1, positionned inside TPCR  with the LRS = ARS.
+       -TPWO :tube filling the outer wall region of the TPC filled with medium#
+    3, positionned inside TPCR with the LRS = ARS.
+       -TPEP :tube filling the end plate region of  the  TPC  filled  with  the
+    medium#  4, positionned inside TPCR with the LRS translated along the z axis
+    compared to the ARS.  Two copies are positionned,one at  each  end  of  the
+    TPC.
+
+.subsection AGVDET   Mini Vertex geometry
+
+  Materials used:
+   1 - Air..........: Standard Geant3 material
+   2 - Aluminum.....: Standard Geant3 material
+   3 - Carbon Fiber.: Used in VDET support. Properties measured in lab.
+   4 - Honeycomb....: Used in VDET support. Properties measured in lab.
+   5 - Rhoacell 70..: Used in VDET support. Properties measured in lab.
+   6 - Silicon......: VDET active elements material. Defined in AGEOME
+
+  Tracking media:
+   1 - VERTEX DETECTOR VOLUME.: Air,        not sensitive, inside field
+   2 - CF-RO SANDWICH SUPPORT.: Carbon Fiber-Rhoacell 70 compound,  "
+   3 - CF-HO SANDWICH SUPPORT.: Carbon Fiber-Honeycomb compound,    "
+   4 - CARBON FIBER SUPPORT...: Carbon fiber,                       "
+   5 - SILICON DETECTORS......: Silicon,        sensitive, inside field
+   6 - ALUMINA PLATES.........: Aluminum,   not sensitive, inside field
+   7 - VDET ELECTRONICS.......:    "                                "
+
+  Volumes:
+   1 - VDET........: Tube filling the space  from the outer wall of the
+                     beam pipe  to the  maximum  radius needed  by VDET
+                     components in R, up to the TPC edges in Z.   It is
+                     filled with medium #1, positioned inside CDET with
+                     no translation and no rotation. Not seen.
+   1.1 - VBDY......: Tube with radii identical to those of  VDET  and Z
+                     limited  to the  space  occupied  by  the physical
+                     modules ( sides ) of the Mini-Vertex.  Filled with
+                     medium  #1,   positioned   inside  VDET   with  no
+                     translation and no rotation. Not seen.
+   1.2 - VDSP......: Tube with radii  identical to those of VDET  and Z
+                     length ranging from VBDY edge to VDET edge.  It is
+                     filled  with medium #1.  Two copies are positioned
+                     simmetrically  inside  VDET  with  no rotation for
+                     the first one and with a 180 degrees rotation  for
+                     the second one.  The two both are translated along
+                     Z and not seen by the drawing package.
+   1.1.1 - VDS0....: Tube placed  inside VBDY  with  no rotation and no
+                     translation,  and the  same  Z  length.  It is the
+                     central  part  of  the  Mini-Vertex  support,  and
+                     its minimum  and  maximum radii  are read from the
+                     Data Base geometrical constants. It is filled with
+                     medium #3 and seen by Geant3 drawing package.
+   1.1.2a- VDL1....: Tube placed inside  VBDY  with no rotation  and no
+                     translation, and the same Z length. It's the space
+                     needed by the physical modules of the  Mini-Vertex
+                     inner barrel. Its radii are calculated accordingly.
+                     Filled with medium #1, it is not seen.
+   1.1.2b- VDL2....: Same as VDL1, but for the outer barrel instead.
+   1.2.1 - VDCF....: Tube placed  inside VDSP  with no  rotation and  Z
+                     translated  to its inner end,  thus touching VDS0.
+                     It  is  the support rings  that keep  in place the
+                     barrel sides.  Filled with medium #4 it is seen by
+                     the drawing package.
+   1.2.2 - VDS1....: Tube placed  inside VDSP  with no rotation and a Z
+                     traslation. It is part of the support, filled with
+                     medium #2 and seen.
+   1.2.3 - VDS2....: Tube placed inside  VDSP  with no rotation and a Z
+                     translation.  It is the long  lateral part  of the
+                     support,  joining the central part to the aluminum
+                     pipe holders. Filled with medium #3 and seen.
+   1.2.4 - VDS3....: Cone placed inside  VDSP  with no rotation and a Z
+                     translation.  It is filled with medium #2 and lies
+                     between VDS1 and VDS2. Seen.
+   1.2.5 - VDAC....: Tube placed inside  VDSP  with no rotation and a Z
+                     translation.  It is the aluminum ring right at the
+                     end of the support  and  holds to the pipe.  It is
+                     filled with medium #6 and seen.
+   1.1.2.1 - VDBX..: Box  defining the space of a single side of a Mini
+                     Vertex barrel. Its length and width are those of a
+                     physical module, as defined in the Data Base, just
+                     like its thickness, that of a silicon crystal plus
+                     the alumina support.  It is filled  with medium #1
+                     and not seen.  Several copies of  VDBX  are placed
+                     inside VDL1 (currently 12) and VDL2 (currently 16)
+                     translated along R and rotated along Z.  Note that
+                     in the inner barrel the silicon is facing the beam
+                     axis,  while in the outer  barrel it is facing the
+                     outside.
+   1.1.2.1.1 - VDAL: Box defining the alumina support of a side.  It is
+                     filled with medium #6 and placed inside  VDBX with
+                     the  same  length  and  width.  Its  thickness  is
+                     computed outside  the  program taking into account
+                     the true thickness,  the holes and the reinforcing
+                     bars that are not  detailed described in the monte
+                     carlo. It is seen by the drawing package.
+   1.1.2.1.2 - VDCD: Box  defining silicon crystals ( active elements )
+                     of the Mini Vertex. It's filled with medium #5 and
+                     placed in  VDBX  with the same width.  This volume
+                     is  actually  made  of  four  crystals,  but  this
+                     subdivision  is  only  taken  into account  in the
+                     digitization part  of the montecarlo.  Seen by the
+                     drawing package.
+   1.1.2.1.3 - VDEL: Box defining  preamplifier  chips and  their frame
+                     in a barrel side.  It is filled with medium #7 and
+                     its  dimension are equivalent  dimensions computed
+                     from the true complicated structure  of the thing.
+                     Two copies of it are placed in  VDBX at each Z end
+                     of the active zone VDCD. Seen.
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

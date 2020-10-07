@@ -1,0 +1,73 @@
+head	1.2;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	96.01.18.15.45.55;	author aloff;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.12.04.11.09.07;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@ Modified Files:
+ 	tpgeom.h tpgeop.h tpgeot.h tpgeow.h tpgpar.h vtrpjj.h
+@
+text
+@*CD tpgeop
+      INTEGER NTPDRW, NTPDPR
+      REAL TPDRBG, TPDRST, TPDHGT, TPDSEP, TPDWID, TPDHWD, TPDPHF,
+     &     TPDPHW, TPDPHS    
+      COMMON /TPGEOP/ NTPDRW(LTSTYP),NTPDPR(LTSROW,LTSTYP),
+     &                TPDRBG(LTSTYP),TPDRST(LTSTYP),TPDHGT(LTSTYP),
+     &                TPDSEP(LTSTYP),TPDWID(LTSTYP),TPDHWD(LTSTYP),
+     &                TPDPHF(LTSROW,LTSTYP),TPDPHW(LTSROW,LTSTYP),
+     &                TPDPHS(LTSROW,LTSTYP)
+C
+#if defined(DOC)
+C----------------------------------------------------------------------
+C   NOTE: Parameters are defined in comdeck TPGPAR
+C
+C!   Pad readout geometry for TPC
+C   ============================
+C
+C   NTPDRW(is)      = Number of padrows in each sector type
+C   NTPDPR(ir,is)   = No of equivalent full pads on each padrow
+C   TPDRBG(is)      = First padrow radius of each sector type
+C   TPDRST(is)      = Radial step between padrow centres
+C   TPDHGT(is)      = Pad height
+C   TPDSEP(is)      = Spacing between pad centres (along r-phi)
+C   TPDWID(is)      = Pad width (along r-phi)
+C   TPDHWD(is)      = Half-pad width
+C   TPDPHF(irs,is)  =  Half angle subtended by frame at each padrow
+C   TPDPHW(irs,is)  =  Phi at leading edge of 1st pad on row irs
+C   TPDPHS(irs,is)  =  Phi width of single pad on row irs
+C
+C---------------------------------------------------------------------
+#endif
+@
+
+
+1.1
+log
+@move *CD tpc geometry to $ALINC
+Added Files:
+ 	tpgeom.h tpgeop.h tpgeot.h tpgeow.h tpgpar.h
+@
+text
+@d2 3
+a4 1
+C
+@

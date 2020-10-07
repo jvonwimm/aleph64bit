@@ -1,0 +1,269 @@
+head	1.2;
+access;
+symbols
+	alpha126_22:1.2
+	alpha122_22:1.2
+	alpha126_21:1.2
+	alpha126_20:1.2
+	alpha126_19:1.2
+	alpha126_18:1.2
+	alpha126_17:1.2
+	alpha126_16:1.2
+	alpha126_15:1.2
+	alpha126_14:1.2
+	alpha126_13:1.2
+	alpha126_12:1.2
+	alpha126_11:1.2
+	alpha126_10:1.2
+	alpha126_09:1.2
+	alpha126_08:1.2
+	alpha126_07:1.2
+	alpha126_06:1.2
+	alpha126_05:1.2
+	alpha126_04:1.2
+	alpha126_03:1.2
+	alpha126_02:1.2
+	alpha126_1:1.2
+	alpha125_17:1.2
+	alpha125_16:1.2
+	alpha125_15:1.2
+	alpha125_14:1.2
+	alpha125_13:1.2
+	alpha125_12:1.2
+	alpha125_11:1.2
+	alpha125_10:1.2
+	alpha125_09:1.2
+	alpha125_08:1.2
+	alpha125_07:1.2
+	alpha125_06:1.2
+	alpha125_05:1.2
+	alpha125_04:1.2
+	alpha125_03:1.2
+	alpha125_02:1.2
+	alpha125_01:1.2
+	alpha124_19:1.2
+	alpha125:1.2
+	alpha124_18:1.2
+	alpha124_17:1.2
+	alpha124_16:1.2
+	alpha124_15:1.2
+	alpha124_14:1.2
+	alpha124_13:1.2
+	alpha124_12:1.2
+	alpha124_11:1.2
+	alpha124_10:1.2
+	alpha124_09:1.2
+	alpha124_08:1.2
+	alpha124_07:1.1
+	alpha124_7:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	99.05.17.12.27.52;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	99.05.12.07.21.05;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE HCALENSC
+CKEY EVENT / INTERNAL
+C-----------------------------------------------------------------------
+C
+C   Corrects the HCAL energy for 1996 and 1997 data
+C   in all the relevant banks (PHST, PHCO, HMAD)
+C                                 A.Sciaba`      5-98
+C
+C   12-APR-1999: Corrects also for a bug in the calibration
+C                software
+C
+C-----------------------------------------------------------------------
+#include "qcde.h"
+#include "qhac.h"
+      REAL OLDEN(500)
+      INTEGER VERSION, DATABASE
+      LOGICAL FIRST / .TRUE. /
+      CHARACTER*4 PROG, CHAINT
+      EXTERNAL QCORFIC
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+C     Runs only on POTs and DSTs (data)
+      IF (XMINI.OR.XMCEV) RETURN
+C
+C     Make the correction only if the JULIA version of the
+C     last reprocessing is 306 or older (for the "online
+C     bug") or if the database version is 246 or older (for
+C     the "offline" bug)
+      JRHAH = IW(NAMIND('RHAH'))
+      IF (JRHAH.GT.0) THEN
+         DO I = 1, LROWS(JRHAH)
+            PROG = CHAINT(ITABL(JRHAH,I,1))
+            IF (PROG.EQ.'JULI') THEN
+               ICTRL = 0
+               VERSION = ITABL(JRHAH,I,5)
+               DATABASE = ITABL(JRHAH,I,7)
+               IF (VERSION.LT.307) THEN
+                  ICTRL = 1
+               ELSEIF (DATABASE.LT.247) THEN
+                  ICTRL = 2
+               ELSE
+                  RETURN
+               ENDIF
+            ENDIF
+         ENDDO
+      ELSE
+         CALL QWMESS('++++++ Bank RHAH not found: '//
+     &        'as default, the correction for the HCAL '//
+     &        'online bug is NOT applied')
+      ENDIF
+C
+ 10   IF (FIRST) THEN
+         IND = MDARD(IW,KUCONS,'H1EC',2)
+         IND = MDARD(IW,KUCONS,'H2EC',2)
+         IND = MDARD(IW,KUCONS,'H3EC',2)
+         IND = MDARD(IW,KUCONS,'H4EC',2)
+         FIRST = .FALSE.
+      ENDIF
+C
+      CALL VZERO(OLDEN,100)
+C
+C- PHST
+      JPHST = NLINK('PHST',0)
+      IF (JPHST.NE.0) THEN
+         NCOLS = IW(JPHST+1)
+         DO I = 1, LROWS(JPHST)
+            ITH = ITABL(JPHST,I,1)
+            IPH = ITABL(JPHST,I,2)
+            ENE = RTABL(JPHST,I,3)
+            RW(JPHST+2+(I-1)*NCOLS+3) = QCORFIC(ENE,ITH,IPH,ICTRL)
+         ENDDO
+      ENDIF
+C
+C- PHCO
+      JPHCO = NLINK('PHCO',0)
+      IF(JPHCO.NE.0) THEN
+         NCOLS = IW(JPHCO+1)
+         IF (LROWS(JPHCO).GT.500) THEN
+            WRITE(IW(6),*)'+++++ TOO MANY HCAL CLUSTERS!'
+            RETURN
+         ENDIF
+         DO I = 1, LROWS(JPHCO)
+            OLDEN(I) = RTABL(JPHCO,I,4)
+            ENER = 0.
+            ENEC = 0.
+            DO J = 1, LROWS(JPHST)
+               IF (ITABL(JPHST,J,4).EQ.I) THEN
+                  ITH = ITABL(JPHST,J,1)
+                  IPH = ITABL(JPHST,J,2)
+                  ENE = RTABL(JPHST,J,3)
+                  ENER = ENER + ENE / COFLIG(ITH,IPH) 
+                  ENEC = ENEC + ENE
+               ENDIF
+            ENDDO
+            RW(JPHCO+2+(I-1)*NCOLS+1) = ENER
+            RW(JPHCO+2+(I-1)*NCOLS+4) = ENEC
+         ENDDO
+      ENDIF
+C
+C- HMAD
+      JHMAD = NLINK('HMAD',0)
+      IF (JHMAD.NE.0) THEN
+         NCOLS = IW(JHMAD+1)
+         DO I = 1, LROWS(JHMAD)
+            ENE = RTABL(JHMAD,I,6)
+            DO J = 1, LROWS(JPHCO)
+               IF ((ABS(ENE-OLDEN(J))).LE.1.E-4)
+     &           RW(JHMAD+2+(I-1)*NCOLS+6) = RTABL(JPHCO,J,4)
+            ENDDO
+         ENDDO
+      ENDIF
+C
+      RETURN
+      END
+C-----------------------------------------------------------
+      REAL FUNCTION COFLIG(IBTH0,IBPH0)
+C-----------------------------------------------------------
+#include "qcde.h"
+#include "qmacro.h"
+C
+C-----------------------------------------------------------
+      COFLIG = 1.
+      CALL HCSIMM(IBTH0,IBPH0,IBTH,IBPH,IRGN)
+      IBANK1 = IW(NAMIND('H1EC'))
+      IBANK2 = IW(NAMIND('H2EC'))
+      IBANK3 = IW(NAMIND('H3EC'))
+      IBANK4 = IW(NAMIND('H4EC'))
+      IF(IRGN.EQ.2) IBTH = IBTH-4
+      IF(IRGN.EQ.3) IBTH = IBTH-10
+      IF(IRGN.EQ.4) IBTH = IBTH-17
+      IF(IRGN.EQ.1) IBANK = IBANK1
+      IF(IRGN.EQ.2) IBANK = IBANK2
+      IF(IRGN.EQ.3) IBANK = IBANK3
+      IF(IRGN.EQ.4) IBANK = IBANK4
+      IF (IBANK.LE.0) THEN
+         WRITE(IW(6),*)'++++ BANKS H1EC, H2EC, H3EC, H4EC MISSING!'
+      ENDIF
+      COFLIG = RTABL(IBANK,IBTH,IBPH)
+      RETURN
+      END      
+@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@d5 1
+a5 1
+C!   Corrects the HCAL energy for 1996 and 1997 data
+d9 2
+d16 1
+a16 1
+      INTEGER VERSION
+d22 2
+d25 4
+a28 5
+C     Runs only on POTs and DSTs
+      IF (XMINI) RETURN
+C
+C     Make the correction only if the JULIA version of the last
+C     reprocessing is 307 or older
+d34 1
+d36 8
+a43 1
+               IF (VERSION.GE.307) RETURN
+d51 1
+a51 1
+
+d59 1
+a59 1
+
+d70 1
+a70 1
+            RW(JPHST+2+(I-1)*NCOLS+3) = QCORFIC(ENE,ITH,IPH)
+d79 1
+a79 1
+            WRITE(6,*)'+++++ TOO MANY HCAL CLUSTERS!'
+d117 1
+a117 1
+
+d121 1
+d136 1
+a136 1
+         WRITE(6,*)'++++ BANKS H1EC, H2EC, H3EC, H4EC MISSING!'
+@

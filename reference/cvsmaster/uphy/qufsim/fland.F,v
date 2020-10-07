@@ -1,0 +1,50 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  uphy1-0:1.1.1.1 flr:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.08.16.13.38.14;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.08.16.13.38.15;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      REAL FUNCTION FLAND(XLA)
+C------------------------------------------------------------------
+C! Pseudo Landau distribution
+C------------------------------------------------------------------
+      PARAMETER( QQPI= 3.141592 )
+C
+      WLA= EXP(-XLA) + XLA
+      WLA= EXP( -WLA/2. )/SQRT(2.*QQPI)
+      FLAND= WLA
+C
+      RETURN
+      END
+@
+
+
+1.1.1.1
+log
+@2nd try to import uphy
+@
+text
+@@

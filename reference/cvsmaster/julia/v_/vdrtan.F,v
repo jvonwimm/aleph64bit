@@ -1,0 +1,167 @@
+head	1.3;
+access;
+symbols
+	jul313_3:1.3
+	jul313_2:1.3
+	jul313_1:1.3
+	jul313:1.3
+	jul312_1:1.3
+	jul312:1.3
+	jul311:1.3
+	jul310_1:1.3
+	jul310:1.3
+	jul309_1:1.3
+	jul309:1.3
+	jul308_6:1.3
+	jul308_5:1.3
+	jul308_4:1.3
+	jul308_3:1.3
+	jul308_2:1.3
+	jul308_1:1.3
+	jul308:1.3
+	jul307_4:1.3
+	jul307_3:1.3
+	jul307_2:1.3
+	jul307_1:1.3
+	jul307:1.3
+	jul306_3:1.3
+	jul306_2:1.3
+	jul306_1:1.3
+	jul306:1.3
+	jul305_4:1.3
+	jul305_3:1.3
+	jul305_2:1.3
+	jul305_1:1.3
+	jul305:1.3
+	jul304_3:1.3
+	jul304_2:1.3
+	jul304_1:1.3
+	jul304:1.2
+	jul303_7:1.2
+	jul303_6:1.2
+	jul303_5:1.2
+	jul303_4:1.2
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	97.10.01.07.09.39;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.06.03.12.05.36;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.06.03.10.29.06;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@Fixes for Linux
+@
+text
+@      SUBROUTINE VDRTAN(JWAF,SXYZ,TNG)
+C ----------------------------------------------------------------------
+C!  Given the hit position, this routine returns the cotangents necessary
+C!  to calculate the Jacobian (to get the alignment errors)
+CKEY V_DECK VDET
+C -  Author         Manoj Thulasidas  9-May-1996
+C  input:  JWAF - the global wafer address
+C          SXYZ - the global hit position array(3), real
+C  output: TNG  - the cotangents array(2), real
+C ----------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+#include "bcs.h"
+C  arguments
+      INTEGER JWAF
+      REAL SXYZ(3), TNG(2)
+C  functions
+      REAL VWTHCK, VDOT
+      INTEGER VJFACW, VPHIFN
+      EXTERNAL VPHIFN, VWTHCK, VDOT, VJFACW
+C  locals
+      REAL XDIFF(3), UVEC(2), CT, WID, PHIN
+      INTEGER I, JFAC, IERR
+C=======================================================================
+C get the global face from JWAF
+      JFAC = VJFACW(JWAF)
+C-- default value, 45 degree
+      TNG(1) = 1.0
+      TNG(2) = 1.0
+C-- wafer thickness
+      WID = VWTHCK()
+      IF (WID.LE.0.0) THEN
+        WRITE (IW(6),*)' VDRTAN:Arithmatic trap, divide by zero.'
+        RETURN
+      ENDIF
+      IERR = VPHIFN(JFAC,PHIN)
+      CALL VDINCP(WID,PHIN,SXYZ,XDIFF)
+      TNG(1) = XDIFF(3)/WID
+C-- a unit vector along u direction is (-sin cos 0)
+      UVEC(1) = -SIN(PHIN)
+      UVEC(2) = COS(PHIN)
+      CT = VDOT(UVEC,XDIFF,2)
+      TNG(2) = CT/WID
+      RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@fix missing carriage returns at end of file
+@
+text
+@d18 2
+a19 2
+      REAL VPHIFN, VWTHCK, VDOT
+      INTEGER VJFACW
+@
+
+
+1.1
+log
+@Mods for julia 281 release. See news for details
+@
+text
+@d46 1
+a46 1
+#endif@

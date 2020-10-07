@@ -1,0 +1,127 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	94.12.07.14.01.21;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.22;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*CD trkfill      FILL MCTRACKELEMENT /TRKCOM/
+C - If it is the 1st point ( IGNWVO=1 ) fill ITRKEL and part of TRKELE
+C
+         IF (FIRST) THEN
+            ITRKEL(1) = IGTRA
+            ITRKEL(2) = IGSTAK
+            ITRKEL(3) = IGVERT
+            ITRKEL(4) = IGPART
+            ITRKEL(5) = NGAMES(NGLEVE)
+            ITRKEL(6) = NGUMBR(NGLEVE)
+            ITRKEL(7) = IGSVOL
+            ITRKEL(8) = IGNWVO
+            ITRKEL(9) = IGSTOP
+            ISEN = IUCOMP(ITRKEL(5),IAGSEN(1,1),LSENV)
+            IF (ISEN .EQ. 0) THEN
+               ITRKEL(10) = 0
+            ELSE
+               ITRKEL(10)= NGUMBR(IAGSEN(ISEN,2))
+            ENDIF
+            ITRKEL(11)= IGTRTY
+            CALL UCOPY (GVECT,TRKELE,7)
+            TRKELE(8) = GETOT
+            TRKELE(9) = GSLENG
+            TRKELE(10)= GTOFG
+            TRKELE(11)= GSTEP
+            TRKELE(12)= GDESTP
+            TRKELE(13)= GMASS
+            TRKELE(14)= GCHARG
+            TRKELE(15)= GTRAN(1,NGLEVE)
+            TRKELE(16)= GTRAN(2,NGLEVE)
+            TRKELE(17)= GTRAN(3,NGLEVE)
+            CALL UCOPY (GRMAT(1,NGLEVE),TRKELE(18),10)
+         ENDIF
+C
+C - If the point is inside the medium ( IGNWVO=0,2 ) complete TRKELE
+C   and fill TRKNXT
+C
+         IF (FINTO) THEN
+            IF (ITRKEL(8).EQ.0 .AND. .NOT.FIRST) THEN
+               CALL UCOPY (TRKNXT(1),TRKELE(1),10)
+            ENDIF
+            CALL UCOPY (GVECT(1),TRKNXT(1),7)
+            TRKNXT(8) = GETOT
+            TRKNXT(9) = GSLENG
+            TRKNXT(10)= GTOFG
+C
+            TRKELE(11) = GSTEP
+            TRKELE(12) = GDESTP
+            ITRKEL(8)  = IGNWVO
+            ITRKEL(9)  = IGSTOP
+         ENDIF
+C
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

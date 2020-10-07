@@ -1,0 +1,192 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.43.26;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.43.27;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE TPTOJ(FLAGS,FSORT,LIST,IER)
+C
+C--------------------------------------------------------------------
+C! Change TPC POT banks back to the JULIA format
+C!
+C!    Author:  R. Johnson   16-06-88
+C!    Modified: W. Wiedenmann  3-10-91
+C!              allow reading of bank PTUN from datastream
+C!
+C!    Input:    FLAGS(3)  /L    Flag for each of
+C!                                   1= coordinates
+C!                                   2= bad coordinates
+C!                                   3= dE/dx
+C!                              Set true for unpacking of the item.
+C!              FSORT     /L    Set true to sort the coordinates by
+C!                              row and sector and to produce the
+C!                              TCRL bank.  This is necessary if the
+C!                              coordinates are to be input to the
+C!                              pattern recognition.
+C!              LIST      /C    BOS event list
+C!                              if LIST(2:2) .eq. '-' then
+C!                                 drop POT banks
+C   Output:      IER   = 0  successful unpacking
+C                        -1 OK but garbage collection
+C                        1  at least 1 POT bank does not exist
+C                        2  not enough space
+C                        >2 TPC internal error
+C!
+C!    If it is desired to have the coordinate bank sorted (FSORT=.T.),
+C!    then the tracks (FRFT) should be unpacked first, so that the
+C!    pointers from track to coordinate may be updated.
+C!
+C--------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+C
+#include "bcs.h"
+C
+      CHARACTER*(*) LIST
+      LOGICAL FIRST,FLAGS(*),FSORT
+      DATA FIRST/.TRUE./
+C
+      IF (FIRST) THEN
+        NPTUN=NAMIND('PTUN')
+        FIRST=.FALSE.
+      ENDIF
+C
+C++   Check if bank PTUN exists on data
+C++   if not: make bank and fill it with (old) values
+C
+      KPTUN=IW(NPTUN)
+      IF (KPTUN.EQ.0) THEN
+        CALL TFILTU(IER)
+        IF (IER.EQ.2) GOTO 999
+      ENDIF
+C
+      IF (FLAGS(1)) THEN
+        CALL PTPCOJ(LIST,IER)
+        IF (IER.GE.2) GOTO 999
+        IF (FSORT) THEN
+          CALL TSRTCO(LIST,IER)
+          IF (IER.GE.2) GOTO 999
+        ENDIF
+      ENDIF
+C
+      IF (FLAGS(2)) THEN
+        CALL PTBCOJ(LIST,IER)
+        IF (IER.GE.2) GOTO 999
+      ENDIF
+C
+      IF (FLAGS(3)) THEN
+        CALL PTEXSJ(LIST,IER)
+        IF (IER.GE.2) GOTO 999
+      ENDIF
+C
+      CALL PTGMAJ(LIST,IER)
+      IF (IER.GE.2) GOTO 999
+C
+  999 CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

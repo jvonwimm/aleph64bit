@@ -1,0 +1,58 @@
+head	1.1;
+access;
+symbols
+	aleph316_2:1.1
+	aleph316_1:1.1
+	aleph316:1.1
+	aleph315_7:1.1
+	aleph315_6:1.1
+	aleph315_5:1.1
+	aleph315_4:1.1
+	aleph315_3:1.1
+	aleph315_2:1.1
+	aleph315_1:1.1
+	aleph315:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	2000.03.20.11.16.41;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Alephlib 315
+@
+text
+@      LOGICAL FUNCTION XLUM2K(DUMMY)
+CKEY XLUMOK TRIG /USER
+C----------------------------------------------------------------------
+C! Checks HV status, enabled triggers, and t0 synchronization, both
+C! for SICAL and LCAL with year dependent setup
+C! Called from user
+C!    Author:     H. Meinhard/B.Bloch       26-Apr-1993
+C!    modified    B.Bloch                   March 2K
+C!                clone copy of the previously defined XLUMOK
+C!                no check on E_stab bit
+C!
+C!    Output:     - XLUM2K  /L      both LCAL and SICAL okay, or SICAL
+C!                                  not existing
+C!
+C!    Description
+C!    ===========
+C!    see routine XLSLUM
+C---------------------------------------------------------------------
+#ifndef DOC
+      LOGICAL XLUM,SLUM,LLUM
+      CALL XLSLUM(XLUM,SLUM,LLUM)
+      XLUM2K = XLUM
+      END
+#endif
+@

@@ -1,0 +1,152 @@
+head	1.3;
+access;
+symbols
+	aleph316_2:1.3
+	aleph316_1:1.3
+	aleph316:1.3
+	aleph315_7:1.3
+	aleph315_6:1.3
+	aleph315_5:1.3
+	aleph315_4:1.3
+	aleph315_3:1.3
+	aleph315_2:1.3
+	aleph315_1:1.3
+	aleph315:1.3
+	aleph314_2:1.3
+	aleph314_1:1.3
+	aleph314:1.3
+	aleph313_1:1.3
+	aleph313:1.3
+	aleph312_1:1.3
+	aleph312:1.3
+	aleph311_1:1.3
+	aleph311:1.3
+	aleph310_3:1.3
+	aleph310_2:1.3
+	aleph310_1:1.3
+	aleph310:1.3
+	aleph309_1:1.3
+	aleph309:1.3
+	aleph308_3:1.3
+	aleph308_2:1.3
+	aleph308_1:1.3
+	aleph308:1.3
+	aleph307_6:1.3
+	aleph307_5:1.3
+	aleph307_4:1.3
+	aleph307_2:1.3
+	aleph307_1:1.3
+	aleph307:1.3
+	aleph306:1.3
+	aleph305_4:1.3
+	aleph305_3:1.3
+	aleph305_2:1.3
+	aleph305_1:1.3
+	aleph305:1.3
+	aleph304_5:1.3
+	aleph304_4:1.3
+	aleph304_3:1.3
+	aleph304_2:1.3
+	aleph304_1:1.3
+	aleph304:1.3
+	aleph303_3:1.3
+	aleph303_2:1.3
+	aleph303_1_mc1:1.3
+	aleph303_1:1.3
+	aleph303:1.3
+	aleph302_9:1.3
+	aleph302_8:1.3
+	aleph302_7:1.3
+	aleph302_6:1.2
+	aleph302_5:1.2
+	aleph302_4:1.2
+	aleph302_3:1.1
+	aleph302_2:1.1
+	aleph302_1:1.1
+	aleph302:1.3;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	97.04.16.08.17.56;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.04.02.08.55.53;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.03.06.11.59.18;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@aleph302_7 : corr in kalm
+@
+text
+@      INTEGER FUNCTION UFGETT(RADIUS, STATE, T_PROC)
+C!  Calculate the process time at a given radius
+#ifndef DOC
+      DOUBLE PRECISION RADIUS, STATE(*), T_PROC
+      DOUBLE PRECISION DELTA_PHI, DENOM, NUMER
+      DOUBLE PRECISION EPS
+      PARAMETER (EPS = 1.0D-15)
+#include "uftcom.h"
+
+      UFGETT = -1
+
+      IF (ABS(STATE(5)).LE. EPS) RETURN
+      DELTA_PHI = STATE(3) - STATE(1)/RADIUS
+      DENOM = RADIUS * DCOS(DELTA_PHI)
+      NUMER = (STATE(5))**(-1) - RADIUS*DSIN(DELTA_PHI)
+      IF ( ABS(NUMER) .LT. EPS ) THEN
+        IF ( ABS(DENOM) .LT. EPS ) RETURN
+        T_PROC = DATAN( NUMER / DENOM ) - HALF_PI
+      ELSE
+        T_PROC = - DATAN( DENOM / NUMER )
+      ENDIF
+      IF ( T_PROC .GT. 0.D0 .AND. STATE(5) .GT. 0.D0 )
+     +                                          T_PROC = T_PROC - ONE_PI
+      IF ( T_PROC .LT. 0.D0 .AND. STATE(5) .LT. 0.D0 )
+     +                                          T_PROC = T_PROC + ONE_PI
+
+      UFGETT = 0
+
+      RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@alephlib 302 corr.file no 4
+@
+text
+@d23 1
+a23 1
+     +                                          T_PROC = T_PROC - PI
+d25 1
+a25 1
+     +                                          T_PROC = T_PROC + PI
+@
+
+
+1.1
+log
+@1st test version aleph302
+@
+text
+@d4 1
+a4 1
+      DOUBLE PRECISION RADIUS, STATE(1), T_PROC
+@

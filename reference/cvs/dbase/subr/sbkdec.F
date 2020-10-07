@@ -1,0 +1,73 @@
+#if defined(UNIX)
+      SUBROUTINE SBKDEC(XBOOK,XCONT,XREFE,XCOMM,XUNDO,XOUTP,CHOUT,
+     +  CHARG)
+C----------------------------------------------------------------------
+C! Decode the UNIX command line options
+C!
+C!    Author:     H. Meinhard       11-Jan-1993
+C!
+C----------------------------------------------------------------------
+#include "sbkcom.h"
+#include "sbkloc.h"
+      CHARACTER CHOUT*80,CHARG*80
+      LOGICAL   XBOOK,XCONT,XREFE,XCOMM,XUNDO,XOUTP
+C----------------------------------------------------------------------
+C command line options, decoded in C main program
+      XBOOKG = XBOOK
+      XCONTT = XCONT
+      XREFER = XREFE
+      XCOMMT = XCOMM
+      XUNDOC = XUNDO
+      XOUTPT = XOUTP
+      CHOUTP = CHOUT
+      CALL CLTOU(CHARG)
+      CHARGV = CHARG
+
+C location of data files
+#include "gtaldoc.h"
+
+      END
+#else
+      SUBROUTINE SBKDEC
+C----------------------------------------------------------------------
+C! Decode the VMS command line options
+C!
+C!    Author:     H. Meinhard       11-Jan-1993
+C!
+C----------------------------------------------------------------------
+#include "sbkcom.h"
+      INCLUDE '($SSDEF)'
+      INCLUDE '($CLIDEF)'
+      CHARACTER LINE*80
+      INTEGER   CLI$GET_VALUE
+      LOGICAL   CLI$PRESENT
+      EXTERNAL  CLI$GET_VALUE,CLI$PRESENT
+C----------------------------------------------------------------------
+C Defaults
+      XBOOKG = .TRUE.
+      XCONTT = .TRUE.
+      XREFER = .TRUE.
+      XCOMMT = .TRUE.
+      XUNDOC = .FALSE.
+      XOUTPT = .FALSE.
+      CHOUTP = 'SBANK.OUT'
+C Argument
+      ISTAT  = CLI$GET_VALUE('P1',CHARGV)
+C /BOOKING
+      IF (.NOT. CLI$PRESENT('BOOKING'))   XBOOKG = .FALSE.
+C /CONTENT
+      IF (.NOT. CLI$PRESENT('CONTENT'))   XCONTT = .FALSE.
+C /REFERENCE
+      IF (.NOT. CLI$PRESENT('REFERENCE')) XREFER = .FALSE.
+C /COMMENT
+      IF (.NOT. CLI$PRESENT('COMMENT'))   XCOMMT = .FALSE.
+C /UNDOCUMENTED
+      IF (CLI$PRESENT('UNDOCUMENTED'))    XUNDOC = .TRUE.
+C /OUTPUT
+      IF (CLI$PRESENT('OUTPUT')) THEN
+        XOUTPT = .TRUE.
+        ISTAT  = CLI$GET_VALUE('OUTPUT',LINE)
+        IF (ISTAT .EQ. SS$_NORMAL) CHOUTP = LINE
+      END IF
+      END
+#endif

@@ -1,0 +1,238 @@
+      SUBROUTINE QFNDIP(BP,SIG2_BP,NJET,JETS,
+     & IP,IP_ERR,CHI2_DOF,NUSED)
+CKEY   QFNDIP  / USER
+C ------------------------------------------------------------------------------
+C! Find the event interaction point in ALPHA
+C  Called from QFILBP , or directly by the user
+C    An ALPHA routine to find the interaction point, given the beamspot,
+C  the jet axes, and the tracks.  See ALEPH note 92-47 for a description.
+C  This is version 2.0, incorporating some new features from what's
+C  described in the aleph note.  The changes are all BACKWARDS COMPATIBLE,
+C  so you don't have to change your code if you don't want to.  The
+C  chief benifits are to have automatic beamspot and jet finding, and
+C  an entry point which allows a fast re-calculation of the vertex and
+C  it's error matrix excluding a single, given track.
+C
+C     Dave Brown, 29-1-93
+C
+C  Updated 15-9-93 Dave Brown, use ycut=0.01 and parameterize the jet
+C  angular error as a function of jet momentum.
+C
+C
+C  Inputs;
+C     BP(3),SIG2_BP(3)  :  Beam spot position and elipsoid.  The elipsoid
+C                          should be the convolution of both the size
+C                          of the luminous region with the position
+C                          measurement error.  Z isn't really used, but
+C                          formally it has to be there.
+C
+C                          IF YOU ENTER SIG2_BP(1)<0.0, THIS CODE WILL
+C                          FIND THE BEAMSPOT FOR YOU WITH GET_BP, and
+C                          RETURN IT AS OUTPUT.  If the GET_BP call fails,
+C                          NUSED will be returned as 0,0
+C
+C     NJET,JETS         :  Number of jets and unit vectors of their momentum
+C                          direction.
+C
+C                          IF YOU ENTER NJET<=0, THIS CODE WILL FIND THE
+C                          JETS FOR YOU using an optimized algorithm and
+C                          whatever EFLW objects you have specified in
+C                          your alpha cards (EFLJ means to cluster up the
+C                          existing DJET jets, EFLW means to start with
+C                          raw energy flow objects.  EFLJ is recommended,
+C                          as being faster.).  IF the jetfinding fails,
+C                          NUSED will be returned as 0,0.
+C                          The found jets will be returned with NJET and
+C                          JETS, and the ALPHA 'tracks' can be accessed
+C                          as objects "QIPBJETS"
+C
+C  Outputs;
+C     IP,IP_ERR,CHI2_DOF   The found vertex, its correlation matrix, and the
+C                          CHI2/DOF of the "fit".
+C
+C     NUSED                The number of tracks used in the "fit", separated
+C                          along the "transverse" and "longitudinal"
+C                          directions.  Also used as an error flag (0,0).
+C
+C ------------------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+#include "qdecl.h"
+#include "qcde.h"
+#include "maxtrk.h"
+C
+C  Inputs (or outputs)
+C  beam point and sigmas**2, number of jets, jet direction UNIT VECTORS
+C
+      INTEGER NJET
+      REAL BP(3),SIG2_BP(3),JETS(3,MAXJET)
+C
+C  Outputs; Interaction point with full covariance matrix,  chisq/dof,
+C  number of tracks used
+C
+      REAL IP(3),IP_ERR(3,3),CHI2_DOF
+      REAL NEWIP(3),NEWIP_ERR(3,3)
+      INTEGER NUSED(2),NEWNUSED(2)
+C
+C  Local variables
+C
+      INTEGER ICHUNK,NTOTR
+      INTEGER IALTRK,JALTRK,ITRK,ICOR,IJET
+      INTEGER IGOOD(MAXTRK)
+      INTEGER NGOOD,MINTRK
+      INTEGER MINTPC,MINITC,MINVDT
+      INTEGER TRKJ(MAXJET)
+      INTEGER NCOL,NROW
+      REAL MAX_CHI2,MAX_ERR(2),D0_CUT,Z0_CUT,PMIN,PCUT
+      REAL D0,PHI,Z0,TANL,CHI
+      REAL SIG2_D0,SIG2_Z0,SIG_D0,SIG_Z0
+      REAL TPAR(5,MAXTRK),TERR(3,MAXTRK)
+      REAL BP_ERR(3),BP_SIZE(3)
+      REAL SUM
+      CHARACTER*8 CNAM
+C
+C  Cut values and other data statements
+C
+      DATA MINVDT,MINITC,MINTPC/0,0,4/
+      DATA PMIN/.2/, PCUT/10./
+      DATA D0_CUT/.5/,Z0_CUT/8./
+      DATA MAX_ERR/.1,.5/
+      DATA MAX_CHI2/4./
+      DATA MINTRK/1/,ICHUNK/0/
+      DATA CNAM/'QFNDJETS'/
+C
+C  Inline functions
+C
+#include "qmacro.h"
+C ------------------------------------------------------------------------------
+C  Preset used tracks to 0 in case of event rejection
+C
+      NUSED(1) = 0
+      NUSED(2) = 0
+      NGOOD = 0
+C
+C  If NJET=0 as input, go off and find 'standard' jets
+C
+      IF(NJET.LE.0)THEN
+        CALL JETCLU(CNAM,PCUT,NJET,JETS,TRKJ)
+C
+C  Require 2 jets
+C
+        IF(NJET.LT.2)THEN
+          NUSED(2) = -1
+          GOTO 1000
+        END IF
+      END IF
+C
+C  If sig2_bp(1)<0, go and get the beamspot; now from ALPHA variables
+C
+      IF(SIG2_BP(1).LT.0.0)THEN
+        IF(XGETBP)THEN
+          DO ICOR=1,3
+            BP(ICOR) = QVTXBP(ICOR)
+            BP_ERR(ICOR) = QVTEBP(ICOR)
+            BP_SIZE(ICOR) = QVTSBP(ICOR)
+            SIG2_BP(ICOR) = BP_ERR(ICOR)**2 + BP_SIZE(ICOR)**2
+          END DO
+        ELSE
+          NUSED(1) = -1
+          GOTO 1000
+        END IF
+      END IF
+C Set a protection for total number of tracks :
+      NTOTR=KLCHT-KFCHT+1
+      IF (NTOTR.GT.MAXTRK) THEN
+         NUSED(1)=-1
+         NUSED(2)=-1
+         GO TO 1000
+      ENDIF
+C
+C  Zero the flag
+C
+      CALL VZERO(IGOOD,MAXTRK)
+C
+C  loop over the tracks, and select
+C
+      DO IALTRK=KFCHT,KLCHT
+        IF(.NOT.XLOCK(IALTRK))THEN
+          ITRK = IALTRK-KFCHT+1
+C
+C  Cut on momentum
+C
+          IF( QP(IALTRK) .LT. PMIN)THEN
+            GOTO 999
+          END IF
+C
+C  Cut on # of hits
+C
+         IF(KFRTNT(IALTRK) .LT. MINTPC .OR.
+     &      KFRTNI(IALTRK) .LT. MINITC)THEN
+            GOTO 999
+          END IF
+C
+C  Unpack track parameters, and make basic cuts
+C
+          D0  = QFRFD0(IALTRK)
+          PHI = QFRFP0(IALTRK)
+          Z0  = QFRFZ0(IALTRK)
+          TANL= QFRFTL(IALTRK)
+          IF(KFRFDF(IALTRK) .GT. 0)THEN
+            CHI = QFRFC2(IALTRK)/KFRFDF(IALTRK)
+          ELSE
+            CHI = 100.
+          END IF
+          SIG2_D0 = QFRFEM(IALTRK,4,4)
+          SIG2_Z0 = QFRFEM(IALTRK,5,5)/(1.+TANL**2)
+          SIG_D0 = SQRT(SIG2_D0)
+          SIG_Z0 = SQRT(SIG2_Z0)
+C
+C  Cut on Chisquared
+C
+          IF(CHI .GT. MAX_CHI2)THEN
+            GOTO 999
+          END IF
+C
+C  Cut on D0 (relative to BP), Z0
+C
+          IF( ABS(D0-SIN(PHI)*BP(1)+COS(PHI)*BP(2)) .GT. D0_CUT .OR.
+     &      ABS(Z0) .GT. Z0_CUT)THEN
+            GOTO 999
+          END IF
+C
+C Cut on track errors
+C
+          IF(SIG_D0 .GT. MAX_ERR(1) .OR.
+     &       SIG_Z0 .GT. MAX_ERR(2) )THEN
+            GOTO 999
+          END IF
+C
+C  This is a good track; save it's 5 parameters and errors in the local array
+C
+          TPAR(1,ITRK) = QFRFIR(IALTRK)
+          TPAR(2,ITRK) = QFRFTL(IALTRK)
+          TPAR(3,ITRK) = QFRFP0(IALTRK)
+          TPAR(4,ITRK) = QFRFD0(IALTRK)
+          TPAR(5,ITRK) = QFRFZ0(IALTRK)
+          TERR(1,ITRK) = QFRFEM(IALTRK,4,4)
+          TERR(2,ITRK) = QFRFEM(IALTRK,5,5)
+          TERR(3,ITRK) = QFRFEM(IALTRK,4,5)
+          IGOOD(ITRK)= 1
+          NGOOD = NGOOD + 1
+        END IF
+999     CONTINUE
+      END DO
+C
+C  Check that we have enough tracks
+C
+      IF(NGOOD .LT. MINTRK)GOTO 1000
+C
+C  Everything needed from the tracks is now stored in local arrays.
+C  Call the routine which does the real work
+C
+      CALL FINDIP(BP,SIG2_BP,NJET,JETS,KNCHT,TPAR,TERR,IGOOD,
+     & IP,IP_ERR,CHI2_DOF,NUSED)
+C
+ 1000 CONTINUE
+      RETURN
+      END
+#endif

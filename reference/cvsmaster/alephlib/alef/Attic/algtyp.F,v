@@ -1,0 +1,77 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  aleph212:1.1.1.1 ALEPH212:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.02.07.11.40.34;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.02.07.11.40.35;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      INTEGER FUNCTION  ALGTYP(IGEAN,ISIMD,IFAST,ITPCS)
+C ----------------------------------------------------------------------
+C! Finds the Galeph tracking level for a file of simulated events
+CKEY  ALEF GALEPH TYPE / USER
+C Author     J. Boucrot     26-AUG-1988
+C Input banks : AJOB ,  TSIM
+C   Returns  ALGTYP = 1  if the file WAS     processed through GALEPH
+C                   = 0        #     WAS NOT            #
+C Output arguments :
+C   IGEAN = 1   Geant tracking was used ;  = 0  other tracking
+C   ISIMD = 1   SIMDST smearing and DST writing  ; = 0   no SIMDST
+C   IFAST = 1   FAST tracking was used  ;  = 0   other tracking
+C   ITPCS = 1   TPCSIM digitisation was done  ;   = 0   not done
+C ----------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "ajjpar.h"
+       PARAMETER ( IFUL = 1 , ISIM = 101 , IFAS = 11 )
+       PARAMETER ( IDST = 100 )
+#include "bmacro.h"
+C ----------------------------------------------------------------------
+        ALGTYP=0
+        IGEAN=0
+        ISIMD=0
+        IFAST=0
+        ITPCS=0
+C
+        JAJOB=NLINK('AJOB',0)
+        IF (JAJOB.EQ.0) GO TO 999
+        ITEST=ITABL(JAJOB,1,JAJORM)
+        IF (MOD(ITEST,IDST).LT.IFAS) IGEAN=IFUL
+        IF (ITEST.EQ.ISIM) ISIMD=1
+        IF (MOD(ITEST,IDST).EQ.IFAS) IFAST=1
+        IF (NLINK('TSIM',0).GT.0) ITPCS=1
+        ALGTYP=1
+C
+ 999    RETURN
+        END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

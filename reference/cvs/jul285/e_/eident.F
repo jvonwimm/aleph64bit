@@ -1,0 +1,334 @@
+      SUBROUTINE EIDENT(ICLN,NTR,IT)
+C----------------------------------------------------------------------
+C!      MAIN ROUTINE  FOR ELECTRON IDENTIFICATION
+C!    AUTHOR  : D. PALLIN
+C!   Modified :- E. Lancon             27-SEP-1991
+C!                Do not do elec_id if track not extrapolable to ecal
+C!    MODIFIED:
+C!
+C!      JOB FOR R1 R2 R2 R3 R4 R5 ESTIMATORS CALCULATION
+C!          AND HYPOTHESIS
+C!      ICLN: NUMERO CLUSTER ; NTR: NUMERO TRACK TPC ; IT: CLUSTER TRACK
+C?
+C!======================================================================
+#ifndef DOC
+      COMMON/BARY/XB11,XB21,XB31,XB12,XB22,XB32,XB13,XB23,XB33
+      PARAMETER(PMAX=300.)
+#include "e4iden.h"
+#include "e4com1.h"
+#include "etpinf.h"
+#include "bcs.h"
+#include "rlunit.h"
+#include "alcons.h"
+#include "rconds.h"
+#include "frftjj.h"
+#include "rflags.h"
+#include "rparac.h"
+#include "eidtbk.h"
+#include "eclujj.h"
+#include "ecnamc.h"
+#include "e4par1.h"
+#include "eibpjj.h"
+#include "eibpr2.h"
+#include "eiflag.h"
+#include "frtljj.h"
+      COMMON/TAGG/TETI,ECLEAK1,EBAR,EEND,COC0,EREAR
+      DIMENSION STAC(6),ANGL(2),PHOT(20)
+      DIMENSION RES(5)
+      DATA RES/.28,.35,.35,.29,.1925/
+#include "bmacro.h"
+C
+      DATA IFIRST/0/
+      IF(IFIRST.EQ.0)THEN
+        CALL EIPARD
+        IFIRST=IFIRST+1
+      ENDIF
+C
+      IGAL=IW(NAMIND('AJOB'))
+      R1=1000.
+      R2=1000.
+      R3=1000.
+      R4=1000.
+      R5=1000.
+      R6=1000.
+      R7=1000.
+      E41=0.
+      E42=0.
+      E43=0.
+      IPP=0
+      ECORR=0.
+C!!!!  FILL COMMON ETPINF FOR CHARGED CLUSTERS ANALYSIS
+C
+C     MOMENTUM OF CHARGED TRACKS
+      KFRFT=IW(NAMIND('FRFT'))
+      IF (KFRFT.LE.0) THEN
+        CALL RERROR ('EIDENT',1,'No FRFT bank, EIDENT ---> exit')
+        GO TO 999
+      ENDIF
+      KFRTL=IW(NAMIND('FRTL'))
+      IF (KFRTL.LE.0) THEN
+        CALL RERROR ('EIDENT',1,'NO FRTL BANK, EIDENT ---> EXIT')
+        GO TO 999
+      ENDIF
+      NTT=ITABL(KFRTL,NTR,JFRTNT)
+C REJECT TRACKS WITH LESS THAN 4 HITS IN TPC
+      IF(NTT.LT.4)GOTO 998
+      RHO=-1./RTABL(KFRFT,NTR,JFRFIR)
+      CHTP=1.
+      IF(RHO.LT.0) THEN
+           RHO=-RHO
+           CHTP=-1.
+           ENDIF
+      PTRAN=ABS(FIELRC)*CLGHT*RHO/1.E5
+      PHI=RTABL(KFRFT,NTR,JFRFP0)
+C   beware ITC tracks with lambda=90 degrees since no z measurement.
+      TGTETA=RTABL(KFRFT,NTR,JFRFTL)
+      IF (TGTETA.NE.0.) THEN
+          TGTETA = 1. / TGTETA
+      ELSE
+          TGTETA = 1.E5
+      ENDIF
+      PZTP=PTRAN/TGTETA
+      PXTP=PTRAN*COS(PHI)
+      PYTP=PTRAN*SIN(PHI)
+      D0=RTABL(KFRFT,NTR,JFRFD0)
+      X0TP=D0*SIN(PHI)
+      Y0TP=-D0*COS(PHI)
+      Z0TP=RTABL(KFRFT,NTR,JFRFZ0)
+      PTTP=SQRT(PTRAN**2+PZTP**2)
+C
+C     protect against badly measured (high momentum) tracks
+C
+CDIF
+      IF(PTTP.GT.PMAX) GOTO 998
+      C0TP=PXTP/PTTP
+      C1TP=PYTP/PTTP
+      C2TP=PZTP/PTTP
+C
+      KECLU=IW(NAECLU)
+      ECLU=RW(KROW(KECLU,ICLN)+JECLE4)
+C!!!! R2 ESTIMATOR
+C
+      CALL E4PAL(ICLN,IT,NTR,IERO)
+C IERO=0 STOREYS SELECTED WITH EXTRAPOLATED TRACK
+C IERO.NE.0 STOREYS SELECTED WITH CLUSTER BARYCENTER
+C IERO=3 NO STOREYS SELECTED
+C IERO=2 NO TRACK EXTRAPOLATION AVAILABLE
+      IF(IERO.EQ.3 .OR. IERO.EQ.2 )GOTO 998
+C  RESOLUTION...  TAKE IN ACCOUNT OVERLAP IF NECESSARY
+C--------------------------------  ECAL
+      TETQ=TETIFL
+      IF(TETIFL.GT.100)TETQ=229-TETQ
+      ITT=INT(TETQ)-50
+      IF(ITT.LE.0.OR.ITT.GT.5)ITT=5
+      RESE2=(RES(ITT)*SQRT(PTTP)+.0033*PTTP)**2
+C     RESE2=(ECALRS*SQRT(PTTP)+.0033*PTTP)**2
+C--------------------------------   TPC
+C     RESP2=(1.5E-3*PTTP*PTRAN)**2
+      XCOS=ABS(PZTP/PTTP)
+      IF(XCOS.LE..76)THEN
+               FCOS=1.
+      ELSE
+      FCOS=.9-.124*XCOS+3.9*XCOS**2+.76*XCOS**3-20.63*XCOS**4-XCOS**5
+     &+24.54*XCOS**6
+      ENDIF
+      RESP2=((1.E-3*PTRAN+.003)*FCOS*PTTP)**2
+C--------------------------------
+C CHECK IF ENERGY FOUND IN FRONT OF TRACK IT
+      IF(E4CLU(IT).LT.0.0001)GOTO 997
+C SI ON N A PAS EXTRAPOLE  ( PASSAGE E4BARY) ON NE VA PAS DANS E4OVRL
+      IOFL=0
+      IF(IERO.EQ.0)
+     &CALL E4OVRL(ICLN,IT,NTR,R3ESTI(IT),R4ESTI(IT),IOFL)
+C--------------------------------
+C VALEUR MOYENNE   & ZERO SUPPRESSION CORRECTION
+C--------------------------------
+      CORSZ = 1.
+      CALL E4COSZ(ECLU,PTTP,TETIFL,XE4100,CORSZ)
+C--------------------------------
+C LEAKEAGE CORRECTION   OUT OF OVERLAP
+C? GET THETA,PHI
+      IF(IOFL.EQ.0)THEN
+       TETA = RTABL(KECLU,ICLN,JECLT4)
+       PHI = RTABL(KECLU,ICLN,JECLF4)
+       STAC(1) = ECLU
+       STAC(2) = 0.
+       STAC(3) = 0.
+       STAC(4) = 0.
+       STAC(5) = TETA
+       STAC(6) = PHI
+       CORR    = 1.
+       ANGL(1) = TETA
+       ANGL(2) = PHI
+C
+       ICHR = 1
+       CALL ECLEAK( 0 , STAC , ANGL , ICHR, CORR)
+       ECLEA= ECLU*(CORR-1.)
+       E4CLU(IT)=E4CLU(IT)+ECLEA
+C--------------------------------
+C     CORRECTION FOR RT AT LOW MOMENTUM (TO BE CHANGED)
+C--------------------------------
+C? Compute cluster correction   (use Badier routine)
+       ECC0  = ECLU*(CORSZ-1.)
+       E4CLU(IT)=E4CLU(IT)+ECC0
+      ENDIF
+C--------------------------------
+C SATURATION CORRECTION  ON DATA ONLY
+C THE TOTAL SATURATION CORRECTION IS SUPPOSED TO BE CONCENTRATED ON
+C THE 2X2 CENTERED TOWERS
+C WE COMPUTE THE TOTAL SATURATION CORR AND APPLY ON 2X2 TOWERS!
+C--------------------------------
+      IF(IGAL.EQ.0)THEN
+        ALP=7.8E-4
+        DELTA=1.-4.*ALP*(E4CLU(IT)/XE4100)
+        IF ( DELTA.GT.0.00001) THEN
+          DELTA=SQRT(DELTA)
+          DIFF=((1.-DELTA)/(2.*ALP))*XE4100-E4CLU(IT)
+          E4CLU(IT)=E4CLU(IT)+DIFF
+        ENDIF
+      ENDIF
+C--------------------------------
+      XE4=E4CLU(IT)/PTTP
+C     RESOLUTION
+      RESO=SQRT((RESP2*XE4100**2)/PTTP**2+RESE2/PTTP**2)
+C     ESTIMATOR
+      R2ESTI(IT)=(XE4-XE4100)/RESO
+C     PREPARE VARIABLES FOR LONGITUDINAL ANALYSIS
+      E4STK3(IT)=0
+      E4STK2(IT)=0
+      E4STK1(IT)=0
+      XB11=0.
+      XB21=0.
+      XB31=0.
+      XB12=0.
+      XB22=0.
+      XB32=0.
+      XB13=0.
+      XB23=0.
+      XB33=0.
+      XB1=0.
+      XB2=0.
+      XB3=0.
+      ERAW=0.
+      KK1=NBE4ST(IT)
+      DO 1 KK=1,KK1
+      IF(KSTO(IT,KK).EQ.3)THEN
+      XB13=XB13+ESTO(IT,KK)*XSTO(IT,KK)
+      XB23=XB23+ESTO(IT,KK)*YSTO(IT,KK)
+      XB33=XB33+ESTO(IT,KK)*ZSTO(IT,KK)
+      E4STK3(IT)=ESTO(IT,KK)+E4STK3(IT)
+      ENDIF
+      IF(KSTO(IT,KK).EQ.2)THEN
+      XB12=XB12+ESTO(IT,KK)*XSTO(IT,KK)
+      XB22=XB22+ESTO(IT,KK)*YSTO(IT,KK)
+      XB32=XB32+ESTO(IT,KK)*ZSTO(IT,KK)
+      E4STK2(IT)=ESTO(IT,KK)+E4STK2(IT)
+      ENDIF
+      IF(KSTO(IT,KK).EQ.1)THEN
+      XB11=XB11+ESTO(IT,KK)*XSTO(IT,KK)
+      XB21=XB21+ESTO(IT,KK)*YSTO(IT,KK)
+      XB31=XB31+ESTO(IT,KK)*ZSTO(IT,KK)
+      E4STK1(IT)=ESTO(IT,KK)+E4STK1(IT)
+      ENDIF
+C 4 CENTERED STOREYS BARYCENTER
+      XB1=XB1+ESTO(IT,KK)*XSTO(IT,KK)
+      XB2=XB2+ESTO(IT,KK)*YSTO(IT,KK)
+      XB3=XB3+ESTO(IT,KK)*ZSTO(IT,KK)
+      ERAW=ERAW+ESTO(IT,KK)
+ 1    CONTINUE
+      XBARY1(IT)=XB1/ERAW
+      XBARY2(IT)=XB2/ERAW
+      XBARY3(IT)=XB3/ERAW
+      IF(E4STK1(IT).NE.0)THEN
+      XB11=XB11/E4STK1(IT)
+      XB21=XB21/E4STK1(IT)
+      XB31=XB31/E4STK1(IT)
+      ENDIF
+      IF(E4STK2(IT).NE.0)THEN
+      XB12=XB12/E4STK2(IT)
+      XB22=XB22/E4STK2(IT)
+      XB32=XB32/E4STK2(IT)
+      ENDIF
+      IF(E4STK3(IT).NE.0)THEN
+      XB13=XB13/E4STK3(IT)
+      XB23=XB23/E4STK3(IT)
+      XB33=XB33/E4STK3(IT)
+      ENDIF
+C
+C
+C!!!! R1 ESTIMATOR
+C
+      RESR1=SQRT(RESP2+RESE2)
+      R1ESTI(IT)=(ECLU-PTTP)/RESR1
+C
+C!!!! R3-R4 ESTIMATORS
+C
+      IF(IOFL.EQ.0)
+     &CALL ELONGI(ICLN,NTR,IT,R3ESTI(IT),R4ESTI(IT))
+C
+C!!!! R5 ESTIMATOR
+C
+C    GET DE/DX HYPOTHESIS
+C
+      CALL EIDEDX(NTR,R5ESTI(IT))
+      RESTO5=R5ESTI(IT)
+C
+C
+C  RECHERCHE BARYCENTRE
+C     CALL EBARYC(ICLN,IT,R6ESTI(IT),R7ESTI(IT),R1ESTI(IT))
+      R6ESTI(IT)=1000.
+      R7ESTI(IT)=1000.
+C!!!! BUILD ELECTRON HYPOTHESIS (WITH R2ESTI R3ESTI R4ESTI )
+C
+C     IPPO =1 ELECTRON  =0 AUTRE
+      IPPOTH(IT)=0
+      RACINE=SQRT(R2ESTI(IT)**2+R3ESTI(IT)**2)
+      IF((R2ESTI(IT).LE.0..AND.RACINE.LT.3.0).OR.
+     &  (R2ESTI(IT).GT.0..AND.R2ESTI(IT).LT.999.0.AND.
+     &   ABS(R3ESTI(IT)).LT.3.0))IPPOTH(IT)=1
+C
+C!!!! GET CORRECTED ECAL ENERGY IF ELECTRON HYPOTHESIS
+C  E4CLU(IT) CONTAINS ALL CORRECTIONS ON 2X2 TOWERS
+C ECORR IS THEN E4CLU/XE4100
+         IF(IPPOTH(IT).EQ.1)ECORR=E4CLU(IT)/XE4100
+C!!!! FILL EIDT BANK
+C  IEFLAG  IDENTIFICATION QUALITY 0= GOOD 1= CRACK PB =2 OVERLAP
+      IEFLAG=0
+      CALL EIEFFL(IEFLAG)
+      R2=R2ESTI(IT)
+      R3=R3ESTI(IT)
+      R4=R4ESTI(IT)
+      R5=R5ESTI(IT)
+      R6=R6ESTI(IT)
+      R7=R7ESTI(IT)
+      E41=E4STK1(IT)
+      E42=E4STK2(IT)
+      E43=E4STK3(IT)
+      IPP=IPPOTH(IT)
+ 997   CONTINUE
+      R1=R1ESTI(IT)
+      CALL EFIEIB(NTR,ICLN)
+C
+C!!!! PRINT AND HISTOGRAMING
+C
+      IF(JDBDRF(JULEC).GT.1.AND.IPPOTH(IT).GT.0)THEN
+         WRITE(LDEBRL,*)'ELECTRON HYPOTHESIS FOR TRACK NB ',IT,
+     &   ' OF CLUSTER NB ',ICLN
+      ENDIF
+      IF(IPPOTH(IT).GT.0)ITOTE4=ITOTE4+1
+C
+      IF(JHISRF(JULEC).GE.1)THEN
+      CALL HFILL(4901,XE4,PTTP,1.)
+      CALL HFILL(4902,R2ESTI(IT),0.,1.)
+      CALL HFILL(4903,R2ESTI(IT),R3ESTI(IT),1.)
+      ENDIF
+CDIFF
+      RETURN
+ 998  CONTINUE
+C     NO E ID DONE
+      RETURN
+ 999  CONTINUE
+C     MISSING BANK(S)
+      RETURN
+      END
+#endif

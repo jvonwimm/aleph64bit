@@ -1,0 +1,3 @@
+C!  indices of BOS work banks used in HCAL routines
+      COMMON/HWBNKW/ICLIHW,IPLIHW,IHPDHW,IPCOHW,ITE1HW,ITE2HW,
+     +              ISPAHW,IPPAHW,IHSPHW,ICEXHW,IFCLHW,ICORHW

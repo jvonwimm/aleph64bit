@@ -1,0 +1,229 @@
+#! /bin/csh
+#==========================================================
+# 14/10/92                                         F.Blin
+#                        DBASE_RUN
+#==========================================================
+# dbase_run1.0                                     FLR
+# 28/01/93  - add number of blocks as parameter
+# dbase_run2.0                                     FLR
+# 31/08/93  - spy on /aleph/dbase
+# dbase_run2.1                                     FLR
+# 15/09/93 - remove reference to $HOME/.netrc     
+# dbase_run2.2                                     FLR 
+# 28/09/93 - increase size of default data base to 420 blocks
+# dbase_run2.3                                     FLR
+# 14/10/93 - set echo on when last argument is "-v"
+# dbase_run2.4                                     FLR 
+# 10/03/94 - increase size of default data base to 440 blocks
+# dbase_run2.5                                     FLR 
+# 04/10/94 - increase size of default data base to 500 blocks
+#            fetch files with sfetch
+# dbase_run2.7
+# 04/08/95 - get ADBSxxx.HACMOD and update $ALINC
+# dbase_run2.8                                     JC
+# 28/11/95 - use $ALEPH_ROOT instead of /al
+# dbase_run3.0
+# 24/06/96 - Change VM to ALWS for the source      JC
+# dbase_run3.1                                     F.Loverre
+# 16/07/96 - Set environment variable NORETRY to yes to avoid
+#            to wait fetching the files on alws
+#            Increase size of default data base to 650 blocks
+#                                     nb of dir. blocks to 16
+# dbase_run3.2                                     FLR
+# 14/08/96 - use -h argument to get the usage.
+# dbase_run3.3
+# 07/03/97 - do not fetch all.assign, sbank.adr
+#            sbank.lbf is still fetched from alws
+# dbase_run3.4
+# 09/04/97 - copy shift9:/aleph/dbase/*.daf shift50:/al/HPUX9/*.daf
+#            copy shift50:/al/OSF1/dbase/*.daf afal01:/al/OSF1/*.daf
+# dbase_run3.5
+# 03/07/97 - redefine BIN to SHARED/script
+#            create data cards in runeptoda on $dbase_dir
+# dbase_run3.6
+# 09/01/98 - make the database on csf, then copy it onto shift9
+#
+# dbase_run3.7
+# 01/08/99 - make the database on hpplus
+#
+# dbase_run3.8
+# 01/10/99 - make the database on lxplus
+#
+# dbase_run3.9                                     F.Loverre
+# 27/01/2004 - All aleph machines have disappeared
+#              no more fetch from alws
+#              make the database from epio file, only on lxplus
+#              epio file is : $REFERENCE/dbase/adbsxxx.epio
+#                             (xxx is the version number)            
+#              comment the hacmod execution 
+#              Increase size of default data base to 3200 blocks
+#                                     nb of dir. blocks to 20
+#============================================================
+#
+# set echo on if last arg is "-v"
+set verbflr = ""
+
+set nar = $#argv
+if (nar != 0) then
+  if ($argv[${nar}] == "-v") then
+     set echo on
+     set verbflr =    "-v"
+     set argv[${nar}] = ""
+     @ nar = ${nar} - 1 
+  endif
+endif
+
+set exec_name = "dbase_run3.9"
+
+# set hacmod to only if given as last arg 
+#set hacmod = ""
+#set daf = ""
+#if (nar != 0) then
+#  if ($argv[${nar}] == "hacmod") then
+#     set hacmod =    "only"
+#     set argv[${nar}] = ""
+#     @ nar = ${nar} - 1 
+#  else 
+#    if ($argv[${nar}] == "daf") then
+#      set daf = "only"
+#      set argv[${nar}] = ""
+#      @ nar = ${nar} - 1
+#    endif 
+#  endif
+#endif
+
+# BIN is the path of runeptoda ==========
+set BIN = ${SHARED}/script
+# =======================================
+#
+# def_rec is the total number of blocks on the .daf file
+# def_dir is the number of blocks in the directory on .daf file
+set def_rec = 3200
+set def_dir = 20
+#
+#*******>
+if ($1 == "-h") then
+  echo " "
+  echo "usage: " 
+  echo " dbase_run <version number> [<number of blocks>] [<number of directory blocks>]"
+  echo " "
+  echo " by default the number of blocks is set to ${def_rec}"
+  echo "        and the number of directory blocks to ${def_dir}."
+  #echo " dbase_run <version number> hacmod "
+  #echo " will not update the data base but the hac parameters contained in adbsnnn.hacmod"
+  echo " "
+  echo " eptoda is then executed on lxplus."
+  echo " temporary files are removed when daf has been created."
+  exit (1)
+else
+  set cycle = $1
+endif
+#
+if (${cycle} == "") goto error_end
+#
+#********
+#
+set sbank = "NO"
+if (-e ${ALEPH}/bin/sbank) set sbank = "YES" 
+set ref_dir = "${ALEPH_ROOT}/${MASTER}/dbase"
+#set doc_dir = "${ALDOC}"
+set dbase_dir = "${ALEPH}/dbase"
+set dbase_name = "adbs${cycle}"
+set dbase_type = "epio"
+# 
+#if (${daf} == "only") goto daf
+#if (${hacmod} == "only") goto hacmod
+#
+# ============ check existence of files 
+#
+cd ${ref_dir}
+if !(-f bankal.fmt) echo " *** WARNING -> file bankal.fmt is not here"
+if !(-f ${dbase_name}.${dbase_type}) then
+   echo " *** FATAL -> file ${dbase_name}.${dbase_type} is not here"
+   goto error_end
+endif
+# 
+#
+#hacmod:
+# =========== if $HOME/fort.1 exists get new HAC parameters
+#cd
+#echo " "
+#if !(-f fort.1) then
+#   echo " ==> NO HAC parameters to be updated"
+#else
+#   cd cvs/inc
+#   rm *.h
+#   cd
+#   hist2cvs
+#   ls -l *.h
+#   cp cvs/inc/*.h ${ALINC}/.
+#   cd ${ALINC}
+#
+#list:
+#   echo -n "give list of new banks [i.e. abcdjj.h efghjj.h or quit] ->"
+#   set list = $<
+#   if ("${list}" != "quit") then
+#      cvs add ${list}
+#      goto list
+#   endif
+#   cd
+#endif
+#if (${hacmod} == "only") goto exit
+#
+# ================== create new daf
+#
+daf:
+cd ${ref_dir}
+#
+set VERSION = $1
+set dafb_rec = ${def_rec}
+set dafb_dir = ${def_dir}
+if (${nar} >= 2) set dafb_rec = $2
+if (${nar} >= 3) set dafb_dir = $3
+
+echo " "
+echo " be patient... creation of adbs${VERSION}.daf"
+echo " with ${dafb_rec} records and ${dafb_dir} directory records"
+echo " will take a while..."
+echo " output is written onto eptoda.out"
+echo " "  
+#
+# ========    run eptoda to create .daf
+#
+# Create .daf on lxplus
+${BIN}/runeptoda ${VERSION} ${dafb_rec} ${dafb_dir} ${verbflr}
+#
+goto exit
+
+#
+# =========== error 
+
+error_end:
+echo "dbase_run abnormal exit"
+#
+
+# ========== exit
+
+exit:
+exit
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

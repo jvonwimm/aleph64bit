@@ -1,0 +1,137 @@
+#! /bin/csh
+#====================================================================================
+# 940712                                 F.Ranjard
+#                       NEWUPHY
+#====================================================================================
+#newuphy1.0
+# P1 = IBM fortran file name
+# P2 = "lib" if a library has to be created
+# calls uphycompil
+# at CERN runs uphycompile remotely 
+# ===================================================================================
+#
+set exec_name = "newuphy1.0"
+set verbflr = ""
+set nar = $#argv
+if (${nar} != 0) then
+   if ($argv[${nar}] == "-v") then
+      echo "${exec_name}"
+      set verflr = "-v"
+      set echo on
+      set argv[${nar}] = ""
+      @ nar = ${nar} - 1
+   endif
+endif  
+if (${nar} < 1) then
+  echo " "
+  echo "usage: " 
+  echo " newuphy <IBM fortran filename> [<lib>]"
+  echo " "
+  echo " the IBM fortran file with filetype FORTRAN and filemode UPHY is"
+  echo " imported using sfetch under the filename IBMfilename.fortran"
+  echo " "
+  echo " the existing IBM INCLUDE statments are replaced by UNIX INCLUDE statments"
+  echo " and the file IBMfilename.f is created"
+  echo " IBMfilename.f is compiled using the f77_options file"
+  echo " a library is created with name libIBMfilename.a if the second argument is lib"
+
+  echo " "
+  echo " example"
+  echo " newuphy obspos "
+  echo " will import CERNVM: OBSPOS FORTRAN UPHY under obspos.fortran "
+  echo " INCLUDE statments will be changed using getfor and obspos.f will be created"
+  echo " obspos.f will be compiled to obspos.o"
+
+  exit(1)
+else
+  set file = $1
+  set flag = "nolib"
+  if (${nar} > 1) set flag = "lib"
+endif
+#
+if (${file} == "") then
+  echo " ${exec_name} : no file name given - exit"
+  exit(1)
+endif 
+#
+#********
+#
+set UNAME = `uname`
+# set input and output filename for getfor
+if (${UNAME} == "HP-UX") then
+   set f1 = "ftn01"
+   set f2 = "ftn02"
+else
+   set f1 = "fort.1"
+   set f2 = "fort.2"
+endif
+#
+set master_dir = "/al/${MASTER}/uphy"
+set uphy_dir = "/aleph/uphy"
+# 
+set disk_ibm_uphy = "pubxu.204"
+#  
+# =========   sfetch file from cernvm
+#
+cd ${master_dir}
+#
+# remove previous files if any
+if (-e {file}.fortran) rm {file}.fortran
+if (-e {file}.fold) rm {file}.fold
+#
+sfetch ${file}.fortran -t cernvm:${file}.fortran -u ${disk_ibm_uphy} \
+       -f ascii
+if !(-f ${file}.fortran) then
+   echo " *** sfetch FATAL error -> ${file}.fortran is not here"
+   goto error_end
+endif
+# 
+# ========   replace IBM INCLUDE statments by unix include
+#            create  ${master_dir}/${file}.f
+#
+# keep old file.f if any as file.fold
+if (-e ${file}.f) mv ${file}.f ${file}.fold
+echo "run getfor to create -> ${master_dir}/${file}.f "
+mv ${file}.fortran ${f1}
+getfor
+mv ${f2} ${file}.f
+rm ${f1}
+#
+#
+# ============ check existence of files 
+#
+if !(-f ${master_dir}/${file}.f) then
+   echo " *** getfor FATAL error -> file ${master_dir}/${file}.f not here"
+   goto error_end
+endif
+#
+# ============================================< compile
+#
+compile:
+#
+uphycompil ${file} ${flag} ${verbflr}
+if ( ${SERVICE} != "AFAL" || ${SERVICE} != "SAGA" ) rsh saga uphycompil ${file} ${flag} ${verbflr}
+if ( ${SERVICE} != "SHIFTALEPH" ) rsh shift9 uphycompil ${file} ${flag} ${verbflr}
+if ( ${SERVICE} != "CSF" ) rsh csf uphycompil ${file} ${flag} ${verbflr}
+# 
+echo "${exec_name} normal exit"
+exit
+#=============================================> abnormal exit
+error_end:
+echo "${exec_name} abnormal exit - restore previous files if any "
+cd ${master_dir}
+if (-e ${file}.fold) mv ${file}.fold ${file}.f
+exit
+ 
+ 
+
+
+
+
+
+
+
+
+
+
+

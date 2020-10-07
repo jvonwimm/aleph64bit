@@ -1,0 +1,92 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	98.08.21.15.09.06;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.07.03.14.47.24;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@gal307.1 see ChangeLog
+@
+text
+@      REAL FUNCTION HCALTO(ISUB,IMD)
+C--------------------------------------------------------------------
+C
+C!  Evaluates the total calibration constant applied to data in
+C!  the year of generation
+C!
+C!          Author: A. Sciaba`   24/04/98
+C!
+C!
+C!        -Called by : HCFORA
+C--------------------------------------------------------------------
+#ifndef DOC
+#include "jobcom.h"
+#include "iocom.h"
+#include "bcs.h"
+#include "hcalct.h"
+#include "bmacro.h"
+C -------------------------------------------------------------
+C
+      HCALTO = 1.
+      IF(IMD.EQ.0) RETURN
+C
+C     If barrel:
+      IF(ISUB.EQ.1) THEN
+         HCALTO = CT0MCB * CALMCB(IMD) / ( CALTUB * CALTBA
+     &        * CALBA(IMD) * CALIMB(IMD) * CT0DAB )
+C     If endcap:
+      ELSEIF(ISUB.EQ.2) THEN
+         HCALTO = CT0MCE * CALMCE(IMD) / ( CALTUE * CALTEC
+     &        * CALEC(IMD) * CALIME(IMD) * CT0DAE )
+      ENDIF
+C
+      RETURN
+      END
+#endif
+
+
+
+@
+
+
+1.1
+log
+@gal307 look at galeph/news/news.h
+@
+text
+@d25 2
+a26 2
+         HCALTO = CT0MCB / ( CALTUB * CALTBA * CALBA(IMD)
+     &        * CALIMB(IMD) * CT0DAB )
+d29 2
+a30 2
+         HCALTO = CT0MCE / ( CALTUE * CALTEC * CALEC(IMD)
+     &        * CALIME(IMD) * CT0DAE )
+@

@@ -1,0 +1,27 @@
+      SUBROUTINE BKFRP(JW,NAME,NR,P,MP,NP,MC,NC)
+*
+*     COPY DATA FROM BANK 'NAME',NR TO TWODIM. ARRAY P
+*
+*     ERRORS: MC<=0 OR MC<=0 OR MP<MC
+*             INSUFFICIENT SPACE (BOS ERROR PRINT)
+*
+*
+      INTEGER JW(1000),P(MP,NP)
+      CHARACTER*4 NAME
+      IF(MC.LE.0.OR.NC.LE.0) GOTO 100
+      IF(MP.LT.MC) GOTO 100
+      IND=MBANK(JW,NAME,NR,1+MC*NC)
+      IF(IND.EQ.0) GOTO 100
+      JW(IND+1)=MC
+      IF(MC.EQ.MP) THEN
+         CALL UCOPY(P,JW(IND+2),MC*NC)
+      ELSE
+         IOF=IND+1
+         DO 30 J=1,NC
+         DO 10 I=1,MC
+   10    JW(IOF+I)=P(I,J)
+         IOF=IOF+MC
+   30    CONTINUE
+      END IF
+  100 RETURN
+      END

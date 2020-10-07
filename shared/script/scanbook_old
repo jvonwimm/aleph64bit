@@ -1,0 +1,40 @@
+#!/bin/csh
+#------------------------------------------------------------------------
+#
+# scanbook
+# 
+# runs by default the X-windows version
+#
+# J. Boucrot  24-Mar-1998
+#
+# Argument given :  if -i : standard interactive execution
+#                   if cards file name : execution with input cards file
+# If no argument :  execution of X-windows version
+#
+#------------------------------------------------------------------------
+#
+#  no argument given : execute xscanbook :    
+#
+
+if (${#argv} == 0) then
+
+# new version for operating system V40D
+
+#  set version = `uname -v`
+#  if ($version == 564)          then
+   xscanbook   
+#  else
+#    xscanbook_new
+#  endif
+
+else
+#  1  argument given : check if it is  -i
+#                      
+      set arg_name = $argv[1] 
+      if ($arg_name == -i) then
+         iscanbook 
+      else
+         iscanbook $arg_name
+      endif
+endif
+exit

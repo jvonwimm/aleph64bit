@@ -1,0 +1,3 @@
+      SUBROUTINE QNTERM
+      RETURN
+      END

@@ -1,0 +1,256 @@
+head	1.2;
+access;
+symbols
+	alpha126_22:1.2
+	alpha126_21:1.2
+	alpha126_20:1.2
+	alpha126_19:1.2
+	alpha126_18:1.2
+	alpha126_17:1.2
+	alpha126_16:1.2
+	alpha126_15:1.2
+	alpha126_14:1.2
+	alpha126_13:1.2
+	alpha126_12:1.2
+	alpha126_11:1.2
+	alpha126_10:1.2
+	alpha126_09:1.2
+	alpha126_08:1.2
+	alpha126_07:1.2
+	alpha126_06:1.2
+	alpha126_05:1.2
+	alpha126_04:1.2
+	alpha126_03:1.2
+	alpha126_02:1.2
+	alpha126_1:1.2
+	alpha125_17:1.2
+	alpha125_16:1.2
+	alpha125_15:1.2
+	alpha125_14:1.2
+	alpha125_13:1.2
+	alpha125_12:1.2
+	alpha125_11:1.2
+	alpha125_10:1.2
+	alpha125_09:1.2
+	alpha125_08:1.2
+	alpha125_07:1.2
+	alpha125_06:1.2
+	alpha125_05:1.2
+	alpha125_04:1.2
+	alpha125_03:1.2
+	alpha125_02:1.2
+	alpha125_01:1.2
+	alpha124_19:1.2
+	alpha125:1.2
+	alpha124_18:1.2
+	alpha124_17:1.2
+	alpha124_16:1.2
+	alpha124_15:1.2
+	alpha124_14:1.2
+	alpha124_13:1.2
+	alpha124_12:1.2
+	alpha124_11:1.2
+	alpha124_10:1.2
+	alpha124_09:1.2
+	alpha124_08:1.2
+	alpha124_07:1.2
+	alpha124_7:1.2
+	alpha124_06:1.2
+	alpha124_05:1.2
+	alpha124_04:1.2
+	alpha124_03:1.2
+	alpha124_02:1.2
+	alpha124_01:1.2
+	alpha124:1.2
+	alpha123_12:1.2
+	alpha123_11:1.2
+	alpha123_10:1.2
+	alpha123_9:1.2
+	alpha123_8:1.2
+	alpha123_7:1.2
+	alpha123_6:1.2
+	alpha123_5:1.2
+	alpha123_4:1.2
+	alpha123_3:1.2
+	alpha123_2:1.2
+	alpha123:1.2
+	alpha122_48:1.2
+	alpha122_47:1.2
+	alpha122_46:1.2
+	alpha122_45:1.2
+	alpha122_44:1.2
+	alpha122_43:1.2
+	alpha122_42:1.2
+	alpha122_41:1.2
+	alpha122_40:1.2
+	alpha122_39:1.2
+	alpha122_38:1.2
+	alpha122_37:1.2
+	alpha122_36:1.2
+	alpha122_35:1.2
+	alpha122_34:1.2
+	alpha122_33:1.2
+	alpha122_32:1.2
+	alpha122_31:1.2
+	alpha122_30:1.2
+	alpha122_29:1.2
+	alpha122_28:1.2
+	alpha122_27:1.1.1.1
+	alpha122_26:1.1.1.1
+	alpha122_25:1.1.1.1
+	alpha122_24:1.1.1.1
+	alpha122_23:1.1.1.1
+	alpha122_22:1.1.1.1
+	alpha122_21:1.1.1.1
+	alpha122_20:1.1.1.1
+	alpha122_19:1.1.1.1
+	alpha122_18:1.1.1.1
+	alpha122_17:1.1.1.1
+	alpha122_16:1.1.1.1
+	alpha122_15:1.1.1.1
+	alpha122_14:1.1.1.1
+	alpha122_13:1.1.1.1
+	alpha122_12:1.1.1.1
+	alpha122_11:1.1.1.1
+	alpha122_10:1.1.1.1
+	alpha122_9:1.1.1.1
+	alpha122_8:1.1.1.1
+	alpha122_6:1.1.1.1
+	alpha122_5:1.1.1.1
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.05.05.13.12.17;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.03.14.12.42.03;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.42.04;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE QWIVX (IVX,CFL)
+CKEY WRITE VERTEX /USER
+C----------------------------------------------------------------------
+C! print vertex IVX
+C
+C called from user routines
+C                                                   H.Albrecht 20.09.88
+C----------------------------------------------------------------------
+#ifndef DOC
+      SAVE INIT,CTEXT
+#include "qcde.h"
+      CHARACTER * 1  C1
+      CHARACTER * 12 CHAR
+      CHARACTER *(*) CFL
+      CHARACTER * 24 CTEXT(2)
+      character*18 blaver(6)
+      data blaver / 'Stand. V0 Vertex  ' , 'Main Vertex       ' ,
+     +              'Vertex from KVFITx' , 'Long V0 Vertex    ' ,
+     +              'Nucl. Int. Vertex ' , 'Vertex from Kink  ' /
+      DATA CTEXT /'Reconstructed vertices', 'MC truth (vertices)'/
+      DATA INIT /0/
+#include "qmacro.h"
+C----------------------------------------------------------------------
+C
+      LHEAD = -1
+      IF (INDEX (CFL,'H') .NE. 0)  LHEAD = 0
+      C1 = ' '
+      IF (INDEX (CFL,'0') .NE. 0)  THEN
+        C1 = '0'
+        LHEAD = 1
+      ENDIF
+      IF (INDEX (CFL,'1') .NE. 0)  THEN
+        C1 = '1'
+        LHEAD = 1
+      ENDIF
+C
+      DO 10 NU=KSREV,KSMCV
+   10 IF (IVX .GE. KLOCUS(1,NU) .AND. IVX .LE. KLOCUS(2,NU))
+     +  NSEC = NU
+C
+      CHAR = ' '
+      ITK = KVINCP(IVX)
+      IF (ITK .NE. 0)  CHAR = CQTPN (ITK)
+      ITYP= KVTYPE(IVX)
+      ICHOI = NSEC-KSREV+1
+ 
+C Write header if needed:
+      IF (LHEAD .GT. 0)  WRITE (KUPRNT,1001)
+     +       C1,CQSEC(NSEC),CTEXT(ICHOI)
+      IF (LHEAD.GE.0.AND.ICHOI.EQ.2)  WRITE (KUPRNT,1002)
+      IF (LHEAD.GE.0.AND.ICHOI.EQ.1)  WRITE (KUPRNT,2002)
+C Write vertex debug:
+      IF (ICHOI.EQ.2) WRITE (KUPRNT,1003)
+     +       IVX,KVN(IVX),QVX(IVX),QVY(IVX),QVZ(IVX),
+     +       KVNDAU(IVX),ITK,CHAR
+      IF (ICHOI.EQ.1) WRITE (KUPRNT,2003)
+     +       IVX,KVN(IVX),QVX(IVX),QVY(IVX),QVZ(IVX),
+     +       KVNDAU(IVX),ITK,ITYP,BLAVER(ITYP+1),CHAR
+      IF (KUPTER .NE. 0 .AND. INIT .EQ. 0)
+     +    WRITE (KUPTER, 1004)
+      INIT = 1
+C
+ 1001 FORMAT (A,'section KS',A,1X,A)
+ 1002 FORMAT ('  IVX KVN    QVX',9X,'QVY',9X,'QVZ',5X,
+     +  'KVNDAU KVINCP CQTPN(KVINCP)')
+ 1003 FORMAT (I5,I4,3F12.6,2I6,2X,A)
+ 1004 FORMAT (' _QWIVX_ Vertex listing written to log file ')
+ 2002 FORMAT ('  IVX KVN    QVX',9X,'QVY',9X,'QVZ',5X,
+     +  'KVNDAU KVINCP ITYP VERTEX TYPE       CQTPN(KVINCP)')
+ 2003 FORMAT (I5,I4,3F12.6,2I6,3X,I3,1X,A18,2x,a12)
+C
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d16 4
+d44 4
+a47 1
+C
+d49 6
+a54 3
+     +       C1,CQSEC(NSEC),CTEXT(NSEC-KSREV+1)
+      IF (LHEAD .GE. 0)  WRITE (KUPRNT,1002)
+      WRITE (KUPRNT,1003) IVX,KVN(IVX),QVX(IVX),QVY(IVX),QVZ(IVX),
+d56 3
+d66 1
+a66 1
+ 1003 FORMAT (I5,I4,3F12.6,2I6,1X,A)
+d68 3
+@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

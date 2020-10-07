@@ -1,0 +1,126 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.29.16.14.29;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.01.40;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.41;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ Removed Files:
+ guinti.F
+@
+text
+@*DK qnext
+      SUBROUTINE QNEXT
+C -----------------------------------------------------------------
+C - F.Ranjard - 870105
+C! calls next event or end of job
+C - Called from QNEXTE                                from cernlib
+C - Calls       ACRUN, ASCEVE, ASPRUN                 from this .HLB
+C ------------------------------------------------------------------
+#ifndef DOC
+#include "jobcom.h"
+C ------------------------------------------------------------------
+C     normal entry
+      IF (TACTJO .EQ. 'RETURN') THEN
+C     process loop over event
+         CALL ASPRUN
+      ELSEIF (TACTJO .EQ. 'NEXT') THEN
+         CALL RDMOUT(NRNDJO)
+         CALL ASPRUN
+      ELSEIF (TACTJO .EQ. 'END') THEN
+C     close job
+         CALL ASCRUN
+         CALL ASCJOB
+         STOP
+      ENDIF
+C
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d8 1
+a8 1
+C -------------------------------------------------------------------
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

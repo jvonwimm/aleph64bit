@@ -1,0 +1,200 @@
+#!/bin/sh
+#
+#	Interface to NQS qstat, qusage and qhow in the spirit of CRSTAT
+#
+#	C. Boissat 07/10/93
+#
+#       mod. U.Schafer 08/04/94 add rsh connect to remote cluster
+#
+PATH=/usr/local/bin:/bin:/usr/bin:/usr/bsd:/usr/sbin
+#
+usage()
+#qtell -c qcat -hsaga08 -o 5711 -h saga01
+{
+cat <<etx
+sfstat (without option) all jobs of logged-on user are displayed.
+sfstat -<option> is the syntax with the following possibilities existing:
+  -h  to get the present help
+  -a  gives all jobs
+  -b  gives summary of all batch queues
+  -c  gives all jobs running ( CPU usage up to date for your own jobs only ! )
+  -f <request>  full queue info for the host your job is queued to 
+  -g <request>  to get the output of job-request if not yet disposed
+  -h <server>   in conjunction with any other switch specifies NQS server host
+  -j <request>  gives status of job-request (NQS++ request number)
+  -k <request>  deletes (kills) job-request (NQS++ request number)
+  -i <request>  look at Job input
+  -l <request>  look at Job output
+  -o  gives only running jobs of the user (with CPU usage up to date)
+  -r  gives all jobs running (without CPU usage)
+  -t <request>  gives CPU usage of a request (all sub processes shown)   (***)
+  -u <userid>  privileged command,  selects an other user. 
+  -w <request>  show on which host the request is running 
+Examples:  sfstat -c           sfstat -j 8234
+Options (***) use rsh and require correct setup of your .rlogin at target host!
+etx
+}
+# clusters are groups of hosts whose names are composed of a string of letters,
+# identical to all of them, and a number identifying an individual host
+if [ \( $# -eq 1 \) -a \( "$1" = "-h" \) ] ;then usage; exit;fi
+# names of 'masters' here !!
+clusters="saga01 afal01 csf"
+node_list="/aleph/log/aleph_hosts"
+unm="`id | cut -f1 -d')' | cut -f2 -d'('`"
+para=`getopt abcorg:h:j:k:i:l:u:f:w:t: $*` || \
+   { retcode=$? ; echo "To get help type: sfstat -h" ; exit $retcode ; }
+paralog=$para
+para=`echo $para|sed 's/--/-_/;s/ -/-/g'`
+switches=""
+LOGFILE="/aleph/log/sfstat.log"
+DATE=`date`
+NODE=`uname -n`
+VER="2.0"
+while [ "$para" != "-" ]
+do
+  option=`echo $para|cut -d'-' -f2`
+  sw=`echo "$option"|cut -c1`
+  switches="$switches$sw"
+  option=`echo "$option"|cut -c3-`
+  eval opt$sw='"$option"'
+  eval ava$sw='"$sw"'
+  para='-'"`echo $para|cut -d'-' -f3-`"
+done
+switch=`echo $switches|tr -d "_"|tr -d "h"|cut -c1`
+if [ -z "$switch" ] ; then switch=u;fi
+switch="-$switch"
+#	find host !
+if [ -n "$avah" ];then
+	hopt="-h $opth"
+elif [ -f $HOME/.nqsrc ] ;then
+	hopt="-h `cat $HOME/.nqsrc | cut -d'>' -f1`"
+else
+        hopt="-h $HOST"
+fi
+#
+hopt1=$hopt
+hoptm=$hopt
+set -- $para
+cluster=""
+hoptp=$hopt
+if [ "$hoptp" != "" ]
+then
+  base=`echo $hopt | awk '{print $2}'|tr -d "[0-9]"`
+  cluster=`echo $clusters |tr " " "\12"|grep "^${base}"`
+  if [ "$cluster" != "" ]
+  then
+    hoptm="-h $cluster"
+    if [ "$cluster" = "$HOST" ]
+    then
+
+      hoptp="$hopt"
+      hopts=""
+    else
+      hopts="$hoptp"
+      hoptp="-h $cluster"
+    fi
+    hopts=`echo $hopts |tr -d " "`
+    jid="$opti$optl$optj$optk$optf$optt"
+    if [ -n "$jid" ]
+    then hopts=`qtell -c qwhere $jid $hoptm`
+        all=" "`cat $node_list |grep "^$base"|tr "\12" " "`" "
+	echo "$all" | grep " $hopts " >/dev/null 
+	if [ $? -ne 0 ]; then echo "Job not found";exit
+        else hopts="-h$hopts";fi
+    fi
+  fi
+fi
+#echo "To get help type: sfstat -h" 
+#
+#
+#	Parse arguments
+case $switch in
+	-c)
+		qtell -c qusage $hoptm 
+		if [ "$hoptm" = "-h csf" ]
+		then echo "WARNING -- Job listing not up to date !";fi
+
+		;;
+	-g)
+		qtell -c qget -e -f job$optg.err $hoptm $optg
+		qtell -c qget -f job$optg.out $hoptm -o $optg
+		;;
+	-f)
+		qtell -c qstat -afsr $hopts $hoptm 
+		;;
+	-j)
+		qtell -c qhow  $hopts $optj $hoptm
+		;;
+	-k)
+                qtell -c qdel $hopts -k $optk $hoptm
+		;;
+	-i)
+		qtell -c qcat $hopts $opti $hoptm  
+		;;
+	-l)
+		qtell -c qcat $hopts -o $optl $hoptm  
+		;;
+	-t)
+		fam=`qtell -c qstat -afsr $hopts $hoptm |\
+                  grep -p "\ $optt" |\
+		  grep Family: | awk '{print $3}'`
+		echo " Group : $fam"
+		rsh `echo $hopts |cut -c3-` ps -g $fam
+		;;
+	-w)
+		qtell -c qwhere $optw $hoptm  
+		;;
+	*)
+		if [ "$cluster" = "" ] ;then case $switch in
+ 
+	-a)
+		qtell -c qstat -a $hoptm 
+		;;
+	-b)
+		qtell -c qstat -b $hoptm 
+		;;
+	-o)
+		qtell -c qusage -o $hoptm 
+		;;
+	-r)
+		qtell -c qstat -a -s r $hoptm
+		;;	
+
+	-u)
+		if [ "$optu" = "$unm" ] ; then optu="" ;fi
+		if [ -n "$optu" ] ; then optu="-u $optu";fi
+		qtell -c qstat $optu $hopt
+	esac ;else case $switch in
+	-a)
+                qtell -c qjob -a $hoptm 
+		;;
+	-b)
+		all=" "`cat $node_list |grep "^$base"|tr "\12" " "`" "
+                apply "qtell -c qstat -b -h%1 $hoptm" $all
+		;;
+	-o)
+                qtell -c qusage $hoptm |(echo "`line`" ; grep "$unm")
+		if [ "$hoptm" = "-h csf" ]
+		then echo "WARNING -- Job listing not up to date !";fi
+		;;
+	-r)
+		all=" "`cat $node_list |grep "^$base"|tr "\12" " "`" "
+                apply "qtell -c qstat -a -s r -h%1 $hoptm" $all
+		;;
+	-u)
+		if [ "$optu" = "$unm" ] ; then optu="" ;fi
+		if [ -z "$optu" ] ; then qtell -c qjob $hoptm
+		else apply "qtell -c qstat -h%1 -u $optu $hoptm" $all;fi
+	esac ;fi
+	esac
+echo "$DATE $unm $switch $paralog $VER $NODE" >> $LOGFILE
+exit
+#EOF
+
+
+
+
+
+
+
+

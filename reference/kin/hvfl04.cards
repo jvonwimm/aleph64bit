@@ -1,0 +1,286 @@
+NREF 2                                                                          
+FDBA 'ADBSTEST'                                                           
+*FDBA 'ADBSTEST DAF N'                                                           
+*   HERE ARE THE STEERING DATA CARDS ONLY     *                                 
+*============================================                                   
+*     RUN #     RUN'S TITLE                                                     
+RUN   111  'HEAVY FLAVOR HVFL04 :DYMU3+FSR PS+photos,MIXED FLAVORS'             
+*     FIRST EVENT    LAST EVENT    TO BE GENERATED                              
+TRIG     1       3000                                                           
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG                                 
+DEBU  6     /     1          2                                                  
+*  Keep some time at end of job  (IBM 168 seconds)                              
+TIME    10                                                                      
+*    save event file on disk                                                    
+*FILO  ' HVFL02 EPIO * | EPIO '                                                 
+*    save histos on a disk file                                                 
+*HSTO   ' HVFL02  HIST * '                                                      
+*  use RANMAR generator for random numbers                                      
+*  INSEED : first seed (range assigned per institute)                           
+*  LOSEED : second seed (incremented locally for new runs)                      
+*      INSEED          LOSEED (1-30000)                                         
+RMAR     89             12345                                                   
+ENDQ                                                                            
+KCAR 0 / $TEXT                                                                  
+POFF                                                                            
+*  vertex smearing x     y     z      93 values                                 
+SVRT          0.0142   0.0005   0.70                                            
+*    IGENE  : qqbar producer code  1 = LUND 7.3+ PARTON SHOWER                  
+*                                  2 = BREM5   + PARTON SHOWER                  
+*                                  3 = DYMU3   + PARTON SHOWER                  
+* SPECIAL OPTION FOR DEVELOPMENTS -1 = SINGLE PARTICLE MODE                     
+*    IWEIT  : weight flag  0 = produce unweighted events, 1 = weighted          
+*    WTMAX  : in case IWEIT=0 required , maximum weight produced by basic       
+*             generator (used for rejection method).Irrelevant for LUND         
+*    IPPART : lowest digit ON =Printout of PART and decay tables                
+*             decimal digit ON = event analysis in terms of particles           
+*    IGENE IWEIT   WTMAX   IPPART                                               
+GHVF    3    0     1.001     10                                                 
+*           HERE ARE THE MODIFICATIONS TO PARAMETERS   *                        
+*=========================================================                      
+* XD,YD Mixing parameters for Bd mesons (both 0. means no mixing)               
+* XS,YS Mixing parameters for Bs mesons (both 0. means no mixing)               
+*   CHNGE BS MIXING TO A HIGHER CHI VALUE ( XS WAS 2.4 , NOW TRIED 5.)          
+*       xd    yd     xs    ys                                                   
+GMIX    0.7   0.    5.0    0.                                                   
+*-----------------------------------------------------------                    
+*   modification to Lund parameters                                             
+*  They come from Gerald's fit and/or  heavy flavor group                       
+*---------------------------------------------------------------                
+*   QCD FIT FROM G. RUDOLPH  ( 5/03/94)   9 VARIABLES                           
+*   mod to lund fragm. functions params                                         
+PARJ 81 / .321          ! LAMBDA QCD was .311                                   
+PARJ 82 / 1.74          ! M MIN.     was 1.90                                   
+PARJ 21 / 0.333         ! SIGMA MT   was .347                                   
+PARJ 41 / 0.5           ! a          was .5                                     
+PARJ 42 / 0.973         ! B          was .77                                    
+*     modified V/P/T production                                                 
+PARJ 11 /  0.516        ! FRACTION V/P FOR UD =VUD             WAS 0.5          
+PARJ 12 /  0.566        ! FRACTION V/P FOR S  =VS              WAS 0.6          
+PARJ 13 /  0.85         ! FRACTION V/P FOR C AND HEAVIER =VCB  WAS .75          
+PARJ 17 /  0.21         ! FRACTION T/T+V FOR ALL FLAVORS       WAS 0.           
+*  reject 75% of eta' produced by fragmentation ( keep 25%)                     
+PARJ 26 / 0.25                                                 WAS 0.20         
+*     modified Baryon , strange production etc...                               
+PARJ 1  /  0.095        ! FRACTION OF BARYON VS MESON PRODUCED WAS 0.100        
+PARJ 2  /  0.298        ! FRACTION OF S/U                      WAS 0.300        
+PARJ 3  /  0.48         ! FRACTION OF US/DU                    WAS 0.40         
+PARJ 4  /  0.05         ! FRACTION OF (QQ)1 /( QQ)0            WAS 0.05         
+PARJ 33 /  0.80         ! WMIN IN SYMETRIC LUND FRAGMENTATION  WAS 0.80         
+*   Use Standard LUND values for  Epsilon_c                                     
+*   Measured one for Epsilon_b                                                  
+*   ( Peterson's fragm. functions params )                                      
+PARJ 54 / -0.040         ! EPSILON_C                                            
+PARJ 55 / -0.006         ! Epsilon_b                                            
+* FRACTION T/T+V  =P17  for flavor dependence                                   
+*         u,d    s      c      b                                                
+GP17     0.21   0.21   0.47   0.21                                              
+* ISPIN = switch for spin effect (on=1/off=0)                                   
+* IFORM = switch for form factor in Lam_b --> Lam_c                             
+* W0    = form factor value                                                     
+*      ISPIN    IFORM   W0                                                      
+GLAM    0        1      0.89                                                    
+*------------------------------------------------------------------             
+* Update of the branching ratios of the D** to 80% D , 20% D*                   
+*----------------------------------------------------------------------         
+*        <-D pi--->  <---D* pi-->  <--D* pi pi-> <--D pi pi->                   
+GMOB 415 0.42  0.21  0.075  0.038  0.061  0.028  0.112  0.056                   
+GMOB 425 0.42  0.21  0.075  0.038  0.061  0.028  0.112  0.056                   
+PMA1 415 / 2.460   !  Set D**+ mass                                             
+PMA1 425 / 2.460   !  Set D**0 mass                                             
+PMA1 435 / 2.560   !  Set D**_s+ mass (guess)                                   
+PMA3 435 / 0.190   !  Allow D**_s+ mass to be smeared by +- 190 Mev only        
+* ....................................................                          
+* . Updated branching ratios of the Lambda_c+ KF=4122.                          
+* . Fix the 77th mode which is Sigma+ pi+ pi- and not anti(Sigma-) pi pi        
+* ....................................................                          
+* semileptonic decay modes  ==================================                  
+* 1 = e+ nue Lamda0         2 = e+ nue Sigma0                                   
+* 3 = e+ nue Sigma*0        4 = e+ nue n                                        
+* 5 = e+ nue Delta0         6 = e+ nue p pi-                                    
+* 7 = e+ nue n pi0                                                              
+* 8 = mu+ numu Lamda0       9 = mu+ numu Sigma0                                 
+*10 = mu+ numu Sigma*0     11 = mu+ numu n                                      
+*12 = mu+ numu Delta0      13 = mu+ numu p pi-                                  
+*14 = mu+ numu n pi0                                                            
+* 2-body decay modes   =========================================                
+*15 = Delta++ K-           16 = Delta++ K*-                                     
+*17 = p K0(bar)            18 = p K*0(bar)                                      
+*19 = Delta+  K0(bar)      20 = Delta+  K*0(bar)                                
+*21 = Lambda0 pi+          22 = Lambda0 rho+                                    
+*23 = Sigma0  pi+          24 = Sigma0  rho+                                    
+*25 = Sigma*0 pi+          26 = Sigma*0 rho+                                    
+*27 = Sigma+  pi0          28 = Sigma+  eta                                     
+*29 = Sigma+  eta'         30 = Sigma+  rho0                                    
+*31 = Sigma+  omega        32 = Sigma*+ pi0                                     
+*33 = Sigma*+ eta          34 = Sigma*+ rho0                                    
+*35 = Sigma*+ omega        36 = Xi0     K+                                      
+*37 = Xi0     K*+          38 = Xi*0    K+                                      
+*39 = Delta++ pi-          40 = Delta++ rho-                                    
+*41 = p       pi0          42 = p       eta                                     
+*43 = p       eta'         44 = p       rho0                                    
+*45 = p       omega        46 = Delta+  pi0                                     
+*47 = Delta+  eta          48 = Delta+  eta'                                    
+*49 = Delta+  rho0         50 = Delta+  omega                                   
+*51 = n      pi+           52 = n       rho+                                    
+*53 = Delta0 pi+           54 = Delta0  rho+                                    
+*55 = Lambda0 K+           56 = Lambda0 K*+                                     
+*57 = Sigma0  K+           58 = Sigma0  K*+                                     
+*59 = Sigma*0 K+           60 = Sigma*0 K*+                                     
+*61 = Sigma+  K0           62 = Sigma+  K0*                                     
+*63 = Sigma*+ K0           64 = Sigma*+ K0*                                     
+* > 2-body decay modes  =================================                       
+*65 = u jet  d(bar) jet  s jet  ud_0 jet                                        
+*66 = u jet  d(bar) jet  s jet  ud_1 jet                                        
+*67 = u jet  s(bar) jet  s jet  ud_0 jet                                        
+*68 = u jet  d(bar) jet  d jet  ud_0 jet                                        
+*69 = s jet  uu_1 jet                                                           
+*70 = u jet  su_0 jet                                                           
+*71 = u jet  su_1 jet                                                           
+*72 = d jet  uu_1 jet                                                           
+*73 = u jet  ud_0 jet                                                           
+*74 = u jet  ud_1 jet                                                           
+* added  ==========================================                             
+*75 = p  K-  pi+           76 = Lambda0 pi+ pi+ pi-                             
+*77 = Sigma+ pi+ pi-       78 = p K0(bar) pi+ pi-                               
+* -----------------------------------                                           
+GADM 4122   0   2212 -321  211  0   0                                           
+GADM 4122   0   3122  211  211 -211 0                                           
+GADM 4122   0   3222  211 -211  0   0                                           
+GADM 4122   0   2212 -311  211 -211 0                                           
+**** Branching Ratios used on data cards to take into account the               
+**** contribution of spectator diagrams                                         
+GMOB 4122 .005  .003  .003  .009  .002  .006  .017  .005  .003  .003            
+          .009  .002  .006  .017  .0057 .025  .016  .006  .005  .005            
+          .004  .005  .004  .004  .004  .004  .004  .002  .002  .004            
+          .004  .003  .002  .003  .003  .002  .002  .002  .001  .001            
+          .002  .001  .001  .002  .002  .001  .001  .001  .001  .001            
+          .003  .003  .003  .003  .005  .005  .002  .002  .001  .001            
+          .002  .002  .001  .001  .187  .040  .025  .025  .110  .053            
+          .053  .020  .011  .0103 .013  .015  .100  .078                        
+*------------------------------------------------------------------             
+PMA1 511 / 5.279   !  Set B0   mass |                                           
+PMA1 521 / 5.279   !  Set B+   mass |  Mofified B and B* masses                 
+PMA1 531 / 5.372   !  Set Bs   mass |  as provided by A. Bencheik               
+PMA1 513 / 5.325   !  Set B*0  mass |  to follow most recent measurements       
+PMA1 523 / 5.325   !  Set B*+  mass |                                           
+PMA1 533 / 5.419   !  Set B*s  mass |                                           
+* ...........................................................                   
+* . Updated branching ratios of the B flavor mesons    KF=100                   
+*   update 931202 explicit modes for semilep decays , the 2 semilep             
+*   spectator diagram are reset to 0. fraction                                  
+* ............................................................                  
+*----------------------------------------------------------------------         
+*     Modify the Decay Scheme of B meson in order to generate                   
+*     2-body final state according to Bauer-Stech-Wirbel computation            
+*                                                All the exclusive              
+*     1= electron neutrino c (spect. quark)      decay chains are               
+*     2= muon     neutrino c (spect. quark)      given for Bd decay             
+*     3= tau      neutrino c (spect. quark)                                     
+*     4= ubar     d        c (spect. quark)      They are modified              
+*     5= ubar     c        d (spect. quark)      accordingly by                 
+*     6= cbar     s        c (spect. quark)      the general JETSET7B           
+*     7= (spect. quark)    s cbar     c          decay routine LUDECY           
+*     8=  pi  D         16=  F   D*                                             
+*     9=  rho D         17=  F*  D*                                             
+*    10=  A1  D         18=  Psi K*                                             
+*    11=  pi  D*        19=  Psi K                                              
+*    12=  rho D*        20=  Psi'K*                                             
+*    13=  A1  D*        21=  Psi'K                                              
+*    14=  F   D         22=  etac K*                                            
+*    15=  F*  D         23=  etac K                                             
+*    24=  Si_c++ Delta-- Pi0                                                    
+*    25=  Si_c+  Delta-- Pi+                                                    
+*    26=  Si_c+  Delta-  Pi0                                                    
+*    27=  Si_c0  Delta-  Pi+                                                    
+*    28=  Si_c0  Delta0  Pi0                                                    
+*    29=  Ve    ele     D*+   Pi0                                               
+*    30=  Vmu   mu      D*+   Pi0                                               
+*    31=  Ve    ele     D*0   Pi+                                               
+*    32=  Vmu   mu      D*0   Pi+                                               
+*    33=  Ve    ele     D*_2+                                                   
+*    34=  Vmu   mu      D*_2+                                                   
+*    35=  Ve    ele     D+                                                      
+*    36=  Ve    ele     D*+                                                     
+*    37=  Vmu   mu      D+                                                      
+*    38=  Vmu   mu      D*+                                                     
+*                                                                               
+*----------------------------------------------------------------------         
+GRPL  100   1    1    42   -12    11    4     81     0                          
+GADM  100   42   -14    13    4     81     0                                    
+GADM  100   42   -16    15    4     81     0                                    
+GADM  100   42   -2     1     4     81     0                                    
+GADM  100   42   -2     4     1     81     0                                    
+GADM  100   42   -4     3     4     81     0                                    
+GADM  100   42   81     3    -4      4     0                                    
+GADM  100    0   -211   411   0      0     0                                    
+GADM  100    0   -213   411   0      0     0                                    
+GADM  100    0   -20213 411   0      0     0                                    
+GADM  100    0   -211   413   0      0     0                                    
+GADM  100    0   -213   413   0      0     0                                    
+GADM  100    0   -20213 413   0      0     0                                    
+GADM  100    0   -431   411   0      0     0                                    
+GADM  100    0   -433   411   0      0     0                                    
+GADM  100    0   -431   413   0      0     0                                    
+GADM  100    0   -433   413   0      0     0                                    
+GADM  100    0    443   313   0      0     0                                    
+GADM  100    0    443   311   0      0     0                                    
+GADM  100    0    440   313   0      0     0                                    
+GADM  100    0    440   311   0      0     0                                    
+GADM  100    0    441   313   0      0     0                                    
+GADM  100    0    441   311   0      0     0                                    
+GADM  100    0   4222 -2224   111    0     0                                    
+GADM  100    0   4212 -2224   211    0     0                                    
+GADM  100    0   4212 -2214   111    0     0                                    
+GADM  100    0   4112 -2214   211    0     0                                    
+GADM  100    0   4112 -2114   111    0     0                                    
+GADM  100    0    -12    11   413    111   0                                    
+GADM  100    0    -14    13   413    111   0                                    
+GADM  100    0    -12    11   423    211   0                                    
+GADM  100    0    -14    13   423    211   0                                    
+GADM  100    0    -12    11   415    0     0                                    
+GADM  100    0    -14    13   415    0     0                                    
+GADM  100    0   -12    11    411    0     0                                    
+GADM  100    0   -12    11    413    0     0                                    
+GADM  100    0   -14    13    411    0     0                                    
+GADM  100    0   -14    13    413    0     0                                    
+GMOB 100                                                                        
+.0     .0     .0278  .44936 .0635 .0813  .01902 .0041  .0114  .0121             
+.003   .010   .0158  .0065  .0071 .0029  .0197  .00139 .00082 .00163            
+.00058 .004   .001   .004   .0085 .017   .0085  .013   .00385 .00385            
+.00385 .00385 .0077  .0077  .0219 .0657  .0219 .0657                            
+***********************************************************************         
+* GDDC card forces some specific decay chains                                   
+*   b_hadron ---> c_hadron + 0,1,2 companions                                   
+*                    |                                                          
+*                     ---> selected decays                                      
+*  IDAU = c-hadron particle code ( JETSET convention)                           
+*  IMOT = b-hadron particle code ( JETSET convention)                           
+*  ICO1 = 1st companion particle code ( JETSET convention) or 0 if none         
+*  ICO2 = 2nd companion particle code ( JETSET convention) or 0 if none         
+*  ISW(n) switches to select the decay modes of IDAU ( n is the number          
+*         of decay modes defined in JETSET )                                    
+*   The example is given for                                                    
+*    Bs ---> Ds + electron or muon                                              
+* from the switches set up if this is true then                                 
+*  Ds ---> Phi Pi ( mode 14) , Phi Rho (mode 17) or Phi K  ( mode 29)           
+* if Ds is produced from another mother or with no lepton companion             
+* the usual decay scheme is used                                                
+* REMEMBER : if you use this option and write out events on file/tape           
+*  only events satisfying the defined configuration will appear on              
+*  the output file . Furthermore , if you want a given number of                
+*  such events , give this number as the 3rd quantity on the TRIG card          
+*  the program will loop over events until it reaches your number of            
+*  selected events whatever is the last event number required.                  
+**********************************************************************          
+*    IDAU IMOT ICO1 ICO2  then the n switches ( here 41 modes )                 
+*GDDC 431   531   11   13                                                       
+*     0  0  0  0  0  0  0  0  0  0 0  0  0  1  0  0  1  0  0  0                 
+*     0  0  0  0  0  0  0  0  1  0 0  0  0  0  0  0  0  0  0  0                 
+*     0                                                                         
+**********************************************************************          
+*         FTYPE   EBEAM  ZMASS  GAMM   SW2  IDEBUG                              
+GDYM      10.     45.6   91.182 2.484  .232     0                               
+* ID2    TAU    FINEXP   POIDS    XK0  QCDFAC    NQUA  IFIRST   NEVMA           
+   0.     0.      1.       1.    0.003  1.04       5    11      5000            
+END$                                                                            

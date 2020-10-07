@@ -1,0 +1,21 @@
+C-------------------------------------------------------------DUISCC
+      INTEGER MWINDU,MPNWDU,MERSDU
+      PARAMETER (MWINDU=6,MPNWDU=13,MERSDU=10)
+      INTEGER INDVCM,IDCMDU,IDVDDU,IDWDDU,IDSGDU,IDESDU,NERSDU,
+     & IWESDU,LERSDU,IOCLDU
+      LOGICAL FUISDU,FERSDU,FPUIDU,FOPSDU,FUIXDU,FNRZDU,FMETDU,FPSWDU
+      COMMON /DUISCC/ INDVCM,IDCMDU,IDVDDU(MWINDU),IDWDDU(MWINDU),
+     &                FUISDU,
+     &                IDSGDU(0:MPNWDU),IDESDU(MERSDU),NERSDU,
+     &                IWESDU(MERSDU),LERSDU,
+     &                IOCLDU(7,0:MPNWDU),FERSDU,FPUIDU,FOPSDU,FUIXDU,
+     &                FNRZDU,FMETDU,FPSWDU
+C-------------------------------------------------------------DXPNTR
+      INTEGER NXCUDX,MXCUDX
+      PARAMETER (MXCUDX=5)
+      LOGICAL FUPODX
+      INTEGER POINDX
+      INTEGER HSPHDX,HSPVDX
+      COMMON /DXPNTR/ NXCUDX,FUPODX(MXCUDX,2),HSPHDX(MXCUDX),
+     & HSPVDX(MXCUDX),POINDX(32,MXCUDX)
+C-------------------------------------------------------------

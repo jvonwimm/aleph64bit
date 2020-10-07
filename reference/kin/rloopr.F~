@@ -1,0 +1,555 @@
+      SUBROUTINE RLOOPR
+C----------------------------------------------------------------------
+C! Loop on records
+C!
+C!   Author        S.Orteu, J.Knobloch
+C!   Modified      Z. Qian              15-jul-1989
+C!   Modified:   H. Meinhard       24-Aug-1989
+C!   Modified :- E. Lancon              5-FEB-1992
+C!                Use ABRSEL routine from alephlib to read events
+C!               F.Ranjard             28-APR-1994
+C!                create XTCN bank from X1RG bank
+C!               P.Comas               25-AUG-1994
+C!                Only the EVEH of events with DAQ error as evtype
+C!                (998) is passed on to the POT. These events are
+C!                not reconstructed
+C!               P.Comas               8-MAY-1995
+C!                Write bunch number used for reconstruction in EVEH
+C!               P.Comas               8-AUG-1996
+C!                Filter out TPC laser events writing only the EVEH
+C!               M.Cattaneo            5-DEC-1997
+C!                Fix format statement when event length > 1Mbyte
+C!               M.Cattaneo           27-JUL-1998
+C!                Print also processing time of previous event
+C!               M.Cattaneo           14-SEP-1998
+C!                Modify format statement
+C?
+C!======================================================================
+#ifndef DOC
+      CHARACTER*50 BID
+*CD bcs
+      INTEGER LMHLEN, LMHCOL, LMHROW
+      PARAMETER (LMHLEN=2, LMHCOL=1, LMHROW=2)
+C
+      COMMON /BCS/   IW(1000)
+      INTEGER IW
+      REAL RW(1000)
+      EQUIVALENCE (RW(1),IW(1))
+C
+C!    Current event and event numbers
+      LOGICAL INIRUC, FMCRUN
+      INTEGER IRUNRC,IEVTRC,ISQNRC
+      REAL RENLEP
+      COMMON /RCURNT/IRUNRC,IEVTRC,ISQNRC, INIRUC, FMCRUN, RENLEP
+C! Event parameters
+      COMMON /REVENT/SIZERE,TKBYRE
+C
+C SIZERE  = SIZE of Read Event (in Kbytes)
+C TKBYRE  = Total number of KBytes read
+C
+C! FLAGS
+      INTEGER JDBDRF,JHISRF,JPRSRF,JPRERF,MDET, IDEBBC, IDEBTC
+      LOGICAL FDEBRF,FDETRF,FREPRO,FPASS0
+      PARAMETER (MDET=17)
+      PARAMETER (NCHDET=4)
+      CHARACTER*(NCHDET) TNAMRD
+      COMMON /RFLAGS/FDEBRF,FDETRF(MDET),FREPRO,FPASS0,JDBDRF(MDET),
+     &        JHISRF(MDET),JPRSRF(MDET),JPRERF(MDET),JCMORF,
+     &        JEBIRF(2),JFBIRF(2),TNAMRD(MDET), IDEBBC, IDEBTC
+C! LOGICAL-UNIT-NUMBERS
+      INTEGER JULINP,JULOUT,NWRTMX,NATOUT,EPIOUT,NOOUTP,JULMON
+      PARAMETER (JULINP=20,JULOUT=50,NWRTMX=3,NATOUT=1,EPIOUT=2,
+     +  NOOUTP=3,JULMON=18)
+      INTEGER MAXFPO
+      PARAMETER (MAXFPO=200)
+      COMMON /RLUNIT/LINPRL,LOUTRL,LDEBRL,LCOMRL,LPOTRL,LHSTRL,
+     +               LRCONS,LRGEOM,LUNIRL(NWRTMX),
+     +               JOUTRL(NWRTMX),ANYORL,LMONRL,LSUMRL,LPAS0L
+      INTEGER LINPRL,LOUTRL,LDEBRL,LCOMRL,LPOTRL,LHSTRL,LRCONS,
+     +               LRGEOM,LUNIRL,JOUTRL,LMONRL,LSUMRL,LPAS0L
+      LOGICAL ANYORL
+      COMMON /RLUNIC/OUTLIS,FORMRL,FTYPRL,OTYPRL,SUMLIS,PASLIS
+C     the character length in the following statement must be
+C            4*MAXFPO (parameter defined above)
+C               vvv
+      CHARACTER*800 OUTLIS(NWRTMX),TEMLIS
+      CHARACTER*100 SUMLIS,PASLIS
+      CHARACTER*4 FORMRL(3),FTYPRL(3),OTYPRL(NWRTMX)
+      PARAMETER (JULVD=1,JULIT=2,JULTP=3,JULEC=4,JULLC=5)
+      PARAMETER (JULSA=6,JULHC=7,JULMU=8,JULCA=9,JULSK=10)
+      PARAMETER (JULYR=11,JULYT=12,JULEF=13,JULBC=14,JULFA=15
+     +           ,JULBO=16,JULSI=17)
+      PARAMETER (MODEND=0,MODREA=1,MODPRV=2,MODPRI=3,MODPRT=4)
+      PARAMETER (MODPRE=5,MODPRL=6,MODPRS=7,MODPRH=8,MODPRM=9)
+      PARAMETER (MODTPT=10,MODTPW=11,MODDEX=12,MODITC=13 ,MODVDE=14)
+      PARAMETER (MODFIT=15,MODFTR=16,MODECL=17,MODMIP=18,MODEID=19)
+      PARAMETER (MODFEO=20,MODFEP=21,MODHCL=22,MODHDP=23,MODEHG=24)
+      PARAMETER (MODMUF=25,MODMUA=26,MODLCA=27,MODSAT=28,MODLTR=29)
+      PARAMETER (MODPID=30,MODYMA=31,MODYTO=32,MODYV0=33,MODHIS=34)
+      PARAMETER (MODPOT=35,MODBSP=36,MODWRI=37)
+      PARAMETER (MODCOM=38,MODBCA=39,MODMUO=40,MODMON=41,MODENF=42)
+      PARAMETER (MODGAM=43,MODEDI=44,MODGMX=45)
+      PARAMETER (MODSUM=46,MODBOM=47)
+      PARAMETER (MODPSI=48,MODSIC=49,MODGMP=50)
+      PARAMETER (MODVTP=51,MODKNK=52,MODNUC=53)
+      PARAMETER (LASTMO=53)
+      CHARACTER*33 RNTXTM  (LASTMO)
+      CHARACTER*8  RNTXTS  (LASTMO)
+      INTEGER RNCALL (LASTMO)
+      REAL    RNTIME (LASTMO)
+C ----> Title of Modules
+      DATA RNTXTM(1 )/'Reading records..................'/
+      DATA RNTXTM(2 )/'Prepare data VDET................'/
+      DATA RNTXTM(3 )/'Prepare data ITC.................'/
+      DATA RNTXTM(4 )/'Prepare data TPC.................'/
+      DATA RNTXTM(5 )/'Prepare data ECAL................'/
+      DATA RNTXTM(6 )/'Prepare data LCAL................'/
+      DATA RNTXTM(7 )/'Prepare data SATR................'/
+      DATA RNTXTM(8 )/'Prepare data HCAL................'/
+      DATA RNTXTM(9 )/'Prepare data MUON................'/
+      DATA RNTXTM(10)/'TPC track finding................'/
+      DATA RNTXTM(11)/'TPC wire association.............'/
+      DATA RNTXTM(12)/'dE/dx calculation................'/
+      DATA RNTXTM(13)/'ITC reconstruction...............'/
+      DATA RNTXTM(14)/'VDET reconstruction..............'/
+      DATA RNTXTM(15)/'Global fit VDET,ITC,TPC..........'/
+      DATA RNTXTM(16)/'Extrapolate track ECAL,Coil,Hcal.'/
+      DATA RNTXTM(17)/'Find ECAL clusters...............'/
+      DATA RNTXTM(18)/'Minimum ionizing in ECAL.........'/
+      DATA RNTXTM(19)/'Electron identification..........'/
+      DATA RNTXTM(20)/'ECAL cluster analysis............'/
+      DATA RNTXTM(21)/'ECAL statistics..................'/
+      DATA RNTXTM(22)/'Find HCAL clusters...............'/
+      DATA RNTXTM(23)/'HCAL digital pattern analysis....'/
+      DATA RNTXTM(24)/'ECAL - HCAL global analysis......'/
+      DATA RNTXTM(25)/'HCAL muon finding................'/
+      DATA RNTXTM(26)/'MUON-hit - track association.....'/
+      DATA RNTXTM(27)/'LCAL reconstruction..............'/
+      DATA RNTXTM(28)/'SATR reconstruction..............'/
+      DATA RNTXTM(29)/'Luminosity track-cluster assoc...'/
+      DATA RNTXTM(30)/'Particle identification summary..'/
+      DATA RNTXTM(31)/'Main vertex finding (Mermikides).'/
+      DATA RNTXTM(32)/'Topology reconstruction..........'/
+      DATA RNTXTM(33)/'V0 reconstruction................'/
+      DATA RNTXTM(34)/'Histogramming....................'/
+      DATA RNTXTM(35)/'Build pot banks..................'/
+      DATA RNTXTM(36)/'Beam Spot Position...............'/
+      DATA RNTXTM(37)/'Write event......................'/
+      DATA RNTXTM(38)/'Compress data....................'/
+      DATA RNTXTM(39)/'BCAL reconstruction..............'/
+      DATA RNTXTM(40)/'MUON HCAL + Chambers association.'/
+      DATA RNTXTM(41)/'Monitoring.......................'/
+      DATA RNTXTM(42)/'Energy Flow......................'/
+      DATA RNTXTM(43)/'ECAL Photon identification.......'/
+      DATA RNTXTM(44)/'EDIR Class Word..................'/
+      DATA RNTXTM(45)/'Gammas in charged clusters.......'/
+      DATA RNTXTM(46)/'Summary File.....................'/
+      DATA RNTXTM(47)/'BOM Calculate Beam Parameters....'/
+      DATA RNTXTM(48)/'SICAL prepare data...............'/
+      DATA RNTXTM(49)/'SICAL reconstruction.............'/
+      DATA RNTXTM(50)/'GAMPEC + mod PECO + BULOS........'/
+      DATA RNTXTM(51)/'Track preselection for VDET......'/
+      DATA RNTXTM(52)/'Kink search......................'/
+      DATA RNTXTM(53)/'Nuclear interaction search.......'/
+C ----> Name of Modules
+      DATA RNTXTS(1 )/'RLOOPR'/
+      DATA RNTXTS(2 )/'VPREDA'/
+      DATA RNTXTS(3 )/'IPREDA'/
+      DATA RNTXTS(4 )/'TPREDA'/
+      DATA RNTXTS(5 )/'EPREDA'/
+      DATA RNTXTS(6 )/'LPREDA'/
+      DATA RNTXTS(7 )/'SPREDA'/
+      DATA RNTXTS(8 )/'HPREDA'/
+      DATA RNTXTS(9 )/'MPREDA'/
+      DATA RNTXTS(10)/'TPCREC'/
+      DATA RNTXTS(11)/'TRKWIR'/
+      DATA RNTXTS(12)/'TRKELS'/
+      DATA RNTXTS(13)/'ITCREC'/
+      DATA RNTXTS(14)/'VDLINK'/
+      DATA RNTXTS(15)/'FITALL'/
+      DATA RNTXTS(16)/'FTRACK'/
+      DATA RNTXTS(17)/'ECFCLU'/
+      DATA RNTXTS(18)/'ECRMIP'/
+      DATA RNTXTS(19)/'ELECID'/
+      DATA RNTXTS(20)/'ECFOBJ'/
+      DATA RNTXTS(21)/'ECPRIN'/
+      DATA RNTXTS(22)/'HCFCLU'/
+      DATA RNTXTS(23)/'HDPREC'/
+      DATA RNTXTS(24)/'ECHCGL'/
+      DATA RNTXTS(25)/'HMFIND'/
+      DATA RNTXTS(26)/'MUASS '/
+      DATA RNTXTS(27)/'LCAREC'/
+      DATA RNTXTS(28)/'SATREC'/
+      DATA RNTXTS(29)/'LTRACK'/
+      DATA RNTXTS(30)/'FPIDEN'/
+      DATA RNTXTS(31)/'YFMAIN'/
+      DATA RNTXTS(32)/'YTOPOL'/
+      DATA RNTXTS(33)/'YMFV0S'/
+      DATA RNTXTS(34)/'RHSEVT'/
+      DATA RNTXTS(35)/'RDEFPO'/
+      DATA RNTXTS(36)/'VBSPOT'/
+      DATA RNTXTS(37)/'RWREVT'/
+      DATA RNTXTS(38)/'CMPLIS'/
+      DATA RNTXTS(39)/'BPREDA'/
+      DATA RNTXTS(40)/'MUIDO '/
+      DATA RNTXTS(41)/'RMONIT'/
+      DATA RNTXTS(42)/'EMSKEV'/
+      DATA RNTXTS(43)/'EBEGID'/
+      DATA RNTXTS(44)/'ALCLASW'/
+      DATA RNTXTS(45)/'ECGMIX'/
+      DATA RNTXTS(46)/'RCJSUM'/
+      DATA RNTXTS(47)/'OMBREC'/
+      DATA RNTXTS(48)/'SIPREDA'/
+      DATA RNTXTS(49)/'SICREC'/
+      DATA RNTXTS(50)/'GASTEER'/
+      DATA RNTXTS(51)/'VTRPRE'/
+      DATA RNTXTS(52)/'KINKS'/
+      DATA RNTXTS(53)/'NUCVTX'/
+      COMMON /RTIMES/AJBSRT,AJBFRT,ARNSRT,ARNFRT,AEVSRT,AEVFRT
+      REAL AJBSRT,AJBFRT,ARNSRT,ARNFRT,AEVSRT,AEVFRT
+*CD evehjj
+      INTEGER JEVEEN,JEVERN,JEVERT,JEVEDA,JEVETI,JEVEEV,JEVEM1,JEVEM2,
+     +          JEVEM3,JEVEM4,JEVETY,JEVEES,JEVETE,LEVEHA
+      PARAMETER(JEVEEN=1,JEVERN=2,JEVERT=3,JEVEDA=4,JEVETI=5,JEVEEV=6,
+     +          JEVEM1=7,JEVEM2=8,JEVEM3=9,JEVEM4=10,JEVETY=11,
+     +          JEVEES=12,JEVETE=13,LEVEHA=13)
+*CD runhjj
+      INTEGER JRUNEN,JRUNRN,JRUNRT,JRUNSD,JRUNST,JRUNTT,JRUNRC,LRUNHA
+      PARAMETER(JRUNEN=1,JRUNRN=2,JRUNRT=3,JRUNSD=4,JRUNST=5,JRUNTT=6,
+     +          JRUNRC=8,LRUNHA=9)
+*CD jestjj
+      INTEGER JJESET,JJESON,JJESNN,JJESOL,JJESCL,JJESPN,JJESBP,LJESTA
+      PARAMETER(JJESET=1,JJESON=2,JJESNN=3,JJESOL=4,JJESCL=5,JJESPN=6,
+     +          JJESBP=7,LJESTA=7)
+      PARAMETER (NBOSER=100,NBCONT=6)
+      COMMON/JCBERR/NBERRR,NBAERF,NBAERN,NBALEN,NFMLEN,
+     X              JBOSER(NBOSER),JBCONT(NBOSER,NBCONT)
+      CHARACTER*1  CLIST
+      CHARACTER*80  OUNPK
+      CHARACTER*60 MESSAGE
+      LOGICAL FIRST
+      LOGICAL RMOD
+      DATA FIRST / .TRUE. /
+      DATA NUMRU / 0 /
+*CD bmacro
+C!    set of intrinsic functions to handle BOS banks
+C - # of words/row in bank with index ID
+      LCOLS(ID) = IW(ID+1)
+C - # of rows in bank with index ID
+      LROWS(ID) = IW(ID+2)
+C - index of next row in the bank with index ID
+      KNEXT(ID) = ID + LMHLEN + IW(ID+1)*IW(ID+2)
+C - index of row # NRBOS in the bank with index ID
+      KROW(ID,NRBOS) = ID + LMHLEN + IW(ID+1)*(NRBOS-1)
+C - # of free words in the bank with index ID
+      LFRWRD(ID) = ID + IW(ID) - KNEXT(ID)
+C - # of free rows in the bank with index ID
+      LFRROW(ID) = LFRWRD(ID) / LCOLS(ID)
+C - Lth integer element of the NRBOSth row of the bank with index ID
+      ITABL(ID,NRBOS,L) = IW(ID+LMHLEN+(NRBOS-1)*IW(ID+1)+L)
+C - Lth real element of the NRBOSth row of the bank with index ID
+      RTABL(ID,NRBOS,L) = RW(ID+LMHLEN+(NRBOS-1)*IW(ID+1)+L)
+C
+C
+C?   unpack every thing execpt HCAL and MUONS in case of reprocessing
+C?   (the 2 alephlib routines give problem, for hcal the unpacking is
+C?   redone in HPREDA, for the muons there is no packing anyway).
+C
+      OUNPK = ' '
+      IF ( FREPRO )
+     &        OUNPK = 'VD IT TP TE EC LC SA FI CR SO'
+      IREAD = 0
+  111 CONTINUE
+C
+C     This is the loop over RECORDS within a file
+C
+      CALL RNXMOD(MODREA,RMOD)
+C
+      CALL ABRSEL ( 'E', OUNPK, IRET)
+
+C
+C?   Get Input and Output unit numbers
+C?   ABRSEL MUST have been called once !
+C
+      IF ( FIRST ) THEN
+        FIRST = .FALSE.
+        CALL ABUNIT (JULIN, IDUM1, IDUM2, JULOU, IDUM3)
+        IF ( JULIN.EQ.0 ) THEN
+          MESSAGE = ' Error in I/O Definition '
+          GOTO 700
+        ENDIF
+      ENDIF
+C
+      CLIST = 'E'
+      IF ( IRET.EQ.2 ) CLIST = 'R'
+      SIZERE = 4./1000.* FLOAT( LENLIS( CLIST ) )
+
+      GOTO ( 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+     &  18, 19, 20, 21) IRET
+
+
+C
+C?   ----->   E V E N T record
+C
+    1 CONTINUE
+      IREAD = IREAD + 1
+      IND = IW(NAMIND('EVEH'))
+      NUMRU = IW(IND+JEVERN)
+      NUMEV = IW(IND+JEVEEV)
+C Set debug flag
+      FDEBRF = IREAD.GE.IDEBBC.AND.IREAD.LE.IDEBTC
+      IF (.NOT.INIRUC) THEN
+C Check that some constants are there.
+C If not, set run number to the number from event header.
+        IF (IRUNRC.EQ.0) THEN
+          IF (FDEBRF) THEN
+            WRITE(LOUTRL,'(A)')     '0RLOOPR- No run number defined'
+            WRITE(LOUTRL,'(A,I6)')
+     *                              ' RLOOPR- Run number set to ',NUMRU
+            IRUNRC = NUMRU
+          ENDIF
+        ENDIF
+C Run not initialised
+        CALL RINRUN
+        INIRUC = .TRUE.
+      ENDIF
+      ISQNRC = ISQNRC + 1
+C Check data consistency
+      IEVTRC = NUMEV
+      IF (IRUNRC.NE.NUMRU) CALL REJECT(NUMRU,NUMEV)
+      IETYP=0
+      KEVEH=IW(NAMIND('EVEH'))
+      IETYP=IW(KEVEH+JEVEES)
+      ILASE=IW(KEVEH+JEVEM1)
+      AEVTIM=AEVFRT-AEVSRT
+      IF (FDEBRF.AND.JDBDRF(JULSK).GE.2)
+     *          WRITE(LOUTRL,'(A,I6,A,I6,A,F7.2,A,I5,A,I4,A,F6.2)')
+     *          ' RLOOPR-Evt',NUMEV,' Run',NUMRU,' ',
+     *          MAX(SIZERE,0.),' Kb. Nr.in job=',IREAD,' Evtyp',
+     *          IETYP,' Time(s):',AEVTIM
+        js = 3
+        call alevnum(js,numru,numev)
+C       in case of event records look for "non physical events"
+C       type=128  pause_event
+C       type=129  pause_event_copy
+C       type=130  last_event (in a run)
+C       type=131  l3_reject
+C       type=132  change_event (last_event in a run -fast run change)
+C       these records will be passed on to the POT without any processin
+C       type>990  DAQ error (type=998 'real' DAQ error)
+C
+      IF(IETYP.GE.128.AND.IETYP.LE.132)THEN
+C                level 3 reject
+        DO 112 I=1,NWRTMX
+          IF(JOUTRL(I).NE.NOOUTP) CALL ABWSEL ('E')
+  112   CONTINUE
+C
+      ELSE IF( (IETYP.EQ.998).OR.(BTEST(ILASE,23)) )THEN
+        CALL RSHRIN(IW,'E',TEMLIS)
+        L = LNBLNK(TEMLIS)
+        CALL BDROP(IW,TEMLIS(5:L))
+        CALL BLIST(IW,'E=','EVEH')
+        DO 113 I=1,NWRTMX
+          IF(JOUTRL(I).NE.NOOUTP) CALL ABWSEL ('E')
+  113   CONTINUE
+C
+      ELSE
+C
+C build XTCN trigger from X1RG trigger bank when X1RG exists and XTCN
+C does not exist
+        CALL XTCNCR
+
+C
+C Write bunch number for reconstruction in word 10 of EVEH starting
+C from '95 data (run > 35000)
+        CALL RWJUBW
+C
+C Reconstruct the event
+        CALL RECONS
+C
+      ENDIF
+C
+      GOTO 111
+C
+C?   ----->     R U N record
+C
+    2 CONTINUE
+C
+      IND = IW(3)
+      NUMRU = IW(IND+JRUNRN)
+      IF (INIRUC .AND. NUMRU.NE.IRUNRC) THEN
+        INIRUC = .FALSE.
+      ENDIF
+      IRUNRC = NUMRU
+C-----------------------------------------------------------------------
+C         drop some banks from the run header to avoid that they go
+C         to the POT
+      CALL BDROP(IW,'HPB1HPB2HPEAHPEB')
+C-  TDVV from run header as nr = 0
+      IDROP = NDROP ('TDVV',0)
+C-  LDST from run header as nr = 1
+      IF(IRUNRC.LT.14000) THEN
+        IDROP = NDROP ('LDST',1)
+      ENDIF
+C-----------------------------------------------------------------------
+      IF (FDEBRF.AND.JDBDRF(JULSK).GE.1)
+     *        WRITE(LOUTRL,'(A,I6,A,F6.2,A)')
+     *        '0RLOOPR- Run ',NUMRU,' found ',SIZERE,' Kbytes read.'
+C
+C?   If Run already initialized write out the record
+C?   if run is not initialized the record will be written out after
+C?   run initilisation (in RINRUN)
+C
+      IF ( INIRUC ) CALL ABWSEL ('R')
+C
+      GOTO 111
+C
+C?   It is an U N K N O W N type (nowadays called slow control) record?
+C?   Write it out only if one run record has been read in (numru <> 0)
+C
+    3 CONTINUE
+      IF (FDEBRF.AND.JDBDRF(JULSK).GE.1)
+     *        WRITE(LOUTRL,'(A,F6.2,A)')
+     *        '0RLOOPR- Unknown Record found ',SIZERE,' Kbytes read.'
+      IF ( NUMRU.NE.0 ) CALL RUNKNO
+      GOTO 111
+C
+C?   Future application
+C
+    4 CONTINUE
+      GOTO 111
+C
+C?   End of file condition, next input file is now opened
+C
+    5 CONTINUE
+      GOTO 111
+C
+C?   No more input files
+C
+    6 CONTINUE
+      MESSAGE = 'No more input files'
+      GOTO 700
+C
+C?   NEVT limit reached
+C
+    7 CONTINUE
+      MESSAGE = 'NEVT limit reached'
+      GOTO 700
+C
+C?   End of selected data according to SEVT/SRUN cards
+C
+    8 CONTINUE
+      MESSAGE = 'End of selected data according to SEVT/SRUN cards'
+      GOTO 700
+C
+C?   Time limit reached
+C
+    9 CONTINUE
+      MESSAGE = 'Time limit reached'
+      GOTO 700
+C
+C?   Input file not properly opened
+C
+   10 CONTINUE
+      MESSAGE = 'Input file not properly opened'
+      GOTO 700
+C
+C?   Syntax error in SEVT, SRUN, IRUN, NEVT, TIME, CLAS cards
+C
+   11 CONTINUE
+      MESSAGE =
+     &    'Syntax error in SEVT, SRUN, IRUN, NEVT, TIME, CLAS cards'
+      GOTO 700
+C
+C?   Read error on event directory
+C
+   12 CONTINUE
+      MESSAGE = 'Read error on event directory'
+      GOTO 700
+C
+C?   Error in FILI cards
+C
+   13 CONTINUE
+      MESSAGE = 'Error in FILI cards'
+      GOTO 700
+C
+C?   Cannot open input file
+C
+   14 CONTINUE
+      MESSAGE = 'Cannot open input file'
+      GOTO 700
+C
+C?   Error on FILO card
+C
+   15 CONTINUE
+      MESSAGE = 'Error on FILO card'
+      GOTO 700
+C
+C?   Cannot open output file
+C
+   16 CONTINUE
+      MESSAGE = 'Cannot open output file'
+      GOTO 700
+C
+C?   17 ... 21 : Error conditions. Call ABRREC again.
+C
+C
+C?   Read error
+C
+   17 CONTINUE
+      MESSAGE = 'Read error'
+      GOTO 800
+C
+C?   Error in decompressing
+C
+   18 CONTINUE
+      MESSAGE = 'Error in decompressing'
+      GOTO 800
+C
+C?   Not enough space for unpacking
+C
+   19 CONTINUE
+      MESSAGE = 'Not enough space for unpacking'
+      GOTO 800
+C
+C?   Error in TPC unpacking
+C
+   20 CONTINUE
+      MESSAGE = 'Error in TPC unpacking'
+      GOTO 800
+C
+C?   Error during data base reading
+C
+   21 CONTINUE
+      MESSAGE = 'Error during data base reading'
+      GOTO 800
+C
+C?   Fatal Error
+C
+  700 CONTINUE
+      WRITE (LOUTRL,'(2a)') ' RLOOPR - ', MESSAGE
+      GOTO 999
+C
+C?   Recoverable Error
+C
+  800 CONTINUE
+      WRITE (LOUTRL,'(//,2a)') ' RLOOPR - ', MESSAGE
+      GOTO 111
+C
+C?     ____________
+C?                |
+C?                | The Way Out
+C?                |
+C?                V
+C?
+C
+  999 CONTINUE
+C
+C?   Close the run if it was open
+C
+      IF (INIRUC) CALL RCLRUN
+C
+      IW(1) = 0
+      RETURN
+      END
+#endif

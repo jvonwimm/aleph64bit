@@ -1,0 +1,87 @@
+head	1.2;
+access;
+symbols
+	look25:1.2
+	look24:1.2
+	look23:1.2
+	look22:1.2
+	look21:1.2
+	look20:1.2
+	v15:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.04.18.09.05.37;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.09.15.50.22;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.09.15.50.23;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@change VAX to DEC.AND..NOT.UNIX ==> version 20
+
+ Modified Files:
+ 	lkevt.h lkfil.h lklast.h lkunpk.h version.h
+ Removed Files:
+	lookend.h
+@
+text
+@      LOGICAL FUNCTION LKEQUAL(STR1,STR2)
+C -----------------------------------------------------------
+C ------------------------------------------------------------
+#ifndef DOC
+      CHARACTER*(*) STR1,STR2
+      INTEGER POS
+C -----------------------------------------------------------
+      LEN=LKLWRD(STR1)
+      L2=INDEX(STR1,'=')
+      IF (L2.GT.0.AND.L2.LE.LEN) LEN=L2-1
+      IF (LEN.GT.-1) THEN
+          IF (STR1(1:LEN).EQ.STR2(1:LEN)) THEN
+              LKEQUAL=.TRUE.
+          ELSE
+              LKEQUAL=.FALSE.
+          ENDIF
+      ELSE
+          LKEQUAL=.FALSE.
+      ENDIF
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK lkequal
+@
+
+
+1.1.1.1
+log
+@import look 15
+@
+text
+@@

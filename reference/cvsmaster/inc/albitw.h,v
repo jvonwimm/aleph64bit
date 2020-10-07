@@ -1,0 +1,52 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  v1:1.1.1.1 flr:1.1.1;
+locks    ; strict;
+comment  @ * @;
+
+
+1.1
+date     94.12.07.13.41.45;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     94.12.07.13.41.46;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*CD albitw
+C! set number of bits in a machine word
+      INTEGER NBITW, NBYTW, LCHAR
+#if defined(BIT64)
+      PARAMETER (NBITW = 64)
+#else
+      PARAMETER (NBITW = 32)
+#endif
+      PARAMETER (NBYTW = NBITW/8, LCHAR = NBYTW)
+#if defined(DOC)
+      NBITW   = number of bits in a machine word
+      NBYTW   = number of bytes in a machine word
+      LCHAR   = number of characters in a machine word
+#endif
+@
+
+
+1.1.1.1
+log
+@import hac+general include files
+@
+text
+@@

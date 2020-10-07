@@ -1,0 +1,614 @@
+head	1.3;
+access;
+symbols
+	jul313_3:1.3
+	jul313_2:1.3
+	jul313_1:1.3
+	jul313:1.3
+	jul312_1:1.3
+	jul312:1.3
+	jul311:1.3
+	jul310_1:1.3
+	jul310:1.3
+	jul309_1:1.3
+	jul309:1.3
+	jul308_6:1.3
+	jul308_5:1.3
+	jul308_4:1.3
+	jul308_3:1.3
+	jul308_2:1.3
+	jul308_1:1.3
+	jul308:1.3
+	jul307_4:1.3
+	jul307_3:1.3
+	jul307_2:1.3
+	jul307_1:1.3
+	jul307:1.3
+	jul306_3:1.3
+	jul306_2:1.3
+	jul306_1:1.3
+	jul306:1.3
+	jul305_4:1.3
+	jul305_3:1.3
+	jul305_2:1.3
+	jul305_1:1.3
+	jul305:1.3
+	jul304_3:1.3
+	jul304_2:1.3
+	jul304_1:1.3
+	jul304:1.3
+	jul303_7:1.3
+	jul303_6:1.3
+	jul303_5:1.3
+	jul303_4:1.3
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2
+	jul280_1:1.2
+	jul280:1.2
+	jul279:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	97.07.04.08.11.31;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.03.12.15.43.25;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.20.10;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.20.11;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@Julia corr 303.4
+@
+text
+@      SUBROUTINE TPLANA(IP,LSTSP)
+C
+C-----------------------------------------------------------------------
+C! Analyze a TPC pulse
+C!
+C!    Author:   R. Johnson   23-12-86
+C!    Modified: R. Johnson   19-01-88
+C!    Modified: M. Cattaneo   3-07-97
+C!       Bug fix: Update IOFFS after calls to WBANK
+C!
+C!    Input:
+C!       - IP      /I      Pulse number in workbank ITPAD
+C!    Output and Input:
+C!       - LSTSP   /I      Pointer to the last subpulse found
+C!                         on this pad
+C!
+C!    Called from TCLANA
+C!
+C!    Description:
+C!    ------------
+C!    This program is called for each TPC pulse in a cluster, where a
+C!    pulse is defined by TPD zero suppression hardware and a cluster
+C!    is a topologically connected group of pulses.  It considers
+C!    separately groups of consecutive samples above a fixed software
+C!    threshold.  The beginnings and endings of such groups are marked,
+C!    and the points of all significant local maxima and minima are
+C!    also marked, except for pulses at large dip angle (assuming
+C!    a track coming from the origin), for which local maxima and
+C!    minima are ignored. Each maximum along with its adjacent minima
+C!    are then considered to form a separate subpulse if the maximum is
+C!    sufficiently greater than the adjacent minima and not too much
+C!    less than any adjacent maxima.  Precise definitions of the cuts
+C!    are found in common TCLUCT.  The results are output into the
+C!    workbank ITSPUW, which is described in comdeck TCLCOW.
+C!
+C!----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "tparac.h"
+#include "bcs.h"
+#include "tcluct.h"
+#include "tclcow.h"
+C
+C------------------ local variables -----------------------------------
+C
+C     MXINF is a limit on the number of inflection points which can be
+C     found on a single pulse.  ISM will contain for each inflection
+C     point (in order MIN,MAX,MIN. . .MIN) the corresponding sample in
+C     ITPDI.  IPK will contain pointers into ISM for a list of those
+C     peaks which are significant.  ISPPK points to samples in ITPDI
+C     corresponding to significant peaks which are sufficiently
+C     isolated to become subpulses.  ISPV1 and ISPV2 point to the
+C     subpulse beginning and ends in ITPDI.  ISPNP gives the number
+C     of significant peaks contained within the subpulse, and ISPIS
+C     is 1 if the subpulse has any neighboring significant peaks
+C     in z and 0 if not.
+C
+      PARAMETER (MXINF=LMXSCL/2,MXPK=MXINF/2-1)
+      DIMENSION ISM(MXINF),IPK(MXPK),ISPPK(MXPK),ISPV1(MXPK)
+      DIMENSION ISPV2(MXPK),ISPNP(MXPK),ISPIS(MXPK)
+      CHARACTER TEXT*130
+C
+C------------------------ Statements function definitions --------------
+C
+#include "bmacro.h"
+C
+      ITPDI(IA)= IW(IOFFS + IA)
+C
+C-----------------------------------------------------------------------
+C
+      IT0= ITABL(ITPADW,IP,JTPDT0)
+      ITOFF=IT0-1
+      NSAMP= ITABL(ITPADW,IP,JTPDNS)
+      IOFF1= ITABL(ITPADW,IP,JTPDOF)
+      IOFFS= ITPDIW+IOFF1
+C
+C++   Look out for pulses starting out above threshold with the
+C++   first sample on a maximum.  Ensure here that in the following
+C++   search for maxima and minima we start at a minimum.
+C
+      IPH1=ITPDI(1)
+      IF (IPH1.GT.ITLCPT) THEN
+C
+C++     Loop over samples until a rise or drop is detected
+C
+        DO 55 IS2=2,NSAMP
+          IPH=ITPDI(IS2)
+          IF (IPH.GT.IPH1) THEN
+C
+C++         Everything is OK if leading edge is a minimum
+C
+            IS=IS2-1
+            GO TO 56
+          ELSEIF (IPH.LT.IPH1) THEN
+C
+C++         If the pulse starts at a maximum, look for the first
+C++         minimum and mark it.
+C
+            IPHMN=IPH
+            INXT=IS2+1
+            GO TO 52
+          ENDIF
+  55    CONTINUE
+C
+C++     Skip this pulse if all samples are equal
+C
+        GO TO 501
+C
+  52    CONTINUE
+C
+C++       Loop over samples until the first minimum is found
+C
+          DO 53 IS2=INXT,NSAMP
+            IPH=ITPDI(IS2)
+            IF (IPH.GT.IPHMN) THEN
+              IS=IS2-1
+              GO TO 56
+            ELSE
+              IPHMN=IPH
+            ENDIF
+  53      CONTINUE
+C
+C++       Skip this pulse if no minimum ever is found
+C
+          GO TO 501
+C
+  56    CONTINUE
+      ELSE
+        IS=2
+      ENDIF
+C
+C++   Case 1:  Look for a rise above the fixed threshold.
+C
+      ILST=NSAMP-ITLCML
+  100 CONTINUE
+C
+C++     Exit if not enough samples are left for a complete subpulse
+C
+        IF (IS.GT.ILST) GO TO 501
+C
+C++     Initialize variables for case 2 when threshold xing is found
+C
+        IPH=ITPDI(IS)
+        IF (IPH.GT.ITLCPT) THEN
+          NINF=1
+          ISM(NINF)=IS
+          IPHMX=IPH
+          IS=IS+1
+          GO TO 200
+        ENDIF
+        IS=IS+1
+        GO TO 100
+  200 CONTINUE
+C
+C++     Case 2:  Look for a local maximum
+C
+        IPH=ITPDI(IS)
+        IF (IPH.LE.ITLCPT) THEN
+          NOVER=IS-ISM(1)
+          IF (NOVER.LT.ITLCML) THEN
+            IS=IS+1
+            GO TO 100
+          ENDIF
+          IF (NINF.EQ.1) THEN
+            NINF=NINF+1
+            ISM(NINF)=IS-1
+            NINF=NINF+1
+            ISM(NINF)=IS-1
+          ENDIF
+          GO TO 400
+        ENDIF
+        IF (IS.EQ.NSAMP) THEN
+          IF (NINF.LT.3) THEN
+            IF (IPH.LT.IPHMX) THEN
+              NINF=NINF+1
+              ISM(NINF)=IS
+              NINF=NINF+1
+              ISM(NINF)=IS
+            ELSE
+              GO TO 501
+            ENDIF
+          ENDIF
+          NOVER=IS-ISM(1)+1
+          IF (NOVER.LT.ITLCML) GO TO 501
+          GO TO 400
+        ENDIF
+C
+C++     Check here for a local maximum.
+C
+        IF (IPH.LT.IPHMX) THEN
+C
+C++       Mark the maximum and initialize variables for case 3.
+C
+          NINF=NINF+1
+          ISM(NINF)=IS-1
+          IPHMN=IPH
+          IS=IS+1
+          GO TO 300
+        ENDIF
+C
+C++     Keep track of maximum pulse height
+C
+        IPHMX=IPH
+        IS=IS+1
+        GO TO 200
+  300 CONTINUE
+        IPH=ITPDI(IS)
+C
+C++     Case 3:  Look for a local minimum or a fall below
+C++     threshold or the end of the pulse
+C
+        IF (IPH.LE.ITLCPT) THEN
+          NOVER=IS-ISM(1)
+          IF (NOVER.LT.ITLCML) THEN
+            IS=IS+1
+            GO TO 100
+          ENDIF
+          NINF=NINF+1
+          ISM(NINF)=IS-1
+          GO TO 400
+        ENDIF
+        IF (IS.EQ.NSAMP) THEN
+          NOVER=IS-ISM(1)+1
+          IF (NOVER.LT.ITLCML) GO TO 501
+          NINF=NINF+1
+          ISM(NINF)=IS
+          GO TO 400
+        ENDIF
+C
+C++     Check here for a local minimum.
+C
+        IF (IPH.GT.IPHMN) THEN
+C
+C++       Mark position of the minimum and initialize variables
+C++       for another search for a maximum.
+C
+          NINF=NINF+1
+          ISM(NINF)=IS-1
+          IPHMX=IPH
+          IS=IS+1
+          GO TO 200
+        ENDIF
+C
+C++     Keep track of mimimum pulse height.
+C
+        IPHMN=IPH
+        IS=IS+1
+        GO TO 300
+  400 CONTINUE
+C
+C++     At this point we are at the end of the subpulse.  Now
+C++     go over the peaks and keep only those which are
+C++     significantly higher than the valleys to each side.
+C
+        IF (NINF.GT.3) THEN
+          MNLST=-1
+          NPK=0
+          MXTST=-1
+          DO 450 IMX=2,NINF,2
+            IPTST=ITPDI(ISM(IMX))*10/JPLMXD
+            IPVAL=ITPDI(ISM(IMX-1))
+            IF (IPVAL.LE.MNLST) THEN
+              MNLST=IPVAL
+              MXTST=IPTST
+              MXLOC=IMX
+            ELSEIF (IPTST.GE.MXTST) THEN
+              MXTST=IPTST
+              MXLOC=IMX
+            ENDIF
+            IF (MXTST.GT.MNLST) THEN
+              IVAL=IMX+1
+              IPVAL=ITPDI(ISM(IVAL))
+              IF (MXTST.GT.IPVAL .OR. IVAL.EQ.NINF) THEN
+                MNLST=IPVAL
+                MXTST=-1
+                NPK=NPK+1
+                IPK(NPK)=MXLOC
+              ENDIF
+            ENDIF
+  450     CONTINUE
+C
+C++       For each significant peak, see if we can form a separate
+C++       relatively isolated subpulse.
+C
+          ISVL1=ISM(1)
+          NSP=0
+          IPTST=ITPDI(ISM(IPK(1)))*10/ITLCPC
+          DO 480 I=2,NPK
+            MIN1=IPK(I-1)+1
+            MIN2=IPK(I)-1
+            IPVAL=255
+            DO 475 IMN=MIN1,MIN2,2
+              IPH=ITPDI(ISM(IMN))
+              IF (IPH.LT.IPVAL) THEN
+                IPVAL=IPH
+                ISVL2=ISM(IMN)
+              ENDIF
+  475       CONTINUE
+            IF (ISVL1.GT.0) THEN
+              IF (IPTST.GT.IPVAL) THEN
+                NSP=NSP+1
+                ISPPK(NSP)=ISM(IPK(I-1))
+                ISPV1(NSP)=ISVL1
+                ISPV2(NSP)=ISVL2
+                ISPNP(NSP)=1
+                ISPIS(NSP)=1
+              ENDIF
+            ENDIF
+            IPTST=ITPDI(ISM(IPK(I)))*10/ITLCPC
+            IF (IPTST.GT.IPVAL) THEN
+              ISVL1=ISVL2
+            ELSE
+              ISVL1=0
+            ENDIF
+  480     CONTINUE
+          IF (ISVL1.GT.0) THEN
+            NSP=NSP+1
+            ISPPK(NSP)=ISM(IPK(NPK))
+            ISPV1(NSP)=ISVL1
+            ISPV2(NSP)=ISM(NINF)
+            ISPNP(NSP)=1
+            IF (NPK.GT.1) THEN
+              ISPIS(NSP)=1
+            ELSE
+              ISPIS(NSP)=0
+            ENDIF
+          ELSEIF (NSP.EQ.0) THEN
+            NSP=1
+            ISPPK(NSP)=ISM(IPK(1))
+            ISPV1(NSP)=ISM(1)
+            ISPV2(NSP)=ISM(NINF)
+            ISPNP(NSP)=MIN(NPK,9)
+            ISPIS(NSP)=0
+          ENDIF
+        ELSE
+          NPK=1
+          NSP=1
+          ISPPK(NSP)=ISM(2)
+          ISPV1(NSP)=ISM(1)
+          ISPV2(NSP)=ISM(3)
+          ISPNP(NSP)=1
+          ISPIS(NSP)=0
+        ENDIF
+C
+C++     Fill the subpulses into the ITSPUW workbank
+C
+        DO 490 ISP=1,NSP
+          IW(ITSPUW+LMHROW)=LROWS(ITSPUW)+1
+          IF ((LROWS(ITSPUW)*LENSPW+LMHLEN).GE.IW(ITSPUW)) THEN
+            WRITE(TEXT,1101) LROWS(ITSPUW)
+ 1101       FORMAT('Extending workbank ITSPUW.',
+     &             ' CURRENT LENGTH=',I3,' SUBPULSES.&',
+     &             ' Increase MXSBCL in TCLCOW if this occurs',
+     &             ' too often.')
+            CALL RERROR('TPLANA',1,TEXT)
+            LEN= (LROWS(ITSPUW)+20)*LENSPW+LMHLEN
+            IW(1)=1
+            CALL WBANK(IW,ITSPUW,LEN,*998)
+            LEN= LROWS(ITSPUW)+20
+            IW(1)=1
+            CALL WBANK(IW,ITPRTW,LEN,*998)
+            IOFFS= ITPDIW+IOFF1
+          ENDIF
+C
+C++       Add up the subpulse total charge, and accumulate sums
+C++       for the rms length of the subpulse.  JFSTBK comes from
+C++       comdeck TCLCOW and is necessary to prevent int. overflow.
+C
+          NSAT=0
+          IPHSM=0
+          IPHZ=0
+          IPHZ2=0
+          JTOFF= ITOFF-JFSTBK
+          DO 495 L=ISPV1(ISP),ISPV2(ISP)
+            JT=L+JTOFF
+            IPH=ITPDI(L)
+            NSAT=NSAT + IPH/LVLSAT
+            IPHSM=IPHSM + IPH
+            IPHZ=IPHZ + IPH*JT
+            IPHZ2=IPHZ2 + IPH*JT*JT
+  495     CONTINUE
+          NTSPU=LROWS(ITSPUW)
+          IW(KROW(ITSPUW,NTSPU)+JSPWT0)= ITOFF + ISPV1(ISP)
+          IW(KROW(ITSPUW,NTSPU)+JSPWNS)= ISPV2(ISP)-ISPV1(ISP)+1
+          IW(KROW(ITSPUW,NTSPU)+JSPWOF)= IOFF1 + ISPV1(ISP)-1
+          IW(KROW(ITSPUW,NTSPU)+JSPWPK)= ISPPK(ISP)-ISPV1(ISP)+1
+          IW(KROW(ITSPUW,NTSPU)+JSPWTC)= IPHSM
+          IW(KROW(ITSPUW,NTSPU)+JSPWSZ)= IPHZ
+          IW(KROW(ITSPUW,NTSPU)+JSPWS2)= IPHZ2
+          IF (NSAT.GT.ITLCMS) THEN
+            IW(KROW(ITSPUW,NTSPU)+JSPWQF)= ISPNP(ISP) + ISPIS(ISP)*1000
+     &                                       + 100000
+          ELSE
+            IW(KROW(ITSPUW,NTSPU)+JSPWQF)= ISPNP(ISP) + ISPIS(ISP)*1000
+          ENDIF
+          IW(KROW(ITSPUW,NTSPU)+JSPWPF)= LSTSP
+          IW(KROW(ITSPUW,NTSPU)+JSPWPB)= 0
+          IF (LSTSP.GT.0) THEN
+            IW(KROW(ITSPUW,LSTSP)+JSPWPB)= NTSPU
+          ENDIF
+          LSTSP=NTSPU
+          IW(KROW(ITSPUW,NTSPU)+JSPWPU)= IP
+  490   CONTINUE
+C
+C++     Go on and look for the next group of consecutive samples above
+C++     the fixed threshold.
+C
+        IS=IS+1
+        GO TO 100
+  501 CONTINUE
+      GO TO 999
+  998 CONTINUE
+      IW(ITSPUW+LMHROW)=LROWS(ITSPUW)-1
+      CALL RERROR('TPLANA',2,'No room to extend workbank ITSPUW')
+  999 CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+ 	gambnk.F gapeco.F gasteer.F
+ 	hcalib.F hcalrd.F hcatow.F hcbhis.F hcfclu.F hchist.F hclcra.F
+ 	hcltst.F hclufi.F hcos.F hcsimm.F hdgdeb.F hdgfil.F hdgpot.F
+ 	hdgsum.F hdprec.F hdspre.F hflnoi.F hinijo.F hiniru.F hmener.F
+ 	hmfind.F hmroad.F hnoise.F hnoisy.F hpatco.F hphnoi.F hplink.F
+ 	hprana.F hpranp.F hprdig.F hpreda.F hprpot.F hprsum.F hprunc.F
+ 	hrcomp.F hrcpat.F hrdcal.F hroad.F hslink.F hslowc.F hspare.F
+ 	hsptre.F hstofi.F htrack.F htubfi.F htwcr.F
+ 	iasign.F iattma.F ibnkin.F icaswt.F icftoi.F iclimb.F icrcco.F
+ 	ideadw.F idigpr.F ienang.F ifind1.F ifind2.F ifitp.F iftrak.F
+ 	igetti.F igettp.F igicha.F iheler.F iinijo.F iiniru.F iintrk.F
+ 	imatch.F inigap.F insect.F intrak.F ipakdi.F ipdsti.F iphcor.F
+ 	ipreda.F iprsum.F ipstat.F irefin.F ireopd.F isave.F ishuff.F
+ 	ishufl.F islowc.F isrch.F itbook.F itccut.F itcopr.F itcrec.F
+ 	itcrep.F itctpc.F itctrk.F itcxng.F iterr.F itextn.F ithist.F
+ 	itidy1.F itidy2.F itlnk1.F itlnk2.F itpcan.F itrak.F itrecf.F
+ 	itreci.F itree.F itrkci.F itrkeq.F itrkzr.F itrmca.F
+@
+text
+@d8 2
+d362 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK tplana
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

@@ -1,0 +1,176 @@
+head	1.2;
+access;
+symbols
+	jul313_3:1.2
+	jul313_2:1.2
+	jul313_1:1.2
+	jul313:1.2
+	jul312_1:1.2
+	jul312:1.2
+	jul311:1.2
+	jul310_1:1.2
+	jul310:1.2
+	jul309_1:1.2
+	jul309:1.2
+	jul308_6:1.2
+	jul308_5:1.2
+	jul308_4:1.2
+	jul308_3:1.2
+	jul308_2:1.2
+	jul308_1:1.2
+	jul308:1.2
+	jul307_4:1.2
+	jul307_3:1.2
+	jul307_2:1.2
+	jul307_1:1.2
+	jul307:1.2
+	jul306_3:1.2
+	jul306_2:1.2
+	jul306_1:1.2
+	jul306:1.2
+	jul305_4:1.2
+	jul305_3:1.2
+	jul305_2:1.2
+	jul305_1:1.2
+	jul305:1.2
+	jul304_3:1.2
+	jul304_2:1.2
+	jul304_1:1.2
+	jul304:1.2
+	jul303_7:1.2
+	jul303_6:1.2
+	jul303_5:1.2
+	jul303_4:1.2
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2
+	jul280_1:1.1
+	jul280:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.06.03.10.29.09;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.05.06.15.53.55;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@Mods for julia 281 release. See news for details
+@
+text
+@      SUBROUTINE VDSIGM(EMAT,IV,VUW,TNG,SIGMA)
+C----------------------------------------------------------------------
+C!  VDSIGM calculates the sigmas to smear the VDZT (IV=1) or VDXY (IV=2)
+C!         bank.
+C!
+C - Author         Manoj Thulasidas  5-Nov-1994
+CKEY V_DECK VDET
+C!
+C!  Description
+C!  ===========
+C!  given the alignment error matrix, wafer center and
+C!  the position of the hit,  returns the error due to the
+C!  alignment to be applied in the MC.
+C!  in order to make a fair comparison with the data 3-hit method,
+C!  the local coordinate vector VUW has to be taken in the overlap
+C!  region.
+C
+C  Input :  EMAT  - the error matrix
+C           IV    - the view
+C           VUW   - the local coordinate
+C           TNG   - the cotangent of the angle that the track makes
+C                   with the wafer, projected to the view
+C
+C  Output : SIGMA - the smear
+C
+C -----------------------------------------------------------------------
+#ifndef DOC
+      REAL EMAT(6,6), VUW(3), TNG, SIGMA
+      INTEGER IV
+      REAL JACOB(6), VTMP(6), VDOT
+C-- get the jacobian
+      CALL VDJACB(IV,VUW,TNG,JACOB)
+C-- error sigma^2 = [J][errmat][J]^t
+      CALL VMATR(JACOB,EMAT,VTMP,6,6)
+      SIGMA = VDOT(VTMP,JACOB,6)
+      SIGMA = SQRT(SIGMA)
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@re-installed jul280 from the historian source because some routines were missing.
+@
+text
+@d1 1
+a1 1
+      SUBROUTINE VDSIGM(EMAT,WCENT,IV,VUW,JWAF,TNG,SIGMA)
+a18 1
+C           WCENT - the center of the wafer (in global coord!)
+a20 1
+C           JWAF  - the global wafer number
+d28 5
+a32 24
+      REAL EMAT(6,6), WCENT(3), VUW(3), TNG, SIGMA
+      INTEGER IV, JWAF
+      REAL JACOB(6), R0, Z0, V, U, W, VTMP(6), VDOT
+      Z0 = WCENT(3)
+      R0 = SQRT(WCENT(1)**2+WCENT(2)**2)
+      V = VUW(1)
+      U = VUW(2)
+      W = VUW(3)
+C-- the jacobian of the displacements
+      IF (IV.EQ.1) THEN
+        JACOB(1) = TNG
+        JACOB(2) = 0.0
+        JACOB(3) = -1.0
+        JACOB(4) = -U
+        JACOB(5) = -(TNG*W)
+        JACOB(6) = -(TNG*U)
+      ELSEIF (IV.EQ.2) THEN
+        JACOB(1) = TNG
+        JACOB(2) = -1.0
+        JACOB(3) = 0.0
+        JACOB(4) = W
+        JACOB(5) = -(TNG*W)
+        JACOB(6) = -(TNG*U)
+      ENDIF
+@

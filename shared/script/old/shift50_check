@@ -1,0 +1,21 @@
+#!/bin/csh
+#======================================================================
+#                         shift50_check
+# 14/01/98                                                     F.Blin
+#======================================================================
+   if ($HOST == "shift50") then 
+      echo "Runs not on shift50"
+      exit
+   endif
+   set admin = "fblxu@aloha.cern.ch,system@aloha.cern.ch"
+
+### test ping on shift50
+   set n_ping = `/usr/sbin/ping -c 3 shift50 | tail -2 | grep round-trip | awk '{print $7}'`
+   if ($n_ping == "100%") then
+      echo ">>> /usr/sbin/ping shift50 4 packets, $n_ping loss" | Mail -s "shift50 problems" $admin
+      exit
+   endif
+
+### run on shift50 sycheck_check
+   rsh shift50 /aleph/script/sycheck_check
+   exit

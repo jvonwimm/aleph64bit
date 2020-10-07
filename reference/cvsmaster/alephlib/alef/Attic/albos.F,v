@@ -1,0 +1,73 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  aleph212:1.1.1.1 ALEPH212:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.02.07.11.40.33;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.02.07.11.40.34;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE ALBOS (NAME,NR,LE,KNDX,IGARB)
+C ----------------------------------------------------
+C - F.Ranjard - 870427
+C! Book/enlarge a bank with name='NAME', number=NR, length=LE
+C - Return bank index=KNDX
+C - IGARB is set to 1 if a garbage collection occured
+C - If not enough space to book/enlarge the bank call ALTELL
+C - Calls    NBANK, BGARB                   from BOS77.hlb
+C ---------------------------------------------
+#ifndef DOC
+       CHARACTER NAME*4
+       EXTERNAL NBANK, ALTELL
+#include "bcs.h"
+C ----------------------------------------------------------
+C
+      IGARB = 0
+      KNDX = NBANK (NAME,NR,LE)
+      IF (KNDX.EQ.0) THEN
+C     not enough space
+         IGARB = 1
+C        allow garbage collection
+         CALL BGARB(IW)
+C
+         KNDX = NBANK (NAME,NR,LE)
+         IF (KNDX.EQ.0) THEN
+C        not enough space after garbage collection
+            IGARB = 2
+C           set end of event flag to true and increment error code
+            CALL ALTELL ('ALBOS: not enough space ',1,'NEXT')
+         ENDIF
+      ENDIF
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

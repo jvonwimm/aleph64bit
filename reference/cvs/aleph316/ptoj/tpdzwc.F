@@ -1,0 +1,391 @@
+      Subroutine Tpdzwc(islot,irow,rs,rphis,zs,
+     +                  itpd,ipream,ipdtpd,iwtpd,
+     +                  corpad,corwir,zshift)
+C-----------------------------------------------------------------------
+C This subroutine returns for a given sector, padrow, and rphi
+C coordinates of a hit the TPD no., the preamplifier no. for this TPD, 
+C the pad channel no. for this TPD and a z correction for the hit due
+C to pad-wire timing differences. 
+C
+C The subroutine is written after corresponding subroutines from 
+C Fabrizio Palla and applies the correction constants which he
+C measured with data.
+C
+C
+C   Author: Werner Wiedenmann 13/05/99  
+C
+C   Input : ISLOT   Sector number
+C           IROW    Row number in sector
+C           RS      Radius of hit (in sector frame)
+C           RPHIS   Rphi of hit   (in sector frame) 
+C           ZS      Z of hit      (in sector frame)
+C           
+C   Output: ITPD    Pad TPD no.           (-1 on error)
+C           IPREAM  Preamplifier no. (Pad)(-1 on error) 
+C           IPDTPD  Pad channel no.  (Pad)(-1 on error) 
+C           IWTPD   Wire TPD number       (-1 on error)
+C           CORPAD  z correction for hit  ( 0 on error)
+C           CORWIR  z correction for hit with wires ( 0 on error) 
+C           ZSHIFT  zshift due to changed alignment and drift velocity 
+C   
+C   Steering: 
+C     1) the corrections are applied by default to data if the new (1997)  
+C        alignment scheme is used, the corresponding database banks exist
+C     2) If a card REFT x 0 x is given in the cards file the corrections won't
+C        be applied to data   
+C     3) If a card REFT x 1 x is given in the cards file the corrections are 
+C        applied to data if the new alignment scheme is used   
+C     4) The corrections won't be applied to MC data besides 
+C        a card REFT x 2 x is given in the cards file and the corresponding
+C        banks TPRZ TPWZ TPAZ are provided for MC in the cards file or on the 
+C        database
+C-----------------------------------------------------------------------
+C
+      Implicit NONE
+      SAVE
+C
+#include "alcons.h"
+#include "bcs.h"
+C
+#include "tpgpar.h"
+#include "tpgeom.h"
+#include "tpgeop.h"
+#include "tpgeow.h"
+#include "tprzjj.h"
+#include "tpwzjj.h"
+#include "tpazjj.h"
+#include "tnfvjj.h"
+#include "tcgdjj.h"
+#include "tmtyjj.h"
+#include "bmacrod.h"
+C
+      INTEGER JREFRF,JREFTC,JREFVC,LREFTA
+      PARAMETER(JREFRF=1,JREFTC=2,JREFVC=3,LREFTA=3)
+      Integer islot,irow,itpd,ipream,ipdtpd,iwtpd
+      Real    rs,rphis,zs,corpad,corwir,zshift
+      Integer ipad,npads,istyp,i,npdtot,j,ipad2
+      Real    phi,dp,phiini,phirgt,philft
+      Integer lprint,ktprz,ktpwz,namind,ktcgd,ktmty,ktpaz
+      INTEGER NTCGD,NTMTY,NTNLO,NTPRZ,NTPWZ,NTPAZ
+      Real    off_tprz,off_tpwz   
+      Integer nwhit, nchan, npadr
+      Real    rsecnt(3), rfst, rlst, rstep, zmx 
+      Real    dr, dz, signz, p1, p2, p3, p4
+      Integer irun, ievt, jtnfv, jtnrow , tnfvru
+      Integer ntoal,nreft,kreft,Algtdb,Junidb,lastru,iret
+      Logical first,qmcdat 
+      Data    first /.true./, lastru /-1/
+C
+#include "bmacro.h"
+C
+      ipad   =  0
+      itpd   = -1 
+      ipream = -1 
+      ipdtpd = -1 
+      iwtpd  = -1
+      corpad = 0.
+      corwir = 0.
+      zshift = 0.  
+C
+C+++  Initialization
+C
+      If (first) Then
+         If (iw(6).gt.0) Then 
+            lprint = iw(6)   
+         Else
+            lprint = 6
+         Endif
+         ntoal = Namind('TOAL')
+         nreft = Namind('REFT')
+         NTCGD = NAMIND('TCGD')
+         NTMTY = NAMIND('TMTY')
+         NTNLO = NAMIND('TNLO')
+         NTPRZ = NAMIND('TPRZ')
+         NTPWZ = NAMIND('TPWZ')
+         NTPAZ = NAMIND('TPAZ')
+C
+C++     Radius of TPC sector center 
+C
+         ktcgd = iw(NTCGD) 
+         ktmty = iw(NTMTY)
+         If ((ktcgd.ne.0).and.(ktmty.ne.0)) Then 
+            rstep=rtabl(ktcgd,1,jtcgrs)
+            Do istyp=1,ltstyp
+               npadr = itabl(ktmty,istyp,jtmtnp)
+               rfst  = rtabl(ktmty,istyp,jtmtrf)
+               rlst  = rfst + float(npadr-1)*rstep
+               rsecnt(istyp) = 0.5*(rfst+rlst)
+            Enddo
+         Else
+            Call Altell('TPDZWC: cannot find TCGD or TMTY bank',
+     +                  0,'STOP')
+         Endif
+C
+C++     Get half-length of TPC active volume
+C
+         zmx= rtabl(ktcgd,1,jtcgto+2)-rtabl(ktcgd,1,jtcgtt+2)
+         first = .false.
+      Endif 
+C
+C+++  Get run number
+C
+      Call Abruev (irun, ievt)
+C
+      qmcdat = .false. 
+      If (irun.le.2000) qmcdat=.true. 
+      kreft = iw(nreft)
+C
+C+++  If TOAL card present (= use old alignment) => no correction
+C
+      If (iw(ntoal).ne.0) Return
+C
+C================================================================= =====
+C     Real Data
+C=======================================================================
+C
+      If (.not.qmcdat) Then
+C
+C+++  Check if new alignment scheme is used => otherwise no correction
+C
+         If (Iw(NTNLO).eq.0) Return
+C
+C+++  REFT card present 
+C+++  -----------------
+C
+         If (kreft.ne.0) Then
+C
+C+++  If REFT x 0 x card present (= don't use TPD timing shifts) 
+C+++  =>  no correction
+C
+            If (iw(kreft+jreftc).eq.0) Return
+         Endif   
+C
+C=======================================================================
+C     Monte Carlo Data
+C=======================================================================
+C
+      Else
+C
+C+++  No correction for MC, besides REFT x 2 x is present
+C
+         If (kreft.ne.0) Then 
+            If (iw(kreft+jreftc).ne.2) Return
+         Else
+            Return 
+         Endif
+      Endif 
+C
+C=======================================================================
+C
+C+++  Load necessary database banks
+C       
+      If (irun.ne.lastru) Then
+         lastru = irun
+         iret = Algtdb(Junidb(0),'TPRZTPWZTPAZ',irun)
+         If (iret.eq.0) Then
+            Write(lprint,*) 
+     +      ' Tpdzwc: one of the banks TPRZ, TPWZ, TPAZ was not found '
+            Return
+         Endif           
+      Endif
+C
+C+++  Ckeck input
+C
+      If ((islot.LT.0).OR.(islot.GT.ltsect)) Then
+         Return
+      Endif
+      istyp = itptyp(islot) 
+
+      If ((irow.LT.0).OR.(irow.GT.ntpdrw(istyp))) Then
+         Return
+      Endif
+
+      If (rs.LE.0.) Then
+         Return
+      Endif
+      phi    = rphis/rs
+C
+C+++  Pad parameters
+C
+      dp     = tpdphs(irow,istyp) ! Dphi for that row number and type
+      npads  = ntpdpr(irow,istyp) ! No. pads 
+      phiini = tpdphw(irow,istyp)
+      phirgt = - phiini+dp*1.5
+      philft = - phirgt
+C
+C+++  Get pad number in this row for the hit
+C
+      If (phi.lt.phirgt) Then
+         ipad = 2*(phi+phiini+dp/4.)/dp 
+      Elseif (phi.gt.philft) Then
+         ipad = 2*(phi-phiini+dp/4.)/dp+2+npads
+      Else
+         ipad = (phi+phiini)/dp+1.5
+      Endif
+      If (ipad.lt.1) Then
+         Write(lprint,*) ' Tpdzwc: WARNING Bad IPAD ',
+     +                   ipad,irow,istyp,phi
+         ipad = 1
+      Endif
+C
+C+++  Now count the pads as a string, starting from row#1 to IROW
+C+++  we follow a zig-zag rule
+C
+      npdtot = 0
+      Do i=1,irow-1
+         npdtot = npdtot + ntpdpr(i,istyp) + 2
+      Enddo
+      If (Mod(irow,2).eq.1) Then
+         ipad2 = npdtot + ipad 
+      Else       
+         ipad2 = npdtot + npads + 2 - ipad
+      Endif
+      If (ipad2.lt.1) Then
+         ipad2 = 1
+      Endif
+C
+C+++  This is the Pad number within the TPD
+C
+      ipdtpd = Mod(ipad2,64)
+C
+C+++  ... and this is the TPD number
+C
+      itpd = ipad2/64+1
+C
+C+++  Handle 64th pads in the TPD
+C
+      If (ipdtpd.eq.0) Then
+        ipdtpd = 64
+        itpd = ipad2/64
+      Endif
+C
+C+++  Try to find the wire TPD
+C
+C.... get the wire(s)
+      nwhit = Ifix((rs*cos(phi)-twire1(istyp))/twstep(istyp)) + 1 
+C.... subtract the wires connected together
+      nchan = nwhit - (itlwif(istyp)-1)
+      if (nchan.gt.itlwil(istyp)) 
+     +   Write(lprint,*) ' Tpdzwc: Bad wire channel ',
+     +                   nchan,itlwil(istyp)
+C.... get the wire TPD number
+      iwtpd = nchan/64 + 1
+C
+C+++  check indices
+C
+      If ((iwtpd.le.0).or.(iwtpd.gt.3)) Then
+         Write(lprint,*) ' Tpdzwc: BAD WIRE TPD NUMBER ',iwtpd
+         itpd   = -1 
+         ipdtpd = -1 
+         ipream = -1 
+         iwtpd  = -1
+         corpad = 0.
+         corwir = 0.
+         zshift = 0.  
+         Return    
+      Endif  
+      If ((itpd.le.0).or.(itpd.gt.21)) Then
+         Write(lprint,*) ' Tpdzwc: BAD TPD NUMBER ',itpd
+         itpd   = -1 
+         ipdtpd = -1 
+         ipream = -1
+         iwtpd  = -1 
+         corpad = 0.
+         corwir = 0.
+         zshift = 0.  
+         Return    
+      Endif  
+      If ((ipdtpd.le.0).or.(ipdtpd.gt.64)) Then
+         Write(lprint,*) ' Tpdzwc: BAD CHANNEL NUMBER ',ipdtpd
+         itpd   = -1 
+         ipdtpd = -1 
+         ipream = -1
+         iwtpd  = -1 
+         corpad = 0.
+         corwir = 0.
+         zshift = 0.  
+         Return    
+      Endif  
+C
+      ipream = ipdtpd/16+1 
+      If (Mod(ipdtpd,16).eq.0) ipream=ipream-1
+      If ((ipream.lt.0).or.(ipream.gt.4)) Then
+         Write(lprint,*) ' Tpdzwc: BAD PREAMP NUMBER ',ipream,ipdtpd
+         itpd   = -1 
+         ipdtpd = -1 
+         ipream = -1
+         iwtpd  = -1 
+         corpad = 0.
+         corwir = 0.
+         zshift = 0.  
+         Return    
+      Endif  
+C
+C+++  Get Database banks
+C
+      ktprz = iw(NTPRZ)
+C
+C+++  offset in z per sector and Tpd for pads 
+C
+      If (ktprz.gt.0) Then 
+          off_tprz = Rtabl(ktprz,islot,jtprzo-1+itpd)
+      Else
+          off_tprz=0.
+      Endif  
+C
+      corpad = off_tprz
+C
+      ktpwz = iw(NTPWZ)
+C
+C+++  offset in z per sector and Tpd for pads 
+C
+      If (ktpwz.gt.0) Then 
+          off_tpwz = Rtabl(ktpwz,islot,jtpwzo-1+iwtpd)
+      Else
+          off_tpwz=0.
+      Endif  
+C
+      corwir = off_tpwz
+C
+C+++  Make alignment/drift corrections
+C
+C
+C---  Get Database bank for Alignment
+C
+      ktpaz = iw(NTPAZ)
+      If (ktpaz.ne.0) Then
+         p1 = Rtabl(ktpaz,islot,jtparp)
+         p2 = Rtabl(ktpaz,islot,jtparx)
+         p3 = Rtabl(ktpaz,islot,jtpary)
+         p4 = Rtabl(ktpaz,islot,jtpart)
+      Endif
+C
+      dr = 0.
+      dz = 0.
+      signz = 1.
+      if (islot.gt.18) signz = -1.
+C     Transformation: sector system --> Aleph system *(-1)       
+C     to agree with convention in fitting job 
+      phi = signz*phi
+C
+C Rotation around axis perp. to sector
+      dr = dr + p1 * rsecnt(istyp) * sin(phi)
+C Rotation around axis inside sector (OX)
+      dz = dz + p2 * rs * sin(phi)
+C Rotation around axis inside sector (OY)
+      dz = dz + p3 * (rs * cos(phi) - rsecnt(istyp))
+C Translation of the sector in R
+      dr = dr + p4 * cos(phi)
+C
+C---  Get Driftvelocity correction
+C
+      jtnfv = Tnfvru(irun,jtnrow)
+      jtnfv = Abs(jtnfv)
+      If (jtnfv.gt.0 .and. jtnrow.gt.0) Then
+         dz = dz + rtabl(jtnfv,jtnrow,jtnfdw)*zs*signz
+      Endif
+C
+      zshift = dz - dr*(zmx - zs)/rs*signz 
+C  
+      Return
+      End

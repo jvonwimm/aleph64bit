@@ -1,0 +1,20 @@
+#
+#  Need to execute from $ALBOOK/src/
+#  as albook
+#
+
+install:
+	cd ../ORACLE; perl install.perl ../UTILITIES/proceduresupgrading.sql
+	cd ../ORACLE; $(MAKE) install
+	cd ../JAVA; $(MAKE) install
+	cd ../FORTRAN; $(MAKE) install
+	cd ../PERL; $(MAKE) install
+	cd ../ORACLE; perl install.perl ../UTILITIES/proceduresok.sql
+
+clean:
+	cd ../ORACLE; $(MAKE) clean
+	cd ../JAVA; $(MAKE) clean
+	cd ../FORTRAN; $(MAKE) clean
+	cd ../PERL; $(MAKE) clean
+
+

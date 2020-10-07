@@ -1,0 +1,197 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.30.07.13.35;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.01.45;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.46;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ cahtra.h gmacro.h lccomc.h lcnamc.h ljjpar.h siconst.h
+ sigeco.h version.h
+ itmsk1.F itmsk2.F itnois.F itres.F itxtlk.F
+ lcadc.F lcamp.F lcasig.F lcbhab.F lcbkpr.F lcdigi.F lcfral.F
+ lchit.F lcirun.F lcnami.F lcnois.F lcpad.F lcroc.F lcsamp.F
+ lcsatu.F lcshow.F lcstrt.F lctrak.F lctrdi.F lctrht.F lcwire.F
+ lcwsum.F lcwtri.F
+ muasig.F mubook.F muirun.F muunoi.F muwsum.F
+ trignews.h
+ siasig.F sitrak.F siwsum.F
+ asasig.F asbook.F ascjob.F ascrun.F asctra.F asevst.F asfxxx.F
+ asieve.F asigea.F asijob.F asimod.F asinit.F asipac.F asirun.F
+ askine.F asksin.F asktrk.F aspeve.F asprun.F asread.F asredc.F
+ asreve.F asrkin.F asrtyp.F asrust.F astdeb.F astgea.F astrac.F
+ astrig.F aswkin.F aswrtp.F aswsum.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+ xtrcom.h
+ ecalnews.h geomnews.h lcalnews.h news.h skelnews.h vdetnews.h
+@
+text
+@*DK aspeve
+      SUBROUTINE ASPEVE
+C --------------------------------------------------------------------
+C. - F.RANJARD - 850328                modified - 890210
+C! Process current event # NEVTJO
+C. - Execute each processor in turn if required :
+C.     KINE, TRAC(incl. hits), ASIG, DIGI, TRIG, RDST
+C. - Drop the 'T'list at the end : it contents banks which do not go
+C.   onto the output.
+C. - called by    ASPRUN                                  from this .HLB
+C. - Calls        ASKINE, ASTRAC, ASASIG, ASDIGI          from this .HLB
+C.                ASTRIG
+C.                BDROP                                   from BOS77.lib
+C.
+C -----------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "jqcom.h"
+#include "iocom.h"
+#include "jobcom.h"
+#include "kincom.h"
+#include "kvoljj.h"
+      DATA MKVOL /200/
+#include "bmacro.h"
+C ----------------------------------------------------------------------
+C
+C - Execute modules in turn if required
+C     set origin vertex volume name
+      JKVOL = IW(NAKVOL)
+      IF (JKVOL.EQ.0) THEN
+          CALL ALBOS ('KVOL',0,LMHLEN+MKVOL*LKVOLA,JKVOL,IGARB)
+          IW(JKVOL+LMHCOL) = LKVOLA
+          IW(JKVOL+LMHROW) = 0
+      ENDIF
+C
+C     event generator
+      IF (IPROJO(1).NE.0) THEN
+         CALL ASKINE
+      ENDIF
+C
+C     fill origin vertex volume name if it is not done
+         JKVOL = IW(NAKVOL)
+         IF (LROWS(JKVOL) .EQ. 0) THEN
+            KKVOL = KNEXT(JKVOL)
+            DO 1 I=1,NIVXKI
+            IW(KKVOL+JKVOVN) = INTCHA ('    ')
+            IW(KKVOL+JKVOVM) = INTCHA ('    ')
+ 1          KKVOL = KKVOL + LCOLS(JKVOL)
+            IW(JKVOL+LMHROW) = NIVXKI
+         ENDIF
+C
+C     tracking + hits ===> analog signals in tracking devices
+      IF (IPROJO(2).NE.0) THEN
+C     transfert KINE BOS banks to KINE GEANT banks
+         CALL ASTGEA
+         CALL ASTRAC
+      ENDIF
+C
+C     saturation effects in calorimeters ===> analog signals
+      IF (IPROJO(3).NE.0) THEN
+         CALL ASASIG
+      ENDIF
+
+C
+C     digitizations in all devices ===> digits
+      IF (IPROJO(4).NE.0) CALL ASDIGI
+C
+C     apply trigger conditions ===> trigger output
+      IF (IPROJO(5).NE.0) CALL ASTRIG
+C
+ 999  CONTINUE
+      CALL BDROP (IW,'T')
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d14 2
+a15 1
+C -------------------------------------------------------------------
+d17 1
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

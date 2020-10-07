@@ -1,0 +1,58 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	tpc300_1:1.1.1.1
+	tpc300:1.1.1.1
+	tpc218:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	94.12.09.14.29.52;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.09.14.29.53;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*CD tpcons
+C
+C  TPCONS contains physical constants for TPC simulation
+C
+      COMMON /DELTA/ CDELTA,DEMIN,DEMAX,DELCLU,RADFAC,CYLFAC
+      PARAMETER (MXGAMV = 8)
+      COMMON /TGAMM/ GAMVAL(MXGAMV),GAMLOG(MXGAMV),POIFAC(MXGAMV),
+     &               POIMAX,POIMIN,CFERMI,CA,CB,POIRAT,POICON
+      PARAMETER (MXBINC = 20)
+      COMMON /CLUST/ EBINC(MXBINC),CONCLU,WRKFUN,MXCL,CKNMIN,CFANO,CRUTH
+     &              ,POWERC
+      COMMON /AVALA/ THETA,ETHETA
+      COMMON /TPTIME/ NTMXSH,NTMXNO,NTMXAN,NTMXDI,NTSCAN,NTBNAS,NTBAPD
+      COMMON /TPELEC/ TPRPAR,TPRSER,TPCFET,TCFEED,TMVPEL,TSIGMX,NTPBIT
+@
+
+
+1.1.1.1
+log
+@import tpcsim 300
+@
+text
+@@

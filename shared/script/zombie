@@ -1,0 +1,118 @@
+#!/usr/local/bin/perl
+#######################################################################
+#                       zombie
+# to kill : .lost emacs ,netscape and other processes on aloha 
+#            if cputime > H_LIMIT
+#           .zwgc  if no tty-window attached (??)
+# 23/04/96                                              F.Blin
+#######################################################################
+# 16/05/96  modified for cron, $HOST and $USER defined  R.Hag
+# 30/05/96  added "decladebug"
+# 02/08/96  log to /tmp/zombie.log  J.Closier
+# 04/11/96  added sub search_zwgc to kill zwgc if no tty-window attached (??)
+# 09/12/96  modified:  kill zwgc, only if no ttymode    R.Hag
+# 14/03/97  modified:  kill kxterm, pawX11 if no tty    R.Hag
+# 22/04/97  modified:  kill ghostview F.Blin
+#######################################################################
+$all_str_grep = "";
+$H_LIMIT = 1;
+#$host = $ENV{'HOST'};  # not defined in root cron
+$host = `uname -n`;  #  defined in root cron, has CR at the end
+$user = $ENV{'LOGNAME'};    # defined in root cron
+#$luser = $ENV{'USER'}; # not defined in root cron
+
+$LOG_file = "/tmp/zombie.log";
+system("rm -f $LOG_file") if (-e "$LOG_file");
+
+&ask_ps("emacs");
+&ask_ps("dxterm");
+&ask_ps("netscape");
+&ask_ps("netscape.301.gold");
+&ask_ps("decladebug");
+&ask_ps("kxterm");
+#&ask_ps("zwgc");
+&ask_ps("pawX11");
+&ask_ps("ghostview");
+&ask_ps("-v");
+&search_zwgc;
+
+exit;
+
+#######################################################################
+sub ask_ps{
+
+local(@array,@ps_ef,@ps_o) = ();
+local($str_grep,$str_kill,$pid,$name) = "";
+
+$all_str_grep = "grep -v $_[0]" if ($_[0] ne "-v" && $all_str_grep eq "");
+$all_str_grep = "$all_str_grep | grep -v $_[0]" if ($_[0] ne "-v" && $all_str_grep ne "");
+
+$str_grep = "grep -v grep | grep $_[0]" if ($_[0] ne "-v");
+
+$str_grep = "grep -v grep | grep -v TIME | grep -v root | $all_str_grep" if ($_[0] eq "-v");
+
+@ps_o = `ps -e -o pid,ppid,tty,user,comm,%cpu,cputime,start | $str_grep`;
+return if ($#ps_o < 0);
+
+foreach $i (0..$#ps_o){
+  $ps_o[$i] =~ s/^\s+//; 
+  @array = split(/\s+/,$ps_o[$i]);
+  $time = ""; 
+  next if (!&check_time($array[6]));
+#  print "zombie:@array\n";
+  $pid = $array[0];
+  $name = $array[3];
+  $tty = $array[2];
+#  next if ($tty ne "??" && $_[0] eq "zwgc");
+  next if ($tty ne "??" && $_[0] eq "pawX11");
+  @ps_ef = `ps -ef | grep -v grep | grep $pid | grep $name  | grep "$time:"`;
+  @array = split(/\s+/,$ps_ef[0]);
+  $date = `date '+%m/%d/%y %H:%M:%S'`;
+  $date =~ s/\s+$//;
+  $str_kill =  "@array $date $user $host";
+  if ($_[0] ne "-v"){
+     $str_kill = "kill $str_kill";
+     system("kill -9 $pid") if ($user eq "root");
+  }
+  if ($user eq "root"){
+     open(LOG,">> $LOG_file");
+     print LOG "$str_kill"; 
+     close(LOG);
+  }
+  print "$str_kill" if ($user ne "root");
+}
+return
+}
+#######################################################################
+sub check_time{
+
+return 0 if (index($_[0],".") > -1);
+$time = substr($_[0],0,index($_[0],":"));
+return 1 if (index($_[0],"-") > -1);
+return 1 if ($time > $H_LIMIT);
+return 0;
+}
+#######################################################################
+sub search_zwgc{
+
+local(@array,@ps_ef) = ();
+local($pid,$name) = "";
+
+@ps_ef = `ps -e -o pid,ppid,tty,user,start,command |grep zwgc |grep ttymode |grep -v grep`;  
+foreach $i (0..$#ps_ef){
+  $ps_ef[$i] =~ s/^\s+//; 
+  @array = split(/\s+/,$ps_ef[$i]);
+  next if ($array[2] ne "??");
+#  print "zwgc:@array\n";
+  $name = $array[3];
+  $pid = $array[0];
+  if ($user eq "root") { 
+     system("kill $pid");
+     open(LOG,">> $LOG_file");
+     print LOG "kill @array $user $host";
+     close(LOG);
+  }
+  print "@array $user $host" if ($user ne "root");
+}
+  return;
+}

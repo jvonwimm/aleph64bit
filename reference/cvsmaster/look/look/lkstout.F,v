@@ -1,0 +1,98 @@
+head	1.2;
+access;
+symbols
+	look25:1.2
+	look24:1.2
+	look23:1.2
+	look22:1.2
+	look21:1.2
+	look20:1.2
+	v15:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.04.18.09.07.21;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.09.15.50.30;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.09.15.50.31;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@change VAX to DEC.AND..NOT.UNIX ==> version 20
+
+ Modified Files:
+ 	lkevt.h lkfil.h lklast.h lkunpk.h version.h
+ Removed Files:
+	lookend.h
+@
+text
+@      SUBROUTINE LKSTOUT (LNEW)
+C -----------------------------------------------------------
+C! set LOUT logical unit : terminal output unit
+C  the first call defines the default
+CKEY LOOK OUTPUT LOUT
+C - F.Ranjard - 911114
+C - Input  : LNEW / I : terminal output unit
+C - ENTRY LKRSOUT
+C   reset LOUT to ULDEF
+C -----------------------------------------------------------
+#ifndef DOC
+      INTEGER LNEW
+#include "lkfil.h"
+      DATA IFI /0/
+C -----------------------------------------------------------
+C - 1st entry
+      IF (IFI.EQ.0) THEN
+         IFI = 1
+         LDEF = LNEW
+      ENDIF
+C
+C - next entry
+      LOUT = LNEW
+      RETURN
+C -----------------------------------------------------------
+C
+C - entry
+      ENTRY LKRSOUT
+      LOUT = LDEF
+      RETURN
+C -----------------------------------------------------------
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK lkstout
+@
+
+
+1.1.1.1
+log
+@import look 15
+@
+text
+@@

@@ -1,0 +1,1 @@
+      COMMON / EMSKPA / XNORM(5),ZON(5),EZON(5,2)

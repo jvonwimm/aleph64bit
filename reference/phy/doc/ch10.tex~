@@ -1,0 +1,774 @@
+\chapter{\label{sec-QJ}Event Topology Routines}
+\par
+All of the subroutines described in this chapter perform loops over
+tracks or
+particles.
+The arguments and loop algorithms are similar
+for all of these subroutines, and are described in detail in
+Section \ref{sec-QJA}.
+The ``tracks'' to be considered are
+selected with the routines QJOPTR (for reconstructed tracks) and QJOPTM
+(for Monte Carlo tracks); these routines also specify tracks to be
+used by the Lorentz transformation routine QTCLAS
+(see \ref{sec-QTC}).
+In addition, the LOCK routines described in Section~\ref{sec-QL}.
+can be used to exclude tracks from analysis by the QJxxxx routines
+described in this chapter.
+ 
+\section{\label{sec-QJOP}Options for ``QJxxxx'' routines}
+\par
+ 
+\subsection{\label{sec-QJORE}Set option for reconstructed objects}
+\par
+\fbox{CALL QJOPTR ('reco$-$option', 'additional')}
+\par
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{Input arguments:}
+\indentitem{'reco$-$option'}One of the following options:
+\begin{itemize}
+\item {\bf 'RE'}: ``REconstructed'' tracks
+({\bf default}; see \ref{sec-AL})
+\item {\bf 'CO'}: Calorimeter Objects
+\item {\bf 'CH'}: CHarged tracks
+\item {\bf 'EF'}: ENFLW or mask energy flow objects depending on ELFW option;
+see Ch.~\ref{sec-EF}.
+\item {\bf 'EJ'}: YCUT=0.003 jets based on objects in EF section;
+see~\ref{sec-EFLWM}.
+\item {\bf 'PC'}: PCPA-based energy flow using PCPA neutral objects and
+selected charged tracks; see~\ref{sec-EFLWP}.
+\item {\bf 'AL'}: All objects (charged tracks, cal. objects,
+ECAL objects, HCAL objects, V0s, V0 daughter tracks, etc.).
+If not applied skillfully together
+with LOCK, many objects will be counted twice.
+\item {\bf 'NO'}: NO object. Only objects specified by
+'additional' (see below) will be taken into account.
+\end{itemize}
+\indentitem{'additional'}Particle name of one or several additional
+particle(s) to be analyzed. If no additional
+particles are
+to be considered, the argument ' ' must be given
+(\eg, CALL QJOPTR('CO',' ')).
+\end{indentlist}
+The following example would cause the QJ routines to consider charged
+tracks and all particles called MISS$-$VECTOR; MISS$-$VECTOR might
+be a
+pseudo$-$particle created by one of the routines described later in
+this
+chapter.
+\begin{verbatim}
+      CALL QJOPTR ('CH', 'MISS-VECTOR').
+\end{verbatim}
+Specifying additional reconstructed particles (QJOPTR) has no impact
+on MC particles (QJOPTM) and vice versa.
+ 
+\subsection{\label{sec-QJOMC}Set option for MC particles}
+\par
+\fbox{CALL QJOPTM ('MC$-$option', 'additional')}
+\par
+\par
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{'MC$-$option'}One of the following options:
+\begin{itemize}
+\item {\bf 'VI'}: Only particles with
+a stability codes $>$ 0. VI stands for `best chance to be visible'.
+({\bf default}: see \ref{sec-TVASC})
+\item {\bf 'EP'}: Only particles with stability codes 1, 2, or $-$3.
+EP stands for energy-momentum conservation.
+\item {\bf 'AL'}: All objects. If not applied carefully together
+with LOCK, many objects will be counted twice.
+\item {\bf 'NO'}: No object. Only objects specified by
+`additional' will be taken into account.
+\end{itemize}
+\indentitem{'additional'}Same as for QJOPTR.
+\end{indentlist}
+ 
+\section{\label{sec-QL}Lock tracks / subsamples of tracks}
+\par
+The ``LOCK'' routines described here make it possible to exclude tracks
+from analysis by the routines (QJxxxx) described in this chapter.
+This
+feature can be used both to flag background tracks and to
+restrict the analysis to a subsample of all tracks (\eg, to consider
+only tracks which contribute to a given jet).
+In any user routine, you may test the lock status of a given
+track ITK with {\bf XLOCK(ITK)} which is {\bf .TRUE.}
+if the track has been locked.
+\par
+Every track has three independent locks: one simple one (QLTRK)
+and two more complicated ones (QLOCK and QLOCK2)
+with a broader scope of
+applications. If desired, several locks can be used simultaneously.
+A
+track is considered ``unlocked'' if and only if all three locks are
+open.
+\par
+Opening and closing locks is done only in user routines; no track
+is locked unless it is explicitly locked by the user.
+ 
+\subsection{\label{sec-QLI}Lock a single ``track''}
+\par
+\fbox{CALL QLTRK (ITK)}
+\par
+\par
+\begin{indentlist}{ 3.25cm}{ 3.50cm}
+\indentitem{ITK}ALPHA ``track'' number
+\indentitem{Remarks:}
+In contrast to the other locks described below, QLTRK locks
+the object ITK and its direct copies only (including the same
+object with a different vertex assignment)
+$-$$-$ no other associated
+objects are affected.
+\end{indentlist}
+\subsection{\label{sec-QLU}Unlock a single ``track''}
+\par
+\fbox{CALL QLUTRK (ITK)}
+\par
+\par
+\begin{indentlist}{ 3.25cm}{ 3.50cm}
+\indentitem{ITK}ALPHA ``track'' number
+\indentitem{Remark:}
+QLUTRK opens only the lock set by QLTRK. If another lock is
+still closed, the track remains locked.
+\end{indentlist}
+\subsection{\label{sec-QLO}Lock a track ``family''}
+\par
+\fbox{CALL QLOCK (ITK)}
+\par
+\par
+\begin{indentlist}{ 3.25cm}{ 3.50cm}
+\indentitem{ITK}ALPHA ``track'' number
+\end{indentlist}
+The family of track ITK consists of:
+\begin{itemize}
+\item The track ITK itself.
+\item All copies of track ITK which have been made or will be made,
+including Lorentz boosts of ITK.
+\item For charged tracks, all associated cal. objects; for cal. objects,
+all associated charged tracks.
+\item For reconstructed tracks, all tracks based on the same reconstructed
+object but assigned to different vertices, used with different mass
+hypotheses, etc..
+\item Daughters, granddaughters, great$-$granddaughters, ... ; i.e.,
+all
+kinship in
+descending line.
+\item Mothers, grandmothers, great$-$grandmothers, ... ; i.e., all
+kinship in
+directly (!) ascending line. If you use QLOCK for declaring a
+reconstructed particle to be background, all its ancestors (composite
+particles based on it) are implicitly declared to be background.
+\item Jets and other ``pseudo particles'' described in
+\ref{sec-QJA}. If you lock a
+jet, you lock all contributing particles. If you lock a particle,
+you
+lock all jet vectors to which the particle belongs.
+To lock all particles not belonging to a jet, user QLREV described
+below.
+\end{itemize}
+Reconstructed tracks and MC truth are treated separately;
+locking a reconstructed track has no effect on any MC track and vice
+versa. Lock does not work if you mix up reconstructed tracks and MC.
+ 
+\subsection{\label{sec-QLZ}Unlock tracks (locked with QLOCK)}
+\par
+\fbox{CALL QLZER (IREMC)}
+\par
+\begin{indentlist}{ 3.25cm}{ 3.50cm}
+\indentitem{IREMC }= KRECO for reconstructed tracks and
+KMONTE for MC truth
+\end{indentlist}
+Note that
+the lock algorithm works for all Lorentz frames simultaneously, and
+that
+the specification of a particular frame is NOT allowed (in contrast
+to \ref{sec-ADI}). Reconstructed objects and Monte Carlo objects
+are treated separately.
+QLZER opens the lock QLOCK for all tracks. Tracks may remain locked
+if
+other locks are still closed.
+It is not possible to remove the lock QLOCK for a single track.
+Using two locks
+simultaneously (see \ref{sec-QL2}) should provide
+all the facilities that are needed.
+ 
+\subsection{\label{sec-QLR}Reverse the lock state (corresponding
+to QLOCK)}
+\par
+\fbox{CALL QLREV (IREMC)}
+\par
+\par
+\begin{indentlist}{ 3.25cm}{ 3.50cm}
+\indentitem{IREMC }(see \ref{sec-QLZ}).
+\end{indentlist}
+\begin{itemize}
+\item All unlocked tracks will be locked.
+\item All locked tracks will be unlocked provided that there is no
+other
+closed lock and, for composite particles, that there is no locked
+daughter, granddaughter, ... after the QLREV operation.
+\end{itemize}
+\par
+Calling QLREV a second time reestablishes the initial lock state.
+The
+mnemonic symbol XLREV(IREMC) is set to .TRUE. if the lock state is
+reversed. At the begin of the event
+processing and after calling QLZER(IREMC), XLREV(IREMC) is .FALSE..
+ 
+\subsection{\label{sec-QL2}Second Lock}
+\par
+\fbox{CALL QLOCK2(ITK)}
+\par
+\par
+QLOCK2 works in the same way as QLOCK.
+If one of these locks is used to flag background tracks, the other
+one
+can be used to select subsamples of the non$-$background tracks.
+Also available:
+CALL QLZER2 (IREMC),
+CALL QLREV2 (IREMC), and the logical function XLREV2(IREMC).
+ 
+\section{\label{sec-QJA}Add momenta of all particles of a given class}
+\par
+\fbox{CALL QJADDP (SCALAR, `vector$-$name', ICLASS)}
+\par
+\par
+For adding momenta of a few particles, see \ref{sec-QVA}.
+(NOTE: All of the QJxxxx routines have similar arguments. The
+arguments are explained fully in this explanation of QJADDP.)
+\par
+\subsection{\label{sec-QJI}Input argument}
+\par
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{ICLASS}
+Class = KRECO or KMONTE or a Lorentz frame identifier (see
+\ref{sec-ADI}).
+If ICLASS is KRECO, note that initially all charged particles
+have the pion mass and all neutral objects have mass = 0. This can
+be modified by CALL QVSETM (see \ref{sec-QVM}).
+If ICLASS refers to a Lorentz frame,
+particles not boosted into the frame are ignored without
+notification. The routine QTCLAS (see \ref{sec-QTC}) performs a Lorentz
+transformation of all tracks belonging to a class. If a particle
+has been boosted several times into the same frame, the most
+recently boosted hypothesis will be used (see remarks in
+\ref{sec-ADS}).
+\end{indentlist}
+ 
+\subsection{\label{sec-QJR}Results}
+\par
+A scalar result is stored in the first subroutine argument. In
+QJADDP, the scalar result is the 3$-$momentum sum of all particles.
+An output vector is specified by its name, which is
+the second subroutine argument `vector$-$name'. If you are
+interested in the scalar result only and not in the output vector,
+specify a blank space ` '.
+QJADDP has exactly one output vector: the sum of all 4$-$momenta.
+The
+following example shows how to use this vector.
+\begin{verbatim}
+      CALL QJADDP (PSUM, 'ADD-ALL', KRECO, ...)
+      ISUM = KPDIR ('ADD-ALL', KRECO)
+      CALL HF2 (4711, QP(ISUM), QM(ISUM), 1.)
+\end{verbatim}
+Other routines may output several vectors; a loop using
+KFOLLO (see
+\ref{sec-ADE}) must be constructed to access all of them.
+\par
+Locking an output vector locks all particles contributing to it
+(see \ref{sec-QLO}).
+You can test whether a track ITK contributes to an output
+vector ISUM by using the logical symbol XSAME (ITK, ISUM) (Sec.
+\ref{sec-TVATPSO}).
+\par
+The output vectors of ``QJ'' routines are called
+``pseudo$-$particles''. In some routines described
+below, these pseudo$-$particles represent an axis
+rather than a 3$-$ or 4$-$vector; the momentum value may or may
+not be meaningful. For consistency, an energy assuming mass = 0
+is calculated in these cases.
+\par
+In addition, pseudo$-$particles are treated differently than ``real''
+particles:
+\begin{itemize}
+\item A warning is issued if the same name is used for a pseudo$-$particle
+and a ``real'' particle.
+\item Existing pseudo$-$particles are dropped automatically if the
+same name
+and the same class is used in another call to a ``QJ'' routine. Thus,
+in
+\begin{verbatim}
+        CALL QJADDP (PSUM, 'ADD-ALL', KRECO, ...)
+        CALL QJADDP (PSUM, 'ADD-ALL', KRECO, ...)
+        CALL QJADDP (PSUM, 'ADD-ALL', KMONTE, ...)
+\end{verbatim}
+the output vector of the first call is not available after the second
+call. Thus, output vectors from different calls are
+never mixed up. Since the third call refers to a different class,
+the vector from the second call is not dropped.
+Note that you are free to invent new names in
+every new call to a ``QJ'' or any other routine.
+\end{itemize}
+\section{\label{sec-QJEI}Momentum tensor eigenvalues and eigenvectors}
+\par
+\fbox{CALL QJEIG (EIGVAL, `eigenvector', ICLASS)}
+\par
+\par
+See also QJSPHE in \ref{sec-QJSP} for sphericity value and axis.
+ 
+{\bf Input argument:}
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{ICLASS}described in \ref{sec-QJA}.
+\end{indentlist}
+ 
+{\bf Results:}
+ 
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{EIGVAL}eigenvalues in descending order
+with DIMENSION EIGVAL(3).
+\begin{itemize}
+\item Sphericity = 1.5 * (1. $-$ EIGVAL(1))
+\item Aplanarity = 1.5 * EIGVAL(3)
+\item Planarity = EIGVAL(2) $-$ EIGVAL(3)
+\end{itemize}
+ 
+\indentitem{'eigenvector'}Three eigenvectors:
+\begin{itemize}
+\item IMAJOR = KPDIR ('eigenvector', ICLASS)
+\item ISEMI = KFOLLO (IMAJOR)
+\item IMINOR = KFOLLO (ISEMI)
+\end{itemize}
+\end{indentlist}
+\section{\label{sec-QJEN}Linearized momentum tensor eigenvalues and
+eigenvectors}
+\par
+\fbox{CALL QJTENS (EIGVAL, `eigenvector', ICLASS)}
+\par
+\par
+Same as QJEIG except that a different normalization is used.
+The momentum tensor for this calculation is defined as
+\begin{equation}
+M_{{jk}}={1\over P}\sum _{i}{{p_{{ji}}p_{{ki}}}\over {p_{i}}}
+\end{equation}
+\begin{equation}
+j,k=1,2,3
+\end{equation}
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{Input arguments and results are as described for QJEIG.}\hspace*{1in}
+\end{indentlist}
+\section{\label{sec-QJSP}Sphericity}
+\par
+\fbox{CALL QJSPHE (SPHERI, `spheri$-$axis', ICLASS)}
+\par
+\par
+Calculates sphericity value and sphericity axis.
+See also QJEIG in \ref{sec-QJEI} for eigenvalues and eigenvectors
+of the momentum tensor.
+{\bf Input argument:}
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{ICLASS}described in \ref{sec-QJA}.
+\end{indentlist}
+ 
+{\bf Results:}
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{SPHERI}Sphericity value
+\indentitem{'spheri$-$axis'}Sphericity axis.
+\end{indentlist}
+ 
+{\bf Error conditions:}
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{Zero or one track}SPHERI value 0.; output vector = 0.,0.,0.,0.
+\indentitem{Two tracks}SPHERI = 0.; output vector = track vector with
+largest p.
+\end{indentlist}
+\section{\label{sec-QJTH}Thrust}
+\par
+\fbox{CALL QJTHRU (THRUST, `thrust$-$axis', ICLASS)}
+\par
+\par
+{\bf Input argument:}
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{ICLASS}described in \ref{sec-QJA}.
+\end{indentlist}
+ 
+{\bf Results:}
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{THRUST}Thrust value.
+\indentitem{'thrust$-$axis'}Thrust axis.
+\end{indentlist}
+ 
+{\bf Error conditions:}
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{No track}THRUST value 0.; output vector = 0.,0.,0.,0.
+\indentitem{One track}thrust value = 1; output vector = track vector.
+\end{indentlist}
+{\bf When reading MINIs ( versions $\geq 10$ ) :}
+ 
+  The thrust calculation is very CPU-time consuming. To save time when reading a MINI,
+ from MINI 10 onwards (written since December 1994)
+ the thrust axis and value are calculated using the 'EF' option in QJOPTR (see \ref{sec-QJORE}). The results
+ are stored in a special bank on the MINI.
+ When reading these MINIs, the thrust axis and value are not computed from scratch, but
+ read directly from this bank.
+ 
+ You don't need to change anything to your program if you want to use
+ the 'EF' option.
+ If you want to compute the thrust with another option, you MUST give
+ the following sequence of calls:
+\begin{verbatim}
+      XJTHRU=.TRUE.
+      CALL QJOPTR ('your reco-option' , 'additional' )
+      CALL QJTHRU(THRUST,'thrust-axis',ICLASS)
+\end{verbatim}
+ 
+ The logical variable XJTHRU belongs to the QCDE include file of ALPHA, and is set to .FALSE. at the
+ beginning of each event.
+ 
+\section{\label{sec-QJFW}Fox$-$Wolfram Moments}
+\par
+\fbox{CALL QJFOXW(FOXWOL, ICLASS)}
+\par
+\par
+{\bf Input argument:}
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{ICLASS}described in \ref{sec-QJA}.
+\end{indentlist}
+ 
+{\bf Result:}
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{FOXWOL}Fox$-$Wolfram moments H0 $-$ H4;
+DIMENSION FOXWOL(5).
+\end{indentlist}
+ 
+\section{\label{sec-QJHE}Divide event into two hemispheres}
+\par
+\fbox{CALL QJHEMI ('same$-$s', `opp$-$s', ICLASS, IVEC, COSCUT)}
+\par
+\par
+{\bf Input arguments:}
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{ICLASS}described in \ref{sec-QJA}.
+\indentitem{IVEC}Track number of vector which defines the ``hemi''spheres.
+\indentitem{COSCUT}The cosine of the opening angle of a cone around
+IVEC.
+Tracks inside this cone belong to the same side, and all other
+ones belong to the opposite side. The word ``hemisphere'' is correct
+if COSCUT = 0.
+\end{indentlist}
+ 
+{\bf Results:}
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{'same$-$s'}The 4$-$momentum sum of tracks on the same
+side as IVEC.
+\indentitem{'opp$-$s'}
+The 4$-$momentum sum of tracks on the side opposite to IVEC.
+\end{indentlist}
+\par
+The two output vectors can be used to assign tracks to one of the
+the two hemispheres with the lock algorithm
+(\ref{sec-QLO}).
+\par In the following example, the event is divided into two
+hemispheres according to the thrust axis. Then, each hemisphere is
+boosted separately into the rest frame of all contributing tracks.
+\begin{verbatim}
+      DIMENSION IVECT(2)
+C---Thrust axis
+      CALL QJTHRU (THRU, 'THRUST', KRECO)
+      ITHRU = KPDIR ('THRUST', KRECO)
+C---Two hemispheres:
+      CALL QJHEMI ('SAME', 'OPPO', KRECO, ITHRU, 0.)
+      IVECT(1) = KPDIR ('SAME', KRECO)
+      IVECT(2) = KPDIR ('OPPO', KRECO)
+C---Lock all tracks in the 'oppo' hemisphere:
+      CALL QLOCK (IVECT(2))
+C---Loop over both hemispheres:
+      DO 10 IHEMI = 1, 2
+C---Transform all selected tracks into the rest frame of IVECT(IHEMI):
+      CALL QTCLAS (KRECO, IVECT(IHEMI))
+C---Now, do the analysis. For example:
+C---Plot the thrust in the boosted frame.
+      CALL QJTHRU (THRUB, ' ', IVECT(IHEMI))
+      CALL QHF1 (4711, THRUB, 1.)
+C---QLREV: locked tracks -> unlocked tracks and vice versa.
+C---This selects tracks in the hemisphere 'OPPO' for next loop.
+      CALL QLREV (KRECO)
+   10 CONTINUE
+\end{verbatim}
+Note that in the above example, two of the maximum six Lorentz frames
+are in use. They can be dropped by the statement
+CALL QVDROP (' `, IVECT(IHEMI))
+inside the loop (see \ref{sec-QVD}).
+ 
+\section{\label{sec-QJME}Missing energy, mass, momentum}
+\par
+\fbox{CALL QJMISS (PMISS, 'miss$-$vector', ICLASS, ITOTAL)}
+\par
+\par
+{\bf Input arguments:}
+\begin{indentlist}{ 4.25cm}{ 4.50cm}
+\indentitem{ICLASS}described in \ref{sec-QJA}.
+\indentitem{ITOTAL}
+= 0: Missing energy, etc. is calculated with respect to
+the total energy vector (0.,0.,0.,QELEP).
+$>$ 0: Calculation is done with respect to vector ITOTAL.
+\end{indentlist}
+ 
+{\bf Results:}
+\begin{indentlist}{ 4.25cm}{ 4.50cm}
+\indentitem{PMISS}Missing momentum.
+\indentitem{'miss$-$vector}vector containing missing
+momentum,
+mass, and energy.
+\end{indentlist}
+ 
+{\bf Error conditions:}
+\begin{itemize}
+\item Total energy $>$ LEP energy QELEP.
+\item Missing momentum $>$ missing energy.
+\item In both cases, the
+output vector contains energy = PMISS and mass = 0.
+\end{itemize}
+\section{\label{sec-QJMM}Jet Finding}
+\par
+\subsection{\label{sec-QJSIM}Scaled Invariant Mass Squared Algorithms}
+\par
+There are two algorithms available, each with the same 3 variants ( or schemes ).
+The first algorithm is known as the JADE algorithm, which defines the invariant mass as:
+\par
+                                      $ M^{2}= 2E_{1}E_{2}(1-\cos \theta _{12}) $.
+\par
+The second is known as the DURHAM algorithm and uses a proposal by Dokshitzer for invariant mass,
+which is less sensitive to soft gluons:
+\par
+                                      $ M^{2}= 2(MIN(E_{1},E_{2}))^{2}(1-\cos \theta _{12}) $.
+ 
+\par
+Both algorithms combine particles into jets using one of the following combination schemes:
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{E   scheme}$ P_{ij} = P_i + P_j $\\
+                       $ E_{ij} = E_i + E_j $
+\indentitem{P   scheme}$ P_{ij} = P_i + P_j $\\
+                       $ E_{ij} = |P_{ij}| $
+\indentitem{$E_0$ scheme}$ E_{ij} = E_i + E_j $\\
+                       $ P_{ij} = E_{ij}(P_i+P_j)/|P_i+P_j| $
+\end{indentlist}
+\par
+For more details, please read the internal reports ALEPH 90$-149$ (SOFTWR 90$-$015)  and
+ ALEPH 91$-$151 ( SOFTWR 91$-$006 ).
+ 
+\par
+\subsubsection{\label{sec-QJMMCL}JADE Algorithm with E scheme:}
+\par
+\fbox{CALL QJMMCL (NJETS, `name', ICLASS, YCUT, EVIS)}
+\par
+A loop runs over all pairs of tracks and finds the pair which has
+the
+smallest invariant mass M.
+If $
+(M/EVIS)^{2}<YCUT
+$, these 2 tracks are merged
+(i.e., 4$-$momenta added).
+\par The loop is then rerun over the new list of tracks which has
+lost
+2 particles and gained the merged pair. When no remaining pair has
+a
+low enough mass, the track list contains a set of merged
+tracks called jets.
+\par
+{\bf Input arguments:}
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{ICLASS}described in \ref{sec-QJA}.
+\indentitem{YCUT}Cut on the scaled invariant mass of 2 tracks.
+Pairs of tracks are merged if their scaled invariant mass is smaller
+than YCUT.
+\indentitem{EVIS}The visible energy of the event.
+If EVIS equals 0, the visible energy is computed as the sum of the
+input particle energies.
+\end{indentlist}
+ 
+{\bf Results:}
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{NJETS}is the number of ``jets'' .
+\begin{itemize}
+\item  $>$ 0 = number of jets found
+\item  $-$ 1 = input error with EVIS , or no particles
+\item  $-$ 2 = error in one of the particles
+\item  $-$ 3 = too many jets found
+\item  $-$ 4 = unknown combination scheme requested
+\item  $-$ 5 = unknown algorithm requested
+\item  $-$ 99 = Not enough BOS workspace to do jet finding
+\end{itemize}
+\indentitem{'name'}Vectors containing 4$-$momenta of the jets.
+\end{indentlist}
+\par
+EXAMPLE:
+\begin{verbatim}
+      DIMENSION LISTEJ(300)
+      CHARACTER*13 CNAM
+C---Select option: charged tracks
+      CALL QJOPTR('CH',' ')
+C---calculate visible energy from input tracks:
+      EVISRE = 0.
+      YCUT  = 0.02
+      CALL QJMMCL(NJT,'MMCLUS_RE_vis',KRECO,YCUT,EVISRE)
+      CNAM = 'MMCLUS_RE_vis'
+      WRITE(KUPRNT,*)' # of jets reconstructed ', CNAM, ':', NJT
+      IF(NJT.GT.0) THEN
+C--- get ALPHA number for first jet found:
+        JJ = KPDIR(CNAM,KRECO)
+  20    IF(JJ .NE. 0) THEN
+C--- get the list of tracks merged into this jet:
+          LL = 0
+          DO 211 L  = KFCHT, KLCHT
+C--- check if this track belongs to this jet:
+            IF(.NOT.XSAME(JJ,L)) GOTO 211
+            LL = LL + 1
+            LISTEJ(LL) = L
+  211     CONTINUE
+          WRITE(KUPRNT,*) 'Jet # ', J
+          WRITE(KUPRNT,*) QX(JJ),QY(JJ),QZ(JJ),QE(JJ)
+          WRITE(KUPRNT,*) 'List of tracks merged into this jet:'
+          WRITE(KUPRNT,*) (LISTEJ(L),L=1,LL)
+C--- get ALPHA number for next jet found:
+          JJ = KFOLLO(JJ)
+          GOTO 20
+        ENDIF
+      ENDIF
+\end{verbatim}
+ 
+ 
+\par
+\subsubsection{\label{sec-QDMMCL}DURHAM Algorithm with E scheme:}
+\par
+\fbox{CALL QDMMCL (NJETS, `name', ICLASS, YCUT, EVIS)}
+\par
+ The arguments and usage are identical to that for QJMMCL above.
+\par
+ 
+ 
+\par
+\subsubsection{\label{sec-QGJMMC}Generalised Version of the JADE/DURHAM algorithm}
+\par
+\fbox{CALL QGJMMC (NJETS, `name', ICLASS, YCUT, EVIS,SCHEME,VERSN)}
+\par
+ The arguments and usage are identical to that for QJMMCL above , except for the extra input arguments :
+{\bf Input arguments:}
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{SCHEME} CHARACTER*2 : 'E' or 'P' or '$E_0$' (see above)
+\indentitem{VERSN } CHARACTER*6 : 'JADE' or 'DURHAM' for JADE (resp. DURHAM) algorithm
+\end{indentlist}
+\par
+    Note that 'NORMAL' and 'BETTER' are alternatives for 'JADE' and 'DURHAM' for historical reasons.
+\par
+ QJMMCL and QDMMCL both call this routine , which itself calls the ALEPHLIB routine
+ FJMMCL , which actually does the jet finding.
+ 
+\subsection{\label{sec-QJMD}Scaled Minimum Distance Algorithm}
+\par
+\fbox{CALL QJMDCL (NJETS, `name', ICLASS, ALPHA, DELTA, ETA, EVIS)}
+\par
+\par
+A loop runs over all pairs of tracks and finds the pair which has
+the
+smallest invariant mass M.
+If $
+(M/EVIS^{\alpha })^{2}<{\sqrt {2(1-\cos 2\delta )}}
+$,
+these 2 tracks are merged (i.e., 4$-$momenta added).
+The loop is then rerun over the new list of tracks which has lost
+2 particles and gained the merged pair. When no remaining pair has
+a
+low enough mass, the track list contains a set of merged
+tracks. If these tracks have energies bigger than $
+2\eta Evis
+$,
+they are called jets.
+\par
+{\bf Input arguments:}
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{ICLASS}described in \ref{sec-QJA}.
+\indentitem{ALPHA}Weight of track energies and Evis, in the calculation
+of
+the scaled mass.
+Pairs of tracks are merged if their scaled mass is smaller
+than $
+{\sqrt {2(1-\cos 2\delta )}}
+$.
+\indentitem{DELTA}Half opening angle cut in degrees.
+\indentitem{ETA}Cut on jet energies (fraction of $
+2Evis
+$);
+only jets with energies $
+>2\eta Evis
+$ are kept.
+\indentitem{EVIS}The visible energy of the event;
+if EVIS equals 0 , the visible energy is computed as the sum of the
+input particle energies.
+\end{indentlist}
+ 
+{\bf Results:}
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{NJETS }is the number of ``jets''.
+\indentitem{'name'}Vectors containing 4$-$momenta of the jets.
+\end{indentlist}
+ 
+\subsection{\label{sec-QJLU}JETSET algorithm LUCLUS from LUND}
+\par
+\fbox{CALL QJLUCL (NJETS, `name', ICLASS, MINCLU, DMAX1, DMAX2,MULSYM, TGEN,
+DMIN)}
+\par
+\par
+{\bf Input arguments:}
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{ICLASS}described in \ref{sec-QJA}.
+\indentitem{MINCLU}Minimum number of clusters to be reconstructed.
+(if $<$0, work space momenta are used as a start)
+(usually=1)
+\indentitem{DMAX1}Max. distance to form starting clusters (usually=0.25GeV)
+\indentitem{DMAX2}Max. distance to join 2 clusters (usually=2.5 GeV)
+\indentitem{MULSYM}
+\begin{itemize}
+\item = 1 for symmetric distance criterion (usual)
+\item = 2 for multicity distance criterion
+\end{itemize}
+\end{indentlist}
+ 
+{\bf Results:}
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{NJETS} is the number of ``jets''
+\begin{itemize}
+\item = $-$1 if not enough particles
+\item = $-$2 if not enough working space (KTBOMX)
+\end{itemize}
+\indentitem{TGEN}Generalized thrust
+\indentitem{DMIN}Minimum distance between 2 jets
+\begin{itemize}
+\item = 0  when only 1 jet
+\item = $-$1 , $-$2 as for NJET
+\end{itemize}
+\indentitem{'name'}Vectors containing 4$-$momenta of the jets.
+\end{indentlist}
+ 
+\subsection{\label{sec-QJPT}PTCLUS: Jet-finding algorithm}
+\par
+\fbox{CALL QJPTCL (NJETS,'name',ICLASS,NJTLIM,YJTLIM,EVIS)}
+\par
+\par
+The PTCLUS jet-finding algorithm is described in the note ALEPH 89 $-$ 150 (PHYSIC 89-060) by M. Scarr and I. TenHave.
+\par
+{\bf Input arguments:}
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{ICLASS}described in \ref{sec-QJA}.
+\indentitem{NJLITM}maximum number of jets to search for; if NJLITM=0,
+the algorithm finds the number of jets using YJTLIM.
+\indentitem{YJLITM}maximum allowed distance between two clusters
+(in M$^2$ / EVIS$^2$); 0.02 is a typical value.
+\indentitem{EVIS}visible energy.  If EVIS=0, the visible energy is
+calculated.
+\end{indentlist}
+ 
+{\bf Results:}
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{NJETS} is the number of ``jets''. ($-$1 if algorithm fails)
+\indentitem{TGEN}Generalized thrust
+\indentitem{'name'}Vectors containing 4$-$momenta of the jets.
+\end{indentlist}

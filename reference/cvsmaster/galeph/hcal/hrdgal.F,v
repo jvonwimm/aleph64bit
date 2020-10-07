@@ -1,0 +1,187 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.29.16.23.20;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.23;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.24;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+@
+text
+@*DK hrdgal
+      SUBROUTINE HRDGAL
+C------------------------------------------------------------------
+C! Get HCAL bank used only in Galeph and store the content in the
+C                     HCCONG common
+C- F.Ranjard - 880202
+C- Modified by L.Silvestris     31/08/90
+C              F.Ranjard        11/10/91
+C              get HCOS and HGEA depending on the GEANT version number
+C              use MDARD to get banks from data base
+C- Called by : HCIRUN
+C!          Calls     : ALTELL from Alephlib
+C!                      UCOPY,HISPRE from Cernlib
+C!
+C -------------------------------------------------
+#ifndef DOC
+#include "gcbank.h"
+#include "hjjpar.h"
+#include "jobcom.h"
+#include "iocom.h"
+#include "bcs.h"
+#include "hccong.h"
+#include "bmacro.h"
+C ----------------------------------------------------------------------
+C - get GEANT version number
+       IGEANT = INT (GVERSN*100.)
+C - get machine row number : CRAY=2, .NOT.CRAY=1
+       MAC = 1
+C
+       JHCOS = MDARD (IW,LRDBIO,'HCOS',IGEANT)
+       IF (JHCOS.EQ.0) THEN
+C      try to get HCOS,NR=1 (GEANT 313 version)
+          JHCOS = MDARD (IW,LRDBIO,'HCOS',1)
+       ENDIF
+       JHGEA = MDARD (IW,LRDBIO,'HGEA',IGEANT)
+       IF (JHGEA.NE.0) THEN
+          IF (MAC.GT.LROWS(JHGEA)) MAC = LROWS(JHGEA)
+C      in case the row corresponding to the machine is not the 1st one
+C      copy the row # MAC into the 1st one
+          IF (MAC.GT.1) THEN
+             KHGEA = KROW(JHGEA,MAC)
+             CALL UCOPY (RW(KHGEA+1),RW(JHGEA+LMHLEN+1),IW(JHGEA+1))
+          ENDIF
+       ENDIF
+C
+       JHTRE = MDARD (IW,LRDBIO,'HTRE',1)
+C
+       IF (JHCOS.NE.0) THEN
+          IF (MAC.GT.LROWS(JHCOS)) MAC = LROWS(JHCOS)
+          HCTUAC   = RTABL(JHCOS,MAC,JHCOTA)
+          HSTREA   = RTABL(JHCOS,MAC,JHCOTS)
+          HCSTDT   = RTABL(JHCOS,MAC,JHCOOL)
+          HTLEMX   = RTABL(JHCOS,MAC,JHCOMT)
+          HCTEFF(1)= RTABL(JHCOS,MAC,JHCOEA)
+          HCTEFF(2)= RTABL(JHCOS,MAC,JHCOEA+1)
+          HCTEFF(3)= RTABL(JHCOS,MAC,JHCOEA+2)
+          HCADCE   = RTABL(JHCOS,MAC,JHCOCF)
+          HPINDU   = RTABL(JHCOS,MAC,JHCOIF)
+          HADCMX   = RTABL(JHCOS,MAC,JHCOMA)
+      ELSE
+         GOTO 998
+      ENDIF
+C
+      IF(JHTRE.NE.0) THEN
+         NHCFSS = ITABL(JHTRE,1,JHTRNB)
+         HCFSS1 = RTABL(JHTRE,1,JHTRLE)
+         HCFSS2 = RTABL(JHTRE,1,JHTRUE)
+C
+         CALL UCOPY(RW(JHTRE+LMHLEN+JHTRSR),HCFLSS(1),NHCFSS)
+         CALL HISPRE(HCFLSS,NHCFSS)
+C
+      ELSE
+         GOTO 998
+      ENDIF
+C
+C  Get geometry D.B. variables used in Galeph
+C
+      CALL HGETDB
+      RETURN
+998   CONTINUE
+      CALL ALTELL('HRDGAL: missing DB banks ', 0, 'STOP')
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d14 2
+a15 1
+C ----------------------------------------------------------------
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

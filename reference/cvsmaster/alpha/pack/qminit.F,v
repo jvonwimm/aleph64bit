@@ -1,0 +1,497 @@
+head	1.10;
+access;
+symbols
+	alpha126_22:1.10
+	alpha126_21:1.10
+	alpha126_20:1.10
+	alpha126_19:1.10
+	alpha126_18:1.10
+	alpha126_17:1.10
+	alpha126_16:1.10
+	alpha126_15:1.10
+	alpha126_14:1.10
+	alpha126_13:1.10
+	alpha126_12:1.10
+	alpha126_11:1.10
+	alpha126_10:1.10
+	alpha126_09:1.9
+	alpha126_08:1.9
+	alpha126_07:1.9
+	alpha126_06:1.9
+	alpha126_05:1.9
+	alpha126_04:1.9
+	alpha126_03:1.9
+	alpha126_02:1.9
+	alpha126_1:1.9
+	alpha125_17:1.9
+	alpha125_16:1.9
+	alpha125_15:1.9
+	alpha125_14:1.9
+	alpha125_13:1.9
+	alpha125_12:1.9
+	alpha125_11:1.9
+	alpha125_10:1.9
+	alpha125_09:1.9
+	alpha125_08:1.9
+	alpha125_07:1.9
+	alpha125_06:1.9
+	alpha125_05:1.9
+	alpha125_04:1.9
+	alpha125_03:1.8
+	alpha125_02:1.8
+	alpha125_01:1.8
+	alpha124_19:1.7
+	alpha125:1.6
+	alpha124_18:1.4
+	alpha124_17:1.4
+	alpha124_16:1.4
+	alpha124_15:1.4
+	alpha124_14:1.4
+	alpha124_13:1.4
+	alpha124_12:1.4
+	alpha124_11:1.4
+	alpha124_10:1.4
+	alpha124_09:1.4
+	alpha124_08:1.4
+	alpha124_07:1.4
+	alpha124_7:1.4
+	alpha124_06:1.4
+	alpha124_05:1.4
+	alpha124_04:1.4
+	alpha124_03:1.4
+	alpha124_02:1.4
+	alpha124_01:1.4
+	alpha124:1.3
+	alpha123_12:1.3
+	alpha123_11:1.3
+	alpha123_10:1.3
+	alpha123_9:1.3
+	alpha123_8:1.3
+	alpha123_7:1.3
+	alpha123_6:1.3
+	alpha123_5:1.2
+	alpha123_4:1.2
+	alpha123_3:1.2
+	alpha123_2:1.2
+	alpha123:1.2
+	alpha122_48:1.2
+	alpha122_47:1.2
+	alpha122_46:1.2
+	alpha122_45:1.2
+	alpha122_44:1.2
+	alpha122_43:1.2
+	alpha122_42:1.2
+	alpha122_41:1.2
+	alpha122_40:1.2
+	alpha122_39:1.2
+	alpha122_38:1.2
+	alpha122_37:1.2
+	alpha122_36:1.2
+	alpha122_35:1.2
+	alpha122_34:1.2
+	alpha122_33:1.2
+	alpha122_32:1.2
+	alpha122_31:1.2
+	alpha122_30:1.2
+	alpha122_29:1.2
+	alpha122_28:1.2
+	alpha122_27:1.2
+	alpha122_26:1.2
+	alpha122_25:1.2
+	alpha122_24:1.2
+	alpha122_23:1.2
+	alpha122_22:1.2
+	alpha122_21:1.2
+	alpha122_20:1.2
+	alpha122_19:1.2
+	alpha122_18:1.2
+	alpha122_17:1.2
+	alpha122_16:1.2
+	alpha122_15:1.2
+	alpha122_14:1.2
+	alpha122_13:1.2
+	alpha122_12:1.2
+	alpha122_11:1.2
+	alpha122_10:1.2
+	alpha122_9:1.2
+	alpha122_8:1.2
+	alpha122_6:1.2
+	alpha122_5:1.2
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.10
+date	2001.06.21.08.53.18;	author boucrot;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	2000.04.05.13.56.48;	author boucrot;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	2000.01.24.12.47.39;	author boucrot;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	2000.01.14.14.24.35;	author boucrot;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	99.12.08.16.17.32;	author flr;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	99.12.08.09.02.28;	author flr;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	99.03.22.14.10.34;	author boucrot;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.11.05.16.10.17;	author boucrot;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.06.25.14.11.09;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.03.14.12.41.49;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.41.50;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.10
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE QMINIT
+CKEY INIT /INTERNAL
+C----------------------------------------------------------------------
+C! initialize analysis job
+C! called from QMAIN
+C!                                                  H.Albrecht 20.09.88
+C!                                          Modified E.Blucher 03.09.89
+C!                                          Modified G.Graefe  02.10.95
+C!                                          Modified T.Oest    26.07.95
+C! Y2K mods and call to qmstgin             Modified J.Boucrot 14.01.00
+C! call to adbchk added                     Modified J.Boucrot 21.06.01
+C----------------------------------------------------------------------
+#ifndef DOC
+      SAVE IOLD,INEW
+#include "qcdesh.h"
+      COMMON / ALFORMA / LUFORM,IFALARM
+      INTEGER ALFMT
+      CHARACTER FMT*75,TEXT*80
+      DATA IOLD,INEW/0,-1/
+C----------------------------------------------------------------------
+C
+C           quasi BLOCK DATA
+C
+      CALL QDATA
+#if defined(UNIX)
+C_PVM
+C
+C   Open log files and initialize PVM if client.
+C
+      CALL QPVMIS(KUPRNT)
+C_PVM
+#endif
+C
+C           interactive job ?
+C
+      CALL QAINTA
+C
+C           date,time; print header
+C
+      CALL QADATI
+
+C          init BOS
+C
+      CALL QUIBOS(KUPRNT,KUPTER)
+      IW(5) = KUCARD
+      IW(6) = KUPRNT
+C
+C           dummy open routine
+C
+      CALL QUOPEN
+C
+C Read BOS bank formats :
+C
+      IND = ALFMT(LUFORM,'ALL ',FMT)
+      IF (IND.NE.0) IFALARM = 1
+C
+C           define NAMe Indices
+C
+      CALL QMNAMI
+C
+C           read data cards
+C
+      CALL QMCARD
+C
+C          initialize ALPHA
+C
+      CALL QMALPH
+      IF (XCOPYJ .AND. .NOT.XWMINI)  GO TO 90
+C
+C           read short-term database
+C
+      CALL QMDBAS
+C
+C           initialise database
+C
+      IF (KDEBUG .GT. 0)  CALL QWMESS ('_QMINIT_ Open data base')
+      KUCONS = JUNIDB (0)
+      CALL AOPDBS (' ',IER)
+      IF (IER .NE. 0)
+     +  CALL QWSYNT ('0_QMINIT_ Data base cannot be opened')
+C    Swap database bank given on data cards with NR=IROLD to IRNEW.
+C
+      CALL ADBSWP(IOLD,INEW)
+C
+      CALL MDARD (IW, KUCONS, 'ADBS', 0)
+      CALL MDARD (IW, KUCONS, 'ADBL', 0)
+      IS = NLINK ('ADBS', 0)
+      IL = NLINK ('ADBL', 0)
+      IF (IS .GT. 0 .AND. IL .GT. 0)  THEN
+         WRITE (KUPRNT, 1001)
+     +   IW(IS+3), IW(IS+4), IW(IL+3), IW(IL+4)
+         IADBS=IW(IS+3)
+         JALPV=IW(NAMIND('ALPV'))
+         IALV=IW(JALPV+1)
+         IF (IALV.LE.124.AND.IADBS.GT.256) THEN
+           WRITE (KUPRNT,1002) IALV 
+           text=' '
+           text='_QMINIT_ JOB ABORTED DUE TO DATABASE # INCONSISTENCY'
+           CALL QMTERM (text(1:lnblnk(text)))
+        ENDIF
+      ELSE
+        CALL QWMESS
+     +   ('_QMINIT_ Data base : ADBS/ADBL is missing')
+      ENDIF
+C Check database version number for official MCarlo production:
+      call adbver(iver,idat)
+      call adbchk(iver)
+C
+C          initialize particle table
+C
+      CALL QMPART
+#if defined(UNIX)
+C_PVM
+C
+C   start PVM tasks, OPEN TMP,RUN BUFFER
+C
+      CALL QPVMIM(KUPRNT)
+C
+C_PVM
+C
+C
+C stage in turn all tape/files from FILI CARDS, if required :
+C
+      CALL QMSTGIN
+#endif
+C
+C          initialize histograms
+C
+      CALL QUIHIS
+C
+C          initialize formats for mini
+C
+      CALL MINFMT
+C
+C          initialize NanoDst if requested
+C
+      IF (XWNANO) CALL QNINIT
+C
+C          Initialization for YTOP
+C
+      CALL YTIJOB
+C Initialise EBNEUT package when ENFLW required :
+      IF (XFILEF) CALL EBINIT(IER)
+C
+C         user initialization
+C
+      IF (XCOPYJ) GO TO 90
+      IF (XSYNTX)  THEN
+        CALL QWMESS ('_QMINIT_ Syntax flag --> QUINIT not called')
+      ELSE
+        IF (KDEBUG .GT. 0)  CALL QWMESS ('_QMINIT_ Call QUINIT')
+        CALL MQUINIT
+        CALL QUINIT
+      ENDIF
+C
+C         initialisation time
+C
+   90 CALL QWMESS ('_QMINIT_------- Initialization done --------')
+      CALL QWMESS(' ')
+      KSTATU = 0
+      CALL TIMEX (QTIMEI)
+C
+C       syntax flag ?
+C
+      IF (XSYNTX)  CALL QMTERM
+     +   ('_QMINIT_ Syntax flag --> no event processing')
+C
+ 1001 FORMAT (' _QMINIT_ Data base version ADBS',I7,I10,
+     +        ', ADBL',2I7)
+ 1002 FORMAT (/3x,'_QMINIT_  *** ERROR  ***'/, 
+     +3x,'_QMINIT_ : Database version >= 300 cannot be used'/,
+     +  14x,'with ALPHA ',I3, ' : use ADBSCONS DAF versions <= 256')
+C 
+      END
+#endif
+@
+
+
+1.9
+log
+@*** empty log message ***
+@
+text
+@d11 1
+d105 3
+@
+
+
+1.8
+log
+@*** empty log message ***
+@
+text
+@d10 1
+a10 1
+C!                                          Modified J.Boucrot 14.01.00
+a90 1
+C ----- patch to avoid problems with ALPHA 124 and Database ADBSCONS 300: ----
+a99 1
+C --- end of patch ------------------------------------------------------------
+d116 5
+@
+
+
+1.7
+log
+@*** empty log message ***
+@
+text
+@d91 1
+a91 2
+
+C ----- special patch to avoid problems with Database ADBSCONS 300: -----------
+@
+
+
+1.6
+log
+@alpha125 fortran bug in qminit
+@
+text
+@a7 1
+C!                                          Modified E.Blucher 02.02.92
+d10 1
+d17 1
+a17 1
+      CHARACTER FMT*75
+d89 1
+a89 1
+        WRITE (KUPRNT, 1001)
+d91 12
+a102 7
+        IF (IW(IS+3).LT.300) THEN
+          WRITE(KUPRNT,*)' _QMINIT_ DB ',IW(IS+3),
+     +    ' is not Y2K compliant - use DB >= 300'
+          CALL QWMESS
+     +     ('_QMINIT_ DB is not Y2K compliant - STOP')
+          CALL EXIT
+        ENDIF 
+d162 1
+a162 1
+ 1001 FORMAT (' _QMINIT_ Data base version ADBS',2I7,
+d164 4
+@
+
+
+1.5
+log
+@alpha125 - Y2K compliant
+@
+text
+@d96 2
+a97 1
+          CALL EXIT 
+@
+
+
+1.4
+log
+@*** empty log message ***
+@
+text
+@d91 6
+@
+
+
+1.3
+log
+@*** empty log message ***
+@
+text
+@d134 1
+@
+
+
+1.2
+log
+@update alpha122 with corr.file no.5
+@
+text
+@d17 1
+a17 1
+      CHARACTER FMT*1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d15 3
+d51 5
+d142 1
+a142 1
+      CALL TIMAX (QTIMEI)
+@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

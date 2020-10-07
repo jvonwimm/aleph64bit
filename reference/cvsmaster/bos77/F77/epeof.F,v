@@ -1,0 +1,51 @@
+head	1.1;
+access;
+symbols
+	bos3589:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	97.01.29.15.49.04;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@release bos3589: new epio routines
+@
+text
+@      SUBROUTINE EPEOF(LUNIT,IERR)
+C. WRITES EOF MARK ON OUTPUT UNIT LUNIT
+C  A CALL WITH LUNIT = INPUT UNIT HAS NO EFFECT.
+*
+* epiocom.inc
+*
+      COMMON/EPCOMM/NMUNIT,NWUNIT,NCONT,ISTART,LASTUT,LREF,LIST(350)
+      EQUIVALENCE (NOUTUT,LIST(8))
+*
+C--- CHECK WHETHER SAME USER UNIT AS LAST TIME
+      IF(LASTUT.EQ.LUNIT)  GOTO 1551
+C--- NEW UNIT - GET REF
+      CALL EPUNIT(LUNIT,IERR)
+      IF(IERR.EQ.0)  GOTO 1552
+      GOTO 77777
+ 1551 IERR=0
+      IF(LREF.NE.0)  GOTO 1552
+      IERR=13
+      CALL EPERRH(LUNIT,IERR)
+      GOTO 77777
+ 1552 CONTINUE
+      IF(LIST(ISTART+16).NE.1)  GOTO 77777
+      IF(LIST(ISTART+33).EQ.0)END FILE LUNIT
+      IF(LIST(ISTART+33).EQ.2)call cfclos(list(istart+25),0)
+C
+77777 RETURN
+      END
+@

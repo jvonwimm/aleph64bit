@@ -1,0 +1,2 @@
+      PARAMETER ( NPCOR = 20)
+      COMMON / GACORF / GACORA (3,NPCOR)

@@ -1,0 +1,79 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  aleph212:1.1.1.1 ALEPH212:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.02.07.11.40.38;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.02.07.11.40.39;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE AOPDBS(FNAME,IRC)
+C--------------------------------------------------------------------
+CKEY ALEF OPEN DB / USER
+C!  OPEN  ALEPH database ( DEF= ADBSCONS DAF )
+C - Author:   D.Schlatter
+C - modified by: F.Ranjard - 890302
+C                          - 920513 - use the ALEPH name
+C   Input:    FNAME       filename,
+C                         if '  ' then
+C                           try to get file from FDBA data card
+C                           if OK return
+C                         endif
+C                           try to open 'ADBSCONS' from the environment
+C                         endif
+C   Output:   IRC         zero for successful opening
+C
+C   Calls:    AOPEN , JUNIDB
+C--------------------------------------------------------------------
+#ifndef DOC
+      CHARACTER*(*) FNAME
+      CHARACTER*80 FDEVI, FNAM
+C-------------------------------------------------------------------
+C
+      LDBAS = JUNIDB(0)
+      FDEVI = ' '
+      IF (FNAME .EQ. ' ') THEN
+         CALL AGTFIL ('FDBA','READ',LDBAS,IRET)
+         IF (IRET .EQ. -1) THEN
+            FNAM = 'ADBSCONS'
+         ELSE
+            IRC = IRET
+            GOTO 999
+         ENDIF
+      ELSE
+         FNAM = FNAME
+      ENDIF
+      CALL AOPEN(LDBAS,FNAM,'DAF ',FDEVI,IRC)
+C
+999   RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

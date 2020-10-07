@@ -1,0 +1,183 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.07.14.01.40;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.41;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK graneq
+#if defined(DOC)
+CKEY GAL RNDM RANECU ALSEED
+C!  GALEPH interface between RNDM and RANECU.
+    The code of RANECU is put in the comdeck RANECU and then called
+    in RNDM and GRNDM.
+    the package must be initialize by a call to RECUST before the
+    1st call to GRNDM or RNDM.
+    the package contains the following entries:
+      SUBROUTINE ALSEED(IRGEN,ISD1,ISD2)
+      Output : IRGEN = generator ident (2 is RANECU)
+               ISD1= first original seed
+               ISD2= second original seed
+      SUBROUTINE RDMIN(ISEED)
+      FUNCTION RNDM(DUMMY)
+      SUBROUTINE RDMOUT(ISEED)
+
+#endif
+      SUBROUTINE ALSEED(IRGEN,ISD1,ISD2)
+C-----------------------------------------------------------------------
+C - Author : B.Bloch-Devaux -890201
+C! returns original seeds from RANECU random generator
+CKEY GAL RANECU SEED / USER
+C - Structure : SUBROUTINE subprogram
+C               User Entry Name :ALSEED
+C               External references :RECUUT
+C               Comdecks references : none
+C - Input : none
+C - Output : IRGEN = generator ident (2 is RANECU)
+C            ISD1= first original seed
+C            ISD2= second original seed
+C
+C-----------------------------------------------------------------------
+#include "arndmc.h"
+      IRGEN = 2
+      ISD1 = ISEED1
+      ISD2 = ISEED2
+      RETURN
+      END
+      SUBROUTINE RDMIN(ISEED)
+C-----------------------------------------------------------------------
+C - Author : B.Bloch-Devaux -890201
+C
+C!Interface from RDMIN to RECUIN (RANECU initialization)
+C initialize with ISEED(1) and ISEED(2) and reset the server
+C - Structure : SUBROUTINE program
+C               User Entry Name :RDMIN
+C               External references :RECUIN, RRESET
+C - Input : ISEED   2 input seeds
+C - Output : none
+C
+C-----------------------------------------------------------------------
+#include "arndmc.h"
+      INTEGER ISEED(*)
+C
+      ISEED1 = ISEED(1)
+      ISEED2 = ISEED(2)
+      NRVEC = LRVEC
+C
+      END
+      FUNCTION RNDM(DUMMY)
+C-----------------------------------------------------------------------
+C - Author : B.Bloch-Devaux -890201
+C!Interface from RNDM to RANECU.
+C act as a server of 100 numbers from one RANECU call
+C
+C - Structure : REAL FUNCTION subprogram
+C               User Entry Name :RNDM,RECUST
+C               Comdecks references : ARNDMC
+C - Input : DUMMY   dummy
+C - Output : Real value between 0. and 1.
+C
+C-----------------------------------------------------------------------
+#include "arndmc.h"
+      IF(NRVEC.EQ.LRVEC) THEN
+#include "ranecu.h"
+        NRVEC=0
+      ENDIF
+      NRVEC=NRVEC+1
+      RNDM=RVEC(NRVEC)
+      RETURN
+C - start up of RANECU
+      ENTRY RECUST
+      ISEED1 = 12345
+      ISEED2 = 67890
+      NRVEC = LRVEC
+      RETURN
+      END
+      SUBROUTINE RDMOUT(ISEED)
+C-----------------------------------------------------------------------
+C - Author : B.Bloch-Devaux -890201
+C! Initialize RANECU and reset the server
+C - Structure : SUBROUTINE subprogram
+C               User Entry Name :RDMOUT
+
+C               Comdecks references : ARNDMC
+C - Input : none
+C - Output : Array of generator seeds (integer)
+C
+C-----------------------------------------------------------------------
+#include "arndmc.h"
+      INTEGER ISEED(*)
+C
+      ISEED(1) = ISEED1
+      ISEED(2) = ISEED2
+      NRVEC = LRVEC
+      RETURN
+      END
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

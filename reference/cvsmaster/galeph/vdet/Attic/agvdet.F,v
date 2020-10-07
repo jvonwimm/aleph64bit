@@ -1,0 +1,90 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.07.14.02.52;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.53;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK agvdet
+      SUBROUTINE AGVDET
+C ----------------------------------------------------------
+C - W.Manner - 901100
+C - Modified : A. Bonissent 940215 : use geom. package
+C! build VDET geometry
+CKEY VDET GEOM
+C - called by AGEOME
+C ---------------------------------------------------------
+#ifndef DOC
+#include "iocom.h"
+#include "agcons.h"
+C
+C --------------------------------------------------------
+C - get setup code and build VDET from data base banks
+C
+      CALL AGGEAN ('VD',IVDST)
+C
+C - position faces depending on the setup code
+C
+         CALL AGVFGP
+         CALL GSORD('VDET',3)
+         CALL GSORD('VDBX',1)
+         CALL GSORD('VDB2',1)
+         IF(IAGSLV+2.GT.LSENV) GO TO 992
+         IAGSLV=IAGSLV+1
+         IAGSEN(IAGSLV,1)=JHOCHA('VDWA')
+         IAGSEN(IAGSLV,2)=    4
+C
+C    Store volume name and level in the geometry tree which define
+C    entrance in detector
+C
+      CALL AGDIMP('VDET',3,'VDET')
+      GOTO 999
+C
+C - error
+C
+C   not enough space to SAVE sensitive module
+  992 CONTINUE
+      WRITE (LOUTIO,*) ' AGVDET : too many sensitive volumes, IAGSLV= '
+     &   ,  IAGSLV, ' LSENV= ',LSENV
+      GOTO 991
+C
+ 991  CALL ALTELL ('AGVDET: cannot build VDET geometry ',0,'STOP')
+C - end
+C
+  999 CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

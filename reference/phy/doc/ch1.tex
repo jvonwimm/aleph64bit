@@ -1,0 +1,57 @@
+\chapter{\label{sec-INTRO}Introduction}
+\pagenumbering{arabic}
+\par
+The ALEPH Physics Analysis package ALPHA is intended to simplify Fortran
+programs for physics analysis.
+Although all ALEPH data types can be processed with ALPHA,
+the program is designed primarily
+for analysis of JULIA output files (POTs), and of  DSTs and MINIs.
+All event input/output is done by ALPHA $-$ the user has to provide
+only the name(s) of the input/output
+data set(s).
+ALPHA also provides easy access to physical variables
+(e.g., momentum, energy), so the user can write physics analysis programs
+without detailed knowledge of
+the ALEPH data structure (tabular BOS banks).
+An extensive set of utility routines (e.g., kinematics, event shape,
+secondary vertex finding, b-tagging, MINI-writing, etc.)
+is available as part of the ALPHA package.
+
+\par
+The program structure (Appendix
+\ref{sec-PSTRUC}) is extremely simple. Three Fortran routines are
+normally
+supplied by the user: job initialization, event processing, and job
+termination (see Ch. \ref{sec-U}).
+Reconstructed objects (tracks, vertices,
+cal. objects) can be accessed with
+simple DO loops. For Monte Carlo generated events, the MC
+``truth'' information is accessible
+in the same way as reconstructed tracks and vertices (see Ch. \ref{sec-A}).
+\par
+This document describes all features of the ALPHA program.
+For first$-$time users, the important parts to
+read are Ch.~\ref{sec-GS} (getting started),
+Ch.~\ref{sec-U} (user routines), Ch.~\ref{sec-DC} (event input),
+Ch.~\ref{sec-A} (loops over tracks), and Ch.~\ref{sec-TVA}
+(track attributes).
+\par
+ALPHA has grown up with time , several general utility packages coming from UPHY
+being incorporated as they become more popular and tested :
+ 
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{ALPHA 114} in September 1992 : QMUIDO, interfaces to YTOP
+\indentitem{ALPHA 115} in May       1993 : ENFLW, SLUMOK, PGPC photons
+\indentitem{ALPHA 116} in December  1993 : GET$\_$BP, QFNDIP, QIPBTAG
+\indentitem{ALPHA 117} in May       1994 : QPI0DO, QVSRCH, NANO reading 
+\indentitem{ALPHA 118} in October   1994 : QTRUTH
+\indentitem{ALPHA 120} in March     1995 : QSELEP, MINI 10 reading, PGAC photons
+\indentitem{ALPHA 121} in October   1995 : NANO writing, new beam spot
+\indentitem{ALPHA 122} in May       1996 : new matching, CVS code manager 
+\indentitem{ALPHA 123} in October   1998 : QPCORR, LEP BOMs, new QELEP          
+\indentitem{ALPHA 124} in May       1999 : MINI writing, new QIPBTAG, QDDX     
+ 
+\end{indentlist}
+ 
+ 
+ 

@@ -1,0 +1,209 @@
+head	1.4;
+access;
+symbols
+	look25:1.4
+	look24:1.4
+	look23:1.4
+	look22:1.4
+	look21:1.4
+	look20:1.4
+	v15:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.4
+date	96.09.02.13.18.30;	author flr;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.04.18.09.05.27;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.03.08.09.25.03;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.09.15.50.22;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.09.15.50.23;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@look21 release
+@
+text
+@      SUBROUTINE LKCHKRU (FSEQ,NRUN,NOLD,IRET)
+C -------------------------------------------------------------
+CKEY LOOK CHECK RUN
+C - F.Ranjard - 920121
+C! check if run # NRUN is on the current file
+C - Input    : FSEQ   / L  = .TRUE. if runs in increasing order
+C              NRUN   / I  = new run number
+C              NOLD   / I  = previous run number
+C - Output   : IRET   / I  = return code
+C                            = 17  run is present
+C                            = 0   run is not present
+C -------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "lkfil.h"
+#include "lkunpk.h"
+      CHARACTER TAPOLD*8, CHAINT*4
+      LOGICAL FSEQ
+      DATA NARUNL /0/
+C -----------------------------------------------------------
+      IF (NARUNL.EQ.0) NARUNL = NAMIND('RUNL')
+      IRET = 0
+      JRUNL = IW(NARUNL)
+      IF (JRUNL.NE.0) THEN
+         TAPOLD(1:4) = CHAINT(IW(JRUNL+1))
+         TAPOLD(5:8) = CHAINT(IW(JRUNL+2))
+         IF (INDEX(SEQNAM,TAPOLD(1:6)).EQ.0) GOTO 3
+         DO 1 I=1,IW(JRUNL+3)
+            IF (NRUN.EQ.IW(JRUNL+3+I)) GOTO 2
+ 1       CONTINUE
+         GOTO 3
+ 2       CONTINUE
+      ENDIF
+      IRET = 17
+      IF (FSEQ .AND. NRUN.LT.NOLD) THEN
+         KSRUN = NBANK('SRUN',0,1)
+         IW(KSRUN+1) = NRUN
+         IF (LINSEL.NE.0) THEN
+            CALL LKRWND('/EDIR')
+         ELSE
+            CALL LKRWND('/DATA')
+         ENDIF
+      ELSE
+         IEVT=0
+ 10      CALL LKGTEVT(FSEQ,'E',ULIST,NRUN,IEVT,IER)
+         IF(IER.EQ.4 ) THEN
+C         EOF on EDIR : try to read a new FILM card if any
+              CALL LKOPRD1 ('    ', '    ',LER)
+              IF (LER.NE.0) THEN
+                SEQFIL = .FALSE.
+                WRITE(LOUT,*) ' [no more input file]'
+                GOTO 3
+              ELSE
+                CALL ABRUEV (KRUN,KEVT)
+                IF(NRUN.EQ.0.AND.IEVT.EQ.0) GOTO 3
+                IF(IEVT.EQ.0) THEN
+                  IF(NRUN.NE.KRUN) GOTO 10
+                ELSE
+                  IF(IEVT.NE.KEVT) GOTO 10
+                ENDIF
+                GOTO 3
+              ENDIF
+         ELSE IF(IER.EQ.2) THEN
+           WRITE(LOUT,*) ' [End of Run]'
+         ELSE IF(IER.EQ.7) THEN
+           WRITE(LOUT,*) ' [End of Selected data] '
+         ELSE IF(IER.EQ.8) THEN
+           WRITE(LOUT,*) ' [Event not found]'
+         ENDIF
+C
+         CALL LKSHOW (IER)
+      ENDIF
+      KSRUN = NDROP('SRUN',0)
+C
+ 3    CONTINUE
+      END
+#endif
+@
+
+
+1.3
+log
+@change VAX to DEC.AND..NOT.UNIX ==> version 20
+
+ Modified Files:
+ 	lkevt.h lkfil.h lklast.h lkunpk.h version.h
+ Removed Files:
+	lookend.h
+@
+text
+@d1 1
+a1 1
+      SUBROUTINE LKCHKRU (NRUN,NOLD,IRET)
+d6 2
+a7 1
+C - Input    : NRUN   / I  = new run number
+a18 1
+      DATA FSEQ /.TRUE./
+d35 1
+a35 1
+      IF (NRUN.LT.NOLD) THEN
+d43 28
+a70 3
+      ELSEIF(NRUN.GT.NOLD) THEN
+         IEVT = 0
+         CALL LKGTEVT(FSEQ,'E',ULIST,NRUN,IEVT,IER)
+@
+
+
+1.2
+log
+@version.h - version number=16
+lkchkru.F - rewind edir and/or data if required run# < current run#
+lkrrec.F - rewind edir and/or data if required event# < current event#
+lkrwnd.F - do not reopen the file if it is the 1st file in the EDIR.
+@
+text
+@a0 1
+*DK lkchkru
+d46 1
+a46 1
+         CALL LKSHOW
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d34 9
+a42 13
+         IRET = 17
+         IF (NRUN.LT.NOLD) THEN
+            KSRUN = NBANK('SRUN',0,1)
+            IW(KSRUN+1) = NRUN
+            IF (INDEX(SEQNAM,'EDIR').NE.0) THEN
+               CALL LKRWND('/EDIR')
+            ELSE
+               CALL LKRWND('/DATA')
+            ENDIF
+         ELSEIF(NRUN.GT.NOLD) THEN
+            IEVT = 0
+            CALL LKGTEVT(FSEQ,'E',ULIST,NRUN,IEVT,IER)
+            CALL LKSHOW
+d44 4
+a47 1
+         KSRUN = NDROP('SRUN',0)
+d49 1
+@
+
+
+1.1.1.1
+log
+@import look 15
+@
+text
+@@

@@ -1,0 +1,160 @@
+      SUBROUTINE AGSATT
+C-----------------------------------------------------------------------
+C  B. BLOCH-DEVAUX - 850910
+CKEY GEOM DRAW
+C! set GEANT drawing attributes
+C Called by  AGEOME
+C Calls GSATT                 from GEANT3
+C
+C ---------------------------------------------------------
+      PARAMETER (LOFFMC = 1000)
+      PARAMETER (LHIS=20, LPRI=20, LTIM=6, LPRO=6, LRND=3)
+      PARAMETER (LBIN=20, LST1=LBIN+3, LST2=3)
+      PARAMETER (LSET=15, LTCUT=5, LKINP=20)
+      PARAMETER (LDET=9,  LGEO=LDET+4, LBGE=LGEO+5)
+      PARAMETER (LCVD=10, LCIT=10, LCTP=10, LCEC=15, LCHC=10, LCMU=10)
+      PARAMETER (LCLC=10, LCSA=10, LCSI=10)
+      COMMON /JOBCOM/   JDATJO,JTIMJO,VERSJO
+     &                 ,NEVTJO,NRNDJO(LRND),FDEBJO,FDISJO
+     &                 ,FBEGJO(LDET),TIMEJO(LTIM),NSTAJO(LST1,LST2)
+     &                 ,IDB1JO,IDB2JO,IDB3JO,IDS1JO,IDS2JO
+     &                 ,MBINJO(LST2),MHISJO,FHISJO(LHIS)
+     &                 ,IRNDJO(LRND,LPRO)
+     &                 ,IPRIJO(LPRI),MSETJO,IRUNJO,IEXPJO,AVERJO
+     3                 ,MPROJO,IPROJO(LPRO),MGETJO,MSAVJO,TIMLJO,IDATJO
+     5                 ,TCUTJO(LTCUT),IBREJO,NKINJO,BKINJO(LKINP),IPACJO
+     6                 ,IDETJO(LDET),IGEOJO(LGEO),LVELJO(LGEO)
+     7                 ,ICVDJO(LCVD),ICITJO(LCIT),ICTPJO(LCTP)
+     8                 ,ICECJO(LCEC),ICHCJO(LCHC),ICLCJO(LCLC)
+     9                 ,ICSAJO(LCSA),ICMUJO(LCMU),ICSIJO(LCSI)
+     &                 ,FGALJO,FPARJO,FXXXJO,FWRDJO,FXTKJO,FXSHJO,CUTFJO
+     &                 ,IDAFJO,IDCHJO,TVERJO
+      LOGICAL FDEBJO,FDISJO,FHISJO,FBEGJO,FGALJO,FPARJO,FXXXJO,FWRDJO
+     &       ,FXTKJO,FXSHJO
+      COMMON /JOBKAR/   TITLJO,TSETJO(LSET),TPROJO(LPRO)
+     1                 ,TKINJO,TGEOJO(LBGE),TRUNJO
+      CHARACTER TRUNJO*60
+      CHARACTER*4 TKINJO,TPROJO,TSETJO,TITLJO*40
+      CHARACTER*2 TGEOJO
+C
+      PARAMETER (LERR=20)
+      COMMON /JOBERR/   ITELJO,KERRJO,NERRJO(LERR)
+      COMMON /JOBCAR/   TACTJO
+      CHARACTER*6 TACTJO
+C
+      COMMON/ALFGEO/ALRMAX,ALZMAX,ALFIEL,ALECMS
+C
+      COMMON/GCDRAW/NGMNOD,MGXNOD,NGMND1,LGVVER,LGVHOR,MGAXV,IGPICK,
+     + MGLEVV,MGLEVH,NGWCUT,JGNAM,JGMOT,JGXON,JGBRO,JGDUP,JGSCA,
+     + JGDVM,JGPSM,
+     + JGNAM1,JGMOT1,JGXON1,JGBRO1,JGDUP1,JGSCA1,JGULEV,JGVLEV,
+     + LGOKTB(16),
+     + GRMAT0(10),GTRAN0(3),IGRNUM,GSIN(41),GCOS(41),GSNPSI,GCSPSI,
+     + GTHETA,GPHI,GPSI,GU0,GV0,GSCU,GSCV,NGGVIE,
+     + IGCTFL,IGCUT,GCTHET,GCPHI,GDCUT,NGSURF,IGSURF,
+     + GZUA,GZVA,GZUB,GZVB,GZUC,GZVC,GPLTRX,GPLTRY,
+     + LGINAT,LGINAP,IGXATT,IGTHRZ,IGPRJ,GDPERS,IGTR3D,IGKHIT,IGOBJ,
+     + LGINBU,
+     + MGAXGU,MGORGU,MGAXGS,MGORGS,MGAXTU,MGORTU,MGAXTS,MGORTS,
+     + IGU,IGS,IGTU,IGTS,NGKVIE,IGVIEW,
+     + NGOPEN,IGMR,IGPION,IGTROP,
+     + GDUMMY(19)
+C
+      COMMON/GCKINE/IGKINE,GPKINE(10),IGTRA,IGSTAK,IGVERT,IGPART,IGTRTY
+     +              ,NGAPAR(5),GMASS,GCHARG,GTLIFE,GVERT(3),GPVERT(4)
+     +              ,IGPAOL
+C
+C ----------------------------------------------------------------------
+C  Set user defaults
+C
+      IGKINE = 1
+C
+C Computes initial scaling factor according to fiducial volume
+C to allow space for a header
+C
+      SCU=8.5/ALRMAX
+      SCV=9.8/ALZMAX
+      GSCU=MIN(SCU,SCV)
+      GSCV=GSCU
+C
+C    Set artificial volumes to 'unseen'
+C
+      CALL GSATT('ALEF','SEEN',0)
+C
+      IF (IGEOJO(1)+IGEOJO(2)+IGEOJO(3).GT.0)
+     1      CALL GSATT('CDET','SEEN',0)
+      IF (IGEOJO(3).GT.0) THEN
+         CALL GSATT('TPCR','SEEN',0)
+         CALL GSATT('TPC ','SEEN',0)
+      ENDIF
+      IF (IGEOJO(4).GT.0) THEN
+         CALL GSATT('ECBL','SEEN',0)
+         CALL GSATT('EBAR','SEEN',0)
+         CALL GSATT('EBAL','SEEN',0)
+         CALL GSATT('ECMA','SEEN',0)
+         CALL GSATT('ECMB','SEEN',0)
+         CALL GSATT('ECPA','SEEN',0)
+         CALL GSATT('ECPB','SEEN',0)
+      ENDIF
+      IF (IGEOJO(4)+IGEOJO(5)+IGEOJO(6).GT.0) THEN
+         CALL GSATT('ECEA','SEEN',0)
+         CALL GSATT('ECEB','SEEN',0)
+      ENDIF
+      IF (IGEOJO(5).GT.0) THEN
+         CALL GSATT('LCEA','SEEN',0)
+         CALL GSATT('LCEB','SEEN',0)
+      ENDIF
+      IF (IGEOJO(6).EQ.1) THEN
+         CALL GSATT('SATC','SEEN',0)
+         CALL GSATT('SALY','SEEN',0)
+         CALL GSATT('SACY','SEEN',0)
+         CALL GSATT('SATA','SEEN',0)
+         CALL GSATT('SATB','SEEN',0)
+         CALL GSATT('SACT','SEEN',0)
+         CALL GSATT('SASP','SEEN',0)
+         CALL GSATT('SASU','SEEN',0)
+      ENDIF
+      IF (IGEOJO(13).GT.0) THEN
+         CALL GSATT('COIL','SEEN',0)
+         CALL GSATT('COIN','SEEN',0)
+         CALL GSATT('COUT','SEEN',0)
+         CALL GSATT('COEN','SEEN',0)
+         CALL GSATT('COBY','SEEN',0)
+      ENDIF
+      IF (IGEOJO(11).GT.0) THEN
+         CALL GSATT('QUEA','SEEN',0)
+         CALL GSATT('QUEB','SEEN',0)
+      ENDIF
+      IF (IGEOJO(7).GT.0)  THEN
+         CALL GSATT('HCBL','SEEN',0)
+         CALL GSATT('HCEA','SEEN',0)
+         CALL GSATT('HCEB','SEEN',0)
+         CALL GSATT('HBAR','SEEN',0)
+         CALL GSATT('HBAL','SEEN',0)
+         CALL GSATT('HCMA','SEEN',0)
+         CALL GSATT('HCMB','SEEN',0)
+         CALL GSATT('HCPA','SEEN',0)
+         CALL GSATT('HCPB','SEEN',0)
+      ENDIF
+      IF (IGEOJO(8).GT.0)  THEN
+         CALL GSATT('MUON','SEEN',0)
+         CALL GSATT('MUEA','SEEN',0)
+         CALL GSATT('MUEB','SEEN',0)
+         CALL GSATT('MMIA','SEEN',0)
+         CALL GSATT('MMIB','SEEN',0)
+         CALL GSATT('MMOA','SEEN',0)
+         CALL GSATT('MMOB','SEEN',0)
+         CALL GSATT('MCIA','SEEN',0)
+         CALL GSATT('MCIB','SEEN',0)
+         CALL GSATT('MMBA','SEEN',0)
+         CALL GSATT('MMBB','SEEN',0)
+         CALL GSATT('MCOA','SEEN',0)
+         CALL GSATT('MCOB','SEEN',0)
+         CALL GSATT('MUBO','SEEN',0)
+      ENDIF
+      IF (IGEOJO(12).GT.0) THEN
+         CALL GSATT('EPBA','SEEN',0)
+         CALL GSATT('EPBB','SEEN',0)
+      ENDIF
+      RETURN
+      END

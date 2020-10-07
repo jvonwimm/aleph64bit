@@ -1,0 +1,161 @@
+#! /bin/csh
+#============================================================================
+#                             newunix
+#                                                       F.Ranjard
+#============================================================================
+# procedure to get a new ALEPH library source file from CERNVM
+# and to compile it on SHIFT9, CSF and SAGA making a library
+#============================================================================
+# call "newsrc" to get a new source file on /al/reference/xxx/srcxyznnn
+# send a batch job "newlib" on various machines to compile and make the library.
+#============================================================================
+# P1 -> prog_name eg: alephlib
+# P2 -> cycle     eg: 154
+#============================================================================
+# newunix1.1                                                      FLR
+# 940922 - use $ALEPH instead of /aleph
+# newunix1.2                                                      JC
+# 951128 - use $ALEPH_ROOT instead of /al
+#===========================================================================
+#include "~/flr/bin/verbflr.h"
+#
+set exec_name = "newunix1.2"
+set verbflr = ""
+set nar = $#argv
+if (${nar} != 0) then
+  if ($argv[${nar}] == "-v") then
+     echo "${exec_name}"
+     set verbflr = "-v" 
+     set echo on
+     set argv[${nar}] = ""
+  endif
+endif
+#
+#*******>
+#*******<
+unset noclobber
+set alib_dir = "${ALEPH}/alib"
+set cycle_new = ""
+set cycle_old = ""
+set mnemonic = ""
+set file_type = ""
+set prog_aleph = "OK"
+set flag = "OK"
+ 
+#===> first parameter : program name
+if ($1 == "") then
+  echo -n "Enter Aleph program name [eg:alephlib <CR>=exit]-> "
+   set prog_name = $<
+   if (${prog_name} == "") goto exec_end
+else
+   set prog_name = $1
+endif
+#
+# =============================================================================
+#                  set idir, prog_dir and cycle number
+#
+set idir = `egrep ^" ${prog_name} " ${alib_dir}/pub/progl | awk '{print $2}'`
+set mnemonic = `egrep ^" ${prog_name} " ${alib_dir}/pub/progl | awk '{print $4}'`
+#
+set prog_dir = "${ALEPH_ROOT}/${OS}/${idir}"
+#
+if (${idir} == "") then
+   set prog_aleph = "NO"
+   set mnemonic = "${prog_name}"
+else
+   if (-e ${prog_dir}/alib.log) then
+      set cycle_old = `egrep ^" ${prog_name} " ${prog_dir}/alib.log | awk '{print $3}'`
+      set dmy_old = `egrep ^" ${prog_name} " ${prog_dir}/alib.log | awk '{print $4}'`
+      set tim_old = `egrep ^" ${prog_name} " ${prog_dir}/alib.log | awk '{print $5}'`
+   endif
+   if (${cycle_old} != "") then
+      @ cycle_new =  ${cycle_old} + 1
+      if (${mnemonic} == "bos") then
+         @ cycle_new = (((${cycle_old} / 100) + 1) * 100) + 89
+      endif
+   endif
+endif
+# ===============================================================================
+# 
+#===> second parameter : cycle number
+if ($2 == "") then
+   if (${cycle_new} == "") then
+      set string_cr = "<CR>=exit"
+   else
+      set string_cr = "<CR>=${cycle_new}"
+   endif
+   echo -n "Enter version number[${string_cr}]-> "
+   set cycle = $<
+   if (${cycle} == "") then
+      if (${cycle_new} == "") then
+         goto exec_end
+      else
+         set cycle = ${cycle_new}
+      endif
+   endif
+else
+   set cycle = $2
+endif
+# 
+# =====================================================================
+# use the standard filename
+set file_name = ${mnemonic}${cycle}
+#
+set file_type = `egrep ^" ${prog_name} " ${prog_dir}/f77_options | awk '{print $2}'`
+if (${file_type} == "") then
+   set flag = "no file_type: look at f77_options" 
+   goto spy
+endif
+#
+# ===================================================================
+# get a new source even if it exist already
+#
+# ===================== get a new source from CERNVM ================
+#
+newsrc ${prog_name} ${cycle} ${file_name} new
+#
+# =====================================================================
+#          compile and make a library on various unix platforms
+# =====================================================================
+#
+set sys_list = "shift9 csf saga"
+set ref_dir = "${ALEPH_ROOT}/${MASTER}/${idir}"
+set batch = "${ref_dir}/${file_name}"
+#  
+# build the file ${batch}.job
+echo '#@$-s /bin/csh' > ${batch}.job
+echo '#@$-eo' >> ${batch}.job
+echo '#@$-lt 1000' >> ${batch}.job
+echo '#@$-r '"${file_name}_${HOST}" >> ${batch}.job
+echo '#@$-mu '"${USER}" >>  ${batch}.job
+echo '#@$-me' >>  ${batch}.job
+echo "time newlib < ${batch}.input" >> ${batch}.job
+echo 'exec_end:' >> ${batch}.job
+echo 'exit' >> ${batch}.job
+#
+# build the file ${batch}.input
+echo "${prog_name}" > ${batch}.input
+echo "${cycle}" >> ${batch}.input
+echo "old" >> ${batch}.input 
+#
+if ( ${SERVICE} == "AFAL" || ${SERVICE} == "SHIFTALEPH" || ${SERVICE} == "SAGA" || ${SERVICE} == "CSF" ) then
+### submit the job in batch to build libraries
+   unalias qsub
+   qsub -h shift9 ${batch}.job
+   qsub -h saga ${batch}.job
+   qsub -h csf -q cpqS ${batch}.job
+else
+### build libraries interactively
+   ${batch}.job
+endif
+#
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> spy
+spy:
+#*******> spy
+echo `date` " END of ${exec_name} ${OS} ${user} ${prog_name} ${cycle} ${flag}" >> ${prog_dir}/spy
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> exec_end
+exec_end:
+ exit
+ 

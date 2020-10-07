@@ -1,0 +1,19 @@
+making Makefiles in /phtools/wicoexam...
+testing in /phtools/wicoexam...
+gmake[1]: Entering directory '/home/wimmer/aleph64bit/cern/2005/build/phtools/wicoexam'
+rm -f wicoex.o
+gfortran -no-pie -c -O -fno-automatic -fno-second-underscore -fno-range-check -fPIC    -I/home/wimmer/aleph64bit/cern/2005/build/phtools -I/home/wimmer/aleph64bit/cern/2005/src/phtools -I/home/wimmer/aleph64bit/cern/2005/src/phtools/wicoexam -I/home/wimmer/aleph64bit/cern/2005/src/include  -DCERNLIB_LINUX -DCERNLIB_UNIX -DCERNLIB_LNX -DCERNLIB_QMGLIBC -DCERNLIB_QMLXIA64 -DCERNLIB_GFORTRAN -DCERNLIB_GCC4 -DCERNLIB_VERBOSE   -o wicoex.o /home/wimmer/aleph64bit/cern/2005/src/phtools/wicoexam/wicoex.F
+rm -f wicot
+Linking with cern libraries
+/home/wimmer/aleph64bit/cern/2005/lib/libpacklib.a -lnsl -lcrypt -ldl
+gfortran -no-pie -o wicot -O -fno-automatic -fno-second-underscore -fno-range-check -fPIC     -L/home/wimmer/aleph64bit/cern/2005/src/lib wicoex.o /home/wimmer/aleph64bit/cern/2005/build/phtools/libphtools.a     `cernlib `  \
+ || rm -f wicot
+Testing phtools
+  ... using wicot
+  Winston Cone LENGTH =   19.165445973633908     
+  photon transmitted - IERR=0
+  output coordinate -0.15073983363882368       0.31095801896913977     
+  output direction  0.15002616295945720      -0.96634440051597126      -0.20897523781321703     
+  total path length   19.626024629316667     
+  total number of bounces           2
+gmake[1]: Leaving directory '/home/wimmer/aleph64bit/cern/2005/build/phtools/wicoexam'

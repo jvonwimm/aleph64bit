@@ -1,0 +1,33 @@
+      SUBROUTINE SETDB(SUBNAM,IDEBUG,ICOUNT)
+*     SET DEBUG FLAG
+*     THE 4.TH COLUMN OF IHB IS USED TO STORE IDEBUG/ICOUNT
+      CHARACTER*(*) SUBNAM
+#include "bosmdl.h"
+#include "concom.h"
+      IF(SUBNAM.EQ.' ') GOTO 100
+      IF(ICOUNT.LE.0) GOTO 100
+      CALL TMODUL(SUBNAM)
+      IF(NH4.EQ.NHB) GOTO 100
+      L=JSN
+      IF(L.EQ.0) GOTO 100
+      JDEBUG=MAX0(-1,MIN0(IDEBUG,      8))
+      JCOUNT=MAX0(0,MIN0(ICOUNT,9999999))
+      IAB=JDEBUG+1+10*JCOUNT
+      J  =IHB(3,L)
+      IF(J.EQ.0) THEN
+*        ADD FIRST DEBUG FLAG FOR THIS SUBNAM
+         NH4=NH4+1
+         IHB(3,L)=NH4
+         IHB(4,NH4)=IAB
+      ELSE
+*        ADD ADDITIONAL DEBUG FLAG FOR THIS SUBNAM
+         DO 10 K=NH4,J+1,-1
+   10    IHB(4,K+1)=IHB(4,K)
+         NH4=NH4+1
+         DO 20 K=L,NHN
+         IF(IHB(3,K).GE.J) IHB(3,K)=IHB(3,K)+1
+  20     CONTINUE
+         IHB(4,J+1)=-IAB
+      END IF
+  100 RETURN
+      END

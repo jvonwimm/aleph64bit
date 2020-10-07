@@ -1,0 +1,118 @@
+* File to be processed by KINAGAIN  version > 202   
+*FILI '/afs/cern.ch/aleph/shared/edirlink/y13650_6.edir   | EDIR'  ! RUN  218 WW   189 G.98 J306.2+G306.3 234 5K EVTS 
+*FILO '/aleph/scwork/bbloch/testcrjb.EPIO'  | EPIO' ! new KINGAL output
+NEVT 20000
+DEBU 1   5
+*RUN 110 'KORALW121 WW with CC03,188.6 Gev ' ! No RUN card, keep original one
+* New random seed ( unused )
+RMAR   10   1
+*   The GAGA card :   you MUST activate ONE GAGA card and ONE READ card
+*   before the ENDQ
+*GAGA  ipsho  ihad  ireco(Colreco model) ibe   icopy
+*
+* ipsho 1= jetset   2=ariadne    13 = herwig 6.2
+* ihad  0 = all evts     1 = fully hadronics only
+* ireco 0 =no CR,   1---4 CR =model depending on ipsho ( see later)
+* ibose 0 =no BE,   1= as in appropriate extra cards file
+* icopy 0 =inactive 1= restore original KINGAL ouput (useful from POT)
+
+* Here follow examples :
+* --------------------JETSET ipsho=1 -------------------------------
+* ipsho=1 : you can further selact on ireco or ibe :
+* ireco  1= SKI 2 =SKII   3= SKII'   4=GAL for 
+*       11     12        13               apply a boost to W+W- system
+* ibose = 0 no BE   1= as in appropriate extra cards file
+*    ipsho  ihad  ireco(Colreco model) ibe   icopy
+*GAGA   1     0      0                  0     0    ! JETSET New setup
+*READ '/afs/cern.ch/aleph/reference/kin/newbe3i.cards | CARD' ! with BEI
+*READ '/afs/cern.ch/aleph/reference/kin/newbe3b.cards | CARD' ! with BEB
+* --------------or one of the followings :
+*GAGA   1     1      11                 0     0    ! JETSET CR=SKI
+*GAGA   1     0      4                  0     0    ! JETSET CR=GAL Model
+*READ '/afs/cern.ch/aleph/reference/kin/jetsetCRGAL.cards | CARD'
+* --------------or one of the followings :
+*GAGA   1     0      0                  1     0    ! JETSET apply BE afterwards
+*READ '/afs/cern.ch/aleph/reference/kin/be3i.cards | CARD'
+*READ '/afs/cern.ch/aleph/reference/kin/be3b.cards | CARD'
+* --------------------ARIADNE ipsho=2 ------------------------------- 
+* ireco = 0 ipsho =2 and READ quoted file for ARIADNE 
+*GAGA   2     0      0                  0     0    ! ARIADNE No CR
+*READ '/afs/cern.ch/aleph/reference/kin/ariadne_nocr.cards | CARD'
+*  or  ireco =1 and One of the quoted CR files
+*GAGA   2     0      1                  0     0    ! ARIADNE With CR
+*READ '/afs/cern.ch/aleph/reference/kin/ariadne_cr2.cards | CARD'
+*READ '/afs/cern.ch/aleph/reference/kin/ariadne_cr3.cards | CARD'
+
+* --------------------HERWIG ipsho=13 -------------------------------
+* ireco = 0 ipsho=13 and READ quoted file for HERWIG (+CR)
+
+* ---------------------------------------------------
+* Here follow examples :
+*    ipsho  ihad  ireco(Colreco model) ibe   icopy
+*GAGA   13    0      0                  0     0    ! HERWIG No CR
+*READ '/afs/cern.ch/aleph/reference/kin/herwig62_nocr.cards | CARD'
+*GAGA   13    0      1                  0     0    ! HERWIG With CR
+*READ '/afs/cern.ch/aleph/reference/kin/herwig62_cr.cards | CARD'
+*GAGA   1     0      0                  0     1    ! copy mode
+GAGA  13      0                        0                  0
+ENDQ
+* you should include before the ENDQ one of the following sections
+* ====================section for HERWIG  6.2 ipsho=13
+*
+READ '/afs/cern.ch/aleph/reference/kin/herwig62.cards | CARD'
+*      CLRECO   PRECO     EXAG    VMIN2   this is for HERWIG color reconnection
+GHCR     0      0.0000     1.       0.1
+ENDQ
+*
+* ====================section for JETSET + BE  ipsho=1 ibose =1
+*   this section to get Bose einstein applied
+*MSTJ 51 / 2      !  BE
+*MSTJ 53 / 1      !  0 both W , 1 one W
+*MSTJ 54 / 1      !  energy conservation
+*MSTJ 57 / 0      !  no penalty
+*PARJ 92 / 2.3    ! lambda
+*PARJ 93 / 0.26   ! sigma
+*
+* ====================section for ARIADNE  ipsho=2
+* ---Activate ( remove *) this section when using ARIADNE ---
+*  cards MSTG/PARG act on values of MSTJ/PARJ in JETSET, overwriting
+*  those stored on tape from the reference processing
+* ----------------------------------------------------------------------
+*  standard modification to Ariadne  parameters
+*  published  best fit ARIADNE4 parameters  commom part
+*MSTA 20 / 1           ! SWITCH ON FSR IN ARIADNE
+*MSTG  41 / 0          ! FSR is done by Ariadne
+*PARG  41 / 0.40       ! A
+*PARG  54 / -0.040     ! eps_c
+*PARG  55 / -0.0035    ! eps_b
+*PARG  11 / 0.5716     ! V_u,d
+*PARG  12 / 0.4648     ! V_s
+*PARG  13 / 0.65       ! V_c,b
+*PARG  17 / 0.20       ! JP=2+ L=1
+*PARG  16 / 0.12       ! JP=1+
+*PARG  15 / 0.04       ! JP=0+
+*PARG  14 / 0.12       ! JP=1+
+*PARG  26 / 0.2884     ! eta' suppress.
+*PARG  1  / 0.1154     ! qq/q
+*PARG  2  / 0.2863     ! s/d
+*PARG  3  / 0.6507     ! su/du
+*PARG  19 / 0.52       ! 1st rank baryon suppress.
+*    Ariadne without color reconnection   from GR sept 23, 1998
+*----------Activate also this section if NO Color reco in ARIADNE ---
+*--------ipsho=2  ireco =0 ------------------------------------------
+*MSTA  35 / 0          ! color reconnection mode (off)
+*PARA  1  / 0.2297     ! Lambda_QCD
+*PARA  3  / 0.7907     ! ptmin cut
+*PARG  21 / 0.3577     ! sigma
+*PARG  42 / 0.823      ! B
+*----------Instead Activate this section if Color reco in ARIADNE ---
+*--------ipsho=2  ireco =1 ------------------------------------------
+*    Ariadne with color reconnection   from GR sept 23, 1998
+*MSTA  35  /  3      ! within AND between W's
+*PARA  28  /  2.0    ! E_gluon cut
+*PARA  1  /  0.231   ! Lambda_QCD
+*PARA  3  /  0.781   ! ptmin
+*PARG 21  /  0.352   ! sigma
+*PARG 42  /  0.762   ! B
+*
+ENDQ

@@ -1,0 +1,26 @@
+NAME     = alwho_query_prog
+CFILES   = 
+CFLAGS   = 
+FFILES   = alwho_query_prog.f
+FFLAGS   = -c -O -fno-globals -fno-automatic -fdollar-ok -fno-backslash -DUNIX -DALEPH_LINUX
+LDFLAGS  = 
+
+LIBS    = \
+		/cern/pro/lib/libmathlib.a \
+		/cern/pro/lib/libpacklib.a \
+		/cern/pro/lib/libkernlib.a
+
+
+# Rules...
+
+SRCFILES = $(FFILES)
+OBJFILES = $(FFILES:.f=.o) 
+
+###$(FC) $(FFLAGS) 
+
+$(NAME) : $(OBJFILES)
+	 g77 -o $@  $(OBJFILES) $(LIBS) $(LDFLAGS)
+
+clean   : ${OBJFILES}
+	rm -f ${OBJFILES} 
+

@@ -1,0 +1,141 @@
+*DK lcdoc
+#if defined(DOC)
+.chapter         LCAL DESCRIPTION
+                                            P. H. Hansen
+                                              NBI 170288
+-----------------------------------------------------------------------
+.section               GEOMETRY DECRIPTION
+
+  Detector components:
+    Subdetector      : LCAL has 2 subdetectors numbered
+                       1 for z < 0
+                       2 for z > 0
+
+    Quadrant         : Each subdetector has 4 quadrants numbered
+                       0 for x < 0, y > 0
+                       1 for x > 0, y > 0
+                       2 for x > 0, y < 0
+                       3 for x < 0, y < 0
+
+    Module           : LCAL has 4 modules numbered
+                       1 for z < 0, x < 0
+                       2 for z < 0, x > 0
+                       3 for z > 0, x < 0
+                       4 for z > 0, x > 0
+
+    Storey (Stack)   : Each module has 3 storeys (stacks)
+
+    Layer  (Plane)   : Each module has 38 wire-planes
+                       9  in 1st storey
+                       20 in 2nd storey
+                       9  in 3rd storey
+
+    Tube             : Each plane has 20 tubes containing 4-5
+                       proportional wires each.
+
+    Tower  (Pad)     : Each storey is divided into 384 towers
+                       characterised by their
+                       column (along x) and row (along y).
+                       The address of a tower is encoded:
+                       IPAD = ICOL + (IROW-1)*16 + (MODU-1)*512
+
+    Trigger sector   : Each subdetector is divided into 12 trigger
+                       sectors containing 64 towers in each storey.
+                       The sectors are azimuthal wedges , approximately
+                       30 degrees each . Contrary to the modules,
+                       the sectors are numbered according to the
+                       ALEPH convention:
+
+C
+C                       X   ^ Y
+C           15 16        \  |           3  4
+C         14     17       \ |         2      5
+C        13       18       \|        1        6
+C   ------------    -------------------------    ------->Z
+C        24       19        |\       12       7
+C         23    20          | \       11     8
+C           22 21           |  \        10 9
+C
+    Local coordinates: The local module system is the global system
+                       translated along z to the front plate of Lcal,
+                       and (in the case of misalignment) it is tilted
+                       so the x-y plane coincides with the front plate.
+
+    Sensitive volume : The sensitive volume is defined by the tube
+                       boundaries.
+
+    Constants        : The geometry constants are stored in banks
+                       LCAL : external dimensions of a module.
+                       LMTY : internal dimensions of a module.
+                       LLAY : constants specific for a wire plane.
+                       LWRG : constants specific for a pad row.
+                       LSCO : position of a subcomponent.
+                       LSLO : position of a module.
+
+                       Other constants are stored in the banks
+                       LCEL : constants characterizing the electronics.
+                       LCSH : constants used in shower parametrization.
+
+                       The constants are transferred to *CD LCCOMC
+
+    Shower parametrisation for electrons:
+    Longitudinal hit distribution:
+       dN/ds = E/Ec * b*(b*s)**a * exp(-bs) /GAMMA(a+1)
+       Ec = 0.032 GeV
+       a  = 1.834 + 0.450*LOG(E)
+       b  = 0.539 - 0.013*LOG(E)
+    Transverse hit distribution:
+       d(dN/dS)/dR = (dN/dS)exp(-R/R0)/R0
+       R0 = 0.01 + 1.11*s*b/a
+    (s in radiation lengths, R in cm)
+-----------------------------------------------------------------------
+.section           PROGRAM TREE
+    LCIRUN Initialise run
+           LCNAMI  Establish name-indices.
+
+    LCHIT  Controls tracking in LCAL.
+           ?LCSHOW  EM shower parametrisation.
+                   CAHIST Fill 'LWHI' and 'LSHI' (Track-to-hit relators)
+           ?LCTRAK  Minimum ionising tracking.
+                   CAHIST Fill 'LWHI' and 'LSHI' (Track-to-hit relators)
+
+    LCASIG Control analog signal processing.
+           CAFIHT Fill 'LWHT' and 'LTHT' (Hit banks)
+           LCSATU  does nothing.
+           LCTRHT  Fill 'LTTR' (Trigger data).
+
+    LCDIGI Control digitalisation.
+           LCADC   Fill 'LTDI','LWDI' (Tower and wire data)
+                   Convert 'LTTD' to MeV.
+           LCTRDI  Convert 'LTTR' to MeV.
+                   LCWTRI  Fill 'LWTR' (Wire trigger data).
+          ?LCNOIS  Add electronic noise.
+                   Add a constant term to Delta(E)/E.
+                   LCPAD add energy to a storey channel.
+           LCROC   Simulate read-out controller.
+                   Zero suppression and dynamic range.
+
+    LCWSUM Print LCAL run summary.
+
+    .........................................
+    Utility routines for geometry desription:
+    LCFRAL  Translate global coordinates to local ones.
+    LCSTRT  Translate local z to plane number.
+    LCSAMP  Finds trigger amplifier for a tower address IPAD.
+            LCAMP contains the table of trigger amplifiers.
+    LCXYPA  Finds IPAD for a given space-point.
+            Checks sensitive volume.
+
+    .........................................
+    Utility routines for debugging:
+    LCBKPR  Print the Lcal banks.
+
+ ---------------------------------------------------------------
+.section    RUN CONDITIONS
+            data card RUNC 'LCAL' I1 I2
+            I1  controls print level for events under DEBUG
+                (=3 will print everything)
+            I2  if I2 .NE. 0 , noise will be suppressed
+
+
+#endif

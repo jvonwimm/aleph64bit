@@ -1,0 +1,35 @@
+KCAR 0 / $TEXT                                                    
+POFF                                                                       
+*   RUN #               RUN'S TITLE                                          
+RUN  101            'GGGB01 GENERATION'                                      
+*     FIRST EVENT   LAST EVENT TO BE GENERATED                               
+TRIG       1           10                                                    
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG                             
+DEBU    6   /      1            10                                          
+*    UNIT # / FORMAT                                                        
+* SAVE   2  / 'EPIO'                                                         
+*  use RANMAR generator for random numbers                                   
+*  INSEED : first seed (range assigned per institute)                          
+*  LOSEED : second seed (incremented locally for new runs)                     
+*      INSEED          LOSEED (1-30000)                                      
+RMAR     89             12345                                                 
+*       sigma-x   sigma-y  sigma-z  (cm)                                      
+SVRT     0.018    0.0010    1.00                                              
+* EB    : Beam energy (in GeV);                                              
+* RHO   : Maximum rejection weight (typically 2), (a better value can be   
+*         found by looking at the weight distribution);                     
+* I3    : = 1 ---> only gamma-gamma-gamma events are generated;               
+*          # 1 ---> gamma-gamma-(gamma) events are generated;                  
+* IODD  : Seed for the random number generator;                               
+* ICONF : = 0 no applied cut (the observed final state depends only on I3     
+*             and on acceptance),                                             
+*         = 1 single photon final state observed,                             
+*         = 2 bhabha-like final state observed;                              
+* X1    : Minimum energy of the detected photon(s) (in units of EB);         
+* A1MIN : Minimum angle of the detected photon(s) (in degrees);                
+* AVETO : Veto angle (in degrees), only used when cutting for the single      
+*          photon configuration;                                              
+*        EB   RHO  I3   IODD    ICONF  X1    A1MIN   A1MAX   AVETO          
+GENE    100.8  2.0   0  1234567    0   0.01    10.0    170.    2.5         
+END$                                                                      
+      

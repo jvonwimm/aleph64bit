@@ -1,0 +1,75 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.07.14.03.02;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.03.03;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK x3wsum
+      SUBROUTINE X3WSUM
+C ----------------------------------------------------------------------
+C.
+C. - Author   : A. Putzer  - 87/04/04  FOR GALEPH 17.0
+C.
+C.
+C! - Print Level3 Trigger Summary
+C.
+C? - This routine prints summary results for the level3 trigger
+C.
+C.
+C. - Called by      XTWSUM                        from this .HLB
+C.
+C ----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "iocom.h"
+#include "xtrcom.h"
+C
+C ----------------------------------------------------------------------
+C
+C.
+C. - Print trigger level3 summary
+C.
+      WRITE(LOUTIO,100) NACCL3
+ 100  FORMAT(//,
+     x 22X,' Level 3     : ',I10,' (not yet coded)')
+C.
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

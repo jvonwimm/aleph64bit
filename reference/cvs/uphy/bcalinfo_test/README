@@ -1,0 +1,112 @@
+Dear Colleages!
+
+	We are happy to inform you that we have now a tool for access to
+the BCAL++ information from ALPHA. (Afterward, we will simply call BCAL++
+as BCAL)
+
+-------------
+Introduction:
+-------------
+
+	For data, BCALINFO first looks for BCAL related banks which
+contain PMT, APD and silicon pad ADC information of each module. This
+information is used to calculate the energy deposit and the centroid. 
+
+	For MC, since BCAL is not currently simulated inside the official
+GALEPH, we make a loop over all the stable MC particle and pass them
+through a fast BCAL simulation program including the quadrupole
+simulation. The 4-momenta of a reconstructed BCAL object are obtained by
+assuming that it is the scattered beam e- (e+). 
+
+------
+Usage:
+------
+
+	When compiling your ALPHA job, you have to link with the obj file
+currently inside /aleph/uphy area (libbcalinfo.a). And, add include path
+"/al/reference/cvs/uphy/bcalinfo" in order to include "bcalinfo.h" file.
+
+	Inside QUEVNT, just call BCALINFO(dummy). Once it is called, the
+following COMMON variables are filled. COMMON can be taken from
+"bcalinfo.h" file in /al/reference/cvs/uphy/bcalinfo.
+
+KNBCR	- Number of BCAL object	reconstructed (Maximum 4 currently)
+KFBCR	- First BCAL object
+KLBCR	- Last BCAL object
+
+	You can access physical information via, QE,QP,QCT,QPH,QX,QY,QZ,
+etc..  just like any ALPHA track.  Some ALPHA variables like QDB, QZB, and
+error matrix are not available. For MC truth, you can access equally by
+KNBCT, KFBCT, KLBCT. 
+
+	At this moment, we do not assign any track class to these BCAL
+objects, i.e., neither KMONTE nor KRECO, in order not to affect on any
+user's routine having some loops on the track class. 
+
+	Here is an example to show how you access BCAL infomation, 
+
+      SUBROUTINE QUEVNT(QT,KT,QV,KV)
+C-------------------------------------------------------------------------
+C	quevnt
+C-------------------------------------------------------------------------
+      include '/aleph/phy/qcde.inc'
+      COMMON /BCINFO/ KNBCR,KFBCR,KLBCR,KNBCT,KFBCT,KLBCT
+      include '/aleph/phy/qmacro.inc'
+*
+*	calling BCAL stuffs
+*
+      CALL BCALINFO(dummy)
+*
+*     	loop on BCAL object to see Q^2 of gamma-gamma scatering
+*
+      NTAG=0
+      DO ITK=KFBCR,KLBCR
+        IF (QE(ITK).ge.40.0) THEN	! scattered electron tag
+          NTAG=NTAG+1
+          Etag=QE(ITK)
+          Ctag=QCT(ITK)
+        ENDIF
+      ENDDO
+      IF (NTAG.EQ.1) THEN
+        WRITE(*,*)' Single tag event'      
+        Q2=2.0*(QELEP/2.0)*Etag*(1.0-Ctag)
+      ENDIF
+*
+*	user routines
+*
+      RETURN
+      END
+
+*
+
+----------
+Utilities:
+----------
+
+Once after the call BCALINFO, one can also use the following functions.
+But besure to declare EXTERNAL.
+
+XBCA(i)		.TRUE. if BCAL reconstruction info. is available
+QBCAER(i)	Raw energy (Currently determined by APD)
+QBCARC(i)	Radial position of the reconstructed centroid
+QBCAPC(i)	Phi (degree) of the reconstructed centroid
+
+KBCALTAG(i)	check a MC particle whether it passes a BCAL module region.
+		return the module number, if 0 the particle can not reach
+		to the BCAL.
+
+where i is the ALPHA track number.
+
+*
+*
+*
+*
+
+
+Any comment and question can be addressed to
+
+icpark@aloha.cern.ch	(software related problem)
+merino@ifae.es		(BCAL++ and Fast simulation related problem)
+
+Hope to have many funs with BCALINFO.
+Inkyu PARK and Gonzalo Merino

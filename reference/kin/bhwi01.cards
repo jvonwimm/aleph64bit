@@ -1,0 +1,62 @@
+KCAR 0 / $TEXT
+POFF
+*     RUN #             RUN'S TITLE                                             
+RUN   1714  'BHABHA:BHWIDE, 91.00 GEV, RUN 1714'                   
+*     FIRST EVENT    LAST EVENT    TO BE GENERATED                              
+TRIG     1            500                                                   
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG                                 
+DEBU  6     /      1          3
+* requested time left at the end of job (in sec)                                
+TIME 120                                                                        
+*    to save event file (EPIO format)                                           
+*FILO 'AXAL23$DKA0:[000000.SCLOCAL.WIMMER.KINGAL]KELBACK912_20.EPIO'
+*    to save histograms                                                         
+*               x        y        z  vertex smearing  94 values                                 
+SVRT          0.0124   0.0005   0.72                                            
+*               x        y        z  mean vertex position
+XVRT          0.0000   0.0000   0.0000
+RMAR   27   1
+* GBHP CARD
+* CMSENE    : centre of mass energy (in GeV);
+* THMINP    : detector range ThetaMin [deg] for positrons
+* THMAXP    : detector range ThetaMax [deg] for positrons
+* THMINE    : detector range ThetaMin [deg] for electrons
+* THMAXE    : detector range ThetaMax [deg] for electrons
+* ENMINP    : Energy minimum [GeV] for detected positrons
+* ENMINE    : Energy minimum [GeV] for detected electrons
+* ACOLLI    : Maximum acollinearity [deg] of final e+e-
+* EPSCMS    : Dimensionless infrared cut on CMS energy of soft
+*             photons, ( E_phot > CMSENE*EPSCMS/2 )
+*     CMSENE  THMINP THMAXP THMINE THMAXE ENMINP ENMINE ACOLLI EPSCMS
+GBHP   91.200 10.00  170.00 10.00  170.00 0.180  0.180  180.00 0.0001
+*
+* GBHK CARD
+* KEYWGT    : switch for constant, variable weight WTMOD:
+*             =0 WTMOD=1 useful for apparatus Monte Carlo,
+*             To make it more efficient the user may need
+*             to adjust a value of WTMAX in routine BHWID1
+*             =1 WTMOD varying, faster/safer, RECOMMENDED
+*             Try both options for KEYWGT, result should be the same
+* KEYRND    : =1,2 type of random number generator RANMAR,RANECU
+* KEYEWC    : switching ON/OFF weak corrections:
+*             =0 only QED corrections included
+*                (here both KeyLib =1,2 should be equivalent)
+*             =1 all ElectroWeak Corrections included
+* KEYLIB    : option for ElectroWeak Corrections Library:
+*             =1 ElectroWeak Corr. from BABAMC (obsolete)
+*             =2 ElectroWeak Corr. from ALIBABA, RECOMMENDED
+* KEYMOD    : type of MODEL subprogram and QED matrix element
+*             for hard bremsstrahlung:
+*             =1 obtained by the authors (helicity amplitudes)
+*             =2 from CALKUL, Nucl. Phys. B206 (1982) 61.
+*             Checked to be in a very good agreement!
+* KEYPIA    : photon vacuum polarization switch:
+*             =0 OFF,
+*             =1 ON, Burkhardt et.al. 1989, as in BHLUMI 2.0x
+*             =2 ON, S. Eidelman, F. Jegerlehner, Z.Phys.C(1995)
+*             =3 ON, Burkhardt and Pietrzyk 1995 (Moriond).
+*             NOTE: Now it works for both ALIBABA and BABAMC
+*             routines as well as for KEYEWC=0! 
+*     KEYWGT  KEYRND  KEYEWC  KEYLIB  KEYMOD  KEYPIA
+GBHK    0       1       1       2       2       1 
+END$                                                                           

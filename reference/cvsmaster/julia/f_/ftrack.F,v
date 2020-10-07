@@ -1,0 +1,630 @@
+head	1.4;
+access;
+symbols
+	jul313_3:1.4
+	jul313_2:1.4
+	jul313_1:1.4
+	jul313:1.4
+	jul312_1:1.4
+	jul312:1.4
+	jul311:1.4
+	jul310_1:1.4
+	jul310:1.4
+	jul309_1:1.4
+	jul309:1.4
+	jul308_6:1.4
+	jul308_5:1.4
+	jul308_4:1.4
+	jul308_3:1.4
+	jul308_2:1.4
+	jul308_1:1.4
+	jul308:1.4
+	jul307_4:1.4
+	jul307_3:1.4
+	jul307_2:1.4
+	jul307_1:1.4
+	jul307:1.4
+	jul306_3:1.4
+	jul306_2:1.4
+	jul306_1:1.4
+	jul306:1.4
+	jul305_4:1.4
+	jul305_3:1.4
+	jul305_2:1.4
+	jul305_1:1.4
+	jul305:1.4
+	jul304_3:1.4
+	jul304_2:1.4
+	jul304_1:1.4
+	jul304:1.4
+	jul303_7:1.4
+	jul303_6:1.4
+	jul303_5:1.4
+	jul303_4:1.4
+	jul303_3:1.4
+	jul303_2_mc1:1.4
+	jul303_2:1.4
+	jul303_1_mc1:1.4
+	jul303_1:1.4
+	jul303_v:1.4
+	jul303:1.4
+	jul302_6:1.4
+	jul302_5:1.4
+	jul302_4:1.4
+	jul302_3:1.4
+	jul302_2:1.4
+	jul302_1:1.4
+	jul302:1.4
+	jul285_1:1.3
+	jul285:1.3
+	jul284_1:1.3
+	jul284:1.3
+	jul283_1:1.3
+	jul283:1.3
+	jul282_1:1.3
+	jul282:1.3
+	jul281_3:1.3
+	jul281_2:1.3
+	jul281_1:1.3
+	jul281:1.3
+	jul280_1:1.3
+	jul280:1.3
+	jul279:1.2
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.4
+date	97.03.06.09.54.50;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.03.12.15.00.52;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.11.29.17.17.01;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.18.10;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.18.11;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@Tracking upgrade
+@
+text
+@        SUBROUTINE FTRACK
+C-------------------------------------------------------------------
+C
+C!  extrapolate TPC track through Ecal, Coil, Hcal
+C!
+C!  G.Capon                              28-Aug-87
+C!
+C!
+C?
+C!======================================================================
+#ifndef DOC
+#include "bcs.h"
+#include "hcalg1.h"
+#include "alcons.h"
+#include "rparac.h"
+#include "rflags.h"
+#include "trexjj.h"
+#include "frftjj.h"
+#include "rconds.h"
+#include "yknkjj.h"
+      PARAMETER (NSTEP=26)
+C                        parametrisation of dE/dx in Ecal and Coil
+      PARAMETER (AL1=.172E-3,AL2=-8.2,AL3=1.14)
+      PARAMETER (PB1=.166E-3,PB2=-6.1,PB3=4.12)
+      PARAMETER (WMU=.10566, WMU2=.011164)
+      DIMENSION ATFRA(9,NSTEP+4)
+      DIMENSION DVE(7),DVF(7),ATIN(8),VV0(6)
+      DIMENSION SCOO(NSTEP+4),STEP(NSTEP+4),TH2PR(NSTEP+4),R2MS(NSTEP+4)
+      DIMENSION RADL(3)
+      DATA RADL /2.4,8.05,2.45/
+      DATA R1ECA,Z1ECA,R2ECA,Z2ECA,R1COI,R2COI
+     +   / 185. , 245., 234., 297., 248.,264.7/
+      DATA PCUT/1./
+      DATA INIJO,NITER/0,4/
+#include "bmacro.h"
+C
+      IF(INIJO.EQ.0) THEN
+         INIJO=1
+         IBON=1
+         IF(FIELRC .LT. 0.1) IBON=0
+         CALL BLIST(IW,'T+','TREX')
+C          Test presence of Hcal geometry banks :
+C          if only TPC+ECAL processing is required one must call
+C          Hiniru to have Hcal geometry (G.Capon - Feb 1990)
+         JHBGE=IW(NAMIND('HBGE'))
+         IF (JHBGE.EQ.0) CALL HINIRU
+         NFRFT=NAMIND('FRFT')
+         NYKNK=NAMIND('YKNK')
+      ENDIF
+      JFRFT=IW(NFRFT)
+      IF(JFRFT.EQ.0) GO TO 99
+      NTRKS=LROWS(JFRFT)
+      JYKNK=IW(NYKNK)
+C
+C?             loop on TPC tracks
+C
+      DO 10 ITRAC = 1,NTRKS
+C
+C?             don't extrapolate tracks coming into a kink
+C
+         IF (JYKNK.NE.0) THEN
+            DO IYKNK = 1, LROWS(JYKNK)
+                IF (ITRAC.EQ.ITABL(JYKNK,IYKNK,JYKNIT)) GO TO 10
+            ENDDO
+         ENDIF
+C
+         NVETT=0
+         CURV =RTABL(JFRFT,ITRAC,JFRFIR)
+         TADIP=RTABL(JFRFT,ITRAC,JFRFTL)
+         PHI  =RTABL(JFRFT,ITRAC,JFRFP0)
+         DW   =RTABL(JFRFT,ITRAC,JFRFD0)
+         ZW   =RTABL(JFRFT,ITRAC,JFRFZ0)
+         VV0(1)=CURV
+         VV0(2)=TADIP
+         VV0(3)=PHI
+         VV0(4)=DW
+         VV0(5)=ZW
+         VV0(6)=RTABL(JFRFT,ITRAC,JFRFAL)
+C     get DW, PHI after mul. scatt. in ITC-TPC wall  !!
+         CALL UNEWDP(VV0,DW,PHI)
+C
+         RHO=1./ABS(CURV)
+         PT=FIELRC*RHO*CLGHT/100000.
+         THETA = ATAN2 (1.,TADIP)
+         STHET = SIN(THETA)
+         PPINI  = PT/STHET
+C
+C?             select penetrating particles
+C?             note that we have different p-cuts in FTRACK and MUASS
+C
+         IF (PPINI . LT. PCUT) GO TO 10
+
+         CTHET = COS(THETA)
+         CPHI  = COS(PHI)
+         SPHI  = SIN(PHI)
+C
+         DVF(1) =+DW*SPHI
+         DVF(2) =-DW*CPHI
+         DVF(3) = ZW
+         DVF(4) = STHET*CPHI
+         DVF(5) = STHET*SPHI
+         DVF(6) = CTHET
+         DVF(7) = PPINI
+         Q     =-SIGN (1.,CURV)
+C
+C             track extrapol up to Ecal entrance
+C
+         CALL AUHCYL(R1ECA,Z1ECA,FIELRC,Q,DVF,DVE,ICODE)
+         IF(ICODE.EQ.0) GO TO 10
+C-      Initialize ATFRA
+         DO 100 I1 =  1,  9
+           DO 110 I2 =  1,  NSTEP+4
+             ATFRA (I1,I2) = 0.
+  110      CONTINUE
+  100    CONTINUE
+         NVETT=NVETT+1
+         DVE(7)=DVF(7)
+         ATFRA(8,NVETT)=1500.
+         CALL UCOPY(DVE,ATFRA(1,NVETT),6)
+         DO 21 K=4,6
+ 21      ATFRA(K,NVETT)=ATFRA(K,NVETT)*DVE(7)
+C
+C      track extrap through Ecal in NITER = 4 steps
+C
+         ENE=SQRT(DVF(7)*DVF(7)+WMU2)
+         DO 25 NIT=1,NITER
+            R2=R1ECA+(R2ECA-R1ECA)*FLOAT(NIT)/FLOAT(NITER)
+            Z2=Z1ECA+(Z2ECA-Z1ECA)*FLOAT(NIT)/FLOAT(NITER)
+            CALL AUHCYL(R2,Z2,FIELRC,Q,DVE,DVF,ICODE)
+            IF(ICODE.EQ.0) GO TO 10
+            DIST=VDIST(DVE,DVF,3)
+            BE=DVF(7)/ENE
+            GA=ENE/WMU
+            DEDX=DIST*PB1*(ALOG(GA*BE)-BE*BE-PB2)*PB3/BE/BE
+            ENE=ENE-DEDX
+            IF(ENE .LT. 1.5*WMU) GO TO 51
+            DVF(7)=SQRT(ENE*ENE-WMU2)
+            IF(NIT.LT.NITER) CALL UCOPY(DVF,DVE,7)
+ 25      CONTINUE
+         NVETT=NVETT+1
+         ATFRA(8,NVETT)=0.
+         CALL UCOPY(DVF,ATFRA(1,NVETT),6)
+         DO 22 K=4,6
+ 22      ATFRA(K,NVETT)=ATFRA(K,NVETT)*DVF(7)
+C
+C             track extrapol through coil
+C             approx Zcoil=Zhcal !!, R2coil=rmax-field !!
+C
+         CALL AUHCYL(R1COI,HZEMIN,FIELRC,Q,DVF,DVE,ICODE)
+         IF(ICODE.EQ.1) THEN
+            NVETT=NVETT+1
+            DVE(7)=DVF(7)
+            ATFRA(8,NVETT)=2500.
+            CALL UCOPY(DVE,ATFRA(1,NVETT),6)
+            DO 23 K=4,6
+ 23         ATFRA(K,NVETT)=ATFRA(K,NVETT)*DVE(7)
+C
+            CALL AUHCYL(R2COI,HZEMIN,FIELRC,Q,DVE,DVF,ICOD4)
+            NVETT=NVETT+1
+            ATFRA(8,NVETT)=0.
+            DIST=VDIST(DVE,DVF,3)
+C                   correct DIST for real coil thickness
+            DIST=DIST*44./16.7
+            BE=DVF(7)/ENE
+            GA=ENE/WMU
+            DEDX=DIST*AL1*(ALOG(GA*BE)-BE*BE-AL2)*AL3/BE/BE
+            ENE=ENE-DEDX
+            IF(ENE .LT. 1.5*WMU) GO TO 51
+            DVF(7)=SQRT(ENE*ENE-WMU2)
+            CALL UCOPY(DVF,ATFRA(1,NVETT),6)
+            DO 24 K=4,6
+ 24         ATFRA(K,NVETT)=ATFRA(K,NVETT)*DVF(7)
+         ELSE
+            CALL UCOPY(DVE,ATIN,6)
+            GO TO 40
+         ENDIF
+C
+C              extrapolate track up to Hcal first plane
+C
+         IF(ICOD4.EQ.1)THEN
+            PHI1=PIBY12
+            CALL AULPOL(HXBMIN,HZEMIN,PHI1,DVF,ATIN,ICODE)
+            IF(ICODE.EQ.0) GO TO 10
+         ELSE
+            CALL UCOPY(DVF,ATIN,6)
+         ENDIF
+C
+C               follow track in Hcal (with mag field)
+C
+ 40      CONTINUE
+         ATIN(4)=ATIN(4)*DVF(7)
+         ATIN(5)=ATIN(5)*DVF(7)
+         ATIN(6)=ATIN(6)*DVF(7)
+         ATIN(8)=Q
+         CALL HTRACK(IBON,1,ATIN,IFAIL,NVETT,ATFRA)
+C
+C          create TREX bank (bank NR = ITRAC )
+C
+ 51      CONTINUE
+         LEN=2+LTREXA*NVETT
+         CALL AUBOS('TREX',ITRAC,LEN,JTREX,IGARB)
+         IF(IGARB.EQ.2) THEN
+            CALL RERROR('FTRACK',1,'no space for TREX bank')
+            GO TO 99
+         ENDIF
+         IW(JTREX+1)=LTREXA
+         IW(JTREX+2)=NVETT
+         KTREX=JTREX+2
+C
+C          fill TREX bank
+C
+         DO 50 N=1,NVETT
+            CALL UCOPY(ATFRA(1,N),RW(KTREX+1),6)
+            IW(KTREX+JTRERG)=NINT(ATFRA(8,N))
+            IW(KTREX+JTRELA)=NINT(ATFRA(9,N))
+            KTREX=KTREX+LTREXA
+ 50      CONTINUE
+C
+         SCOO(1)=0.
+         CALL VZERO(R2MS,NSTEP+4)
+         CALL VZERO (TH2PR,NSTEP+4)
+C
+C          compute steps and partial lengths of trajectory
+C
+         DO 60 N=1,NVETT-1
+            DX=RTABL(JTREX,N+1,JTREX3)-RTABL(JTREX,N,JTREX3)
+            DY=RTABL(JTREX,N+1,JTREX3+1)-RTABL(JTREX,N,JTREX3+1)
+            DZ=RTABL(JTREX,N+1,JTREX3+2)-RTABL(JTREX,N,JTREX3+2)
+            STEP(N)=SQRT(DX*DX+DY*DY+DZ*DZ)
+            SCOO(N+1)=SCOO(N)+STEP(N)
+            NMED=ITABL(JTREX,N,JTRERG)/1000
+            IF(NMED.GT.0 .AND. NMED.LE.3) THEN
+               PX=RTABL(JTREX,N,JTREP3)
+               PY=RTABL(JTREX,N,JTREP3+1)
+               PZ=RTABL(JTREX,N,JTREP3+2)
+               PTOT2=PX*PX+PY*PY+PZ*PZ
+               ETOT2=PTOT2+WMU2
+               PIBE2=PTOT2*(PTOT2/ETOT2)
+               CORR=1.
+               IF(STEP(N).GT.0)
+     &              CORR=(1.+LOG10(STEP(N)/RADL(NMED))/9.)**2
+               TH2PR(N)=225.0E-6/PIBE2*STEP(N)/RADL(NMED)*CORR
+            ENDIF
+C
+C                          compute average mult. scatt. radius
+C
+            DO 70 I=1,N
+                DVOL=SCOO(N+1)-SCOO(I+1)
+                R2MS(N+1)=R2MS(N+1) + TH2PR(I)*(STEP(I)*STEP(I)/3.+
+     +               STEP(I)*DVOL+DVOL*DVOL)
+ 70         CONTINUE
+C
+            JROW=KROW(JTREX,N+1)
+            RW(JROW+JTRERM)=SQRT(R2MS(N+1))
+ 60      CONTINUE
+C
+C              for first row put IFAIL in place of m.s. radius !!
+C
+         JROW=KROW(JTREX,1)
+         RW(JROW+JTRERM)=IFAIL
+C
+C?             ...and now the next track
+C
+ 10   CONTINUE
+C
+ 99   RETURN
+C
+      END
+#endif
+@
+
+
+1.3
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+@
+text
+@d20 1
+a20 1
+#include "etp1jj.h"
+d47 2
+d50 4
+a53 4
+         NFRFT=NAMIND('FRFT')
+         JFRFT=IW(NFRFT)
+         IF(JFRFT.EQ.0) GO TO 99
+         NTRKS=LROWS(JFRFT)
+d58 10
+a67 7
+      NVETT=0
+C-      Initialize ATFRA
+      DO 100 I1 =  1,  9
+        DO 110 I2 =  1,  NSTEP+4
+          ATFRA (I1,I2) = 0.
+  110   CONTINUE
+  100 CONTINUE
+d85 9
+a95 2
+         CTHET = COS(THETA)
+         STHET = SIN(THETA)
+a102 1
+         PPINI  = PT/STHET
+a105 5
+C?             select penetrating particles
+C?             note that we have different p-cuts in FTRACK and MUASS
+C
+         IF (PPINI . LT. PCUT) GO TO 10
+C
+d110 12
+a121 6
+      NVETT=NVETT+1
+      DVE(7)=DVF(7)
+      ATFRA(8,NVETT)=1500.
+      CALL UCOPY(DVE,ATFRA(1,NVETT),6)
+      DO 21 K=4,6
+ 21   ATFRA(K,NVETT)=ATFRA(K,NVETT)*DVE(7)
+d125 20
+a144 20
+      ENE=SQRT(DVF(7)*DVF(7)+WMU2)
+      DO 25 NIT=1,NITER
+      R2=R1ECA+(R2ECA-R1ECA)*FLOAT(NIT)/FLOAT(NITER)
+      Z2=Z1ECA+(Z2ECA-Z1ECA)*FLOAT(NIT)/FLOAT(NITER)
+      CALL AUHCYL(R2,Z2,FIELRC,Q,DVE,DVF,ICODE)
+      IF(ICODE.EQ.0) GO TO 10
+      DIST=VDIST(DVE,DVF,3)
+      BE=DVF(7)/ENE
+      GA=ENE/WMU
+      DEDX=DIST*PB1*(ALOG(GA*BE)-BE*BE-PB2)*PB3/BE/BE
+      ENE=ENE-DEDX
+      IF(ENE .LT. 1.5*WMU) GO TO 51
+      DVF(7)=SQRT(ENE*ENE-WMU2)
+      IF(NIT.LT.NITER) CALL UCOPY(DVF,DVE,7)
+ 25   CONTINUE
+      NVETT=NVETT+1
+      ATFRA(8,NVETT)=0.
+      CALL UCOPY(DVF,ATFRA(1,NVETT),6)
+      DO 22 K=4,6
+ 22   ATFRA(K,NVETT)=ATFRA(K,NVETT)*DVF(7)
+d149 13
+a161 13
+      CALL AUHCYL(R1COI,HZEMIN,FIELRC,Q,DVF,DVE,ICODE)
+      IF(ICODE.EQ.1) THEN
+         NVETT=NVETT+1
+         DVE(7)=DVF(7)
+         ATFRA(8,NVETT)=2500.
+         CALL UCOPY(DVE,ATFRA(1,NVETT),6)
+         DO 23 K=4,6
+ 23      ATFRA(K,NVETT)=ATFRA(K,NVETT)*DVE(7)
+C
+         CALL AUHCYL(R2COI,HZEMIN,FIELRC,Q,DVE,DVF,ICOD4)
+         NVETT=NVETT+1
+         ATFRA(8,NVETT)=0.
+         DIST=VDIST(DVE,DVF,3)
+d163 14
+a176 14
+         DIST=DIST*44./16.7
+         BE=DVF(7)/ENE
+         GA=ENE/WMU
+         DEDX=DIST*AL1*(ALOG(GA*BE)-BE*BE-AL2)*AL3/BE/BE
+         ENE=ENE-DEDX
+         IF(ENE .LT. 1.5*WMU) GO TO 51
+         DVF(7)=SQRT(ENE*ENE-WMU2)
+         CALL UCOPY(DVF,ATFRA(1,NVETT),6)
+         DO 24 K=4,6
+ 24      ATFRA(K,NVETT)=ATFRA(K,NVETT)*DVF(7)
+      ELSE
+         CALL UCOPY(DVE,ATIN,6)
+         GO TO 40
+      ENDIF
+d180 7
+a186 7
+      IF(ICOD4.EQ.1)THEN
+         PHI1=PIBY12
+         CALL AULPOL(HXBMIN,HZEMIN,PHI1,DVF,ATIN,ICODE)
+         IF(ICODE.EQ.0) GO TO 10
+      ELSE
+         CALL UCOPY(DVF,ATIN,6)
+      ENDIF
+d190 6
+a195 6
+ 40   CONTINUE
+      ATIN(4)=ATIN(4)*DVF(7)
+      ATIN(5)=ATIN(5)*DVF(7)
+      ATIN(6)=ATIN(6)*DVF(7)
+      ATIN(8)=Q
+      CALL HTRACK(IBON,1,ATIN,IFAIL,NVETT,ATFRA)
+d199 10
+a208 10
+ 51   CONTINUE
+      LEN=2+LTREXA*NVETT
+      CALL AUBOS('TREX',ITRAC,LEN,JTREX,IGARB)
+      IF(IGARB.EQ.2) THEN
+         CALL RERROR('FTRACK',1,'no space for TREX bank')
+         GO TO 99
+      ENDIF
+      IW(JTREX+1)=LTREXA
+      IW(JTREX+2)=NVETT
+      KTREX=JTREX+2
+d212 10
+a221 10
+      DO 50 N=1,NVETT
+      CALL UCOPY(ATFRA(1,N),RW(KTREX+1),6)
+      IW(KTREX+JTRERG)=NINT(ATFRA(8,N))
+      IW(KTREX+JTRELA)=NINT(ATFRA(9,N))
+      KTREX=KTREX+LTREXA
+ 50   CONTINUE
+C
+      SCOO(1)=0.
+      CALL VZERO(R2MS,NSTEP+4)
+      CALL VZERO (TH2PR,NSTEP+4)
+d225 19
+a243 18
+      DO 60 N=1,NVETT-1
+      DX=RTABL(JTREX,N+1,JTREX3)-RTABL(JTREX,N,JTREX3)
+      DY=RTABL(JTREX,N+1,JTREX3+1)-RTABL(JTREX,N,JTREX3+1)
+      DZ=RTABL(JTREX,N+1,JTREX3+2)-RTABL(JTREX,N,JTREX3+2)
+      STEP(N)=SQRT(DX*DX+DY*DY+DZ*DZ)
+      SCOO(N+1)=SCOO(N)+STEP(N)
+      NMED=ITABL(JTREX,N,JTRERG)/1000
+      IF(NMED.GT.0 .AND. NMED.LE.3) THEN
+         PX=RTABL(JTREX,N,JTREP3)
+         PY=RTABL(JTREX,N,JTREP3+1)
+         PZ=RTABL(JTREX,N,JTREP3+2)
+         PTOT2=PX*PX+PY*PY+PZ*PZ
+         ETOT2=PTOT2+WMU2
+         PIBE2=PTOT2*(PTOT2/ETOT2)
+         CORR=1.
+         IF(STEP(N).GT.0) CORR=(1.+LOG10(STEP(N)/RADL(NMED))/9.)**2
+         TH2PR(N)=225.0E-6/PIBE2*STEP(N)/RADL(NMED)*CORR
+      ENDIF
+d247 9
+a255 9
+      DO 70 I=1,N
+      DVOL=SCOO(N+1)-SCOO(I+1)
+      R2MS(N+1)=R2MS(N+1) + TH2PR(I)*(STEP(I)*STEP(I)/3.+
+     + STEP(I)*DVOL+DVOL*DVOL)
+ 70   CONTINUE
+C
+      JROW=KROW(JTREX,N+1)
+      RW(JROW+JTRERM)=SQRT(R2MS(N+1))
+ 60   CONTINUE
+d259 2
+a260 2
+      JROW=KROW(JTREX,1)
+      RW(JROW+JTRERM)=IFAIL
+@
+
+
+1.2
+log
+@julia version 279
+@
+text
+@a0 1
+*DK ftrack
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d227 1
+a227 1
+         PIBE2=PTOT2*PTOT2/ETOT2
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

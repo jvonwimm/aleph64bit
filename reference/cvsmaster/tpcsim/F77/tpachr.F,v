@@ -1,0 +1,104 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	tpc300_1:1.1.1.1
+	tpc300:1.1.1.1
+	tpc218:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.09.14.29.57;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.09.14.29.58;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK tpachr
+      SUBROUTINE TPACHR(NEL,QTOT)
+C-----------------------------------------------------------------------
+C!  Generate the total charge produced during an avalanche; account for
+C!  statistical fluctuations at wire amplification.
+C
+C  Called from:  TSAVAL
+C  Calls:        RNDM,RANNOR
+C
+C  Input:  PASSED     --NEL, num of electrons producing the avlanche
+C          /TPCONS/   --THETA, width parameter (see Lapique & Piuz,
+C                              NIM 175 (1980) 297-318 )
+C                     --ETHETA, exp(THETA)
+C          /TPCOND/   --AMPLIT, avg. size of avalanche from 1 electron
+C                     --NPOLYA, cutoff for Polya/Gaussian distribution
+C  Output: PASSED     --QTOT total charge produced
+C
+C  A. Caldwell
+C  M. Mermikides  1/9/86  Set limit to total charge to avoid numeric
+C                         overflows.
+C  D. Casper      8/10/92 Correct error in Polya width
+C-----------------------------------------------------------------------
+#include "tpcons.h"
+#include "tpcond.h"
+      DATA QMAX/1.E8/
+C
+      IF ( NEL .LE. NPOLYA ) THEN
+C
+C  Polya distribution
+C
+ 1       ZZ = -ALOG(RNDM(F))
+         ZZCH = ETHETA * (ZZ**THETA) * EXP(-THETA*ZZ)
+C
+         ZZ1 = RNDM(F)
+         IF ( ZZCH .LT. ZZ1 ) GOTO 1
+C
+         QTOT = NEL*AMPLIT*ZZ
+C
+      ELSE
+C
+C  Gaussian distribution
+C
+         CALL RANNOR(FL,DUM)
+C
+         QZER0 = NEL*AMPLIT
+         WIDTH = AMPLIT * SQRT(FLOAT(NEL)/(1.+THETA))
+         QTOT  = QZER0 + FL*WIDTH
+C
+      ENDIF
+C
+C Set limit to total charge produced
+      IF(QTOT.GT.QMAX) THEN
+C        PRINT '('' +++TPACHR+++ Exceeded max charge, QTOT,NEL'',
+C     &             G15.3,I10)',QTOT,NEL
+
+         QTOT = QMAX
+      ENDIF
+      RETURN
+C
+      END
+@
+
+
+1.1.1.1
+log
+@import tpcsim 300
+@
+text
+@@

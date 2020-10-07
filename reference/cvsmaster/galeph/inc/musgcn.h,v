@@ -1,0 +1,113 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	94.12.07.14.01.32;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.33;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*CD musgcn
+C! The current constants to create MU signals
+      COMMON/MUSGCN/WDMDMU,XLMDMU,NMEIMU,XLEIMU,KPMDMU,ZPSWMU(2),
+     *              NASLMU,NUSLMU,NUEMMU,NYSTMU,NXSTMU,XSOFMU(2),
+     *              YSOFMU(2),GP16MU,WD16MU,YCUTSL(2),YCUTSB(2)
+      COMMON/MUSGKN/   TMUCVO,TMU3VO
+      CHARACTER*4 TMUCVO,TMU3VO
+C
+#if defined(DOC)
+      WDMDMU -- width of the current module
+      XLMDMU -- length of the current module
+      NMEIMU -- # of eightfold tubes in the module
+      XLEIMU -- length of eightfold tube in the module
+                (used for barrel and middle angle module)
+      KPMDMU -- pointer of 'MCRD' to the module
+                (used for endcap module to find the length
+                 of eightfold tube)
+      XOFFMU -- X-offset of two tube planes
+      YOFFMU -- Y-offset of two tube planes
+      ZPSWMU -- Z-coordinate of wires of two tube plane in
+                module reference system
+      NASLMU -- slot name of the module
+      NUSLMU -- slot # of the module
+      NUEMMU -- electronics module # of this module
+      NPEMMU -- order # of the module in the electronics module
+                it belongs to (in the case of one electronics module
+                has more than one module, NPEMMU could be great than 1)
+      NXSTMU -- # of X-strips in the module
+      NYSTMU -- # of Y-strips in the module
+      NXSOMU -- offset # of two X-strip planes
+      NYSOMU -- offset # of two Y-strip planes
+      XSOFMU -- position offset of two X-strip plane
+      YSOFMU -- position offset of two Y-strip plane
+      GP16MU -- width of gap between 16-fold tubes
+      WD16MU -- 2*WDEIMU + GP16MU
+      YCUTSB(IPLN) -- Position of the first active Y-strip
+      YCUTSL(IPLN) -- Position of the last active Y-strip
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

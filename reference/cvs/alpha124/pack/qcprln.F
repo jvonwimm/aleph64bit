@@ -1,0 +1,141 @@
+      SUBROUTINE QCPRLN(RL,TETIFL,PMOM,RLnew)
+C ----------------------------------------------------------------------
+C! computes beta/alpha and Rl for electron - Auxiliary to FIXPRL
+C  Called from FIXPRL
+C                                 Author: P. Perret  31/01/97
+C
+C     Input  : RL       Estimator stored in preceeding processing
+C              TETIFL   ECAL theta impact in ECAL numbering
+C              PMOM     Track momentum
+C
+C     Output : RLnew    new estimator
+C
+C ----------------------------------------------------------------------
+#ifndef DOC
+      implicit none
+      real rl,tetifl,pmom,rlnew
+      integer nver,nregion,ipar,iregion
+      real bsa0,sigbsa0,bsa,bsan,sigbsan
+      PARAMETER (NVER=2, nregion=3)
+      real PARAMEAN(3,NREGION,NVER), PARASIGM(3,NREGION,NVER)
+      real PSIGCOR(2,NREGION,NVER)
+      DATA PARAMEAN / 0.1892 ,0.02852 ,0.00205     ! overlap
+     >              , 0.18901,0.025051,0.11433E-2  ! barrel
+     >              , 0.17370,0.010945,-0.13903E-2 ! end cap
+c
+     >              , 4.58732,0.701522, 0.         ! overlap new
+     >              , 5.09686,0.953056, 0.         ! barrel new
+     >              , 5.19404,0.853438, 0.   /     ! end cap new
+      DATA PARASIGM / 0.0414 ,0.0015  ,0.00184     ! overlap
+     >              ,13.207  ,17.319  ,0.          ! barrel
+     >              ,13.903  ,18.305  ,0.          ! end cap
+c
+     >              ,16.06845,1.06258 , 0.         ! overlap new
+     >              ,12.78   ,19.27848, 0.         ! barrel new
+     >              ,15.17324,18.32008, 0.   /     ! end cap new
+      DATA PSIGCOR  / 1.000 , 0.                   ! overlap
+     >              , 0.923 , 0.                   ! barrel
+     >              , 0.9018, 0.                   ! end cap
+c
+     >              ,1.00069, 1.9151               ! overlap new
+     >              ,0.98973, 0.32534              ! barrel new
+     >              ,0.97593, 0.64457        /     ! end cap new
+C ----------------------------------------------------------------------
+      real FUNRL2, FUNRL3, FUNSIGC
+      EXTERNAL FUNRL2, FUNRL3, FUNSIGC
+C ----------------------------------------------------------------------
+c
+      RLnew = RL
+c
+      IPAR = 1
+      iregion = 0
+      IF (TETIFL.GE.44..AND.TETIFL.LE.57.
+     >    .OR.TETIFL.GE.172..AND.TETIFL.LE.185.) THEN
+C Overlap
+        IPAR = 2
+        iregion = 1
+      ELSE IF (TETIFL.GE.57..AND.TETIFL.LT.172.) THEN
+C Barrel
+        iregion = 2
+      ELSE IF (TETIFL.GE.186..OR.TETIFL.LT.43.) THEN
+C End Cap
+        iregion = 3
+      ENDIF
+C
+      if(iregion.ne.0) then
+c..
+c compute from the old parametrisation Beta/Alpha
+c..
+        IF(IPAR.EQ.1) THEN
+          SIGBSA0 = FUNRL2(PMOM,PARASIGM(1,IREGION,1)
+     >                    ,PARASIGM(2,IREGION,1))
+        ELSE
+          SIGBSA0 = FUNRL3(PMOM,PARASIGM(1,IREGION,1)
+     >                    ,PARASIGM(2,IREGION,1),PARASIGM(3,IREGION,1))
+        ENDIF
+c
+        BSA0 = FUNRL3(PMOM,PARAMEAN(1,IREGION,1)
+     >                    ,PARAMEAN(2,IREGION,1),PARAMEAN(3,IREGION,1))
+c
+        SIGBSA0=SIGBSA0*PSIGCOR(1,IREGION,1)
+c
+        BSA=RL*SIGBSA0+BSA0
+c..
+C compute with the new parametrisation Beta/Alpha and sigma reference
+c..
+        BSAN = FUNRL2(PMOM,PARAMEAN(1,IREGION,2),PARAMEAN(2,IREGION,2))
+        SIGBSAN = FUNRL2(PMOM,PARASIGM(1,IREGION,2)
+     >                  ,PARASIGM(2,IREGION,2))
+c..
+C    new correction for a sigma closer to one on all the momentum range
+c..
+        SIGBSAN=SIGBSAN*FUNSIGC(PMOM,PSIGCOR(1,IREGION,2)
+     >                         ,PSIGCOR(2,IREGION,2))
+c ..
+C      The new value of Rl :
+c..
+        RLnew = (BSA - BSAN)/SIGBSAN
+
+      ENDIF
+C
+      RETURN
+      END
+C ----------------------------------------------------------------------
+      real function funrl2(pmom,par1,par2)
+c
+c     computes bsa or sigbsa evolution for Rl as a function of P momentum
+c     Auxiliary to QCPRLn
+c                                 Author: P. Perret  31/01/97
+c                                     
+      implicit none
+      real pmom,par1,par2
+      funrl2 = 1./(par1 + par2 * alog(pmom))
+      return
+      end
+C ----------------------------------------------------------------------
+      real function funrl3(pmom,par1,par2,par3)
+c
+c     computes bsa or sigbsa evolution for Rl as a function of P momentum
+c     old parametrisation
+c     Auxiliary to QCPRLn
+c                                 Author: P. Perret  31/01/97
+c                                     
+      implicit none
+      real pmom,par1,par2,par3
+      funrl3 = par1 + par2 * alog(1./pmom) + par3*(alog(pmom))**2
+      return
+      end
+C ----------------------------------------------------------------------
+      real function funsigc(pmom,par1,par2)
+c
+c     computes correction for sigbsa evolution as a function of P momentum
+c     Auxiliary to QCPRLn
+c                                 Author: P. Perret  31/01/97
+c                                     
+      implicit none
+      real pmom,par1,par2
+      funsigc = par1/(1. + par2/(pmom*pmom))
+      return
+      end
+#endif
+

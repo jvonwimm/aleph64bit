@@ -1,0 +1,62 @@
+#! /bin/csh
+#========================================================================
+#                        alftp
+# 09/10/92                                                    F.Blin
+#========================================================================
+# Call by updcorr
+#========================================================================
+# P1 -> file_name
+# P2 -> file_type
+# P3 -> disk_ibm
+# P4 -> transfert type ascii or binary [default = ascii]
+#========================================================================
+# 19/07/93 - remove reference to ./netrc                FLR
+#          - include ibm_user name in ftp_tmp file
+#          - let ftp ask for ibm_password
+#========================================================================
+#set echo on
+if ($#argv == 3) goto begin
+if ($#argv == 4) goto begin
+   echo ' P1 -> input file name                      eg: adbs171  '
+   echo ' P2 -> input file type                      eg: epio     '
+   echo ' P3 -> CERNVM disk                          eg: PUBXU.210'
+   echo ' P4 -> transfert type [default = ascii]     eg: binary'
+   echo 'Please type -> progn_ftp P1 P2 P3'
+   echo '            eg: alftp alpha114 ufor PUBXU.409'
+   echo '            eg: alftp bankal fmt PUBXU.210 ascii'
+   exit
+endif
+ 
+#=================================================> BEGIN
+begin:
+if (-e ftp_tmp) rm ftp_tmp
+set file_name = "$1"
+set file_type = "$2"
+set disk_ibm = "$3"
+set transfert_type = "$4"
+ 
+# ************ get ibm user name
+echo -n "Enter ibm user [<CR>=${USER}]-> "
+set ibm_user = $<
+if (${ibm_user} == "") then
+   set ibm_user = ${USER}
+endif
+ 
+# ******** fill ftp_tmp file
+echo "${ibm_user}" > ftp_tmp
+echo "cd ${disk_ibm}" >> ftp_tmp
+if (${transfert_type} == "") transfert_type = "ascii"
+echo "${transfert_type}" >> ftp_tmp
+echo "get ${file_name}.${file_type}" >> ftp_tmp
+echo "quit" >> ftp_tmp
+ 
+# ************* call ftp
+ftp cernvm < ftp_tmp
+ 
+goto exec_end
+ 
+ 
+#=================================================> EXEC_END
+exec_end:
+exit
+ 

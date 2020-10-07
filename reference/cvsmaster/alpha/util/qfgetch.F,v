@@ -1,0 +1,133 @@
+head	1.1;
+access;
+symbols
+	alpha126_22:1.1
+	alpha122_22:1.1
+	alpha126_21:1.1
+	alpha126_20:1.1
+	alpha126_19:1.1
+	alpha126_18:1.1
+	alpha126_17:1.1
+	alpha126_16:1.1
+	alpha126_15:1.1
+	alpha126_14:1.1
+	alpha126_13:1.1
+	alpha126_12:1.1
+	alpha126_11:1.1
+	alpha126_10:1.1
+	alpha126_09:1.1
+	alpha126_08:1.1
+	alpha126_07:1.1
+	alpha126_06:1.1
+	alpha126_05:1.1
+	alpha126_04:1.1
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1
+	alpha124:1.1
+	alpha123_12:1.1
+	alpha123_11:1.1
+	alpha123_10:1.1
+	alpha123_9:1.1
+	alpha123_8:1.1
+	alpha123_7:1.1
+	alpha123_6:1.1
+	alpha123_5:1.1
+	alpha123_4:1.1
+	alpha123_3:1.1
+	alpha123_2:1.1
+	alpha123:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	98.10.01.15.05.37;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE QFGET_CH (IFRUN, IFEVT, ILRUN, ILEVT)
+C-----------------------------------------------------------------------
+CKEY FILL BEAMSPOT / INTERNAL
+C
+C   Author  S. Wasserbaech  2-5-95
+C
+C   Returns first and last event numbers for the chunk containing the
+C   event IRUN/IEVT specified in the previous call to QFGET_BP.  The
+C   outputs are zero if the previous call to QFGET_BP was unsuccessful,
+C   or if Monte Carlo is being analyzed.
+C
+C - Input:
+C   None.
+C
+C - Output:
+C   IFRUN  / I  Run number for first event in chunk
+C   IFEVT  / I  Event number for first event in chunk
+C   ILRUN  / I  Run number for last event in chunk
+C   ILEVT  / I  Event number for last event in chunk.  Notice that this
+C                 does not necessarily correspond to a real event: an
+C                 arbitrary large number may be given if the chunk
+C                 extends to the end of a run.
+C-----------------------------------------------------------------------
+#ifndef DOC
+      COMMON / GETBPCO / IFRUN0, IFEVT0, ILRUN0, ILEVT0,
+     >                   ISETUP0, SIGMAX0
+C-----------------------------------------------------------------------
+      IFRUN = IFRUN0
+      IFEVT = IFEVT0
+      ILRUN = ILRUN0
+      ILEVT = ILEVT0
+C
+      RETURN
+      END
+#endif
+
+@

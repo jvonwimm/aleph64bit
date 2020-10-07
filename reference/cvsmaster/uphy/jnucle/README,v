@@ -1,0 +1,104 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  jnucle_1:1.1.1.1 OSF1:1.1.1;
+locks    ; strict;
+comment  @# @;
+
+
+1.1
+date     96.09.30.13.33.40;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.09.30.13.33.40;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK JNUCLE                                                                      
+C******************************************************************             
+C                                                                               
+C Author: David Rousseau (Marseille)  last update 9 May 1993                    
+C                                                                               
+C ****************************************************************
+C purpose : for a decay B --> D + X where only the D is fully                   
+C reconstructed, the nucleated jet method allows, by adding to                  
+C the the D nearby particles (charged and neutrals),                            
+C to reconstruct the B 4-momentum                                               
+C (most useful quantities : boost P/M and B direction)                          
+C This algorithm has been used for "B lifetime with the J/Psi tag"              
+C Its potentiality for Bs --> Ds + X                                            
+C- are described in minutes of heavy flavour meeting 28.10.92                   
+C ALEPH 92-161   PHYSIC 92-147                                                  
+C                                                                               
+CThe essential parameters of the algorithm are ECUT                             
+C  (minimum energy of a particle to be accepted in the jet)                     
+C and MCUT (Maximum mass of the jet)                                            
+C The current value used are roughly tuned for Bs-->Ds X                        
+C It should give a resolution on (P/M) of about                                 
+C 13 % if no neutrino in X, 16 % if X is anything                               
+Cthe resolution on the B direction is about 20 mrad                             
+C                                                                               
+C(one could cut events with an identified lepton in the hemisphere,             
+Cor big missing energy)                                                         
+C                                                                               
+C- The algorithm is designed to run within ALPHA, but to minimize               
+C interference with other routine and                                           
+C to avoid problem if multiple calls to this routine in the same event,         
+C the main part of the routine is independent of ALPHA: no tracks are           
+C locked neither unlocked, no mass of tracks is changed.                        
+CNo QJOPTR is done.                                                             
+C                                                                               
+C     To avoid including in the jet tracks which already belong                 
+C to the D, it is up to the user to give the corresponding energy               
+C flow track number or CHT track number for charged track.                      
+C                                                                               
+C                                                                               
+C If EFLW or EFLJ card is present Janot Energy Flow is used, PCPA otherwise.    
+C                                                                               
+C                                                                               
+C IF DP(4).le.0 the 4 momentum of the D is calculated from the                  
+C tracks given. If not, the value of DP is used. (This allows the user          
+C to do more complicated calculation of the 4-momentum (Mass constraint,        
+C at vertex, etc...))                                                           
+C                                                                               
+c  INPUT      NTK   INTEGER number of tracks from the D                         
+C             TK    INTEGER(10) array of alpha tracks number (CHT section       
+C                               or energy flow) of input                        
+C                               tracks from D. This array is used to            
+C                               avoid including in the jet tracks which         
+C                               are already included in the D. It is            
+C                               NOT used to calculate D 4 momentum.             
+C             DP   REAL(4)  4-momentum of the D (if DP(4)<=0                    
+C                           this is  calculated form the 4 momenta of           
+C                           tracks in TK)                                       
+C OUTPUT     JNP   REAL(4)  4-momentum of the nucleated jet                     
+C                           If somethng went wrong: set to 0.                   
+C                                                                               
+C call : sets of kinematics calculation functions : JNxxxx                      
+C                                                                               
+C all warning messages should be taken seriously                                
+C**************************************************************************     
+                                                                                
+
+@
+
+
+1.1.1.1
+log
+@import 
+@
+text
+@@

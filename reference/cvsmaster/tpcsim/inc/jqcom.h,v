@@ -1,0 +1,58 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	tpc300_1:1.1.1.1
+	tpc300:1.1.1.1
+	tpc218:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	94.12.09.14.29.50;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.09.14.29.51;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*CD jqcom
+#include "bcs.h"
+      COMMON /NAMCOM/   NARUNH, NAPART, NAEVEH, NAVERT, NAKINE, NAKRUN
+     &                 ,NAKEVH, NAIMPA, NAASEV, NARUNE, NAKLIN, NARUNR
+     &                 ,NAKVOL, NAVOLU
+C
+#if defined(DOC)
+  Standard name-index definition
+
+      NAxxxx                  name-index of bank 'xxxx'
+                              index of bank 'xxxx' is Kxxxx = IW(NAxxxx)
+                              NAxxxx are set to 0 in ASINIT and defined
+                              booking time.
+#endif
+@
+
+
+1.1.1.1
+log
+@import tpcsim 300
+@
+text
+@@

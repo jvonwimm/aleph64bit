@@ -1,0 +1,68 @@
+NREF 9600
+*     RUN #     RUN'S TITLE
+RUN    280      'DFGT - JETSET 7.4'
+*     FIRST EVENT    LAST EVENT    TO BE GENERATED
+TRIG     1            1000
+TIME    100
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG
+DEBU  6     /      1           5
+*    UNIT # / FORMAT
+*FILO 'dfgt.epio | EPIO '
+*HSTO 'dfgt.his' 
+RMAR    20              1
+ENDQ
+KCAR 0 / $TEXT
+POFF
+* BEAM   Beam energy in Gev
+* IPRINT print out flag for PART bank
+*IHISTO 0=delete/1=keep the working histograms 
+*       BEAM  IPRINT  IHISTO
+GENE    86.0    10     1
+*============================
+* Weinberg angle, alpha,  alphas, ISR 
+PASM	0.2320  0.0078120  0.120   1
+*
+* RUSR: basic supersymmetry parameters
+*      m0         mu      M2       tanBeta   A      Rscale
+RUSR   1000.0    -65.0   43.0     1.0       0.0      1.0
+*
+*
+* Control for integration steps of BASES
+*
+*   NCALW : NUMBER OF SAMPLE POINTS PER ITERATION TO CALCULATE THE WIDTH
+*   NCALX : NUMBER OF SAMPLE POINTS PER ITERATION TO CALCULATE THE CROSS
+*            SECTION 
+*   ITM1W : CONTROLS NUMBER OF ITERATIONS FOR GRID OPTIMIZATIONS STEP
+*           INCREASE THESE TWO NUMBERS TO IMPROVE ACCURACY FOR WIDTH 
+*           CALCULATION STEP
+*   ITM1X : CONTROLS NUMBER OF ITERATIONS FOR GRID OPTIMIZATIONS STEP
+*           INCREASE THESE TWO NUMBERS TO IMPROVE ACCURACY FOR CROSS
+*           SECTION CALCULATION STEP
+* 
+*   ITM2W : CONTROLS NUMBER OF ITERATIONS FOR  WIDTH CALC. STEP
+*   ITM2X : CONTROLS NUMBER OF ITERATIONS FOR  CROSS SECTION CALC. STEP
+*   ACC1  : ACCURACY REQUIRED IN STEP 1 ( STOPS IF ACHIEVED ) FOR BOTH
+*            WIDTH AND CROSS SECTION CALC.
+*           EXPRESSED IN UNIT OF PERCENT  
+*   ACC2  : ACCURACY REQUIRED IN STEP 2 ( STOPS IF ACHIEVED ) FOR BOTH
+*            WIDTH AND CROSS SECTION CALC. 
+*           EXPRESSED IN UNIT OF PERCENT
+*     
+*  Increase ITMn(W/X), and NCAL(W/X), and decrease ACCn. to have 
+*  high precision results. Increase ACCn and decrease NCAL(W,X) and ITMn(W/X)
+*  to produce rough but quick results 
+*
+*    NCALW NCALX ITM1W ITM1X ITM2W ITM2X ACC1  ACC2
+GBAS 20000 80000   8     5    10    5    0.2   0.01
+*************************
+*  Select final states
+*  0 == all topology
+*  1 == lepton + lepton      (lepton indicates electron or muon)
+*  2 == lepton + tau or tau + tau
+*  3 == lepton + quarks
+*  4 == tau + quarks
+*  5 == quarks + quarks
+*
+GCHC    0
+**
+END$

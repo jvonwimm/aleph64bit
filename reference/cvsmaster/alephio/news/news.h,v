@@ -1,0 +1,858 @@
+head	1.27;
+access;
+symbols
+	alio83:1.27
+	alio82:1.26
+	alio81:1.25
+	alio80:1.24
+	alio74:1.23
+	alio73:1.21
+	alio72:1.20
+	alio71:1.19
+	alio70:1.18
+	alio68:1.16
+	alio69:1.17
+	alio67:1.15
+	alio66:1.14
+	alio65:1.13
+	alio64:1.12
+	alio63:1.11
+	alio62:1.10
+	alio61:1.9
+	alio60:1.8
+	alephio53:1.4
+	v4:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.27
+date	2001.02.05.09.38.50;	author flr;	state Exp;
+branches;
+next	1.26;
+
+1.26
+date	2000.11.10.12.30.30;	author flr;	state Exp;
+branches;
+next	1.25;
+
+1.25
+date	2000.08.18.13.54.27;	author flr;	state Exp;
+branches;
+next	1.24;
+
+1.24
+date	99.12.03.14.19.42;	author flr;	state Exp;
+branches;
+next	1.23;
+
+1.23
+date	98.12.14.15.02.00;	author flr;	state Exp;
+branches;
+next	1.22;
+
+1.22
+date	98.12.14.08.39.30;	author flr;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	97.11.24.14.51.11;	author flr;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	97.11.14.15.22.09;	author flr;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	97.11.02.13.35.41;	author flr;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	97.06.05.12.42.03;	author flr;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	97.01.29.15.51.30;	author flr;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	97.01.16.13.55.57;	author flr;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	96.10.21.07.38.26;	author flr;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	96.09.03.15.48.52;	author flr;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	96.08.14.12.10.03;	author flr;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	96.07.19.07.05.25;	author flr;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	96.07.15.07.43.28;	author flr;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	96.06.11.09.06.10;	author flr;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	96.05.29.16.35.47;	author flr;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	96.05.08.13.29.44;	author flr;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	96.05.03.14.45.58;	author flr;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	96.04.30.07.08.56;	author flr;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.04.23.10.05.13;	author flr;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.03.13.15.22.45;	author flr;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.03.13.15.01.50;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.01.18.13.51.46;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.52.29;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.52.30;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.27
+log
+@v8r2 - introduce Z tape number for CASTOR
+@
+text
+@C! ALEPH machine dependant code
+   ALE:ALEPHIO.OLB, _D.OLB, .NEWS, ALEPHIO:[*]*.F, [C]*.c, [INC]*.h
+
+   /aleph/src/alephio      ---> $ALROOT/alephio/*
+   alephio is part of alephlib
+   /aleph/lib/libalephlib.a ---> /aleph/gen/libalephlib.a
+   ----------------------------------------------------------------------
+ ! 010205 - ALEPHIO 8.3
+   ASTAGE - introduce "Z"tape number handling for CASTOR (JBO)
+
+   ----------------------------------------------------------------------
+ ! 001110 - ALEPHIO 8.2
+   ACLOSE - do not call BWRND at end of job for EPIO output unit
+            to avoid to call cfrew twice.
+
+   ----------------------------------------------------------------------
+ ! 000818 - ALEPHIO 8.1 
+   ALK7COM - increase the number of segments: maximum number of runs=15000
+   SXSDR   - fix a precision problem on data written on DEC-VAX and read on
+             Linux (J.B.Hansen)
+
+   -----------------------------------------------------------------------
+ ! 991202 - ALEPHIO 8.0  Y2K compliant
+            BECAREFUL - it should be used with ADBSCONS 2000
+   ADBVER - date print format
+   ALVSN  - update IYR to 4 digits.
+   BKRHAL - update IDAY to 4 digits.
+   GTSTUP - year is now 4-digit integer but RUNH is still 2-digit
+   GTYEAR - integer function : returns the year of data taking or the
+            year of the MC geometry.
+
+   ----------------------------------------------------------------------
+ ! 981214 - ALEPHIO 7.4
+   ALK7COM - increase the number of segments: maximum number of runs=12500
+   ALGTENV - replace I_tapes with Y_tapes to get the full name.
+
+   ----------------------------------------------------------------------
+ ! 971124 - ALEPHIO 7.3
+
+   ALK7FIL - enforce "-s 600" and not "-S 600" as it was done in alephio 7.2
+
+   -----------------------------------------------------------------------
+ ! 971114 - ALEPHIO 7.2
+
+   ALK7FIL - enforce -s 600 for DLTs and Redwood if not given.
+
+   ----------------------------------------------------------------------
+ ! 971102 - ALEPHIO 7.1
+   
+   ADSPOS, ASTAGE - 
+           add the variable index in LNBLNK calling sequences (Linux).
+
+   AOPTAP, AWRTAP - 
+           remove -b parameter, keep -L parameter in the staging message.
+
+   BKRAHB -
+           include krunjj.h which was forgotten when switching to CVS.
+
+   -----------------------------------------------------------------------
+ ! 970502 - ALEPHIO 7.0
+
+   GTFTYP - remove the UNIX path name before looking for the file type.
+            on /afs there are 2 "." in the file name :
+            /afs/cern.ch/..../fname.ftyp
+
+   -------------------------------------------------------------------------
+ ! 970117 - ALEPHIO 6.9 this correction is removed
+
+   AOPEN, AOPENW, AOPTAP, AWRTAP
+   on VAX, set EPIO-C flag on: EPIO is calling CFIO package on all platforms.
+
+   ------------------------------------------------------------------------- 
+ ! 961218 - ALEPHIO 6.8
+
+   introduce ALEPH_LINUX to build libraries on Linux operating system
+   to compile under Linux select -DUNIX -DALEPH_LINUX
+
+   ADSPOS, ALSTGQRY, AOPEN, AOPENW, AOPTAP, ASTAGE, AWRTAP - 
+           declare EXTERNAL SYSTEM to please Linux.
+
+   CMPHOST, CTOLOW, CMPBAN, DMPBAN, DMPCHR -
+           add ALEPH_LINUX to ALEPH_DEC so that Linux and DEC use VAX packing.
+
+   ALMACH - add ALEPH_LINUX
+
+   SDRSX, SIBSDR, SXSDR - add ALEPH_LINUX to ALEPH_DEC in floating point
+           converting routines (not used anyway).
+
+   CMPBU3, CMPBU4, DMPBL4 - remove an apostrophe in a C-comment to please
+           Linux C-preprocessor.
+
+   ----------------------------------------------------------------------
+ ! 961021 - ALEPHIO 6.7
+
+   ASTAGE, AWRTAP - on HP UNIX only
+            use the same CERN stager on all UNIX patforms.
+            introduce a ALEPH_OUTSIDE flag to keep the previous code for
+            outside HP machines if they need it.
+            To use the old code, these 2 routines have to be compiled
+            with $FC $FCOPT -I$ALROOT/alephio/inc -DALEPH_OUTSIDE
+ 
+   ---------------------------------------------------------------------
+ ! 960903 - ALEPHIO 6.6
+
+   AWRTAP - on UNIX only,
+            replace '-v' argument with '-V' as in AOPTAP.
+            introduce an #if defined(ALEPH_HP) which was missing.
+
+   ----------------------------------------------------------------------
+ ! 960814 - ALEPHIO 6.5
+
+   AOPTAP - on UNIX only,
+            replace '-v' argument with '-V' : -V is followed by the VID
+            which is given on the FILI card,
+            -v is followed by the VSN which must be specified on the 
+            FILI card if different from the VID.
+
+   ---------------------------------------------------------------------
+ ! 960718 - ALEPHIO 6.4
+
+   ADSPOS, AOPEN, AOPENW, AOPTAP, ASTAGE, AWRTAP - change CALL SYSTEM to
+           IST = SYSTEM( ) and then check IST. If not 0 quit.
+
+   ---------------------------------------------------------------------
+ ! 960715 - ALEPHIO 6.3
+
+   AOPTAP, MYTAPE - cut AOPTAP.F into AOPTAP.F and MYTAPE.F to please
+                    Wisconsin AXP/VMS
+
+   ---------------------------------------------------------------------
+               
+ ! 960611 - ALEPHIO 6.2
+
+   ALSTGQRY - re-introduce this routine which had disappeared !!!
+
+   --------------------------------------------------------------------
+ ! 960529 - ALEPHIO 6.1
+
+   ADBVER, OPENDA - rewrite a WRITE statment to please fpp on alws.
+
+   ----------------------------------------------------------------------
+ ! 960422 - ALEPHIO 6.0
+
+        move ALPH, DBAS, a part of ALEF from ALEPHLIB to ALEPHIO
+        the corresponding include files have been moved as well.
+        a module C which contains the IO C routines is introduced.
+        
+        C-comilation is made with : -DALEPH_C 
+
+        F77-compilation on UNIX machine is made with :
+             -DUNIX -DALEPH_${VENDOR} (VENDOR = DEC SGI HP)
+
+        F77-compilation on AXP/VMS is made with :
+             -DALEPH_DEC         for *.F
+
+        In alph/
+        replace TIMAx by TIMEx subroutine calls in abrrec.F
+
+   -----------------------------------------------------------------------
+ ! 960312 - ALEPHIO 5.3
+
+        Replace flag VAX by DEC.AND..NOT.UNIX
+        rearrange the code to fit this new flag
+        to compile VMS version define DEC
+        to compile a UNIX version define UNIX and DEC (or HP, or SGI)
+
+        In *CD -> ARDNEWS
+   ACLOSE - avoid to call BRWND twice for the same file.
+   ASTAGE, AWRTAP - introduce a flag HP to distinguish between the 
+                    two different stagers.
+
+   ----------------------------------------------------------------------
+ ! 960111 - ALEPHIO 5.2
+        In *CD -> ARDNEWS
+   ALSTGQRY - on UNIX look also on ALWS to find whether a file is staged.
+              BECAREFUL this FUNCTION works at CERN, outside it should be
+              customized to use other stager if necessary.
+              For the moment this FUNCTION is called by LOOK on request,
+              and by DALI when a FILM card contains a CART parameter
+              to request the staging of a file.
+
+   ----------------------------------------------------------------------
+ ! 951128 - ALEPHIO 5.1
+        IN *CD -> ARDNEWS
+   AWRTAP   - change the name of the script 'alstagewrt' to 'alstageout'
+              (UNIX change only).
+   ALSTGQRY - remove options if any
+
+   ---------------------------------------------------------------------
+ ! 950321 - ALEPHIO 5.0
+        In *CD -> ARDNEWS
+   ASTAGE, AWRTAP - to adapt to new stageout script
+   ALSTGQRY - integer function to make a stagequery on VAX or UNIX
+              IER = ALSTGQRY (fname)   i.e. - fname = ab1234.1.sl
+              IER =0 if file is NOT staged, =1 if it is staged
+
+   ---------------------------------------------------------------------
+ ! 940808 - ALEPHIO 4.0
+        In *CD -> IONEWS
+   ALMACH - distinguish between VAX station and AXP.
+
+   --------------------------------------------------------------------------
+ ! 940531 - ALEPHIO 3.0
+            CD IO
+   add following *CD: ADBSJJ, IANDSH, JOBERR.
+   add following *DK: ALMACH, ALTELL, OPENDA, OPENDB, OPENSQ, FPRROW,
+                      SDRSX, SIBSDR, SXSDR, EXIT, JALREC, NOTIMA.
+
+   ---------------------------------------------------------------------
+ ! 940518 - ALEPHIO 2.0
+            CD ARDNEWS
+   AOPTAP - modify the test to distinguish between AB1234.1.SL and AB1234.11.SL
+            AB1234.1.SL is kept as ab1234.epio
+            AB1234.2.SL is kept as ab1234.2.epio
+            AB1234.11.SL is kept as ab1234.11.epio
+
+   ---------------------------------------------------------------------
+ ! 940401 - ALEPHIO 1.0
+
+   1st version of the ALEPH machine dependant code library.
+
+   To facilitate the ALEPHLIB installation the 3 sets which contain machine
+   dependant code have been extracted from ALEPHLIB and put into ALEPHIO.
+
+   ALEPHIO contains the following sets: ALREAD, EPIO, PRESS.
+
+   ALEPHLIB has no more machine dependant code.
+
+   ALEPHIO 1.0 is included into ALEPHLIB 20.0
+   ------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+@
+
+
+1.26
+log
+@ alio8.2 - do not call BRWND in ACLOSE at end of job for epio output unit
+@
+text
+@d8 4
+@
+
+
+1.25
+log
+@v8.1 - increase # of segments in alk7com and fix precision priblem found by J.B.Hansen
+@
+text
+@d8 5
+@
+
+
+1.24
+log
+@alio80 - Y2K compliant
+@
+text
+@d8 6
+d31 1
+a31 2
+   ALK7FIL -
+           enforce "-s 600" and not "-S 600" as it was done in alephio 7.2
+d36 1
+a36 2
+   ALK7FIL -
+           enforce -s 600 for DLTs and Redwood if not given.
+@
+
+
+1.23
+log
+@change I to Y tapes in algtenv
+@
+text
+@d8 10
+@
+
+
+1.22
+log
+@increase number of segments in alk7com to allow 12500 runs
+@
+text
+@d10 1
+@
+
+
+1.21
+log
+@alephio 7.3 enforce -s 600 in alk7fil and not -S 600
+@
+text
+@d8 4
+@
+
+
+1.20
+log
+@alephio 7.2 introduce -s parameter in alk7fil
+@
+text
+@d8 6
+@
+
+
+1.19
+log
+@alephio7.1 mods for redwood and corr in bkrhab
+@
+text
+@d8 6
+@
+
+
+1.18
+log
+@ alephio7.0 remove UNIX directory to get the file type
+@
+text
+@d8 12
+d26 2
+a27 1
+ ! 970117 - ALEPHIO 6.9
+@
+
+
+1.17
+log
+@release alephio69: call cfio on VMS
+@
+text
+@d8 6
+@
+
+
+1.16
+log
+@alephio68 introduce ALEPH_LINUX flag
+@
+text
+@d8 6
+@
+
+
+1.15
+log
+@alephio 6.7 introduce new stager on HP
+@
+text
+@d8 20
+@
+
+
+1.14
+log
+@alephio 6.6
+@
+text
+@d8 10
+@
+
+
+1.13
+log
+@alephio6.5 change -v for -V in aoptap.F
+@
+text
+@d2 1
+a2 2
+   ALE:ALEPHIO.OLB, _D.OLB, .NEWS, ALEPHIO:*.F, *.c, *.h
+   with $define ALEPHIO $2$dkb200:[general_a.ale.alephio]
+d8 7
+d18 1
+a18 1
+            replace '-v' argument by '-V' : -V is followed by the VID
+@
+
+
+1.12
+log
+@replace Call SYSTEM with IST=SYSTEM
+@
+text
+@d9 9
+d21 1
+a21 1
+   IST = SYSTEM( ) and then check IST. If not 0 quit.
+@
+
+
+1.11
+log
+@alephio63 cut aoptap into aoptap and mytape
+@
+text
+@d9 6
+@
+
+
+1.10
+log
+@alephio62 add alstgqry which had disappeared
+@
+text
+@d9 7
+@
+
+
+1.9
+log
+@alephio 6.1 - rewrite WRITE statment in adbver.F and openda.F to please fpp on alws
+@
+text
+@d9 5
+@
+
+
+1.8
+log
+@replace TIMAx by TIMEx in abrrec.F
+@
+text
+@d9 5
+@
+
+
+1.7
+log
+@replace flag ${VENDOR} with ALEPH_${VENDOR}
+Modified Files:
+  ard/	ainqui.F algtenv.F aopen.F aopenw.F aoperd.F aoptap.F astage.F
+ 	awrtap.F
+  pres/	cmpbu3.c cmpbu4.c cmpbu5.c dmpbl3.c dmpbl4.c dmpbl5.c dmpcop.c
+ 	extzv.c insv.c
+  epio/ epinit.F
+  inc/ 	cmphost.h ctolow.h gtchunit.h gtftyp.h
+  io/ 	almach.F openda.F opendb.F opensq.F sdrsx.F sibsdr.F sxsdr.F
+  news/	news.h
+@
+text
+@d23 3
+@
+
+
+1.6
+log
+@alephio is still part of alephlib
+Modified Files:
+	news.h
+@
+text
+@d14 8
+@
+
+
+1.5
+log
+@move alph, dbas, a part of alef and a part of c to alephio
+Modified Files:
+ 	version.h
+ Added Files:
+ 	adbrow.F adbrpn.F adbrun.F adbswp.F adbver.F agetdb.F agtfil.F
+	albos.F aldawr.F aldtyp.F aleveh.F alfind.F alfmt.F algtbk.F
+ 	algtdb.F algtlu.F algtro.F algtyp.F alinst.F alk7fil.F
+ 	alk7fru.F alk7op.F alk7tru.F alredb.F alrune.F alrunh.F
+ 	alrunr.F alseed.F alstho.F alstin.F alstri.F altabl.F alvsn.F
+ 	aopdbs.F aublis.F aubos.F aubprs.F bkcari.F bkinca.F bkrhab.F
+ 	bkrhal.F bkrhaw.F bktobk.F cafiht.F chahol.F dafrds.F gtdbas.F
+ 	gtstup.F igtfmt.F jhocha.F julrec.F junial.F junidb.F
+ 	kbytrec.F loctab.F nameru.F ubpack.F uclean.F uindxs.F usbos.F
+ 	usgtdb.F utcblk.F utccop.F utcofo.F utwocl.F utwoex.F
+Removed Files:
+	noibm.F
+ Modified Files:
+	news.h
+@
+text
+@d6 2
+a7 1
+   /aleph/lib/libalephio.a ---> /aleph/gen/libalephio.a
+d12 1
+a12 1
+        the corresponding include files have been moves as well.
+a13 1
+        The library is no longer into alephlib.
+d87 8
+@
+
+
+1.4
+log
+@update news.h, aclose.F for 5.3 version
+@
+text
+@d2 5
+a6 4
+   ALE:ALEPHIO.HLB, .FOR, .NEWS
+   ALEPHIO OLDLIB GENERA, NEWS GENERA
+   /aleph/src/alephio
+   the library is included into alephlib
+d8 8
+@
+
+
+1.3
+log
+@import alephio 52 from historian. Modify aclose.F to NOT call brwnd twice
+for the same file. update version.h to 5.3
+@
+text
+@d7 14
+a20 1
+ ! 960111 - ALEPHIO5.2
+@
+
+
+1.2
+log
+@ Modified Files:
+	acdarg.F afilin.F afilou.F ainqui.F amount.F aoptap.F astage.F
+	awrtap.F
+ Modified Files:
+	cmphost.h ctolow.h gtchdecl.h version.h
+ Removed Files:
+	albitw.h
+ Modified Files:
+ 	altell.F babend.F jalrec.F noibm.F opensq.F sdrsx.F sibsdr.F
+	sxsdr.F
+ Modified Files:
+	ardnews.h news.h
+@
+text
+@d1 4
+a4 5
+*CD NEWS
+C! ALEPH machine dependant code 
+   ALE:ALEPHIO.HLB, .FOR, .NEWS 
+   ALEPHIO OLDLIB GENERA, NEWS GENERA   
+   /aleph/src/alephio   
+d6 6
+a11 6
+   ----------------------------------------------------------------------   
+ ! 960111 - ALEPHIO5.2  
+        In *CD -> ARDNEWS   
+   ALSTGQRY - on UNIX look also on ALWS to find whether a file is staged.   
+              BECAREFUL this FUNCTION works at CERN, outside it should be   
+              customized to use other stager if necessary.  
+d14 5
+a18 5
+              to request the staging of a file. 
+    
+   ----------------------------------------------------------------------   
+ ! 951128 - ALEPHIO 5.1 
+        IN *CD -> ARDNEWS   
+d20 3
+a22 3
+              (UNIX change only).   
+   ALSTGQRY - remove options if any 
+    
+d24 7
+a30 7
+ ! 950321 - ALEPHIO 5.0 
+        In *CD -> ARDNEWS   
+   ASTAGE, AWRTAP - to adapt to new stageout script 
+   ALSTGQRY - integer function to make a stagequery on VAX or UNIX  
+              IER = ALSTGQRY (fname)   i.e. - fname = ab1234.1.sl   
+              IER =0 if file is NOT staged, =1 if it is staged  
+    
+d32 1
+a32 1
+ ! 940808 - ALEPHIO 4.0 
+d35 8
+a42 8
+    
+   --------------------------------------------------------------------------   
+ ! 940531 - ALEPHIO 3.0 
+            CD IO   
+   add following *CD: ADBSJJ, IANDSH, JOBERR.   
+   add following *DK: ALMACH, ALTELL, OPENDA, OPENDB, OPENSQ, FPRROW,   
+                      SDRSX, SIBSDR, SXSDR, EXIT, JALREC, NOTIMA.   
+    
+d44 4
+a47 4
+ ! 940518 - ALEPHIO 2.0 
+            CD ARDNEWS  
+   AOPTAP - modify the test to distinguish between AB1234.1.SL and AB1234.11.SL 
+            AB1234.1.SL is kept as ab1234.epio  
+d49 2
+a50 2
+            AB1234.11.SL is kept as ab1234.11.epio  
+    
+d52 7
+a58 7
+ ! 940401 - ALEPHIO 1.0 
+    
+   1st version of the ALEPH machine dependant code library. 
+    
+   To facilitate the ALEPHLIB installation the 3 sets which contain machine 
+   dependant code have been extracted from ALEPHLIB and put into ALEPHIO.   
+    
+d60 5
+a64 5
+    
+   ALEPHLIB has no more machine dependant code. 
+    
+   ALEPHIO 1.0 is included into ALEPHLIB 20.0   
+   ------------------------------------------------------------------------ 
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 5
+a5 5
+*CD news
+C! ALEPH machine dependant code
+   ALE:ALEPHIO.HLB, .FOR, .NEWS
+   ALEPHIO OLDLIB GENERA, NEWS GENERA
+   /aleph/src/alephio
+d7 27
+a33 2
+   ----------------------------------------------------------------------
+ ! 940808 - ALEPHIO 4.0
+d36 8
+a43 8
+
+   --------------------------------------------------------------------------
+ ! 940531 - ALEPHIO 3.0
+            CD IO
+   add following *CD: ADBSJJ, IANDSH, JOBERR.
+   add following *DK: ALMACH, ALTELL, OPENDA, OPENDB, OPENSQ, FPRROW,
+                      SDRSX, SIBSDR, SXSDR, EXIT, JALREC, NOTIMA.
+
+d45 4
+a48 4
+ ! 940518 - ALEPHIO 2.0
+            CD ARDNEWS
+   AOPTAP - modify the test to distinguish between AB1234.1.SL and AB1234.11.SL
+            AB1234.1.SL is kept as ab1234.epio
+d50 2
+a51 2
+            AB1234.11.SL is kept as ab1234.11.epio
+
+d53 7
+a59 7
+ ! 940401 - ALEPHIO 1.0
+
+   1st version of the ALEPH machine dependant code library.
+
+   To facilitate the ALEPHLIB installation the 3 sets which contain machine
+   dependant code have been extracted from ALEPHLIB and put into ALEPHIO.
+
+d61 5
+a65 5
+
+   ALEPHLIB has no more machine dependant code.
+
+   ALEPHIO 1.0 is included into ALEPHLIB 20.0
+   ------------------------------------------------------------------------
+@
+
+
+1.1.1.1
+log
+@import alephio 4
+@
+text
+@@

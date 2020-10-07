@@ -1,0 +1,89 @@
+NREF 9700
+*
+* ALEPH PRODUCTION CARDS file for PHOJ01 generator
+*
+* 3rd number : evts kept after rejection
+TRIG 1 1000  2000
+* Smearing of the vertex position
+SVRT     .010  .0015       0.066
+*  events to be debugged
+DEBU 6 / 1 2
+RMAR 1 123
+ENDQ
+KCAR 0 / $TEXT
+POFF
+*
+* PDFL card allows you to select a different Parton Distribution Function
+*  for a given particle, defined by its Particle Data Group code.
+* The meaning of IPAR,ISET,and IEXT are given in PHOJET manual
+*
+* PDFL           IDPDG IPAR ISET IEXT
+*
+* IDPDG = 22 : photon
+* IPAR ISET IEXT
+*  5    1    0        GRV-G LH
+*  5    2    0        GRV-G HO
+*  5    3    0        GRV-G LO
+*  1    1    4        SaS 1D
+*  1    2    4        SaS 1M
+*  1    3    4        SaS 2D
+*  1    4    4        SaS 2M
+*PDFL 22 / 1 1 4
+*
+* the default is to generate all process types, but
+* with PROC card one can select type 1 to 11, 1= on, 0 = off
+*
+* PROC      I1 - I11
+*
+* ETG1  EEMIN1 THMIN1 THMAX1
+* this card controls the selection applied to electron 1
+ETG1   20.0 0.030 3.1116
+* ETG2  EEMIN2 THMIN2 THMAX2
+* this card controls the selection applied to electron 1
+ETG2   20.0 0.030 3.1116
+*
+* If an electron has energy greater than EEMIN . and THMIN1 > Theta > THMAX
+* then the event is regarded as TAGGED and the event is rejected
+* ( this program only deals with ANTI-TAGGED events )
+*
+* GCON EBEAM WMIN WMAX
+*
+* GCON is the overall control of beam energy,
+*       and cuts on W of final state
+*
+GCON    91.5 2.5
+*  apply standard ALEPH selection 
+* isel: call standard selection 1=on/0=off
+* nsav: >0 keep 1 failed event every nsav event for control, 0= keep none
+* nch : select event with at least nch charged track satisfying next 2 cuts 
+* pcut: min momentum for charged tracks to be considered
+* cost: max cost of charged track to be considered
+*    isel  nsav nch  pcut   cost
+*GSTD    1   50   1    0.2   0.95 ! keep 1 reject every 50
+GSTD    1   0   1    0.2   0.95   ! do not keep any rejected event
+*
+* MODEL parameters ISWMDL, AND PARMDL
+* can be set by cards IMDL, and PMDL
+*
+* PMDL n / VAL
+PMDL 110 / 0.55  ! reduce scale for resolved events, thus increasing rate
+* pmdl 36 - 39 are 4 PT cuts which phojet allows you to set
+*   see phojet manual for details
+* only the first one has any effect!
+PMDL 36 / 2.0
+* IMDL n / IVAL
+IMDL 3 / 1                        ! SOFT PT 0 = GAUSSIAN
+IMDL 4 / 0                        ! SOFT PT 0 = GAUSSIAN
+PMDL 23 / 10.0 ! CONTROLLING PARAMETER FOR GAUSSIAN SOFT PT
+*                   PHOJET  default is 2.5
+PMDL 21 / 1.7
+PMDL 22 / 1.0
+*
+* LUND control parameters
+*
+PARJ 21 / 0.320         ! SIGMA MT
+PARJ 23 / 0.05          ! non gaussian tail
+PARJ 41 / 0.44          ! a          was .5  smaller a => harder
+PARJ 42 / 0.9           ! B          was .77 smaller b = > softer
+*                      LUND defaults... 0.58
+END$

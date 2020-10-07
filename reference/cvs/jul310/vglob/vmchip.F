@@ -1,0 +1,479 @@
+      SUBROUTINE VMCHIP(FIELD,ITRK)
+C-------------------------------------------------------------
+C!Calculate one-pass Kalman chisquared for full VDET combinations
+CKEY VGLOB VDET TRACK
+C
+C  Author      : P. Rensing  27-3-95
+C
+C This routine takes as input the existing VMUC and VMWC banks for a
+C     track, and computes the Kalman chi^2 for all permutations, using
+C     the special VDET pattern recognition mode of the Kalman
+C     filter. Some cuts are made on the number of hits assigned to
+C     reduce backgrounds. The list of acceptable combinations is then
+C     trimmed to a reasonable number.
+C
+C  INPUTS:
+C    REAL FIELD          = Magnetic field
+C    INTEGER ITRK        = FRFT track row
+C    bank VMUC and VMWC (num=itrk)
+C 
+C  OUTPUTS:
+C    VM5C bank (NR=itrk)
+C
+C-------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+C
+C subroutine arguments
+C
+      REAL FIELD
+      INTEGER ITRK
+C
+C  Global includes
+C
+#include "bcs.h"
+#include "vglbcm.h"
+C
+#include "vmucjj.h"
+#include "vmwcjj.h"
+#include "vm5cjj.h"
+#include "tpcojj.h"
+#include "iccojj.h"
+#include "frftjj.h"
+#include "frtljj.h"
+#include "ftcljj.h"
+#include "ficljj.h"
+C
+C  Function calls
+C
+      INTEGER NLINK,NBANK,NAMIND,UFTKAL,UFVDIN,UFVDOU
+      EXTERNAL NLINK,NBANK,NAMIND,UFTKAL,UFVDIN,UFVDOU
+C
+C  Local variables
+C
+      INTEGER MAXHIT
+      PARAMETER (MAXHIT = 40)
+      integer MAXROWOUT
+      parameter (MAXROWOUT = 200)
+C
+C "max" difference between sum of simple chi^2s and kalman chi^2
+C
+      real DELCHIS
+      parameter (DELCHIS = 20.0)
+C
+C "max" difference between one-pass kalman chi^2 and iterated kalman chi^2
+C
+      real DELCHIP
+      parameter (DELCHIP = 10.0)
+C
+      INTEGER namTPCO, namFTCL, namFRTL, namFRFT, namICCO, namFICL
+      INTEGER indTPCO, indFTCL, indFRTL, indFRFT, indICCO, indFICL
+      INTEGER NTPC, NPTS, NITC, NITCuse
+      INTEGER icol, row, offset
+      integer indVMUC, indVMWC, indVM5C
+      integer rowVMUC, rowVMWC
+      INTEGER NVDET, WAFER(NLAYER*NGRK*NVIEW), uHit, wHit
+      INTEGER point
+      INTEGER NDOF, NVDOUT
+      REAL RHO(MAXHIT), RPH(MAXHIT), ZED(MAXHIT)
+      REAL SIGRPH(MAXHIT), SIGZED(MAXHIT), SIGCOR(MAXHIT)
+      REAL TPAR(6), TCOV(21), CHI2
+      REAL VUW(3), XYZ(3)
+      REAL CHI2TP
+      REAL maxChi, worst
+      real uCoord(NLAYER*NGRK*NVIEW), wCoord(NLAYER*NGRK*NVIEW)
+      real uph, wph
+      integer hits(NLAYER*NGRK*NVIEW)
+      logical goodMatch
+      integer nwhits, nuhits, n3dhits, nwafhit, nnullhits
+      LOGICAL BLANK(NLAYER*NGRK*NVIEW)
+      integer NComb
+      real kalChi, obj
+      integer chiRow, nullRow, nullChiRow
+      real nullChiCut
+      real penalties
+      integer n1vhits
+      integer rc, igarb
+      integer ndoftpc
+      real simpleChi
+      integer ucols(NLAYER*NVIEW)
+      INTEGER IRET
+C
+      SAVE namTPCO, namFTCL, namFRTL, namFRFT, namICCO, namFICL
+C
+#include "bmacrod.h"
+C
+C  Data statements
+C
+      DATA namFRFT/0/
+C
+C  Inline functions
+C
+#include "bmacro.h"
+C
+C  First time through, find the name indicies
+C
+      IF ( namFRFT .LE. 0 ) THEN
+        namFRFT = NAMIND('FRFT')
+        namFRTL = NAMIND('FRTL')
+        namTPCO = NAMIND('TPCO')
+        namFTCL = NAMIND('FTCL')
+        namICCO = NAMIND('ICCO')
+        namFICL = NAMIND('FICL')
+      END IF
+C
+      maxchi = 1.0e6
+      NComb = 0
+C
+C  Find the track banks
+C
+      indTPCO = IW(namTPCO)
+      indFTCL = IW(namFTCL)
+      indFRTL = IW(namFRTL)
+      indFRFT = IW(namFRFT)
+      IF (indTPCO .LE. 0 .OR. indFTCL .LE. 0 .OR.
+     $     indFRTL .LE. 0 .OR. indFRFT .LE. 0) THEN
+        CALL RERROR('VMCHIP',-1,' Cannot find track bank(s)')
+        GOTO 999
+      END IF
+C
+C  Find the VM(U,W)C bank
+C
+      IndVMUC = NLINK('VMUC',ITRK)
+      IndVMWC = NLINK('VMWC',ITRK)
+      IF (IndVMUC .le. 0 .or. IndVMWC .le. 0) THEN
+         CALL RERROR('VMCHIP',-2,' Cannot find VMUC or VMWC bank')
+        GOTO 999
+      END IF
+C
+C Create the output bank
+C
+      indVM5C = NBANK('VM5C', ITrk, LMHLEN + MAXROWOUT*LVM5CA)
+      If (indVM5C .le. 0) then
+         call rerror('VMCHIP', -3,' Out of memory')
+         goto 999
+      end if
+      iw(indVM5C + LMHCOL) = LVM5CA
+      iw(indVM5C + LMHROW) = 0
+C
+C  First, refit the track using the TPC coordinates only;
+C  Unpack the coordinates in order of DESCENDING radius
+C
+      NTPC = ITABL(indFRTL,ITRK,JFRTNT)
+      offset = ITABL(indFRTL,ITRK,JFRTIT) + NTPC
+      DO row = 1, NTPC
+         point = KROW(indTPCO, ITABL(indFTCL, offset - row + 1, JFTCIT))
+         RHO(row) = RW(point + JTPCRV)
+         RPH(row) = RW(point + JTPCPH) * RHO(row)
+         ZED(row) = RW(point + JTPCZV)
+         SIGRPH(row) = RW(point + JTPCSR)
+         SIGZED(row) = RW(point + JTPCSZ)
+         SIGCOR(row) = 0.0
+      END DO
+      NPTS = NTPC
+C
+      NITC = 0
+      IF (USEITC) THEN
+         indICCO = IW(namICCO)
+         indFICL = IW(namFICL)
+         IF ( indICCO .GT. 0 .and. indFICL .gt. 0 ) THEN
+            NITC = ITABL(indFRTL, ITRK, JFRTNI)
+            NITCuse = 0
+            offset = ITABL(indFRTL, ITRK, JFRTII)
+            DO row = 1, NITC
+               point = KROW(indICCO,
+     $              ABS(ITABL(indFICL, offset + row, JFICII)))
+               IF ( RW(point + JICCRV) .gt. 0) THEN
+                NITCuse = NITCuse + 1
+                RHO(NPTS+NITCuse) = RW(point + JICCRV)
+                RPH(NPTS+NITCuse) = RW(point + JICCPH) 
+     $              * RHO(NPTS+NITCuse)
+                ZED(NPTS+NITCuse) = RW(point + JICCZV)
+                SIGRPH(NPTS+NITCuse) = RW(point + JICCSR)
+                SIGZED(NPTS+NITCuse) = RW(point + JICCSZ)
+                SIGCOR(NPTS+NITCuse) = 0.0
+               ENDIF
+            end do
+         END IF
+      ENDIF
+      NPTS = NPTS + NITCuse
+C
+C  Now the fit.  No update of the MS is needed as there are no
+C  VDET hits yet.  Note that we have to make the VDET pat rec calls
+C  to prepare the Kalman for the VDET patterns following.
+C
+C chi2 is not set by Kalman Filter when ISAFVD=1 unless there is an error
+C
+      CHI2 = RTABL(indFRFT, ITRK, JFRFC2)
+      CALL VDMSUP2(ITRK,0, WAFER,uCoord,wCoord, IGARB)
+      iret = UFVDIN(0,1,0)
+      rc = UFTKAL(FIELD,NPTS,RHO,RPH,ZED,SIGRPH,SIGZED,SIGCOR,
+     &     RW(KROW(indFRFT,ITRK)+JFRFIR), CHI2,
+     &     TPar,TCov,CHI2,NDOF)
+      IF (rc .ne. 0) THEN
+         call RERROR('UFTKAL',rc,'Kalman Filter error')
+         GOTO 999
+      END IF
+      iret = UFVDOU(NVDET,CHI2TP)
+C
+C  Loop over the entries in the VM(U,W)C bank
+C
+      Do rowVMUC = 1, LROWS(IndVMUC)
+         Do rowVMWC = 1, LROWS(IndVMWC)
+C
+C Produce a well-order list of the hits, checking for feasibility
+C
+            call vgcmbv(IW(KROW(indVMWC,rowVMWC)+JVMWHW+1),
+     $           IW(KROW(indVMUC,rowVMUC)+JVMUHW+1), hits, ucols,
+     $           goodMatch)
+            if (.not. goodMatch) goto 1500
+C
+C count various types of hits
+C
+            nwhits = 0
+            nuhits = 0
+            n3dhits = 0
+            nwafhit = 0
+            nnullhits = 0
+            do icol = 1, 8, 2
+               if ( hits(icol) .gt. 0 ) then
+                  nwhits = nwhits + 1
+                  if (hits(icol+1) .gt. 0) then
+                     n3dhits = n3dhits + 1
+                  end if
+               else if (hits(icol) .lt. 0) then
+                  nnullhits = nnullhits + 1
+               end if
+C
+               if ( hits(icol+1) .gt. 0 ) then
+                  nuhits = nuhits + 1
+               else if (hits(icol+1) .lt. 0) then
+                  nnullhits = nnullhits + 1
+               end if
+C
+               if ( hits(icol) .ne. 0 .or. hits(icol+1) .ne. 0) then
+                  nwafhit = nwafhit + 1
+               end if
+            end do
+            n1vhits = nUHits + nWHits - 2*n3dhits
+C
+C compute the penalties that will be applied
+C
+            penalties = nnullhits*CHINUL + n1vhits*ONEDPEN
+            simplechi = RTABL(indVMUC,rowVMUC,JVMUCK) +
+     $           RTABL(indVMWC,rowVMWC,JVMWCK)
+C
+C if the pattern of hits does not satisfy some requirements, remove it.
+C Do not cut on the "no hit" pattern.
+C
+            if ((nwhits+nuhits) .gt. 0) then
+               if (nwafhit .gt. 1 .and.
+     $              (nwhits+nuhits) .eq. 1) goto 1500
+               if (nwafhit .gt. 2 .and. n3dhits .eq. 0) goto 1500
+C               if (nitc .EQ. 0 .and. n3dhits .le. 0
+C     $              .and. MAX(nuhits,nwhits) .le. 1) goto 1500
+               if (penalties + MAX(0.0,simpleChi - DELCHIS)
+     $              .gt. maxChi) goto 1500
+            end if
+C
+C  Unpack any real hits. Do not bother sorting; UFTKAL does it anyway.
+C
+            nvdet = 0
+            do icol = 1, 8, 2
+               if (hits(icol) .gt. 0 .or. hits(icol+1) .gt. 0) then
+                  nvdet = nvdet + 1
+C
+C Unpack the wafer and hit numbers
+C
+                  if (hits(icol+1) .gt. 0) then
+                     CALL VHUPCK(hits(icol+1), WAFER(NVDET), uHit)
+                  else
+                     uHit = 0
+                  end if
+                  if (hits(icol) .gt. 0) then
+                     CALL VHUPCK(hits(icol), WAFER(NVDET), wHit)
+                  else
+                     wHit = 0   
+                  end if
+C
+C  Convert these to Kalman coordinates
+C
+                  call vkaerr(itrk, wafer(NVDet), wHit, uHit, 
+     $                 vuw, xyz, SIGRPH(NPTS+NVDET),
+     $                 SIGZED(NPTS+NVDET), wph, uph)
+                  RHO(NPTS+NVDET) = sqrt(xyz(1)**2 + xyz(2)**2)
+                  RPH(NPTS+NVDET) = RHO(NPTS+NVDET) *
+     $                 atan2( xyz(2), xyz(1) )
+                  ZED(NPTS+NVDET) = xyz(3)
+                  SIGCOR(NPTS+NVDET) = 0.0
+C
+                  uCoord(NVDet) = vuw(2)
+                  wCoord(NVDet) = vuw(3)
+               end if
+            end do
+C
+C  Kalman chisquared for this combination
+C
+            IF (NVDET .NE. 0) THEN
+C
+C Prepare the computation of MS in the VDet as defined by the set of
+C     hits/wafers that the track intersects.
+C
+               CALL VDMSUP2(ITRK,NVDET,WAFER,uCoord,wCoord, IGARB)
+C
+               CHI2 = Chi2TP
+               iret = UFVDIN(NVDET,1,1)
+               RC = UFTKAL(FIELD,NPTS+NVDET,RHO,RPH,ZED,SIGRPH,
+     $              SIGZED,SIGCOR, 
+     &              RW(KROW(indFRFT,ITRK)+JFRFIR), CHI2,
+     &              TPAR,TCOV,CHI2,NDOF)
+               iret = UFVDOU(NVDOUT,CHI2)
+               if (RC .ne. 0 .or.
+     $              nvdout .ne. nuhits+nwhits ) goto 1500
+C
+               kalChi = chi2 - chi2tp
+C protect against rounding error               
+               if (kalChi .lt. 1.0e-4) kalchi = 1.0e-4
+            else
+               kalchi = 0.0
+            endif
+C
+C cut on total chi^2
+C
+            obj = kalChi + penalties
+            if (obj .gt. MaxChi .and. (nUHits+nWHits).gt.0) goto 1500
+C
+C Passed all cuts. Store the combination.
+C
+            if (LFRROW(indVM5C) .gt. 0) then
+               point = KNEXT(indVM5C)
+               IW(indVM5C + LMHROW) = IW(indVM5C + LMHROW) + 1
+            else
+               worst = 0.0
+               do row = 1, LROWS(indVM5C)
+                  if (RTABL(indVM5C,row,JVM5CP) .gt. worst) then
+                     point = KROW(indVM5C,row)
+                     worst = RW(point + JVM5CP)
+                  end if
+               end do
+            end if
+            RW(point + JVM5CK) = kalChi 
+            RW(point + JVM5CP) = obj
+            do icol = 0, 7, 2
+               IW(point + JVM5HW + icol) = hits(icol+1)
+               IW(point + JVM5HW + icol+1) = hits(icol+2)
+               RW(point + JVM5PH + icol) =
+     $              RTABL(indVMWC,rowVMWC,JVMWPH + icol/2)
+               RW(point + JVM5PH + icol+1) =
+     $              RTABL(indVMUC,rowVMUC,JVMUPH + ucols(icol/2+1)-1)
+            end do
+C
+C combination stored
+C
+            if (obj+MAXCHIK+DELCHIP .lt. maxChi) then
+               maxChi = obj + MAXCHIK + DELCHIP
+            end if
+C
+C end of loops over rows in VMUC, VMWC banks
+C
+ 1500       continue
+         end do
+      END DO
+C
+C  sort the VM5C bank according to the full chisquared; note that
+C  this preserves the column structure
+C
+      IF (LROWS(indVM5C) .gt. 1) THEN
+         CALL SORTRQ(RW(indVM5C+LMHLEN+1),LCOLS(indVM5C),
+     $        LROWS(indVM5C),JVM5CP)
+      END IF
+      maxChi = RTABL(indVM5C,1,JVM5CP) + MAXCHIK + DELCHIP
+C 
+C Cut the list. The cut criteria is BESTCHI+MAXCHIK or the "no hit"
+C     solution, which ever is lower, but we must add slop of DELCHIP to
+C     both limits. Also, make sure the "no hit" solution is always in
+C     the list.
+C
+      NComb = LROWS(indVM5C)
+      chiRow = -1
+      nullRow = 0
+      nullChiRow = -1
+      nullChiCut = 1.0e6
+      do row = 1, NComb
+         if (RTABL(indVM5C,row,JVM5CP) .gt. maxChi
+     $        .and. chiRow .lt. 0) then
+            chiRow = row - 1
+         end if
+         if (RTABL(indVM5C,row,JVM5CP) .gt. nullChiCut
+     $        .and. nullChiRow .lt. 0) then
+            nullChiRow = row - 1
+         end if
+
+         DO icol = 0, 7
+            IF (ITABL(indVM5C,row,JVM5HW+icol) .GT. 0) goto 54
+         END DO
+         nullRow = row
+         nullChiCut = RTABL(indVM5C,row,JVM5CP) + DELCHIP
+ 54      continue
+      end do
+C
+      if (chiRow .gt. 0) NComb = min(NComb, chiRow)
+      if (nullChiRow .gt. 0) NComb = min(NComb, nullChiRow)
+C
+C if the "no hit" solution is past the end of the list, copy it to the
+C     end.
+C
+      if (nullRow .gt. NComb) then
+         NComb = MIN(NComb+1, MAXROWOUT)
+         call ucopy(IW(KROW(indVM5C,nullRow)+1),
+     $        IW(KROW(indVM5C,NComb)+1), LCOLS(indVM5C) )
+      end if
+C
+C Done. clean up and return
+C
+ 999  CONTINUE
+C
+C Put the Kalman accuracy back to normal
+C
+      iret = UFVDIN(0,0,0)
+C
+C Remake the VM5C bank to size
+C
+      IF (NComb .GT. 0) THEN
+         indVM5C = NBANK('VM5C',ITRK,LMHLEN + LCOLS(indVM5C)*NComb)
+         IW(indVM5C + LMHROW) = NComb
+C
+C Reset the blank column flags for the final association
+C
+         DO icol = 1, 8
+            BLANK(icol) = .TRUE.
+         END DO
+         DO row = 1, NComb
+            DO icol = 1, 8
+               IF (ITABL(indVM5C,row,JVM5HW+icol-1) .gt. 0)
+     $              BLANK(icol) = .FALSE.
+            END DO
+         END DO
+C
+C only clear the overlap hit columns
+C
+         DO icol = 3, 8, 4
+            IF (BLANK(icol) .and. BLANK(icol+1)) then
+               DO row = 1, NComb
+                  IW(KROW(indVM5C,row)+JVM5HW+icol-1) = 0
+                  IW(KROW(indVM5C,row)+JVM5HW+icol) = 0
+               END DO
+            end if
+         END DO
+      ELSE
+         call rerror('VMCHIP',5,' No combinations for a track')
+         if (indVM5C .gt. 0) then
+            indVM5C = NBANK('VM5C',ITRK,LMHLEN + LCOLS(indVM5C))
+            IW(indVM5C + LMHROW) = 1
+            CALL VZERO(RW(indVM5C + LMHLEN + 1), LCOLS(indVM5C))
+         end if
+      END IF
+C
+      RETURN
+      END
+#endif

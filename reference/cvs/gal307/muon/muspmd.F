@@ -1,0 +1,188 @@
+*DK muspmd
+      SUBROUTINE MUSPMD(XLOC,IOUFG)
+C
+C*******************************************************************************
+C
+C T.Wang - 860728
+C
+C
+C             modified for DAF and new bank layout
+C             by F.Bossi,D.Kuhn,R.Xu 87-09-28
+C           - modified for final dbase
+C             by A. Antonelli, F. Bossi 1 July 89
+C
+C! find if the track element is in a special module
+C     and change the geometric and readout constants.
+C
+C     Called by MUSTRM        in this .HLB
+C
+C*******************************************************************************
+#ifndef DOC
+      SAVE
+C
+#include "bcs.h"
+#include "trkcom.h"
+#include "munamc.h"
+#include "mjjpar.h"
+#include "mugncn.h"
+#include "musgcn.h"
+      REAL XLOC(3)
+      EXTERNAL MUNSTA
+#include "bmacro.h"
+C
+#include "muiwna.h"
+C
+      IOUFG = 0
+      NSLOT = ITRKEL(10)
+C
+C       Only the barrel modules 4, 9, and middle angle 4 are special
+C
+      IF( .NOT. ((TRKVOL.EQ.'MUB1').OR.(TRKVOL.EQ.'MUB2')) ) GOTO 900
+      IF( .NOT. ((NSLOT.EQ.4) .OR. (NSLOT.EQ.9) .OR.
+     *           (NSLOT.EQ.11)) ) GOTO 900
+C
+      IF( TRKVOL .EQ. 'MUB1' )THEN
+         INDMD = 0
+         INDSL = 0
+      ELSE
+         INDMD = 4
+         INDSL = 17
+      ENDIF
+C
+C       For top module, use X coordinate to define in which special
+C       module the track element is, for bottom ones, use Y.
+C
+      IF( NSLOT .EQ. 4 )THEN
+        OLDWD = 0.5*RTABL(JMBTG,INDMD+1,JMBTRB)
+      WDMDMU = 0.5*RTABL(JMBTG,INDMD+4,JMBTRB)
+      RX = RTABL(JMBTG,INDMD+4,JMBTRT)
+      RY1 = RTABL(JMBTG,INDMD+4,JMBTZT)
+      RY = XLMDMU - RY1
+      XLOW = RTABL(JMBSG,INDSL+4,JMBSDE)
+      XHGH = RTABL(JMBSG,INDSL+5,JMBSDE)
+        X1 = - OLDWD + 2.*WDMDMU - RX
+        X2 = OLDWD + 2.*XLOW
+        X3 = 2.*XHGH - OLDWD
+        X4 = OLDWD - 2.*WDMDMU + RX
+        X = XLOC(1)
+        ABSY = ABS(XLOC(2))
+        INDPS = INDMD + 4
+        RDIF = WDMDMU - RX
+        NYSTMU = ITABL(JMBTG,INDPS,JMBTY1)
+        OFSTMU = 0.
+        IF( X .LE. X2 )THEN
+          IF( (X.GT.X1) .AND. (ABSY.GT.RY) )GOTO 999
+          IF(XLOC(1).GT.X1)THEN
+               NYSTMU = ITABL(JMBTG,INDPS,JMBTY2)
+               OFSTMU = RY1
+          ENDIF
+          XLOC(1) = XLOC(1) - XLOW
+          IEMMU = INDSL+4
+        ELSE IF( X .GE. X3 )THEN
+          IF( (X.LT.X4) .AND. (ABSY.GT.RY) )GOTO 999
+          IF(XLOC(1).LT.X4) THEN
+               NYSTMU = ITABL(JMBTG,INDPS,JMBTY2)
+               OFSTMU = RY1
+           ENDIF
+          XLOC(1) = XLOC(1) - XHGH
+          IEMMU = INDSL+5
+        ELSE
+          GOTO 999
+        ENDIF
+        XLEIMU = FLOAT(NYSTMU)*PTYSMU + OFSTMU
+      ELSE
+        IF( NSLOT .EQ. 9 )THEN
+           IROW = 9
+        ELSE
+           IROW = 13
+        ENDIF
+      NMROW = INDSL + IROW
+      XLCNT = 0.5*RTABL(JMBTG,INDMD+3,JMBTZB)
+      XLSID = 0.5*RTABL(JMBTG,INDMD+2,JMBTZB)
+      RTOO = RTABL(JMBTG,INDMD+2,JMBTRT)
+      ZTOO = RTABL(JMBTG,INDMD+2,JMBTZT)
+      YMDL = RTABL(JMBSG,NMROW+2,JMBSZC)
+      YLOW = RTABL(JMBSG,NMROW+3,JMBSZC)
+      YHGH = RTABL(JMBSG,NMROW+1,JMBSZC)
+        Y0 = YLOW + XLSID - ZTOO
+        Y1 = YLOW + XLSID
+        Y2 = YMDL - XLCNT
+        Y3 = YMDL + XLCNT
+        Y4 = YHGH - XLSID
+        Y5 = YHGH - XLSID + ZTOO
+        Y = XLOC(2)
+        X = XLOC(1) + WDMDMU
+C
+        IF(NSLOT.EQ.9)THEN
+            XTOO = RTOO
+        ELSE
+            XTOO = 2.*WDMDMU - RTOO
+        ENDIF
+C
+        IF( Y .LE. Y1 )THEN
+          IF(Y .GE. Y0 )THEN
+           IF(NSLOT.EQ.9.AND.X.LE.XTOO) GO TO 999
+           IF(NSLOT.EQ.11.AND.X.GE.XTOO) GO TO 999
+          ENDIF
+          XLOC(2) = Y - YLOW
+          INDPS = INDMD + 2
+          NYSTMU = ITABL(JMBTG,INDPS,JMBTY1)
+          IEMMU = NMROW + 3
+          XLMDMU = XLSID
+        ELSE IF( Y .LT. Y2 )THEN
+          GOTO 999
+        ELSE IF( Y .LE. Y3 )THEN
+          XLOC(2) = Y - YMDL
+          INDPS = INDMD + 3
+          NYSTMU = ITABL(JMBTG,INDPS,JMBTY1)
+          IEMMU = NMROW + 2
+          XLMDMU = XLCNT
+        ELSE IF( Y .LT. Y4 )THEN
+          GOTO 999
+        ELSE
+          IF(Y .LE. Y5 ) THEN
+            IF(NSLOT.EQ.9.AND.X.LE.XTOO) GO TO 999
+            IF(NSLOT.EQ.11.AND.X.GE.XTOO) GO TO 999
+          END IF
+          XLOC(2) = Y - YHGH
+          INDPS = INDMD + 2
+          NYSTMU = ITABL(JMBTG,INDPS,JMBTY1)
+          IF(NSLOT.EQ.9.AND.X.LE.XTOO) NYSTMU =
+     +                     ITABL(JMBTG,INDPS,JMBTY2)
+          IF(NSLOT.EQ.11.AND.X.GE.XTOO) NYSTMU =
+     +                     ITABL(JMBTG,INDPS,JMBTY2)
+          IEMMU = NMROW + 1
+          XLMDMU = XLSID
+        ENDIF
+      ENDIF
+C
+C
+C       Get the readout constants
+C
+      NUEMMU    = ITABL(JMBSG,IEMMU,JMBSID)
+      NXSTMU    = ITABL(JMBTG,INDPS,JMBTNX)
+      NYSTMU    = ITABL(JMBTG,INDPS,JMBTY1)
+      XLEIMU    = FLOAT(NYSTMU)*PTYSMU
+C
+  900 CONTINUE
+C                    Middle Angle slot 4
+      IF( .NOT. ((TRKVOL.EQ.'MUM1').OR.(TRKVOL.EQ.'MUM2')) ) GOTO 950
+      IF( .NOT. ((NSLOT.EQ.4) )) GOTO 950
+      NUMV = MUNSTA(NSLOT,TRKVOL,TMU3VO)
+      IDXMD = ITABL(JMMSG,NUMV,JMMSK2)
+      RTOO = RTABL(JMMTG,IDXMD,JMMTRT)
+      ZTOO = RTABL(JMMTG,IDXMD,JMMTZT)
+      X1 = -WDMDMU + ZTOO
+      Y = XLOC(2) + XLMDMU
+      IF(TMU3VO.EQ.'MUEB') THEN
+          XTOO = 2.*XLMDMU - RTOO
+          IF(XLOC(1).LE.X1.AND.Y.GE.XTOO) GO TO 999
+      ELSE
+          XTOO = RTOO
+          IF(XLOC(1).LE.X1.AND.Y.LE.XTOO) GO TO 999
+      ENDIF
+  950 RETURN
+  999 IOUFG = -1
+      RETURN
+      END
+#endif

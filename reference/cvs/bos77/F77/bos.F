@@ -1,0 +1,222 @@
+      SUBROUTINE BOS(JW,NDIM)
+C
+C     INITIALIZATION OF THE BOS - SYSTEM
+C
+C     ------------------------------------------------------------------
+C
+C             FORTRAN77 VERSION OF THE BOS - SYSTEM
+C
+C             AUTHOR: V. BLOBEL
+C                     II.INSTITUT FUER EXPERIMENTALPHYSIK
+C                        DER UNIVERSITAET HAMBURG
+C                     NOTKESTRASSE 85
+C                     D 2000 HAMBURG 52
+C
+C     ---------------------- DATA STATEMENTS ---------------------------
+C
+C     NAR    = NUMBER OF INITIALIZED ARRAYS ( 0 MEANS FIRST CALL)
+C
+C
+C     NAMESD = NUMBER OF NAMES                     CHANGED BY CALL BNMAX
+C     NRESD  = NUMBER OF RESERVED WORDS            CHANGED BY CALL BNRES
+C     NUW    = NUMBER OF RETURN CODE MESSAGES TO BE PRINTED
+C     NUB    = NUMBER OF BANKS TO BE PRINTED BY USER CALLS
+C     NLP    = NUMBER OF BANKS OF THE SAME NAME FOR TREE SEARCH
+C              (IF THERE ARE MORE THAN NLP BANKS OF THE SAME NAME, A)
+C              (WORK BANK OF INDICES/NUMBERS WILL BE CREATED, TO ALLOW)
+C              (BINARY SEARCH IN NLINK/MLINK            )
+C
+*     A WORK BANK WITH NR/INDEX PAIRS IS CREATED, IF MORE THAN NLP
+*     NAMED BANKS OF THE SAME NUMBER EXIST, TO SPEED UP NLINK/ML
+C
+C
+C     --------------- MACHINE DEPENDENT PARAMETERS ---------------------
+C
+#include "mparam.h"
+C
+C     -------------------------- BOSCOM --------------------------------
+#include "boscom.h"
+      INTEGER NSYSTR(322)
+      EQUIVALENCE (NSYST,NSYSTR(1))
+#include "csysbos.h"
+C
+C     ------------------------ PARAMETERS ----------------------------
+C
+#include "param.h"
+#include "cparam.h"
+C
+C     ------------------------------------------------------------------
+      COMMON/BOSMDL/LGDUM(6),LCL(10)
+C
+      COMMON/HCS/KW(100)
+      INTEGER    JW(*)
+      CHARACTER*8 ARNAME
+      INTEGER IFMTA(9),LARR(10)
+      DATA NAR/0/,IFMTA/0,4,0,10,13,10,1000002,0,0/
+      DATA    NAMESD/100/,NRESD/100/,NUW/100/,NUB/100/,NLP/40/
+*                                 REDUCE NLP TO ABOUT 40 AFTER TEST
+*     ...
+      NARR=0
+      LOCIW=LOCF(IW(1))
+      LOCJW=LOCF(JW(1))
+      MDIM=IABS(NDIM)
+      IF(NAR.EQ.0) THEN
+C
+C        FIRST CALL, INITIALIZE BASIC ARRAY IW IN COMMON/BCS/
+C
+         IF(LOCIW.NE.LOCJW.OR.NDIM.LT.0) THEN
+            WRITE(NPR,1001)
+            CALL BABEND('BOS')
+         END IF
+C
+C        CLEAR AND DEFINE SYSTEM COMMON/SYSCOM/
+C
+         MDIM=MAX0(MDIM,1000)
+         DO 02 M=1,322
+   02    NSYSTR(M)=0
+         NSYST=NSS
+         NAMES=NAMESD
+         NRESR=NRESD
+         NLPLM=NLP
+         DO 04 M=1,10
+   04    LCL(M)=0
+         CALL TIMEL(TLEFT)
+C
+C        DETERMINE PRIME NUMBER FOR HASH FUNCTION
+C
+         NPRIM=NAMES+MOD(NAMES,2)+1
+   10    NPRIM=NPRIM-2
+         NSQRT=SQRT(FLOAT(NPRIM))
+         DO 20 I=3,NSQRT,2
+            IF(I*(NPRIM/I).EQ.NPRIM) GOTO 10
+   20    CONTINUE
+      ELSE IF(NDIM.GE.0) THEN
+
+*        CHECK, WETHER THE ARRAY IS ALREADY INITIALIZED
+
+         DO 30 I=1,NAR
+            IF(LOCJW.EQ.IARR(I)) THEN
+*              ARRAY ALREADY USED
+               IF(I.EQ.1) GOTO 100
+               IF(MDIM.EQ.0) MDIM=LARR(I)
+               GOTO 40
+            END IF
+   30    CONTINUE
+      ENDIF
+C
+C     STORE LOCATION OF NEW ARRAY, IF NDIM NOT NEGATIVE
+C
+      IF(NDIM.GE.0) THEN
+         IF(NAR.GE.10) THEN
+            WRITE(NPR,1002)
+            CALL BABEND('BOS')
+         END IF
+         NAR=NAR+1
+         IARR(NAR)=LOCJW
+         LARR(NAR)=MDIM
+         NARR=NAR
+      END IF
+C
+C     NAME FOR STANDARD ARRAYS
+C
+   40 IF(LOCIW.EQ.LOCJW) THEN
+         ARNAME='/BCS/IW '
+      ELSE IF(LOCF(KW(1)).EQ.LOCJW) THEN
+         ARNAME='/HCS/KW '
+      ELSE
+         ARNAME='        '
+      ENDIF
+C
+C     CLEAR ARRAY
+C
+      IF(NDIM.GE.0) THEN
+         MCLEAR=MDIM
+      ELSE
+         MCLEAR=NSYST+NAMES
+      END IF
+      DO 06 M=1,MCLEAR
+   06 JW(M)=0
+C
+C     INITIALIZE ARRAY
+C
+      JW(  4)=1
+      JW(LUC)=NCA
+      JW(LUP)=NPR
+      JW(LUW)=NUW
+      JW(LUB)=NUB
+      JW(IAR+1)=INTCHA(ARNAME(1:4))
+      JW(IAR+2)=INTCHA(ARNAME(5:8))
+      JW(ICK)=12345
+C
+      JW(NJA)=NARR
+      JW(NJW)=MDIM
+      JW(LJW)=LOCJW
+      JW(INM)=NAMES+NSYST+1
+*     named banks on a page boundary
+      I = LOCF(JW(JW(INM)))
+      J = ((I+127)/128)*128
+      JW(INM)=JW(INM)+(J-I)
+      JW(IGP)=JW(INM)
+      JW(IWK)=MDIM+1
+      JW(IGN)=MDIM
+      JW(ICK)=12345
+      JW(LCH)=1
+C
+C     CREATE SYSTEM WORK BANK FOR LINK INDICES
+C
+      JW(IDL)=0
+      CALL WBANK(JW,JW(IDL),NAMES,*90)
+      JW(JW(IDL)-3)=INTCHA('+LNK')
+C
+C     FOLLOWING WORK BANKS ONLY FOR BASIC ARRAY
+C
+      IF(LOCIW.NE.LOCJW) GOTO 100
+C
+C     CREATE SYSTEM WORK BANKS
+C        WORK BANK FOR NAMES
+
+      CALL WBANK(IW,IDNAM,NAMES,*90)
+      IW(IDNAM)=0
+      IW(IDNAM-3)=INTCHA('+NAM')
+C
+C        WORK BANK FOR POINTER
+C
+      CALL WBANK(IW,IDPTR,NAMES+NPRIM,*90)
+      IW(IDPTR-3)=INTCHA('+PTR')
+C
+C        WORK BANK FOR BANK FORMAT INDICES
+C
+      CALL WBANK(IW,IDFMT,NAMES,*90)
+      IW(IDFMT-3)=INTCHA('+IDF')
+C
+      NAMI=NAMIND('+FMT')
+      CALL WBANK(IW,IW(IDFMT+1),9,*90)
+      IW(IW(IDFMT+1)-3)=INTCHA('+FMT')
+      IFMTA(1)=INTCHA('+FMT')
+      CALL UCOPY(IFMTA,IW(IW(IDFMT+1)+1),9)
+      GOTO 100
+C
+C
+C
+   90 WRITE(NPR,1003)
+      CALL BABEND('BOS')
+C
+C     CHANGE DEFAULT MAX NR OF NAMES
+C
+      ENTRY BNAMES(NAMAX)
+      NAMESD=MAX(10,NAMAX)
+      GOTO 100
+C
+C     ENTRY TO INCREASE NR OF RESERVED WORDS
+C
+      ENTRY BNRES
+      NRESD=NRESD+100
+C
+  100 RETURN
+ 1001 FORMAT('0BOS++++++++ INITIALIZATION ERROR - STOP'/
+     1       14X,'BASIC ARRAY NOT FIRST ARRAY'/)
+ 1002 FORMAT('0BOS++++++++ INITIALIZATION ERROR - STOP'/
+     1       14X,'MORE THAN 10 ARRAYS'/)
+ 1003 FORMAT('0BOS++++++++ INITIALIZATION ERROR - STOP'/
+     1       14X,'ARRAY LENGTH TO SMALL'/)
+      END

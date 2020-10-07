@@ -1,0 +1,323 @@
+head	1.3;
+access;
+symbols
+	aleph316_2:1.3
+	aleph316_1:1.3
+	aleph316:1.3
+	aleph315_7:1.3
+	aleph315_6:1.3
+	aleph315_5:1.3
+	aleph315_4:1.3
+	aleph315_3:1.3
+	aleph315_2:1.3
+	aleph315_1:1.3
+	aleph315:1.3
+	aleph314_2:1.3
+	aleph314_1:1.3
+	aleph314:1.3
+	aleph313_1:1.3
+	aleph313:1.3
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.2
+	aleph304_5:1.2
+	aleph304_4:1.2
+	aleph304_3:1.2
+	aleph304_2:1.2
+	aleph304_1:1.2
+	aleph304:1.2
+	aleph303_3:1.2
+	aleph303_2:1.2
+	aleph303_1_mc1:1.2
+	aleph303_1:1.2
+	aleph303:1.2
+	aleph302_9:1.2
+	aleph302_8:1.2
+	aleph302_7:1.2
+	aleph302_6:1.2
+	aleph302_5:1.2
+	aleph302_4:1.2
+	aleph302_3:1.2
+	aleph302_2:1.2
+	aleph302_1:1.2
+	aleph302:1.2
+	aleph216:1.2
+	aleph215_3:1.2
+	aleph215_2:1.2
+	aleph215:1.2
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	99.10.26.09.32.04;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.07.22.08.00.44;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.40.46;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.40.47;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@for Alephlib 313
+@
+text
+@      SUBROUTINE AUHCYL( RAD, ZMAX, FIELD,Q, PAR, PAREX, ICODE)
+C--------------------------------------------------------------------
+C  M. MERMIKIDES   171186
+C   Modified  9/05/87 Generalised for -ve sign mag field
+C   Modified 22/07/96 Double precision on all platforms (M.Cattaneo)
+C   Modified 25/10/99 Double precision fixes for Linux  (D.Smith)
+C
+C! Computes intersection of helix with a cylinder with axis along the
+C  z-axis. We keep the first intersection with either the barrel or
+C  endplane.
+C
+C  NB. The starting point of the helix should be within the cylinder
+C      defined by RAD and ZMAX.
+C
+C  Input:
+C        RAD   Radius of cylinder       (cm)
+C        ZMAX  Half-length of cylinder. (cm)
+C        FIELD Magnetic field in kG (assumed uniform, solenoidal)
+C        Q     Charge of track (+- 1.)
+C        PAR(1) = x
+C           (2) = y      Coordinates of start point on the track (cm)
+C           (3) = z
+C           (4) = dx/ds
+C           (5) = dy/ds  Direction cosines at start point
+C           (6) = dz/ds
+C           (7) = |p|    Abs. momentum of track (GeV/c)
+C
+C
+C  Output:
+C        PAREX(1) = x
+C             (2) = y      Coordinates at point of intersection
+C             (3) = z      with cylinder.
+C             (4) = dxds
+C             (5) = dxds   Dir. cosines at intersection point
+C             (6) = dzds
+C
+C        ICODE  = Return code (1 = intersection in barrel part
+C                              2     "          "   end cap
+C                              0     "          not possible
+C --------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "alcons.h"
+C
+      DOUBLE PRECISION RHO,XC,YC,PHIC,CPH,SPH,UC,U0,CHORD,U,V
+      DOUBLE PRECISION PX,PY,PZ,PT,U1,V1,VALU,BQ,DIR
+C
+      DIMENSION PAR(7),PAREX(6)
+C
+C  First check that the track starts from inside the cylinder
+C
+      ICODE = 0
+      RSTA = SQRT(PAR(1)**2 + PAR(2)**2)
+      IF (RSTA.GT.RAD.OR.ABS(PAR(3)).GT.ZMAX) GO TO 999
+C
+      PX = PAR(7)*PAR(4)
+      PY = PAR(7)*PAR(5)
+      PT = SQRT(PX**2 + PY**2)
+      PZ = PAR(7)*PAR(6)
+C
+      BQ = Q
+      IF(FIELD.LT.0.) BQ = -Q
+      RHO = PT/(ABS(FIELD)*CLGHT*1.E-5)
+      XC = BQ*RHO*PY/PT + PAR(1)
+      YC =-BQ*RHO*PX/PT + PAR(2)
+C
+C  We work in a rotated system (u,v) such that the centre of
+C  the circle lies on the +ve u-axis (UC).  U0 is the point of
+C  closest approach to the origin in the u-v plane.  In this frame
+C  positive tracks point upwards (+ve v) at U0.
+C  PSIP is the turning angle from U0 to starting point of the track,
+C  measured in a clockwise sense.
+C
+      PHIC = DATAN2(YC,XC)
+      CPH = COS(PHIC)
+      SPH = SIN(PHIC)
+      UC = XC*CPH + YC*SPH
+      U0 = UC-RHO
+C
+C  Find Z at the point of closest approach.
+C  Take care of the case where the track starts upstream of d0 (U0)
+C  (We assume track does not turn through more than pi)
+C
+      U1 = PAR(1)*CPH + PAR(2)*SPH
+      V1 = PAR(2)*CPH - PAR(1)*SPH
+      IF (BQ*V1.GT.0D0) THEN
+         DIR = 1.0D0
+      ELSE
+         DIR = -1.0D0
+      ENDIF
+      CHORD = SQRT((U1 - U0)**2 + V1*V1)
+      VALU = CHORD/(2D0*RHO)
+      IF (VALU.GT.1.0D0) VALU = 1.0D0
+      PSIP = 2D0*ASIN(VALU)
+      TANL = PZ/PT
+      Z0 = PAR(3) - DIR*RHO*PSIP*TANL
+      DMAX = UC + RHO
+C
+      IF (ABS(DMAX).LE.RAD) THEN
+C
+C  Intersection with cylinder is not possible. See if track intersects
+C  endplane.
+C
+         Z = SIGN(ZMAX,PAR(6))
+         SS = (Z-Z0)/TANL
+C  PSI is turning angle from U0 to intersection; don't let it exceed 2pi
+         PSI = SS/RHO
+         IF (PSI.GE.TWOPI) GO TO 999
+         U = UC + RHO*COS(PI-PSI)
+         V = BQ*RHO*SIN(PI-PSI)
+         PSI = PSI - PSIP
+         ICODE = 2
+C
+C  Find intersection with cylinder
+C
+      ELSE
+         U = (RAD*RAD - (RHO + UC)*(RHO - UC))/(2D0*UC)
+         V = BQ*SQRT( (RAD - U)*(RAD + U) )
+         CHORD = SQRT((U1 - U)**2 + (V1 - V)**2)
+         VALU = CHORD/(2D0*RHO)
+         IF (VALU.GT.1.0D0) VALU = 1.0D0
+C  PSI is turning angle from (u,v) to intersection
+         PSI = 2D0*ASIN(VALU)
+         Z = PAR(3) + RHO*PSI*TANL
+         ICODE = 1
+C
+C  Cylinder crossed beyond ZMAX, compute intersection with endplane
+C
+         IF (ABS(Z).GT.ZMAX) THEN
+            Z = SIGN(ZMAX,PAR(6))
+            SS = (Z- Z0)/TANL
+C  PSI is turning angle from d0 to intersection
+            PSI = SS/RHO
+            U = UC - RHO*COS(PSI)
+            V =  BQ*RHO*SIN(PSI)
+            PSI = PSI - PSIP
+            ICODE = 2
+         ENDIF
+C
+      ENDIF
+C
+      PAREX(1) = U*CPH - V*SPH
+      PAREX(2) = U*SPH + V*CPH
+      PAREX(3) = Z
+      CP = COS(BQ*PSI)
+      SP = SIN(BQ*PSI)
+      PAREX(4) = (PAR(4)*CP + PAR(5)*SP)
+      PAREX(5) = (PAR(5)*CP - PAR(4)*SP)
+      PAREX(6) = PAR(6)
+C
+  999 RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@Mods for alephlib 215
+@
+text
+@d4 3
+a6 2
+C   Modified  9/5/87  Generalised for -ve sign mag field
+C   Modified 22/7/96  Double precision on all platforms (M.Cattaneo)
+d74 1
+a74 1
+      PHIC = ATAN2(YC,XC)
+d86 2
+a87 2
+      IF (BQ*V1.GT.0.) THEN
+         DIR = 1.0
+d89 1
+a89 1
+         DIR = -1.0
+d92 3
+a94 3
+      VALU = CHORD/(2.*RHO)
+      IF (VALU.GT.1.0) VALU = 1.0
+      PSIP = 2.*ASIN(VALU)
+d117 1
+a117 1
+         U = (RAD*RAD - (RHO + UC)*(RHO - UC))/(2.*UC)
+d120 2
+a121 2
+         VALU = CHORD/(2.*RHO)
+         IF (VALU.GT.1.0) VALU = 1.0
+d123 1
+a123 1
+         PSI = 2.*ASIN(VALU)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 2
+a5 1
+C   Modified 9/5/87  Generalised for -ve sign mag field
+a43 1
+#if defined(VAX) || defined(IBM)
+a46 1
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

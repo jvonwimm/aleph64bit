@@ -1,0 +1,10 @@
+      PARAMETER (MAXATTR=2000)
+      COMMON /PHEAD/HEADR,HEADRD,TABLIS,ATTLIS,NLIS,ICOLIS,NATTR,TMAIN
+      CHARACTER*10 HEADRD(MAXATTR)                                           
+      CHARACTER*10 HEADR(MAXATTR)                                           
+      CHARACTER*4  TABLIS(MAXATTR)
+      CHARACTER*10 ATTLIS(MAXATTR)
+      DIMENSION    NLIS(MAXATTR)                                               
+      DIMENSION    ICOLIS(MAXATTR)                                             
+      CHARACTER*4  TABLE                                     
+      CHARACTER*4  TMAIN

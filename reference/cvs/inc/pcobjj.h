@@ -1,0 +1,3 @@
+*CD pcobjj
+      INTEGER LPCOBA
+      PARAMETER(LPCOBA=0)

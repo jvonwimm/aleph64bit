@@ -1,0 +1,3 @@
+      SUBROUTINE DELAYP (IDELAY)
+      RETURN
+      END

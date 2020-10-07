@@ -1,0 +1,772 @@
+#       1 RUN    45238   45238 DUCK HV_NOT_ON       
+  Symptom:Small run at start of fill, HV not yet ON
+  Effect: Not usable
+
+#       2 RUN    45332   45333 MAYB WRONG TRIGGER   
+  Symptom:LCAL singles rates, for example, very high.
+  Cause:  Short period of data taken at 189GeV during LEP M/D while the trigger 
+          was still set to RUN_91
+  Effect: Small. Some trigger thresholds are too low.
+
+#       3 RUN    45348   45348 DUCK BETWEEN_FILLS   
+  Symptom:Run started after beam lost, but still during Stabel Beam. No useful 
+          data
+  Effect: Useless, no HV...
+
+#       4 RUN    45495   45495 DUCK INTERFILL       
+  Symptom:Data taken between fills
+  Effect: Not usable. No interest
+
+#       5 RUN    45424   45424 DUCK NO_VDET_HV      
+  Symptom:VDET partially OFF, but unmasked in XVDOK
+  Effect: Do not use.
+
+#       6 RUN    45475   45476 DUCK NO_VDET_HV      
+  Symptom:VDET partially OFF, but unmasked by XVDOK
+  Effect: Do not use
+
+#       7 RUN    45768   45768 DUCK NO_TPC_HV       
+  Symptom:TPC HV OFF during the whole run
+  Effect: No XLUMOK event. No luminosity
+
+#       8 RUN    46457   46457 DUCK WRONG LEP ENERGY
+  Symptom:LEP energy set to 91.6 in JULIA - should be 189.0
+  Cause:  Run started during filling. Run number could not be changed due to 
+          cursor block. Run was unjunked.
+  Effect: Luminosity wrong. Not useable for physics without fixing start of run 
+          problems.
+
+#       9 RUN    46785   46785 DUCK HIGH DEAD TIME  
+  Symptom:Very high dead time > 86%
+  Cause:  SICAL LV OFF, too many hits to read out
+  Effect: Very short run without useful SICAL data and very high dead time
+
+#      10 RUN    46510   46510 DUCK MAGNET OFF      
+  Symptom:Run taken while the magnet was off
+  Effect: no useable
+
+#      11 RUN    46582   46582 DUCK BAD ITC TRIGGER 
+  Symptom:The ITC trigger is not reliable during this run
+  Cause:  ITC Hv not reliable
+  Effect: analyses which rely on ITC trigger or ITC data can not be done
+
+#      12 RUN    47015   47015 DUCK TAPEWR_TEST     
+  Symptom:Run written on tape to test the tape system.
+  Effect: Do not use. Test run
+
+#      13 RUN    46304   46304 DUCK EMPTY RUN       
+  Symptom:Operator mistake which should have been junked online
+  Effect: no events in this run have xlumok
+
+#      14 RUN    46981   46981 DUCK HCAL HV OFF     
+  Symptom:no xlumok events in this run
+  Cause:  HCAL HV off in one endcap
+  Effect: no events
+
+#      15 RUN    46970   46970 DUCK NO VDET HV      
+  Symptom:vdet HV off for almost all of this run
+  Effect: almost no usable luminosity
+
+#      16 RUN    47064   47065 DUCK TPC HV OFF      
+  Symptom:no xlumok events
+  Cause:  TPC HV off
+  Effect: not useful
+
+#      17 RUN    47097   47097 DUCK ECAL HV OFF     
+  Symptom:no xlumok events
+  Cause:  ECAL HV off for entire run
+  Effect: not useful
+
+#      18 RUN    47344   47344 DUCK HUGE EVENT      
+  Symptom:last event crashes many ALEPH programs
+  Cause:  huge event caused by beam loss
+  Effect: Don't use this small run
+
+#      19 RUN    47579   47579 DUCK INTERFILL RUN   
+  Symptom:interfill run with no physics
+  Cause:  Unjunk by mistake
+  Effect: not useful
+
+#      20 RUN    46838   46838 DUCK WRONG ELEP      
+  Symptom:run started when ELEP = 22.1 GeV
+  Effect: not usable till fixed
+
+#      21 RUN    47669   47669 MAYB NO_COLLISIONS   
+  Symptom:Dtata taken with separated beams
+  Effect: To check which events are due to beam gas and other background...
+
+#       1 DAQ    46510   46510 DUCK NO MAGN.FIELD   
+  Symptom:Run is Duck due to no magnetic field.
+  Cause:  Magnet failure
+  Effect: not usable at all
+
+#       2 DAQ    47723   47818 PERF LOW_LVL3_EFF    
+  Symptom:LVL3 rejection rate for TAG_SNGC ~30 0gher than expected
+  Cause:  Threshold incorrectly set
+  Effect: Expect marginal effects (checked on a subsamples of triggers in run 
+          47662)
+
+#       3 DAQ    47723   47818 PERF LOW_LVL3_EFF    
+  Symptom:LVL3 rejection rate for TAG_SNGC ~30 0gher than expected
+  Cause:  Threshold incorrectly set
+  Effect: Expect marginal effects (checked on a subsamples of triggers in run 
+          47662)
+  Symptom:This message was put by mistake! It is IDENTICAL to the PREVIOUS ONE .
+
+#       1 VDET   45260   99999 PERF BO09_TROUBLE    
+  Symptom:No efficiency on Z side of module BO-09
+  Symptom:change effected run range
+
+#       2 VDET   45393   45393 DUCK VDET_HV_OFF     
+  Symptom:Not possible to switch VDET ON
+  Cause:  ALSC81 got stuck => ZBD not responding
+  Effect: No VDET hits
+
+#       3 VDET   45424   45424 DUCK BO11_HV_NOT_ON  
+  Symptom:BO11 not reaching HVON - Voltage reached was 20 V (nominal 30 V) - 
+          VDET HV bit was NOTOFF
+  Cause:  Power Supply got stuck
+  Effect: Low efficiency in module BO11 - All events anyway rejected by XLUMOK
+
+#       4 VDET   45475   45476 DUCK VDET HV OFF     
+  Symptom:VDET HV bit off for these runs
+  Cause:  SLOW CONTROL PROBLEMS
+  Effect: Data not useable
+
+#       5 VDET   45674   45674 MAYB VDET_HV_~ON     
+  Symptom:BO09 is in unknown state and BO12 is in ramping state
+  Cause:  For BO09 IGRH reached limit. For BO12 unknown.
+  Effect: The modules above may not work correctly.
+  Effect: handled ok by xvdeok
+
+#       6 VDET   45882   45882 DUCK FIC PROBLEM     
+  Symptom:ONE FIC was not working after long break in data taking
+  Effect: VDET data completely unusable for this run
+
+#       7 VDET   46774   46776 DUCK NO HITS         
+  Symptom:no hits; due to Multiplexer
+  Cause:  Multiplexer needs cycling after power failure
+  Effect: no VDET hits
+
+#       8 VDET   47536   47539 DUCK HV_OFF_AO09     
+  Symptom:HV in A009 is off, but VDET HV bit has been forced on.
+  Cause:  A009 would not ramp
+  Effect: One dead VDET module
+  Symptom:AO09 PS would not go to Standby.  AO08/AO09 PS replaced.
+  Symptom:AO09 PS and patch box bad.  Replaced AO08/AO09 PS and patch boxes.
+
+#       9 VDET   47536   47539 DUCK HV_OFF_AO89     
+  Symptom:HV for AO08 and AO09 is off, but VDET HV bit is on
+  Cause:  Changing pwoer supply
+  Effect: AO08 and AO09 are dead
+  Cause:  Bad power supply and patch box for AO09.  Had to change AO08/AO09 PS
+
+#      10 VDET   47536   47539 DUCK VDET HV         
+  Symptom:During 47535 HV on AO09 failed, caused VDET HV bit OFF.  47536-47539 
+          no AO09 HV, AO08 sometimes off
+  Cause:  Bad PS and patch card on AO09.  PS replaced for AO08/AO09.
+  Effect: No r-phi and z for AO09 during 47536-47539.  Sometimes no r-phi and z 
+          for AO08 during 47536-47539.
+
+#      11 VDET   47535   47535 PERF VDET HV         
+  Symptom:Run 47535, at event 8890 VDET HV bit tripped.
+  Cause:  AO09 Power supply... see other reports.
+  Effect: For events after 8890 in run 47535, no VDET HV
+  Effect: This is handled correctly by xvdeok and xlumok
+
+#      12 VDET   47723   47723 DUCK BAD_BOS         
+  Symptom:VDET produces banks which are invalid
+  Cause:  Recovery after power cut
+  Effect: Not usable: Who knows what face is in what bank !
+
+#       1 ITC    45180   45187 DUCK BAD T0 TIMING.  
+  Symptom:Missing drift hits caused by pre-adjustment T0 timing.
+  Cause:  Start of year T0 adjustment being done.
+  Effect: Data not useful for alignment or physics.
+
+#       2 ITC    45357   45371 PERF DRIFT TIME      
+  Symptom:shift observed in the drift time distribution
+  Symptom:Apparent shift in the drift time distribution w.r.t. the reference.
+  Cause:  Old reference histograms used, before change of T0 this year.
+  Effect: None
+
+#       3 ITC    45396   45398 MAYB BAD T0          
+  Symptom:Drift in T0 of 2.4ns
+  Cause:  Reset of ITC Camac crate 3 during run, with no autotrim performed or 
+          restart of run
+  Symptom:Tracking quality much improved although a small number of hits has 
+          been totally lost.
+  Cause:  Data-base banks updated for these runs to give a wire-by-wire timing 
+          correction in half the chamber
+  Effect: Should make the residual effect very small. Data should be OK for 
+          physics.
+  Cause:  Checked after reprocessing with the new data-base entry for these 
+          runs.
+  Effect: The residual effect on the overall tracking is very small.
+
+#       4 ITC    46582   46582 DUCK HT STATUS BIT   
+  Symptom:HT status bit off during this run. HT ON or STANDBY or OFF during run.
+  Cause:  Trip during HT ramp - HT forced ON before trip cleared so bit could 
+          not be set.
+  Effect: Fatal - ITC trigger & tracking
+
+#       5 ITC    47715   47715 DUCK CAMAC CRATE TRIP
+  Symptom:Trip of the ITC CAMAC CRATE TDC2 - CRATE 3
+  Cause:  Possibly bad power supply
+  Effect: unusable data for physics
+
+#       6 ITC    47827   47857 MAYB ITC TIMING      
+  Symptom:Many noisy drift hits.
+  Cause:  Drift in ITC timing affecting Z readout and RP processor
+  Effect: Tracking not affected, small effect on trigger efficiency
+
+#       1 TPC    45565   45565 PERF NOISE           
+  Symptom:Noise picked up on both pads and wires intermittently on all sectors
+  Cause:  Faulty NIM power supply in the gate triggering system caused random 
+          opening and closing of the gateing circuits.
+  Effect: May produce less precise dE/dx measurements
+  Effect: May produce less precise dE/dx measurements
+
+#       2 TPC    45557   45564 PERF NOISE           
+  Symptom:Interrmitent noise on pads and wires of all sectors. Especially 
+          sector 17 pads.
+  Cause:  Faulty NIM power supply caused the gating circuits to open and close 
+          randomly inducing noise on the pads and wires.
+  Effect: May produce less precise dE/dx measurements
+
+#       3 TPC    45515   45565 MAYB GATING PROBLEM  
+  Symptom:Noise on Wires and Sometimes Pads for all sectors due to randomly 
+          opening and closing gating trigger signal.
+  Cause:  Faulty NIM power supply controlling the gating trigger superimposed 
+          100 Hz signal on top of normal gating trigger.
+  Effect: Approximately 10f events have bad dE/dx and poor tracking including 
+          hit efficiency and z direction VDET association.
+
+#       4 TPC    45616   45616 MAYB DEDX BAD        
+  Symptom:DEDX bad (around 50*mip) for all this run
+  Effect: DEDX unusable for now, tracking seems ok
+
+#       5 TPC    45671   45671 MAYB DEDX BAD        
+  Symptom:DEDX is bad (around 5*mip) for whole run
+  Effect: DEDX is unusable, Tracking seems ok
+
+#       6 TPC    45836   45840 PERF GATING SECT 17  
+  Symptom:The gating check failed for Sector 17 due to a low pedestal value of 
+          1.44
+  Cause:  The Gating circuit had broken, but was still switching from open to 
+          close.
+  Effect: Very little effect.  The circuit was inducing much ringing, but was 
+          pulling the pedestal slightly low.
+
+#       7 TPC    46312   46315 PERF NOISY PDS SCT 14
+  Symptom:All pads in rows 2 and 3 noisy in sector 14 are noisy.
+  Cause:  Bad TPD #3 in Sector 14 was not working for all 64 channels.
+  Effect: It is not believed to affect physics very much, other than a loss of 
+          2 hits for tracks through this outer sector.
+
+#       8 TPC    46316   46322 PERF NO PADS SECT 14 
+  Symptom:No Pads Hits in Pad Rows 2 and 3 in Sector 14.
+  Cause:  The Noisy TPD #3 in Sector 14 was removed from the readout, until 
+          time was available to change it.
+  Effect: All tracks are missing 2 pad hits if passed through this sector.
+
+#       9 TPC    46304   46304 MAYB DEDX BAD        
+  Symptom:dedx is bad offline for this short run - seem ok online
+  Cause:  probably related to size of run
+  Effect: don't use for dedx for now
+
+#      10 TPC    47622   47622 MAYB HV_OFF_BIT_ON   
+  Symptom:The HV tripped, but the HV bit stayed ON for many events around 15:10
+  Effect: Many (50-100 ?) events with no TPC but HV bit ON
+
+#      11 TPC    47403   47403 MAYB BAD DE/DX       
+  Symptom:The mip peak is a factor 4 larger than in normal conditions
+  Effect: Bad dE/dx untill fixed
+
+#      12 TPC    47669   47669 MAYB HV OFF BIT ON   
+  Symptom:For a short time the HV is off for whole TPC but the bit is still on
+  Effect: no tracks during this time
+  Effect: but not many track anyway since the beams are not colliding
+
+#      13 TPC    47672   47672 MAYB HV OFF BIT ON   
+  Symptom:for a minute or so near the end of the run the hv is off but the hv 
+          bit is on
+  Effect: data not usable during this time as there are no tracks !
+
+#      14 TPC    47702   47703 MAYB BAD DEDX        
+  Symptom:Low Coordinate Efficiency and Ionization for Sector 23. Intermittant.
+  Cause:  The problem is either the Gating Circuit in Sector 23 or the Trigger.
+  Effect: Affect dE/dx only.  No affect on the Alignment, just fewer statistics.
+  Cause:  Trigger was switched to Sector 33, to differentiate circuit or gating 
+          problem
+
+#      15 TPC    47744   47766 MAYB BAD DEDX SECT 32
+  Symptom:Sector number 32 seems to be at a lower efficiency than the 
+          reference.  This is reflected also by looking at the expert
+  Cause:  Intermittent gating problem.  Gating circuit replaced.  Could be bad 
+          gating trigger.  Problem fixed but not understood.
+  Effect: No effect on pad efficiencies.  50% wire ionisation causing bad dEdx.
+
+#       1 ECAL   45183   45190 MAYB TRIGGER         
+  Symptom:low trigger rate from wires in End Cap B module 11
+  Cause:  cable plugged in the wrong way in direction of trigger electronics
+  Effect: certainly small
+
+#       2 ECAL   45251   45251 PERF ECAL PAD ENERGY 
+  Symptom: histograms of pad energy disagree with reference due to a change of 
+          threshold
+  Cause:  Change in readout thresholds
+  Effect: none
+
+#       3 ECAL   45498   45500 DUCK WIRE_LOW_VOLTAGE
+  Symptom:Barrel MUX45 power supply dead, no +8 V. No trigger
+  Cause:  Dead supply
+  Effect: Not usable at all !
+
+#       4 ECAL   45610   99999 CHNG PS              
+  Symptom:change power supply
+  Symptom:This is the HV power supply of Barrel modules 3 and 4. Gain has 
+          changed,
+
+#       5 ECAL   45701   45702 MAYB BAD_ADC         
+  Symptom:Corrupted tower addresses in Barrel 5. Affects a few events at the 
+          end of the runs.
+  Cause:  Bad contact in the sequencer cable
+  Effect: Bad data in part of barrel 5. Tagged with the ERRF bank.
+
+#       6 ECAL   45731   45731 MAYB FAN OUT DEAD    
+  Symptom:pad and wire energy in end cap B creasy
+  Cause:  power supply problem in fan out crate
+  Effect: Few very high energy events, with TeV in End Cap B
+
+#       7 ECAL   45867   99999 CHNG REMOVE_PLANE    
+  Symptom:Plane 16 Barrel module 1 removed
+
+#       8 ECAL   46382   46391 DUCK GAS LEAK        
+  Symptom:air in barrel 2 causing pressure increase, no gain then no HV
+  Cause:  Ripped diaphragm in pump for barrel 2
+  Effect: barrel module 2 not usable
+
+#       9 ECAL   46392   46461 MAYB GAIN            
+  Symptom:the gain is changing in barrel 2. Maybe not perfectly tracked by the 
+          platines
+  Cause:  new gas in barrel 2
+  Symptom:Gain is now stable but high (4/8/98)
+  Cause:  HV needs changing
+  Effect: hopefully none
+
+#      10 ECAL   46454   46461 DUCK GAIN            
+  Symptom:The Gain is low in Barrel 10
+  Cause:  Air inside module at atmospheric pressure due to ripped diaphrame
+  Effect: not known - off line check needed
+
+#      11 ECAL   46462   46774 MAYB GAIN            
+  Symptom:The Gain is now stable but high in barrel 2
+  Cause:  New gas. HV needs changing
+  Effect: probably none
+  Symptom:T0 off by ~ 40 ns
+  Effect: to be corrected offline
+  Symptom:New gain
+  Cause:  HV adjusted by Bolek (old 1367.8   new 1360.0)
+  Effect: to be corrected offline
+
+#      12 ECAL   46464   46468 DUCK GAS PROBLEM     
+  Symptom:air in barrel 10 causing pressure increase, HV off for refilling
+  Cause:  Ripped diaphragm in pump
+  Effect: barrel module 10 not usable
+
+#      13 ECAL   46470   46525 MAYB GAIN            
+  Symptom:The gain is low and may change in barrel 10
+  Cause:  New gas in module
+  Effect: probably none
+  Symptom:gas back to normal
+  Cause:  gas in barrel 10 has been exchanged
+
+#      14 ECAL   46525   46525 MAYB GAIN            
+  Symptom:gain in barrel 10 is high
+  Cause:  HV needs  adjustment after gas replacement
+  Effect: probably none
+  Symptom:T0 shifted by ~ 40 ns
+  Effect: to be corrected offline
+  Symptom:Duplicate problem 13
+
+#      15 ECAL   46454   46461 DUCK MISSING PLANES  
+  Symptom:several planes in barrel 10 are inefficent
+  Cause:  gas leak in the membrane
+  Effect: This module can not be used for trigger or energy measurement
+
+#       1 HCAL   45203   45619 PERF HV_OFF          
+  Symptom:Low Efficiency Mod 4 Endcap A
+  Cause:  Two High Voltage Channels OFF due to OVC (Layer 12-13 18-19)
+  Effect: Negligible
+
+#       2 HCAL   45251   45251 PERF HCAL NR CLUSTERS
+  Symptom:spike appears in bin 22
+  Cause:  Huge events, the cause have been identified in a HV channel
+  Effect: negligible
+
+#       3 HCAL   45220   45466 PERF HV_OFF          
+  Symptom:Low Efficiency Muon chamber 1 Endcap B
+  Cause:  Hard OVC Crate 1 ch. 24 ENDB
+  Effect: Negligible
+
+#       4 HCAL   45378   45383 PERF HV_OFF          
+  Symptom:Low Efficiency Muon id Hcal Barrel 18 planes 20-23
+  Cause:  Hard OVC
+  Effect: Negligible
+
+#       5 HCAL   45386   45466 PERF HV_OFF          
+  Symptom:Low digital efficiency BARREL module 5 planes 8:11.
+  Cause:  Over-Current on BARREL HV-crate 5 channel 38.
+  Effect: Negligible.
+  Cause:  The crate is 1 and NOT 5  !
+
+#       6 HCAL   45405   45466 PERF HV_OFF          
+  Symptom:Low Efficiency on BARREL Module 5 planes 20-23
+  Cause:  High Voltage Over-Current 0n Crate 2 channel 1
+  Effect: In coincidence with other OVC on same module BARREL 5 cause SOSO flag 
+          on HCAL data-quality.
+
+#       7 HCAL   45407   45466 PERF HV OFF          
+  Symptom:Low muon efficiency ID on chamber 7 BARREL (phi = 180 degrees)
+  Cause:  Over-Current Crate 3 channel 27
+  Effect: Negligible
+
+#       8 HCAL   45001   45289 PERF ON-LINE BUG     
+  Symptom:Wrong HCAL on-line calibration
+  Cause:  Bug in the on-line code since '96
+  Effect: negligible after the reprocessing (beg. july 98). Patch in alpha for 
+          '96 and '97
+
+#       9 HCAL   45559   45565 PERF HV - BARREL     
+  Symptom:Low Eff. Barr. Mod. 18
+  Cause:  HV OVC layers 8-11 Barr.Mod.18
+  Effect: Negligible
+
+#      10 HCAL   45683   45683 PERF LOW EFFICIENCY  
+  Symptom:HV not at full value  for one module in Endcap A for first 20 minutes
+  Cause:  Small value of the rumping up tension
+  Effect: May cause some inefficiency in that module
+  Symptom:Low Efficiency MOD 2,3 Endcap A (PHI 90-180)
+  Effect: Affects the energy flow
+  Effect: no effect since the bad events have been removed with XLUMOK
+
+#      11 HCAL   45666   45671 PERF LOW_EFFICIENCY  
+  Symptom:Low Efficiency mod 2,3 Endcap A (PHI 90-180)
+  Cause:  Very slow rump-up of the High voltage (affects the first 20 minutes)
+  Effect: Affects the energy flow
+  Effect: No effect: bad events cancelled with XLUMOK
+
+#      12 HCAL   45674   45674 PERF LOW_EFFICIENCY  
+  Symptom:Low Efficiency mod 2,3 Endcap A (PHI 90-180)
+  Cause:  Very slow rump-up of the HV (affects the first 20 minutes)
+  Effect: Affects the energy flow
+  Effect: No effect: bad events removed with XLUMOK
+
+#      13 HCAL   45679   45679 PERF LOW_EFFICIENCY  
+  Symptom:Low Efficiency MOD 2,3 Endcap A (PHI 90-180)
+  Cause:  Very slow ramp-up of the HV (affects the first 20 minutes)
+  Effect: Affects the energy flow
+  Effect: No effect: bad events removed with XLUMOK
+
+#      14 HCAL   45687   45687 PERF LOW_EFFICIENCY  
+  Symptom:Low Efficiency MOD 2,3 Endcap A (PHI 90-180)
+  Cause:  Very slow rump-up of HV (affects the first 20 minutes)
+  Effect: Affects the energy flow
+  Effect: No Effect: bad events removed with XLUMOK
+
+#      15 HCAL   45692   45692 PERF LOW_EFFICIENCY  
+  Symptom:Low Efficiency MOD 3,4 Endcap A (PHI 90-180)
+  Cause:  Very slow rump-up of the HV (affects the first 20 minutes)
+  Effect: Affects the energy flow
+  Symptom:The modules are 2,3 (NOT 3,4)
+  Effect: No Effect: bad events removed with XLUMOK
+
+#      16 HCAL   46334   46339 MAYB LV_SB           
+  Symptom:The barrel mu chamber 9M is very noisy
+  Cause:  The power supply of the barrel splitter board 16 gives an unstable 
+          voltage
+  Effect: Digital information of the above mentioned mu chamber cannot be used
+
+#      17 HCAL   46334   46338 PERF DAQ_GEN         
+  Symptom:ARPEL reports an ASTROS busy timeout every few seconds in endcap B
+  Cause:  A faulty connection in a cable bringing the busy signal from the 
+          ASTROS to the FIC
+  Effect: Negligible
+
+#      18 HCAL   46629   47024 MAYB HV_10           
+  Symptom:Low eff. in Hcal Barrel sub. 12
+  Cause:  HV Channel 24 Crate 3 HCAL Barrel (last 4 planes of submodule 12) in 
+          OVC and then masked
+  Effect: Last four planes of Hcal Barrel submodule 12 inefficient. Muon-id 
+          affected.
+  Effect: Last four planes off.It can affect the muon-id
+
+#      19 HCAL   46814   47024 MAYB HV_EC           
+  Symptom:Digital Efficiency for Endcap A module 1 low
+  Cause:  3 HV channels OFF
+  Effect: Low digital and trigger efficiency
+
+#      20 HCAL   47051   47295 PERF DIG_MU          
+  Symptom:Muon Chamber Vert. 2A/Int Layer 1 extremely inefficient
+  Cause:  probably an oscillating chain
+  Effect:  mu-id affected
+
+#      21 HCAL   47141   47295 MAYB HV_10           
+  Symptom:Low efficiency on HCAL module 3
+  Cause:  One HV channel masked (planes 08-11), one oscillating (planes 20-23) 
+          and then masked from run 47150
+  Effect: mu-id affected
+
+#       1 SCAL   45201   45321 PERF SOSO RUNQ       
+  Symptom:The RUNQ returns a SOSO rating because of the ratio of Method 2 to 
+          Method 1 luminosity calculation is lower than expecte
+  Cause:  Not known.
+  Effect: We believe none.
+
+#       2 SCAL   45508   45511 MAYB ENERGY SHIFT    
+  Symptom:energy is shifted by few Gev for bhabha electrons
+  Cause:  calibratiom file taken with magnet off ( or ramping down), all 
+          pedestals too low by about 1 ADC count ( 5 MeV)
+  Effect: none when corrected off line
+
+#       3 SCAL   46544   46559 PERF 17 CHAN.AMPLEX  
+  Symptom:17 channels had  changed by more than 10 adc counts
+  Cause:  beam dump occured. probably an amplex had its channels saturated , 
+          Elizabeth Martin shut off and put on again the Sical.
+  Effect: none
+
+#       4 SCAL   46786   46787 DUCK HV OFF          
+  Symptom:no sical triggers or data
+  Cause:  recovering from power cut
+  Effect: No SICAL data
+
+#       5 SCAL   46655   46656 PERF PEDESTALS       
+  Symptom:Following a magnet discharge, there was a change in the pedestals.  
+          This caused a shift of .447 counts on average.
+  Cause:  Not understood.
+  Effect: Little.
+  Symptom:Appears to be a downward shift in measured energy for side A
+
+#       6 SCAL   46926   46974 MAYB OSCILLATING AMPL
+  Symptom:SICAL energy side B has a +12 GeV shift according to reference curve.
+  Symptom:for 2 days,shifts appeared in Energydistributions
+  Cause:  2 oscillating amplices(side A) and/or 1 (side B) increased 
+          artificially the energy
+  Effect: none as those extra clusters are identified and removed in Julia
+
+#       1 LCAL   45183   45188 MAYB TRG_INEFFICIENCY
+  Symptom:500f triggers LW_LO_HI and LW_A+BVH were lost (those using signal 
+          LW_ETA2)
+  Cause:  broken/badly connected cable in the XLV1-system
+  Effect: LCAL records only 500f Bhabhas
+
+#       2 LCAL   47637   47645 PERF NO_SOR_RECORDS  
+  Symptom:As L\INIT crashed at start of run, the SOR records may be missing on 
+          tape.
+  Effect: Some configuration banks may be missing, and an inappropriate default 
+          taken from the database.
+  Cause:  L\INIT crashed for run 47637, 47639 and 47645.
+  Symptom:SOR records seems in fact to be present.
+
+#       1 BCAL   45593   45594 PERF APD MOD #1      
+  Symptom:APD MOD #1 has a peak which is more than 4 GeV higher than the Beam 
+          Energy
+  Effect: none
+
+#       1 LVL1   45183   45188 MAYB TRIGGER INEFFIC.
+  Symptom:500f triggers LW_LO_HI and LW_A+BVH were lost (those using signal 
+          LW_ETA2)
+  Cause:  broken/badly connected cable in the XLV1-system
+  Effect: LCAL records only 500f Bhabhas
+
+#       2 LVL1   45283   45288 PERF LVL1            
+  Symptom:spike in the LVL1 TPC SegBit histo
+  Symptom:The spike in LVL1 TPC SegBit histo was due to corrupted constants 
+          from Level2
+  Effect: None
+
+#       1 LVL2   45196   45216 PERF BAD_PROC_7      
+  Symptom:Processor 7 has low efficiency
+  Symptom:No additional symptoms.
+  Cause:  Two incorrectly cabled discriminator cards.
+  Effect: Very small. Fewer triggers possible from tracks in TPC sectors 16(l), 
+          17, 18.
+
+#       2 LVL2   46379   99999 CHNG Z-ROAD HITS>=3  
+  Symptom:Level2 now requies that >=3 hits in a theta bin make a line pointing 
+          at approx z=0
+  Cause:  Increase rejection of Multi-photon backgrounds, random hits should 
+          not be aligned in z
+  Effect: To be assesed during next 1pb^-1, expectation is lower rate of 
+          triggering on junk, minimal effect on physics.
+
+#       3 LVL2   46412   99999 CHNG Z-ROAD HITS>=3  
+  Symptom:Number of Z-road hits reset to old configuration
+  Effect: Back to the old efficiencies and backgrounds
+
+#       4 LVL2   46463   99999 CHNG Z-ROAD HITS>=3  
+  Symptom:Level2 now requies that >=3 hits in a theta bin make a line pointing 
+          at approx z=0
+  Cause:  Reduces the trigger rate for "junk" events
+  Effect: Should be negligible, all real tracks should pass the new cut, only 
+          junk is affected.
+
+#       1 TR     45180   45187 LINK ITC T0 BAD      
+  Symptom:Due to ITC  problem    1
+
+#       2 TR     45393   45393 LINK VDET_HV_OFF     
+  Symptom:Due to VDET problem    2
+
+#       3 TR     45424   45424 LINK VDET HV OFF     
+  Symptom:Due to VDET problem    3
+
+#       4 TR     45475   45476 LINK VDET HV OFF     
+  Symptom:Due to VDET problem    4
+
+#       5 TR     45515   45565 LINK GATING BAD      
+  Symptom:Due to TPC  problem    3
+
+#       6 TR     45882   45882 LINK VDET DATA BAD   
+  Symptom:Due to VDET problem    6
+
+#       7 TR     46774   46776 LINK NO VDET HITS    
+  Symptom:Due to VDET problem    7
+
+#       8 TR     47536   47539 LINK HV OFF          
+  Symptom:Due to VDET problem    8
+
+#       9 TR     45001   45001 LINK TPC HVOFF BIT ON
+  Symptom:Due to TPC  problem   10
+
+#      10 TR     45001   45001 LINK TPCHV OFF BIT ON
+  Symptom:Due to TPC  problem   12
+
+#      11 TR     45001   45001 LINK TPCHV OFF BIT ON
+  Symptom:Due to TPC  problem   13
+
+#      12 TR     47723   47723 LINK NO VDET DATA    
+  Symptom:Due to VDET problem   12
+
+#      13 TR     47715   47715 LINK ITC BAD RESIDUAL
+  Symptom:Due to ITC  problem    5
+
+#       1 DX     45515   45565 LINK GATING BAD      
+  Symptom:Due to TPC  problem    3
+
+#       2 DX     45001   45001 LINK DEDX BAD        
+  Symptom:Due to TPC  problem    4
+
+#       3 DX     45001   45001 LINK DEDX BAD        
+  Symptom:Due to TPC  problem    5
+
+#       4 DX     46304   46304 LINK BAD DEDX        
+  Symptom:Due to TPC  problem    9
+
+#       5 DX     45001   45001 LINK BAD DE/DX       
+  Symptom:Due to TPC  problem   11
+
+#       6 DX     45001   45001 LINK BAD DEDX SECT32 
+  Symptom:Due to TPC  problem   15
+
+#       7 DX     47702   47703 LINK BAD DEDX SECT23 
+  Symptom:Due to TPC  problem   14
+
+#       1 EI     45498   45500 LINK ECAL_LV_OFF     
+  Symptom:Due to ECAL problem    3
+
+#       2 EI     45701   45702 LINK BAD ADC         
+  Symptom:Due to ECAL problem    5
+
+#       3 EI     45731   45731 LINK FAN OUT DEAD    
+  Symptom:Due to ECAL problem    6
+
+#       1 GA     45498   45500 LINK ECAL_LV_OFF     
+  Symptom:Due to ECAL problem    3
+
+#       2 GA     45701   45702 LINK BAD ADC         
+  Symptom:Due to ECAL problem    5
+
+#       3 GA     45731   45731 LINK FAN OUT DEAD    
+  Symptom:Due to ECAL problem    6
+
+#       1 MI     45001   45002 LINK HV_OFF          
+  Symptom:Due to HCAL problem    4
+
+#       2 MI     46334   46339 LINK NOISY CHAMBER   
+  Symptom:Due to HCAL problem   16
+
+#       1 LX     45183   45188 LINK TRIGGER_INEFFIC 
+  Symptom:Due to LCAL problem    1
+  Cause:  FAULTY CABLE TO FIRST LEVEL TRIGGER
+  Effect: LCAL LUMI A FACTOR OF TWO TOO LOW
+
+#       1 FV     46786   46787 LINK SICAL HV OFF    
+  Symptom:Due to SCAL problem    4
+
+#       1 EF     45180   45187 LINK ITC T0 BAD      
+  Symptom:Due to ITC  problem    1
+
+#       2 EF     45393   45393 LINK VDET HV OFF     
+  Symptom:Due to VDET problem    2
+
+#       3 EF     45424   45424 LINK VDET HV OFF     
+  Symptom:Due to VDET problem    3
+
+#       4 EF     45475   45476 LINK VDET HV OFF     
+  Symptom:Due to VDET problem    4
+
+#       5 EF     45498   45500 LINK LV OFF NO TRIGGE
+  Symptom:Due to ECAL problem    3
+
+#       6 EF     45701   45702 LINK BAD ADC         
+  Symptom:Due to ECAL problem    5
+
+#       7 EF     45731   45731 LINK FAN OUT DEAD    
+  Symptom:Due to ECAL problem    6
+
+#       8 EF     45001   45001 LINK SLOW RUMP-UP    
+  Symptom:Due to HCAL problem   10
+
+#       9 EF     45001   45001 LINK HV-OFF          
+  Symptom:Due to HCAL problem   11
+
+#      10 EF     45001   45001 LINK HV-OFF          
+  Symptom:Due to HCAL problem   12
+
+#      11 EF     45001   45001 LINK HV_OFF          
+  Symptom:Due to HCAL problem   13
+
+#      12 EF     45001   45001 LINK HV_OFF          
+  Symptom:Due to HCAL problem   14
+
+#      13 EF     45001   45001 LINK HV_OFF          
+  Symptom:Due to HCAL problem   15
+
+#      14 EF     45882   45882 LINK VDET DATA BAD   
+  Symptom:Due to VDET problem    6
+
+#      15 EF     46786   46787 LINK SICAL HV OFF    
+  Symptom:Due to SCAL problem    4
+
+#      16 EF     46774   46776 LINK NO VDET DATA    
+  Symptom:Due to VDET problem    7
+
+#      17 EF     47536   47539 LINK VD HV OFF       
+  Symptom:Due to VDET problem    8
+
+#      18 EF     45001   45001 LINK TPCHV OFF BIT ON
+  Symptom:Due to TPC  problem   10
+
+#      19 EF     45001   45001 LINK TPCHV OFF BIT ON
+  Symptom:Due to TPC  problem   12
+
+#      20 EF     45001   45001 LINK TPCHV OFF BIT ON
+  Symptom:Due to TPC  problem   13
+
+#      21 EF     47715   47715 LINK ITC BAD         
+  Symptom:Due to ITC  problem    5
+
+#      22 EF     47723   47723 LINK NO VDET DATA    
+  Symptom:Due to VDET problem   12
+

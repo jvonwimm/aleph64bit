@@ -1,0 +1,85 @@
+head	1.3;
+access;
+symbols
+	v1:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	97.05.30.11.29.27;	author aldbase;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.06.15.11.15.54;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.42.06;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.42.07;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@update the repository
+@
+text
+@*CD lcaljj
+      INTEGER JLCAID,JLCAVR,JLCACN,JLCANS,JLCAZD,JLCARI,JLCARO,JLCAZL,
+     +          JLCATI,JLCATO,JLCAGI,JLCAGO,JLCAGB,JLCASD,JLCASL,JLCASP,
+     +          JLCASR,JLCASM,JLCASX,JLCABI,JLCABS,JLCABX,JLCAB1,JLCAH1,
+     +          JLCAM1,JLCAB2,JLCAH2,JLCAM2,JLCALD,JLCAND,JLCALP,JLCANP,
+     +          LLCALA
+      PARAMETER(JLCAID=1,JLCAVR=2,JLCACN=4,JLCANS=5,JLCAZD=6,JLCARI=7,
+     +          JLCARO=8,JLCAZL=9,JLCATI=10,JLCATO=11,JLCAGI=12,
+     +          JLCAGO=13,JLCAGB=14,JLCASD=15,JLCASL=16,JLCASP=17,
+     +          JLCASR=18,JLCASM=19,JLCASX=20,JLCABI=21,JLCABS=22,
+     +          JLCABX=23,JLCAB1=24,JLCAH1=25,JLCAM1=26,JLCAB2=27,
+     +          JLCAH2=28,JLCAM2=29,JLCALD=30,JLCAND=33,JLCALP=36,
+     +          JLCANP=39,LLCALA=41)
+@
+
+
+1.2
+log
+@remove old hac parameters, enter new set from bankal.hac
+@
+text
+@d5 2
+a6 1
+     +          JLCAM1,JLCAB2,JLCAH2,JLCAM2,LLCALA
+d12 2
+a13 1
+     +          JLCAH2=28,JLCAM2=29,LLCALA=29)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 4
+@
+
+
+1.1.1.1
+log
+@import hac+general include files
+@
+text
+@@

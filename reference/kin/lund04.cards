@@ -1,0 +1,70 @@
+KCAR 0 / $TEXT                                                                  
+POFF                                                                            
+FDBA 'ADBSTEST'                                                           
+*FDBA 'ADBSTEST DAF N'                                                           
+*   HERE ARE THE STEERING DATA CARDS ONLY     *                                 
+*============================================                                   
+*     RUN #     RUN'S TITLE                                                     
+RUN   111  'JESET 7.4 AS LUND04 '                                               
+*     FIRST EVENT    LAST EVENT    TO BE GENERATED                              
+TRIG     1    500                                                               
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG                                 
+DEBU  6     /     1          1                                                  
+*  Keep some time at end of job  (IBM 168 seconds)                              
+TIME    10                                                                      
+*  use RANMAR generator for random numbers                                      
+*  INSEED : first seed (range assigned per institute)                           
+*  LOSEED : second seed (incremented locally for new runs)                      
+*      INSEED          LOSEED (1-30000)                                         
+RMAR     89             12345                                                   
+* IFL =FLAVOR CODE(0=MIX,1=D,2=U,3=S,4=C,5=B,6=T,                               
+*                  -1= single particle see GSIN)                                
+* ECMS= Center of mass energy in Gev                                            
+* IPR = lower digit=PRINTOUT of PART bank and full decay tables,                
+*       0=noprintout                                                            
+*      decimal digit: analysis of the event content in terms of particles       
+*     IFL         ECMS     IPR                                                  
+GLUN    5         91.2       10                                                 
+* this card is relevant for single particle mode (IFL=-1 in GLUN )              
+* LUNTYP  Lund type of particle                                                 
+* PMIN    minimum momentum(Gev)         PMAX    maximum momentum(Gev)           
+* CMIN    minimum costheta              CMAX    maximum costheta                
+* PHMIN   minimum phi (radians)         PHMAX   maximum phi  (radians)          
+*  LUNTYP   PMIN   PMAX   CMIN   CMAX   PHMIN   PHMAX                           
+GSIN  421    5.     25.    0.     .99    0.      6.2832                         
+*-----------------------------------------------------------                    
+PMA1 6 / 174.      ! TOP MASS                                                   
+PMA1 7 / 250.      !  NEXT QUARK GENERATION                                     
+PMA1 8 / 350.      !                                                            
+PMA1 10221 / 1.    !  SET F0(980) MASS TO ALLOW KK DECAYS                       
+*-----------------------------------------------------------                    
+*   modification to Lund parameters                                             
+*  They come from Gerald's fit and/or  heavy flavor group                       
+*---------------------------------------------------------------                
+*   QCD FIT FROM G. RUDOLPH  ( 5/03/94)  14 VARIABLES                           
+*   mod to lund fragm. functions params                                         
+PARJ 81 / .321          ! LAMBDA QCD was .311                                   
+PARJ 82 / 1.74          ! M MIN.     was 1.90                                   
+PARJ 21 / 0.333         ! SIGMA MT   was .347                                   
+PARJ 41 / 0.5           ! a          was .5                                     
+PARJ 42 / 0.973         ! B          was .77                                    
+*     modified V/P/T production                                                 
+PARJ 11 /  0.516        ! FRACTION V/P FOR UD =VUD             WAS 0.5          
+PARJ 12 /  0.566        ! FRACTION V/P FOR S  =VS              WAS 0.6          
+PARJ 13 /  0.85         ! FRACTION V/P FOR C AND HEAVIER =VCB  WAS .75          
+PARJ 17 /  0.21         ! FRACTION T/T+V FOR ALL FLAVORS       WAS 0.           
+*  reject 60% of eta' produced by fragmentation ( keep 40%) new fit GR          
+PARJ 26 / 0.25                                                 WAS 0.20         
+*     modified Baryon , strange production etc...                               
+PARJ 1  /  0.095        ! FRACTION OF BARYON VS MESON PRODUCED WAS 0.100        
+PARJ 2  /  0.298        ! FRACTION OF S/U                      WAS 0.300        
+PARJ 3  /  0.48         ! FRACTION OF US/DU                    WAS 0.40         
+PARJ 4  /  0.05         ! FRACTION OF (QQ)1 /( QQ)0            WAS 0.05         
+PARJ 33 /  0.80         ! WMIN IN SYMETRIC LUND FRAGMENTATION  WAS 0.80         
+*   Use Standard LUND values for  Epsilon_c                                     
+*   Measured one for Epsilon_b                                                  
+*   ( Peterson's fragm. functions params )                                      
+PARJ 54 / -0.040         ! EPSILON_C                                            
+PARJ 55 / -0.006         ! Epsilon_b                                            
+*                                                                               
+END$                                                                            

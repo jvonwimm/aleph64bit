@@ -1,0 +1,303 @@
+\chapter{\label{sec-U}User routines}
+\par
+In this chapter, ALPHA routines which are intended to be modified
+by the
+user are described.
+\par Normally, only three routines have to be provided by
+the user:
+initialization (QUINIT), event analysis
+(QUEVNT), and program termination (QUTERM).
+Models for these three subroutines are available (see Appendix
+\ref{sec-ZB}).
+Other subroutines which
+may be modified by the user are also described in this chapter.
+\par
+User routines can be provided either as a plain Fortran file or as
+a CVS source file; the {\bf alpharun} command file described in
+Appendix~\ref{sec-ZB} supports both options. 
+
+\par
+For all user routines, default versions exist in the ALPHA library
+which
+are loaded automatically if no user code is given.
+ 
+\section{\label{sec-UG}General Comments}
+\par
+\subsection{\label{sec-UC}Name conventions}
+\par
+All Fortran symbols defined in the ALPHA package start with
+Q, K, C, or X:
+\begin{indentlist}{ 1.00cm}{ 1.25cm}
+\indentitem{Q }subroutines; real functions, variables, or arrays
+\indentitem{K }integer functions, variables, or arrays
+\indentitem{X }logical functions, variables, or arrays
+\indentitem{C }character functions, variables,
+or arrays (always in combination with Q as 2nd character).
+\end{indentlist}
+To avoid conflicts with the hundreds of variables defined in the ALPHA
+package,
+it would be safest if your own Fortran names for subroutines, variables,
+etc. did {\it NOT} start with Q, K, X, or CQ.
+ 
+\subsection{\label{sec-UA}Including ALPHA features in Fortran code}
+\par
+In addition to subroutines, the ALPHA package contains include files
+which have to be included at the beginning of
+user subroutines or functions.
+There are several such includes, three of them being the following:
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{QCDE}
+COMMONs, DIMENSIONs, EQUIVALENCEs, PARAMETERs, DATAs,
+type declarations (all ALPHA symbols starting with C or X are
+individually declared as CHARACTER or LOGICAL, respectively).
+\indentitem{QMACRO}
+ 
+statement function definitions (from the user's point of
+view, statement functions look exactly like ``normal'' Fortran
+functions, but their execution is faster).
+
+\indentitem{QDECL}
+
+Contains all integer/real declarations of all ALPHA internal variables,
+to be put in the code by people intending to use IMPLICIT NONE.
+
+\end{indentlist}
+The BOS array RW(...) and IW(...), as well as
+the BMACRO statement functions (RTABL, etc.), are included in QCDE
+and
+QMACRO.
+ 
+These sets of statements can be included in user subroutines
+by machine$-$dependent
+Fortran statements or by CVS statements, as shown below.
+\par
+\noindent {\bf Fortran includes for DEC  machines:}
+\begin{verbatim}
+      INCLUDE 'PHYINC:QCDE.INC'
+      INCLUDE 'PHYINC:QMACRO.INC'
+\end{verbatim}
+{\bf Fortran includes for UNIX Machines:}
+\begin{verbatim}
+      INCLUDE '$ALEPH/phy/qcde.inc'
+      INCLUDE '$ALEPH/phy/qmacro.inc'
+\end{verbatim}
+{\bf CVS statements for CVS source files, on all machines:}
+\begin{verbatim}
+#include "qdecl.h"
+#include "qcde.h"
+#include "qmacro.h"
+\end{verbatim}
+\begin{description}\item[\bf{Important!
+}]The following sequence of statements must be observed:\end{description}
+\begin{enumerate}
+\item SUBROUTINE or FUNCTION statement
+\item QDECL, if you need it (e.g.if you want to use IMPLICIT NONE)
+\item QCDE 
+\item your own variable declarations, COMMONs, DIMENSIONs, etc.
+\item your own DATA statements
+\item QMACRO
+\item your own statement function definitions (if any)
+\item your executable Fortran statements
+\end{enumerate}
+If you don't do so, you may end up with specially unintelligible Fortran compiler 
+diagnostics...
+
+\par
+\subsection{\label{sec-UHAC}``HAC'' parameters}
+\par
+The HAC (Handy ACcess)
+parameters denote the offset of attributes within each officially maintained ALEPH BOS bank.
+For banks accessible by mnemonic symbols in ALPHA (see Ch.
+\ref{sec-M}), this offset
+is taken into account automatically, and the corresponding HAC
+parameters are available in QCDE (note that names of HAC parameters
+and mnemonic symbols are closely related).
+ 
+A separate include file QHAC is provided for the HAC
+parameters of all banks appearing on POT/DST/MINI
+event files which are NOT
+available in QCDE. QHAC contains only HAC parameters of banks
+needed by ALPHA and which are official ALEPH banks maintained 
+in the standard documentation system. 
+It 
+can be included in the same way as
+QCDE and may be used in conjunction with it. 
+ 
+\par
+\subsection{\label{sec-UIMP}Implicit None}
+\par
+The include file  QDECL must be used by         
+ people wishing to use IMPLICIT NONE in their program.
+\par
+ 
+\par
+\subsection{\label{sec-UBNK}Booking of private BOS banks in ALPHA}
+\par
+To be faster, ALPHA stores internally a lot of BOS bank indices in the ALPHA
+commons. Therefore one should absolutely avoid any BOS garbage collection
+during the execution of ALPHA since the program would crash immediately.
+\par
+ If you need to book your own BOS banks:
+ use the BOS routines NBANK, MBANK, WBANK. One should
+absolutely avoid the use of the ALEPHLIB routine AUBOS since it performs a
+BOS garbage collection if the space is too small in the BOS array. Of course,
+the use of the BOS routines BGARB or WGARB in ALPHA is absolutely forbidden.
+ 
+ 
+\par
+ 
+\section{\label{sec-UI}User Initialization}
+\par
+\fbox{SUBROUTINE QUINIT}
+\par This routine should be used to book histograms and to perform
+other user initializations.
+All standard initialization work is performed automatically in the ALPHA
+subroutine QMINIT before QUINIT is called. The standard ALPHA initialization includes:
+\begin{itemize}
+\item Initialization of BOS (default : 1500,000 words working space)
+\item Initialization of HBOOK (default : 100,000 words working space)
+\item Reading special files containing constants and calibrations
+\item Reading the user's data cards
+\item Opening the ALEPH data base
+\item Initialization of ALPHA.
+\end{itemize}
+These space allocations are large enough for most applications; they
+can be increased by modifying the routines described in
+sections \ref{sec-QUIH} and \ref{sec-QUIB}.
+ 
+\section{\label{sec-UE}Event analysis routine}
+\par
+\fbox{SUBROUTINE QUEVNT(QT,KT,QV,KV)}
+\par {\it QUEVNT is called once for each event.}
+
+The current event is
+read in, unpacked, and ready to be analyzed when QUEVNT is called.
+\begin{description}\item[\bf{Subroutine arguments
+}]{\it QT,KT,QV,KV}
+are used for special applications;
+see \ref{sec-MBTV}. The subroutine arguments must
+be given even if they are not used.
+\end{description}
+\begin{description}\item[\bf{IMPORTANT:
+}]Do NOT perform a BOS garbage collection (CALL BGARB(IW)) in QUEVNT or in
+any routine called by QUEVNT: this would cause ALPHA to crash irrecoverably.
+If you must use private BOS banks, you have to book them using the BOS routines NBANK,MBANK or WBANK.
+DO NOT use the AUBOS routine from the ALEPHLIB, which performs an automatic BOS garbage collection
+when no more space is available.
+\end{description}
+\section{\label{sec-UT}User termination routine}
+\par
+\fbox{SUBROUTINE QUTERM}
+\par This subroutine can be used for anything which needs to
+be done at the end of a job (e.g., histogram manipulations).
+Histogram output is done automatically in the ALPHA routine QMTERM.
+ 
+QUTERM must never be called directly. For program termination, use
+the
+statement
+(see \ref{sec-QMT}):
+\begin{verbatim}
+              CALL QMTERM ('any message')
+\end{verbatim}
+QMTERM, in turn, calls QUTERM.
+QMTERM is called automatically after all input files have
+been processed.
+\section{\label{sec-OUS}Other User Subroutines}
+\par
+The routines in this section normally do not have to be modified.
+As mentioned above, default versions of all user routines are loaded
+if
+no new versions are provided.
+\par
+\subsection{\label{sec-QUN}New Run}
+\par
+\fbox{SUBROUTINE QUNEWR (IROLD,IRNEW)}
+\par This routine is
+called from QMNEWR once a new run is encountered on the event input
+file, i.e.,
+\begin{itemize}
+\item either a run record is read on the input file
+\item or the run number in an event record has changed
+\item or both conditions are fulfilled.
+\end{itemize}
+QUNEWR
+may be used to initialize run$-$dependent data or to print run statistics.
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{Input arguments}
+\indentitem{IROLD}
+old run number:
+= 0 if called for the first time.
+\indentitem{IRNEW}
+new run number:
+= 0 if called from QMTERM during the program termination.
+\indentitem{Default}no action: RETURN.
+ 
+\end{indentlist}
+\par
+\subsection{\label{sec-QUSREC}Unkown Record Type}
+\par
+\fbox{SUBROUTINE QUSREC}
+\par This routine is
+called whenever a record is read that is neither a run
+nor an event record (e.g. a slow control record); the routine can be used
+to analyze these special records.
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{Default:}
+no action: RETURN.
+\end{indentlist}
+\subsection{\label{sec-QUIH}Initialize the histogram package}
+\par
+\fbox{SUBROUTINE QUIHIS}
+\par NOT intended for histogram
+booking (use QUINIT).
+\begin{itemize}
+\item Called automatically from QMINIT.
+\end{itemize}
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{Default:}
+ 
+Initialize HBOOK : CALL HLIMIT (100000).
+\end{indentlist}
+{\bf Warnings:} If the above size of the HBOOK array is too small, which can happen with
+a very large number of scatter plots and/or Ntuples, one can increase it
+by modifying the parameter LQPAW in the QUIHIS routine.
+Users who want to write on output file  {\em very}
+large NTUPLES ( more than 16 Mbytes ) will have to give appropriate NREC and/or  RECL parameters
+in their HIST data card ( see \ref{sec-HISTW} on p. ~\pageref{sec-HISTW} ).
+ 
+\subsection{\label{sec-QUTH}Terminate the histogram package}
+\par
+\fbox{SUBROUTINE QUTHIS}
+\par
+\begin{itemize}
+\item Called automatically from QMTERM.
+\end{itemize}
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{Default:}Terminate HBOOK: CALL HISTDO
+If the HIST data card is given, write output on histogram file.
+\end{indentlist}
+\subsection{\label{sec-QUIB}Initialize BOS}
+\par
+\fbox{SUBROUTINE QUIBOS}
+\par The length of the
+BOS working space COMMON /BCS/ is explicitly declared in this
+subroutine.
+\begin{itemize}
+\item Called automatically from QMINIT.
+\end{itemize}
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{Default:}initialize BOS with 1500,000 words working space.
+\end{indentlist}
+
+If you need more space, you have to edit the source code of this routine (see below where to find it),
+ to increase the value of the PARAMETER LQBOS to the desired value, and to put
+  the modified QUIBOS routine in your CVS files or into your FORTRAN user file.
+
+The CVS source code of QUIBOS can be found in the following files:
+
+on the UNIX machines in  \$ALROOT/alphavsn/pack/quibos.F
+
+                        (vsn is the ALPHA version number, e.g.  124)
+
+on the ALWS cluster  in  phy:quibos.F
+

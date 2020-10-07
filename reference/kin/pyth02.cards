@@ -1,0 +1,85 @@
+KCAR 0 / $TEXT                                                                  
+POFF                                                                            
+*     RUN #     RUN'S TITLE                                                     
+RUN    111       'PYTHIA 5.6 RUNNUNG PHOTOPRODUCTION'                           
+*     FIRST EVENT    LAST EVENT    TO BE GENERATED                              
+TRIG     1          100                                                         
+TIME    10                                                                      
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG                                 
+DEBU  6     /      1            3                                               
+*    UNIT # / FORMAT                                                            
+*FILO 'scweek:PYTHIA56.EPIO | EPIO  '
+*HSTO 'scweek:PYTHIA56.HIS '
+*  use RANMAR generator for random numbers                                      
+*  INSEED : first seed (range assigned per institute)                           
+*  LOSEED : second seed (incremented locally for new runs)                      
+*      INSEED          LOSEED (1-30000)                                         
+RMAR     78             12345                                                   
+* IFLAVOR =  FLAVOR CODE  0= HADRONS 6 FLAVOURS,                                
+*                         1= HADRONS 5 FLAVOURS,                                
+*                         2= T TBAR,                                            
+*                         3= W+W-,                                              
+*                         4= Z0 Z0                                              
+*                         5= GAMMA Z0 ,                                         
+*                         6= GAMMA GAMMA,                                       
+*                         7= GAMMA H0(+), 8=H0 H0 (+)                           
+*                         9= Z0 H0                                              
+*                        10= NEUTRINO ANTI-NEUTRINO ONLY                        
+*                        11= LEPTON ANTI-LEPTON ONLY                            
+*                        12= PHOTOPRODUCTION WITH QCD JETS ONLY                 
+*                        13= PHOTOPRODUCTION WITH HIGH PT PHOTONS ONLY          
+* (+) = not yet implemented in PYTHIA                                           
+* you can get any other production channels using pythia data cards             
+* but then set : IFLAVOR = 99 and choose your own frame using pythia data cards 
+* ECMS  Center of mass energy in Gev                                            
+* IPRINT   0=noprintout ,1=PRINTOUT of PART bank , 2= as 1 plus Decay tables    
+*     IFLAVOR     ECMS     IPRINT                                               
+GPYT    12        91.2       0                                                  
+*  vertex smearing x     y     z                                                
+SVRT          0.0180   0.0010   1.00                                            
+*-----------------------------------------------------------                    
+*  STANDARD MODIFICATION TO PYTHIA PARAMETERS                                   
+*-----------------------------------------------------------                    
+MSTP 11 / 1            ! TURN ON INITIAL STATE RADIATION.                       
+*                      I.E. USE OF ELECTRON STRUCTURE FUNCTION                  
+MSTP 12 / 1            ! TURN ON STRUCTURE FUNCTIONS , THAT IS                  
+* USE OF E- , E+, QUARK AND GLUON STRUCTURE FUNCTIONS INSIDE AN ELECTRON.       
+MSTP 83 / 200          ! NUMBER OF MC-GENERATED PHASE SPACE POINTS              
+*                        FOR MSTP(82) > 2                                       
+* IF ONLY HARD SCATTER IS REQUIRED, TURN OFF RADIATION AND FRAGMENTATION        
+*MSTP 61 / 0           ! MASTER SWITCH FOR INITIAL STATE QCD RADIATION          
+*MSTP 71 / 0           ! MASTER SWITCH FOR FINAL   STATE QCD RADIATION          
+*MSTP 111 / 0          ! MASTER SWITCH FOR FRAGMENTATION AND DECAY              
+* SET UP PT MIN VALUE FOR PHOTOPRODUCTION                                       
+CKIN 3 / 1.6          ! CUT AT 1.6 GEV                                          
+*-----------------------------------------------------------                    
+*  STANDARD MODIFICATION TO LUND PARAMETERS                                     
+*-----------------------------------------------------------                    
+PMA1 6 / 120.          ! SET TOP MASS , DO NOT FORGET TO DISABLE UNACCESSIBLE   
+*                        decay modes for W...... See MDM1 cards below!          
+* Set next quarks family away                                                   
+PMA1 7 / 550.                                                                   
+PMA1 8 / 800.                                                                   
+PMA1 23 / 91.182    !   SET Z0 MASS                                             
+PMA1 25 / 600.      !   SET HIGGS MASS                                          
+MDM1 174 / 0        ! TURN OFF DECAY OF W INTO TOP-QUARK + B-QUARK              
+MDM1 337 / 0        ! TURN OFF DECAY OF WVIRT INTO TOP-QUARK + B-QUARK          
+MSTJ 24 / 2         !  USE NON DISCRETE MASSES FOR RESONNANCES                  
+MSTJ 11 / 3         !  USE PETERSON'S FRAGM. FUNCTIONS FOR C AND B QUARKS       
+*   QCD fit from QCD GROUP   (19/12/90)                                         
+*   mod to lund fragm. functions params                                         
+PARJ 81 / .310         ! Lambda QCD                                             
+PARJ 82 / 1.50         ! M min.                                                 
+PARJ 21 / 0.358        ! Sigma Mt                                               
+PARJ 41 / 0.5          ! a                                                      
+PARJ 42 / 0.84         ! b                                                      
+*   Use Standard LUND values for  Epsilon_c                                     
+*   Measured one for Epsilon_b                                                  
+*   ( Peterson's fragm. functions params )                                      
+PARJ 54 / -0.020       ! Epsilon_c                                              
+PARJ 55 / -0.006       ! Epsilon_b                                              
+*  include Aleph standard values for sin2theta, mz, gamz                        
+PARU 102 / .232        ! Sin sqared Theta                                       
+PARJ 123 /  91.182     ! M z                                                    
+PARJ 124 / 2.484       ! Gamma z                                                
+ENDQ                                                                            

@@ -1,0 +1,96 @@
+head	1.1;
+access;
+symbols
+	alio83:1.1
+	alio82:1.1
+	alio81:1.1
+	alio80:1.1
+	alio74:1.1
+	alio73:1.1
+	alio72:1.1
+	alio71:1.1
+	alio70:1.1
+	alio68:1.1
+	alio69:1.1
+	alio67:1.1
+	alio66:1.1
+	alio65:1.1
+	alio64:1.1
+	alio63:1.1
+	alio62:1.1
+	alio61:1.1
+	alio60:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.04.23.09.59.33;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@move alph, dbas, a part of alef and a part of c to alephio
+Modified Files:
+ 	version.h
+ Added Files:
+ 	adbrow.F adbrpn.F adbrun.F adbswp.F adbver.F agetdb.F agtfil.F
+	albos.F aldawr.F aldtyp.F aleveh.F alfind.F alfmt.F algtbk.F
+ 	algtdb.F algtlu.F algtro.F algtyp.F alinst.F alk7fil.F
+ 	alk7fru.F alk7op.F alk7tru.F alredb.F alrune.F alrunh.F
+ 	alrunr.F alseed.F alstho.F alstin.F alstri.F altabl.F alvsn.F
+ 	aopdbs.F aublis.F aubos.F aubprs.F bkcari.F bkinca.F bkrhab.F
+ 	bkrhal.F bkrhaw.F bktobk.F cafiht.F chahol.F dafrds.F gtdbas.F
+ 	gtstup.F igtfmt.F jhocha.F julrec.F junial.F junidb.F
+ 	kbytrec.F loctab.F nameru.F ubpack.F uclean.F uindxs.F usbos.F
+ 	usgtdb.F utcblk.F utccop.F utcofo.F utwocl.F utwoex.F
+Removed Files:
+	noibm.F
+@
+text
+@      INTEGER FUNCTION  ALGTYP(IGEAN,ISIMD,IFAST,ITPCS)
+C ----------------------------------------------------------------------
+C! Finds the Galeph tracking level for a file of simulated events
+CKEY  ALEF GALEPH TYPE / USER
+C Author     J. Boucrot     26-AUG-1988
+C Input banks : AJOB ,  TSIM
+C   Returns  ALGTYP = 1  if the file WAS     processed through GALEPH
+C                   = 0        #     WAS NOT            #
+C Output arguments :
+C   IGEAN = 1   Geant tracking was used ;  = 0  other tracking
+C   ISIMD = 1   SIMDST smearing and DST writing  ; = 0   no SIMDST
+C   IFAST = 1   FAST tracking was used  ;  = 0   other tracking
+C   ITPCS = 1   TPCSIM digitisation was done  ;   = 0   not done
+C ----------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "ajobjj.h"
+       PARAMETER ( IFUL = 1 , ISIM = 101 , IFAS = 11 )
+       PARAMETER ( IDST = 100 )
+#include "bmacro.h"
+C ----------------------------------------------------------------------
+        ALGTYP=0
+        IGEAN=0
+        ISIMD=0
+        IFAST=0
+        ITPCS=0
+C
+        JAJOB=NLINK('AJOB',0)
+        IF (JAJOB.EQ.0) GO TO 999
+        ITEST=ITABL(JAJOB,1,JAJORM)
+        IF (MOD(ITEST,IDST).LT.IFAS) IGEAN=IFUL
+        IF (ITEST.EQ.ISIM) ISIMD=1
+        IF (MOD(ITEST,IDST).EQ.IFAS) IFAST=1
+        IF (NLINK('TSIM',0).GT.0) ITPCS=1
+        ALGTYP=1
+C
+ 999    RETURN
+        END
+#endif
+@

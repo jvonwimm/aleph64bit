@@ -1,0 +1,59 @@
+#! /bin/csh
+#============================================================================
+#                             ALREMOVE
+#                                                       F.Ranjard 970411
+#============================================================================
+# To remove from the current directory old version given by its version number 
+# call local_remove for the 4 platforms SHIFTALEPH AFAL csf
+#============================================================================
+# P1 = ALEPH program name
+#============================================================================
+# set echo on if last argument is "-v"
+#============================================================================
+set exec_name = "alremove2.0"
+set nar = $#argv
+if (nar != 0) then
+  if ($argv[${nar}] == "-v") then
+     set echo on
+     set argv[${nar}] = ""
+  endif
+endif
+#*******>
+
+if ($1 == "-h") then
+   echo ""
+   echo "usage:"
+   echo "  alremove <prog_name>"
+   echo "  will propose a list of all version numbers avalaible on the directory"
+   echo "  on which resides prog_name"
+   echo "  the user has to choose one of them or RETURN"
+   echo "  at CERN, it does it on the 3 platforms SHIFTALEPH AFAL CSF"
+   echo ""
+   echo "example"
+   echo "  alremove galeph"
+   echo ""
+   exit(1)
+endif
+
+#*******>
+unset noclobber
+
+set file = $1
+#
+local_remove ${file} ${version}
+     
+if (${SERVICE} != "AFAL") rsh afal01 local_remove ${file} ${version}
+if (${SERVICE} != "SHIFTALEPH") rsh shift50 local_remove ${file} ${version}
+if (${SERVICE} != "CSF") rsh csf local_remove ${file} ${version}
+
+goto exit
+
+
+#*******> exec_end
+exec_end:
+ exit
+ 
+ 
+
+
+

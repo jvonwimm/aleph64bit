@@ -1,0 +1,49 @@
+*DK trkdoc
+#if defined(DOC)
+.chapter TRACKING
+     The tracking is performed by GEANT3.   The  steering  routine  is  GTREVE
+  called by ASPEVE.
+     Multiple-scattering, energy loss and electromagnetic process are done  by
+  GEANT3 packages.
+     Hadronic processes are performed by GHEISHA.
+
+     Tracking is performed depending on the type of the particle:
+         gamma, electron, charged had., neutral had., muon
+     The primary vertex is stored in VERT bank  and  primary  tracks  in  KINE
+  banks.
+     The secondaries can be stored either in VERT+KINE banks or in STACK bank.
+  The user makes the choice.
+     A track receives 2 numbers :  a track number IGTRA  and  a  stack  number
+  IGSTAK.  When the track belongs to the KINE bank ("primary track") the stack
+  number IGSTAK = 0.
+     Tracking starts with the first track of the KINE bank and continues  with
+  all  tracks stored in the STAK bank until it is emptied .  Then it continues
+  with the next track in the KINE bank.
+     (look at GEANT3 manual the TRAK chapter for more details)
+
+     Control is given to the user in GUSTEP after a step is performed or  when
+  entering a new volume in GTRACK.  At this level a track element is avalaible
+  in  the  GEANT  common  block /GCTRAK/, /GCSETS/, /GCKINE/.  Secondaries are
+  stored in /GCKING/.
+
+     If the track element is in a selected sensitive volume (IGDTYP>0 and SETS
+  data card) and it is a charged particle or a photon in the ECAL, the  common
+  /TRKCOM/ is filled in and control is transferred to the corresponding module
+  xxHIT,  where  it  can be used in conjonction with the common /GCKING/ which
+  contains the secondaries and /GCMATE/ which contains  the  current  material
+  parameters.
+
+     Then in case of production of secondaries during the last tracking step ,
+  control is transferred to ASKTRK to store  the  secondaries  either  in  the
+  standard KINEmatics banks or in a temporary STACK.  The track element can be
+  stored in the JGXYZ bank if debug or display of the event is required.
+
+     New tracks are stored in routine ASKTRK:
+  PRIMARIES are stored in 'KINE' banks, non primary tracks are stored in
+  the stack and loose their identity after the tracking.
+
+    A particle is called a PRIMARY if it is a daughter of a primary and it
+  is produced in the inner part of the apparatus (up to the TPC outer wall
+  but the TPC endplate and ITC endplate), and its momentum is above 100Mev.
+
+#endif

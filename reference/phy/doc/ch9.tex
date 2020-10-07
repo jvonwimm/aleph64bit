@@ -1,0 +1,808 @@
+\chapter{\label{sec-KI} Kinematics and Track Operations}
+\par
+In this chapter, the kinematics
+utility routines available in ALPHA are
+described.  Also, many routines for creating new tracks and modifying
+existing tracks are described.
+First, calculations with scalar results are summarized.  Next,
+routines with vector results are described (e.g., cross product).
+Finally,
+routines for doing kinematic fits, vertex fits,
+Lorentz transformations are discussed.
+ 
+\section{\label{sec-MK}Scalar quantities}
+\par
+The arguments I,J,K,L are ALPHA ``track'' numbers.
+ 
+\begin{indentlist}{ 3.25cm}{ 3.50cm}
+\indentitem{QCT (I)}cos (polar angle)
+\indentitem{QPH (I)}PHi = azimuth (radians)
+\indentitem{QPT (I)}Transverse momentum (with respect to the beam
+line)
+\indentitem{QBETA (I)}beta (see~\ref{sec-TVABA} for mass assumption)
+\indentitem{QGAMMA (I)}gamma
+\end{indentlist}
+\begin{description}
+\item[\bf{Note:}]Returned masses are negative
+if (E$^2$ $-$ p$^2$) is negative.
+\end{description}
+\begin{indentlist}{ 3.25cm}{ 3.50cm}
+\indentitem{QMSQ2 (I,J)}(invariant mass)$^2$ of particles I and J
+\indentitem{QM2 (I,J)}invariant mass of particles I and J
+\indentitem{QMSQ3 (I,J,K)}(invariant mass)$^2$ of particles I, J, and
+K
+\indentitem{QM3 (I,J,K)}invariant mass of particles I, J, and K
+\indentitem{QMSQ4 (I,J,K,L)}(invariant mass)$^2$ of particles I, J,
+K, and L
+\indentitem{QM4 (I,J,K,L)}invariant mass of particles I, J, K, and
+L
+\indentitem{QDMSQ (I,J)}mass$^2$ of the 4$-$momentum difference p(I)
+$-$ p(J).
+In a decay I $-$$-$$>$ J + x, QDMSQ(I,J) gives the mass$^2$ of x.
+\indentitem{QPPAR (I,J)}momentum component of particle I parallel
+to particle J
+\indentitem{QPPER (I,J)}momentum component of particle I perpendicular
+to particle J
+\indentitem{QDOT3 (I,J)}scalar product of momentum vectors I and J
+(3$-$vectors)
+\indentitem{QDOT4 (I,J)}scalar product of 4$-$vectors I and J
+= QE(I) * QE(J) $-$ QDOT3(I,J)
+\indentitem{QCOSA (I,J)}cos (angle between tracks I and J) (lab frame)
+\indentitem{QDECA2(I,J)}cos (decay angle):
+In a two$-$body decay x $\rightarrow$ I + J, the decay angle is the
+angle between particle x and particle I, measured in the
+rest frame of particle x (i.e., the angle
+between the boost direction and particle I).
+\indentitem{QDECAN(I,J)}extension of QDECA2 for the n$-$body decay
+I $\rightarrow$ J + any.
+Note the different meaning of the first argument in
+QDECA2 and QDECAN.
+\indentitem{QMDIFF(I,'part')}mass difference between I and particle
+table
+mass of `part'.
+\indentitem{QMCHI2(I,'part')}$\chi^2$ resulting from mass difference
+between
+I and particle table mass of `part'. This function is equivalent
+to
+$$({\rm QM(ITK)}- {\rm QPMASS('part-name'}))^2 / {\rm QSIGMM(ITK)}.$$
+\indentitem{QMCHIF(I)}$\chi^2$ of mass-constrained
+fit (KVFITM or KVFITA --
+see \ref{sec-QFIT}). QMCHIF(I)=$-1$ if
+track I was not the result of a fit.
+\indentitem{QVDIF2(IV1,IV2)}distance between vertices IV1 and IV2
+in $r-\phi$ (see~\ref{sec-QVFIT}).
+\indentitem{QVDIF3(IV1,IV2)}distance between vertices IV1 and IV2
+in 3 dimensions (see~\ref{sec-QVFIT}).
+\indentitem{QVCHIF(IV)}$\chi^2/$NDF of vertex fit for vertex IV
+(KVFITN or KVFITV -- see~\ref{sec-QVFIT}).
+ 
+\end{indentlist}
+\section{\label{sec-QV}Vector quantities}
+\par
+\subsection{\label{sec-QVE}General Remarks}
+\par
+Except where noted below (e.g., mass), the attributes of ``tracks''
+read from the input tape cannot be changed by the user. To modify
+attributes of an ``input'' track, a copy of the track must be made.
+\par
+The following example illustrates some features of the routines
+described in this section.
+\par
+\begin{verbatim}
+      ISUM = KVNEW (DUMMY)
+      DO 10 ITK1 = ... , ...
+      DO 10 ITK2 = ... , ...
+        CALL QVADD2 (ISUM, ITK1, ITK2)
+C       ... analysis of the sum of ITK1 and ITK2, for example:
+        CALL HF2 (4711, QP(ISUM), QM(ISUM),1.)
+   10 CONTINUE
+\end{verbatim}
+\par The function KVNEW (DUMMY) creates a new track (ISUM) in the
+system
+area which is
+needed as working space for most of the subroutines described here
+(see \ref{sec-QVN}).
+New ``tracks'' can be created whenever necessary ,
+however users have to be warned that if they do it inside loops ,
+{\em they may quickly exceed the size of the BOS array.}
+A warning is issued
+if an ``input'' track is used as working space (\ie if an ``input''
+track is given as the output track of a routine).
+ 
+\par Subroutine QVADD2 (ISUM, ITK1, ITK2) adds the 4$-$momenta of
+tracks
+ITK1 and ITK2 and stores the resulting composite particle as track
+ISUM (see \ref{sec-QVA}).
+All track$-$track and track$-$vertex relations, flags, etc. are
+set in
+QVADD2. For example, all flags for the lock algorithm are set
+(see \ref{sec-QLO}). Thus, with
+CALL QLOCK (ISUM), you lock ITK1 and ITK2 as well as ISUM.
+The mother$-$daughter relation (see
+\ref{sec-AMM}) from ISUM to ITK1 and ITK2 is stored, but
+NOT the reverse daughter$-$mother relation; see KVSAVE in
+\ref{sec-QVST}).
+ 
+\par In subroutine calls, the result is stored in the track denoted
+by the
+first subroutine argument: for example,
+CALL QVCOPY (ITO, IFROM) copies track IFROM
+to track ITO.
+\par Do not mix up tracks from different classes. ITK1 and ITK2 in
+QVADD2
+must belong the same class (KRECO or KMONTE or a Lorentz frame derived
+from one of them; see
+\ref{sec-ADI}). If you really want to mix up tracks from
+different classes, they must first be ``saved'' in the same
+class (see KVSAVC in \ref{sec-QVSC}).
+ 
+\subsection{\label{sec-QVA}Add 4$-$momenta of particles}
+\par
+\subsubsection{\underline{Add two particles}}
+\par
+\fbox{CALL QVADD2 (ISUM, ITK1, ITK2)}
+\par
+Add the 4$-$momenta of ITK1 and ITK2 and and store
+the result in ISUM.
+\par
+\subsubsection{\underline{Add three particles}}
+\par
+\fbox{CALL QVADD3 (ISUM, ITK1, ITK2, ITK3)}
+\par
+Add the 4$-$momenta of ITK1, ITK2, ITK3 and store
+the result in ISUM.
+\par
+\subsubsection{\underline{Add four particles}}
+\par
+\fbox{CALL QVADD4 (ISUM, ITK1, ITK2, ITK3, ITK4)}
+\par
+Add the 4$-$momenta of the particles ITKn (n = 1 to 2,3, or 4) and
+store
+the result in ISUM.
+\par
+\subsubsection{\underline{Add N particles}}
+\par
+\fbox{CALL QVADDN (ISUM, ITK)}
+\par
+\par
+For adding more than four particles, either use QJADDP (see
+\ref{sec-QJA}) or
+construct a loop with QVADDN:
+\begin{verbatim}
+      ISUM = KVNEW (DUMMY)
+      DO 10 ITK = ... , ...
+ 10   CALL QVADDN (ISUM, ITK)
+\end{verbatim}
+The sum of all track momenta is stored in ISUM.
+ 
+Before using track ISUM in such loops, its momentum must be set
+to zero. This is done in KVNEW. When reusing ISUM for another
+loop, however, it must be zeroed by CALL QVZERO (ISUM).
+\par
+\subsection{\label{sec-QIDV0}Recalculate 4$-$Vector of V0}
+\par
+\fbox{CALL QIDV0 (ITK, `PI+', `PI$-$')}
+\par
+Recalculates the 4$-$vector of a ``V0'' object ITK (i.e., a reconstructed
+neutral track pointing to a V0) by using the 3$-$vectors of the decay
+particles and masses denoted by the two particle names given as
+function arguments. The attributes of ITK are overwritten by the new
+4$-$vector. The attributes of the decay particles remain unchanged.
+For saving a V0 mass hypothesis, the function KVSAVE
+(\ref{sec-QVST})
+or KVFITM (\ref{sec-QFIT})
+must be called. For example,
+\begin{verbatim}
+       DO 10 ITK=KFV0T,KLV0T
+         CALL QIDV0 (ITK, 'P', 'PI-')
+         IF (QMCHI2 (ITK, 'LAM0') .LE. 9.)
+      &    ISAVE = KVFITM (ITK, 'LAM0', IER)
+         CALL QIDV0 (ITK, 'pi+', 'p#')
+         IF (QMCHI2 (ITK, 'LAM0') .LE. 9.)
+      &    ISAVE = KVFITM (ITK, 'LAM#0', IER)
+    10 CONTINUE
+\end{verbatim}
+\par
+ The particle names in the QIDV0 arguments may be given either in upper or lower case .
+ 
+\par
+\subsection{\label{sec-QVC}Copy a track}
+\par
+\fbox{CALL QVCOPY (ITO, IFROM)}
+\par
+Copy the track attributes from IFROM to ITO. If one of the tracks
+is in the user's track section, only
+the basic attributes (see \ref{sec-TVABA})
+are copied. Otherwise, all flags, relations, etc. are copied.
+See remarks about lock algorithm in sections
+\ref{sec-QLI} and \ref{sec-QLO}.
+ 
+QVCOPY should be used only if a specific track ITO has to be
+overwritten. Another copy routine which is protected against
+overwriting tracks is KVSAVE
+(\ref{sec-QVST}).
+\par
+\subsection{\label{sec-QVX}Cross product}
+\par
+\fbox{CALL QVCROS (ICROSS, ITK1, ITK2)}
+\par
+\par
+Store the cross product of the vectors ITK1 and ITK2 in ICROSS.
+Space for ICROSS can be reserved by ICROSS = KVNEW (DUMMY).
+ 
+Mother $-$ daughter relation: ITK1 and ITK2 are daughters of ICROSS.
+ 
+\subsection{\label{sec-QVD}Drop tracks}
+\par
+\fbox{CALL QVDROP ('part$-$name', ICLASS)}
+\par
+\par
+Drop all tracks with name `part$-$name' in the class ICLASS.
+For example,
+\begin{verbatim}
+CALL QVDROP (' ', ICLASS)
+\end{verbatim}
+will drop tracks with any track in class
+ICLASS.
+The main application of this subroutine is to
+drop all tracks in a specific Lorentz frame.
+See the example in section \ref{sec-QTC}.
+\par If ICLASS = KRECO or ICLASS = KMONTE:
+Only tracks created in the analysis program are dropped; tracks coming
+from the event input file cannot be dropped.
+\par
+It should be noted that , as no BOS garbage
+collection takes place in ALPHA , the memory space corresponding to dropped tracks is NEVER released inside an event .
+If one exceeds the size of the BOS array , the only way to solve the problem is to increase this size in the
+QUIBOS subroutine ( sec \ref{sec-QUIB}  on p. ~\pageref{sec-QUIB} ) .
+\par
+\subsection{\label{sec-QVG}Copy track attributes into a Fortran array}
+\par
+(To copy a Fortran array into a track, see section
+\ref{sec-QVM}.)
+ 
+\subsubsection{\underline{Copy 3$-$momentum of a track}}
+\par
+\fbox{CALL QVGET3 (ARR, ITK)}
+\par
+\par
+Copy the 3$-$momentum (px,py,pz) of track ITK into the Fortran array
+ARR with DIMENSION ARR(3).
+\par
+\subsubsection{\underline{Copy 4$-$momentum of a track}}
+\par
+\fbox{CALL QVGET4 (ARR, ITK)}
+\par
+\par
+Copy the 4$-$momentum (px,py,pz,E) of track ITK into the Fortran
+array ARR with DIMENSION ARR(4).
+ 
+\subsubsection{\underline{Copy covariance matrix of a track}}
+\par
+\fbox{CALL QVGETS (ERRMAT, ITK)}
+\par
+\par
+Copy the 4*4 covariance matrix (order: px,py,pz,E) of track ITK
+into the symmetric Fortran matrix ERRMAT with DIMENSION ERRMAT(4,4).
+ 
+\subsection{\label{sec-QVN}Create a new track}
+\fbox{INEW = KVNEW (DUMMY)}
+\par
+Create a new track (see
+\ref{sec-QVE}) with momentum = energy = 0. The
+corresponding space is allocated dynamically and NOT kept when a new
+event is read in.
+INEW is a track without a particle name. None of the access methods
+described in Ch.
+\ref{sec-A} give access to it; the only access to the track is
+with the track number INEW.
+Consequently, it can never be dropped (see
+\ref{sec-QVD}).
+The new track does NOT belong to a specific class
+(KRECO / KMONTE / Lorentz frame).
+\par
+\subsection{\label{sec-QVST}Save a track}
+\fbox{ISAVE = KVSAVE (ITK, `part$-$name')}
+\par
+To save track ITK means to copy it into a new track ISAVE and to assign
+a
+particle name to the track copy. This particle name can be used later
+for direct access to this particle (see
+\ref{sec-AD}). Note that the mass is
+NOT changed in KVSAVE (see KIDSAV, \ref{sec-QVSTID}).
+\par
+The class (KRECO / KMONTE / Lorentz frame; see \ref{sec-ADI}) of
+a saved
+track is given by its history (in the example below, the class of
+JPSI
+is set equal to that of ITK1 and ITK). A dedicated routine
+KVSAVC (see \ref{sec-QVSC}) makes it possible
+to copy a track into a different or new
+class. KVSAVC must be used instead of KVSAVE if the track class cannot
+be deduced from the track history (see example in \ref{sec-QVSC}).
+\par
+If `part$-$name' is equal to ` ', KVSAVE only performs a copy, and
+the
+track copy has no particle name. In contrast to QVCOPY (see
+\ref{sec-QVC}), KVSAVE never overwrites a track.
+\par
+In a decay chain, the daughter$-$mother relation is established by
+KVSAVE.
+The inverse relation (mother$-$daughter) is established in routines
+like
+QVADDx.
+\par
+{\bf Example: $
+\psi \rightarrow e^{+}e^{-}
+$:}
+\begin{verbatim}
+     ISUM = KVNEW (DUMMY)
+     ITK1 = KPDIR ('E+', KRECO)
+  10 IF (ITK1 .NE. 0)  THEN
+       ITK2 = KPDIR ('E-', KRECO)
+  20   IF (ITK2 .NE. 0)  THEN
+C ... all e+ e- combinations:
+         CALL QVADD2 (ISUM, ITK1, ITK2)
+C ... cut on invariant mass and save J/psi candidates:
+         IF (ABS (QM(ISUM) - QPMASS ('JPSI')) .LT. (your cut))
+    &      ITKPSI = KVSAVE (ISUM, 'JPSI')
+         ITK2 = KFOLLO (ITK2)
+         GO TO 20
+       ENDIF
+       ITK1 = KFOLLO (ITK1)
+       GO TO 10
+     ENDIF
+\end{verbatim}
+\par The daughter$-$mother relation is established
+only for the accepted (i.e., saved) $
+\psi
+$s.
+In subsequent loops, the $
+\psi
+$(s) is (are) directly accessible by
+their name and can be used, for example, to analyze
+$\psi'\To \psi\pi^+\pi^-$
+in the same way as
+$ \psi \rightarrow e^{+}e^{-}$.
+\par
+\subsection{\label{sec-QVSTA}Save a track inside particle/antiparticle
+loop}
+\fbox{ISAVE = KVSAVA (ITK, `part$-$name', IANTI)}
+\par
+This routine has the same function as KVSAVE, but is intended to
+be used inside of loops over particles and antiparticles.
+If IANTI is 0, the track is saved as `part$-$name'; if IANTI is nonzero,
+the track is saved as the corresponding antiparticle.
+\par
+\subsection{\label{sec-QVSTID}Save a track and set its mass}
+\fbox{ISAVE = KIDSAV (ITK, `part$-$name')}
+\par
+This function does the same thing as KVSAVE, but also sets the mass
+of
+track ISAVE to the mass of `part$-$name'. As in KVSAVE, the original
+track ITK is not changed.  For charged tracks, KIDSAV will save tracks
+as the appropriate particle or antiparticle depending on their charge.
+For example  KIDSAV(ITK, `K+') will save positive tracks as $K^+$ and
+negative
+tracks as $K^-$.
+\par
+\subsection{\label{sec-QVSC}Save a track with class ICLASS}
+\fbox{ISAVE = KVSAVC (ITK, `part$-$name', ICLASS)}
+\par
+Save (see \ref{sec-QVST})
+track ITK in track class ICLASS independent of the
+track history. Track classes are described in
+\ref{sec-ADI}. If class ICLASS does
+not yet exist, a new class is created. Note that the maximum number
+of
+new classes is six (see \ref{sec-QT}).
+\par
+It is possible but not recommended to put a reconstructed track into
+the class KMONTE (MC truth) or vice versa. The lock algorithm will
+not work for these tracks.
+\par
+{\bf Example: }Create and save a beam particle in track class KRECO.
+\begin{verbatim}
+     DIMENSION VEC(4)
+     VEC(1) = 0.                                    px
+     VEC(2) = 0.                                    py
+     VEC(3) = QELEP * 0.5                           beam energy
+     VEC(4) = VEC(3)                                energy = momentum
+     INEW = KVNEW (DUMMY)
+     CALL QVSET4 (INEW, VEC)
+     IBEAM = KVSAVC (INEW, 'BEAME+', KRECO)
+\end{verbatim}
+KVSAVC has to be used here instead of KVSAVE because the track history
+of INEW does not specify the track class. See~\ref{sec-QVN} and ~\ref{sec-QVM}
+for explanations of KVNEW and QVSET4.
+\par
+\subsection{\label{sec-QVM}Modify track parameters}
+\par
+(To copy a track into a Fortran array, see
+\ref{sec-QVG}.)
+ 
+The QVSxxx routines described below
+modify the specified track attributes but do not
+change any flag or pointer. Thus, all track$-$track relations (KMOTH,
+KDAU, KSAME, etc.) which have been
+established remain valid even if the routines
+completely overwrite the kinematic quantities.
+\par
+\subsubsection{\underline{Scale track momentum}}
+\par
+\fbox{CALL QVSCAL (ITK, FACTOR)}
+\par
+Multiply the momentum of track ITK by the factor FACTOR. The energy
+of ITK is set according to the new momentum and the old mass value.
+QVSCAL can be called for ``input'' tracks.
+\par
+\subsubsection{\underline{Set mass of a track}}
+\par
+\fbox{CALL QVSETM (ITK, AMASS)}
+\par
+\par
+Set the mass of track ITK to AMASS. The new energy of ITK is set
+according to the new mass and the old (unchanged) momentum. QVSETM
+can be called for ``input'' tracks.
+\par
+\subsubsection{\underline{Set 3$-$momentum of a track}}
+\par
+\fbox{CALL QVSET3 (ITK, ARR)}
+\par
+\par
+Copy the Fortran array ARR containing px, py, pz with
+DIMENSION ARR(3) into the momentum vector of track ITK. The new track
+energy is calculated from the new momentum and the old mass.
+\subsubsection{\underline{Set 4$-$momentum of a track}}
+\par
+\fbox{CALL QVSET4 (ITK, ARR)}
+\par
+\par
+Copy the Fortran array ARR containing px, py, pz, E with
+DIMENSION ARR(4) into the momentum vector of track ITK. All basic
+track attributes are recalculated. See example in section
+\ref{sec-QVSC}.
+\par
+\subsubsection{\underline{Set covariance matrix of a track}}
+\par
+\fbox{CALL QVSETS (ITK, ERRMAT)}
+\par
+\par
+Copy the 4*4 Fortran matrix ERRMAT
+containing the track's covariance
+matrix in the order px,py,pz,E with DIMENSION ERRMAT(4,4) into the
+covariance matrix of track ITK.
+\par
+\subsection{\label{sec-USFL}Set User Track Flags}
+\par
+\fbox{CALL QSTFLR (ITK,IFLAG,VAL) and CALL QSTFLI(ITK,IFLAG,IVAL)}
+\par
+\par
+\begin{indentlist}{ 3.25cm}{ 3.50cm}
+\indentitem{ITK}ALPHA ``track'' number
+\indentitem{IFLAG}Flag number: 1 $-$ 18
+\indentitem{VAL, IVAL }Value to be stored in flag IFLAG
+\end{indentlist}
+Each ALPHA ``track'' has 18 user flags which may be set to any integer
+or real value. QSTFLR and QSTFLI are used to set a flag to a real
+number
+or to an integer, respectively.
+Once these flags are set, they can be read with
+the functions KRDFL(ITK,IFLAG) (integer) and QRDFL(ITK,IFLAG)
+(real); see section \ref{sec-TVAFP}.
+\par
+\subsection{\label{sec-QVSU}Subtract track momenta}
+\par
+\fbox{CALL QVSUB (IDIFF, ISUM, ISUB)}
+\par
+\par
+Subtract the vector ISUB from ISUM and store the result in
+IDIFF. Space for IDIFF can be reserved by IDIFF = KVNEW (DUMMY).
+\begin{itemize}
+\item If QE(ISUM) $<$ QE(ISUB), the result is meaningless.
+\item If QP(IDIFF) $>$ QE(IDIFF), the result gets a negative mass.
+\item A warning is issued in either case.
+\end{itemize}
+ 
+\subsection{\label{sec-QVZ}Zero track attributes}
+\par
+\fbox{CALL QVZERO (ITK)}
+\par
+\par
+Set all attributes (momentum, etc.) of ITK to 0. Note that KVNEW
+(see \ref{sec-QVN}) implies QVZERO.
+\par
+\section{\label{sec-QFIT}Kinematic fitting}
+\par
+ None of the functions described below can work when reading a NANO-Dst ,
+\par
+\fbox{IFIT = KVFITM (ITK, `part$-$name', IER)}
+\par
+Performs a mass$-$constrained fit for the decaying particle ITK.
+This fit readjusts the 4$-$vector of ITK by using the constraint
+E$^2$ $-$ p$^2$ = mass('part$-$name')$^2$  (method: Lagrange multiplier).
+In particular, the fit improves the 3$-$momentum resolution.
+KVFITM determines the 4$-$momentum of the decaying particle only;
+the
+4$-$vectors of the decay products are not recalculated and remain
+unchanged.  Therefore, the momenta of the daughter particles will
+not
+add up to the fitted momentum of the mother exactly.
+\par
+\noindent\fbox{IFIT = KVFITA (ITK, `part$-$name', IER, IANTI)}
+\par
+This function is similar to KVFITM. It is intended to be
+used inside loops over particles and
+antiparticles.  The particle given by `part$-$name' is used if
+IANTI is 0; the corresponding antiparticle is used if IANTI is
+nonzero.
+\par
+ 
+The $\chi^2$ for the track fit may be accessed with the statement
+function QMCHIF(IFIT) .
+\par
+\section{\label{sec-QVFIT}Vertex fitting with YTOP}
+\par
+The following functions provide an interface to the YTOP package
+in ALEPHLIB. This package is described in the note ALEPH 91$-$132 , SOFTWR 91$-$005  .
+All these functions build a new vertex available in QVRT with its full error matrix .
+\par
+ None of the functions described below can work when reading a NANO-Dst ,
+\par
+\noindent\fbox{IFIT = KVFITN (ND, ID, `part$-$name')}
+\par
+\noindent Fit ND tracks stored in ID to a common vertex.
+IFIT is the number of new track coming into the vertex; this track is stored
+with the name 'part-name' and can be accessed with KPDIR, etc.
+The vertex number is the end vertex of track IFIT:
+$$IVX = KENDV(IFIT).$$
+IFIT $=$ -1 if the fit fails.
+ 
+\noindent\fbox{IFIT = KVFITV (IV,ND, ID, `part$-$name')}
+\par
+\noindent Same as KVFITN except that vertex IV is used as an additional
+constraint in the fit.
+ 
+Both functions refit the track parameters of the input tracks and
+calculate the 4-vector and error matrix of the new track (IFIT) at
+the fit vertex.
+The fit vertex position and error matrix are stored in the end vertex
+of IFIT:  KENDV(IFIT).
+There can be any number of input tracks, but if NTR $>$ 10, KVFITx
+will first vertex tracks 1-10 and then add the following tracks to this
+vertex. Input tracks can be either charged tracks, V0s previously refitted using KVFITN (otherwise the error matrix is not
+available), 
+ or ``tracks" resulting
+from a previous fit.
+ 
+The $\chi^2/$NDF for the vertex fit may be accessed with the statement
+function QVCHIF(IVX), where IVX is the end vertex of IFIT. The number
+of degress of freedom for the routines are:
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{NDF = 2 * ND -3} for KVFITN
+\indentitem{NDF = 2 * ND} for KVFITV
+\end{indentlist}
+ 
+The following statement functions give the distance between two
+vertices IV1 and IV2.
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{DIST = QVDIF2(IV1,IV2)} distance in $r-\phi$
+\indentitem{DIST = QVDIF3(IV1,IV2)} distance in 3 dimensions
+\end{indentlist}
+ 
+{\bf Example:}
+ 
+Assume that you have a $D^0 \to K \pi$ candidate (ID0) and a lepton
+(ILEP) from a $B$-meson decay.  The following code finds
+the vertex of the $B$ decay.
+ 
+\begin{verbatim}
+      CALL QVSETM(IPION,QPMASS('PI+'))      !pion mass
+      CALL QVSETM(IKAON,QPMASS('K+'))       !kaon mass
+      ITL(1) = IPION
+      ITL(2) = IKAON
+      ID0    = KVFITN(2,ITL,'D0Kp')
+      IF(ID0.GT.0) THEN
+        RMD0 = QM(ID0)            ! vertex refitted D0 mass
+        IVD0 = KENDV(ID0)         ! D0 vertex
+        CHI2 = QVCHIF(IVD0)       ! chi**2 of the D0 vertex
+C
+        ITL(1) = ILEP
+        ITL(2) = ID0
+        IB     = KVFITN(2,ITL,'Blep')    ! fit B vertex
+        IF(IB.GT.0) THEN
+          IVB = KENDV(IB)                ! B vertex
+          CHI2 = QVCHIF(IVD0)            ! chi**2 of B vertex
+          DIST = QVDIF3(IVB,IVD0)        ! distance between B and D0
+                                         ! vertex
+        ENDIF
+      ENDIF
+\end{verbatim}
+ 
+\noindent\fbox{IFIT = KVFITC (NTKD,ITKD,RMAS,DRMAS,`part$-$name')}
+\par
+\noindent Fits NTKD tracks in array ITKD to a common vertex with mass
+constraint RMAS in the fit. The new track is stored with the name 'part$-$name'
+and can be accessed as described above for KVFITN or KVFITV :
+The vertex number is the end vertex of track IFIT:
+$$IVX = KENDV(IFIT).$$
+IFIT $=$ -1 if the fit fails.
+\par
+\par
+\begin{indentlist}{ 3.25cm}{ 3.50cm}
+\indentitem{NTKD}Number of input tracks to be fitted
+\indentitem{ITKD}Array of input ALPHA ``track'' numbers
+\indentitem{RMAS}Mass to which the tracks are constrained  ( in Gev )
+\indentitem{DRMAS}Error on Mass**2 = 2*RMAS*Sigma(DMAS)
+\indentitem{'part$-$name'}Name which will be given to the new track
+\end{indentlist}
+\par
+All above quantities are input arguments to KVFITC .
+\par
+This routine may give problems , or wrong results ,
+if DRMAS is not properly tuned . It is strongly recommended to use
+KVFTMC instead ( described just below) which doesn't need any error on the mass as input .
+\par
+\noindent\fbox{IFIT = KVFTMC (NTKD,ITKD,`part$-$name',USE,RMAS)}
+\par
+\noindent Fits a subset of NTKD tracks in array ITKD to a common vertex with mass
+constraint RMAS in the fit. Same remarks as for KVFITC for the fitted vertex .
+\par
+\par
+\begin{indentlist}{ 3.25cm}{ 3.50cm}
+\indentitem{NTKD}Number of input tracks in array ITKD
+\indentitem{ITKD}Array of input ALPHA ``track'' numbers
+\indentitem{'part$-$name'}Name which will be given to the new track
+\indentitem{USE}Array of logicals of size NTKD defining which tracks to use in the fit
+\indentitem{RMAS}Mass to which the tracks are constrained
+\end{indentlist}
+\par
+All above quantities are input arguments to KVFTMC .
+\par
+\section{\label{sec-QV0CK}Auxiliary routine for V0s}
+\par
+The following routine is an interface to the YCHIV2 routine in the ALEPHLIB .
+\par
+\noindent\fbox{CALL QV0CHK(JULTR,CHI2,IER)}
+\par
+\noindent Computes the chisquare of a charged track belonging to a V0 with the
+constraint of the primary vertex . This routine allows to do subsequent cuts on this
+chisquare to get a given efficiency and purity of a V0 sample .
+The routine works without restriction on POTs or DSTs .
+\par
+On MINIs , it works only if
+the QFNDIP package has been called , using the QFND data card in the input CARDS file .
+\par
+\begin{indentlist}{ 3.25cm}{ 3.50cm}
+\indentitem{JULTR}JULIA ``track'' number .\\
+ BE CAREFUL ! It's not the ALPHA track number !\\
+ If you know only the ALPHA track number ITK , you get the JULIA track number by
+ the function KTN : JULTR = KTN(ITK) .
+\indentitem{CHI2}Chisquare of track ITK with main vertex constraint ,
+set to -999999. if no calculation possible .
+\indentitem{IER}= 0 if all OK , = 1 if no CHI2 calculation possible
+\end{indentlist}
+ 
+{\bf Example of use of QV0CHK :}
+ 
+\begin{verbatim}
+      DO IVTK = KFV0T,KLV0T           ! loop on all V0 tracks
+         IF (XYV0(IVTK)) THEN            ! information on daughters exists
+            IT1 = KYV0K1(IVTK)           ! 1st V0 daughter ( JULIA track number)
+            IT2 = KYV0K2(IVTK)           ! 2nd V0 daughter ( JULIA track number)
+            CALL QV0CHK(IT1,CHI1,IER1)
+            CALL QV0CHK(IT2,CHI2,IER2)
+C  here make checks or cuts on CHI1 , CHI2
+        ENDIF
+     ENDDO
+\end{verbatim}
+ 
+ 
+{\bf Optimised cuts for K0s selection :}
+ 
+The suggested cuts to be used after calling QV0CHK in order to select
+K0s are as follows :
+ 
+\par
+\begin{indentlist}{ 3.25cm}{ 3.50cm}
+\indentitem{Cut1}For each track the chi**2 value returned by QV0CHK should be greater than 13.
+\indentitem{Cut2}The sum of the TWO chi**2 for both V0 tracks should be greater than 80.
+\end{indentlist}
+Both conditions should be satisfied . Please notice that the above
+cuts are for K0s only and cannot be applied to Lambdas.
+ 
+ 
+\section{\label{sec-QT}Lorentz transformations}
+\par
+See also QDECAx (decay angle in the rest frame of a decaying particle)
+in \ref{sec-MK}.
+\par
+\subsection{\label{sec-QTL}Boost a track and its daughters}
+\par
+\fbox{IBOOST = KTLOR (ITK, IREST)}
+\par
+Boost the track ITK
+into the rest frame of IREST and store the
+result in IBOOST.
+\par
+The sample of all tracks boosted into the rest frame of any track
+IREST
+constitutes its own track class which is denoted by the track number
+IREST, and which can be accessed directly as described in
+\ref{sec-AD}. Another way to access
+boosted tracks is to use KSAME (see
+\ref{sec-AS}), which makes it possible to jump from a given track
+to the same track in other Lorentz frames.
+\par
+A track can be boosted into its own rest frame. The
+result is a vector with the initial direction and a momentum very
+close to 0.
+\par
+KTLOR does not boost a track into a given frame twice. It returns,
+instead, the number of the already boosted track. This rule is only
+valid as long as you leave the mass and the particle name unchanged.
+\par
+If a composite track is to be boosted, all daughters, granddaughters,
+etc. (but NOT mothers, etc!) of the track are boosted at the same
+time.
+The mother$-$daughter and daughter$-$mother relationships among the
+boosted
+tracks are established. If these relationships are not needed,
+use KTLOR1 or QTCLAS described below.
+\par
+The track to be boosted (ITK) and the track which defines the rest
+frame (IREST) may belong to different track classes. No check is done
+that the boost makes sense. Note, however, an important restriction:
+If more than one track is boosted into a frame, all of them must come
+from the same class. This restriction prevents putting reconstructed
+tracks and MC truth into the same track class; see example in
+\ref{sec-QTC}.
+\par
+A maximum of six Lorentz
+frames can be used simultaneously. Frames which
+are not used any more can be dropped by
+{\it CALL QVDROP (' `, IREST)} (see \ref{sec-QVD})
+to reduce the number of frames in use, and to release
+the space occupied by the boosted tracks.
+ 
+\subsection{\label{sec-QT1}Boost a track}
+\par
+\fbox{IBOOST = KTLOR1 (ITK, IREST)}
+\par
+Same function as KTLOR except that daughters are NOT boosted. A track
+boosted by KTLOR1 has no daughters or mothers, even if these
+relatives exist in the original frame.
+ 
+\subsection{\label{sec-QTC}Boost all tracks of a given class}
+\par
+\fbox{CALL QTCLAS (ICLASS, IREST)}
+\par
+\par
+Boost the tracks in class ICLASS (= KRECO or KMONTE or a Lorentz
+frame previously defined) into the rest frame of track IREST.
+The track selection
+follows exactly the same rules as described for the event topology
+routines in Chapter \ref{sec-QJ}.
+In particular,
+selection options can be set by the routines QJOPTR or QJOPTM
+(see \ref{sec-QJOP}), and locked tracks are not boosted.
+As in KTLOR1, daughters are NOT boosted
+and mother$-$daughter relations are NOT available.
+\par {\bf Example:}
+\begin{verbatim}
+      IREST = ... this momentum vector defines the rest system.
+C boost the reconstructed tracks:
+      CALL QTCLAS (KRECO, IREST)
+C if you want to boost MC particles into the same frame, first make a
+C copy of IREST - do not mix up KRECO and KMONTE in the same class:
+      ICOPY = KVSAVE (IREST, 'COPY')
+      CALL QTCLAS (KMONTE, ICOPY)
+C ...
+C later reference to the boosted particles (see >)
+      ITK = KPDIR ('CHARGED', IREST)
+C use a loop with KFOLLO. The same for MC particles:
+      ITK = KPDIR ('E+', ICOPY)
+C ...
+C drop all boosted tracks in frame IREST:
+      CALL QVDROP (' ', IREST)
+\end{verbatim}

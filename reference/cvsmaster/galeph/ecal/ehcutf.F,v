@@ -1,0 +1,153 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.07.14.02.08;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.09;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK ehcutf
+      SUBROUTINE EHCUTF(MFLAG)
+C.----------------------------------------------------------------
+C  R.Clifft                       mod   M.Rumpf March 87
+C! Fast tracking or not?
+C  MFLAG = 0|1 --> no|yes
+C  called by ECHIT
+C.----------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "jqcom.h"
+#include "trkcom.h"
+#include "gcking.h"
+#include "ehcond.h"
+#include "ehpash.h"
+      CHARACTER NAME*4
+C
+      MFLAG=0
+C
+C - Do not FAST track particles with a total energy before the step > EC
+C   (ECUTTE is set in EHPASR)
+C
+         IF (TRKELE(8).GT.ECUTTE) RETURN
+C
+C *** if  electron OR positron
+C
+      IF (ITRKEL(4).EQ.2 .OR. ITRKEL(4).EQ.3) THEN
+         IF(ITRKEL(9).NE.0)            GO TO 999
+C
+C *** get track segment start parameters
+C
+         PV=TRKNXT(7)
+         XV=TRKNXT(1)
+         YV=TRKNXT(2)
+         ZV=TRKNXT(3)
+         UV=TRKNXT(4)
+         VV=TRKNXT(5)
+         WV=TRKNXT(6)
+         TGTET = ABS (SQRT(XV**2+YV**2)/ZV)
+C
+C-       TEST TRACK ELEMENT IN OVERLAP REGION
+C
+         IF ( TGTET . LT . 0.95 .AND. TGTET . GT. 0.8 )  GO TO 999
+C
+C *** find which segment we are in.  nst = 1,2,3,4  for
+C ***  barrel-stacks1/2 , end cap-stacks1/2 , barrel-stack3 ,
+C ***  end cap-stack3
+C
+         CALL UHTOC(ITRKEL(5),4,NAME,4)
+         IF(NAME(3:3).EQ.'S')           THEN
+           NST=3
+           IF(NAME(2:2).EQ.'C') NST=4
+         ELSE
+           NST=1
+           IF(NAME(2:2).EQ.'C') NST=2
+         ENDIF
+C
+C *** call EHEDGE to check proximity to edge of wanted region
+C
+         CALL EHEDGE (NST,PV,XV,YV,ZV,UV,VV,WV,
+     &                DPERP,DTOT,MFLEG)
+         IF (MFLEG.EQ.0)  GO TO 999
+C
+C *** check path length to back criterion for parametrisation
+C
+         PTB=DPERP
+         DTB=DTOT
+         CALL EHCHEK (NST,DTB,PTB,PV,MFLSL)
+         IF (MFLSL.EQ.0)  GO TO 999
+C
+C *** we contain shower, so set necessary parameters
+C
+         MFLAG=1
+      ENDIF
+
+  999 RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

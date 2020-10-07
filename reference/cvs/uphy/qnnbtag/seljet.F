@@ -1,0 +1,79 @@
+C****************************************************
+        SUBROUTINE SELJET(KMAX,J,NMAX,LLL)
+        DIMENSION LLL(4)
+C
+         IF(J.EQ.1)THEN
+             NMAX=4
+             LLL(1)=1
+             LLL(2)=2
+             LLL(3)=3
+             LLL(4)=4
+         ENDIF
+C
+         IF(J.EQ.2)THEN
+             NMAX=3
+             LLL(1)=1
+             LLL(2)=2
+             LLL(3)=3
+         ENDIF
+C
+         IF(J.EQ.3)THEN
+             NMAX=3
+             LLL(1)=1
+             LLL(2)=2
+             LLL(3)=4
+         ENDIF
+C
+         IF(J.EQ.4)THEN
+             NMAX=3
+             LLL(1)=1
+             LLL(2)=3
+             LLL(3)=4
+         ENDIF
+C
+         IF(J.EQ.5)THEN
+             NMAX=3
+             LLL(1)=2
+             LLL(2)=3
+             LLL(3)=4
+         ENDIF
+C
+         IF(J.EQ.6)THEN
+             NMAX=2
+             LLL(1)=1
+             LLL(2)=2
+         ENDIF
+C
+         IF(J.EQ.7)THEN
+             NMAX=2
+             LLL(1)=1
+             LLL(2)=3
+         ENDIF
+C
+         IF(J.EQ.8)THEN
+             NMAX=2
+             LLL(1)=1
+             LLL(2)=4
+         ENDIF
+C
+         IF(J.EQ.9)THEN
+             NMAX=2
+             LLL(1)=2
+             LLL(2)=3
+         ENDIF
+C
+         IF(J.EQ.10)THEN
+             NMAX=2
+             LLL(1)=2
+             LLL(2)=4
+         ENDIF
+C
+         IF(J.EQ.11)THEN
+             NMAX=2
+             LLL(1)=3
+             LLL(2)=4
+         ENDIF
+C
+         RETURN
+         END
+C

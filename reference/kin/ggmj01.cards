@@ -1,0 +1,109 @@
+NREF 9700
+RUN 101  'Test GGMJ01'
+*FILO 'SCWEEK:GGMJ01_STANDARD.NATIVE'
+RMAR   89 23
+* Smearing of the vertex position
+SVRT     .0700  .0005      .700
+*   events to be generated / accepted
+TRIG         1     1000      1000
+DEBU 6 / 1 5
+KCAR 0 / $TEXT
+POFF
+*
+* EXAMPLE CARDS FOR GGMJ01 GENERATOR
+* NONE ARE REQUIRED, BUT GMAP AND GCON ARE USUALLY NEEDED AS A MINIMUM
+*
+* GCON :  OVERALL CONTROL CARD
+* PARAMETERS:
+*        ICON - Controls whether an existing MAP is read in or
+*                otherwise a new one is produce and then written out.
+*               0    - MAP is generated then written out.
+*               1    - Existing map is read in, all parameters controlling
+*                       physics are read from this map.
+*        IHIS - Control histogramming ( NOT HBOOK ! )
+*               0    - No histogramming
+*               1    - Histogramming is enabled
+*
+* DEFAULTS :
+*
+*        ICON = 0
+*        IHIS = 1
+*
+*    ICON IHIS
+GCON  0     1
+*
+* GMAP :  GIVE THE FILE NAME OF MAP FILE
+* PARAMETERS:
+*        FNAME  File name
+*GMAP 'SCWEEK:GGMJ01.MAP | NATIVE '  ! VAX/VMS
+GMAP 'ggmj01.map | NATIVE '  ! Unix
+*
+* GGPH :  Controls the physics of the process
+*
+* PARAMETERS:
+*         PTMIN  : Minimum Pt of high Pt quarks
+*         NGNTYP : Gen. Type(0=All,1=1Resolved,2=2resolved, 3=1sub. Proc.
+*         NGNPRC : Subprocess type ( Valid when Gen. Type = 3)
+*         NQSSRC : How to calculate Q^2(0=Shat, 1=Pt^2)
+*         NUMFLV : # of flavour(0=Acoording to Q^2, 3=dus, 4=dusc,5=duscb)
+*         NDISTR : Type of Parton distribution function.
+*            = 0 ; DG with Nflv controlled by QSQ
+*            = 1 ; DG with Nflv=3
+*            = 2 ; DG with Nflv=4
+*            = 3 ; DG with Nflv=5
+*            = 4 ; LAC, SET-I
+*            = 5 ; LAC, SET-II
+*            = 6 ; LAC, SET-III
+*            = 7 ; DO
+*            = 8 ; DO + VMD
+*            = 9 ; Modified DO + VMD
+*            =10 ; Gordon and Storrow
+*         NGMINS :  Photon source from e- beam (0=Bremstrulung, 1=Beamstrulung)
+*         NGPLUS :  Photon source from e+ beam (0=Bremstrulung, 1=Beamstrulung)
+*         XLAM   : (GeV^2) Lambda value to calculate Parton density function
+*         XXLAM  : (GeV^2) Lambda value to calculate Alpha_S
+*         YMAX3  : Rapidity max for jet-3
+*         YMAX4  : Rapidity max for jet-4
+*
+* DEFAULTS :
+*
+*          EBEAM  = 46.1
+*          PTMIN  = 2.5
+*          NGNTYP = 0
+*          NGNPRC = 0
+*          NQSSRC = 1
+*          NUMFLV = 0
+*          NDISTR = 0
+*          NGMINS = 0
+*          NGPLUS = 0
+*          XLAM   = 0.4
+*          XXLAM  = 0.4
+*          YMAX3  = 200.0
+*          YMAX4  = 200.0
+*
+*   EBEAM PTMIN NGNTYP NGNPRC NQSSRC NUFLV NDISTR
+GGPH 91.5  2.5    0      0      1      0     0
+*GGPH 46.1  2.5    0      0      1      0     0
+*   NGMINS NGPLUS XLAM XXLAM YMAX3 YMAX4
+      0     0    0.4   0.4  200.  200.
+*
+* GGPH :  Controls the details of the map generation by BASES integration
+*          package
+* PARAMETERS:
+*
+*         NCALL : Number of calls to BASES during integration
+*         ITMX1 : Number of iterations in grid defining step
+*         ITMX2 : Number of iterations in cross section calculation step
+*         ACC1  : Accuracy target in grid defining step
+*         ACC2  : Accuracy target in cross section calculation step
+* DEFAULTS :
+*         NCALL = 10000
+*         ITMX1 = 25
+*         ITMX2 = 25
+*         ACC1 = 0.2
+*         ACC2 = 0.2
+*
+*     NCALL ITMX1 ITMX2 ACC1  ACC2
+GBAS  10000   15      15   0.1  0.1
+END$
+ENDQ

@@ -1,0 +1,112 @@
+head	1.1;
+access;
+symbols
+	alio83:1.1
+	alio82:1.1
+	alio81:1.1
+	alio80:1.1
+	alio74:1.1
+	alio73:1.1
+	alio72:1.1
+	alio71:1.1
+	alio70:1.1
+	alio68:1.1
+	alio69:1.1
+	alio67:1.1
+	alio66:1.1
+	alio65:1.1
+	alio64:1.1
+	alio63:1.1
+	alio62:1.1
+	alio61:1.1
+	alio60:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.04.23.10.01.05;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@move alph, dbas, a part of alef and a part of c to alephio
+Modified Files:
+ 	version.h
+ Added Files:
+ 	adbrow.F adbrpn.F adbrun.F adbswp.F adbver.F agetdb.F agtfil.F
+	albos.F aldawr.F aldtyp.F aleveh.F alfind.F alfmt.F algtbk.F
+ 	algtdb.F algtlu.F algtro.F algtyp.F alinst.F alk7fil.F
+ 	alk7fru.F alk7op.F alk7tru.F alredb.F alrune.F alrunh.F
+ 	alrunr.F alseed.F alstho.F alstin.F alstri.F altabl.F alvsn.F
+ 	aopdbs.F aublis.F aubos.F aubprs.F bkcari.F bkinca.F bkrhab.F
+ 	bkrhal.F bkrhaw.F bktobk.F cafiht.F chahol.F dafrds.F gtdbas.F
+ 	gtstup.F igtfmt.F jhocha.F julrec.F junial.F junidb.F
+ 	kbytrec.F loctab.F nameru.F ubpack.F uclean.F uindxs.F usbos.F
+ 	usgtdb.F utcblk.F utccop.F utcofo.F utwocl.F utwoex.F
+Removed Files:
+	noibm.F
+@
+text
+@      SUBROUTINE UCLEAN(NAME,NUM,IER)
+C ----------------------------------------------------------------------
+C - J.F. Grivaz 15-03-1989
+C! Remove duplicate rows from a Tabular Bank
+C - Designed for relation bank, and works correctly only if
+C - the first column is normally filled with a positive integer
+C - Input :
+C -   NAME  = Bank name
+C -   NUM   = Bank number
+C - Output :
+C -   IER = 1 if Unsuccessful
+C - Calls UBPACK
+C  ----------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+      CHARACTER*4 NAME
+#include "bmacro.h"
+C ----------------------------------------------------------------------
+C
+      KINDX = NLINK(NAME,NUM)
+      IF(KINDX.LE.0) GO TO 999
+      NCOLS = LCOLS(KINDX)
+      NROWS = LROWS(KINDX)
+C
+      KIND1 = KINDX + LMHLEN
+      DO 1 I1 = 1,NROWS-1
+        IF(IW(KIND1+1).LT.0) GO TO 2
+        KIND2 = KIND1 + NCOLS
+        DO 3 I2 = I1+1,NROWS
+          IF(IW(KIND2+1).LT.0.) GO TO 4
+          DO 5 J = 1,NCOLS
+            IF(IW(KIND2+J).NE.IW(KIND1+J)) GO TO 4
+    5     CONTINUE
+          IW(KIND2+1)=-IW(KIND2+1)
+    4     CONTINUE
+          KIND2 = KIND2 + NCOLS
+    3   CONTINUE
+    2   CONTINUE
+        KIND1 = KIND1 + NCOLS
+    1 CONTINUE
+C
+      KTAG = 1
+      LTAG = 0
+      JTAG = -1
+      CALL UBPACK(NAME,NUM,KTAG,LTAG,JTAG,IER)
+      IF(IER.NE.0) GO TO 100
+      GO TO 100
+C
+  999 CONTINUE
+      IER = 1
+C
+  100 CONTINUE
+      RETURN
+      END
+#endif
+@

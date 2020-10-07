@@ -1,0 +1,142 @@
+head	1.1;
+access;
+symbols
+	aleph316_2:1.1
+	aleph316_1:1.1
+	aleph316:1.1
+	aleph315_7:1.1
+	aleph315_6:1.1
+	aleph315_5:1.1
+	aleph315_4:1.1
+	aleph315_3:1.1
+	aleph315_2:1.1
+	aleph315_1:1.1
+	aleph315:1.1
+	aleph314_2:1.1
+	aleph314_1:1.1
+	aleph314:1.1
+	aleph313_1:1.1
+	aleph313:1.1
+	aleph312_1:1.1
+	aleph312:1.1
+	aleph311_1:1.1
+	aleph311:1.1
+	aleph310_3:1.1
+	aleph310_2:1.1
+	aleph310_1:1.1
+	aleph310:1.1
+	aleph309_1:1.1
+	aleph309:1.1
+	aleph308_3:1.1
+	aleph308_2:1.1
+	aleph308_1:1.1
+	aleph308:1.1
+	aleph307_6:1.1
+	aleph307_5:1.1
+	aleph307_4:1.1
+	aleph307_2:1.1
+	aleph307_1:1.1
+	aleph307:1.1
+	aleph306:1.1
+	aleph305_4:1.1
+	aleph305_3:1.1
+	aleph305_2:1.1
+	aleph305_1:1.1
+	aleph305:1.1
+	aleph304_5:1.1
+	aleph304_4:1.1
+	aleph304_3:1.1
+	aleph304_2:1.1
+	aleph304_1:1.1
+	aleph304:1.1
+	aleph303_3:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	97.06.18.06.54.58;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Add routine pjpfxt
+@
+text
+@        SUBROUTINE PJPFXT(JFXTR)
+C***********************************************************************
+C
+C!  Create the FXTR bank and fill it from PFXT, if possible
+C
+C       Author: D.Casper    17/06/97
+C
+C       Input:  FRFT, PFXT banks
+C
+C       Output: JFXTR   BOS index of the newly created FXTR bank; zero if
+C                       track bank is missing or BOS array is full
+C
+C***********************************************************************
+#ifndef DOC
+#include "bcs.h"
+#include "fxtrjj.h"
+#include "pfxtjj.h"
+
+        data npfxt/0/
+#include "bmacro.h"
+C
+        jfxtr = 0
+        if (npfxt.eq.0) then
+            npfxt = namind('PFXT')
+            nfrft = namind('FRFT')
+        endif
+        jfrft = iw(nfrft)
+
+C Check presence of tracks
+
+        if (jfrft.le.0) return
+
+C Drop output bank, if it exists
+
+        call bdrop(iw,'FXTR')
+
+C Book the output bank, parallel to FRFT
+
+        ntrks = LROWS(jfrft)
+        lfxtr = LMHLEN + LFXTRA * ntrks
+        CALL AUBOS('FXTR',0,lfxtr,jfxtr,igarb)
+        if (jfxtr.eq.0 .or. igarb.eq.2) return
+        call blist(IW,'S+','FXTR')
+
+C Fill bank header
+
+        iw(jfxtr+lmhrow) = ntrks
+        iw(jfxtr+lmhcol) = lfxtra
+
+C If no tracks pre-selected (no PFXT bank), we're done
+
+        jpfxt = iw(npfxt)
+        if (jpfxt.eq.0) return
+
+C Fill FXTR from PFXT
+
+        do irow = 1, lrows(jpfxt)
+            kpfxt = krow(jpfxt,irow)
+            itrk  = iw(kpfxt + jpfxtn)
+            if (itrk.le.ntrks) then
+                kfxtr = krow(jfxtr, itrk)
+                iw(kfxtr + jfxtv0) = iw(kpfxt + jpfxv0)
+                iw(kfxtr + jfxtnc) = iw(kpfxt + jpfxnc)
+                iw(kfxtr + jfxtkn) = iw(kpfxt + jpfxkn)
+            endif
+        enddo
+
+        return
+        end
+#endif
+@

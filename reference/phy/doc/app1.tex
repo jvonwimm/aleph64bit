@@ -1,0 +1,40 @@
+\chapter{\label{sec-PSTRUC}Program Structure}
+\par
+\begin{verbatim}
+      QMAIN                  main program
+      |
+      +---- QMINIT           PROGRAM INITIALIZATION
+      |       |
+      |       +--  QUIBOS    init BOS
+      |       +--  QUIHIS    init histogram package
+      |       +--  QMALPH    initialize ALPHA
+      |       |
+      |       +--  QUINIT    user initialization               <---
+      |
+  +->-+---  QMREAD           READ EVENTS
+  |   |       |
+  |   |       +-- ABRSEL     open input files; read next record
+  |   |       |
+  |   |       +-...-> QUNEWR called for every new run
+  |   |       |
+  |   |       +-- QMTERM     terminate job if eof or time limit or ...
+  |   |
+  |   +---   QMEVNT          PROCESS ONE EVENT
+  |   |       |
+  |   |       +-- QFILL      fill ALPHA variables
+  |   |       |
+  +-<-+       +-- QUEVNT     user event analysis               <---
+ 
+ 
+called from anywhere :
+ 
+            QMTERM           PROGRAM TERMINATION
+              |
+              +--  QUTERM    user termination                  <---
+              |
+              +--  QUTHIS    output histograms
+              |
+              STOP           Fortran STOP
+ 
+ Arrows (<---) indicate the important user routines.
+\end{verbatim}

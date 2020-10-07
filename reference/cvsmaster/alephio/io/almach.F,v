@@ -1,0 +1,194 @@
+head	1.4;
+access;
+symbols
+	alio83:1.4
+	alio82:1.4
+	alio81:1.4
+	alio80:1.4
+	alio74:1.4
+	alio73:1.4
+	alio72:1.4
+	alio71:1.4
+	alio70:1.4
+	alio68:1.4
+	alio69:1.4
+	alio67:1.3
+	alio66:1.3
+	alio65:1.3
+	alio64:1.3
+	alio63:1.3
+	alio62:1.3
+	alio61:1.3
+	alio60:1.3
+	alephio53:1.2
+	v4:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.4
+date	97.01.16.13.55.50;	author flr;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.05.03.14.45.13;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.03.13.15.01.24;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.52.30;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.52.31;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@alephio68 introduce ALEPH_LINUX flag
+@
+text
+@       SUBROUTINE  ALMACH (NAME)
+C --------------------------------------------------------------------
+CKEY IO MACHINE / USER
+C - F.Ranjard - 921014
+C! returns the Historian flags used to make the library
+C - Modified by - P. Comas - 940608
+C                distinguish between VAX or Alpha
+C - Output : NAME  / A : Machine name
+C ----------------------------------------------------------------------
+#ifndef DOC
+      CHARACTER*(*) NAME
+      CHARACTER*8 FLAG
+#if defined(ALEPH_DEC) &&  ! defined(UNIX)
+      INCLUDE '($SYIDEF)'
+      INTEGER*4 LIB$GETSYI
+#endif
+C -----------------------------------------------------------------------
+      FLAG = 'UNKNOWN '
+#if defined(IBM)
+      FLAG = 'IBM'
+#else
+#if defined(ALEPH_DEC)
+#if defined(UNIX)
+      FLAG = 'DECS'
+#else
+      CALL LIB$GETSYI(SYI$_ARCH_NAME,,FLAG)
+#endif
+#else
+#if defined(APOLLO)
+      FLAG = 'APOLLO'
+#else
+#if defined(ALEPH_HP)
+      FLAG = 'HP'
+#else
+#if defined(RS6K)
+      FLAG = 'RS6K'
+#else
+#if defined(ALEPH_SGI)
+      FLAG = 'SGI'
+#else
+#if defined(ALEPH_LINUX)
+      FLAG = 'LINUX'
+#else
+#if defined(UNIX)
+      FLAG = 'UNIX'
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+      LE = LNBLNK(FLAG)
+      LM = LEN (NAME)
+      NAME = ' '
+      L = MIN (LE,LM)
+      IF (L.GT.0) NAME = FLAG(1:L)
+      END
+#endif
+@
+
+
+1.3
+log
+@replace flag ${VENDOR} with ALEPH_${VENDOR}
+Modified Files:
+  ard/	ainqui.F algtenv.F aopen.F aopenw.F aoperd.F aoptap.F astage.F
+ 	awrtap.F
+  pres/	cmpbu3.c cmpbu4.c cmpbu5.c dmpbl3.c dmpbl4.c dmpbl5.c dmpcop.c
+ 	extzv.c insv.c
+  epio/ epinit.F
+  inc/ 	cmphost.h ctolow.h gtchunit.h gtftyp.h
+  io/ 	almach.F openda.F opendb.F opensq.F sdrsx.F sibsdr.F sxsdr.F
+@
+text
+@d41 3
+d46 1
+@
+
+
+1.2
+log
+@import alephio 52 from historian. Modify aclose.F to NOT call brwnd twice
+for the same file. update version.h to 5.3
+@
+text
+@d13 1
+a13 1
+#if defined(DEC) &&  ! defined(UNIX)
+d22 1
+a22 1
+#if defined(DEC)
+d32 1
+a32 1
+#if defined(HP)
+d38 1
+a38 1
+#if defined(SGI)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK almach
+d13 1
+a13 1
+#if defined(VAX)
+a21 3
+#if defined(VAX)
+      CALL LIB$GETSYI(SYI$_ARCH_NAME,,FLAG)
+#else
+d23 1
+d26 3
+a42 1
+#endif
+@
+
+
+1.1.1.1
+log
+@import alephio 4
+@
+text
+@@

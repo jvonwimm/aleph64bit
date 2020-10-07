@@ -1,0 +1,165 @@
+head	1.2;
+access;
+symbols
+	alpha126_22:1.2
+	alpha122_22:1.2
+	alpha126_21:1.2
+	alpha126_20:1.1
+	alpha126_19:1.1
+	alpha126_18:1.1
+	alpha126_17:1.1
+	alpha126_16:1.1
+	alpha126_15:1.1
+	alpha126_14:1.1
+	alpha126_13:1.1
+	alpha126_12:1.1
+	alpha126_11:1.1
+	alpha126_10:1.1
+	alpha126_09:1.1
+	alpha126_08:1.1
+	alpha126_07:1.1
+	alpha126_06:1.1
+	alpha126_05:1.1
+	alpha126_04:1.1
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1
+	alpha124:1.1
+	alpha123_12:1.1
+	alpha123_11:1.1
+	alpha123_10:1.1
+	alpha123_9:1.1
+	alpha123_8:1.1
+	alpha123_7:1.1
+	alpha123_6:1.1
+	alpha123_5:1.1
+	alpha123_4:1.1
+	alpha123_3:1.1
+	alpha123_2:1.1
+	alpha123:1.1
+	alpha122_48:1.1
+	alpha122_47:1.1
+	alpha122_46:1.1
+	alpha122_45:1.1
+	alpha122_44:1.1
+	alpha122_43:1.1
+	alpha122_42:1.1
+	alpha122_41:1.1
+	alpha122_40:1.1
+	alpha122_39:1.1
+	alpha122_38:1.1
+	alpha122_37:1.1
+	alpha122_36:1.1
+	alpha122_35:1.1
+	alpha122_34:1.1
+	alpha122_33:1.1
+	alpha122_32:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	2003.03.12.13.17.56;	author alphy;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.06.24.11.11.08;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE QTRUZ
+C***********************************************************************
+C Reset the history of the event wrt MC-EF matching.
+C Author: Paul Bright-Thomas
+C Mods:     03/03/97 PBT Created.
+C***********************************************************************
+#ifndef DOC
+      INTEGER II,JJ
+#include "mcef.h"
+C***********************************************************************
+C-- Zero the EF-MC matches
+      NEFIN = 0
+      DO 100 II = 1,MXEF
+        NEFMC(II)  = 0
+        ITEFIN(II) = 0
+        DO 110 JJ = 1,MXMTCH
+          ITEFMC(II,JJ) = 0
+          SEFMC(II,JJ)  = 0.
+ 110    END DO
+ 100  END DO
+C-- Zero the MC-EF matches
+      NMCIN = 0
+      DO 200 II = 1,MXMC
+        NMCEF(II)  = 0
+        ITMCIN(II) = 0
+        DO 210 JJ = 1,MXMTCH
+          ITMCEF(II,JJ) = 0
+          SMCEF(II,JJ)  = 0.
+ 210    END DO
+ 200  END DO
+C
+ 999  RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@d5 1
+a5 1
+C Mods:   03/03/97 PBT Created.
+@
+

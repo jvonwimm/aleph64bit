@@ -1,0 +1,91 @@
+#!/usr/local/bin/perl 
+require "complete.pl"; 
+require "ctime.pl";
+###############################################################################
+#                              progl
+# 20/08/96                                                            F.Blin   
+# updated file $ALDOC/progl.lis
+# eg: progl julia 304
+###############################################################################
+$ALROOT = $ENV{'ALROOT'};
+$ALINC = $ENV{'ALINC'};
+$ALDOC = $ENV{'ALDOC'};
+$CYCLE = "";
+$PROG = "";
+
+$n_parameter = @ARGV;
+if($n_parameter > 0){
+  $PROG_name = shift(@ARGV);
+  $CYCLE = shift(@ARGV) if ($n_parameter > 1);
+}
+$PROG_name =~ tr/A-Z/a-z/;
+if (substr($PROG_name,0,5) eq "aleph" || substr($PROG_name,0,5) eq "alpha" || $PROG_name eq "julia" || $PROG_name eq "galeph"){
+   $PROG_name = "alephlib" if ($PROG_name eq "aleph");
+   $PROG = $PROG_name if ($PROG_name eq "alephio");
+   $PROG = substr($PROG_name,0,5) if ($PROG_name eq "alpha");
+   $PROG = substr($PROG_name,0,5) if ($PROG_name eq "alephlib");
+   $PROG = substr($PROG_name,0,3) if ($PROG_name eq "julia" || $PROG_name eq "galeph");
+   }   
+else {
+    &help;
+}
+$dir_prog = "$PROG$CYCLE"; 
+$dir_prog = "$PROG" if ($PROG_name eq "alephio" || $PROG_name eq "mini" || $PROG_name eq "bos77"); 
+
+print "PROG=$PROG PROG_name=$PROG_name Directory -> $dir_prog \n";
+
+if (!open(PROGLIS, "$ALDOC/progl.lis")) {
+    print "WARNING cannot open the file $ALDOC/progl.lis \n";
+    exit;
+}
+@the_file = <PROGLIS>;
+close (PROGLIS);
+  for( $i=0 ; $i<$#the_file + 1; $i++){
+    $line = $the_file[$i];
+    @prog_info = split(/\s+/, $line);
+    $prog_name = $prog_info[0];
+    if($prog_name eq $PROG_name) {
+       print "prog_name=$prog_name PROG_name=$PROG_name \n" ;
+       print "prog_info=@prog_info\n";
+       print "old:the_file[$i]->$the_file[$i]";
+       $prog_info[0] = $PROG_name;
+       $prog_info[1] = $CYCLE;
+       $prog_info[2] = $dir_prog;
+       $the_file[$i] = &do_packing(@prog_info);
+       print "new:the_file[$i]->$the_file[$i]";
+       system("cp $ALDOC/progl.lis $ALDOC/progl.lis_old");
+       if (!open(PROGLIS, ">$ALDOC/progl.lis")) {
+          print "WARNING cannot open the file $ALDOC/progl.lis \n";
+          exit;
+       }
+       print PROGLIS @the_file;
+       close (PROGLIS);
+       last;
+    }
+}
+
+exit;
+
+###############################################################################
+sub do_packing{
+    local(@prog_info) = @_;
+    local($var) = "";
+
+    $prog_info[0] = pack(A9, "$PROG_name");
+    $prog_info[1] = pack(A8, "$CYCLE");
+    $prog_info[2] = pack(A10, "$dir_prog");
+    $var = "$prog_info[0] $prog_info[1] $prog_info[2] $prog_info[3]\n";
+
+    return $var;
+}
+
+###############################################################################
+sub help {
+    print "Syntax     : progl  program_name [- cycle]\n";
+
+    print "examples : progl alephio 070 \n";
+    print "           progl alephib 214 \n";
+    print "           progl julia 281 \n";
+    exit;
+}
+###############################################################################

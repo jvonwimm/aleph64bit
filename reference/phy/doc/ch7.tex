@@ -1,0 +1,715 @@
+ \chapter{\label{sec-A}ALPHA ``Tracks'' and ``Vertices''}
+\par
+Before QUEVNT is called for each event, ALPHA fills its own data structure
+with information from the event.  Each ``tracklike'' object (eg.,
+tracks, calorimeter objects, energy flow objects, etc.) is
+assigned a unique number. (A ``tracklike'' object is any object which
+can be
+described with a 4 vector.)
+This ALPHA ``track'' number is equal to the JULIA
+``track'' number + a constant. Unique ALPHA numbers are also assigned
+to
+vertices (reconstructed vertices and Monte Carlo vertices).
+The constant is introduced in order to obtain a unique numbering scheme
+for all
+species of ``tracks'' or vertices (in JULIA and GALEPH,
+different species start with
+the number 1).  In the description below, ITK always refers to an
+ALPHA ``track''
+number and IVX to an ALPHA vertex number.
+\par The properties of the tracks and vertices are found using functions
+which
+refer to the ALPHA ``track'' and vertex numbers. For example, the
+energy of
+ALPHA ``track'' ITK is QE(ITK). The properties available for each
+tracklike
+object and each vertex are described in sections \ref{sec-TVATA}
+and \ref{sec-TVAVA}, respectively.
+\par
+In the following sections, several methods for determining ALPHA track
+and vertex numbers are described. All of these methods can be nested.
+Functions which give simple access to relationships between different
+types of objects are also described.
+ 
+\section{\label{sec-AL}Access by Fortran DO loops}
+\par
+In ALPHA, fortran DO loops can be used to loop over most types of
+objects.
+For each type of object, three variables are defined:
+KFxxx, KLxxx, KNxxx. xxx represents the type of object. The last
+letter of the variables is either T (tracklike) or V (vertex).
+DO loops must be made from KFxxx to KLxxx; KNxxx is the number of
+objects
+of type xxx.
+\par
+For example, the following three lines will make a histogram of
+the momentum spectrum of charged particles.
+\begin{verbatim}
+              DO 10 ITK = KFCHT, KLCHT
+                CALL HF1 (47,QP(ITK),1.)
+         10   CONTINUE
+\end{verbatim}
+\begin{indentlist}{ 3.25cm}{ 3.50cm}
+\indentitem{KFCHT,KLCHT}
+number of first (last) charged track.
+\indentitem{ITK}loop index = ALPHA track number
+\indentitem{QP(ITK)}momentum of track ITK (see \ref{sec-TVABA})
+\end{indentlist}
+The number of charged tracks is given by the variable
+KNCHT.
+KNCHT stands for KLCHT $-$ KFCHT + 1.
+Therefore, if KNCHT = 0, KLCHT = KFCHT $-$ 1.
+\par The objects which can be accessed with these DO loops are
+listed in the following two sections.
+ 
+\subsection{\label{sec-altrack}ALPHA ``TRACKS'' :}
+\par
+ALPHA ``tracks'' are stored in the internal ALPHA bank QVEC.
+
+\begin{indentlist}{ 2.00cm}{ 2.25cm}
+\indentitem{Charged Tracks: KFCHT, KLCHT, KNCHT}
+
+If the FRF0 card is present in the ALPHA cards file, the NR=0
+version of the FRFT bank (track parameters determined without vertex
+detector coordinates) will be used.  Otherwise, the NR=2 version
+of FRFT (TPC + ITC + VDET tracks) will be used.  Only FRFT NR=2
+tracks are available on the MiniDST.
+ 
+\indentitem{Calorimeter Objects: KFCOT, KLCOT, KNCOT}
+
+For physics analysis with optimised energy resolution,
+ one should better use the Energy Flow 
+objects (see below).
+
+Calorimeter objects can
+be any of the following:
+\begin{itemize}
+\item ECAL objects with no associated HCAL object.\footnote{For
+ECAL wire energies, see~\ref{sec-ECWI}.}
+\item HCAL objects with no associated ECAL object.
+\item Composite cal.
+objects consisting of at least one ECAL and HCAL object
+associated to each other. See \ref{sec-ALC}
+for getting access to the contributing ECAL and HCAL objects separately.
+See the end of Section \ref{sec-AR} for a more detailed description
+of composite cal. objects in ALPHA.
+\end{itemize}
+Calorimeter objects can be further divided into:
+\begin{indentlist}{ 2.00cm}{ 2.25cm}
+\indentitem{ISolated cal. objects:  KFlST, KLIST, KNIST}
+Cal objects with NO associated charged track.
+\indentitem{ASsociated cal. objects: KFAST, KLAST, KNAST}
+Cal objects with one or more associated charged track.
+\end{indentlist}
+ 
+\indentitem{``REconstructed'' objects: KFRET, KLRET, KNRET}
+
+``REconstructed'' objects are:
+\begin{itemize}
+\item Charged tracks;
+\item Calorimeter objects (see above)
+which are NOT associated to charged tracks (ISolated cal. objects).
+\end{itemize}
+ 
+\indentitem{Reconstructed Standard V0s from YV0V: KFV0T, KLV0T, KNV0T}
+
+See Section
+\ref{sec-AMM} for comments on the daughters of standard V0s.
+ 
+\indentitem{Tracks from standard V0 Vertices: KFDCT, KLDCT, KNDCT}
+
+Charged tracks outgoing from reconstructed DeCay vertices. The momenta
+for these tracks are calculated relative to the secondary
+vertex position.
+
+ Caution: this section includes only the daughter tracks from
+reconstructed standard V0s from YV0V, and not from the ``Long V0s'' 
+coming from the new tracking with JULIA version 302 and after (see below).
+
+\indentitem{Reconstructed Long V0s: KFLVT, KLLVT}
+
+ ``Long V0s'' (coming from the new tracking with JULIA version 302 and after). 
+One gets the loop limits for them through the following subroutine call:
+
+ CALL QLV0T(KFLVT,KLLVT)                               
+                                           
+ 
+\indentitem{Energy Flow objects: KFEFT, KLEFT, KNEFT}
+
+This section includes selected charged tracks
+and ECAL and HCAL clusters remaining after subtracting
+track energies. These objects
+may also be accessed with their particle name `EFLW' using
+the functions KPDIR and KFOLLO (described in
+\ref{sec-AD}).
+This section is not
+filled unless the EFLW card is included in the card file
+(see Ch. \ref{sec-EF}).
+
+Energy Flow objects made with the ENFLW package (see Chapter 11)
+should be used for all analyses which need an optimised calorimeter 
+energy resolution.
+\indentitem{NEutral Calorimeter Objects: KFNET, KLNET, KNNET}
+
+Neutral objects derived from the PCPA bank.  These objects
+may also be accessed with their particle name `NEOB' using
+the functions KPDIR and KFOLLO (described in
+\ref{sec-AD}). To be used only by experts.
+ 
+\indentitem{Photons from GAmpec: KFGAT, KLGAT, KNGAT}
+
+These objects
+may also be accessed with their particle name `GAMP' using
+the functions KPDIR and KFOLLO (described in
+\ref{sec-AD}).
+ 
+\indentitem{Jets from EJET: KFJET, KLJET, KNJET}
+
+Jets based on EFLW objects using QJMMCL with
+YCUT = 0.003.
+These objects
+may also be accessed with their particle name `EJET' using
+the functions KPDIR and KFOLLO (described in
+\ref{sec-AD}). They may be used as input for jet finding
+with a higher YCUT (see~\ref{sec-QJSIM} and~\ref{sec-EFLWJ}).
+ 
+\indentitem{Monte Carlo particles (``truth'') KFMCT, KLMCT, KNMCT}
+\end{indentlist}
+ 
+\subsection{\label{sec-alvert}ALPHA ``VERTICES'' :}
+\par
+
+         ALPHA  ``vertices'' are stored in the ALPHA internal bank QVRT.
+
+\begin{indentlist}{ 2.00cm}{ 2.25cm}
+
+
+\indentitem{Monte Carlo vertices (``truth''): KFMCV, KLMCV, KNMCV}
+            These vertices come either from the  KINGAL generator or from the
+ interactions in GALEPH.  
+
+\indentitem{REconstructed Vertices: KFREV, KLREV, KNREV}
+
+For datasets coming from the ``old'' tracking (JULIA version 285 and before) 
+ this includes:  the Main
+vertex (which is the first vertex, KFREV, when it exists),
+Standard V0s from the YV0V
+package, and Secondary vertices fitted by any of the KVFITx routines, see sec.
+\ref{sec-QFIT} on p.~\pageref{sec-QFIT}.
+
+It is possible that there is no Main vertex in an event.
+
+For datasets coming from the ``new'' tracking of 1997
+(JULIA version 302 and after):
+ in addition to the previous vertices one may get three
+ other vertex categories described below.
+ To access them  by DO loops, one has
+ to call specific subroutines which give the corresponding vertex numbers:
+
+\begin{itemize}
+\item ``Long V0s'': 
+
+                     CALL QLV0V(KFLV0,KLLV0)
+ 
+                     KFLV0, KLLV0 are the first and last ``Long V0'' vertex 
+                     numbers, if any.
+
+\item Nuclear Interactions:
+
+                     CALL QNUCL(KFNIV,KLNIV)
+
+                     KFNIV, KLNIV are the first and last nuclear interaction
+                     vertex numbers, if any
+
+
+\item Kink Vertices:
+
+                     CALL QKINKV(KFKIV,KLKIV)
+
+                     KFKIV, KLKIV are the first and last kink                  
+                     vertex numbers, if any
+  
+
+
+\end{itemize}
+
+    Please take note of the above subroutine calls: they are mandatory to get
+the loop limits for these new vertex categories.
+
+\end{indentlist}
+ 
+\section{\label{sec-ALC}Loops over ECAL and HCAL objects}
+\par
+If ECAL and HCAL objects are topologically associated to each other,
+the loops described above give access to composite calorimeter objects
+rather than to each contributing ECAL and HCAL object separately.
+It is also possible to get access to all ECAL and HCAL objects, regardless
+of
+whether or not they are associated to other reconstructed objects.
+(The
+loops described below are equivalent to looping through the PECO and
+PHCO
+banks.)
+ 
+The following statements perform a loop over all ECAL objects;
+see \ref{sec-AD}.
+(DO loops cannot be used because the objects are
+not stored in consecutive locations.)
+\begin{verbatim}
+            IOBJ = KPDIR ('ECAL', KRECO)
+         10 IF (IOBJ .EQ. 0)  GO TO 999
+      C...      Analysis of the ECAL object IOBJ ...
+            IOBJ = KFOLLO (IOBJ)
+            GO TO 10
+\end{verbatim}
+(The functions KPDIR and KFOLLO are described in
+\ref{sec-AD}.)
+The corresponding loop for HCAL objects is:
+\begin{verbatim}
+            IOBJ = KPDIR ('HCAL', KRECO)
+         10 etc ...
+\end{verbatim}
+\section{\label{sec-AR}Relationships between objects in different
+subdetectors}
+\par
+The JULIA program provides relationships between objects reconstructed
+in the various detector components if they are topologically
+associated to each other. These relations are available in ALPHA and
+can be used for charged tracks, ECAL objects, HCAL objects, and
+composite calorimeter
+objects. (Below, IOBJ is any ALPHA ``track'' number referring
+to a charged track, cal.
+object, ECAL object, or HCAL object.)
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{KNCHGD (IOBJ)}
+Number of charged tracks associated to IOBJ.
+\indentitem{KCHGD (IOBJ, N)}
+The Nth charged track associated to IOBJ.
+\end{indentlist}
+%\newpage
+For example,
+\begin{verbatim}
+            IOBJ = ... any calorimeter object ...
+            DO 10 N = 1, KNCHGD (IOBJ)
+            ICHGD = KCHGD (IOBJ, N)
+      C ...   analysis of a charged track ICHGD associated to IOBJ ...
+         10 CONTINUE
+\end{verbatim}
+Note: If IOBJ in the example above is a charged track itself, then
+KNCHGD (IOBJ) is 1 and KCHGD (IOBJ,1) gives IOBJ.
+Similarly:
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{KNECAL (IOBJ)}
+Number of ECAL objects associated to IOBJ.
+\indentitem{KECAL (IOBJ, N)}
+The Nth ECAL object associated to IOBJ.
+ 
+\indentitem{KNHCAL (IOBJ)}
+Number of HCAL objects associated to IOBJ.
+\indentitem{KHCAL (IOBJ, N)}
+The Nth HCAL object associated to IOBJ.
+\end{indentlist}
+\par
+The relation from a composite calorimeter object ICOMP to each
+of its contributing ECAL and HCAL object is provided by
+the relations described above: KECAL (ICOMP,N) and KHCAL (ICOMP,N).
+In addition, the composite object is treated as ``mother'' of the
+contributing ECAL and HCAL objects, so the mother$-$daughter or
+daughter$-$mother relation described in
+\ref{sec-AM} can be used for all calorimeter objects.
+\par Note that the composite calorimeter
+objects in ALPHA are not identical to those in the PCRL bank.  ALPHA
+composite calorimeter objects include at most one HCAL object, while the
+PCRL
+objects may include many HCAL objects.  ALPHA starts with each HCAL
+object and adds the ECAL objects that are associated to it.
+If an ECAL object is
+associated to more than one HCAL object, its energy is divided equally
+among the HCAL objects.
+\section{\label{sec-AD}Direct access to particles}
+\par
+\subsection{\label{sec-ADI}Particle name and class}
+\par
+In addition to the loops described above, it is possible to access
+particles by
+their name.
+In many cases, this method is faster and the code is easier to read
+than the
+standard loops
+described in \ref{sec-AL}.
+Two quantities must be specified:
+\begin{itemize}
+\item The particle name (example: `E+' or `GAMMA'); see
+\ref{sec-PTD}.
+\item The object (= track = particle) class which distinguishes between
+reconstructed tracks, the
+Monte$-$Carlo truth, and any Lorentz frame derived from one of them:
+\begin{itemize}
+\item Class KRECO: Reconstructed objects read from the event input
+file
+and everything derived from
+them except Lorentz boosted objects.
+\item Class KMONTE: Monte$-$Carlo truth.
+\item Each Lorentz frame is considered as its own class
+(see \ref{sec-QT}).
+These classes are denoted by the number of the object which defines
+the Lorentz rest frame.
+\end{itemize}
+\end{itemize}
+\par KRECO and KMONTE are
+available
+everywhere as integer Fortran parameters. Their actual values are
+$-$1 and
+$-$2, respectively. Positive integers denote Lorentz frames. Integers
+less than $-$2 can be used to create your own particle classes
+(see KVSAVC in \ref{sec-QVSC}).
+\par
+The particle name of MC particles is specified in the MC particle
+table
+(see \ref{sec-PTD}).
+Reconstructed objects have the names `CHARGED', `ECAL',
+`HCAL', `CALOBJ', `EFLW', 'NEOB', and 'GAMP'
+ for charged tracks, ECAL objects, HCAL objects,
+unspecified (\eg, composite) calorimeter objects,
+energy flow objects, neutral calorimeter objects, and GAMPEC photons,
+respectively.
+The functions KVSAVE, KVSAVC, and KIDSAV (see~\ref{sec-QVSTID})
+can be used to create new tracks with
+a name.
+A list of standard particle names is given in App. \ref{sec-STP}.
+New particle names can be introduced by using them in ALPHA
+subroutine calls or by specifying them on data cards (see
+\ref{sec-PTPNEW}).
+ 
+\subsection{\label{sec-ADE}Example: Loop over all MC generated positrons}
+\par
+\begin{verbatim}
+              ITK = KPDIR ('E+', KMONTE)
+         10   IF (ITK .EQ. 0)  GO TO 90
+        C     ... e+ analysis ...
+              ITK = KFOLLO (ITK)
+              GO TO 10
+         90   CONTINUE ...
+\end{verbatim}
+\begin{indentlist}{ 3.25cm}{ 3.50cm}
+\indentitem{KPDIR ('particle$-$name', ICLASS)}
+{\it 'particle$-$name':} Character string (1 to 12 characters).
+{\it ICLASS:} Track class (see \ref{sec-ADI}): KRECO
+or KMONTE or a track number
+ITKRST if ITKRST has been used before to define the rest frame for
+a
+Lorentz boost (see \ref{sec-QT}).
+\indentitem{KFOLLO (ITK)}
+The following particle with the same particle name in the
+same class.
+\indentitem{Remarks:}
+ 
+The term ``FOLLOwing'' refers to some arbitrary ordering.
+Lower case characters in particle names are translated to
+upper case. It is safest, however, to use only
+upper case characters with ALPHA.
+\end{indentlist}
+\subsection{\label{sec-ADT}Particle name versus integer particle
+code -- time consumption}
+\par
+Using character particle names in function calls makes the code easier
+to read, but it implies a
+lookup in a table. Although the lookup is fast,
+in nested loops it may be
+desirable to save this time. Consequently, some (not all)
+functions are provided in two versions: one which expects the particle
+name as an argument and another which expects the corresponding
+integer particle code and thus saves the lookup time. The second version
+is denoted by a ``C'' (= ``Code'') as the 2nd character of the function
+name.
+\par Using integer particle codes,
+the example given in section \ref{sec-ADE} becomes:
+\begin{verbatim}
+        C ... somewhere in the job or subroutine initialization:
+              IP = KPART ('E+')
+        C ...
+              ITK = KCDIR (IP, KMONTE)
+         10   IF (ITK .EQ. 0)  GO TO 90
+        C     ... analysis of the e+ ...
+              ITK = KFOLLO (ITK)
+              GO TO 10
+ 
+         90   CONTINUE ...
+\end{verbatim}
+\begin{indentlist}{ 5.00cm}{ 5.25cm}
+\indentitem{IP = KPART('name')}
+must be called before IP is used. The particle name is the basic
+reference to a particle. The integer
+code may change from one job to another.
+\indentitem{KCDIR (IP, ICLASS)}
+First particle with the given particle code in class ICLASS.
+\end{indentlist}
+ 
+\subsection{\label{sec-ADA}Loops over a particle and its antiparticle}
+\par
+The particle table contains the relation between particles and
+antiparticles, so loops over particles (or systems of particles)
+and their corresponding (systems of) antiparticles can be
+performed easily.
+\par
+{\bf Example:} Loop over MC $-$ generated e+ and e$-$:
+\begin{verbatim}
+              DO 90 IANTI = 0,1
+              ITK = KPDIRA ('E+', KMONTE, IANTI)
+         10   IF (ITK .EQ. 0)  GO TO 90
+        C     ... analysis of the e+ or e- ...
+              ITK = KFOLLO (ITK)
+              GO TO 10
+ 
+         90   CONTINUE ...
+\end{verbatim}
+\begin{indentlist}{ 5.00cm}{ 5.25cm}
+\indentitem{KPDIRA ('particle$-$name', ICLASS, IANTI)}
+If IANTI=0, KPDIRA returns the first particle with the
+given name in the class ICLASS.
+If IANTI is not equal to 0, the first corresponding antiparticle
+is given.
+\end{indentlist}
+To use the integer particle code (see \ref{sec-ADT}), replace
+\begin{verbatim}
+KPDIRA ('E+', KMONTE, IANTI) with KCDIRA (IP, KMONTE, IANTI).
+\end{verbatim}
+ 
+\subsection{\label{sec-ADS}Analysis of particle systems: Examples}
+\par
+Systems of particles can be analyzed by nesting loops with
+KPDIR and KPDIRA. The two examples given below illustrate
+cases in which care must be taken to avoid multiple counting of the
+same
+particle combinations.
+ 
+\subsubsection{\underline {Combinations of the same particles: $\pi$$\sp{+}$
+$\pi$$\sp{+}$}}
+\par
+\begin{verbatim}
+       C---First select pion candidates
+              DO 5 ITK=KFCHT,KLCHT
+              IF(condition to select pions) THEN
+                ISAVE=KIDSAV(ITK,'PI+')
+              ENDIF
+            5 CONTINUE
+       C---Loop over selected pions.
+              IPIONE = KPDIR ('PI+', KRECO)
+           10 IF (IPIONE .NE. 0)  THEN
+                IPITWO = KFOLLO (IPIONE)                 <--- important
+           20   IF (IPITWO .NE. 0)  THEN
+                  ... analysis of the pi+ pi+ system ...
+                  IPITWO = KFOLLO (IPITWO)
+                  GO TO 20
+                ENDIF
+              IPIONE = KFOLLO (IPIONE)
+              GO TO 10
+              ENDIF
+\end{verbatim}
+The 2nd $\pi$$\sp{+}$ (IPITWO) has to be initialized with KFOLLO and
+NOT
+with KPDIR. See section \ref{sec-QVSTID} for the use of KIDSAV.
+\subsubsection{\underline{$\Delta$$\sp{+}$$\sp{+}$
+$\rightarrow$ p $\pi$$\sp{+}$}}
+\par
+Proton and pion candidates must be selected and saved with KVSAVE
+or KIDSAV before this code is reached (see \ref{sec-QVST}).
+\begin{verbatim}
+              IPROT = KPDIR ('P', KRECO)
+           10 IF (IPROT .NE. 0)  THEN
+                IPIPLU = KPDIR ('PI+', KRECO)
+           20   IF (IPIPLU .NE. 0)  THEN
+                IF (.NOT.XSAME(IPROT,IPIPLU))  THEN    <--- important
+       C         ... analysis of the p pi+ system ...
+                ENDIF
+                IPIPLU = KFOLLO (IPIPLU)
+                GO TO 20
+              ENDIF
+              IPROT = KFOLLO (IPROT)
+              GO TO 10
+            ENDIF
+\end{verbatim}
+ 
+The logical function XSAME (see \ref{sec-TVATPSO}) tests whether the
+two
+contributing particles are based on
+different reconstructed objects or simply on different mass
+hypotheses of the same reconstructed object.
+ 
+\section{\label{sec-AM}Mother $-$ daughter relationships}
+\par
+\subsection{\label{sec-AMM}Mother to daughters}
+\par
+The connection
+from a mother to its daughters is available for MC particles
+and for composite particles established by the QVxxxx
+routines described in \ref{sec-QVA}.
+\begin{verbatim}
+              IMOTH = ... (track number of a mother particle)
+              DO 10 I = 1, KNDAU (IMOTH)
+                IDAUGH = KDAU (IMOTH,I)
+                CALL HFILL (47, QP(IDAUGH))
+         10   CONTINUE
+\end{verbatim}
+\begin{indentlist}{ 3.00cm}{ 3.25cm}
+\indentitem{KNDAU (ITK)}
+number of daughters for track ITK
+= 0 if no daughter exists
+\indentitem{KDAU (ITK,I)}
+track number of Ith daughter
+\end{indentlist}
+{\bf Note for standard V0s from YV0V:} The daughters of a standard V0
+ (section V0T) are
+stored in the DCT section (see \ref{sec-AL}).
+These tracks are copies of tracks in the
+CHT section, but their momenta are recalculated relative
+to the secondary vertex position.
+The function KCHT (see \ref{sec-KCHT})
+returns the CHT track number corresponding to
+a track in the DCT section.
+\par
+
+{\bf Example:}
+\begin{verbatim}
+         DO 10 IV0=KFV0T,KLV0T
+c---  First daughter of V0 (in DCT section)
+       I1DCT=KDAU(IV0,1)
+C --- Corresponding track in CHT section.
+       I1CHT=KCHT(I1DCT)
+    10 CONTINUE
+\end{verbatim}
+
+The above note is {\bf not valid} for the ``Long V0s'' from the new tracking
+(vertices in the range KFLV0,KLLV0).
+\par
+\subsection{\label{sec-AMD}Daughter to mother(s)}
+\par
+The connection from a daughter to its mother(s) is available for MC
+particles and for daughters of ``saved'' composite particles (see
+KVSAVE
+in \ref{sec-QVST}).
+The QVADDx routines (\ref{sec-QVA}) and
+the jet / event topology routines \ref{sec-QJ})
+do NOT set up this relation.
+\begin{verbatim}
+              IDAUGH = ... (track number of a daughter particle)
+              DO 10 I = 1, KNMOTH (IDAUGH)
+                IMOTH = KMOTH (IDAUGH,I)
+                CALL HFILL (47, QP(IMOTH))
+         10   CONTINUE
+\end{verbatim}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{KNMOTH (ITK)}
+Number of mothers of track ITK. Note that MC particles
+as read in from the event input file have no or one mother.
+\indentitem{KMOTH (ITK,I)}
+Track number of the Ith mother.
+\end{indentlist}
+\section{\label{sec-AS}Access to the ``same'' object}
+\par
+The ``same'' object means:
+\begin{itemize}
+\item any copy of an object;
+\item for reconstructed tracks, the ``same'' object with different
+mass or
+vertex hypothesis;
+\item The ``same'' object boosted into any Lorentz frame.
+\end{itemize}
+\subsection{Loops over copies of the ``same'' object using KSAME}
+Example:
+\begin{verbatim}
+          ITKSAM = KSAME (ITK)
+       10 IF (ITKSAM .EQ. ITK)  GO TO 90
+    C       ... analysis of the same object, e.g.: search for the object
+    C           in a specific Lorentz frame ITKRST (see >):
+          IF (KCLASS (ITKSAM) .EQ. ITKRST)  THEN
+    C       ...
+          ENDIF
+          ITKSAM = KSAME (ITKSAM)
+          GO TO 10
+       90 CONTINUE ...
+\end{verbatim}
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{Remarks:}
+This loop is terminated if it arrives at the original track.
+KSAME never returns 0.
+The same particle can be boosted several times into the same
+Lorentz frame provided that the boosts are performed with
+different mass or other hypotheses (see
+\ref{sec-QTL}); if you start with the original track ITK,
+the most recently boosted hypothesis is reached first.
+\end{indentlist}
+\par
+\subsection{\label{sec-KCHT}Find original copy of a charged track}
+For copies of charged tracks, the function KCHT returns the original
+track number in the CHT section.
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{KCHT (ITK)}
+If $
+KFCHT\leq ITK\leq KLCHT
+$,
+{\bf KCHT (ITK)} is equal to ITK. Otherwise (i.e., ITK is a
+copy of a track in the CHT section),
+{\bf KCHT (ITK)}
+equals the corresponding track number in the CHT section.
+This function can be used only for charged tracks; for other objects,
+use KSAME.
+\end{indentlist}
+\section{\label{sec-AX}Match reconstructed tracks and MC truth}
+\par
+The relation between reconstructed and MC particles is not necessarily
+one$-$to$-$one. Therefore, a loop has to be constructed:
+\begin{verbatim}
+        ITK1 = ... (any given MC or reconstructed track number)
+        DO 10 I = 1, KNMTCH(ITK1)
+          IF (KSMTCH (ITK1,I) .LE. (min. required shared hits))  GO TO 10
+          ITK2 = KMTCH (ITK1,I)
+  C       ...
+     10 CONTINUE
+\end{verbatim}
+If ITK1 is a reconstructed track then ITK2 is a matching MC track.
+If ITK1 is a MC track then ITK2 is a matching reconstructed track.
+\begin{indentlist}{ 3.25cm}{ 3.50cm}
+\indentitem{KNMTCH (ITK)}Number of matching candidates for track ITK.
+\indentitem{KMTCH (ITK,I)}Track number of Ith matching particle.
+\indentitem{KSMTCH (ITK,I)}Number of shared hits between MC and reconstructed
+track.
+\indentitem{KBESTM (ITK)}Best  match to track ITK.
+
+\end{indentlist}
+\newpage
+{\bf Remarks:}
+\begin{itemize}
+\item The match is performed on the basis of shared hits in the
+TPC and ITC.
+\item A much better matching is provided for charged tracks
+since ALPHA 122 by a set of new 
+routines:
+ MCMATCH, JULMATCH, VDHMATCH which are described in Section \ref{sec-OAMCMAT}
+on p.~\pageref{sec-OAMCMAT}.
+\item A specific matching is available for Energy Flow objects (charged and
+neutral);  
+it is described in Section \ref{sec-EFLWMA} on p.~\pageref{sec-EFLWMA}.
+
+\end{itemize}
+\section{\label{sec-AV}Track $-$ vertex relationships}
+\par
+\begin{indentlist}{ 4.75cm}{ 5.00cm}
+\indentitem{IVX = KORIV (ITK)}origin vertex of a track
+\indentitem{IVX = KENDV (ITK)}end vertex of a track
+\indentitem{ITK = KVINCP (IVX)}particle incoming to vertex IVX
+ 
+\end{indentlist}
+To find the tracks outgoing from a vertex, the following
+loop must be performed:
+\begin{verbatim}
+              IVX = ... (vertex number; defined before)
+              DO 10 I = 1, KVNDAU (IVX)
+                ITK = KVDAU (IVX,I)
+                CALL HFILL (47, QP(ITK))
+         10   CONTINUE
+\end{verbatim}
+\begin{indentlist}{ 3.25cm}{ 3.50cm}
+\indentitem{KVNDAU (IVX)}number of outgoing tracks
+\indentitem{KVDAU (IVX,I)}track number of Ith outgoing track
+\end{indentlist}

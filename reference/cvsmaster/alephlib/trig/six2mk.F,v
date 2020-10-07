@@ -1,0 +1,174 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.45.01;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.45.02;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE SIX2MK
+C***********************************************************************
+C                                                                      *
+C   Author   :- Joe Boudreau          30-OCT-1991                      *
+C                                                                      *
+C! Build the SIX2 bank from SIXA and SITC                              *
+C                                                                      *
+C   Inputs        :  SIXA bank,SITC bank                               *
+C   Outputs       :  SIX2 bank                                         *
+C                                                                      *
+C***********************************************************************
+#ifndef DOC
+C
+#include "bcs.h"
+#include "six2jj.h"
+C
+C
+      LOGICAL BTEST
+      INTEGER VLOW,LOW,HIGH,VHIGH
+      PARAMETER ( VLOW=0,LOW=1,HIGH=2,VHIGH=3)
+      INTEGER IEND,IPTY,SXBT(2,2),KSIX2,JPNT
+      INTEGER ECABT,ECBBT
+C
+C  Discriminate the sector and return a "Thermometer code" for each end
+C  cap odd and each endcap even.
+C
+      DO 100 IEND = 1,2
+          DO 200 IPTY = 1,2
+              CALL SIDISC(IEND,IPTY,SXBT(IEND,IPTY))
+ 200      CONTINUE
+ 100  CONTINUE
+C
+C     Create the SIX2 bank with fixed length
+C
+      LEN = LMHLEN + LSIX2A
+      CALL AUBOS('SIX2',0,LEN,KSIX2,IGARB)
+      IF (KSIX2.LE.0) RETURN
+      IW(KSIX2 + LMHCOL) = LSIX2A
+      IW(KSIX2 + LMHROW) = 1
+      JPNT  = KSIX2 + LMHLEN +1
+C
+C  Make the six basic SICAL triggers and store them in the bank
+C
+      ECABT = IOR(SXBT(1,1),SXBT(1,2))
+      ECBBT = IOR(SXBT(2,1),SXBT(2,2))
+      IF (BTEST(ECABT,HIGH).AND.BTEST(ECBBT,LOW))
+     .                              IW(JPNT)=IBSET(IW(JPNT),0)
+      IF (BTEST(ECABT,LOW).AND.BTEST(ECBBT,HIGH))
+     .                              IW(JPNT)=IBSET(IW(JPNT),1)
+      IF (BTEST(ECABT,VHIGH))  IW(JPNT)=IBSET(IW(JPNT),2)
+      IF (BTEST(ECBBT,VHIGH))  IW(JPNT)=IBSET(IW(JPNT),3)
+      IF (BTEST(ECABT,VLOW))   IW(JPNT)=IBSET(IW(JPNT),4)
+      IF (BTEST(ECBBT,VLOW))   IW(JPNT)=IBSET(IW(JPNT),5)
+C
+C     Store the thermometer codes
+C
+      CALL MVBITS(SXBT(1,1),0,4,IW(JPNT), 6)
+      CALL MVBITS(SXBT(1,2),0,4,IW(JPNT),10)
+      CALL MVBITS(SXBT(2,1),0,4,IW(JPNT),14)
+      CALL MVBITS(SXBT(2,2),0,4,IW(JPNT),18)
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

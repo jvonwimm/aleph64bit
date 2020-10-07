@@ -1,0 +1,31 @@
+#!/usr/local/bin/perl 
+require "complete.pl"; 
+require "ctime.pl";
+###############################################################################
+#                              create_all_assign
+# 29/09/97                                                       F.BLIN
+###############################################################################
+$ALDOC = $ENV{'ALDOC'};
+
+if (-e "$ALDOC/all.assign"){
+    print " ++> Now mv $ALDOC/all.assign $ALDOC/all.assign_old \n";
+    system ("mv $ALDOC/all.assign $ALDOC/all.assign_old");
+}
+
+@in = `cat $ALDOC/progl.lis`;
+
+foreach $i (0 ..$#in){
+    ($PROG_name,$CYCLE,$PROGCY,$cvs)= split(/\s+/,$in[$i]);
+#    print "$i PROG_name=$PROG_name CYCLE=${CYCLE}  \n";
+     $CY_alephio = $CYCLE if ($PROG_name eq "alephio");
+     $CY_alephlib = $CYCLE if ($PROG_name eq "alephlib");
+     $CY_julia = $CYCLE if ($PROG_name eq "julia");
+     $CY_galeph = $CYCLE if ($PROG_name eq "galeph");
+}
+print " ++> Now create $ALDOC/all.assign \n";
+print "   $ALDOC/alephio${CY_alephio}.assign + \n";  
+print "   $ALDOC/aleph${CY_alephlib}.assign + \n"; 
+print "   $ALDOC/jul${CY_julia}.assign + \n"; 
+print "   $ALDOC/gal${CY_galeph}.assign \n";
+system("cat $ALDOC/alephio${CY_alephio}.assign $ALDOC/aleph${CY_alephlib}.assign $ALDOC/jul${CY_julia}.assign $ALDOC/gal${CY_galeph}.assign > $ALDOC/all.assign");
+exit;

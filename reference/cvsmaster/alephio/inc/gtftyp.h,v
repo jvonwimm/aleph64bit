@@ -1,0 +1,174 @@
+head	1.4;
+access;
+symbols
+	alio83:1.4
+	alio82:1.4
+	alio81:1.4
+	alio80:1.4
+	alio74:1.4
+	alio73:1.4
+	alio72:1.4
+	alio71:1.4
+	alio70:1.4
+	alio68:1.3
+	alio69:1.3
+	alio67:1.3
+	alio66:1.3
+	alio65:1.3
+	alio64:1.3
+	alio63:1.3
+	alio62:1.3
+	alio61:1.3
+	alio60:1.3
+	alephio53:1.2
+	v4:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.4
+date	97.06.05.12.42.00;	author flr;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.05.03.14.44.39;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.03.13.15.01.10;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.52.27;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.52.28;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@ alephio7.0 remove UNIX directory to get the file type
+@
+text
+@C!  get file type and record length
+C   close previous file on the same unit
+C   pass file name to EPIO if required
+      IF (ATYPE(1:1).EQ.' ') THEN
+        IF (FNAME(1:1).NE.' ') THEN
+          LE  = LNBLNK(FNAME)
+C        pass VAX directory name or UNIX path name if any
+          I1 = INDEX(FNAME,']')
+          IF (I1.EQ.0) THEN
+            I1 = ICFILA('/',FNAME,1,LE)
+            IF (I1.GT.LE) I1=0
+          ENDIF         
+C        look for '.' in VAX or UNIX name
+C        if it does not exist look for ' ' in IBM name
+          IBG = INDEX(FNAME(I1+1:LE),'.')
+          IF (IBG.EQ.0) IBG = INDEX(FNAME(I1+1:LE),' ')
+          IBG = ICNEXT (FNAME,I1+IBG+1,LE)
+          FTYP3 = FNAME(IBG:IBG+2)
+        ELSE
+          FTYP3 = 'NAT'
+        ENDIF
+      ELSE
+        FTYP3=ATYPE(1:3)
+      ENDIF
+      CALL CLTOU (FTYP3(1:3))
+C
+      IF (FTYP3.EQ.'DAF') DIRECT=.TRUE.
+C
+C - KRECL is the block length in bytes
+      KRECL = KBYTREC (FTYP3,FDEVI)
+C - LWRDS is the block length in words
+      LWRDS = KRECL/NBYTW
+C - MRECL is the block length in the unit required by the machine
+#if defined(ALEPH_DEC) || defined(ALEPH_SGI)
+      MRECL = LWRDS
+#else
+      MRECL = KRECL
+#endif
+C
+C - existing files have to be closed before reopened
+      CALL ACLOSE(LUN,IRCL)
+C
+C - initialize EPIO if necessary and send file name
+      IF (FTYP3.EQ.'EPI') THEN
+         CALL EPINIT
+         LE = LNBLNK (FNAME)
+         CALL EPDEFU (LUN,FNAME(1:LE),IST)
+         IF (IST.NE.0) GOTO 98
+      ENDIF
+#if defined(ARDEB)
+      WRITE (IW(6),*) ' GTFTYP ',SUBR,' FTYP3= ',FTYP3,' KRECL= ',KRECL,
+     &                ' LWRDS= ',LWRDS,' MRECL= ',MRECL
+#endif
+C
+@
+
+
+1.3
+log
+@replace flag ${VENDOR} with ALEPH_${VENDOR}
+Modified Files:
+  ard/	ainqui.F algtenv.F aopen.F aopenw.F aoperd.F aoptap.F astage.F
+ 	awrtap.F
+  pres/	cmpbu3.c cmpbu4.c cmpbu5.c dmpbl3.c dmpbl4.c dmpbl5.c dmpcop.c
+ 	extzv.c insv.c
+  epio/ epinit.F
+  inc/ 	cmphost.h ctolow.h gtchunit.h gtftyp.h
+@
+text
+@d6 2
+a7 1
+C        pass VAX directory name if any
+d9 4
+a14 1
+          LE  = LNBLNK(FNAME)
+@
+
+
+1.2
+log
+@import alephio 52 from historian. Modify aclose.F to NOT call brwnd twice
+for the same file. update version.h to 5.3
+@
+text
+@d30 1
+a30 1
+#if defined(DEC) || defined(SGI)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*CD gtftyp
+d30 1
+a30 1
+#if defined(VAX) || defined(DEC) || defined(SGI)
+@
+
+
+1.1.1.1
+log
+@import alephio 4
+@
+text
+@@

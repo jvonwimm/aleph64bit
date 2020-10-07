@@ -1,0 +1,155 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.2
+	aleph304_5:1.2
+	aleph304_4:1.2
+	aleph304_3:1.2
+	aleph304_2:1.2
+	aleph304_1:1.2
+	aleph304:1.2
+	aleph303_3:1.2
+	aleph303_2:1.2
+	aleph303_1_mc1:1.2
+	aleph303_1:1.2
+	aleph303:1.2
+	aleph302_9:1.2
+	aleph302_8:1.2
+	aleph302_7:1.2
+	aleph302_6:1.2
+	aleph302_5:1.2
+	aleph302_4:1.2
+	aleph302_3:1.2
+	aleph302_2:1.2
+	aleph302_1:1.2
+	aleph302:1.2
+	aleph216:1.2
+	aleph215_3:1.2
+	aleph215_2:1.2
+	aleph215:1.2
+	aleph214:1.2
+	aleph213:1.2
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.04.30.12.34.01;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.41.05;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.41.06;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@replace #include "implicit.h" by "IMPLICIT NONE"
+Modified Files:
+	aire.F airsct.F avolum.F ealgmk.F ealign.F ealtmk.F ecplst.F
+@
+text
+@      SUBROUTINE EALTMK
+C.----------------------------------------------------------------------
+CKEY ECALDES ALIGNMENT MARKS  / INTERNAL
+C     H.Videau      creation le 5/12/88
+C! Sets the alignment marks in EALIMP
+C  Rotates the marks given in EQTY at their position in EALIMP
+C   Calls: EROTPT
+C   Called by USER (alignement).
+C.----------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+      SAVE
+#include "ecccom.h"
+C
+C   Locales
+      INTEGER I,J
+      INTEGER MD,SC
+C
+      DO 3 SC = 1, ECALSC
+       DO 4 MD = 1, ECALMD
+C     We pick the mire positions in EQTY
+        DO 1 I=1,EQTYMN(ESCOEQ(SC))
+         CALL EROTPT(EALIMP(1,I,MD,SC),EQTYTP(1,I,ESCOEQ(SC)),
+     &             EALITD(1,1,MD,SC))
+ 1      CONTINUE
+ 4     CONTINUE
+ 3    CONTINUE
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d11 1
+a11 1
+#include "implicit.h"
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

@@ -1,0 +1,439 @@
+head	1.2;
+access;
+symbols
+	alpha126_22:1.2
+	alpha126_21:1.2
+	alpha126_20:1.2
+	alpha126_19:1.2
+	alpha126_18:1.2
+	alpha126_17:1.2
+	alpha126_16:1.2
+	alpha126_15:1.2
+	alpha126_14:1.2
+	alpha126_13:1.2
+	alpha126_12:1.2
+	alpha126_11:1.2
+	alpha126_10:1.2
+	alpha126_09:1.2
+	alpha126_08:1.2
+	alpha126_07:1.2
+	alpha126_06:1.2
+	alpha126_05:1.2
+	alpha126_04:1.2
+	alpha126_03:1.2
+	alpha126_02:1.2
+	alpha126_1:1.2
+	alpha125_17:1.1.1.1
+	alpha125_16:1.1.1.1
+	alpha125_15:1.1.1.1
+	alpha125_14:1.1.1.1
+	alpha125_13:1.1.1.1
+	alpha125_12:1.1.1.1
+	alpha125_11:1.1.1.1
+	alpha125_10:1.1.1.1
+	alpha125_09:1.1.1.1
+	alpha125_08:1.1.1.1
+	alpha125_07:1.1.1.1
+	alpha125_06:1.1.1.1
+	alpha125_05:1.1.1.1
+	alpha125_04:1.1.1.1
+	alpha125_03:1.1.1.1
+	alpha125_02:1.1.1.1
+	alpha125_01:1.1.1.1
+	alpha124_19:1.1.1.1
+	alpha125:1.1.1.1
+	alpha124_18:1.1.1.1
+	alpha124_17:1.1.1.1
+	alpha124_16:1.1.1.1
+	alpha124_15:1.1.1.1
+	alpha124_14:1.1.1.1
+	alpha124_13:1.1.1.1
+	alpha124_12:1.1.1.1
+	alpha124_11:1.1.1.1
+	alpha124_10:1.1.1.1
+	alpha124_09:1.1.1.1
+	alpha124_08:1.1.1.1
+	alpha124_07:1.1.1.1
+	alpha124_7:1.1.1.1
+	alpha124_06:1.1.1.1
+	alpha124_05:1.1.1.1
+	alpha124_04:1.1.1.1
+	alpha124_03:1.1.1.1
+	alpha124_02:1.1.1.1
+	alpha124_01:1.1.1.1
+	alpha124:1.1.1.1
+	alpha123_12:1.1.1.1
+	alpha123_11:1.1.1.1
+	alpha123_10:1.1.1.1
+	alpha123_9:1.1.1.1
+	alpha123_8:1.1.1.1
+	alpha123_7:1.1.1.1
+	alpha123_6:1.1.1.1
+	alpha123_5:1.1.1.1
+	alpha123_4:1.1.1.1
+	alpha123_3:1.1.1.1
+	alpha123_2:1.1.1.1
+	alpha123:1.1.1.1
+	alpha122_48:1.1.1.1
+	alpha122_47:1.1.1.1
+	alpha122_46:1.1.1.1
+	alpha122_45:1.1.1.1
+	alpha122_44:1.1.1.1
+	alpha122_43:1.1.1.1
+	alpha122_42:1.1.1.1
+	alpha122_41:1.1.1.1
+	alpha122_40:1.1.1.1
+	alpha122_39:1.1.1.1
+	alpha122_38:1.1.1.1
+	alpha122_37:1.1.1.1
+	alpha122_36:1.1.1.1
+	alpha122_35:1.1.1.1
+	alpha122_34:1.1.1.1
+	alpha122_33:1.1.1.1
+	alpha122_32:1.1.1.1
+	alpha122_31:1.1.1.1
+	alpha122_30:1.1.1.1
+	alpha122_29:1.1.1.1
+	alpha122_28:1.1.1.1
+	alpha122_27:1.1.1.1
+	alpha122_26:1.1.1.1
+	alpha122_25:1.1.1.1
+	alpha122_24:1.1.1.1
+	alpha122_23:1.1.1.1
+	alpha122_22:1.1.1.1
+	alpha122_21:1.1.1.1
+	alpha122_20:1.1.1.1
+	alpha122_19:1.1.1.1
+	alpha122_18:1.1.1.1
+	alpha122_17:1.1.1.1
+	alpha122_16:1.1.1.1
+	alpha122_15:1.1.1.1
+	alpha122_14:1.1.1.1
+	alpha122_13:1.1.1.1
+	alpha122_12:1.1.1.1
+	alpha122_11:1.1.1.1
+	alpha122_10:1.1.1.1
+	alpha122_9:1.1.1.1
+	alpha122_8:1.1.1.1
+	alpha122_6:1.1.1.1
+	alpha122_5:1.1.1.1
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	2000.11.21.08.47.02;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.03.14.12.42.38;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.42.39;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE V0DKPT(IFRFT,IROW,NAMB,DK,VCOS)
+CKEY   QIPBTAG / INTERNAL
+C ------------------------------------------------------------------------------
+C! Crude topological vertex, to seed other calculations
+C  Called from QFNDV0
+C  Author                                                D. Brown 6-9-93
+C  Modifs for Linux to avoid precision problems       S. Jezequel 9-11-00
+C ------------------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+C
+C  Global includes
+C
+#include "alcons.h"
+#include "bcs.h"
+#include "bmacrod.h"
+C
+C  Inputs; track numbers
+C
+      INTEGER IFRFT,IROW(2)
+C
+C  Output; number of solutions, decay point and track momenta at
+C  those points
+C
+      INTEGER NAMB
+      REAL DK(3,2),VCOS(2)
+C
+C  Local variables
+C
+      INTEGER ITRK,JTRK,IAMB
+      REAL thecos
+      REAL R(2),D0(2),P0(2),TANL(2),Z0(2)
+      REAL CP(2),SP(2),ARC(2)
+      REAL X(2),Y(2),Z(2),DIST
+      DOUBLE PRECISION XC(2),YC(2),DELTA,ABR(2)
+      DOUBLE PRECISION CP0(2),SP0(2),DEL(2)
+      REAL P(2),COSL(2),SINL(2)
+      REAL DHAT(2)
+      DOUBLE PRECISION XCR,ALPHA,BETA,GAMMA
+      REAL RSIGN(2)/1.0,-1.0/,MAXD/20./
+C
+#include "bmacro.h"
+C -----------------------------------------------------------------------
+C  Start
+C
+      NAMB = 0
+C
+C  Unpack the track parameters
+C
+      DO ITRK=1,2
+        R(ITRK) = 1./RTABL(IFRFT,IROW(ITRK),1)
+        TANL(ITRK) = RTABL(IFRFT,IROW(ITRK),2)
+        P0(ITRK) = RTABL(IFRFT,IROW(ITRK),3)
+        CP0(ITRK) = COS(DBLE(P0(ITRK)))
+        SP0(ITRK) = SIN(DBLE(P0(ITRK)))
+        COSL(ITRK) = 1.0/SQRT(1.0+TANL(ITRK)**2)
+        SINL(ITRK) = TANL(ITRK)*COSL(ITRK)
+        D0(ITRK) = RTABL(IFRFT,IROW(ITRK),4)
+        Z0(ITRK) = RTABL(IFRFT,IROW(ITRK),5)
+C
+C  Compute some stuff
+C
+        ABR(ITRK) = DBLE(ABS(R(ITRK)))
+        DEL(ITRK) = DBLE(R(ITRK))-DBLE(D0(ITRK))
+        XC(ITRK) =  -DEL(ITRK)*SP0(ITRK)
+        YC(ITRK) =   DEL(ITRK)*CP0(ITRK)
+      END DO
+      DELTA = SQRT( (XC(1)-XC(2))**2 + (YC(1)-YC(2))**2)
+C
+C  Separate the cases by the distance between circle centers
+C
+      IF(DELTA.GT.ABR(1)+ABR(2)-1.0)THEN
+C
+C  Tracks dont touch; find their closest approach points
+C
+        DO ITRK=1,2
+          JTRK = MOD(ITRK,2)+1
+          SP(ITRK) =  SIGN(1.0,R(ITRK))*(XC(JTRK)-XC(ITRK))
+     &                                                      /DELTA
+          CP(ITRK) = -SIGN(1.0,R(ITRK))*(YC(JTRK)-YC(ITRK))
+     &                                                      /DELTA
+          P(ITRK) = ATAN2(SP(ITRK),CP(ITRK))
+          IF(ABS(P(ITRK)-P0(ITRK)).GT.PI)THEN
+            IF(P(ITRK).GT.P0(ITRK))THEN
+              P(ITRK) = P(ITRK)-TWOPI
+            ELSE
+              P(ITRK) = P(ITRK)+TWOPI
+            END IF
+          END IF
+          ARC(ITRK) = (P(ITRK)-P0(ITRK))*R(ITRK)
+          X(ITRK) = XC(ITRK)+R(ITRK)*SP(ITRK)
+          Y(ITRK) = YC(ITRK)-R(ITRK)*CP(ITRK)
+          Z(ITRK) = Z0(ITRK) + TANL(ITRK)*ARC(ITRK)
+        END DO
+C
+C  Record the point
+C
+        DIST = SQRT((X(1)-X(2))**2+(Y(1)-Y(2))**2+
+     &        (Z(1)-Z(2))**2)
+        IF(DIST.LT.MAXD)THEN
+          NAMB = NAMB + 1
+          DK(1,NAMB) = (X(1)+X(2))/2.
+          DK(2,NAMB) = (Y(1)+Y(2))/2.
+          DK(3,NAMB) = (Z(1)+Z(2))/2.
+C
+C  Get the track directions dot productat this point
+C
+          VCOS(NAMB) = COSL(1)*COSL(2)*(CP(1)*CP(2)+SP(1)*SP(2))+
+     &          SINL(1)*SINL(2)
+        END IF
+      ELSE IF(DELTA+MIN(REAL(ABR(1)),REAL(ABR(2))).GT.
+     &                MAX(REAL(ABR(1)),REAL(ABR(2)))+1.0)THEN
+C
+C  The tracks touch in 2 places; find them
+C
+C
+C  Prevent from rounding errors in special cases
+C  (especially two back-to-back tracks)
+C
+        thecos = COS(P0(1)-P0(2))
+        IF     ( ABS(thecos) .LT. 0.999 ) THEN
+          XCR = DEL(1)**2 + DEL(2)**2
+     &          - 2.*DEL(1)*DEL(2)*thecos
+        ELSEIF ( thecos .GE. 0.999 ) THEN
+          XCR = (DEL(1)-DEL(2))**2
+     &          + 2.*DEL(1)*DEL(2)*(1.-thecos)
+        ELSEIF ( thecos .LE. -.999 ) THEN
+          XCR = (DEL(1)+DEL(2))**2
+     &          - 2.*DEL(1)*DEL(2)*(1.+thecos)
+        ELSE
+        ENDIF
+C
+        ALPHA = (R(1)**2-R(2)**2 - XCR)/(2.*R(2))
+        BETA = DEL(1)*CP0(1)-DEL(2)*CP0(2)
+        GAMMA = DEL(1)*SP0(1)-DEL(2)*SP0(2)
+C
+C Protect against neg've SQRT
+C
+        IF ( ABS(xcr-alpha**2) .LE. 1E-3 ) xcr = alpha**2
+        IF ( xcr-alpha**2 .LT. -1E-3 ) THEN
+          WRITE (IW(6),*) 'SQRT Warning in V0DKPT +++ Call an expert'
+          WRITE (IW(6),*) 'xcr,alpha**2 : '
+          WRITE (IW(6),*) xcr,alpha**2
+          xcr = alpha**2
+        ENDIF
+C
+C  There are 2 solutions; try them both
+C
+        DO IAMB=1,2
+          IF(ABS(GAMMA).GT.1.0)THEN
+            CP(2) = (ALPHA*BETA + RSIGN(IAMB)*
+     &            GAMMA*SQRT(XCR-ALPHA**2))/XCR
+            SP(2) = (ALPHA - BETA*CP(2))/GAMMA
+          ELSE
+            SP(2) = (ALPHA*GAMMA + RSIGN(IAMB)*
+     &            BETA*SQRT(XCR-ALPHA**2))/XCR
+            CP(2) = (ALPHA - GAMMA*SP(2))/BETA
+          END IF
+          CP(1) = (R(2)*CP(2)+DEL(1)*CP0(1)-DEL(2)*CP0(2))/R(1)
+          SP(1) = (R(2)*SP(2)+DEL(1)*SP0(1)-DEL(2)*SP0(2))/R(1)
+C
+C  Find the separation in Z at this point
+C
+          DO ITRK=1,2
+            P(ITRK) = ATAN2(SP(ITRK),CP(ITRK))
+            IF(ABS(P(ITRK)-P0(ITRK)).GT.PI)THEN
+              IF(P(ITRK).GT.P0(ITRK))THEN
+                P(ITRK) = P(ITRK)-TWOPI
+              ELSE
+                P(ITRK) = P(ITRK)+TWOPI
+              END IF
+            END IF
+            ARC(ITRK) = (P(ITRK)-P0(ITRK))*R(ITRK)
+            Z(ITRK) = Z0(ITRK) + TANL(ITRK)*ARC(ITRK)
+          END DO
+C
+C  Record the point
+C
+          DIST = ABS(Z(1)-Z(2))
+          IF(DIST.LT.MAXD)THEN
+            NAMB = NAMB + 1
+            DK(1,NAMB) =  R(1)*SP(1)-DEL(1)*SP0(1)
+            DK(2,NAMB) = -R(1)*CP(1)+DEL(1)*CP0(1)
+            DK(3,NAMB) = (Z(1)+Z(2))/2.
+C
+C  Get the track directions dot productat this point
+C
+            VCOS(NAMB) = COSL(1)*COSL(2)*(CP(1)*CP(2)+SP(1)*SP(2))+
+     &            SINL(1)*SINL(2)
+          END IF
+        END DO
+      ELSE
+C
+C  The tracks are 'inside' one another.  This needs a special solution
+C
+        IF(ABR(1).GT.ABR(2))THEN
+          DHAT(1) = (XC(2)-XC(1))/DELTA
+          DHAT(2) = (YC(2)-YC(1))/DELTA
+        ELSE
+          DHAT(1) = (XC(1)-XC(2))/DELTA
+          DHAT(2) = (YC(1)-YC(2))/DELTA
+        END IF
+        DO ITRK=1,2
+          SP(ITRK) =  SIGN(1.0,REAL(R(ITRK)))*DHAT(1)
+          CP(ITRK) = -SIGN(1.0,REAL(R(ITRK)))*DHAT(2)
+          P(ITRK) = ATAN2(SP(ITRK),CP(ITRK))
+          IF(ABS(P(ITRK)-P0(ITRK)).GT.PI)THEN
+            IF(P(ITRK).GT.P0(ITRK))THEN
+              P(ITRK) = P(ITRK)-TWOPI
+            ELSE
+              P(ITRK) = P(ITRK)+TWOPI
+            END IF
+          END IF
+          ARC(ITRK) = (P(ITRK)-P0(ITRK))*R(ITRK)
+          X(ITRK) = XC(ITRK)+R(ITRK)*SP(ITRK)
+          Y(ITRK) = YC(ITRK)-R(ITRK)*CP(ITRK)
+          Z(ITRK) = Z0(ITRK) + TANL(ITRK)*ARC(ITRK)
+        END DO
+C
+C  Record the point
+C
+        DIST = SQRT((X(1)-X(2))**2+(Y(1)-Y(2))**2+
+     &        (Z(1)-Z(2))**2)
+        IF(DIST.LT.MAXD)THEN
+          NAMB = NAMB + 1
+          DK(1,NAMB) = (X(1)+X(2))/2.
+          DK(2,NAMB) = (Y(1)+Y(2))/2.
+          DK(3,NAMB) = (Z(1)+Z(2))/2.
+C
+C  Get the track directions dot productat this point
+C
+          VCOS(NAMB) = COSL(1)*COSL(2)*(CP(1)*CP(2)+SP(1)*SP(2))+
+     &          SINL(1)*SINL(2)
+        END IF
+      END IF
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d7 1
+d33 1
+a33 1
+      REAL DEL(2),CP0(2),SP0(2),CP(2),SP(2),ARC(2)
+d35 3
+a37 1
+      REAL XC(2),YC(2),P(2),COSL(2),SINL(2),ABR(2)
+d39 1
+a39 1
+      REAL DELTA,XCR,ALPHA,BETA,GAMMA
+d43 1
+a43 1
+C ------------------------------------------------------------------------------
+d54 2
+a55 2
+        CP0(ITRK) = COS(P0(ITRK))
+        SP0(ITRK) = SIN(P0(ITRK))
+d63 2
+a64 2
+        ABR(ITRK) = ABS(R(ITRK))
+        DEL(ITRK) = R(ITRK)-D0(ITRK)
+d78 4
+a81 2
+          SP(ITRK) =  SIGN(1.0,R(ITRK))*(XC(JTRK)-XC(ITRK))/DELTA
+          CP(ITRK) = -SIGN(1.0,R(ITRK))*(YC(JTRK)-YC(ITRK))/DELTA
+d111 2
+a112 1
+      ELSE IF(DELTA+MIN(ABR(1),ABR(2)).GT.MAX(ABR(1),ABR(2))+1.0)THEN
+d204 2
+a205 2
+          SP(ITRK) =  SIGN(1.0,R(ITRK))*DHAT(1)
+          CP(ITRK) = -SIGN(1.0,R(ITRK))*DHAT(2)
+@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

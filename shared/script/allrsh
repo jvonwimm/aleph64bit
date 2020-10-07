@@ -1,0 +1,20 @@
+#!/bin/csh -f
+#                Interface script for alrsh 
+#    avoid alrsh having problems with  fork  going to more then 10 nodes
+#            Ronald Hagelberg        15.May 1996 
+if ( $#argv == 0 ) goto usage
+echo "command is:" $*
+$ALEPH/script/alrsh afal0 $*
+$ALEPH/script/alrsh afal1 $*
+$ALEPH/script/alrsh afal2 $*
+$ALEPH/script/alrsh afal3 $*
+$ALEPH/script/alrsh saga $*
+$ALEPH/script/alrsh shift $*
+exit
+usage:
+
+echo "Usage: `basename $0` command"
+echo "  To run a command on all ALEPH hosts,   e.g.:"
+echo '      allrsh who'
+echo "  Note: alrsh with afal should not be used, because we have too many machines"
+exit 1

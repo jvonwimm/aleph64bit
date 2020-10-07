@@ -1,0 +1,171 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.40.40;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.40.41;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE GETSLU(IRUN,IFOUN,ILUQR,NBHA,XLUSI,BAK,EWCOR)
+C----------------------------------------------------------------------
+C! Gets the SICAL Luminosity for run IRUN
+C  Author  J.Boucrot  16-Mar-1993
+C  Modified 19-May-1993 to get informations from Sical bank 'SLUM'
+CKEY ALEF LFIL
+C Input argument :
+C  IRUN = run number to be searched in bank 'RSLU'
+C Output arguments :
+C   IFOUN = 0 if no information found for run IRUN
+C         = 1 if information found in bank 'RSLU' of ADBSCONS DAF
+C         = 2 if information found in run header bank 'SLUM'
+C
+C The following output arguments are defined ONLY if IFOUN.GT.0  :
+C   ILUQR = SICAL Flag  for Luminosity  :
+C           0 = unknown     1 = provisional value   2 = definitive value
+C    NBHA = Number of SICAL Bhabha events
+C  XLUSI  = Best estimate of lumi from SICAL , in nb**-1
+C The following quantities are defined ONLY if IFOUN = 1
+C    BAK  = background Bhabha events
+C  EWCOR  = Electroweak correction
+C
+C Description:
+C gets the SICAL LUMI informations from the 'RSLU' bank.
+C----------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "rslujj.h"
+#include "slumjj.h"
+      INTEGER ALGTRO
+#include "bmacro.h"
+C----------------------------------------------------------------------
+      IFOUN = 0
+      JRSLU = ALGTRO ('RSLU',IRUN,JRSLRN,JROWR)
+      IF (JRSLU.NE.0 .AND. JROWR.GT.0) THEN
+C  RSLU bank found : get the output arguments
+         JRSLU = IABS (JRSLU)
+         IFOUN = 1
+         KRSLU = KROW(JRSLU,JROWR)
+         ILUQR = IW(KRSLU+JRSLLQ)
+         NBHA  = IW(KRSLU+JRSLNB)
+         XLUSI = RW(KRSLU+JRSLLU)
+         BAK   = RW(KRSLU+JRSLBK)
+         EWCOR = RW(KRSLU+JRSLEW)
+C  Nothing found in RSLU : try the run header bank 'SLUM' :
+      ELSE
+         JSLUM=NLINK('SLUM',IRUN)
+         IF (JSLUM.GT.0) THEN
+            IMETH=2
+            NBHA = RTABL (JSLUM,IMETH,JSLUTI)
+            XLUSI = RTABL (JSLUM,IMETH,JSLULU)
+            ILUQR = 1
+            BAK = 0.
+            EWCOR = 0.
+            IFOUN = 2
+         ENDIF
+      ENDIF
+C
+ 999  RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

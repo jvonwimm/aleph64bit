@@ -1,0 +1,188 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.2
+	aleph304_5:1.2
+	aleph304_4:1.2
+	aleph304_3:1.2
+	aleph304_2:1.2
+	aleph304_1:1.2
+	aleph304:1.2
+	aleph303_3:1.2
+	aleph303_2:1.2
+	aleph303_1_mc1:1.2
+	aleph303_1:1.2
+	aleph303:1.2
+	aleph302_9:1.2
+	aleph302_8:1.2
+	aleph302_7:1.2
+	aleph302_6:1.2
+	aleph302_5:1.2
+	aleph302_4:1.2
+	aleph302_3:1.2
+	aleph302_2:1.2
+	aleph302_1:1.2
+	aleph302:1.2
+	aleph216:1.2
+	aleph215_3:1.2
+	aleph215_2:1.2
+	aleph215:1.2
+	aleph214:1.2
+	aleph213:1.2
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.04.30.12.34.16;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.41.07;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.41.08;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@replace #include "implicit.h" by "IMPLICIT NONE"
+Modified Files:
+	aire.F airsct.F avolum.F ealgmk.F ealign.F ealtmk.F ecplst.F
+@
+text
+@      SUBROUTINE EDEFMD
+C.----------------------------------------------------------------------
+CKEY ECALDES MODULE INITIALISATION / INTERNAL
+C     H.Videau      Creation 15/12/85   Modification 26/01/88
+C! Initialises module system
+C  In this routine the modules are defined as angular sectors of pi/6
+C  in their theoretical position. We consider that an actual module can
+C  never gets out of its sector by an alignment mistake. The 12 sector
+C  make a partition of the complete space.
+C  The fine definition is given by the column, row, plane, stack
+C  description or by the sensitive zone of the module: ETZSMD
+C   Calls: EROGEN,EROTPL.
+C   Called by EXPNEC
+C.----------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+      SAVE
+#include "ecccom.h"
+#include "alcons.h"
+C
+C    Points de definition des plans de separation des modules
+      REAL PTPL(ECALLS)
+C
+      REAL VDOT
+      EXTERNAL VDOT
+C Variables locales
+      INTEGER I,PN,BPMD(ECALLP)
+      REAL PHI,CS,SN
+C Plans temporaires. Variables locales.
+      REAL PTEC(ECALLS)
+C
+C
+C Generation des rotations theoriques des modules
+      CALL EROGEN(EMODDM)
+C
+C     Mise en place des plans de reference
+      BPMD(1)=ECALM1
+      BPMD(2)=ECALM2
+      DO 2017 PN=1,ECALLP
+      CALL EROTPL(PTEC,EBPLLF(1,BPMD(PN)),ECALDM)
+      DO 2007 I=1,ECALSC
+            CALL EROTPL(ESCOMD(1,PN,I),PTEC,ETSCDM(1,1,ESCOET(I)))
+ 2007 CONTINUE
+ 2017 CONTINUE
+C   Definition des coordonnees locales . pencil coordinates
+      DO 2008 I=1,ECALMD
+            EMODID(I)=I
+C    Generation du point definissant le plan
+C    Ne devrait on le faire en appliquant les rotations de modules?
+            PHI=FLOAT(I-1)*ECALAP
+            CS=COS(PHI)
+            SN=SIN(PHI)
+            PTPL(1)=CS
+            PTPL(2)=SN
+            PTPL(3)=0.
+            PTPL(4)=1.
+            DO 2018 PN=1,ECALLP
+            EMODPC(PN,I)=VDOT(PTPL(1),EBPLLF(1,BPMD(PN)),ECALLS)
+ 2018       CONTINUE
+ 2008 CONTINUE
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d16 1
+a16 1
+#include "implicit.h"
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

@@ -1,0 +1,759 @@
+head	1.18;
+access;
+symbols
+	jul313_3:1.18
+	jul313_2:1.18
+	jul313_1:1.17
+	jul313:1.17
+	jul312_1:1.16
+	jul312:1.16
+	jul311:1.16
+	jul310_1:1.16
+	jul310:1.16
+	jul309_1:1.16
+	jul309:1.15
+	jul308_6:1.13
+	jul308_5:1.13
+	jul308_4:1.13
+	jul308_3:1.13
+	jul308_2:1.12
+	jul308_1:1.12
+	jul308:1.12
+	jul307_4:1.12
+	jul307_3:1.12
+	jul307_2:1.12
+	jul307_1:1.12
+	jul307:1.12
+	jul306_3:1.12
+	jul306_2:1.11
+	jul306_1:1.10
+	jul306:1.10
+	jul305_4:1.10
+	jul305_3:1.10
+	jul305_2:1.10
+	jul305_1:1.10
+	jul305:1.10
+	jul304_3:1.9
+	jul304_2:1.9
+	jul304_1:1.9
+	jul304:1.9
+	jul303_7:1.8
+	jul303_6:1.8
+	jul303_5:1.8
+	jul303_4:1.8
+	jul303_3:1.8
+	jul303_2_mc1:1.8
+	jul303_2:1.8
+	jul303_1_mc1:1.8
+	jul303_1:1.8
+	jul303_v:1.8
+	jul303:1.8
+	jul302_6:1.7
+	jul302_5:1.7
+	jul302_4:1.7
+	jul302_3:1.7
+	jul302_2:1.7
+	jul302_1:1.6
+	jul302:1.8
+	jul285_1:1.4
+	jul285:1.3
+	jul284_1:1.3
+	jul284:1.3
+	jul283_1:1.3
+	jul283:1.3
+	jul282_1:1.3
+	jul282:1.3
+	jul281_3:1.3
+	jul281_2:1.3
+	jul281_1:1.3
+	jul281:1.3
+	jul280_1:1.3
+	jul280:1.3
+	jul279:1.2
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.18
+date	2001.02.05.13.00.07;	author cattanem;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	2000.10.26.09.04.18;	author cattanem;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	99.05.18.16.27.49;	author cattanem;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	99.04.23.16.22.59;	author cattanem;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	99.04.06.12.26.25;	author cattanem;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	98.11.09.14.45.08;	author cattanem;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	98.04.17.11.45.45;	author cattanem;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	98.04.01.13.54.10;	author cattanem;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	97.11.07.11.19.26;	author cattanem;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	97.08.19.15.02.40;	author cattanem;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	97.05.13.11.36.22;	author cattanem;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	97.03.20.17.26.19;	author cattanem;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	97.03.19.17.09.13;	author cattanem;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	97.03.06.09.55.05;	author cattanem;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	97.03.04.13.53.21;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.03.12.15.31.19;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.11.29.17.18.43;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.19.14;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.19.15;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.18
+log
+@Add KW4F to POT
+@
+text
+@      SUBROUTINE RDEFIO (IERIO)
+C----------------------------------------------------------------------
+C!  - Define formats for input and output files
+C!
+C!  Author        S. Orteu        18-MAR-1987
+C!  Modified      J.Knobloch      15-DEC-1988
+C!   Modified :- E. Lancon              7-MAR-1991
+C!              Remove the MINI option
+C!  Modified      J.Sedgbeer      01-MAR-1991 Add IXTR bank to POT.
+C!  Modified      J.Sedgbeer      25-SEP-1991 Add IZDB bank to POT.
+C!   Modified :- E. Lancon             27-JAN-1992
+C!              Remove the DST option
+C!              Do not open output file anymore, done by ABRSEL (alephli
+C!              Add IERIO as argument
+C!
+C!   Outputs:
+C!        -   IERIO           I/    Error Return Code
+C!                                  0 = No error
+C!                                  1 = Invalid Output Option
+C!                                  3 = Too Many Output Banks
+C!
+C!   Modified :- E. Lancon             17-MAY-1993
+C!        remove call to RFORMA put it in RINRUN
+C!   Modified :- E. Lancon             20_SEP-1993
+C!        call ALFMT to defined format for required output banks
+C!   Modified :- P. Comas            4-MAY-1994
+C!        Add new (due to the change in the readout) trigger banks
+C!        to the POT
+C!   Modified :- P. Comas            2-MAY-1995
+C!        New banks PWEI and LPAS to POT
+C!   Modified :- P. Comas           29-MAY-1995
+C!        New bank HLOD to POT
+C!   Modified :- P. Comas           27-JUL-1995
+C!        New MC bank X1IP to POT
+C!   Modified :- P. Comas           15-NOV-1995
+C!        New bank PTPX for pad dE/dx to POT
+C!   Modified :- D. Casper           4-FEB-1997
+C!        Tracking upgrade banks to POT
+C!   Modified :- M.Cattaneo         19-MAR-1997
+C!        New bank LCRA to POT
+C!   Modified :- B.Bloch-Devaux     20-MAR-1997
+C!        New bank KXME to POT
+C!   Modified :- M.Cattaneo         13-MAY-1997
+C!        New banks BCSC,BCSL,BCTR to POT
+C!   Modified :- D.Casper           17-JUL-1997
+C!        New bank YSMO to POT
+C!   Modified :- M.Cattaneo         06-NOV-1997
+C!        New bank BLCT to POT
+C!   Modified :- M.Cattaneo         01-APR-1998
+C!        Banks FSHO, KMAR, KWTK to POT
+C!   Modified :- M.Cattaneo         17-APR-1998
+C!        New bank BCHG to POT
+C!   Modified :- M.Cattaneo         09-NOV-1998
+C!        New bank BCPO to POT, remove BLCT (can be made from BCPO)
+C!   Modified :- M.Cattaneo         23-APR-1999
+C!        New banks KWGT,SIID to POT, also BLUM to POT on random triggers
+C!   Modified :- M.Cattaneo         26-OCT-2000
+C!        New bank HTDO on POT
+C!   Modified :- M.Cattaneo         05-FEB-2001
+C!        New bank KW4F on POT
+C! Total: 165 banks on OUTLIS
+C?
+C!======================================================================
+#ifndef DOC
+#include "rparac.h"
+#include "rlunit.h"
+#include "rflags.h"
+#include "bcs.h"
+      EXTERNAL ALFMT
+      INTEGER  ALFMT
+      CHARACTER*75 FORMA
+      CHARACTER FNAME*120,FTYPE*8,FDEVI*80,CBANK*4
+      CHARACTER POTBK*4
+      CHARACTER*5 PBANK(15)
+      CHARACTER*4 CHAINT,TLIST(MAXFPO)
+C
+C?  Nasty should go in RLUNIT com deck at next julia version
+C
+      DATA JULFMT / 17 /
+C----------------------------------------------------------------------
+      IERIO = 0
+C    output formats on cards
+      FTYPRL(1) = 'NATI'
+      FTYPRL(2) = 'EPIO'
+      FTYPRL(3) = 'NO  '
+C    output formats for BOS
+      FORMRL(1) = 'FORT'
+      FORMRL(2) = 'EPIO'
+      FORMRL(3) = 'NO  '
+C    types of output
+      OTYPRL(1) = 'DALI'
+      OTYPRL(2) = 'FILO'
+      OTYPRL(3) = 'DST '
+C    default lists for the 3 output types
+C
+C    first DALI
+C
+      OUTLIS(1) = ' '
+C
+C    DST
+C
+      OUTLIS(3) =
+     +'EVEHASEVKINEVERTDHEAKEVHFKINFVERKW4F'//
+     +'BOMPBOMRBOMBBOME'//
+     +'EGPR'//
+     +'KXMEFPOLKPOLFZFRFPOIFSHOKMARKWTKKWGT'//
+     +'HLTU'//
+     +'LUPALIDTPLPDPLSDLCRA'//
+     +'MUIDMUEXMHITMCADHMADHROAD4CD'//
+     +'PFRFPFRTFRID'//
+     +'PSCOSFTRPSPO'//
+     +'PEMHPHMHPITMPASL'//
+     +'PYERPYFRYV0V'//
+     +'PCRLPCOBPCHYPECOPEHYPEPT'//
+     +'PTEXEIDTPCPAPPRLPHCOPHHY'//
+     +'PFERPFHRPEWIEJET'//
+     +'BLUMBCSCBCSLBCTRBCNTBHITBPTRBCHGBCPOREVHRTLOPTST'//
+     +'X1ADX3ECX3EWX3HCX3ITX3L2X3LUX3TOX3TPX3X3MUDGHPDIERRF'//
+     +'JBERJESTECRQOSTSX3TMHCCVHINF'//
+     +'VDCOVCPLVDXYVDZTVDTDVDHTVDFKVUFK'//
+     +'PPOBPPDSX1TIXTBPXTEBXTRBXTCNX2DF'//
+     +'VFHLVFLGVFPHVCOM'//
+     +'EWHERTLSPT2XPCOI'//
+     +'PIDIPRPWLOLEMTHR'//
+     +'PTBCPTNC'//
+     +'PESTETDI'//
+     +'PGACPGID'//
+     +'PHSTHTUBHTDO'//
+     +'EFOLHCTEECTEETKCSILHSILUSIXASPDASCLSSIID'//
+     +'IXTRIZDBX1RGX1ERERORLPASPWEIHLODX1IPVWRLVDMRVDGCPTPX'//
+     +'YNVHYNLIPFXTTWZZTRIKYKNKYLV0YSMO'
+C
+C    POT  = DST
+C
+      OUTLIS(2) = OUTLIS(3)
+C
+      TEMLIS=' '
+      LREC = 0
+C
+C Define Output file format
+C
+      IF (IW(NAMIND('MINI')).NE.0) THEN
+        WRITE (LOUTRL,'(2a)')
+     &    '0REDFIO- MINI Is No Longer A Valid Output Format - Use POT '
+        IERIO = 1
+        GOTO 999
+      ENDIF
+C
+      DO 1 I=1,NWRTMX
+        KTYP=IW(NAMIND(OTYPRL(I)))
+        IF (KTYP.EQ.0)THEN
+          LUNIRL(I)=0
+          JOUTRL(I)=NOOUTP
+        ELSE
+          ANYORL=.TRUE.
+          LUNIRL(I)=0
+          JOUTRL(I)=NATOUT
+        ENDIF
+    1 CONTINUE
+C
+C     handle ADDD card
+C
+      KADDD = IW(NAMIND('ADDD'))
+    2 CONTINUE
+      IF(KADDD.NE.0)THEN
+        I=IW(KADDD-2)
+        IF(I.EQ.0)I=1
+        DO 3 J=1,IW(KADDD)
+          POTBK = CHAINT(IW(KADDD+J))
+          L=LNBLNK(OUTLIS(I))
+          IF(L.EQ.0)THEN
+            OUTLIS(I)=POTBK
+          ELSE
+            OUTLIS(I)=OUTLIS(I)(1:L)//POTBK
+          ENDIF
+    3   CONTINUE
+        KADDD=IW(KADDD-1)
+        GOTO 2
+      ENDIF
+C
+C     handle REMD data card
+C
+      KREMD = IW(NAMIND('REMD'))
+   31 CONTINUE
+      IF(KREMD.NE.0)THEN
+        I=IW(KREMD-2)
+        IF(I.EQ.0)I=1
+        DO 5 J=1,IW(KREMD)
+          L=LNBLNK(OUTLIS(I))
+          NB=L/4
+          CBANK=CHAINT(IW(KREMD+J))
+          LTEM=LNBLNK(TEMLIS)
+          IF(LTEM.EQ.0)THEN
+            TEMLIS=CBANK
+          ELSE
+            TEMLIS=TEMLIS(:LTEM)//CBANK
+          ENDIF
+          DO 4 N=1,NB
+            I1=(N-1)*4+1
+            I2=I1+3
+            IF(OUTLIS(I)(I1:I2).EQ.CBANK)
+     +         OUTLIS(I)=OUTLIS(I)(:I1-1)//OUTLIS(I)(I2+1:)
+    4     CONTINUE
+    5   CONTINUE
+        KREMD=IW(KREMD-1)
+        GOTO 31
+      ENDIF
+C
+C     Clean up, sort and print list of banks on each output stream
+C
+      DO 20 I=1,NWRTMX
+        IF(JOUTRL(I).NE.NOOUTP)THEN
+          DO 12 J=1,15
+   12     PBANK(J)=' '
+          WRITE(LOUTRL,'(2A)')'0Banks written to ',OTYPRL(I)
+          L=LNBLNK(OUTLIS(I))
+          NB=L/4
+          K=0
+C
+C       First clean up
+C
+          IF(NB.GT.MAXFPO)THEN
+            DO 29 M=1,20
+              WRITE(LOUTRL,'(A,I4,A,I4)')
+     +          ' -TOO MANY BANKS ON OUTPUT LIST-',
+     +          NB, ' - LIMITED TO -',MAXFPO
+              IERIO = 3
+   29       CONTINUE
+            GOTO 999
+          ENDIF
+          DO 30 N=1,NB
+            I1=(N-1)*4+1
+            I2=I1+3
+   30     TLIST(N)=OUTLIS(I)(I1:I2)
+C
+C      sort the banknames on a list
+C      but leave the first one in place (EVEH)
+C
+          CALL SORCHA(TLIST(2),1,4,NB-1,1)
+C
+C          put the names back - eliminate doubles
+C
+          N=0
+          DO 35 M=1,NB
+            IF(M.EQ.1.OR.TLIST(M).NE.TLIST(M-1))THEN
+              N=N+1
+              I1=(N-1)*4+1
+              I2=I1+3
+              OUTLIS(I)(I1:I2)=TLIST(M)
+            ELSEIF ( M.GT.1 .AND. TLIST(M).EQ.TLIST(M-1) ) THEN
+              WRITE (LOUTRL,'(3A)') ' ++++ BANK ',TLIST(M),
+     &          ' Duplicated in Output List Definition '
+            ENDIF
+   35     CONTINUE
+C
+C?  Check bank formats and write output bank list to julia log file
+C
+          NB=N
+          DO 15 N=1,NB
+            I1=(N-1)*4+1
+            I2=I1+3
+            K=K+1
+            CBANK = OUTLIS(I)(I1:I2)
+            IER = ALFMT (JULFMT, CBANK, FORMA)
+            IF ( IER.NE.0 ) THEN
+              WRITE (LOUTRL,'(3A)') ' ++++ RDEFIO : Bank ',CBANK,
+     &          ' has no format defined'
+            ENDIF
+            PBANK(K)=' '//CBANK
+            IF(K.EQ.15)THEN
+              WRITE(LOUTRL,'(20X,15A)')PBANK
+              DO 14 J=1,15
+   14         PBANK(J)=' '
+              K=0
+            ENDIF
+   15     CONTINUE
+          IF(K.NE.0) WRITE(LOUTRL,'(20X,15A)')PBANK
+        ENDIF
+   20 CONTINUE
+C
+C     open the file for monitoring if requested
+C
+      CALL RMONII
+C
+  999 RETURN
+C
+      END
+#endif
+@
+
+
+1.17
+log
+@Mods for julia 313
+@
+text
+@d59 3
+a61 1
+C! Total: 164 banks on OUTLIS
+d103 1
+a103 1
+     +'EVEHASEVKINEVERTDHEAKEVHFKINFVER'//
+@
+
+
+1.16
+log
+@TPC clock frequency in Hz
+@
+text
+@d57 3
+a59 1
+C! Total: 163 banks on OUTLIS
+d126 1
+a126 1
+     +'PHSTHTUB'//
+@
+
+
+1.15
+log
+@Add BLUM to POT for random triggers
+@
+text
+@d57 1
+@
+
+
+1.14
+log
+@prepare julia 309
+@
+text
+@d55 2
+a56 2
+C!   Modified :- M.Cattaneo         06-APR-1999
+C!        New bank KWGT to POT
+d112 1
+a112 1
+     +'BCSCBCSLBCTRBCNTBHITBPTRBCHGBCPOREVHRTLOPTST'//
+d124 1
+a124 1
+     +'EFOLHCTEECTEETKCSILHSILUSIXASPDASCLS'//
+@
+
+
+1.13
+log
+@julia 308.3 changes for BCAL
+@
+text
+@d55 2
+d101 1
+a101 1
+     +'KXMEFPOLKPOLFZFRFPOIFSHOKMARKWTK'//
+@
+
+
+1.12
+log
+@Mod for julia 306.3
+@
+text
+@d53 2
+d110 1
+a110 1
+     +'BLCTBCSCBCSLBCTRBCNTBHITBPTRBCHGREVHRTLOPTST'//
+@
+
+
+1.11
+log
+@Correction file julia 306.2
+@
+text
+@d51 2
+d108 1
+a108 1
+     +'BLCTBCSCBCSLBCTRBCNTBHITBPTRREVHRTLOPTST'//
+@
+
+
+1.10
+log
+@Prepare Julia 305
+@
+text
+@d49 2
+d95 1
+a95 1
+     +'KXMEFPOLKPOLFZFRFPOI'//
+@
+
+
+1.9
+log
+@modifs for julia 304
+@
+text
+@d47 2
+a55 1
+      EXTERNAL LNBLNK
+d104 1
+a104 1
+     +'BCSCBCSLBCTRBCNTBHITBPTRREVHRTLOPTST'//
+@
+
+
+1.8
+log
+@New BCAL banks to OUTLIS
+@
+text
+@d45 2
+d117 1
+a117 1
+     +'YNVHYNLIPFXTTWZZTRIKYKNKYLV0'
+@
+
+
+1.7
+log
+@Brigitte corrections to jul302
+@
+text
+@d43 2
+d101 1
+a101 1
+     +'BCNTBHITBPTRREVHRTLOPTST'//
+a115 1
+      L3=LNBLNK(OUTLIS(3))
+@
+
+
+1.6
+log
+@add bank LCRA
+@
+text
+@d41 2
+d88 1
+a88 1
+     +'FPOLKPOLFZFRFPOI'//
+@
+
+
+1.5
+log
+@Tracking upgrade
+@
+text
+@d38 3
+a40 1
+C!        Tracking upgrade banks
+d88 1
+a88 1
+     +'LUPALIDTPLPDPLSD'//
+@
+
+
+1.4
+log
+@Add PHMH to outlis
+@
+text
+@d37 2
+d108 2
+a109 1
+     +'IXTRIZDBX1RGX1ERERORLPASPWEIHLODX1IPVWRLVDMRVDGCPTPX'
+@
+
+
+1.3
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+ 	gambnk.F gapeco.F gasteer.F
+ 	hcalib.F hcalrd.F hcatow.F hcbhis.F hcfclu.F hchist.F hclcra.F
+ 	hcltst.F hclufi.F hcos.F hcsimm.F hdgdeb.F hdgfil.F hdgpot.F
+ 	hdgsum.F hdprec.F hdspre.F hflnoi.F hinijo.F hiniru.F hmener.F
+ 	hmfind.F hmroad.F hnoise.F hnoisy.F hpatco.F hphnoi.F hplink.F
+ 	hprana.F hpranp.F hprdig.F hpreda.F hprpot.F hprsum.F hprunc.F
+ 	hrcomp.F hrcpat.F hrdcal.F hroad.F hslink.F hslowc.F hspare.F
+ 	hsptre.F hstofi.F htrack.F htubfi.F htwcr.F
+ 	iasign.F iattma.F ibnkin.F icaswt.F icftoi.F iclimb.F icrcco.F
+ 	ideadw.F idigpr.F ienang.F ifind1.F ifind2.F ifitp.F iftrak.F
+ 	igetti.F igettp.F igicha.F iheler.F iinijo.F iiniru.F iintrk.F
+ 	imatch.F inigap.F insect.F intrak.F ipakdi.F ipdsti.F iphcor.F
+ 	ipreda.F iprsum.F ipstat.F irefin.F ireopd.F isave.F ishuff.F
+ 	ishufl.F islowc.F isrch.F itbook.F itccut.F itcopr.F itcrec.F
+ 	itcrep.F itctpc.F itctrk.F itcxng.F iterr.F itextn.F ithist.F
+ 	itidy1.F itidy2.F itlnk1.F itlnk2.F itpcan.F itrak.F itrecf.F
+ 	itreci.F itree.F itrkci.F itrkeq.F itrkzr.F itrmca.F
+@
+text
+@d88 1
+a88 1
+     +'PEMHPITMPASL'//
+@
+
+
+1.2
+log
+@julia version 279
+@
+text
+@a0 1
+*DK rdefio
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d30 8
+d97 1
+a97 1
+     +'VDCOVCPLVDXYVDZTVDTDVDHT'//
+d104 1
+a104 1
+     +'PGPCPGID'//
+d107 1
+a107 1
+     +'IXTRIZDBX1RGX1EREROR'
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

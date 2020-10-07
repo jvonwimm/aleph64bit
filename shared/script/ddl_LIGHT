@@ -1,0 +1,51 @@
+#!/usr/local/bin/perl 
+require "complete.pl"; 
+require "ctime.pl";
+
+#######################################################################
+#                       ddl_LIGHT [only on alephwww]
+# 08/04/98                                                   F.Blin
+#######################################################################
+
+$ALDOC = $ENV{'ALDOC'};
+$DIR_Light_bin = "/usr/local/src/Light/bin";
+
+$DIR_www = "/www/Light/web/generic/src/bankusage";
+&change_DIR($DIR_www,"Bank usage");
+system("$DIR_Light_bin/bank_usage $ALDOC/sbank.adr ../../BankUsage.RZ");
+
+$DIR_www = "/www/Light/web/generic/src/ddl";
+&change_DIR($DIR_www,"DDL");
+system("$DIR_Light_bin/gen_ddl $ALDOC/bankdoc/*.ddl");
+system("$DIR_Light_bin/ddl2light DDL.RZ *.ss_ddl");
+###>>>  (ddl2light fails in ADAMO if you try to this directly)
+system("$DIR_Light_bin/mv DDL.RZ ../../DDL.RZ"); 
+
+$DIR_www = "/www/Light/web/generic/src/index";
+&change_DIR($DIR_www,"Make the corresponding index i.e. of DDL");
+###>>> requires approx 4 mins CPU on afal44
+system("$DIR_Light_bin/type_index ConfigIndex ../../GenIdx.RZ"); 
+
+$DIR_www = "/www/Light/web/generic/src/lbf";
+&change_DIR($DIR_www,"lbf");
+system("$DIR_Light_bin/gen_lbf $ALDOC/sbank.lbf");
+###>>>Do not use lbf from ADAMO... 
+system("$DIR_Light_bin/lbf ../../LBF.RZ *.lbf");
+exit; 
+###############################################################################
+sub change_DIR {
+
+    local($PWD) = "";
+
+    chdir($_[0]);
+    $PWD = `pwd`;
+    $PWD =~ s/\s+$//;
+    if ($PWD ne $_[0]){
+	print "***WARNING $PWD ne $_[0] \n";
+        exit;
+    }
+    print "\n*** -> Now $_[1]\n";
+    print " on directory $_[0] \n\n";
+    return 1;
+}
+###############################################################################

@@ -1,0 +1,96 @@
+C****************************************************************
+      SUBROUTINE W_CHPH2(HAXIS,LHEMI1,LHEMI2,POIDS1,POIDS2)
+C****************************************************************
+C Routine to correct the charm physics in the Monte-Carlo .
+C Stephane Monteil.
+C
+C   Purpose     : Three physics parameters are off in the MCs;
+C                 That routine corrects lifetimes,  branching ratios
+C                 and production rates  of the final charmed
+C                 hadrons (D+, D0, D_s,/\c+)
+C
+C  *Input  = HAXIS in BTAGRAW common
+C
+C  *Outputs= POIDSx : weights which had to be apply to the
+C                     hemispheres of the cc event
+C                     - POIDS1 Alpha's hemisphere 1
+C                     - POIDS2 Alpha's hemisphere 2
+C
+C                *********************************
+C
+C  *Subroutines : Tag_c     --> tags the final hadron
+C                 Hemi_c    --> Determines its hemisphere
+C                 Declen    --> Computes its decay length
+C                 Mc_count  --> Counts the multiplicity
+C                               in charged Tr. of its decay(A.Greene)
+C  *Function    : Charm_wt  --> Operates the reweighting.
+C                 Ifannee   --> Finds Monte-Carlo's year
+C
+C
+C****************************************************************
+#include "qcde.h"
+      EXTERNAL CHARM_WT
+      DIMENSION NCOD_C(10),NPART(10)
+      DIMENSION PCM(4)
+      DIMENSION PD1(10),PD2(10)
+      DIMENSION LHEMI1(10),LHEMI2(10)
+      LOGICAL CHARM,LASTC
+#include "comnnt.h"
+#include "qmacro.h"
+C
+C     Initialisation
+C
+      do i=1,10
+         PD1(I)     = 1.
+         PD2(I)     = 1.
+      ENDDO
+C
+C     Find the final charmed hadron, alpha code, alpha number
+C
+      CALL TAG_C(NC,NCOD_C,NPART)
+C
+C     Test of alpha hemisphere to which belongs the hadron
+C
+      CALL HEMI_C(HAXIS,NC,NPART,LHEMI1,LHEMI2)
+C
+C    Initializes some variables
+C
+      POIDS1 = 1.
+      POIDS2 = 1.
+      ITK0   = 0
+C
+C    Runs over all tagged hadrons
+C
+      IF (NC.GE.1) THEN
+          DO IIC = 1,NC
+             ITK0 = NPART(IIC)
+C
+C     Multiplicity in charged tracks of the decay
+C     Computes the decay length
+C     Applies the weights
+C
+             IF (LHEMI1(IIC).EQ.1) THEN
+                 CALL MC_COUNT(ITK0,NTOT,NCHT,PTOT,PCHT,CHARGE)
+                 CALL DECLEN(ITK0,DCM,PCM)
+                 PD1(IIC) = CHARM_WT(NCOD_C(IIC),NCHT,DCM,PCM)
+                 POIDS1   = POIDS1*PD1(IIC)
+             ENDIF
+C
+C      Same thing on the other hemipshere
+C
+             IF (LHEMI2(IIC).EQ.1) THEN
+                 CALL MC_COUNT(ITK0,NTOT,NCHT,PTOT,PCHT,CHARGE)
+                 CALL DECLEN(ITK0,DCM,PCM)
+             KTQUA = ITQUA
+                 PD2(IIC) = CHARM_WT(NCOD_C(IIC),NCHT,DCM,PCM,KTQUA)
+                 POIDS2 = POIDS2*PD2(IIC)
+            ENDIF
+        ENDDO
+C
+      ENDIF
+C
+C        made
+C
+  999 CONTINUE
+      RETURN
+      END

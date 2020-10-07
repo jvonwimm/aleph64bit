@@ -1,0 +1,78 @@
+      INTEGER FUNCTION GTDBAS(LBASE,KRUN)
+C --------------------------------------------------------------------
+C! Get name of the correct data base and open it
+CKEY ALEF DBASE
+C - F.Ranjard - 910308
+C
+C  Input  :   LBASE = data base logical unit
+C             KRUN  = current run number
+C
+C  Ouput  :  GTDBAS = return code
+C                   = 0  a correct data base has been opened
+C
+C     get ADBR,NR=0  which contains the setup code.
+C         ADBS,NR=0  which contains the version number
+C         ADBN,NR=0  which contains the name of the data base
+C     Then check whether the run number has changed.
+C     IF yes THEN
+C       Check that the opened data base is the right one.
+C     ELSE
+C       call AOPDBS again which will use the setup code to open
+C       the right data base
+C     ENDIF
+C
+C--------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "adbnjj.h"
+#include "adbrjj.h"
+#include "adbsjj.h"
+      CHARACTER*8  FNAM
+      INTEGER GTSTUP
+#include "bmacro.h"
+C ----------------------------------------------------------------------
+      IRUN = IABS (KRUN)
+      IRET = 0
+C
+C - 1st entry
+      JADBR = MDARD (IW,LBASE,'ADBR',0)
+      IF (JADBR.EQ.0) THEN
+          CALL ALTELL (
+     &     'ALGTDB: ADBR is missing, current d.b. will be used',
+     &      0,'RETURN')
+      ELSE
+         IDBSTP = GTSTUP ('DB',IRUN)
+         JADBN  = MDARD (IW,LBASE,'ADBN',0)
+         IF (JADBN.EQ.0) THEN
+            CALL ALTELL (
+     &        'ALGTDB: ADBN is missing, curent d.b. will be used',
+     &         0,'RETURN')
+         ELSE
+            IVMIN = ITABL(JADBN,IDBSTP,JADBFV)
+            IVMAX = ITABL(JADBN,IDBSTP,JADBLV)
+            JADBS = MDARD (IW,LBASE,'ADBS',0)
+            IF (JADBS.EQ.0) THEN
+               CALL ALTELL (
+     &         'ALGTDB: ADBS is missing, curent d.b. will be used',
+     &          0,'RETURN')
+            ELSE
+               IVCUR = ITABL(JADBS,1,JADBVN)
+               IF (IVCUR.LT.IVMIN .OR. IVCUR.GT.IVMAX) THEN
+                  KADBN = KROW (JADBN,IDBSTP)
+                  CALL ALSTIN (IW(KADBN+JADBFI),LADBNA-JADBFI+1,FNAM)
+                  LN = LNBLNK (FNAM)
+                  CALL AOPDBS (FNAM(1:LN),IRET)
+                  CALL DAFRST (LBASE)
+                  CALL BDROP (IW,'ADBSADBRADBN')
+                  CALL BDROP (IW,'+DIS')
+                  CALL ADBVER(IVERS,IDATE)
+                  JADBR = MDARD (IW,LBASE,'ADBR',0)
+               ENDIF
+            ENDIF
+         ENDIF
+      ENDIF
+C
+      GTDBAS = IRET
+C
+      END
+#endif

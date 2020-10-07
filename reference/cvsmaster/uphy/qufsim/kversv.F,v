@@ -1,0 +1,56 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  uphy1-0:1.1.1.1 flr:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.08.16.13.38.15;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.08.16.13.38.16;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@        FUNCTION kversv(dummy)
+C-----------------------------------------------------------------------
+C! Create new vertex
+C
+C  Patrick Janot -- 23 Oct 1993
+C-----------------------------------------------------------------------
+#include "qcde.h"
+C
+C Enlarge ank QVRT
+C
+      IF ( klfrv .LE. klmcv )  CALL qsbank ('QVRT', klmcv + 50)
+      knmcv  = knmcv + 1
+      klmcv  = klmcv + 1
+      kffrv  = klmcv+ 1
+      kversv = klmcv
+C
+      RETURN
+      END
+@
+
+
+1.1.1.1
+log
+@2nd try to import uphy
+@
+text
+@@

@@ -1,0 +1,286 @@
+head	1.2;
+access;
+symbols
+	dbase01:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.02.13.10.50.24;	author flr;	state dead;
+branches;
+next	1.1;
+
+1.1
+date	97.02.12.10.06.04;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.02.12.10.06.04;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release dbase02
+@
+text
+@        PROGRAM SPLITDB
+C.----------------------------------------------------------------------
+C Author M.Rumpf (RUMPF at FRCPN11)  22/06/89
+C Modified by F.Ranjard
+C! split ADBSCONS DAF into ADBSLTC EPIO, ADBSSTC.DAF and  ADBSDOC DAF
+C! or write an EPIO file from any DAF given on data cards
+C Reads DAF on unit JUNIDB(0) (=4)
+C writes LTC file on EPIO format on unit 25
+C writes LTC file in NATIVE format on unit 24
+C Writes STC file on DAF format on unit 23
+C writes DOC file on DAF format on unit 22
+C BOS77 and ALEPHLIB libraries needed
+C ADAMO Tables COL2 and TAB2 are written onto ADBSDOC.DAF
+C
+C - data cards:
+C    ********  read a FULLDAF, write a DOCumentation DAF  ***********
+C    * read a full DAF containing ADAMO tables
+C    FDBA  'DBASE:ADBS122.FULLDAF | DAF'
+C    * write a DOCcumentation DAF
+C    FDOC  'DBS:ADBSDOC.DAF122 | DAF'
+C    * number of records on the DOC DAF
+C    DOCB  170
+C    * list of banks to be put onto STC DAF
+C    TSTC  0 / $FMT '2I,(A)'
+C    TSTC  0 /  1    2
+C             'ADBS'
+C             'COPT'
+C    ENDQ
+C    ********  read a FULLDAF, write an EPIO file *******************
+C    * read a full DAF containing ADAMO tables
+C    FDBA  'DBASE:ADBS122.FULLDAF | DAF'
+C    * write an EPIO file
+C    FEPI  'DBS:ADBS122.EPIO'
+C    * drop following banks from the EPIO file
+C    DROP  '.COL' '.TAB' '.DIR' '.CHK'
+C    * write only the EPIO file , do not write DAF or NATIVE files
+C    EPIO
+C    ENDQ
+C
+C    *************** split a FULLDAF into 3 files *******************
+C    * read a full DAF containing ADAMO tables
+C    FDBA  'DBASE:ADBS122.FULLDAF | DAF'
+C    * write an STC short term constant DAF
+C    FSTC  'DBS:ADBSSTC.DAF122 | DAF'
+C    * write a DOCcumentation DAF
+C    FDOC  'DBS:ADBSDOC.DAF122 | DAF'
+C    * write an LTC long term constant EPIO file
+C    FEPI  'DBS:ADBSLTC.EPIO122 | EPIO'
+C    * write an LTC NATIVE file
+C    FNAT  'DBS:ADBSLTC.NAT122 | NATIVE'
+C    * number of records on STC DAF
+C    STCB  220
+C    * number of records on the DOC DAF
+C    DOCB  170
+C    * list of banks to be put onto STC DAF
+C    TSTC  0 / $FMT '2I,(A)'
+C    TSTC  0 /  1    2
+C             'ADBS'
+C             'COPT'
+C    ENDQ
+C.---------------------------------------------------------------------
+#ifndef DOC
+#include "lbos.h"
+       CHARACTER*4 NAME,CHAINT
+       CHARACTER*40 TEPI,TNAT,TFIL,TDBS,TSTC,TDOC,FTYP,FDEV
+       CHARACTER*120 MSG,MSGB,MSGE
+C -------------------------------------------------------
+C
+       CALL BNAMES (NAMAX)
+       CALL BOS(IW,LBOS)
+       IW(5) = 7
+       IW(7) = 100000
+       CALL BKFMT ('+BUF','I')
+       IRECL = 1024
+       LUDOC = 22
+       LUSTC = 23
+       LUNAT = 24
+       LUEPI = 25
+C
+C Read data cards file from IW(5) in the IW BOS arrray
+C
+   9  CONTINUE
+      CALL BREADC
+C
+C     STCfile name
+      CALL ACDARG ('FSTC','DAF','*',TSTC,FTYP,FDEV,IER)
+      IF (IER.EQ.-1) THEN
+         LUSTC = 0
+      ELSEIF(IER.GT.0) THEN
+         CALL AWERRC (IW(6),'SPLIT',TSTC,IER)
+         CALL EXIT
+      ENDIF
+C     number of blocks for STC file
+      JSTCB = NLINK ('STCB',0)
+      IF (JSTCB.GT.0) THEN
+          NBSTC = IW(JSTCB+1)
+      ELSE
+          LUSTC = 0
+      ENDIF
+C
+C     DOCfile name
+      CALL ACDARG ('FDOC','DAF','*',TDOC,FTYP,FDEV,IER)
+      IF (IER.EQ.-1) THEN
+         LUDOC = 0
+      ELSEIF(IER.GT.0) THEN
+         CALL AWERRC (IW(6),'SPLIT',TDOC,IER)
+         CALL EXIT
+      ENDIF
+C     number of blocks for DOC file
+      JDOCB = NLINK ('DOCB',0)
+      IF (JDOCB.GT.0) THEN
+         NBDOC = IW(JDOCB+1)
+      ELSE
+         LUDOC = 0
+      ENDIF
+C
+C     if EPIO then write an EPIO file from a DAF, do not split
+C     write one bank per record (LREC=3600)
+      JEPIO = NLINK ('EPIO',0)
+      IF (JEPIO .GT.0) THEN
+         LUDOC = 0
+         LUSTC = 0
+         LUNAT = 0
+         LDUM  = NALREC (3600)
+      ENDIF
+C     list of banks to drop from LTC file
+      JDLTC = NLINK ('DLTC',0)
+      IF (JDLTC.GT.0) THEN
+         DO 1 I=1,IW(JDLTC)
+            NAME = CHAINT(IW(JDLTC+I))
+            CALL BLIST(IW,'T+',NAME)
+  1      CONTINUE
+      ENDIF
+C
+C Open DAF
+C
+      LUDAF = JUNIDB(0)
+      TDBS = '    '
+      CALL AOPDBS (TDBS,IRC)
+      IF (IRC.NE.0) THEN
+         CALL AWERRC (IW(6),'AOPDBS',TDBS,IRC)
+         GOTO 998
+      ENDIF
+      CALL ADBVER (IVERS,IDATE)
+C
+C Create DOC DAF on unit LUDOC=22
+C
+      IF (LUDOC .NE. 0) THEN
+         LUN  = LUDOC
+         NREC = NBDOC
+         TFIL = TDOC
+#include "erase.h"
+#include "owdaf.h"
+      ENDIF
+C
+C Create STC DAF on unit LUSTC=23
+C
+      IF (LUSTC .NE. 0) THEN
+         LUN = LUSTC
+         NREC= NBSTC
+         TFIL= TSTC
+#include "erase.h"
+#include "owdaf.h"
+      ENDIF
+C
+C Open LTC NATIVE file  on unit LUNAT=24
+      IF (LUNAT .GT. 0) THEN
+         CALL ACDARG('FNAT','NATIVE','*',TFIL,FTYP,FDEV,IER)
+         IF (IER.EQ.-1) THEN
+            LUNAT=0
+         ELSEIF (IER.NE.0) THEN
+            WRITE (IW(6),*) ' problem with FNAT card - EXIT'
+            CALL EXIT
+         ENDIF
+#include "erase.h"
+         IF (LUNAT.GT.0) THEN
+            CALL AOPENW(LUNAT,TFIL,FTYP,FDEV,IER)
+            IF (IER.NE.0) THEN
+               CALL AWERRC (IW(6),'SPLIT',TFIL,IER)
+               CALL EXIT
+            ENDIF
+         ENDIF
+      ENDIF
+C
+C Open LTC EPIO file  on LUEPI=25
+      IF (LUEPI .GT. 0) THEN
+         CALL ACDARG('FEPI','EPIO','*',TFIL,FTYP,FDEV,IER)
+         IF (IER.EQ.-1) THEN
+            LUEPI = 0
+         ELSEIF(IER.NE.0) THEN
+            WRITE (IW(6),*) ' problem with FEPI card - EXIT'
+            CALL EXIT
+         ENDIF
+#include "erase.h"
+         IF (LUEPI.GT.0) THEN
+            CALL AOPENW(LUEPI,TFIL,FTYP,FDEV,IER)
+            IF (IER.NE.0) THEN
+               CALL AWERRC (IW(6),'SPLIT',TFIL,IER)
+               CALL EXIT
+            ENDIF
+         ENDIF
+      ENDIF
+C
+       LUNPR = IW(6)
+C
+C Print list of banks found on DAF
+C
+       CALL BDAPR(LUDAF,'    ')
+C
+C Compute banks format from ADAMO tables
+C Write them on BOS/EPIO file
+C
+       IFLAG = JEPIO
+       CALL SPLITDA (LUDAF,LUDOC,LUSTC,LUNAT,LUEPI,IFLAG)
+C
+C Write last buffer
+C
+       IF (LUEPI.GT.0) CALL BWRITE (IW,LUEPI,'0')
+       IF (LUNAT.GT.0) CALL BWRITE (IW,LUNAT,'0')
+C
+C Flag = 0  OK.
+C
+       PRINT * ,'IFLAG',IFLAG
+       IF (LUDOC.GT.0) CALL BDAPR(LUDOC,'    ')
+       IF (LUSTC.GT.0) CALL BDAPR(LUSTC,'    ')
+       CALL BOSTA
+       STOP
+C
+  998  WRITE(6,1998) LUDAF
+ 1998  FORMAT(1X,' DAF not found on unit ',I5)
+       STOP
+  90   WRITE(6,*) 'error opening file on logical unit ',LUN,IOP
+       END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@@
+
+
+1.1.1.1
+log
+@1st release of dbase library
+@
+text
+@@

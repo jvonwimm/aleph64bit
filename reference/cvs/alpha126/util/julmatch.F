@@ -1,0 +1,353 @@
+      SUBROUTINE JULMATCH(IALTRK,IMCTRK,IFLAG)
+CKEY MATCHING / USER
+C-------------------------------------------------------------------------------
+C! Match a reconstructed track with MC truth, and classify the track.
+C  Author Dave Brown, 29-6-94
+C  Modified  02-9-94  P. Rensing
+C
+C  Good tracks are classified according to the origin of the true track
+C
+C  Input argument :
+C     IALTRK =  Input ALPHA track number
+C  Output arguments :
+C     IMCTRK =  Associated ALPHA MC true track if there's a reasonable match
+C            =  0  if not
+C      IFLAG = -3     Hits not related to MC true hits
+C              -2     Hits mixed from several particles (not decays)
+C              -1     Spiral branch or calorimetric reflection
+C               0     Double counted particles (2 tracks for 1 particle)
+C               1      True track comes from true primary
+C               2      True track comes from HF decay
+C               3      True track comes from neutral decay
+C               4      True track comes from charged decay (split kink)
+C               5      Kink fit as a single track
+C               6      True track comes from material interaction
+C               7      Unknown
+C
+C  Note: IMCTRK is returned zero for IFLAG <= -2
+C-------------------------------------------------------------------------------
+#ifndef DOC
+C
+      IMPLICIT NONE
+C
+C  alpha variables
+C
+#include "qdecl.h"
+#include "qcde.h"
+      SAVE INEW, LASTRUN, LASTEVT
+C
+C  IO variables
+C
+      INTEGER IALTRK,IFLAG,IMCTRK
+C
+C  Local variables
+C
+      INTEGER MAXMAT
+      PARAMETER (MAXMAT=20)
+      INTEGER INEW, LASTRUN, LASTEVT
+      INTEGER DUMMY
+      INTEGER NMATCH,IMATCH,JMATCH
+      INTEGER NHITMATCH(MAXMAT),ISORT(MAXMAT),IMCTR(MAXMAT)
+      INTEGER IRELATE
+      INTEGER IDAU,NDAU
+      INTEGER OVX
+      INTEGER NITC,NTPC,NHITS
+      INTEGER MOMCOD1,MOMCOD2,IMOTH,MOMVTX,NMOTH
+      INTEGER JFKIN,IHC,IFKIN
+      INTEGER JALTRK
+      REAL MCFRAC(3),SUMFRAC,FRAC
+      REAL OVTX(3),TPNEW(5)
+      REAL TPNEW2(5),PHIDIFF2,RDOT2
+      REAL PHIDIFF,COSP,SINP,RDOT,COSL,SINL,TDOT,TDOT2
+      REAL EDIFF,RHO
+      REAL D0_PMOVE,Z0_PMOVE,D0_PMOVE2,Z0_PMOVE2
+C
+      DATA LASTRUN/-1/
+C
+C  test common
+C
+      COMMON / JULMTEST / PHIDIFF,EDIFF,MCFRAC,RDOT,D0_PMOVE,Z0_PMOVE
+C
+C  Functions
+C
+      INTEGER NAMIND
+C-------------------------------------------------------------------------------
+C  Inline functions
+C
+      LOGICAL PION,KAON,BOTTOM,CHARM,K0,LAMBDA,GAMMA,ELECTRON
+      LOGICAL SIGMA,CHI
+      INTEGER ICOD
+      PION(ICOD) = ICOD.EQ.8.OR.ICOD.EQ.9
+      KAON(ICOD) = ICOD.EQ.11.OR.ICOD.EQ.12
+      LAMBDA(ICOD) = ICOD.EQ.18.OR.ICOD.EQ.26
+      SIGMA(ICOD) = ICOD.EQ.19.OR.ICOD.EQ.20.OR.ICOD.EQ.21
+      CHI(ICOD) = ICOD.EQ.22.OR.ICOD.EQ.23.OR.ICOD.EQ.30.OR.ICOD.EQ.31
+      K0(ICOD) = ICOD.EQ.10.OR.ICOD.EQ.16.OR.ICOD.EQ.56.OR.ICOD.EQ.57
+      GAMMA(ICOD) = ICOD.EQ.1
+      ELECTRON(ICOD) = ICOD.EQ.2.OR.ICOD.EQ.3
+      CHARM(ICOD) = (ICOD.GE.35.AND.ICOD.LE.41).OR.ICOD.EQ.53.OR.
+     &     (ICOD.GE.169.AND.ICOD.LE.210)
+      BOTTOM(ICOD) = (ICOD.GE.115.AND.ICOD.LE.13).OR.
+     &     (ICOD.GE.259.AND.ICOD.LE.270).OR.
+     &     (ICOD.GE.211.AND.ICOD.LE.238)
+#include "qmacro.h"
+C-------------------------------------------------------------------------------
+C  Initialize variables
+C
+C  Paul Rensing, Sept 2, 1994
+C  Use the same INEW track during one event; otherwise we run
+C   out of Alpha tracks.
+      IF (LASTRUN .NE. KRUN .OR. LASTEVT .NE. KEVT) THEN
+         INEW = KVNEW(DUMMY)
+         LASTRUN = KRUN
+         LASTEVT = KEVT
+      END IF
+C
+      JFKIN = IW(NAMIND('FKIN'))
+      DO IMATCH=1,3
+        MCFRAC(IMATCH) = 0.0
+      END DO
+C
+C  Get the MC true ITC/TPC hit matching
+C
+      IMCTRK = 0
+      IFLAG = -3
+      NMATCH = KNMTCH(IALTRK)
+      IF (NMATCH.GT.0) THEN
+C
+C  Order the matches according to the number of matched hits
+C
+        DO IMATCH=1,NMATCH
+          NHITMATCH(IMATCH) = KSMTCH(IALTRK,IMATCH)
+        END DO
+        CALL SORTZV(NHITMATCH,ISORT,NMATCH,-1,1,0)
+C
+C  Get hit fraction of matching tracks (up to 3)
+C
+        NITC = KFRTNI(IALTRK)
+        NTPC = KFRTNT(IALTRK)
+        NHITS = NITC+NTPC
+        DO IMATCH=1,MIN(3,NMATCH)
+          JMATCH = ISORT(IMATCH)
+          MCFRAC(IMATCH) = NHITMATCH(JMATCH)/FLOAT(NHITS)
+        END DO
+        DO IMATCH=4,NMATCH
+          JMATCH = ISORT(IMATCH)
+          MCFRAC(3) = MCFRAC(3) + NHITMATCH(JMATCH)/FLOAT(NHITS)
+        END DO
+        SUMFRAC = MCFRAC(1)+MCFRAC(2)+MCFRAC(3)
+        IF (SUMFRAC.LE.0.6) THEN
+C
+C  Garbage track
+C
+          IFLAG = -3
+          IMCTRK = 0
+          GO TO 999
+        END IF
+C
+C  Get MC tracks in order
+C
+        DO IMATCH=1,NMATCH
+          IMCTR(IMATCH) = KMTCH(IALTRK,ISORT(IMATCH))
+        END DO
+C
+C  look at MC truth for leading 2 tracks; check if they are daughters
+C  of one another
+C
+        IF (NMATCH.GE.2.AND.MCFRAC(2).GE.0.1) THEN
+          IRELATE = 0
+          DO IDAU=1,KNDAU(IMCTR(1))
+            IF (KDAU(IMCTR(1),IDAU).EQ.IMCTR(2)) THEN
+              IRELATE = 1
+            END IF
+          END DO
+          DO IDAU=1,KNDAU(IMCTR(2))
+            IF (KDAU(IMCTR(2),IDAU).EQ.IMCTR(1)) THEN
+              IRELATE = -1
+            END IF
+          END DO
+        ELSE
+          IRELATE = 0
+        END IF
+        IF (IRELATE.NE.0) THEN
+C
+C  Kink fit as a single track
+C
+          IFLAG = 5
+          IMCTRK = IMCTR(1)
+          GOTO 999
+        END IF
+C
+C  Check for tracks confusing lots of hits
+C
+        IF (MCFRAC(3)/SUMFRAC.GT.0.1.OR.MCFRAC(2)/SUMFRAC.GT.0.25) THEN
+C
+C  Track split up into lots of parts
+C
+          IFLAG = -2
+          IMCTRK = 0
+          GO TO 999
+        END IF
+C-------------------------------------------------------------------------------
+C  Get the origin vertex of the MC track
+C
+        IMCTRK = IMCTR(1)
+        IFKIN = IMCTRK-KFMCT+1
+        IHC = ITABL(JFKIN,IFKIN,8)
+        OVX = KORIV(IMCTRK)
+        OVTX(1) = QVX(OVX)
+        OVTX(2) = QVY(OVX)
+        OVTX(3) = QVZ(OVX)
+        RHO = SQRT(OVTX(1)**2+OVTX(2)**2)
+C
+C  Move track parameters to true MC vertex
+C
+        TPNEW(1) = QFRFIR(IALTRK)
+        TPNEW(2) = QFRFTL(IALTRK)
+        TPNEW(3) = QFRFP0(IALTRK)
+        TPNEW(4)  = QFRFD0(IALTRK)
+        TPNEW(5)  = QFRFZ0(IALTRK)
+        CALL PMOVE(OVTX,TPNEW)
+        PHIDIFF = TPNEW(3)-QFRFP0(IALTRK)
+        COSP = COS(TPNEW(3))
+        SINP = SIN(TPNEW(3))
+        COSL = 1./SQRT(1.0+TPNEW(2)**2)
+        SINL = TPNEW(2)*COSL
+        D0_PMOVE = TPNEW(4)
+        Z0_PMOVE = TPNEW(5)
+        RDOT = (QX(IMCTRK)*COSP + QY(IMCTRK)*SINP)/QPT(IMCTRK)
+        TDOT = (QX(IMCTRK)*COSP*COSL + QY(IMCTRK)*SINP*COSL +
+     &       QZ(IMCTRK)*SINL)/QP(IMCTRK)
+C
+C  Catch-all check for calorimeter reflection, spiral arms, etc.
+C  This is different for tracks with TPC information
+C
+        IF (NTPC.GE.4) THEN
+          IF (ABS(D0_PMOVE).GT.2.0 .OR.
+     &        ABS(Z0_PMOVE).GT.5.0 .OR.
+     &        TDOT.LT.0.95 .OR.
+     &        ABS(PHIDIFF).GT.1.0) THEN
+            IFLAG = -1
+            GOTO 999
+          END IF
+        ELSE
+          IF (ABS(D0_PMOVE).GT.1.0 .OR.
+     &        RDOT.LT.0.95 .OR.
+     &        ABS(PHIDIFF).GT.1.0) THEN
+            IFLAG = -1
+            GOTO 999
+          END IF
+        END IF
+C
+C  Check to see if this MC true track is double counted
+C
+        NMATCH = KNMTCH(IMCTRK)
+        DO IMATCH=1,NMATCH
+          JALTRK = KMTCH(IMCTRK,IMATCH)
+          IF (JALTRK.NE.IALTRK) THEN
+            FRAC = 0.0
+            DO JMATCH = 1, KNMTCH(JALTRK)
+              IF (KMTCH(JALTRK, JMATCH) .EQ. IMCTRK) THEN
+                 FRAC = KSMTCH(JALTRK,JMATCH)/
+     &                  FLOAT(KFRTNI(JALTRK)+KFRTNT(JALTRK))
+              END IF
+            END DO
+            IF (FRAC.GT.0.6) THEN
+C
+C  Make sure this isn't a spiral branch
+C
+              TPNEW2(1) = QFRFIR(JALTRK)
+              TPNEW2(2) = QFRFTL(JALTRK)
+              TPNEW2(3) = QFRFP0(JALTRK)
+              TPNEW2(4)  = QFRFD0(JALTRK)
+              TPNEW2(5)  = QFRFZ0(JALTRK)
+              CALL PMOVE(OVTX,TPNEW2)
+              PHIDIFF2 = TPNEW2(3)-QFRFP0(JALTRK)
+              COSP = COS(TPNEW2(3))
+              SINP = SIN(TPNEW2(3))
+              COSL = 1./SQRT(1.0+TPNEW2(2)**2)
+              SINL = TPNEW2(2)*COSL
+              D0_PMOVE2 = TPNEW2(4)
+              Z0_PMOVE2 = TPNEW2(5)
+              TDOT2 = (QX(IMCTRK)*COSP*COSL + QY(IMCTRK)*SINP*COSL +
+     &             QZ(IMCTRK)*SINL)/QP(IMCTRK)
+              RDOT2 = (QX(IMCTRK)*COSP + QY(IMCTRK)*SINP)/QPT(IMCTRK)
+              IF( (KFRTNT(JALTRK).GE.4.AND.
+     &             ABS(D0_PMOVE2).LT.2.0 .AND.
+     &             ABS(Z0_PMOVE2).LT.5.0 .AND.
+     $             TDOT2.GT.0.95 .AND.
+     &             ABS(PHIDIFF2).LT.1.0)
+     $             .OR.
+     &             (KFRTNT(JALTRK).LT.4 .AND.
+     $             ABS(D0_PMOVE2).LT.1.0 .AND.
+     &             RDOT2.GT.0.95 .AND.
+     &             ABS(PHIDIFF2).LT.1.0)) THEN
+C
+C  Double-counted track
+C
+                IFLAG = 0
+                GOTO 999
+              END IF
+            END IF
+          END IF
+        END DO
+C-------------------------------------------------------------------------------
+C  Everything else is considered normal (IE, recontructed track
+C  matches truth)
+C  Now, assign an origin to the main MC track
+C
+        IF (OVX.EQ.KFMCV.OR.KNMOTH(IMCTRK).EQ.0) THEN
+C
+C  Particle comes from primary vertex
+C
+          IFLAG = 1
+        ELSE
+C
+C  Get particle mother
+C
+          IMOTH = KMOTH(IMCTRK,1)
+          MOMCOD1 = KTPCOD(IMOTH)
+C
+C  See if the daughters conserve energy and momentum
+C
+          NDAU = KNDAU(IMOTH)
+          CALL QVZERO(INEW)
+          DO IDAU=1,NDAU
+            CALL QVADDN(INEW,KDAU(IMOTH,IDAU))
+          END DO
+          EDIFF = QE(IMOTH)-QE(INEW)
+          IF (IHC.GT.0) THEN
+C
+C  Heavy flavor
+C
+            IFLAG = 2
+          ELSE IF(K0(MOMCOD1).OR.LAMBDA(MOMCOD1).OR.
+     &           (GAMMA(MOMCOD1).AND.RHO.GT.1.0)) THEN
+C
+C  neutral decays, including photon conversions
+C
+            IFLAG = 3
+          ELSE IF(ABS(EDIFF).GT.0.1.OR.ELECTRON(MOMCOD1)) THEN
+C
+C  Material interaction
+C
+            IFLAG = 6
+          ELSE IF(SIGMA(MOMCOD1).OR.CHI(MOMCOD1).OR.
+     &            PION(MOMCOD1).OR.KAON(MOMCOD1)) THEN
+C
+C  Charged hadron decay
+C
+            IFLAG = 4
+          ELSE
+C
+C  Everything else is a mystery
+C
+            IFLAG = 7
+          END IF
+        END IF
+      END IF
+ 999  CONTINUE
+C
+      RETURN
+      END
+#endif

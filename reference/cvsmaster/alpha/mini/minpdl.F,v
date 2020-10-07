@@ -1,0 +1,140 @@
+head	1.1;
+access;
+symbols
+	alpha126_22:1.1
+	alpha122_22:1.1
+	alpha126_21:1.1
+	alpha126_20:1.1
+	alpha126_19:1.1
+	alpha126_18:1.1
+	alpha126_17:1.1
+	alpha126_16:1.1
+	alpha126_15:1.1
+	alpha126_14:1.1
+	alpha126_13:1.1
+	alpha126_12:1.1
+	alpha126_11:1.1
+	alpha126_10:1.1
+	alpha126_09:1.1
+	alpha126_08:1.1
+	alpha126_07:1.1
+	alpha126_06:1.1
+	alpha126_05:1.1
+	alpha126_04:1.1
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	99.03.22.14.07.15;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE MINPDL
+C
+CKEY MDST /INTERNAL
+C-----------------------------------------------------------------------
+C! Fill PDLT bank from DDLT.
+C
+C     Author: Agnieszka Jacholkowska    24-Oct-94
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+C
+      PARAMETER (AFACTM=100000.,DFACTM=100000.,EFACTM=10000.)
+#include "pdltjj.h"
+#include "ddltjj.h"
+
+C!    set of intrinsic functions to handle BOS banks
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+C
+C++   Pick up DDLT bank.
+C
+      KDDLT = NLINK('DDLT',0)
+      IF (KDDLT.LE.0) RETURN
+      NDDLT = LROWS(KDDLT)
+      IF (NDDLT.LE.0) RETURN
+C
+C++   Create PDLT bank.
+C
+      NPDLT = NDDLT
+      LEN = LMHLEN + LPDLTA * NDDLT
+      CALL AUBOS('PDLT',0,LEN, KPDLT,IGARB)
+      CALL BLIST(IW,'S+','PDLT')
+      IF (IGARB.GE.2) THEN
+         RETURN
+      ELSE IF (IGARB.NE.0) THEN
+         KDDLT = NLINK('DDLT',0)
+      ENDIF
+      IW(KPDLT+LMHCOL) = LPDLTA
+      IW(KPDLT+LMHROW) = NDDLT
+C
+C++   Fill PDLT bank.
+C
+      DO 100 I=1,NDDLT
+         IW(KROW(KPDLT,I)+JPDLPA) = ITABL(KDDLT,I,JDDLPA)
+         IW(KROW(KPDLT,I)+JPDLJT) = ITABL(KDDLT,I,JDDLJT)
+         RW(KROW(KPDLT,I)+JPDLPI) = FLOAT(ITABL(KDDLT,I,JDDLPI))/AFACTM
+         RW(KROW(KPDLT,I)+JPDLPE) = FLOAT(ITABL(KDDLT,I,JDDLPE))/AFACTM
+         IW(KROW(KPDLT,I)+JPDLVP) = ITABL(KDDLT,I,JDDLVP)
+
+         IW(KROW(KPDLT,I)+JPDLFR) = ITABL(KDDLT,I,JDDLFR)
+  100 CONTINUE
+C
+      RETURN
+      END
+#endif
+@

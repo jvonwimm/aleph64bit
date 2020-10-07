@@ -1,0 +1,137 @@
+head	1.2;
+access;
+symbols
+	dbase02:1.1.1.1
+	dbase01:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.02.14.16.11.41;	author flr;	state dead;
+branches;
+next	1.1;
+
+1.1
+date	97.02.12.10.06.13;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.02.12.10.06.13;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@move subroutine in subr andprograms in prog sbk becomes empty
+@
+text
+@      SUBROUTINE STREFER(NINARR)
+C-----------------------------------------------------------------------
+C! set list of lines where a bank is referenced
+C!    Author: A. McSporran    19/8/88
+CKEY CREATE REFERENCE BANK
+C!    Input:
+C!         -  NINARR  I           : Number of names in NAMARR.
+C!
+C!    Use from /FILCAR/
+C!         -  NAMARR  C*4         : Array containing names of banks to
+C!                                  be checked for references in
+C!                                  alphabetic order.
+C!    Fill in /FILCAR/
+C!         -  NUMREF  I           : Number of references found for bank
+C!                                  with name in NAMARR(IND).
+C!         -  REFLIN  C*40        : 40 character line of text for
+C!                                  where bank is referenced. (up to
+C!                                  50 are stored, usual max = 25.
+C!
+C!    Description
+C!    -----------
+C!
+C!    The file ALL.ASSIGN contains code from various programs in
+C!    reconstruction/analysis projects. On reading this file, if a
+C!    command is found that references a BOS bank, then if
+C!    the bank opened is in the given list NAMARR, the name of
+C!    the program is added to the REFLIN array, to be returned to
+C!    the calling routine.
+C!
+C?    Algorithm
+C?    =========
+C?
+C?    Repeat
+C?        Open input file DOC:ALL.ASSIGN;
+C?        Repeat read line;
+C?        until line contains code for referance to a bank;
+C?        put bank name in BANK_NAME;
+C?        check BANK_NAME with BANK_NAME_ARRAY;
+C?        if found then add reference description to REFERENCED_ARRAY;
+C?    Until end of input file;
+C?    return.
+C=======================================================================
+#ifndef DOC
+#include "sbkpar.h"
+#include "sbkloc.h"
+#include "fildat.h"
+      CHARACTER*5  SSTRING
+      LOGICAL      FOUND
+C ----------------------------------------------------------------------
+C
+#if UNIX
+      OPEN (UNIT=LINP2,FILE=ALDOCC(:ILDOCC)//'/all.assign',STATUS='OLD')
+#else
+      OPEN (UNIT=LINP2,FILE='DOC:ALL.ASSIGN',STATUS='OLD',READONLY)
+#endif
+C
+   18 READ(LINP2,'(A)',END=99)INPLIN
+      INAM=INDEX(INPLIN,'NAMIND(''')
+      IPOS=MAX0(INDEX(INPLIN,'IW(NA'),INDEX(INPLIN,'NLINK('''),
+     +   INDEX(INPLIN,'CALLALGTDB'),INDEX(INPLIN,'CALLAGETDB'),
+     +   INDEX(INPLIN,'MDARD'),
+     +   INDEX(INPLIN,'MBANK(IW,'''),INDEX(INPLIN,'NBANK('''), INAM)
+      IF(IPOS.EQ.0)GOTO 18
+      FOUND=.FALSE.
+      I=0
+   10 I=I+1
+      IF (FOUND.OR.I.GT.NINARR) GOTO 18
+      SSTRING=''''//NAMARR(I)
+      ISTRING=INDEX(INPLIN,SSTRING)
+      IF(ISTRING.EQ.0)GOTO 10
+      FOUND = .TRUE.
+      IF (NUMREF(I).GE.NENTR) THEN
+         WRITE (LOUT,*) ' Too many references for ',NAMARR(I),
+     &                  ' increase NENTR in SBKPAR'
+         GOTO 10
+      ENDIF
+      NUMREF(I)=NUMREF(I)+1
+      REFLIN(I,NUMREF(I))=INPLIN(1:25)
+      GOTO 10
+C
+   99 CONTINUE
+      CLOSE (LINP2)
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@@
+
+
+1.1.1.1
+log
+@1st release of dbase library
+@
+text
+@@

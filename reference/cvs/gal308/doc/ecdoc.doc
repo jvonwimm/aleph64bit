@@ -1,0 +1,780 @@
+*DK ecdoc
+#if defined(DOC)
+.chapter        ECAL ANALOG SIGNAL AND DIGITIZATION     Edition M.Rumpf
+                     Ecole Polytechnique / RAL
+                                                     Last update Jan 88
+
+
+.section        ECAL ANALOG SIGNALS GENERATION      March 86
+
+                                                            J.Badier
+                                                            R.Clifft
+                                                            I.Karyotakis
+                                                            M.Rumpf
+                                                            H.Videau
+
+             1)  Ecal geometry and readout description
+             2)  Sort of Tracking Information
+             3)  Parametrisation Criteria
+             4)  Analog Signal Generation :
+                    . Track segment signal
+                    . Shower point  signal
+                    . Shower point Generation
+             5)  Running Conditions for Analog signal
+             6)  Standard histograms for Analog signals
+
+.subsection Ecal geometry and read-out
+
+
+.subsub Geometrical definitions used in ECAL Monte carlo
+
+       .Axis systems    'ALEPH' is  general system (OX,OY,OZ)
+                               used for track segment processing
+                            O theoritical interaction point
+                            OZ beam direction (beam e-)
+                            OX horizontal and pointing towards
+                               the centre of LEP
+                            OY third axis (almost vertical)
+
+                         'GERBE'   Shower local system used
+                                   for shower signal allocation.
+
+       .Theta           polar angle with OZ
+       .Phi             azimuthal angle around OZ axis
+                        tan(Phi)= Y/X
+                        where X,Y,Z are point coordinates in
+                        Aleph system.
+
+       .subcomponent #  ISC =1 end cap z>0
+                        ISC =2 Barrel
+                        ISC =3 end cap z<0
+
+       .Module #        MODUL = 1,12 in each subcomponent
+                        Module #1 starts at Phi = -32 mrads
+
+       .Angular offsets
+                    -  The whole ECAL is tilted by -32 mrads
+                        around Z axis against ALEPH system
+                    -  End caps are rotated by - PI/12 around
+                        Z axis against the barrel
+
+       .Stack           Each module contains 3 stacks
+                            stack1 contains 10 planes
+                            stack2    "     23   "
+                            stack3    "     12   "
+
+       .Planes
+                       Numbered from 1 to 45
+                       Plane #1 is close to inner face of ECAL
+
+       .Rows     (Theta divisions)
+             Each module is divided along Theta in rows
+             numbered with index j increasing with Theta.
+               End cap z>0   j=  1,50    ( 50 rows)
+               Barrel        j= 51,178   (128 rows)
+               End cap z<0   j=179,228   ( 50 rows)
+                           Total 228 rows
+             Remark: there are 5 rows overlapping in barrel and
+                     end cap z>0 (same for end cap z<0)
+                     To follow online conventions,these rows
+                     have not the same numbers even if they refer
+                     to same theta divisions (total =218).
+
+               End cap z>0 j= 46, 50  <--> Barrel j= 51, 55
+               End cap z<0 j=179,183  <--> Barrel j=174,178
+
+       .Columns  (Phi divisions)
+               Barrel contains 32 columns /module
+                               total = 384
+               Numbering is done from 1 to 384 (index i) increasing
+               with Phi.
+
+               Each End cap module is divided in 2 subsectors
+               Each subsectors is divided in 4 regions:
+                      Region 1     4  columns   row j= 1 , 8
+                             2     8                j= 9 ,24
+                             3    12                j=25 ,40
+                             4    16                j=41 ,50
+               In each region columns are numbered continuously
+               in the whole end cap:
+                     Region 1    i=  1-->  96
+                            2    i=  1--> 192
+                            3    i=  1--> 288
+                            4    i=  1--> 384
+
+           Remark: The angular offset of 32.7 mrads represents
+           exactly 2 columns of the barrel or of region 4 of the
+           end caps.
+              --- >  Column # 1 starts at the edge of module #1
+           of the barrel (phi=-32 mrads) and at half of module #1
+           of the end caps.
+
+       .Tower
+                         A tower is an intersection of a row and
+             a column.A tower is completely defined when the two
+             indices i and j are specified.
+
+       .Tower storey
+                          Intersection of a tower and a stack
+
+       .Tower address
+             Tower address is stored in a 32 bits word :
+
+                BIT#    3              11            000
+                        1              65            210
+                        --------------------------------
+                        <      j       ><      i     >00
+                             Theta            Phi
+
+                         ADDRESS = 2**2 * i + 2**16 * j
+
+        bits 0 and 1 are cleared and reserved for reconstruction
+        program.
+        Adresses are sorted in increasing order.
+
+
+
+.subsub Description of the Read-out Geometry Package
+
+        The ECAL geometry package is included now in ALEPHLIB
+
+ The aim:
+      in the Monte Carlo answer any of the following questions,
+      given a POINT (x,y,z) in the Aleph frame or any frame related
+      to this one find the elements to which it belongs i.e:
+              SUBCOMPONENT   (end cap A, barrel, end cap B)
+              THEN   MODULE  (one of the 12 pieces of equipment
+                              making each subcomponent)
+              THEN   PLANE and subsequently TUBE (wire)
+              OR STACK
+              OR     ROW  (division in theta) via the SUBSECTORS
+                           in the end caps
+              OR     COLUMN  (division in phi) via the REGIONS
+                              in the end caps
+    We can get compound elements:
+            TOWER= ROW x COLUMN
+            STOREY= TOWER x STACK = ROW x COLUMN x STACK
+            PAD= TOWER x PLANE = ROW x COLUMN x PLANE
+
+  The description of the geometry of these entities, their
+  relationships with the development of the mathematical tools
+  is given in the draft:
+         ECAL GEOMETRY PACKAGE  (M.Rumpf/H.Videau)
+
+ The interfaces:
+ __ from the Data Base (until further notice :data statements)
+    we get the quasi non redundant information defining the
+    geometry      this is then expanded at initialisation time
+    into a description      more suitable for a convenient access .
+    Routine ECDFRD is called from ECIRUN for initialisation of
+    the ECAL geometry package.
+    a special action is taken when generating a shower:
+    the definition of the geometry (base planes) is then rotated
+    in the shower frame to speed up the searchs (routine ECSGEO).
+
+ __ to the user via a set of functions or routines answering
+    the questions.
+         In GALEPH,these are the following :
+                EFNDPL       finds plane # [1,45]
+                EFNDLG       finds row # [1,228]
+                EFNDCL       finds column # [1,384]
+
+
+         Example:   IPL=EFNDPL(ISC,IMD,P,SYSTM)
+
+ where IPL is the plane number, SYSTM indicates if we are
+ in the Aleph frame (ALEPH) or in the shower frame (GERBE),
+ P is the point (x,y,z), ISC is the subcomponent number, IMD
+ the module number.
+
+
+ Handling of the change of frame.
+
+ The routine ECSGEO rotates the base planes and defines
+ a new set in a special common. This is transparent to
+ the user. The program does not check that ECSGEO has been
+ called before to make any request with SYSTM='GERBE'.
+ Be aware.
+
+  This gives an autonomous package usable in any context
+ if the two interfaces are kept clean. It will be expanded
+ in view of the reconstruction with routines making
+ the reciprocal computation of the limits and points of
+ interest for a geometrical entity like tower, ..
+
+.subsection Sort of tracking information : present strategy
+
+      At each tracking step,control is given to ECAL via a call
+   to routine ECHIT which drives analog signals generation for ECAL.
+   The information we have at our disposal is located in the array
+   "Track Element" (/TRKCOM/) which contains mainly :
+     - Tracking flags
+     - coordinates at the beginning of the step (trkele (1-->3)
+     - direction                "       "       (trkele (4-->6)
+     - coordinates at the end of the step if any (trknxt (1-->3)
+     _ direction           "           "         (trknxt (4-->6)
+       and some additionnal informations .
+
+
+       a) If track is NOT entering a new volume AND
+             tracking NOT starting a new particle
+          ---> One step complete in the sensitive volume.
+               Process this track segment (routine EHTRKE)
+
+       b) If Track does not interact AND its energy > Cutoff
+          ---> Have a look to end of step
+               If parametrisation criteria satisfied (EHCUTF) then
+                           Create a Shower  (EHSHOW)
+                           Stop Tracking for this track
+               Else return to tracking to complete the step.
+
+.subsection Parametrisation criteria
+
+            Triggered by EC Running condition ICECJO(5) = 1
+            via Steering data card :
+            RUNC 'ECAL' 0 0 0 0 1 0 0 0 0 0 for example.
+
+   When fast tracking with shower parametrisation is requested,
+ electron and positron track elements in the sensitive region
+ of ECAL are tested to see whether or not they satisfy the
+ necessary conditions for parametrisation.
+ These conditions, which have been set up using studies with the
+ EGS program, require that the shower produced by the electron
+ positron loose no more than an energy, CUTFEH, across any boundary.
+ At present CUTFEH = 40 MeV.Two regions are defined in depth
+ consisting of
+  (a) storeys 1 and 2, plus spacers,
+  (b) storey 3, plus the material before HCAL.
+ The boundaries referred to are the back(or front) of the current
+ region and its lateral limits.
+
+   Routine EHCUTF,called from ECHIT, makes the decision whether
+ or not to parametrise and sets the subroutine argument flag
+ MFLAG: 1=YES  0=NO
+   Routine EHCUTF calls the routines EHEDGE, to check the lateral
+ losses from the shower, then EHGEOB or EHGEOE to check losses
+ from the back(or front) of the barrel or end cap regions
+ respectively.
+   Routine EHTRAN is a service routine and EHCUTP contains all
+ constants involved
+
+
+.subsection Analog signal in equivalent homogeneous medium
+
+          ATTENTION : Le traitement des elements de trace n'est
+          valable que pour les electrons,positrons et photons.
+          Les hadrons sont provisoirement traites dans la routine
+          EHDEPT.La validite de GHEISHA n'a pas ete testee.
+
+          Les elements de traces ainsi que les points d'une gerbe
+          contribuent a la generation du signal.La fluctuation de
+          ce signal est decrite par le parametre DNRJ :
+               DNRJ = ( DSIGNAL/SIGNAL ) * SQRT( ENERGIE )
+          Experimentalement , selon les auteurs :
+                      .16 < DNRJ < .2
+
+   . Contribution d'un segment de trace.(SUBROUTINE EHDEPT)
+     -----------------------------------
+       Les coupures au niveau EGS sur les electrons et les photons
+       ainsi que le champ magnetique doivent etre fixes. On evalue
+       alors :
+       - PARGEV : Nombre d'elements de traces par gev d'energie
+                  deposee : c'est l'inverse de l'energie moyenne
+                  d'un element de trace.
+       - DELTAL : 1. / PARGEV
+
+       Condition TEDEPO='VERY FAST'
+       ----------------------------
+       On ne cree aucun signal pour une fraction DEPRHO des elements
+       de trace.Pour les autres,la contribution NRJ au signal est
+       proportionelle a l'energie deposee par l'element de trace :
+                  NRJ = TRKELE(12) * FASTNR
+       DEPRHO et FASTNR sont calcules a partir de DNRJ et PARGEV
+       de facon a exprimer le signal en kev et a retrouver la
+       precision en energie :
+
+       Condition TEDEPO='FLUCTUATED' (defaut)
+       ----------------------------
+       On conserve la contribution NRJ :
+                  NRJ = TRKELE(12) * ENRJ
+       ENRJ est tire aleatoirement selon une distribution de la forme
+                   ~
+                   |__.
+                   |  |
+                   |  |
+                   |  |
+                   | <------ RHODEP = 1. - RHO
+                   |__|________________.
+                   |     RHO           |
+                   |___________________|____ENRJ
+                      |                |
+                    FLUCT1           FLUCT2
+
+       C'est une approximation grossiere d'une distribution de
+       Landau.RHO est un parametre qu'on doit choisir.FLUCT1 et
+       FLUCT2 s'en deduisent.
+
+
+
+    .Contribution d'un point d'une gerbe.(SUBROUTINE EHDEPS)
+     -----------------------------------
+
+
+       Condition TIRAGE='VERY FAST'
+       ----------------------------
+       Le nombre de points tires pour simuler une gerbe d'energie
+       ENER est choisi selon une loi de Poisson correspondant a un
+       nombre moyen egal a ENER / DNRJ ** 2.
+
+       Condition TIRAGE= 'FLUCTUATED' (defaut)
+       --------------------
+       Le nombre moyen de points tires vaut : ENER * PARGV1
+       PARGV1 est convenablement ajuste.La contribution au signal
+       est tiree selon la distribution suivante:
+                   ~
+                   |__.
+                   |  |
+                   |  |
+                   |  |
+                   | <------ RHODEP = 1. - RHO
+                   |__|________________.
+                   |     RHO           |
+                   |___________________|____ENRJ
+                      |                |
+                    ENMAX1           ENMAX2
+
+       ENMAX1 et ENMAX2 sont calcules de facon a exprimer le signal
+       en kev et a retrouver la precision en energie.
+
+
+    .Generation d'un point d'une gerbe   (subroutine EHGERB)
+     ---------------------------------
+
+       La distribution spatiale des points de la gerbe est
+       factorisee en deux expressions , l'une longitudinale ,
+       l 'autre transversale. Le nombre de points tires depend
+       de l'option relative au depot d'energie.
+
+
+       Distribution longitudinale (SUBROUTINE EHLOTI)
+       --------------------------
+
+       Le tirage est effectue selon la methode decrite dans la
+       note ALEPH 87-9 EMCAL 1.
+
+       Distribution transversale (SUBROUTINE EHTRTI)
+       -------------------------
+        La loi est de la forme :
+                   dn/dr = A * r / ( r + r0 * s ) ** AK
+              - A est une normalisation.
+              - AK decrit le comportement loin du coeur :
+              -    AK = 3.15 + .044 * ENER
+              - r0 ne depend que de l'energie .
+              - s est l'abcisse longitudinale.
+              - Si ENER < EMINRA , pas de distribution radiale.
+
+       Une description plus detaillee des parametres utilises
+       se trouve dans la subroutine EHPASR qui remplit le common
+       EHPASH.
+
+
+.subsection Run Conditions for Analog Signal Generation
+
+      Run conditions are defined through character variables
+      (see below) in the ECAL code.
+      Values can be changed via Steering Data Card :
+
+      RUNC 'ECAL'  N1 .... N10 where Ni is  ICECJO (i) new value.
+
+      with the following correspondance Indices <--> characters
+      _______________________________________________________________
+      I Integer . Character .           Values
+      I--------------------------------------------------------------
+      I ICECJO  .           .      0       .     1         .    2
+      I  index  .           .   Default    .               .
+      I--------------------------------------------------------------
+      I   (1)   . TCUTRK    . 'NO CUT'     .'CUT TRACK'    .
+      I   (2)   . TSMEAR    . 'NO SMEARING'.'SMEARING'     .
+      I   (3)   . TIRAGE    . 'FLUCTUADED' .'VERY FAST'    .
+      I   (4)   . TEDEPO    . 'FLUCTUADED' .'VERY FAST'    .
+      I   (5)   . TPARAM    . 'NO'         .'ELEC'         .  'ALL'
+      I______________________________________________________________
+
+
+
+ TCUTRK = Define if track elements must be cut in several segments.
+          Intersections with virtual wire planes are computed and
+          pseudo gas track elements generated and sent to energy
+          deposition routines .
+          This condition is not applied to e+,e- and photons
+             Values 'NO CUT'/'CUT TRACK'    (default 'NO CUT')
+
+ TSMEAR = Define if smearing to be done on energy deposition point
+          (Dummy implementation)
+             Values 'NO SMEARING'/'SMEARING'(default 'NO SMEARING')
+
+ TEDEPO = For track element energy deposition
+             See Analog signal generation
+
+ TIRAGE = For shower point energy deposition
+             See Analog signal generation
+
+ TPARAM = 'NO'/'ELEC'/'ALL'   default = 'ALL'
+           NO     --> no parametrisation requested
+           ELEC   --> parametrisation requested for e+,e- only
+                      with RUNC 'ECAL' x x x x 1 x x x x x
+           ALL    --> parametrisation requested for e+,e-,Hadrons
+                      with RUNC 'ECAL' x x x x 2 x x x x x
+.subsection Standard histograms for analog signals
+
+   Steering data card :
+                    HIST  4
+   triggers histograms for both analog and digit processes.
+   Warning : histograms limits have been computed for 'LUND' or
+             'PART' generator.For 'USER' generator,the limits
+             are those of 'LUND' and can be not suitable.
+             Changes can be made in ECBOOK .
+
+       List of histogram numbers and content:
+
+439    track elements for photons : plot of length of tracks
+       elements versus their energy
+       xx' : energy in keV    0.< E < 0.05   binning = 50x50
+       yy' : length in cm     0.< l < 20.
+
+440    track elements for both e+ and e- (see above)
+       xx' : energy in keV    0.< E < 0.05   binning = 50x50
+       yy' : length in cm     0.< l < 5.
+
+441    distribution of the sum of the analog signals in stack 1 + 2
+       for the barrel
+       xx' : energy in MeV    binning = 100
+                              automatic limits calculation
+
+442    distribution of the analog signal in stack 3 for the barrel
+       xx' : enery en MeV     binning = 100
+                              automatic limits calculation
+
+443    same as 441 but for endcap
+
+444    same as 442 but for endcap
+
+445    plot of the sum of analog signals on the odd planes
+       versus the sum of analog signals on the even planes
+       xx' : signal in MeV    binning = 50x50
+       yy' : signal in MeV    0.< E < xmax
+                              xmax = Pmax * 500 (LUND or USER)
+                              xmax = Pmax *1000 (PART)
+
+446    distribution of the total analog signal on the wires
+       xx' : signal in MeV    binning = 100
+                              automatic limits calculation
+
+447    longitudinal profile of the wires (analog signal)
+       xx' : n. of the plane  binning = 45
+       yy' : signal in MeV
+
+448    number of hits per wires planes (analog level)
+       xx' : n. of the plane  binning = 45
+       yy' : number of hits
+
+449    distribution of the sum of the analog signal on all the
+       towers
+       xx' : signal in MeV    binning = 100
+                              automatic limits calculation
+
+450    distribution of the sum of the analog signal on all the
+       towers in the stack 1
+       xx' : signal in MeV    binning = 100
+                              automatic limits calculation
+
+451    distribution of the sum of the analog signal on all the
+       towers in the stack 2
+       xx' : signal in MeV    binning = 100
+                              automatic limits calculation
+
+452    distribution of the sum of the analog signal on all the
+       towers in the stack 3
+       xx' : signal in MeV    binning = 100
+                              automatic limits calculation
+
+455    plot of the sum of digital signals on the odd planes
+       versus the sum of digital signals on the even planes
+       xx' : signal in MeV    binning = 50x50
+       yy' : signal in MeV    0.< E < xmax
+                              xmax = Pmax * 500 (LUND or USER)
+                              xmax = Pmax *1000 (PART)
+
+
+.section        ECAL digitisation                  O.CALLOT  17-MAR-86
+                                       modified    E.LANCON  06-DEC-90
+
+
+
+   1) Decide which tower will be processed
+   2) generate noise on towers ( and add real events )
+   3) Digitise each storey
+   4) Suppress zeroes
+   5) Correct output tower digits
+   6) Generate time sampling on wire analog sum , and generate noise
+      on wire signals
+   7) Digitize wire planes and analog sums , correct output wire digits,
+      apply zero supression , and create wire banks
+   9) Generate trigger banks
+  10) Run conditions and parameters
+  11) Standard histograms for digitisation.
+
+ INPUT
+
+ Tower information is in bank ETHT, NR=0
+ Wire planes information is in bank EWHT,NR=0
+ History is not used in this part.
+
+ OUTPUT   (see Bank Description for details)
+
+ * Tower digits are in bank ETDI, NR=0  ( same structure as ETHT )
+
+ * Wire digits are in bank EWDI, NR=0  (for modules above threshold).
+
+ * Digital wire sums are in bank EWHE, NR=0.
+
+ * History is not modified but if requested ( EDSAVG = 'YES' ) we
+   add a new bank 'ENDI' which contains digitisation history for
+   towers.
+
+ * Trigger banks are ETTR ( towers ) and EWTR ( Wire planes )
+
+
+
+.subsection Decide which tower will be processed
+
+  We use the table MAPETC to tag tower to be processed, following
+  conditions:
+     EDNOXT = 'ALL'  : process all physical tower
+            = 'HITS' : only tower given in ETHT bank
+            = '+ONE' : same as 'HITS' + all adjacent towers (default)
+
+  We will also take into account the 'Real event tower' in case of
+  mixing with a real event.
+
+.subsection Generate noise on towers
+
+ The noise is described as two components:Correlated noise (same on
+ every storey ) and Uncorrelated.
+  * Generate correlated noise with mean value and sigma
+      EDMCOR = mean value in keV
+      EDSCOR = sigma      in keV
+  * For each channel,the mean value of the noise is ZERO, and the
+   sigma is the one observed in the dedector  (function EDSNOI).
+   The noise's sigma is SQRT( 308.*c**2 + 665.), in fC, C in nF
+   is the capa of the storey. We compute the capa as proportional
+   to the storey surface, and normalised to the capa in the
+   center of the barrel. This function is renormalized
+   so that the noise corresponds to the one observed in the
+   detector.
+   This depends mainly ( only, within +-4% ) on stack and theta
+   index.So, we compute the 3*114 values ( symetric in theta )
+   on first call and access then a table for successive calls.
+  * we have only 3 parameters to describe the noise amplitude:
+   EDTNOI(3) gives the conversion fC => keV and can be adjusted
+   to increase/decrease the noise.
+  * The actual noise ( correlated + uncorrelated ) for each channel
+   is saved if EDSAVG = 'YES'
+  * 'Add real event' is not yet implemented. It will interfere with
+   points 1) and 2) ( we do'nt generate noise on real events ) and
+   is controled by the condition EDMIXR = 'YES'
+
+.subsection Digitize towers
+
+  This is the transformation from signal to ADC hits. We have
+ to notice that there are 2 ADC per channel, with different gains
+ and pedestals,and we have also to take into account the gain's
+ variation due to the calorimeter itself. However, the On-line
+ system will correct gain and pedestals; so the only thing to
+ simulate is the error on this correction:
+
+  * The High Gain (HG) to Low Gain (LG) ratio can be measured using
+ the test capacitor in the multiplexor. Reading LG when HG is near
+ saturation ( ~500 channels over threshold ) give this HG/LG ratio
+ to .1 %.
+  * The pedestal value can be measured with precision ( .1 counts ).
+ But the integer arithmetic in the On-line system limits the preci-
+ sion to half a count.
+  * Uniformity of the calorimeter (gain in the chambers + electronic)
+ is supposed to be good within +- .5 %. The HG/LG error is then
+ negligible, we have only to simulate this +- .5% error on the gain
+ (which is uncorrelated, because all correlated effects are supposed
+ to be measured and taken into account in the On-line correction )
+  * Maximum value in the ADC's correspond to about 120 GeV per storey.
+ We do'nt need to check ADC saturation.
+
+ Digitisation is then simply the choice of a gain value ( nominal gain
+ EDTGAI(3)+error EDTGER(3) full width fraction) and a pedestal rounding.
+  The gain value is saved if EDSAVG = 'YES'
+
+
+.subsection Suppress zeroes
+
+ The cuts are defined in ADC counts, as x time the noise's sigma,
+ rounded to next integer. This is done in routine EDTCUT which return
+ the ADC threshold as function of the 3 storey indices and a 'cut level'
+ This threshold is taken from the EZTH bank and is the same
+ for M.C. and real data.
+
+ Two scheme are implemented :
+
+  * EDZSUP ='SINGLE CUT',we output all tower in which one storey is
+   over threshold 1 ( parameter EDCUT1 )
+  * EDZSUP ='DOUBLE CUT',we output only towers in which one storey
+  is  over threshold 1 AND one storey in this tower or in one adjacent
+  tower  is over threshold 2 ( parameter EDCUT2 )
+
+
+.subsection Correct tower digits
+
+  The on-line output will be corrected, and put in some physical unit.
+ We suppose here that this is keV, and we convert ADC counts in keV.
+ The dynamical range is then about 10**8 ( 27 bits ). We correct
+ also the saved gain value to be integer and in 10**-6 unit. These
+ parameters are KALEDT(3)
+
+
+.subsection Generate time sampling on wire analog sum , and generate
+            noise on wire signals
+
+  The analog sum on wires is sampled at 8 different time SAMTIM(I) .
+  The noise is generated in keV on each wire planes and on the analog
+  sums , with both coherent and uncoherent contributions : PLCOHE and
+  PLUNCO for wire planes , SMCOHE and SMUNCO for the sums .
+
+
+.subsection Digitize wire planes and analog sums , correct output wire
+            digits, apply zero supression , and create wire banks
+
+  Wire informations are digitized from keV in ADC counts according
+  to conversion factors CONPLA for wire planes and CONSUM for the
+  analog sums . Gains 1 or 8 are chosen with respect to saturation
+  levels SATPLA and SATSUM ( in ADC counts ) .
+  Then digitized wire informations are converted to keV using the
+  selected gain , and the digital sum per module is performed over
+  the 45 planes .
+  Finally two output banks are created : EWHE which contains the
+  digital sums of the 36 modules , EWDI which contains the 45 wire
+  plane signals and the 8 analog sums for each module with a digital
+  sum above threshold ICUTMO .
+
+
+.subsection Generate trigger banks
+
+   The trigger signals are generated for Towers, then for wire planes.
+
+  TOWERS:
+    We group the signal for all towers in  a cell ( 24 phi cells
+   corresponding to each electronic box , 12 theta corresponding to
+   the on-line grouping ) and then add a gaussian noise with sigma
+   in ETTNOI(12,3) function of theta and stack number. The relative
+   weight for stack 1,2,3 is in ETSTWE(3).
+
+  WIRE PLANES:
+    We sum over the odd and even planes the (signal+noise) obtained
+   previously in step 6.
+
+.subsection Run conditions and parameters
+
+ CONDITIONS
+ **********
+  index in ICECJO         value in ICECJO() default = 0
+ /                       /
+ 6 EDNOXT = '+ONE'       0  process also adjacent towers
+            'HITS'       1  process only tower with hits
+            'ALL'        2  process all towers
+ 7 EDMIXR = 'NO'         0  No real event to be mixed with simulated one
+            'YES'        1  Mix real event ( not implemented...)
+ 8 EDSAVG = 'NO'         0  Don't save toer noise and gain
+            'YES'        1  Save it in bank 'ENDI'
+ 9 EDZSUP = 'SINGLE CUT' 0
+            'DOUBLE CUT' 1  > see point 4) suppress zeroes
+
+
+ PARAMETERS
+ **********
+
+        -------- tower digitisation --------
+ EDTMCO = mean correlated noise ( keV )             0.
+ EDTSCO = sigma of correlated noise ( keV )         1600.
+ EDTNOI(3) = noise ampiltude ( keV per fC )         170., 170., 300.
+ KALEDT(3) = ADC calibration ( keV per count )      4000, 4000, 7200
+ EDTGAI(3) = inverse of KALEDT ( signal => ADC )
+ EDTGER(3) = gain error ( fraction,full width )     3* .01
+        -------- wire plane ------
+ PLCOHE = sigma of wire plane coher. noise ( keV )  300.
+ PLUNCO = sigma of wire plane uncoh. noise ( keV )  1000.
+ SMCOHE = sigma of analog sum coher. noise ( keV )  17100.
+ SMUNCO = sigma of analog sum uncoh. noise ( keV )  7550.
+ CONPLA = conversion factor for wire plane signals  1600.
+          ( ADC counts to keV )
+ CONSUM = conversion factor for analog sums         25600.
+          ( ADC counts to keV )
+ SATPLA = saturation level for gain 8 on wire plane 3500.
+          ( ADC counts )
+ SATSUM = saturation level for gain 8 on analog sum 3000.
+          ( ADC counts )
+        -------- zero suppress --------
+ EDCUT1 = nb of noise sigma for thres. 1            3.
+ EDCUT2 = nb of noise sigma for thres. 2            5.
+ ICUTMO = threshold ( keV ) on wire digital sum     100000
+        -------- trigger generation --------
+ ETTNOI(12,3) = sigma of trigger noise per cell     12 * 35000.
+                                                    12 * 35000.
+                                                    12 * 60000.
+ ETSTWE(3)  = relative wheight of the 3 stacks      3*1.
+
+.subsection Standard histograms for digitisation
+
+   Steering data card :
+                    HIST  4   or  HIST   'ECAL'
+   triggers histograms for both analog and digit processes.
+   Warning : histograms limits have been computed for 'LUND' or
+             'PART' generator.For 'USER' generator,the limits
+             are those of 'LUND' and can be not suitable.
+             Changes can be made in ECBOOK .
+
+       List of histogram numbers and content:
+
+456    distribution of the total digital signal on the wires
+       xx' : signal in MeV    binning = 100
+                              automatic limits calculation
+
+457    longitudinal profile of the wires (digital signal)
+       xx' : n. of the plane  binning = 45
+       yy' : signal in MeV
+
+458    number of hits per wires planes (digital level)
+       xx' : n. of the plane  binning = 45
+       yy' : number of hits
+
+459    distribution of the sum of the digital signal on all the
+       towers
+       xx' : signal in MeV    binning = 100
+                              automatic limits calculation
+
+460    distribution of the sum of the digital signal on all the
+       towers in the stack 1
+       xx' : signal in MeV    binning = 100
+                              automatic limits calculation
+
+461    distribution of the sum of the digital signal on all the
+       towers in the stack 2
+       xx' : signal in MeV    binning = 100
+                              automatic limits calculation
+
+462    distribution of the sum of the digital signal on all the
+       towers in the stack 3
+       xx' : signal in MeV    binning = 100
+                              automatic limits calculation
+
+463    number of hits towers per event (digital level)
+       xx' : nb of hit        binning = 100
+                              0.< nb < 100.
+
+#endif

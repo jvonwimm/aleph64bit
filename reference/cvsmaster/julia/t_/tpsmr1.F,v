@@ -1,0 +1,140 @@
+head	1.2;
+access;
+symbols
+	jul313_3:1.2
+	jul313_2:1.2
+	jul313_1:1.2
+	jul313:1.2
+	jul312_1:1.2
+	jul312:1.2
+	jul311:1.2
+	jul310_1:1.2
+	jul310:1.2
+	jul309_1:1.2
+	jul309:1.2
+	jul308_6:1.2
+	jul308_5:1.2
+	jul308_4:1.2
+	jul308_3:1.2
+	jul308_2:1.2
+	jul308_1:1.2
+	jul308:1.2
+	jul307_4:1.2
+	jul307_3:1.2
+	jul307_2:1.2
+	jul307_1:1.2
+	jul307:1.2
+	jul306_3:1.2
+	jul306_2:1.2
+	jul306_1:1.2
+	jul306:1.2
+	jul305_4:1.1
+	jul305_3:1.1
+	jul305_2:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	98.02.27.07.43.58;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.12.17.17.40.55;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@correction to TPSMR1
+@
+text
+@C ---------------------------------------------------------------------------
+      subroutine TPSMR1(MAXHIT,ZVEC,RVEC)
+C ---------------------------------------------------------------------------
+C!  adds the smearing vector to the TPCO coordinates.
+C!  takes into account the drift length dependence for z hits
+C  Author  Manoj Thulasidas  Dec. 8, 1997
+C
+C  Input 
+C            MAXHIT  = number of hits to be smeared  (21 here)
+C            ZVEC    = smearing vector in Z
+C            RVEC    = smearing vector in Z
+C  Output
+C            smeared TPCO bank
+C
+C  Modified:  Manoj Thulasidas  Feb. 15, 1998
+C            Change the Z smearing proportional to the drift distance
+C            to an average smearing.  (Fixes the cos(theta) dependence)
+C ---------------------------------------------------------------------------
+#ifndef DOC
+      implicit none
+C  globals
+#include "bcs.h"
+C - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+C  arguments
+      integer MAXHIT
+      real ZVEC(MAXHIT), RVEC(MAXHIT)
+C  functions
+      integer  NAMIND
+      EXTERNAL NAMIND
+C  locals
+      real ZMAX
+      parameter (ZMAX = 220.0)
+      real RHIT, ZHIT, PHIT, RVAL
+      integer NATPCO, KTPCO, NTPCO, ITPCO, IHIT
+      logical FIRST
+      data FIRST /.TRUE./
+C - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+C  inline macros
+C  declare the bmacro stuff
+      INTEGER LCOLS, ID, LROWS, KNEXT, KROW, NRBOS, LFRWRD,
+     $   LFRROW, ITABL, L
+      REAL RTABL
+#include "tpcojj.h"
+#include "bmacro.h"
+C============================================================================
+      if (FIRST) then
+        FIRST = .FALSE.
+        NATPCO = NAMIND('TPCO')
+      endif
+      KTPCO = IW(NATPCO)
+      NTPCO = LROWS(KTPCO)
+      DO ITPCO = 1, NTPCO
+        IHIT = ITABL(KTPCO, ITPCO, JTPCIN) / 100000
+        RHIT = RTABL(KTPCO, ITPCO, JTPCRV)
+        PHIT = RTABL(KTPCO, ITPCO, JTPCPH)
+        ZHIT = RTABL(KTPCO, ITPCO, JTPCZV)
+        RVAL = RHIT*PHIT
+C  apply the given smearing
+        RVAL = RVAL + RVEC(IHIT)
+        PHIT = RVAL/RHIT
+C  z smearing is zero when the drift distance is zero
+C        ZHIT = ZHIT + (ZMAX-ABS(ZHIT))/ZMAX * ZVEC(IHIT)
+        ZHIT = ZHIT + 0.5 * ZVEC(IHIT)
+C  put them back in TPCO
+        RW(KROW(KTPCO,ITPCO)+JTPCPH) = PHIT
+        RW(KROW(KTPCO,ITPCO)+JTPCZV) = ZHIT
+      ENDDO
+      return
+      end
+#endif
+@
+
+
+1.1
+log
+@Add TPC smearing routines
+@
+text
+@d14 4
+d62 2
+a63 1
+        ZHIT = ZHIT + (ZMAX-ABS(ZHIT))/ZMAX * ZVEC(IHIT)
+@

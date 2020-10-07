@@ -1,0 +1,49 @@
+      SUBROUTINE PAGE
+C ----------------------------------------------------------------
+C     count number of lines printed per page
+C at end of screen print 'press return to continue' and wait for input
+C     dont' do if writing onto file
+C ----------------------------------------------------------------
+#ifndef DOC
+#include "sbkpar.h"
+#include "paging.h"
+#include "sbkcom.h"
+      INTEGER*2 FLAGS,DEVICE,LINEWIDTH,LINESPP
+      CHARACTER TEXT*34,DUMMY*80,CLEAR*80,HOME*80,S_IN*80,S_OUT*80
+      LOGICAL FIRST
+      DATA FIRST /.TRUE./
+      DATA TEXT/'***  press RETURN to continue  ***'/
+C ------------------------------------------------------------
+      LINES=LINES+1
+#if defined(UNIX)
+      IF (FIRST) THEN
+        CALL UNIX_LINES(LINESPP,CLEAR,HOME,S_IN,S_OUT)
+        LIMIT = LINESPP - 2
+        FIRST = .FALSE.
+      END IF
+      IF (LINES .GT. LIMIT .AND. .NOT. XOUTPT) THEN
+        WRITE (6,'(1X,3A,$)') S_IN(:LNBLNK(S_IN)),
+     +    TEXT,S_OUT(:LNBLNK(S_OUT))
+        READ (5,'(A)') DUMMY
+        WRITE (6,'(1X,A,$)') CLEAR(:LNBLNK(CLEAR))
+        LINES = 0
+      END IF
+#else
+      IF (FIRST) THEN
+C     get page length of screen into LINESPP
+        ISTAT=LIB$SCREEN_INFO(FLAGS,DEVICE,LINEWIDTH,LINESPP)
+        LIMIT=LINESPP-2
+        FIRST = .FALSE.
+      END IF
+      IF(LINES.GT.LIMIT.AND..NOT.XOUTPT)THEN
+        ST=LIB$UP_SCROLL()
+        ST=LIB$PUT_SCREEN(TEXT,%REF(LINESPP+1),%REF(1),%REF(3))
+        READ (5,'(A)') DUMMY
+C     erase page and move cursor to last line col 1
+        STATUS = LIB$ERASE_PAGE(%REF(LINESPP-1),%REF(1))
+        STATUS = LIB$SET_CURSOR(%REF(LINESPP-1),%REF(1))
+        LINES=0
+      ENDIF
+#endif
+      END
+#endif

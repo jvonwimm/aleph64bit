@@ -1,0 +1,103 @@
+C  This file contains platform dependent text and must be specially prepared
+C  for each platform.
+
+C  Text with a letter in the first column is not stored, and only there for
+C  information. It may be omitted.Blank lines are ignored as well.
+
+C  Letters 2,3 serve as index for the text from letter 5 onwards, which is
+C  stored and may be either printed (even several lines) or used in the
+C  program (1 line).
+
+123456789 123456789 123456789 123456789 123456789 123456789 123456789
+cIn ....................... text ...........................................
+
+VPF VMS     ! Serves as flag for VMS in the program.
+OPF OSF     ! Digital UNIX
+HPF HP      ! HPUX9
+SPF SGI     ! Silicon Graphics
+ PF LINUX   ! Linux
+
+VWR    ! carriage control character for "WRITE(6" statements
+OWR    !
+HWR L  !
+SWR L  !
+ WR L  !
+
+ HD                                                       
+ HD           ********************************************
+ HD         ****  DISPLAY  of  A L E P H  INTERACTIONS  ****
+ HD           ***************   D A L I  *****************
+ HD             ****************************************
+ HD                                                      
+
+VBR BOOK:RUNCARTS.LIST
+ BR $ALBOOK/runcarts.list
+
+CAE AL$EDIR:
+CAE $ALEDIR/
+
+C   see DALIJ.FOR: SUBROUTINE DJ_CHANGE_NAME, DJGTFN
+VL1 A
+ L1 ?
+VEP AL$DATA:
+ EP $ALDATA/
+VED AL$EDIR:
+ ED $ALEDIR/
+VSL 0 no change of EDIR to small letters
+ SL S    change of EDIR to small letters
+
+VST Film names for your area must start with [.
+ ST Film names for your area must start with ./
+
+VS1 =================================================
+VS1 The EPIO-file is not available. Stage the file.
+VS1 You may do this via LOOK in another window. 
+VS1 Example for run 98765:
+VS1
+VS1 LOOK
+VS1 LOOK> OPEN/DST 98765 (or /MINI,/NANO,/POT )
+VS1
+VS1 Read the file again when finished.              
+VS1 If the EPIO file is on your area add [] before 
+VS1 the film name in the EDIR file.
+VS1 ===============================================
+
+ S1 =================================================
+ S1 The EPIO-file is not available. Stage the file.
+ S1 You may do this via LOOK in another window. 
+ S1 Example for run 98765:
+ S1
+ S1 alook
+ S1 LOOK> OPEN/DST 98765 (or /MINI,/NANO,/POT )
+ S1
+ S1 Read the file again when finished.              
+ S1 ===============================================
+
+VAL C-list stored in DALPHA.CARDS . With the command
+VAL @ALDATA$EXE:DALPHA or SUBMIT ALDATA$EXE:DALPHA 
+VAL the output file  DALPHA.EPIO  is created in your
+VAL directory. See Help file.
+
+ AL A file DALPHA.CARDS is created in your area.
+ AL You may remove this, since you have come to a
+ AL VMS-specific section not yet ported to UNIX.
+
+ PS ================================================
+ PS  
+ PS Do not use the normal set of colors for your
+ PS PostScript file. Read the menu!!!
+ PS  
+ PS ================================================
+
+VBP PHY:BEAM.POSITION
+ BP $BEAMPOSITION
+
+ RO
+
+ LL If you had problems, call H.Drevermann.
+
+ KW GA EL NU MU PI KK K0 KL KS PR NE LA SI XI OM
+ KW TA DD D0 DS WW Z0 A1 JP KR=K* DR=D* PH GL
+ KW UQ DQ SQ CQ BQ TQ    BB B0 BS BC QQ   - = to
+ KW 1J 2J 3J 4J NJ  err. EVd EIt ETp EEc EHc EJu EMc
+ KW neutral, charged decay ND CD no tracks NT  AS SY

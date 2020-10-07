@@ -1,0 +1,195 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.42.27;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.42.28;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      INTEGER FUNCTION KBVERT (NVX,VXYZT,NTR)
+C -------------------------------------------------------------
+C - Y.Kariotakis - 860200    modified by F.Ranjard - 870504
+C
+C! fill VERT bank
+CKEY KINE KINGAL FILL BANK / USER  INTERNAL
+C  Book and fill VERT,NR=NVX bank with vertex position and time of
+C       flight
+C  Connect vertex# NVX to track# NTR (enlarge KINE,NR=NTR bank if
+C       necessary)
+C  Return VERT,NR=NVX bank index
+C
+C - structure: INTEGER FUNCTION subprogram
+C              User Entry Name: KBVERT
+C              External References: AUBOS(ALEPHLIB), NLINK(BOS77)
+C              Comdecks referenced: BCS, KIPARA, BMACRO, KMACRO
+C
+C - usage   : JVERT  = KBVERT (NVX,VXYZT,NTR)
+C - input   : VYXZT  = vx,vy,vz and time of flight
+C             NTR    = track origin (KINE bank # of the origin)
+C             NVX    = vertex# (VERT bank # to be filled)
+C - output  : KBVERT = BOS index of the VERT bank just filled
+C                      0 means not enough space to book it
+C                     -1       bank KINE,NR=NTR does not exist
+C                     -2       not enough space to increase KINE
+#ifndef DOC
+      SAVE
+      REAL VXYZT(*)
+#include "kipara.h"
+#include "bcs.h"
+#include "bmacro.h"
+#include "kmacro.h"
+C -------------------------------------------------------------------
+C
+C - Connect vertex NVX to track NTR if NTR .ne. 0
+C
+      IF (NTR .EQ. 0) GOTO 100
+C
+      JKINE = NLINK ('KINE',NTR)
+      IF (JKINE .LE. 0) THEN
+         KBVERT = -1
+         GOTO 999
+      ELSE
+C        check the space left
+         IF (LFRVK(JKINE) .EQ. 0) THEN
+            CALL AUBOS ('KINE',NTR,IW(JKINE)+LKVX,JKINE,IGARB)
+            IF (JKINE.EQ.0) THEN
+               KBVERT = -2
+               GOTO 999
+            ENDIF
+         ENDIF
+C        store the vertex NVX
+         KNVX = KNEXVK(JKINE)
+         IW(KNVX+1) = NVX
+C        increase the # of vertices on this track
+         IW(JKINE+3) = IW(JKINE+3) + 1
+      ENDIF
+C
+ 100  CONTINUE
+C
+C - Book VERT, NR = NVX , RETURN if the bank exists already
+      JVERT = NLINK ('VERT',NVX)
+      IF (JVERT .GT. 0) GOTO 998
+      CALL AUBOS ('VERT',NVX,LHVER+LPVER+LVKI,JVERT,IGARB)
+      IF (JVERT .EQ. 0) GOTO 998
+C
+C - Fill the bank
+      IW(JVERT+1) = LHVER
+      IW(JVERT+2) = LPVER
+      IW(JVERT+3) = 0
+C
+      KVERT = JVERT + LHVER
+      RW(KVERT+1) = VXYZT(1)
+      RW(KVERT+2) = VXYZT(2)
+      RW(KVERT+3) = VXYZT(3)
+      RW(KVERT+4) = VXYZT(4)
+      IW(KVERT+5) = NTR
+C
+C -   end
+C
+ 998  KBVERT = JVERT
+C
+ 999  RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

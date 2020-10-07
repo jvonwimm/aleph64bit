@@ -1,0 +1,27 @@
+#! /bin/sh
+
+$LSB_TRAPSIGS
+$LSB_RCP1
+$LSB_RCP2
+$LSB_RCP3
+# LSBATCH: User input
+#BSUB -q xu_1nh
+#BSUB -J dbase21_afal14
+( cat <<_USER_\SCRIPT_
+#!/bin/csh
+time /afs/cern.ch/aleph/shared/script/maklib < /afs/cern.ch/aleph/reference/cvs/dbase/dbase21.input
+exec_end:
+exit
+_USER_SCRIPT_
+) > $LSB_CHKFILENAME.shell
+chmod u+x $LSB_CHKFILENAME.shell
+$LSB_JOBFILENAME.shell
+saveExit=$?
+/bin/rm -f $LSB_JOBFILENAME.shell
+(exit $saveExit)
+
+ExitStat=$?
+wait
+# LSBATCH: End user input
+true
+exit `expr $? "|" $ExitStat`

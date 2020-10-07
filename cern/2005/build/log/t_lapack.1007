@@ -1,0 +1,1134 @@
+( cd BLAS/TESTING; gmake -f Makeblat1 )
+gmake[1]: Entering directory '/home/wimmer/aleph64bit/cern/LAPACK/BLAS/TESTING'
+gfortran -O -fPIC -c sblat1.f
+sblat1.f:215:44:
+
+                CALL STEST1(SNRM2(N,SX,INCX),STEMP,STEMP,SFAC)
+                                            1
+Warning: Rank mismatch in argument ‘strue1’ at (1) (scalar and rank-1) [-Wargument-mismatch]
+sblat1.f:219:44:
+
+                CALL STEST1(SASUM(N,SX,INCX),STEMP,STEMP,SFAC)
+                                            1
+Warning: Rank mismatch in argument ‘strue1’ at (1) (scalar and rank-1) [-Wargument-mismatch]
+gfortran -no-pie -O -fPIC sblat1.o  \
+        ../../blas_x86_64.a  -o ../xblat1s
+gfortran -O -fPIC -c dblat1.f
+dblat1.f:215:44:
+
+                CALL STEST1(DNRM2(N,SX,INCX),STEMP,STEMP,SFAC)
+                                            1
+Warning: Rank mismatch in argument ‘strue1’ at (1) (scalar and rank-1) [-Wargument-mismatch]
+dblat1.f:219:44:
+
+                CALL STEST1(DASUM(N,SX,INCX),STEMP,STEMP,SFAC)
+                                            1
+Warning: Rank mismatch in argument ‘strue1’ at (1) (scalar and rank-1) [-Wargument-mismatch]
+gfortran -no-pie -O -fPIC dblat1.o  \
+        ../../blas_x86_64.a  -o ../xblat1d
+gfortran -O -fPIC -c cblat1.f
+gfortran -no-pie -O -fPIC cblat1.o  \
+        ../../blas_x86_64.a  -o ../xblat1c
+gfortran -O -fPIC -c zblat1.f
+gfortran -no-pie -O -fPIC zblat1.o \
+        ../../blas_x86_64.a  -o ../xblat1z
+gmake[1]: Leaving directory '/home/wimmer/aleph64bit/cern/LAPACK/BLAS/TESTING'
+( cd BLAS; ./xblat1s > sblat1.out; \
+           ./xblat1d > dblat1.out; \
+           ./xblat1c > cblat1.out; \
+           ./xblat1z > zblat1.out )
+( cd BLAS/TESTING; gmake -f Makeblat2 )
+gmake[1]: Entering directory '/home/wimmer/aleph64bit/cern/LAPACK/BLAS/TESTING'
+gfortran -O -fPIC -c sblat2.f
+gfortran -no-pie -O -fPIC sblat2.o  \
+        ../../blas_x86_64.a  -o ../xblat2s
+gfortran -O -fPIC -c dblat2.f
+gfortran -no-pie -O -fPIC dblat2.o  \
+        ../../blas_x86_64.a  -o ../xblat2d
+gfortran -O -fPIC -c cblat2.f
+gfortran -no-pie -O -fPIC cblat2.o  \
+        ../../blas_x86_64.a  -o ../xblat2c
+gfortran -O -fPIC -c zblat2.f
+gfortran -no-pie -O -fPIC zblat2.o \
+        ../../blas_x86_64.a  -o ../xblat2z
+gmake[1]: Leaving directory '/home/wimmer/aleph64bit/cern/LAPACK/BLAS/TESTING'
+( cd BLAS; ./xblat2s < sblat2.in ; \
+           ./xblat2d < dblat2.in ; \
+           ./xblat2c < cblat2.in ; \
+           ./xblat2z < zblat2.in )
+( cd BLAS/TESTING; gmake -f Makeblat3 )
+gmake[1]: Entering directory '/home/wimmer/aleph64bit/cern/LAPACK/BLAS/TESTING'
+gfortran -O -fPIC -c sblat3.f
+gfortran -no-pie -O -fPIC sblat3.o \
+        ../../blas_x86_64.a -o ../xblat3s
+gfortran -O -fPIC -c dblat3.f
+gfortran -no-pie -O -fPIC dblat3.o  \
+        ../../blas_x86_64.a -o ../xblat3d
+gfortran -O -fPIC -c cblat3.f
+gfortran -no-pie -O -fPIC cblat3.o  \
+        ../../blas_x86_64.a -o ../xblat3c
+gfortran -O -fPIC -c zblat3.f
+gfortran -no-pie -O -fPIC zblat3.o \
+        ../../blas_x86_64.a -o ../xblat3z
+gmake[1]: Leaving directory '/home/wimmer/aleph64bit/cern/LAPACK/BLAS/TESTING'
+( cd BLAS; ./xblat3s < sblat3.in ; \
+           ./xblat3d < dblat3.in ; \
+           ./xblat3c < cblat3.in ; \
+           ./xblat3z < zblat3.in )
+( cd TESTING ; gmake )
+gmake[1]: Entering directory '/home/wimmer/aleph64bit/cern/LAPACK/TESTING'
+cd LIN ; gmake single
+gmake[2]: Entering directory '/home/wimmer/aleph64bit/cern/LAPACK/TESTING/LIN'
+gfortran -c -O -fPIC aladhd.f
+gfortran -c -O -fPIC alaerh.f
+gfortran -c -O -fPIC alaesm.f
+gfortran -c -O -fPIC alahd.f
+gfortran -c -O -fPIC alareq.f
+gfortran -c -O -fPIC alasum.f
+gfortran -c -O -fPIC alasvm.f
+gfortran -c -O -fPIC chkxer.f
+gfortran -c -O -fPIC icopy.f
+gfortran -c -O -fPIC ilaenv.f
+gfortran -c -O -fPIC xlaenv.f
+gfortran -c -O -fPIC xerbla.f
+gfortran -O -fPIC -c schkaa.f
+gfortran -c -O -fPIC schkeq.f
+gfortran -c -O -fPIC schkgb.f
+gfortran -c -O -fPIC schkge.f
+gfortran -c -O -fPIC schkgt.f
+gfortran -c -O -fPIC schklq.f
+gfortran -c -O -fPIC schkpb.f
+gfortran -c -O -fPIC schkpo.f
+gfortran -c -O -fPIC schkpp.f
+gfortran -c -O -fPIC schkpt.f
+gfortran -c -O -fPIC schkq3.f
+gfortran -c -O -fPIC schkql.f
+gfortran -c -O -fPIC schkqp.f
+gfortran -c -O -fPIC schkqr.f
+gfortran -c -O -fPIC schkrq.f
+gfortran -c -O -fPIC schksp.f
+gfortran -c -O -fPIC schksy.f
+gfortran -c -O -fPIC schktb.f
+gfortran -c -O -fPIC schktp.f
+gfortran -c -O -fPIC schktr.f
+gfortran -c -O -fPIC schktz.f
+gfortran -c -O -fPIC sdrvgb.f
+gfortran -c -O -fPIC sdrvge.f
+gfortran -c -O -fPIC sdrvgt.f
+gfortran -c -O -fPIC sdrvls.f
+gfortran -c -O -fPIC sdrvpb.f
+gfortran -c -O -fPIC sdrvpo.f
+gfortran -c -O -fPIC sdrvpp.f
+gfortran -c -O -fPIC sdrvpt.f
+gfortran -c -O -fPIC sdrvsp.f
+gfortran -c -O -fPIC sdrvsy.f
+gfortran -c -O -fPIC serrge.f
+gfortran -c -O -fPIC serrgt.f
+gfortran -c -O -fPIC serrlq.f
+gfortran -c -O -fPIC serrls.f
+gfortran -c -O -fPIC serrpo.f
+gfortran -c -O -fPIC serrql.f
+gfortran -c -O -fPIC serrqp.f
+gfortran -c -O -fPIC serrqr.f
+gfortran -c -O -fPIC serrrq.f
+gfortran -c -O -fPIC serrsy.f
+gfortran -c -O -fPIC serrtr.f
+gfortran -c -O -fPIC serrtz.f
+gfortran -c -O -fPIC serrvx.f
+gfortran -c -O -fPIC sgbt01.f
+gfortran -c -O -fPIC sgbt02.f
+gfortran -c -O -fPIC sgbt05.f
+gfortran -c -O -fPIC sgelqs.f
+gfortran -c -O -fPIC sgeqls.f
+gfortran -c -O -fPIC sgeqrs.f
+gfortran -c -O -fPIC sgerqs.f
+gfortran -c -O -fPIC sget01.f
+gfortran -c -O -fPIC sget02.f
+gfortran -c -O -fPIC sget03.f
+gfortran -c -O -fPIC sget04.f
+gfortran -c -O -fPIC sget06.f
+gfortran -c -O -fPIC sget07.f
+gfortran -c -O -fPIC sgtt01.f
+gfortran -c -O -fPIC sgtt02.f
+gfortran -c -O -fPIC sgtt05.f
+gfortran -c -O -fPIC slaptm.f
+gfortran -c -O -fPIC slarhs.f
+gfortran -c -O -fPIC slatb4.f
+gfortran -c -O -fPIC slattb.f
+gfortran -c -O -fPIC slattp.f
+gfortran -c -O -fPIC slattr.f
+gfortran -c -O -fPIC slavsp.f
+gfortran -c -O -fPIC slavsy.f
+gfortran -c -O -fPIC slqt01.f
+gfortran -c -O -fPIC slqt02.f
+gfortran -c -O -fPIC slqt03.f
+gfortran -c -O -fPIC spbt01.f
+gfortran -c -O -fPIC spbt02.f
+gfortran -c -O -fPIC spbt05.f
+gfortran -c -O -fPIC spot01.f
+gfortran -c -O -fPIC spot02.f
+gfortran -c -O -fPIC spot03.f
+gfortran -c -O -fPIC spot05.f
+gfortran -c -O -fPIC sppt01.f
+gfortran -c -O -fPIC sppt02.f
+gfortran -c -O -fPIC sppt03.f
+gfortran -c -O -fPIC sppt05.f
+gfortran -c -O -fPIC sptt01.f
+gfortran -c -O -fPIC sptt02.f
+gfortran -c -O -fPIC sptt05.f
+gfortran -c -O -fPIC sqlt01.f
+gfortran -c -O -fPIC sqlt02.f
+gfortran -c -O -fPIC sqlt03.f
+gfortran -c -O -fPIC sqpt01.f
+gfortran -c -O -fPIC sqrt01.f
+gfortran -c -O -fPIC sqrt02.f
+gfortran -c -O -fPIC sqrt03.f
+gfortran -c -O -fPIC sqrt11.f
+gfortran -c -O -fPIC sqrt12.f
+gfortran -c -O -fPIC sqrt13.f
+gfortran -c -O -fPIC sqrt14.f
+gfortran -c -O -fPIC sqrt15.f
+gfortran -c -O -fPIC sqrt16.f
+gfortran -c -O -fPIC sqrt17.f
+gfortran -c -O -fPIC srqt01.f
+gfortran -c -O -fPIC srqt02.f
+gfortran -c -O -fPIC srqt03.f
+gfortran -c -O -fPIC srzt01.f
+gfortran -c -O -fPIC srzt02.f
+gfortran -c -O -fPIC sspt01.f
+gfortran -c -O -fPIC ssyt01.f
+gfortran -c -O -fPIC stbt02.f
+gfortran -c -O -fPIC stbt03.f
+gfortran -c -O -fPIC stbt05.f
+gfortran -c -O -fPIC stbt06.f
+gfortran -c -O -fPIC stpt01.f
+gfortran -c -O -fPIC stpt02.f
+gfortran -c -O -fPIC stpt03.f
+gfortran -c -O -fPIC stpt05.f
+gfortran -c -O -fPIC stpt06.f
+gfortran -c -O -fPIC strt01.f
+gfortran -c -O -fPIC strt02.f
+gfortran -c -O -fPIC strt03.f
+gfortran -c -O -fPIC strt05.f
+gfortran -c -O -fPIC strt06.f
+gfortran -c -O -fPIC stzt01.f
+gfortran -c -O -fPIC stzt02.f
+gfortran -c -O -fPIC slaord.f
+gfortran -no-pie -O -fPIC  aladhd.o alaerh.o alaesm.o alahd.o alareq.o alasum.o alasvm.o chkxer.o icopy.o ilaenv.o xlaenv.o xerbla.o slaord.o schkaa.o schkeq.o schkgb.o schkge.o schkgt.o schklq.o schkpb.o schkpo.o schkpp.o schkpt.o schkq3.o schkql.o schkqp.o schkqr.o schkrq.o schksp.o schksy.o schktb.o schktp.o schktr.o schktz.o sdrvgb.o sdrvge.o sdrvgt.o sdrvls.o sdrvpb.o sdrvpo.o sdrvpp.o sdrvpt.o sdrvsp.o sdrvsy.o serrge.o serrgt.o serrlq.o serrls.o serrpo.o serrql.o serrqp.o serrqr.o serrrq.o serrsy.o serrtr.o serrtz.o serrvx.o sgbt01.o sgbt02.o sgbt05.o sgelqs.o sgeqls.o sgeqrs.o sgerqs.o sget01.o sget02.o sget03.o sget04.o sget06.o sget07.o sgtt01.o sgtt02.o sgtt05.o slaptm.o slarhs.o slatb4.o slattb.o slattp.o slattr.o slavsp.o slavsy.o slqt01.o slqt02.o slqt03.o spbt01.o spbt02.o spbt05.o spot01.o spot02.o spot03.o spot05.o sppt01.o sppt02.o sppt03.o sppt05.o sptt01.o sptt02.o sptt05.o sqlt01.o sqlt02.o sqlt03.o sqpt01.o sqrt01.o sqrt02.o sqrt03.o sqrt11.o sqrt12.o sqrt13.o sqrt14.o sqrt15.o sqrt16.o sqrt17.o srqt01.o srqt02.o srqt03.o srzt01.o srzt02.o sspt01.o ssyt01.o stbt02.o stbt03.o stbt05.o stbt06.o stpt01.o stpt02.o stpt03.o stpt05.o stpt06.o strt01.o strt02.o strt03.o strt05.o strt06.o stzt01.o stzt02.o \
+        ../../tmglib_x86_64.a ../../lapack_x86_64.a ../../blas_x86_64.a  -o ../xlintsts
+gmake[2]: Leaving directory '/home/wimmer/aleph64bit/cern/LAPACK/TESTING/LIN'
+Testing REAL LAPACK linear equation routines
+./xlintsts < stest.in > stest.out 2>&1
+cd EIG ; gmake single
+gmake[2]: Entering directory '/home/wimmer/aleph64bit/cern/LAPACK/TESTING/EIG'
+gfortran -O -fPIC -c schkee.f
+gfortran -O -fPIC -c sbdt01.f
+gfortran -O -fPIC -c sbdt02.f
+gfortran -O -fPIC -c sbdt03.f
+gfortran -O -fPIC -c schkbb.f
+gfortran -O -fPIC -c schkbd.f
+gfortran -O -fPIC -c schkbk.f
+gfortran -O -fPIC -c schkbl.f
+gfortran -O -fPIC -c schkec.f
+gfortran -O -fPIC -c schkgg.f
+gfortran -O -fPIC -c schkgk.f
+gfortran -O -fPIC -c schkgl.f
+gfortran -O -fPIC -c schkhs.f
+gfortran -O -fPIC -c schksb.f
+gfortran -O -fPIC -c schkst.f
+gfortran -O -fPIC -c sckglm.f
+gfortran -O -fPIC -c sckgqr.f
+gfortran -O -fPIC -c sckgsv.f
+gfortran -O -fPIC -c scklse.f
+gfortran -O -fPIC -c sdrges.f
+gfortran -O -fPIC -c sdrgev.f
+gfortran -O -fPIC -c sdrgsx.f
+gfortran -O -fPIC -c sdrgvx.f
+gfortran -O -fPIC -c sdrvbd.f
+gfortran -O -fPIC -c sdrves.f
+gfortran -O -fPIC -c sdrvev.f
+gfortran -O -fPIC -c sdrvgg.f
+gfortran -O -fPIC -c sdrvsg.f
+gfortran -O -fPIC -c sdrvst.f
+gfortran -O -fPIC -c sdrvsx.f
+gfortran -O -fPIC -c sdrvvx.f
+gfortran -O -fPIC -c serrbd.f
+gfortran -O -fPIC -c serrec.f
+gfortran -O -fPIC -c serred.f
+gfortran -O -fPIC -c serrgg.f
+gfortran -O -fPIC -c serrhs.f
+gfortran -O -fPIC -c serrst.f
+gfortran -O -fPIC -c sget02.f
+gfortran -O -fPIC -c sget10.f
+gfortran -O -fPIC -c sget22.f
+gfortran -O -fPIC -c sget23.f
+gfortran -O -fPIC -c sget24.f
+gfortran -O -fPIC -c sget31.f
+gfortran -O -fPIC -c sget32.f
+gfortran -O -fPIC -c sget33.f
+gfortran -O -fPIC -c sget34.f
+gfortran -O -fPIC -c sget35.f
+gfortran -O -fPIC -c sget36.f
+gfortran -O -fPIC -c sget37.f
+gfortran -O -fPIC -c sget38.f
+gfortran -O -fPIC -c sget39.f
+gfortran -O -fPIC -c sget51.f
+gfortran -O -fPIC -c sget52.f
+gfortran -O -fPIC -c sget53.f
+gfortran -O -fPIC -c sget54.f
+gfortran -O -fPIC -c sglmts.f
+gfortran -O -fPIC -c sgqrts.f
+gfortran -O -fPIC -c sgrqts.f
+gfortran -O -fPIC -c sgsvts.f
+gfortran -O -fPIC -c shst01.f
+gfortran -O -fPIC -c slarfy.f
+gfortran -O -fPIC -c slarhs.f
+gfortran -O -fPIC -c slatm4.f
+gfortran -O -fPIC -c slctes.f
+gfortran -O -fPIC -c slctsx.f
+gfortran -O -fPIC -c slsets.f
+gfortran -O -fPIC -c sort01.f
+gfortran -O -fPIC -c sort03.f
+gfortran -O -fPIC -c ssbt21.f
+gfortran -O -fPIC -c ssgt01.f
+gfortran -O -fPIC -c sslect.f
+gfortran -O -fPIC -c sspt21.f
+gfortran -O -fPIC -c sstt21.f
+gfortran -O -fPIC -c sstt22.f
+gfortran -O -fPIC -c ssyt21.f
+gfortran -O -fPIC -c ssyt22.f
+gfortran -O -fPIC -c slafts.f
+gfortran -O -fPIC -c slahd2.f
+gfortran -O -fPIC -c slasum.f
+gfortran -O -fPIC -c slatb9.f
+gfortran -O -fPIC -c sstech.f
+gfortran -O -fPIC -c sstect.f
+gfortran -O -fPIC -c ssvdch.f
+gfortran -O -fPIC -c ssvdct.f
+gfortran -O -fPIC -c ssxt1.f
+gfortran -O -fPIC -c alahdg.f
+gfortran -O -fPIC -c alasum.f
+gfortran -O -fPIC -c alasvm.f
+gfortran -O -fPIC -c alareq.f
+gfortran -O -fPIC -c ilaenv.f
+gfortran -O -fPIC -c xerbla.f
+gfortran -O -fPIC -c xlaenv.f
+gfortran -O -fPIC -c chkxer.f
+\
+          gfortran -no-pie -O -fPIC -o ../xeigtsts \
+          schkee.o sbdt01.o sbdt02.o sbdt03.o schkbb.o schkbd.o schkbk.o schkbl.o schkec.o schkgg.o schkgk.o schkgl.o schkhs.o schksb.o schkst.o sckglm.o sckgqr.o sckgsv.o scklse.o sdrges.o sdrgev.o sdrgsx.o sdrgvx.o sdrvbd.o sdrves.o sdrvev.o sdrvgg.o sdrvsg.o sdrvst.o sdrvsx.o sdrvvx.o serrbd.o serrec.o serred.o serrgg.o serrhs.o serrst.o sget02.o sget10.o sget22.o sget23.o sget24.o sget31.o sget32.o sget33.o sget34.o sget35.o sget36.o sget37.o sget38.o sget39.o sget51.o sget52.o sget53.o sget54.o sglmts.o sgqrts.o sgrqts.o sgsvts.o shst01.o slarfy.o slarhs.o slatm4.o slctes.o slctsx.o slsets.o sort01.o sort03.o ssbt21.o ssgt01.o sslect.o sspt21.o sstt21.o sstt22.o ssyt21.o ssyt22.o slafts.o slahd2.o slasum.o slatb9.o sstech.o sstect.o ssvdch.o ssvdct.o ssxt1.o alahdg.o alasum.o alasvm.o alareq.o ilaenv.o xerbla.o xlaenv.o chkxer.o ../../tmglib_x86_64.a \
+  ../../lapack_x86_64.a ../../blas_x86_64.a
+gmake[2]: Leaving directory '/home/wimmer/aleph64bit/cern/LAPACK/TESTING/EIG'
+NEP: Testing Nonsymmetric Eigenvalue Problem routines
+./xeigtsts < nep.in > snep.out 2>&1
+SEP: Testing Symmetric Eigenvalue Problem routines
+./xeigtsts < sep.in > ssep.out 2>&1
+SVD: Testing Singular Value Decomposition routines
+./xeigtsts < svd.in > ssvd.out 2>&1
+SEC: Testing REAL Eigen Condition Routines
+./xeigtsts < sec.in > sec.out 2>&1
+SEV: Testing REAL Nonsymmetric Eigenvalue Driver
+./xeigtsts < sed.in > sed.out 2>&1
+SGG: Testing REAL Nonsymmetric Generalized Eigenvalue Problem routines
+./xeigtsts < sgg.in > sgg.out 2>&1
+SGD: Testing REAL Nonsymmetric Generalized Eigenvalue Problem driver routines
+./xeigtsts < sgd.in > sgd.out 2>&1
+SSB: Testing REAL Symmetric Eigenvalue Problem routines
+./xeigtsts < ssb.in > ssb.out 2>&1
+SSG: Testing REAL Symmetric Generalized Eigenvalue Problem routines
+./xeigtsts < ssg.in > ssg.out 2>&1
+SGEBAL: Testing the balancing of a REAL general matrix
+./xeigtsts < sbal.in > sbal.out 2>&1
+SGEBAK: Testing the back transformation of a REAL balanced matrix
+./xeigtsts < sbak.in > sbak.out 2>&1
+SGGBAL: Testing the balancing of a pair of REAL general matrices
+./xeigtsts < sgbal.in > sgbal.out 2>&1
+SGGBAK: Testing the back transformation of a pair of REAL balanced matrices
+./xeigtsts < sgbak.in > sgbak.out 2>&1
+SBB: Testing banded Singular Value Decomposition routines
+./xeigtsts < sbb.in > sbb.out 2>&1
+GLM: Testing Generalized Linear Regression Model routines
+./xeigtsts < glm.in > sglm.out 2>&1
+GQR: Testing Generalized QR and RQ factorization routines
+./xeigtsts < gqr.in > sgqr.out 2>&1
+GSV: Testing Generalized Singular Value Decomposition routines
+./xeigtsts < gsv.in > sgsv.out 2>&1
+LSE: Testing Constrained Linear Least Squares routines
+./xeigtsts < lse.in > slse.out 2>&1
+cd LIN ; gmake complex
+gmake[2]: Entering directory '/home/wimmer/aleph64bit/cern/LAPACK/TESTING/LIN'
+gfortran -O -fPIC -c cchkaa.f
+gfortran -c -O -fPIC cchkeq.f
+gfortran -c -O -fPIC cchkgb.f
+gfortran -c -O -fPIC cchkge.f
+gfortran -c -O -fPIC cchkgt.f
+gfortran -c -O -fPIC cchkhe.f
+gfortran -c -O -fPIC cchkhp.f
+gfortran -c -O -fPIC cchklq.f
+gfortran -c -O -fPIC cchkpb.f
+gfortran -c -O -fPIC cchkpo.f
+gfortran -c -O -fPIC cchkpp.f
+gfortran -c -O -fPIC cchkpt.f
+gfortran -c -O -fPIC cchkq3.f
+gfortran -c -O -fPIC cchkql.f
+gfortran -c -O -fPIC cchkqp.f
+gfortran -c -O -fPIC cchkqr.f
+gfortran -c -O -fPIC cchkrq.f
+gfortran -c -O -fPIC cchksp.f
+gfortran -c -O -fPIC cchksy.f
+gfortran -c -O -fPIC cchktb.f
+gfortran -c -O -fPIC cchktp.f
+gfortran -c -O -fPIC cchktr.f
+gfortran -c -O -fPIC cchktz.f
+gfortran -c -O -fPIC cdrvgb.f
+gfortran -c -O -fPIC cdrvge.f
+gfortran -c -O -fPIC cdrvgt.f
+gfortran -c -O -fPIC cdrvhe.f
+gfortran -c -O -fPIC cdrvhp.f
+gfortran -c -O -fPIC cdrvls.f
+gfortran -c -O -fPIC cdrvpb.f
+gfortran -c -O -fPIC cdrvpo.f
+gfortran -c -O -fPIC cdrvpp.f
+gfortran -c -O -fPIC cdrvpt.f
+gfortran -c -O -fPIC cdrvsp.f
+gfortran -c -O -fPIC cdrvsy.f
+gfortran -c -O -fPIC cerrge.f
+gfortran -c -O -fPIC cerrgt.f
+gfortran -c -O -fPIC cerrhe.f
+gfortran -c -O -fPIC cerrlq.f
+gfortran -c -O -fPIC cerrls.f
+gfortran -c -O -fPIC cerrpo.f
+gfortran -c -O -fPIC cerrql.f
+gfortran -c -O -fPIC cerrqp.f
+gfortran -c -O -fPIC cerrqr.f
+gfortran -c -O -fPIC cerrrq.f
+gfortran -c -O -fPIC cerrsy.f
+gfortran -c -O -fPIC cerrtr.f
+gfortran -c -O -fPIC cerrtz.f
+gfortran -c -O -fPIC cerrvx.f
+gfortran -c -O -fPIC cgbt01.f
+gfortran -c -O -fPIC cgbt02.f
+gfortran -c -O -fPIC cgbt05.f
+gfortran -c -O -fPIC cgelqs.f
+gfortran -c -O -fPIC cgeqls.f
+gfortran -c -O -fPIC cgeqrs.f
+gfortran -c -O -fPIC cgerqs.f
+gfortran -c -O -fPIC cget01.f
+gfortran -c -O -fPIC cget02.f
+gfortran -c -O -fPIC cget03.f
+gfortran -c -O -fPIC cget04.f
+gfortran -c -O -fPIC cget07.f
+gfortran -c -O -fPIC cgtt01.f
+gfortran -c -O -fPIC cgtt02.f
+gfortran -c -O -fPIC cgtt05.f
+gfortran -c -O -fPIC chet01.f
+gfortran -c -O -fPIC chpt01.f
+gfortran -c -O -fPIC claipd.f
+gfortran -c -O -fPIC claptm.f
+gfortran -c -O -fPIC clarhs.f
+gfortran -c -O -fPIC clatb4.f
+gfortran -c -O -fPIC clatsp.f
+gfortran -c -O -fPIC clatsy.f
+gfortran -c -O -fPIC clattb.f
+gfortran -c -O -fPIC clattp.f
+gfortran -c -O -fPIC clattr.f
+gfortran -c -O -fPIC clavhe.f
+gfortran -c -O -fPIC clavhp.f
+gfortran -c -O -fPIC clavsp.f
+gfortran -c -O -fPIC clavsy.f
+gfortran -c -O -fPIC clqt01.f
+gfortran -c -O -fPIC clqt02.f
+gfortran -c -O -fPIC clqt03.f
+gfortran -c -O -fPIC cpbt01.f
+gfortran -c -O -fPIC cpbt02.f
+gfortran -c -O -fPIC cpbt05.f
+gfortran -c -O -fPIC cpot01.f
+gfortran -c -O -fPIC cpot02.f
+gfortran -c -O -fPIC cpot03.f
+gfortran -c -O -fPIC cpot05.f
+gfortran -c -O -fPIC cppt01.f
+gfortran -c -O -fPIC cppt02.f
+gfortran -c -O -fPIC cppt03.f
+gfortran -c -O -fPIC cppt05.f
+gfortran -c -O -fPIC cptt01.f
+gfortran -c -O -fPIC cptt02.f
+gfortran -c -O -fPIC cptt05.f
+gfortran -c -O -fPIC cqlt01.f
+gfortran -c -O -fPIC cqlt02.f
+gfortran -c -O -fPIC cqlt03.f
+gfortran -c -O -fPIC cqpt01.f
+gfortran -c -O -fPIC cqrt01.f
+gfortran -c -O -fPIC cqrt02.f
+gfortran -c -O -fPIC cqrt03.f
+gfortran -c -O -fPIC cqrt11.f
+gfortran -c -O -fPIC cqrt12.f
+gfortran -c -O -fPIC cqrt13.f
+gfortran -c -O -fPIC cqrt14.f
+gfortran -c -O -fPIC cqrt15.f
+gfortran -c -O -fPIC cqrt16.f
+gfortran -c -O -fPIC cqrt17.f
+gfortran -c -O -fPIC crqt01.f
+gfortran -c -O -fPIC crqt02.f
+gfortran -c -O -fPIC crqt03.f
+gfortran -c -O -fPIC crzt01.f
+gfortran -c -O -fPIC crzt02.f
+gfortran -c -O -fPIC csbmv.f
+gfortran -c -O -fPIC cspt01.f
+gfortran -c -O -fPIC cspt02.f
+gfortran -c -O -fPIC cspt03.f
+gfortran -c -O -fPIC csyt01.f
+gfortran -c -O -fPIC csyt02.f
+gfortran -c -O -fPIC csyt03.f
+gfortran -c -O -fPIC ctbt02.f
+gfortran -c -O -fPIC ctbt03.f
+gfortran -c -O -fPIC ctbt05.f
+gfortran -c -O -fPIC ctbt06.f
+gfortran -c -O -fPIC ctpt01.f
+gfortran -c -O -fPIC ctpt02.f
+gfortran -c -O -fPIC ctpt03.f
+gfortran -c -O -fPIC ctpt05.f
+gfortran -c -O -fPIC ctpt06.f
+gfortran -c -O -fPIC ctrt01.f
+gfortran -c -O -fPIC ctrt02.f
+gfortran -c -O -fPIC ctrt03.f
+gfortran -c -O -fPIC ctrt05.f
+gfortran -c -O -fPIC ctrt06.f
+gfortran -c -O -fPIC ctzt01.f
+gfortran -c -O -fPIC ctzt02.f
+gfortran -no-pie -O -fPIC  aladhd.o alaerh.o alaesm.o alahd.o alareq.o alasum.o alasvm.o chkxer.o icopy.o ilaenv.o xlaenv.o xerbla.o slaord.o cchkaa.o cchkeq.o cchkgb.o cchkge.o cchkgt.o cchkhe.o cchkhp.o cchklq.o cchkpb.o cchkpo.o cchkpp.o cchkpt.o cchkq3.o cchkql.o cchkqp.o cchkqr.o cchkrq.o cchksp.o cchksy.o cchktb.o cchktp.o cchktr.o cchktz.o cdrvgb.o cdrvge.o cdrvgt.o cdrvhe.o cdrvhp.o cdrvls.o cdrvpb.o cdrvpo.o cdrvpp.o cdrvpt.o cdrvsp.o cdrvsy.o cerrge.o cerrgt.o cerrhe.o cerrlq.o cerrls.o cerrpo.o cerrql.o cerrqp.o cerrqr.o cerrrq.o cerrsy.o cerrtr.o cerrtz.o cerrvx.o cgbt01.o cgbt02.o cgbt05.o cgelqs.o cgeqls.o cgeqrs.o cgerqs.o cget01.o cget02.o cget03.o cget04.o cget07.o cgtt01.o cgtt02.o cgtt05.o chet01.o chpt01.o claipd.o claptm.o clarhs.o clatb4.o clatsp.o clatsy.o clattb.o clattp.o clattr.o clavhe.o clavhp.o clavsp.o clavsy.o clqt01.o clqt02.o clqt03.o cpbt01.o cpbt02.o cpbt05.o cpot01.o cpot02.o cpot03.o cpot05.o cppt01.o cppt02.o cppt03.o cppt05.o cptt01.o cptt02.o cptt05.o cqlt01.o cqlt02.o cqlt03.o cqpt01.o cqrt01.o cqrt02.o cqrt03.o cqrt11.o cqrt12.o cqrt13.o cqrt14.o cqrt15.o cqrt16.o cqrt17.o crqt01.o crqt02.o crqt03.o crzt01.o crzt02.o csbmv.o  cspt01.o cspt02.o cspt03.o csyt01.o csyt02.o csyt03.o ctbt02.o ctbt03.o ctbt05.o ctbt06.o ctpt01.o ctpt02.o ctpt03.o ctpt05.o ctpt06.o ctrt01.o ctrt02.o ctrt03.o ctrt05.o ctrt06.o ctzt01.o ctzt02.o sget06.o \
+        ../../tmglib_x86_64.a ../../lapack_x86_64.a ../../blas_x86_64.a  -o ../xlintstc
+gmake[2]: Leaving directory '/home/wimmer/aleph64bit/cern/LAPACK/TESTING/LIN'
+Testing COMPLEX LAPACK linear equation routines
+./xlintstc < ctest.in > ctest.out 2>&1
+cd EIG ; gmake complex
+gmake[2]: Entering directory '/home/wimmer/aleph64bit/cern/LAPACK/TESTING/EIG'
+gfortran -O -fPIC -c cchkee.f
+gfortran -O -fPIC -c cbdt01.f
+gfortran -O -fPIC -c cbdt02.f
+gfortran -O -fPIC -c cbdt03.f
+gfortran -O -fPIC -c cchkbb.f
+gfortran -O -fPIC -c cchkbd.f
+gfortran -O -fPIC -c cchkbk.f
+gfortran -O -fPIC -c cchkbl.f
+gfortran -O -fPIC -c cchkec.f
+gfortran -O -fPIC -c cchkgg.f
+gfortran -O -fPIC -c cchkgk.f
+gfortran -O -fPIC -c cchkgl.f
+gfortran -O -fPIC -c cchkhb.f
+gfortran -O -fPIC -c cchkhs.f
+gfortran -O -fPIC -c cchkst.f
+gfortran -O -fPIC -c cckglm.f
+gfortran -O -fPIC -c cckgqr.f
+gfortran -O -fPIC -c cckgsv.f
+gfortran -O -fPIC -c ccklse.f
+gfortran -O -fPIC -c cdrges.f
+gfortran -O -fPIC -c cdrgev.f
+gfortran -O -fPIC -c cdrgsx.f
+gfortran -O -fPIC -c cdrgvx.f
+gfortran -O -fPIC -c cdrvbd.f
+gfortran -O -fPIC -c cdrves.f
+gfortran -O -fPIC -c cdrvev.f
+gfortran -O -fPIC -c cdrvgg.f
+gfortran -O -fPIC -c cdrvsg.f
+gfortran -O -fPIC -c cdrvst.f
+gfortran -O -fPIC -c cdrvsx.f
+gfortran -O -fPIC -c cdrvvx.f
+gfortran -O -fPIC -c cerrbd.f
+gfortran -O -fPIC -c cerrec.f
+gfortran -O -fPIC -c cerred.f
+gfortran -O -fPIC -c cerrgg.f
+gfortran -O -fPIC -c cerrhs.f
+gfortran -O -fPIC -c cerrst.f
+gfortran -O -fPIC -c cget02.f
+gfortran -O -fPIC -c cget10.f
+gfortran -O -fPIC -c cget22.f
+gfortran -O -fPIC -c cget23.f
+gfortran -O -fPIC -c cget24.f
+gfortran -O -fPIC -c cget35.f
+gfortran -O -fPIC -c cget36.f
+gfortran -O -fPIC -c cget37.f
+gfortran -O -fPIC -c cget38.f
+gfortran -O -fPIC -c cget51.f
+gfortran -O -fPIC -c cget52.f
+gfortran -O -fPIC -c cget54.f
+gfortran -O -fPIC -c cglmts.f
+gfortran -O -fPIC -c cgqrts.f
+gfortran -O -fPIC -c cgrqts.f
+gfortran -O -fPIC -c cgsvts.f
+gfortran -O -fPIC -c chbt21.f
+gfortran -O -fPIC -c chet21.f
+gfortran -O -fPIC -c chet22.f
+gfortran -O -fPIC -c chpt21.f
+gfortran -O -fPIC -c chst01.f
+gfortran -O -fPIC -c clarfy.f
+gfortran -O -fPIC -c clarhs.f
+gfortran -O -fPIC -c clatm4.f
+gfortran -O -fPIC -c clctes.f
+gfortran -O -fPIC -c clctsx.f
+gfortran -O -fPIC -c clsets.f
+gfortran -O -fPIC -c csbmv.f
+gfortran -O -fPIC -c csgt01.f
+gfortran -O -fPIC -c cslect.f
+gfortran -O -fPIC -c cstt21.f
+gfortran -O -fPIC -c cstt22.f
+gfortran -O -fPIC -c cunt01.f
+gfortran -O -fPIC -c cunt03.f
+\
+          gfortran -no-pie -O -fPIC -o ../xeigtstc \
+          cchkee.o cbdt01.o cbdt02.o cbdt03.o cchkbb.o cchkbd.o cchkbk.o cchkbl.o cchkec.o cchkgg.o cchkgk.o cchkgl.o cchkhb.o cchkhs.o cchkst.o cckglm.o cckgqr.o cckgsv.o ccklse.o cdrges.o cdrgev.o cdrgsx.o cdrgvx.o cdrvbd.o cdrves.o cdrvev.o cdrvgg.o cdrvsg.o cdrvst.o cdrvsx.o cdrvvx.o cerrbd.o cerrec.o cerred.o cerrgg.o cerrhs.o cerrst.o cget02.o cget10.o cget22.o cget23.o cget24.o cget35.o cget36.o cget37.o cget38.o cget51.o cget52.o cget54.o cglmts.o cgqrts.o cgrqts.o cgsvts.o chbt21.o chet21.o chet22.o chpt21.o chst01.o clarfy.o clarhs.o clatm4.o clctes.o clctsx.o clsets.o csbmv.o csgt01.o cslect.o cstt21.o cstt22.o cunt01.o cunt03.o slafts.o slahd2.o slasum.o slatb9.o sstech.o sstect.o ssvdch.o ssvdct.o ssxt1.o alahdg.o alasum.o alasvm.o alareq.o ilaenv.o xerbla.o xlaenv.o chkxer.o ../../tmglib_x86_64.a \
+  ../../lapack_x86_64.a ../../blas_x86_64.a
+gmake[2]: Leaving directory '/home/wimmer/aleph64bit/cern/LAPACK/TESTING/EIG'
+NEP: Testing Nonsymmetric Eigenvalue Problem routines
+./xeigtstc < nep.in > cnep.out 2>&1
+SEP: Testing Symmetric Eigenvalue Problem routines
+./xeigtstc < sep.in > csep.out 2>&1
+SVD: Testing Singular Value Decomposition routines
+./xeigtstc < svd.in > csvd.out 2>&1
+CEC: Testing COMPLEX Eigen Condition Routines
+./xeigtstc < cec.in > cec.out 2>&1
+CES: Testing COMPLEX Nonsymmetric Schur Form Driver
+./xeigtstc < ced.in > ced.out 2>&1
+CGG: Testing COMPLEX Nonsymmetric Generalized Eigenvalue Problem routines
+./xeigtstc < cgg.in > cgg.out 2>&1
+CGD: Testing COMPLEX Nonsymmetric Generalized Eigenvalue Problem driver routines
+./xeigtstc < cgd.in > cgd.out 2>&1
+CHB: Testing Hermitian Eigenvalue Problem routines
+./xeigtstc < csb.in > csb.out 2>&1
+CSG: Testing Symmetric Generalized Eigenvalue Problem routines
+./xeigtstc < csg.in > csg.out 2>&1
+CGEBAL: Testing the balancing of a COMPLEX general matrix
+./xeigtstc < cbal.in > cbal.out 2>&1
+CGEBAK: Testing the back transformation of a COMPLEX balanced matrix
+./xeigtstc < cbak.in > cbak.out 2>&1
+CGGBAL: Testing the balancing of a pair of COMPLEX general matrices
+./xeigtstc < cgbal.in > cgbal.out 2>&1
+CGGBAK: Testing the back transformation of a pair of COMPLEX balanced matrices
+./xeigtstc < cgbak.in > cgbak.out 2>&1
+CBB: Testing banded Singular Value Decomposition routines
+./xeigtstc < cbb.in > cbb.out 2>&1
+GLM: Testing Generalized Linear Regression Model routines
+./xeigtstc < glm.in > cglm.out 2>&1
+GQR: Testing Generalized QR and RQ factorization routines
+./xeigtstc < gqr.in > cgqr.out 2>&1
+GSV: Testing Generalized Singular Value Decomposition routines
+./xeigtstc < gsv.in > cgsv.out 2>&1
+LSE: Testing Constrained Linear Least Squares routines
+./xeigtstc < lse.in > clse.out 2>&1
+cd LIN ; gmake double
+gmake[2]: Entering directory '/home/wimmer/aleph64bit/cern/LAPACK/TESTING/LIN'
+gfortran -O -fPIC -c dchkaa.f
+gfortran -c -O -fPIC dchkeq.f
+gfortran -c -O -fPIC dchkgb.f
+gfortran -c -O -fPIC dchkge.f
+gfortran -c -O -fPIC dchkgt.f
+gfortran -c -O -fPIC dchklq.f
+gfortran -c -O -fPIC dchkpb.f
+gfortran -c -O -fPIC dchkpo.f
+gfortran -c -O -fPIC dchkpp.f
+gfortran -c -O -fPIC dchkpt.f
+gfortran -c -O -fPIC dchkq3.f
+gfortran -c -O -fPIC dchkql.f
+gfortran -c -O -fPIC dchkqp.f
+gfortran -c -O -fPIC dchkqr.f
+gfortran -c -O -fPIC dchkrq.f
+gfortran -c -O -fPIC dchksp.f
+gfortran -c -O -fPIC dchksy.f
+gfortran -c -O -fPIC dchktb.f
+gfortran -c -O -fPIC dchktp.f
+gfortran -c -O -fPIC dchktr.f
+gfortran -c -O -fPIC dchktz.f
+gfortran -c -O -fPIC ddrvgb.f
+gfortran -c -O -fPIC ddrvge.f
+gfortran -c -O -fPIC ddrvgt.f
+gfortran -c -O -fPIC ddrvls.f
+gfortran -c -O -fPIC ddrvpb.f
+gfortran -c -O -fPIC ddrvpo.f
+gfortran -c -O -fPIC ddrvpp.f
+gfortran -c -O -fPIC ddrvpt.f
+gfortran -c -O -fPIC ddrvsp.f
+gfortran -c -O -fPIC ddrvsy.f
+gfortran -c -O -fPIC derrge.f
+gfortran -c -O -fPIC derrgt.f
+gfortran -c -O -fPIC derrlq.f
+gfortran -c -O -fPIC derrls.f
+gfortran -c -O -fPIC derrpo.f
+gfortran -c -O -fPIC derrql.f
+gfortran -c -O -fPIC derrqp.f
+gfortran -c -O -fPIC derrqr.f
+gfortran -c -O -fPIC derrrq.f
+gfortran -c -O -fPIC derrsy.f
+gfortran -c -O -fPIC derrtr.f
+gfortran -c -O -fPIC derrtz.f
+gfortran -c -O -fPIC derrvx.f
+gfortran -c -O -fPIC dgbt01.f
+gfortran -c -O -fPIC dgbt02.f
+gfortran -c -O -fPIC dgbt05.f
+gfortran -c -O -fPIC dgelqs.f
+gfortran -c -O -fPIC dgeqls.f
+gfortran -c -O -fPIC dgeqrs.f
+gfortran -c -O -fPIC dgerqs.f
+gfortran -c -O -fPIC dget01.f
+gfortran -c -O -fPIC dget02.f
+gfortran -c -O -fPIC dget03.f
+gfortran -c -O -fPIC dget04.f
+gfortran -c -O -fPIC dget06.f
+gfortran -c -O -fPIC dget07.f
+gfortran -c -O -fPIC dgtt01.f
+gfortran -c -O -fPIC dgtt02.f
+gfortran -c -O -fPIC dgtt05.f
+gfortran -c -O -fPIC dlaptm.f
+gfortran -c -O -fPIC dlarhs.f
+gfortran -c -O -fPIC dlatb4.f
+gfortran -c -O -fPIC dlattb.f
+gfortran -c -O -fPIC dlattp.f
+gfortran -c -O -fPIC dlattr.f
+gfortran -c -O -fPIC dlavsp.f
+gfortran -c -O -fPIC dlavsy.f
+gfortran -c -O -fPIC dlqt01.f
+gfortran -c -O -fPIC dlqt02.f
+gfortran -c -O -fPIC dlqt03.f
+gfortran -c -O -fPIC dpbt01.f
+gfortran -c -O -fPIC dpbt02.f
+gfortran -c -O -fPIC dpbt05.f
+gfortran -c -O -fPIC dpot01.f
+gfortran -c -O -fPIC dpot02.f
+gfortran -c -O -fPIC dpot03.f
+gfortran -c -O -fPIC dpot05.f
+gfortran -c -O -fPIC dppt01.f
+gfortran -c -O -fPIC dppt02.f
+gfortran -c -O -fPIC dppt03.f
+gfortran -c -O -fPIC dppt05.f
+gfortran -c -O -fPIC dptt01.f
+gfortran -c -O -fPIC dptt02.f
+gfortran -c -O -fPIC dptt05.f
+gfortran -c -O -fPIC dqlt01.f
+gfortran -c -O -fPIC dqlt02.f
+gfortran -c -O -fPIC dqlt03.f
+gfortran -c -O -fPIC dqpt01.f
+gfortran -c -O -fPIC dqrt01.f
+gfortran -c -O -fPIC dqrt02.f
+gfortran -c -O -fPIC dqrt03.f
+gfortran -c -O -fPIC dqrt11.f
+gfortran -c -O -fPIC dqrt12.f
+gfortran -c -O -fPIC dqrt13.f
+gfortran -c -O -fPIC dqrt14.f
+gfortran -c -O -fPIC dqrt15.f
+gfortran -c -O -fPIC dqrt16.f
+gfortran -c -O -fPIC dqrt17.f
+gfortran -c -O -fPIC drqt01.f
+gfortran -c -O -fPIC drqt02.f
+gfortran -c -O -fPIC drqt03.f
+gfortran -c -O -fPIC drzt01.f
+gfortran -c -O -fPIC drzt02.f
+gfortran -c -O -fPIC dspt01.f
+gfortran -c -O -fPIC dsyt01.f
+gfortran -c -O -fPIC dtbt02.f
+gfortran -c -O -fPIC dtbt03.f
+gfortran -c -O -fPIC dtbt05.f
+gfortran -c -O -fPIC dtbt06.f
+gfortran -c -O -fPIC dtpt01.f
+gfortran -c -O -fPIC dtpt02.f
+gfortran -c -O -fPIC dtpt03.f
+gfortran -c -O -fPIC dtpt05.f
+gfortran -c -O -fPIC dtpt06.f
+gfortran -c -O -fPIC dtrt01.f
+gfortran -c -O -fPIC dtrt02.f
+gfortran -c -O -fPIC dtrt03.f
+gfortran -c -O -fPIC dtrt05.f
+gfortran -c -O -fPIC dtrt06.f
+gfortran -c -O -fPIC dtzt01.f
+gfortran -c -O -fPIC dtzt02.f
+gfortran -c -O -fPIC dlaord.f
+gfortran -no-pie -O -fPIC  aladhd.o alaerh.o alaesm.o alahd.o alareq.o alasum.o alasvm.o chkxer.o icopy.o ilaenv.o xlaenv.o xerbla.o dlaord.o  dchkaa.o dchkeq.o dchkgb.o dchkge.o dchkgt.o dchklq.o dchkpb.o dchkpo.o dchkpp.o dchkpt.o dchkq3.o dchkql.o dchkqp.o dchkqr.o dchkrq.o dchksp.o dchksy.o dchktb.o dchktp.o dchktr.o dchktz.o ddrvgb.o ddrvge.o ddrvgt.o ddrvls.o ddrvpb.o ddrvpo.o ddrvpp.o ddrvpt.o ddrvsp.o ddrvsy.o derrge.o derrgt.o derrlq.o derrls.o derrpo.o derrql.o derrqp.o derrqr.o derrrq.o derrsy.o derrtr.o derrtz.o derrvx.o dgbt01.o dgbt02.o dgbt05.o dgelqs.o dgeqls.o dgeqrs.o dgerqs.o dget01.o dget02.o dget03.o dget04.o dget06.o dget07.o dgtt01.o dgtt02.o dgtt05.o dlaptm.o dlarhs.o dlatb4.o dlattb.o dlattp.o dlattr.o dlavsp.o dlavsy.o dlqt01.o dlqt02.o dlqt03.o dpbt01.o dpbt02.o dpbt05.o dpot01.o dpot02.o dpot03.o dpot05.o dppt01.o dppt02.o dppt03.o dppt05.o dptt01.o dptt02.o dptt05.o dqlt01.o dqlt02.o dqlt03.o dqpt01.o dqrt01.o dqrt02.o dqrt03.o dqrt11.o dqrt12.o dqrt13.o dqrt14.o dqrt15.o dqrt16.o dqrt17.o drqt01.o drqt02.o drqt03.o drzt01.o drzt02.o dspt01.o dsyt01.o dtbt02.o dtbt03.o dtbt05.o dtbt06.o dtpt01.o dtpt02.o dtpt03.o dtpt05.o dtpt06.o dtrt01.o dtrt02.o dtrt03.o dtrt05.o dtrt06.o dtzt01.o dtzt02.o \
+        ../../tmglib_x86_64.a ../../lapack_x86_64.a ../../blas_x86_64.a  -o ../xlintstd
+gmake[2]: Leaving directory '/home/wimmer/aleph64bit/cern/LAPACK/TESTING/LIN'
+Testing DOUBLE PRECISION LAPACK linear equation routines
+./xlintstd < dtest.in > dtest.out 2>&1
+cd EIG ; gmake double
+gmake[2]: Entering directory '/home/wimmer/aleph64bit/cern/LAPACK/TESTING/EIG'
+gfortran -O -fPIC -c dchkee.f
+gfortran -O -fPIC -c dbdt01.f
+gfortran -O -fPIC -c dbdt02.f
+gfortran -O -fPIC -c dbdt03.f
+gfortran -O -fPIC -c dchkbb.f
+gfortran -O -fPIC -c dchkbd.f
+gfortran -O -fPIC -c dchkbk.f
+gfortran -O -fPIC -c dchkbl.f
+gfortran -O -fPIC -c dchkec.f
+gfortran -O -fPIC -c dchkgg.f
+gfortran -O -fPIC -c dchkgk.f
+gfortran -O -fPIC -c dchkgl.f
+gfortran -O -fPIC -c dchkhs.f
+gfortran -O -fPIC -c dchksb.f
+gfortran -O -fPIC -c dchkst.f
+gfortran -O -fPIC -c dckglm.f
+gfortran -O -fPIC -c dckgqr.f
+gfortran -O -fPIC -c dckgsv.f
+gfortran -O -fPIC -c dcklse.f
+gfortran -O -fPIC -c ddrges.f
+gfortran -O -fPIC -c ddrgev.f
+gfortran -O -fPIC -c ddrgsx.f
+gfortran -O -fPIC -c ddrgvx.f
+gfortran -O -fPIC -c ddrvbd.f
+gfortran -O -fPIC -c ddrves.f
+gfortran -O -fPIC -c ddrvev.f
+gfortran -O -fPIC -c ddrvgg.f
+gfortran -O -fPIC -c ddrvsg.f
+gfortran -O -fPIC -c ddrvst.f
+gfortran -O -fPIC -c ddrvsx.f
+gfortran -O -fPIC -c ddrvvx.f
+gfortran -O -fPIC -c derrbd.f
+gfortran -O -fPIC -c derrec.f
+gfortran -O -fPIC -c derred.f
+gfortran -O -fPIC -c derrgg.f
+gfortran -O -fPIC -c derrhs.f
+gfortran -O -fPIC -c derrst.f
+gfortran -O -fPIC -c dget02.f
+gfortran -O -fPIC -c dget10.f
+gfortran -O -fPIC -c dget22.f
+gfortran -O -fPIC -c dget23.f
+gfortran -O -fPIC -c dget24.f
+gfortran -O -fPIC -c dget31.f
+gfortran -O -fPIC -c dget32.f
+gfortran -O -fPIC -c dget33.f
+gfortran -O -fPIC -c dget34.f
+gfortran -O -fPIC -c dget35.f
+gfortran -O -fPIC -c dget36.f
+gfortran -O -fPIC -c dget37.f
+gfortran -O -fPIC -c dget38.f
+gfortran -O -fPIC -c dget39.f
+gfortran -O -fPIC -c dget51.f
+gfortran -O -fPIC -c dget52.f
+gfortran -O -fPIC -c dget53.f
+gfortran -O -fPIC -c dget54.f
+gfortran -O -fPIC -c dglmts.f
+gfortran -O -fPIC -c dgqrts.f
+gfortran -O -fPIC -c dgrqts.f
+gfortran -O -fPIC -c dgsvts.f
+gfortran -O -fPIC -c dhst01.f
+gfortran -O -fPIC -c dlarfy.f
+gfortran -O -fPIC -c dlarhs.f
+gfortran -O -fPIC -c dlatm4.f
+gfortran -O -fPIC -c dlctes.f
+gfortran -O -fPIC -c dlctsx.f
+gfortran -O -fPIC -c dlsets.f
+gfortran -O -fPIC -c dort01.f
+gfortran -O -fPIC -c dort03.f
+gfortran -O -fPIC -c dsbt21.f
+gfortran -O -fPIC -c dsgt01.f
+gfortran -O -fPIC -c dslect.f
+gfortran -O -fPIC -c dspt21.f
+gfortran -O -fPIC -c dstt21.f
+gfortran -O -fPIC -c dstt22.f
+gfortran -O -fPIC -c dsyt21.f
+gfortran -O -fPIC -c dsyt22.f
+gfortran -O -fPIC -c dlafts.f
+gfortran -O -fPIC -c dlahd2.f
+gfortran -O -fPIC -c dlasum.f
+gfortran -O -fPIC -c dlatb9.f
+gfortran -O -fPIC -c dstech.f
+gfortran -O -fPIC -c dstect.f
+gfortran -O -fPIC -c dsvdch.f
+gfortran -O -fPIC -c dsvdct.f
+gfortran -O -fPIC -c dsxt1.f
+\
+          gfortran -no-pie -O -fPIC -o ../xeigtstd \
+          dchkee.o dbdt01.o dbdt02.o dbdt03.o dchkbb.o dchkbd.o dchkbk.o dchkbl.o dchkec.o dchkgg.o dchkgk.o dchkgl.o dchkhs.o dchksb.o dchkst.o dckglm.o dckgqr.o dckgsv.o dcklse.o ddrges.o ddrgev.o ddrgsx.o ddrgvx.o ddrvbd.o ddrves.o ddrvev.o ddrvgg.o ddrvsg.o ddrvst.o ddrvsx.o ddrvvx.o derrbd.o derrec.o derred.o derrgg.o derrhs.o derrst.o dget02.o dget10.o dget22.o dget23.o dget24.o dget31.o dget32.o dget33.o dget34.o dget35.o dget36.o dget37.o dget38.o dget39.o dget51.o dget52.o dget53.o dget54.o dglmts.o dgqrts.o dgrqts.o dgsvts.o dhst01.o dlarfy.o dlarhs.o dlatm4.o dlctes.o dlctsx.o dlsets.o dort01.o dort03.o dsbt21.o dsgt01.o dslect.o dspt21.o dstt21.o dstt22.o dsyt21.o dsyt22.o dlafts.o dlahd2.o dlasum.o dlatb9.o dstech.o dstect.o dsvdch.o dsvdct.o dsxt1.o alahdg.o alasum.o alasvm.o alareq.o ilaenv.o xerbla.o xlaenv.o chkxer.o ../../tmglib_x86_64.a \
+  ../../lapack_x86_64.a ../../blas_x86_64.a
+gmake[2]: Leaving directory '/home/wimmer/aleph64bit/cern/LAPACK/TESTING/EIG'
+NEP: Testing Nonsymmetric Eigenvalue Problem routines
+./xeigtstd < nep.in > dnep.out 2>&1
+SEP: Testing Symmetric Eigenvalue Problem routines
+./xeigtstd < sep.in > dsep.out 2>&1
+SVD: Testing Singular Value Decomposition routines
+./xeigtstd < svd.in > dsvd.out 2>&1
+DEC: Testing DOUBLE PRECISION Eigen Condition Routines
+./xeigtstd < dec.in > dec.out 2>&1
+DEV: Testing DOUBLE PRECISION Nonsymmetric Eigenvalue Driver
+./xeigtstd < ded.in > ded.out 2>&1
+DGG: Testing DOUBLE PRECISION Nonsymmetric Generalized Eigenvalue Problem routines
+./xeigtstd < dgg.in > dgg.out 2>&1
+DGD: Testing DOUBLE PRECISION Nonsymmetric Generalized Eigenvalue Problem driver routines
+./xeigtstd < dgd.in > dgd.out 2>&1
+DSB: Testing DOUBLE PRECISION Symmetric Eigenvalue Problem routines
+./xeigtstd < dsb.in > dsb.out 2>&1
+DSG: Testing DOUBLE PRECISION Symmetric Generalized Eigenvalue Problem routines
+./xeigtstd < dsg.in > dsg.out 2>&1
+DGEBAL: Testing the balancing of a DOUBLE PRECISION general matrix
+./xeigtstd < dbal.in > dbal.out 2>&1
+DGEBAK: Testing the back transformation of a DOUBLE PRECISION balanced matrix
+./xeigtstd < dbak.in > dbak.out 2>&1
+DGGBAL: Testing the balancing of a pair of DOUBLE PRECISION general matrices
+./xeigtstd < dgbal.in > dgbal.out 2>&1
+DGGBAK: Testing the back transformation of a pair of DOUBLE PRECISION balanced matrices
+./xeigtstd < dgbak.in > dgbak.out 2>&1
+DBB: Testing banded Singular Value Decomposition routines
+./xeigtstd < dbb.in > dbb.out 2>&1
+GLM: Testing Generalized Linear Regression Model routines
+./xeigtstd < glm.in > dglm.out 2>&1
+GQR: Testing Generalized QR and RQ factorization routines
+./xeigtstd < gqr.in > dgqr.out 2>&1
+GSV: Testing Generalized Singular Value Decomposition routines
+./xeigtstd < gsv.in > dgsv.out 2>&1
+LSE: Testing Constrained Linear Least Squares routines
+./xeigtstd < lse.in > dlse.out 2>&1
+cd LIN ; gmake complex16
+gmake[2]: Entering directory '/home/wimmer/aleph64bit/cern/LAPACK/TESTING/LIN'
+gfortran -O -fPIC -c zchkaa.f
+gfortran -c -O -fPIC zchkeq.f
+gfortran -c -O -fPIC zchkgb.f
+gfortran -c -O -fPIC zchkge.f
+gfortran -c -O -fPIC zchkgt.f
+gfortran -c -O -fPIC zchkhe.f
+gfortran -c -O -fPIC zchkhp.f
+gfortran -c -O -fPIC zchklq.f
+gfortran -c -O -fPIC zchkpb.f
+gfortran -c -O -fPIC zchkpo.f
+gfortran -c -O -fPIC zchkpp.f
+gfortran -c -O -fPIC zchkpt.f
+gfortran -c -O -fPIC zchkq3.f
+gfortran -c -O -fPIC zchkql.f
+gfortran -c -O -fPIC zchkqp.f
+gfortran -c -O -fPIC zchkqr.f
+gfortran -c -O -fPIC zchkrq.f
+gfortran -c -O -fPIC zchksp.f
+gfortran -c -O -fPIC zchksy.f
+gfortran -c -O -fPIC zchktb.f
+gfortran -c -O -fPIC zchktp.f
+gfortran -c -O -fPIC zchktr.f
+gfortran -c -O -fPIC zchktz.f
+gfortran -c -O -fPIC zdrvgb.f
+gfortran -c -O -fPIC zdrvge.f
+gfortran -c -O -fPIC zdrvgt.f
+gfortran -c -O -fPIC zdrvhe.f
+gfortran -c -O -fPIC zdrvhp.f
+gfortran -c -O -fPIC zdrvls.f
+gfortran -c -O -fPIC zdrvpb.f
+gfortran -c -O -fPIC zdrvpo.f
+gfortran -c -O -fPIC zdrvpp.f
+gfortran -c -O -fPIC zdrvpt.f
+gfortran -c -O -fPIC zdrvsp.f
+gfortran -c -O -fPIC zdrvsy.f
+gfortran -c -O -fPIC zerrge.f
+gfortran -c -O -fPIC zerrgt.f
+gfortran -c -O -fPIC zerrhe.f
+gfortran -c -O -fPIC zerrlq.f
+gfortran -c -O -fPIC zerrls.f
+gfortran -c -O -fPIC zerrpo.f
+gfortran -c -O -fPIC zerrql.f
+gfortran -c -O -fPIC zerrqp.f
+gfortran -c -O -fPIC zerrqr.f
+gfortran -c -O -fPIC zerrrq.f
+gfortran -c -O -fPIC zerrsy.f
+gfortran -c -O -fPIC zerrtr.f
+gfortran -c -O -fPIC zerrtz.f
+gfortran -c -O -fPIC zerrvx.f
+gfortran -c -O -fPIC zgbt01.f
+gfortran -c -O -fPIC zgbt02.f
+gfortran -c -O -fPIC zgbt05.f
+gfortran -c -O -fPIC zgelqs.f
+gfortran -c -O -fPIC zgeqls.f
+gfortran -c -O -fPIC zgeqrs.f
+gfortran -c -O -fPIC zgerqs.f
+gfortran -c -O -fPIC zget01.f
+gfortran -c -O -fPIC zget02.f
+gfortran -c -O -fPIC zget03.f
+gfortran -c -O -fPIC zget04.f
+gfortran -c -O -fPIC zget07.f
+gfortran -c -O -fPIC zgtt01.f
+gfortran -c -O -fPIC zgtt02.f
+gfortran -c -O -fPIC zgtt05.f
+gfortran -c -O -fPIC zhet01.f
+gfortran -c -O -fPIC zhpt01.f
+gfortran -c -O -fPIC zlaipd.f
+gfortran -c -O -fPIC zlaptm.f
+gfortran -c -O -fPIC zlarhs.f
+gfortran -c -O -fPIC zlatb4.f
+gfortran -c -O -fPIC zlatsp.f
+gfortran -c -O -fPIC zlatsy.f
+gfortran -c -O -fPIC zlattb.f
+gfortran -c -O -fPIC zlattp.f
+gfortran -c -O -fPIC zlattr.f
+gfortran -c -O -fPIC zlavhe.f
+gfortran -c -O -fPIC zlavhp.f
+gfortran -c -O -fPIC zlavsp.f
+gfortran -c -O -fPIC zlavsy.f
+gfortran -c -O -fPIC zlqt01.f
+gfortran -c -O -fPIC zlqt02.f
+gfortran -c -O -fPIC zlqt03.f
+gfortran -c -O -fPIC zpbt01.f
+gfortran -c -O -fPIC zpbt02.f
+gfortran -c -O -fPIC zpbt05.f
+gfortran -c -O -fPIC zpot01.f
+gfortran -c -O -fPIC zpot02.f
+gfortran -c -O -fPIC zpot03.f
+gfortran -c -O -fPIC zpot05.f
+gfortran -c -O -fPIC zppt01.f
+gfortran -c -O -fPIC zppt02.f
+gfortran -c -O -fPIC zppt03.f
+gfortran -c -O -fPIC zppt05.f
+gfortran -c -O -fPIC zptt01.f
+gfortran -c -O -fPIC zptt02.f
+gfortran -c -O -fPIC zptt05.f
+gfortran -c -O -fPIC zqlt01.f
+gfortran -c -O -fPIC zqlt02.f
+gfortran -c -O -fPIC zqlt03.f
+gfortran -c -O -fPIC zqpt01.f
+gfortran -c -O -fPIC zqrt01.f
+gfortran -c -O -fPIC zqrt02.f
+gfortran -c -O -fPIC zqrt03.f
+gfortran -c -O -fPIC zqrt11.f
+gfortran -c -O -fPIC zqrt12.f
+gfortran -c -O -fPIC zqrt13.f
+gfortran -c -O -fPIC zqrt14.f
+gfortran -c -O -fPIC zqrt15.f
+gfortran -c -O -fPIC zqrt16.f
+gfortran -c -O -fPIC zqrt17.f
+gfortran -c -O -fPIC zrqt01.f
+gfortran -c -O -fPIC zrqt02.f
+gfortran -c -O -fPIC zrqt03.f
+gfortran -c -O -fPIC zrzt01.f
+gfortran -c -O -fPIC zrzt02.f
+gfortran -c -O -fPIC zsbmv.f
+gfortran -c -O -fPIC zspt01.f
+gfortran -c -O -fPIC zspt02.f
+gfortran -c -O -fPIC zspt03.f
+gfortran -c -O -fPIC zsyt01.f
+gfortran -c -O -fPIC zsyt02.f
+gfortran -c -O -fPIC zsyt03.f
+gfortran -c -O -fPIC ztbt02.f
+gfortran -c -O -fPIC ztbt03.f
+gfortran -c -O -fPIC ztbt05.f
+gfortran -c -O -fPIC ztbt06.f
+gfortran -c -O -fPIC ztpt01.f
+gfortran -c -O -fPIC ztpt02.f
+gfortran -c -O -fPIC ztpt03.f
+gfortran -c -O -fPIC ztpt05.f
+gfortran -c -O -fPIC ztpt06.f
+gfortran -c -O -fPIC ztrt01.f
+gfortran -c -O -fPIC ztrt02.f
+gfortran -c -O -fPIC ztrt03.f
+gfortran -c -O -fPIC ztrt05.f
+gfortran -c -O -fPIC ztrt06.f
+gfortran -c -O -fPIC ztzt01.f
+gfortran -c -O -fPIC ztzt02.f
+gfortran -no-pie -O -fPIC  aladhd.o alaerh.o alaesm.o alahd.o alareq.o alasum.o alasvm.o chkxer.o icopy.o ilaenv.o xlaenv.o xerbla.o dlaord.o  zchkaa.o zchkeq.o zchkgb.o zchkge.o zchkgt.o zchkhe.o zchkhp.o zchklq.o zchkpb.o zchkpo.o zchkpp.o zchkpt.o zchkq3.o zchkql.o zchkqp.o zchkqr.o zchkrq.o zchksp.o zchksy.o zchktb.o zchktp.o zchktr.o zchktz.o zdrvgb.o zdrvge.o zdrvgt.o zdrvhe.o zdrvhp.o zdrvls.o zdrvpb.o zdrvpo.o zdrvpp.o zdrvpt.o zdrvsp.o zdrvsy.o zerrge.o zerrgt.o zerrhe.o zerrlq.o zerrls.o zerrpo.o zerrql.o zerrqp.o zerrqr.o zerrrq.o zerrsy.o zerrtr.o zerrtz.o zerrvx.o zgbt01.o zgbt02.o zgbt05.o zgelqs.o zgeqls.o zgeqrs.o zgerqs.o zget01.o zget02.o zget03.o zget04.o zget07.o zgtt01.o zgtt02.o zgtt05.o zhet01.o zhpt01.o zlaipd.o zlaptm.o zlarhs.o zlatb4.o zlatsp.o zlatsy.o zlattb.o zlattp.o zlattr.o zlavhe.o zlavhp.o zlavsp.o zlavsy.o zlqt01.o zlqt02.o zlqt03.o zpbt01.o zpbt02.o zpbt05.o zpot01.o zpot02.o zpot03.o zpot05.o zppt01.o zppt02.o zppt03.o zppt05.o zptt01.o zptt02.o zptt05.o zqlt01.o zqlt02.o zqlt03.o zqpt01.o zqrt01.o zqrt02.o zqrt03.o zqrt11.o zqrt12.o zqrt13.o zqrt14.o zqrt15.o zqrt16.o zqrt17.o zrqt01.o zrqt02.o zrqt03.o zrzt01.o zrzt02.o zsbmv.o  zspt01.o zspt02.o zspt03.o zsyt01.o zsyt02.o zsyt03.o ztbt02.o ztbt03.o ztbt05.o ztbt06.o ztpt01.o ztpt02.o ztpt03.o ztpt05.o ztpt06.o ztrt01.o ztrt02.o ztrt03.o ztrt05.o ztrt06.o ztzt01.o ztzt02.o dget06.o \
+        ../../tmglib_x86_64.a ../../lapack_x86_64.a ../../blas_x86_64.a  -o ../xlintstz
+gmake[2]: Leaving directory '/home/wimmer/aleph64bit/cern/LAPACK/TESTING/LIN'
+Testing COMPLEX16 LAPACK linear equation routines
+./xlintstz < ztest.in > ztest.out 2>&1
+cd EIG ; gmake complex16
+gmake[2]: Entering directory '/home/wimmer/aleph64bit/cern/LAPACK/TESTING/EIG'
+gfortran -O -fPIC -c zchkee.f
+gfortran -O -fPIC -c zbdt01.f
+gfortran -O -fPIC -c zbdt02.f
+gfortran -O -fPIC -c zbdt03.f
+gfortran -O -fPIC -c zchkbb.f
+gfortran -O -fPIC -c zchkbd.f
+gfortran -O -fPIC -c zchkbk.f
+gfortran -O -fPIC -c zchkbl.f
+gfortran -O -fPIC -c zchkec.f
+gfortran -O -fPIC -c zchkgg.f
+gfortran -O -fPIC -c zchkgk.f
+gfortran -O -fPIC -c zchkgl.f
+gfortran -O -fPIC -c zchkhb.f
+gfortran -O -fPIC -c zchkhs.f
+gfortran -O -fPIC -c zchkst.f
+gfortran -O -fPIC -c zckglm.f
+gfortran -O -fPIC -c zckgqr.f
+gfortran -O -fPIC -c zckgsv.f
+gfortran -O -fPIC -c zcklse.f
+gfortran -O -fPIC -c zdrges.f
+gfortran -O -fPIC -c zdrgev.f
+gfortran -O -fPIC -c zdrgsx.f
+gfortran -O -fPIC -c zdrgvx.f
+gfortran -O -fPIC -c zdrvbd.f
+gfortran -O -fPIC -c zdrves.f
+gfortran -O -fPIC -c zdrvev.f
+gfortran -O -fPIC -c zdrvgg.f
+gfortran -O -fPIC -c zdrvsg.f
+gfortran -O -fPIC -c zdrvst.f
+gfortran -O -fPIC -c zdrvsx.f
+gfortran -O -fPIC -c zdrvvx.f
+gfortran -O -fPIC -c zerrbd.f
+gfortran -O -fPIC -c zerrec.f
+gfortran -O -fPIC -c zerred.f
+gfortran -O -fPIC -c zerrgg.f
+gfortran -O -fPIC -c zerrhs.f
+gfortran -O -fPIC -c zerrst.f
+gfortran -O -fPIC -c zget02.f
+gfortran -O -fPIC -c zget10.f
+gfortran -O -fPIC -c zget22.f
+gfortran -O -fPIC -c zget23.f
+gfortran -O -fPIC -c zget24.f
+gfortran -O -fPIC -c zget35.f
+gfortran -O -fPIC -c zget36.f
+gfortran -O -fPIC -c zget37.f
+gfortran -O -fPIC -c zget38.f
+gfortran -O -fPIC -c zget51.f
+gfortran -O -fPIC -c zget52.f
+gfortran -O -fPIC -c zget54.f
+gfortran -O -fPIC -c zglmts.f
+gfortran -O -fPIC -c zgqrts.f
+gfortran -O -fPIC -c zgrqts.f
+gfortran -O -fPIC -c zgsvts.f
+gfortran -O -fPIC -c zhbt21.f
+gfortran -O -fPIC -c zhet21.f
+gfortran -O -fPIC -c zhet22.f
+gfortran -O -fPIC -c zhpt21.f
+gfortran -O -fPIC -c zhst01.f
+gfortran -O -fPIC -c zlarfy.f
+gfortran -O -fPIC -c zlarhs.f
+gfortran -O -fPIC -c zlatm4.f
+gfortran -O -fPIC -c zlctes.f
+gfortran -O -fPIC -c zlctsx.f
+gfortran -O -fPIC -c zlsets.f
+gfortran -O -fPIC -c zsbmv.f
+gfortran -O -fPIC -c zsgt01.f
+gfortran -O -fPIC -c zslect.f
+gfortran -O -fPIC -c zstt21.f
+gfortran -O -fPIC -c zstt22.f
+gfortran -O -fPIC -c zunt01.f
+gfortran -O -fPIC -c zunt03.f
+\
+          gfortran -no-pie -O -fPIC -o ../xeigtstz \
+          zchkee.o zbdt01.o zbdt02.o zbdt03.o zchkbb.o zchkbd.o zchkbk.o zchkbl.o zchkec.o zchkgg.o zchkgk.o zchkgl.o zchkhb.o zchkhs.o zchkst.o zckglm.o zckgqr.o zckgsv.o zcklse.o zdrges.o zdrgev.o zdrgsx.o zdrgvx.o zdrvbd.o zdrves.o zdrvev.o zdrvgg.o zdrvsg.o zdrvst.o zdrvsx.o zdrvvx.o zerrbd.o zerrec.o zerred.o zerrgg.o zerrhs.o zerrst.o zget02.o zget10.o zget22.o zget23.o zget24.o zget35.o zget36.o zget37.o zget38.o zget51.o zget52.o zget54.o zglmts.o zgqrts.o zgrqts.o zgsvts.o zhbt21.o zhet21.o zhet22.o zhpt21.o zhst01.o zlarfy.o zlarhs.o zlatm4.o zlctes.o zlctsx.o zlsets.o zsbmv.o zsgt01.o zslect.o zstt21.o zstt22.o zunt01.o zunt03.o dlafts.o dlahd2.o dlasum.o dlatb9.o dstech.o dstect.o dsvdch.o dsvdct.o dsxt1.o alahdg.o alasum.o alasvm.o alareq.o ilaenv.o xerbla.o xlaenv.o chkxer.o ../../tmglib_x86_64.a \
+  ../../lapack_x86_64.a ../../blas_x86_64.a
+gmake[2]: Leaving directory '/home/wimmer/aleph64bit/cern/LAPACK/TESTING/EIG'
+NEP: Testing Nonsymmetric Eigenvalue Problem routines
+./xeigtstz < nep.in > znep.out 2>&1
+SEP: Testing Symmetric Eigenvalue Problem routines
+./xeigtstz < sep.in > zsep.out 2>&1
+SVD: Testing Singular Value Decomposition routines
+./xeigtstz < svd.in > zsvd.out 2>&1
+ZEC: Testing COMPLEX16 Eigen Condition Routines
+./xeigtstz < zec.in > zec.out 2>&1
+ZES: Testing COMPLEX16 Nonsymmetric Schur Form Driver
+./xeigtstz < zed.in > zed.out 2>&1
+ZGG: Testing COMPLEX16 Nonsymmetric Generalized Eigenvalue Problem routines
+./xeigtstz < zgg.in > zgg.out 2>&1
+ZGD: Testing COMPLEX16 Nonsymmetric Generalized Eigenvalue Problem driver routines
+./xeigtstz < zgd.in > zgd.out 2>&1
+ZHB: Testing Hermitian Eigenvalue Problem routines
+./xeigtstz < zsb.in > zsb.out 2>&1
+ZSG: Testing Symmetric Generalized Eigenvalue Problem routines
+./xeigtstz < zsg.in > zsg.out 2>&1
+ZGEBAL: Testing the balancing of a COMPLEX16 general matrix
+./xeigtstz < zbal.in > zbal.out 2>&1
+ZGEBAK: Testing the back transformation of a COMPLEX16 balanced matrix
+./xeigtstz < zbak.in > zbak.out 2>&1
+ZGGBAL: Testing the balancing of a pair of COMPLEX general matrices
+./xeigtstz < zgbal.in > zgbal.out 2>&1
+ZGGBAK: Testing the back transformation of a pair of COMPLEX16 balanced matrices
+./xeigtstz < zgbak.in > zgbak.out 2>&1
+ZBB: Testing banded Singular Value Decomposition routines
+./xeigtstz < zbb.in > zbb.out 2>&1
+GLM: Testing Generalized Linear Regression Model routines
+./xeigtstz < glm.in > zglm.out 2>&1
+GQR: Testing Generalized QR and RQ factorization routines
+./xeigtstz < gqr.in > zgqr.out 2>&1
+GSV: Testing Generalized Singular Value Decomposition routines
+./xeigtstz < gsv.in > zgsv.out 2>&1
+LSE: Testing Constrained Linear Least Squares routines
+./xeigtstz < lse.in > zlse.out 2>&1
+gmake[1]: Leaving directory '/home/wimmer/aleph64bit/cern/LAPACK/TESTING'

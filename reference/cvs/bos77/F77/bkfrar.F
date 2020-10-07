@@ -1,0 +1,111 @@
+      SUBROUTINE BKFRAR(JW,NAME,NR,ARRAY,NF,FMT)
+      EXTERNAL STRBNK
+      CHARACTER*4 NAME, FMT*(*)
+      COMMON/BCS/IW(1000)
+      COMMON/STRSTR/JS,IAST,IBST,IND
+      INTEGER JW(1000),ARRAY(NF),IFMT(196),LV(3,10)
+      CALL TRFMT(FMT,IFMT,NFMT)
+      IF(IFMT(1).LT.0) GOTO 100
+      CALL CNVL(1,72)
+      CALL BKFMT(NAME,'18A')
+      IND=MBANK(JW,NAME,NR,0)
+C     CALL CNVT('NSTD ',STRBNK)
+C     CALL CNVI(0,1,STRBNK)
+C     CALL CNVT('/   ',STRBNK)
+
+C
+C     INITIALIZE FORMAT USE
+C
+      I    =3
+      ITERM=3
+      LEV=0
+      N=0
+      NWRD=NF
+C
+C     INITIALIZE
+C
+      JA=1
+      JB=NWRD
+C
+C     PRINT ONE LINE
+C
+   10 J =JA
+   20 IF(N.EQ.0) GOTO 50
+   30 M=MIN(N,JB-J+1)
+      N=N-M
+      IF(K.EQ.1) THEN
+C
+C     FLOATING POINT
+C
+         CALL CNVF(ARRAY(J),M,STRBNK)
+C
+C     INTEGER
+C
+      ELSE IF(K.EQ.2) THEN
+         CALL CNVI(ARRAY(J),M,STRBNK)
+C
+C     TEXT (A)
+C
+      ELSE IF(K.EQ.3) THEN
+         CALL CNVA(ARRAY(J),M,STRBNK)
+C
+      END IF
+      J=J+M
+      IF(J.LE.JB) GOTO 20
+      CALL STRBNK
+      GOTO 90
+C
+C     GET NEXT FORMAT CODE
+C
+   50 I=I+1
+      IF(I.GT.NFMT) THEN
+         I=ITERM
+         GOTO 50
+      END IF
+C
+C     RIGHT PARENTHESIS
+C
+      IF(IFMT(I).EQ.0) THEN
+         LV(3,LEV)=LV(3,LEV)+1
+         IF(LV(3,LEV).GE.LV(2,LEV)) THEN
+            ITERM=LV(1,LEV)-1
+            LEV=LEV-1
+         ELSE
+            I=LV(1,LEV)
+         END IF
+C
+C
+C
+      ELSE
+         N=IFMT(I)/10
+         K=IFMT(I)-10*N
+         IF(K.EQ.0) THEN
+C
+C        LEFT PARENTHESIS
+C
+            LEV=LEV+1
+            LV(1,LEV)=I
+            LV(2,LEV)=N
+            LV(3,LEV)=0
+C
+C
+C
+         ELSE
+C
+C           FORMAT F OR I OR A
+C
+            IF(NFMT.NE.3) THEN
+               IF(I.NE.NFMT-1)    GOTO 30
+               IF(LEV.EQ.0)         GOTO 30
+               IF(I.NE.LV(1,LEV)+1) GOTO 30
+            END IF
+            N=2147483647
+            GOTO 30
+         END IF
+      END IF
+      GOTO 50
+
+   90 CALL STRBNK
+      CALL BLIST(JW,'E+',NAME)
+  100 RETURN
+      END

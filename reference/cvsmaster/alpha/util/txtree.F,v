@@ -1,0 +1,691 @@
+head	1.5;
+access;
+symbols
+	alpha126_22:1.5
+	alpha126_21:1.5
+	alpha126_20:1.5
+	alpha126_19:1.5
+	alpha126_18:1.5
+	alpha126_17:1.5
+	alpha126_16:1.5
+	alpha126_15:1.5
+	alpha126_14:1.5
+	alpha126_13:1.5
+	alpha126_12:1.5
+	alpha126_11:1.5
+	alpha126_10:1.5
+	alpha126_09:1.5
+	alpha126_08:1.5
+	alpha126_07:1.5
+	alpha126_06:1.5
+	alpha126_05:1.5
+	alpha126_04:1.5
+	alpha126_03:1.5
+	alpha126_02:1.5
+	alpha126_1:1.5
+	alpha125_17:1.5
+	alpha125_16:1.5
+	alpha125_15:1.5
+	alpha125_14:1.5
+	alpha125_13:1.5
+	alpha125_12:1.5
+	alpha125_11:1.5
+	alpha125_10:1.5
+	alpha125_09:1.5
+	alpha125_08:1.5
+	alpha125_07:1.5
+	alpha125_06:1.5
+	alpha125_05:1.5
+	alpha125_04:1.5
+	alpha125_03:1.5
+	alpha125_02:1.5
+	alpha125_01:1.5
+	alpha124_19:1.5
+	alpha125:1.5
+	alpha124_18:1.5
+	alpha124_17:1.5
+	alpha124_16:1.5
+	alpha124_15:1.5
+	alpha124_14:1.5
+	alpha124_13:1.5
+	alpha124_12:1.5
+	alpha124_11:1.5
+	alpha124_10:1.5
+	alpha124_09:1.5
+	alpha124_08:1.5
+	alpha124_07:1.5
+	alpha124_7:1.5
+	alpha124_06:1.5
+	alpha124_05:1.5
+	alpha124_04:1.5
+	alpha124_03:1.5
+	alpha124_02:1.5
+	alpha124_01:1.5
+	alpha124:1.5
+	alpha123_12:1.5
+	alpha123_11:1.5
+	alpha123_10:1.5
+	alpha123_9:1.5
+	alpha123_8:1.5
+	alpha123_7:1.5
+	alpha123_6:1.5
+	alpha123_5:1.5
+	alpha123_4:1.5
+	alpha123_3:1.5
+	alpha123_2:1.5
+	alpha123:1.5
+	alpha122_48:1.5
+	alpha122_47:1.5
+	alpha122_46:1.5
+	alpha122_45:1.5
+	alpha122_44:1.5
+	alpha122_43:1.5
+	alpha122_42:1.5
+	alpha122_41:1.5
+	alpha122_40:1.5
+	alpha122_39:1.5
+	alpha122_38:1.5
+	alpha122_37:1.5
+	alpha122_36:1.5
+	alpha122_35:1.5
+	alpha122_34:1.5
+	alpha122_33:1.5
+	alpha122_32:1.5
+	alpha122_31:1.5
+	alpha122_30:1.5
+	alpha122_29:1.5
+	alpha122_28:1.5
+	alpha122_27:1.5
+	alpha122_26:1.5
+	alpha122_25:1.5
+	alpha122_24:1.5
+	alpha122_23:1.5
+	alpha122_22:1.5
+	alpha122_21:1.5
+	alpha122_20:1.5
+	alpha122_19:1.5
+	alpha122_18:1.5
+	alpha122_17:1.5
+	alpha122_16:1.5
+	alpha122_15:1.4
+	alpha122_14:1.4
+	alpha122_13:1.4
+	alpha122_12:1.4
+	alpha122_11:1.4
+	alpha122_10:1.4
+	alpha122_9:1.3
+	alpha122_8:1.3
+	alpha122_6:1.3
+	alpha122_5:1.3
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.5
+date	96.11.12.13.58.27;	author boucrot;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.08.27.14.48.18;	author boucrot;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.06.27.10.50.07;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.06.25.14.11.38;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.03.14.12.42.23;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.42.24;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.5
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE TXTREE(MOTHU,OPT)
+CKEY TOOLS / USER
+C-------------------------------------------------------------------------------
+C! Produce a LaTex source file of the decay tree from a MCarlo event.
+C  Author   : A. Bonissent October 1992
+C  Modified : B Marx December 1992 : works on IBM or Vax;
+C
+C To be called inside an Alpha job
+C
+C    Input arguments :
+C      MOTHU : the alpha particle number where the tree will start
+C      OPT   : a character string ;
+C              if it includes 'TRACK#', the ALPHA track number will be
+C              be displayed as well as the particle's name
+C              If not, only the particle's code will appear
+C
+C    Output : The file txtree.tex is produced and updated at each
+C             call. It is also closed at each call, so that it can be
+C             latexed at any time
+C             A new file will be created at each job
+C             On VAXes the file is put automatically on the scweek: directory
+C
+C    Here is an example of how to use it
+C   Find the index of a psi
+C      N=KPDIR('JPSI',-2)
+C   Find the mother of the psi
+C      MOTH=KMOTH(N,1)
+C   Produce the tree (labels only)
+C      CALL TXTREE(MOTH,'    ')
+C   Produce the tree (labels and track number)
+C      CALL TXTREE(MOTH,'TRACK#')
+C-------------------------------------------------------------------------------
+#ifndef DOC
+      CHARACTER*50 TXCOD
+      CHARACTER*(*) OPT
+      DIMENSION ISTAB(100)
+#include "qcde.h"
+#include "qmacro.h"
+C-------------------------------------------------------------------------------
+      NPLIN=0
+      IFIRST=1
+      MOTH=MOTHU
+C See if we have to output the track numbers
+      IFNUM=0
+      IF (INDEX(OPT,'TRACK#').NE.0) IFNUM=1
+C
+C create the LaTex header
+C
+      CALL TXWHEA
+C
+C Build the LaTex code for the mother particle
+C
+      TXCOD='                    '
+      CALL TXKOD(MOTH,IFNUM,TXCOD)
+C and print it
+      CALL TXLINE(TXCOD,0)
+      CALL TXLINE(' $\rightarrow$ ',1)
+C
+C This is the loop on the decay products
+C
+   20 CONTINUE
+      IF (IFIRST.NE.1) THEN
+C
+C NPLIN is the number of tabulations in the current line
+C
+         IF (NPLIN.EQ.0) GO TO 30
+C
+C A tabulation can stand for a particle who's decay tree has already
+C   been written. In this case, we do nothing
+C
+         IF (ISTAB(NPLIN).EQ.0) THEN
+            NPLIN=NPLIN-1
+            GO TO 20
+         ENDIF
+C
+C write a vertical bar for all decaying particles in the tree
+C
+         DO I=1,NPLIN-1
+           IF(ISTAB(I).NE.0)THEN
+              CALL TXLINE(' \> \vl ',0)
+           ELSE
+              CALL TXLINE(' \> ',0)
+           ENDIF
+         ENDDO
+C This is to write the arrow for the subtree
+C and find its mother
+         CALL TXLINE('\> $\dr$ ',0)
+         MOTH=ISTAB(NPLIN)
+         ISTAB(NPLIN)=0
+      ENDIF
+C
+C Loop over the children
+C
+      NDAU=KNDAU(MOTH)
+      DO 10 IDAU=1,NDAU
+      JDAU=KDAU(MOTH,IDAU)
+      TXCOD='                    '
+      CALL TXKOD(JDAU,IFNUM,TXCOD)
+C
+C See if we are dealing with a stable particle
+C
+      LOCST=KSTABC(JDAU)
+      IF (LOCST.EQ.-1.OR.LOCST.EQ.-2) THEN
+C
+C This is an unstable particle, we remember it is array ISTAB,
+C  and set a tabulation for it.
+C
+         CALL TXLINE('\='//TXCOD,0)
+         NPLIN=NPLIN+1
+         ISTAB(NPLIN)=JDAU
+      ELSE
+C This is a stable particle, we simply output it's code
+         CALL TXLINE(TXCOD,0)
+      ENDIF
+   10 CONTINUE
+C
+C Now we have finished one subtree, we terminate the line
+C
+      CALL TXLINE('\\ ',1)
+      IFIRST=0
+      GO TO 20
+   30 CONTINUE
+C
+C This is the end of the tree, we just have to write some LaTex
+C commands
+C
+      CALL TXWCLO
+      RETURN
+      END
+      SUBROUTINE TXWCLO
+CKEY TOOLS / USER
+C-------------------------------------------------------------------------------
+C! Auxiliary to TXTREE : write the end of the LaTex file and close it
+C  Author   : A. Bonissent October 1992
+C-------------------------------------------------------------------------------
+#ifndef DOC
+      COMMON / TXTRLU / LUNTXT
+C
+      LUN = LUNTXT
+      WRITE (LUN,900) '\end{tabbing}'
+      WRITE (LUN,900) '\end{document}'
+  900 FORMAT (A)
+      CLOSE (LUN)
+C
+      RETURN
+      END
+      SUBROUTINE TXWHEA
+CKEY TOOLS / USER
+C-------------------------------------------------------------------------------
+C! Auxiliary to TXTREE : open the LaTex file and write the header
+C  Author   : A. Bonissent October 1992
+C If this is the first time for the job, open the file (new),
+C and write the LaTex header
+C Else, just write the header for the tabbing, run and event #
+C before that, open the file (old) and erase the last line,
+C which is the LaTex last line (end document)
+C-------------------------------------------------------------------------------
+#ifndef DOC
+#include "qcde.h"
+      CHARACTER*80 LINE
+      COMMON / TXTRLU / LUNTXT
+      LOGICAL FIRST
+      DATA FIRST /.TRUE./
+#include "qmacro.h"
+      WRITE (LINE,901) KRUN,KEVT
+      IF (FIRST) THEN
+         FIRST=.FALSE.
+         LUNTXT = 63
+         LUN = LUNTXT
+#if defined(ALEPH_DEC) &&  ! defined(UNIX)
+         OPEN (UNIT=LUN,STATUS='NEW',NAME='SCWEEK:TXTREE.TEX')
+#else
+#if defined(UNIX)
+         OPEN (LUN,STATUS='NEW',FILE='txtree.tex')
+#endif
+#endif
+         WRITE(LUN,900)'\documentstyle [12pt]{article}'
+         WRITE(LUN,900)'\makeatletter'
+         WRITE(LUN,900)'\newdimen\@@gtempa \@@firsttab=\allocationnumber'
+         WRITE(LUN,900)'\newdimen\@@gtempa\newdimen\@@gtempa\newdimen'
+     +    //'\@@gtempa\newdimen\@@gtempa'
+         WRITE(LUN,900)'\newdimen\@@gtempa\newdimen\@@gtempa\newdimen'
+     +    //'\@@gtempa\newdimen\@@gtempa'
+         WRITE(LUN,900)'\newdimen\@@gtempa\newdimen\@@gtempa\newdimen'
+     +    //'\@@gtempa\newdimen\@@gtempa'
+         WRITE(LUN,900)'\newdimen\@@gtempa\newdimen\@@gtempa\newdimen'
+     +    //'\@@gtempa\newdimen\@@gtempa'
+         WRITE(LUN,900)'\newdimen\@@gtempa\newdimen\@@gtempa\newdimen'
+     +    //'\@@gtempa\newdimen\@@gtempa'
+         WRITE(LUN,900)'\newdimen\@@gtempa\newdimen\@@gtempa\newdimen'
+     +    //'\@@gtempa\newdimen\@@gtempa'
+         WRITE(LUN,900)'\newdimen\@@gtempa\newdimen\@@gtempa\newdimen'
+     +    //'\@@gtempa\newdimen\@@gtempa'
+         WRITE(LUN,900)'\newdimen\@@gtempa\newdimen\@@gtempa\newdimen'
+     +    //'\@@gtempa\newdimen\@@gtempa'
+         WRITE(LUN,900)'\newdimen\@@gtempa \@@maxtab=\allocationnumber'
+         WRITE(LUN,900)'\makeatother'
+         WRITE(LUN,900)'\setlength{\oddsidemargin}{-0.0in}'
+         WRITE(LUN,900)'\setlength{\evensidemargin}{-0.0in}'
+         WRITE(LUN,900)'\setlength{\textwidth}{16.0cm}'
+         WRITE(LUN,900)'\setlength{\textheight}{21.0cm}'
+C
+         WRITE(LUN,900)'\newcommand{\vl}{\begin{picture}(1,10)'
+         WRITE(LUN,900)' \put(3,-5){\line(0,1){15}}\end{picture}}'
+C
+         WRITE(LUN,900)'\newcommand{\dr}{\begin{picture}(15,10)'
+         WRITE(LUN,900)' \put(3,2.){\line(0,1){7.5}}\put(3,2.0)'
+         WRITE(LUN,900)'{\vector(1,0){12.0}} \end{picture}}'
+C
+         WRITE(LUN,900)'\begin{document}'
+         WRITE(LUN,900)LINE
+         WRITE(LUN,900)'\begin{tabbing}'
+      ELSE
+#if defined(ALEPH_DEC) &&  ! defined(UNIX)
+         OPEN (UNIT=LUN,STATUS='OLD',NAME='SCWEEK:TXTREE.TEX')
+#else
+#if defined(UNIX)
+         OPEN (LUN,STATUS='OLD',FILE='txtree.tex')
+#endif
+#endif
+    1    READ (LUN,900,END=2) X
+         GO TO 1
+    2    BACKSPACE LUN
+         WRITE(LUN,900)'\bigskip'
+         WRITE(LUN,900)LINE
+         WRITE(LUN,900)'\begin{tabbing}'
+      ENDIF
+  900 FORMAT(A)
+  901 FORMAT(' RUN ',I10,', EVENT ',I10,'\medskip')
+      RETURN
+      END
+      SUBROUTINE TXLINE(STR,IKOD)
+CKEY TOOLS / USER
+C-------------------------------------------------------------------------------
+C! Auxiliary to TXTREE : output a character string in the LaTex file
+C  Author   : A. Bonissent October 1992
+C If IKOD = 0, the line is actually output on the file.
+C Else, the character string is appended to the current line
+C-------------------------------------------------------------------------------
+#ifndef DOC
+      CHARACTER*132 LINE
+      CHARACTER*(*) STR
+      COMMON / TXTRLU / LUNTXT
+      DATA LN/0/
+C-------------------------------------------------------------------------------
+      LUN = LUNTXT
+      NC=LEN(STR)
+      IF (NC+LN.GT.132) THEN
+         WRITE(LUN,900)LINE(1:LN)
+         LN=0
+      ENDIF
+      NCO=NC
+      DO NL=1,NC
+        NCUR=NC+1-NL
+        IF(STR(NCUR:NCUR).NE.' ')THEN
+           NC=NCUR+1
+           IF(NC.GT.NCO)NC=NCO
+           GO TO 10
+        ENDIF
+      ENDDO
+   10 CONTINUE
+      LINE(LN+1:LN+NC)=STR
+      LN=LN+NC
+      IF(IKOD.EQ.1)THEN
+         WRITE(LUN,900)LINE(1:LN)
+         LN=0
+      ENDIF
+  900 FORMAT(1X,A)
+      RETURN
+      END
+      SUBROUTINE TXKOD(ITK,IFNUM,CODE)
+CKEY TOOLS / USER
+C-------------------------------------------------------------------------------
+C! Auxiliary to TXTREE : produce the LaTex code for ALPHA track ITK
+C  Author   : A. Bonissent October 1992
+C
+C  Input arguments :
+C    ITK   = ALPHA track number
+C    IFNUM = 1 : include the track number into the code
+C Output argument :
+C     CODE = LaTex code for track
+C            Only a few codes have been created.
+C            Others are simply the Alpha code.
+C            This could be improved.
+C-------------------------------------------------------------------------------
+#ifndef DOC
+      CHARACTER*5 COD5
+      CHARACTER*20 CODET
+      CHARACTER*(*)CODE
+#include "qcde.h"
+#include "qmacro.h"
+C-------------------------------------------------------------------------------
+      IK=IW(KOQVEC+ITK*KCQVEC+JQVEPA)
+      IF(IK.EQ.1)THEN
+         CODE='$\gamma$'
+      ELSEIF(IK.EQ.2)THEN
+         CODE='$e^{+}$'
+      ELSEIF(IK.EQ.3)THEN
+         CODE='$e^{-}$'
+      ELSEIF(IK.EQ.4)THEN
+         CODE='$\nu$'
+      ELSEIF(IK.EQ.5)THEN
+         CODE='$\mu^{+}$'
+      ELSEIF(IK.EQ.6)THEN
+         CODE='$\mu^{-}$'
+      ELSEIF(IK.EQ.7)THEN
+         CODE='$\pi^{0}$'
+      ELSEIF(IK.EQ.8)THEN
+         CODE='$\pi^{+}$'
+      ELSEIF(IK.EQ.9)THEN
+         CODE='$\pi^{-}$'
+      ELSEIF(IK.EQ.10)THEN
+         CODE='$K^{0}_{l}$'
+      ELSEIF(IK.EQ.11)THEN
+         CODE='$K^{+}$'
+      ELSEIF(IK.EQ.12)THEN
+         CODE='$K^{-}$'
+      ELSEIF(IK.EQ.13)THEN
+         CODE='$n$'
+      ELSEIF(IK.EQ.14)THEN
+         CODE='$p$'
+      ELSEIF(IK.EQ.15)THEN
+         CODE='$\bar{p}$'
+      ELSEIF(IK.EQ.16)THEN
+         CODE='$K^{0}_{s}$'
+      ELSEIF(IK.EQ.17)THEN
+         CODE='$\eta$'
+      ELSEIF(IK.EQ.18)THEN
+         CODE='$\Lambda_{0}$'
+      ELSEIF(IK.EQ.41)THEN
+         CODE='$\Lambda_{c}^{+}$'
+      ELSEIF(IK.EQ.53)THEN
+         CODE='$\bar\Lambda_{c}^{-}$'
+      ELSEIF(IK.EQ.58)THEN
+         CODE='$\nu_e$'
+      ELSEIF(IK.EQ.59)THEN
+         CODE='$\bar{\nu}_e$'
+      ELSEIF(IK.EQ.60)THEN
+         CODE='$\nu_{\mu}$'
+      ELSEIF(IK.EQ.61)THEN
+         CODE='$\bar{\nu}_{\mu}$'
+      ELSEIF(IK.EQ.62)THEN
+         CODE='$\nu_{\tau}$'
+      ELSEIF(IK.EQ.63)THEN
+         CODE='$\bar{\nu}_{\tau}$'
+      ELSEIF(IK.EQ.69)THEN
+         CODE='$\eta''$'
+      ELSEIF(IK.EQ.73)THEN
+         CODE='$J/\psi$'
+      ELSEIF(IK.EQ.74)THEN
+         CODE='$\psi''$'
+      ELSEIF(IK.EQ.76)THEN
+         CODE='$\rho^{+}$'
+      ELSEIF(IK.EQ.77)THEN
+         CODE='$\rho^{-}$'
+      ELSEIF(IK.EQ.78)THEN
+         CODE='$K^{\star +}$'
+      ELSEIF(IK.EQ.79)THEN
+         CODE='$K^{\star -}$'
+      ELSEIF(IK.EQ.80)THEN
+         CODE='$K^{\star 0}$'
+      ELSEIF(IK.EQ.81)THEN
+         CODE='$\bar{K^{\star 0}}$'
+      ELSEIF(IK.EQ.88)THEN
+         CODE='$\rho^{0}$'
+      ELSEIF(IK.EQ.90)THEN
+         CODE='$\phi$'
+      ELSEIF(IK.EQ.101)THEN
+         CODE='u'
+      ELSEIF(IK.EQ.102)THEN
+         CODE='d'
+      ELSEIF(IK.EQ.103)THEN
+         CODE='s'
+      ELSEIF(IK.EQ.104)THEN
+         CODE='c'
+      ELSEIF(IK.EQ.105)THEN
+         CODE='b'
+      ELSEIF(IK.EQ.107)THEN
+         CODE='$\bar{\rm u}$'
+      ELSEIF(IK.EQ.108)THEN
+         CODE='$\bar{\rm d}$'
+      ELSEIF(IK.EQ.109)THEN
+         CODE='$\bar{\rm s}$'
+      ELSEIF(IK.EQ.110)THEN
+         CODE='$\bar{\rm c}$'
+      ELSEIF(IK.EQ.111)THEN
+         CODE='$\bar{\rm b}$'
+      ELSEIF(IK.EQ.259)THEN
+         CODE='$\Lambda_{b}$'
+      ELSEIF(IK.EQ.260)THEN
+         CODE='$\overline{\Lambda_{b}}$'
+      ELSE
+         CODE=CQTPN(ITK)
+         NC=LEN(CODE)
+         ISBAR=0
+         IC=0
+         LAST=0
+   10    IC=IC+1
+            IF(CODE(IC:IC).NE.' ')LAST=IC
+            IF(CODE(IC:IC).EQ.'#')THEN
+               ISBAR=1
+               CODE=CODE(1:IC-1)//CODE(IC+1:NC)
+               NC=NC-1
+               IC=IC-1
+            ENDIF
+         IF(IC.LT.NC)GO TO 10
+         IF(ISBAR.EQ.1) then
+          CODET='$\overline{'//CODE(1:LAST)//'}$'
+          CODE = CODET
+         ENDIF
+      ENDIF
+      IF(IFNUM.EQ.1)THEN
+         IF(ITK.GT.999)THEN
+            COD5='(000)'
+         ELSE
+            WRITE(COD5,900)ITK
+  900       FORMAT('(',I3,')')
+         ENDIF
+         NC=LEN(CODE)
+         IC=0
+         LAST=0
+   20    IC=IC+1
+         IF (CODE(IC:IC).NE.' ') LAST=IC
+         IF (IC.LT.NC) GO TO 20
+         CODE=CODE(1:LAST)//COD5
+      ENDIF
+      RETURN
+      END
+#endif
+#endif
+#endif
+#endif
+#endif
+@
+
+
+1.4
+log
+@*** empty log message ***
+@
+text
+@d174 1
+a174 1
+         OPEN (LUN,STATUS='NEW',FILE='txtree,tex')
+@
+
+
+1.3
+log
+@alpha122_5 taken from alws
+@
+text
+@d170 1
+a170 4
+#if defined(IBM)
+         OPEN (UNIT=LUN,FILE='/TXTREE TEX A',STATUS='NEW')
+#else
+#if defined(DEC) &&  ! defined(UNIX)
+a176 1
+#endif
+d202 1
+a202 1
+
+d205 1
+a205 1
+
+d209 1
+a209 1
+
+d214 1
+a214 4
+#if defined(IBM)
+         OPEN (UNIT=LUN,FILE='/TXTREE TEX A',STATUS='OLD')
+#else
+#if defined(DEC) &&  ! defined(UNIX)
+a220 1
+#endif
+a223 3
+#if defined(IBM)
+         BACKSPACE LUN
+#endif
+a247 3
+#if defined(IBM)
+      IF (NC+LN.GT.79) THEN
+#else
+a248 1
+#endif
+@
+
+
+1.2
+log
+@update alpha122 with corr.file no.5
+@
+text
+@d173 1
+a173 1
+#if defined(ALEPH_DEC) &&  ! defined(UNIX)
+d221 1
+a221 1
+#if defined(ALEPH_DEC) &&  ! defined(UNIX)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d173 1
+a173 1
+#if defined(DEC) &&  ! defined(UNIX)
+d221 1
+a221 1
+#if defined(DEC) &&  ! defined(UNIX)
+@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

@@ -1,0 +1,125 @@
+   0,4 TEST
+   0,// ! TYPE "F10"
+   0,GT
+   0,! TEST OF WIZARDS
+   0,YX
+   0,?Z
+   0,?D
+   0,?O
+   0,TO
+   0,T0
+   0,: W1
+   0,// ! after ":command" but not mnemonic // is required
+   0,T1
+   0,: 234
+   0,T2
+   0,E0
+   0,: I1
+   0,E1
+   0,// ! TYPE T3##
+   0,E2
+   0,T0
+   0,// ! TYPE 876<CR>##
+   0,T1
+   0,T2
+   0,// ! TYPE WU##
+   0,T3
+   0,E0
+   0,?D
+   0,! CLICK IT##
+   0,FR
+   0,IF(FR),//! TYPE NUMBER##
+   0,TO=VD
+   0,// ! DUMMY 1
+   0,TO=IT
+   0,// ! DUMMY 2
+   0,! CLICK FR=x##
+   0,FR
+   0,//! TYPE NUMBER#
+   0,TO=VD
+   0,// ! DUMMY 3
+   0,TO=IT
+   0,//
+   0,cw FR DO w+ w-! select what you want, then continue wizard#
+   0,TO=VD
+   0,// ! DUMMY 8
+   0,TO=IT
+   0,// ! DUMMY 9
+   0,: WS
+   0,DO
+   0,?Z
+   0,RB ! click and rubber band##
+   0,DO
+   0,AS
+   1,Check tracking (short)
+   1,! Get V-PLOT and store it on WR#
+   1,GT
+   1,FT
+   1,: WR
+   1,//
+   1,VV
+   1,! check tracks in different V-plot regions#
+   1,RB ! define region by rubber band on WR, continue with , <CR>
+   1,ZZ
+   1,RB ! define region by rubber band on WR, continue with , <CR>
+   1,ZZ
+   9,ALPHA jets (long wizard)
+   9,! Get V-PLOT, check it on WS and store it on W5#
+   9,GT ! Click to get a processor
+   9,FT
+   9,: WS
+   9,//
+   9,VV
+   9,! Get V-PLOT, check it on WS and store it on W5
+   9,?I
+   9,C5
+   9,! get XY projection (with fish eye) and store it on W1#
+   9,GT
+   9,YX
+   9,DS=ON
+   9,DS=ON
+   9,?I
+   9,C1
+   9,! get RZ projection, define separating line and store picture on W1# 
+   9,GT
+   9,RZ
+   9,?I
+   9,C3
+   9,! draw ALPHA projection TU on WD"#
+   9,GT
+   9,AP
+   9,?P
+   9,TU
+   9,: WD
+   9,//
+   9,DO
+   9,! draw 3D picture with artificial cube#
+   9,?0
+   9,?D
+   9,AC
+   9,: W6
+   9,//
+   9,DO ! ROTATE VIA MOUSE, STOP WITH RIGHT BUTTON + <CR>#
+   9,! calculate jets and redraw all picture with jet colors#
+   9,GT
+   9,AL
+   9,: WS
+   9,//
+   9,?L
+   9,LI
+   9,?0
+   9,?A
+   9,EC
+   9,JD
+   9,?0
+   9,?J
+   9,CA
+   9,! draw jets only on W5 with artificial cube
+   9,?0
+   9,?I
+   9,G6
+   9,JE
+   9,: W5
+   9,//
+   9,DO
+ 109,GT:FT:W5:VV:GG:XY:DS:C1:GG:RZ:C3:GG:AP:TU:CD:AC:C6:GT:AL:WS:EC:JD:CA:

@@ -1,0 +1,256 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.30.07.08.46;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.35;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.36;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ cahtra.h gmacro.h lccomc.h lcnamc.h ljjpar.h siconst.h
+ sigeco.h version.h
+ itmsk1.F itmsk2.F itnois.F itres.F itxtlk.F
+ lcadc.F lcamp.F lcasig.F lcbhab.F lcbkpr.F lcdigi.F lcfral.F
+ lchit.F lcirun.F lcnami.F lcnois.F lcpad.F lcroc.F lcsamp.F
+ lcsatu.F lcshow.F lcstrt.F lctrak.F lctrdi.F lctrht.F lcwire.F
+ lcwsum.F lcwtri.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+ xtrcom.h
+@
+text
+@*DK lcnois
+      SUBROUTINE LCNOIS
+C--------------------------------------------------------------
+C! Make noise in LCal
+C. - J.Dines Hansen & P.Hansen - 860417
+C.   Modified P.Hansen - 890429
+C. - Coherent and incoherent noise in towers and wire-planes
+C.   Adds coherent and incoherent noise in towers and wires
+C.   Adds also extra smearing to DEtot/Etot from sampling fluct
+C.   Note that no noise is added to wireplanes in modules
+C.   that contains no energy to start with.
+C. - Modifies banks LTDI, LWDI and LTTR
+C. - Called by  LCDIGI                           from this .HLB
+C. - Calls      LCPAD                            from this .HLB
+C. -            LCAMP                            from this .HLB
+C. -            RANNOR                           from   CERNLIB
+C -----------------------------------------------
+#ifndef DOC
+      SAVE
+#include "jqcom.h"
+#include "lcnamc.h"
+#include "lccomc.h"
+      DIMENSION NOISE(3)
+      DIMENSION RANOI(4),CONOI(4)
+      EXTERNAL LCAMP
+#include "bmacro.h"
+C -------------------------------------------------------------
+C
+C Generate energy-dependent and coherent noise
+C independently in each module
+      DO 100 I=1,4
+        CALL RANNOR(RANOI(I),CONOI(I))
+  100 CONTINUE
+C
+C - Modify 'LWDI' bank
+      KLWDI = IW(NALWDI)
+      IF(KLWDI .LE. 0)                    GOTO 999
+C
+C - Loop over modules containing energy
+      DO 130 ILWD = 1,LROWS(KLWDI)
+         KADR = KROW(KLWDI,ILWD)
+         LAY = 0
+         DO 120 ISTOR = 1,3
+           LAYMX = LCNLAY(ISTOR)
+           DO 110 L = 1,LAYMX
+             LAY = LAY + 1
+             CALL RANNOR(RAN,DUM)
+             MODU = IW(KADR+1)
+C Coherent noise
+             NOICH  = NINT(ADCOLC*COHNLC*CONOI(MODU)/16.)
+C Energy dependent noise
+             ENE=FLOAT(IW(KADR+1+LAY))
+             IF(ENE.GT.100.) THEN
+               NOIED = NINT(ENE*
+     +                 (SCONLC+SSAMLC/SQRT(ENE*0.001))*
+     +                  RANOI(MODU))
+             ENDIF
+C Total noise
+             MVDIG = NINT(ADCOLC*WNOILC(ISTOR)*RAN)+NOICH+NOIED
+             IW(KADR+1+LAY) = IW(KADR+1+LAY)+MVDIG
+  110      CONTINUE
+  120    CONTINUE
+  130 CONTINUE
+C
+C - Coherent noise for tower storeys
+      DO 140 I=1,4
+         CALL RANNOR (CONOI(I),DUM)
+  140 CONTINUE
+C
+C - Loop only over hit pads to save time
+C ( the zero suppression will remove other signals )
+      KLTDI = IW(NALTDI)
+      IF(KLTDI.GT.0) THEN
+        DO 210 IT=1,LROWS(KLTDI)
+          IPAD=ITABL(KLTDI,IT,1)
+C         Loop over storeys
+          DO 200 ISTOR = 1,3
+            ENE = FLOAT(ITABL(KLTDI,IT,1+ISTOR))
+            CALL RANNOR(RAN,DUM)
+C Coherent noise
+            NOICH  = NINT(ADCOLC*COHNLC*CONOI(MODU))
+C Energy dependent noise
+            IF(ENE.GT.100.) THEN
+              NOIED = NINT(ENE*
+     +                (SCONLC+SSAMLC/SQRT(ENE*0.001))*RANOI(MODU))
+            ENDIF
+C Total noise
+            NOISE(ISTOR) = NINT(ADCOLC*SNOILC(ISTOR)*RAN)+NOICH+NOIED
+            IF(NOISE(ISTOR).NE.0)
+     &        CALL LCPAD(NALTDI,ISTOR,IPAD,NOISE(ISTOR))
+  200     CONTINUE
+  210   CONTINUE
+      ENDIF
+C
+C - Modify LTTR
+      KLTTR = IW(NALTTR)
+      IF(KLTTR .LE. 0)                   GOTO 999
+C
+        DO 310 ISEG = 1,LROWS(KLTTR)
+C
+C Module number
+        IF(ISEG.GE.16.AND.ISEG.LE.21) MODU = 1
+        IF(ISEG.GE.22.OR.(ISEG.GE.13.AND.ISEG.LE.15)) MODU = 2
+        IF(ISEG.GE.4.AND.ISEG.LE.9) MODU = 3
+        IF(ISEG.LE.3.OR.(ISEG.GE.10.AND.ISEG.LE.12)) MODU = 4
+C
+        KADR = KROW(KLTTR,ISEG)
+C         Loop over storeys
+          DO 320 ISTOR = 1,3
+            CALL RANNOR(RAN,DUM)
+C Coherent noise
+            NOICH  = NINT(ADCOLC*COHNLC*CONOI(MODU))
+C Total noise
+            MVDIG   = NINT(ADCOLC*TNOILC(ISTOR)*RAN)+NOICH
+            IW(KADR+ISTOR) = MAX0(0,IW(KADR+ISTOR)+MVDIG)
+  320     CONTINUE
+  310   CONTINUE
+  300 CONTINUE
+C
+  999 RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d9 1
+a9 1
+C.   Adds also a constant term to DEtot/Etot
+d17 1
+a28 5
+C - Constant contribution to sigma(E)/E
+C   (to be supplied from database)
+      SBYEW = 0.0105
+      SBYES = 0.0125
+C
+d52 6
+a57 1
+             NOIED = NINT(FLOAT(IW(KADR+1+LAY))*SBYEW*RANOI(MODU))
+d78 1
+a78 1
+            IENE = ITABL(KLTDI,IT,1+ISTOR)
+d83 4
+a86 1
+            NOIED = NINT(FLOAT(IENE)*SBYES*RANOI(MODU))
+a112 2
+C Energy dependent noise
+            NOIED = NINT(FLOAT(IW(KADR+ISTOR))*SBYES*RANOI(MODU))
+d114 1
+a114 1
+            MVDIG   = NINT(ADCOLC*TNOILC(ISTOR)*RAN)+NOICH+NOIED
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

@@ -1,0 +1,126 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.48.38;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.14;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.15;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE BKFRW(JW1,NAME,NR,JW2,ID,*)
+C
+C     COPY WORK BANK TO NAMED BANK
+C
+      INTEGER JW1(*),JW2(*),ID(*)
+      CHARACTER*4 NAME
+#include "boscom.h"
+#include "mparam.h"
+#include "param.h"
+C     ...
+      JW1(1)=0
+      JW2(1)=0
+      IF(JW2(ID(1)).LT.0) GOTO 10
+      ND2=JW2(ID(1))
+      NAMI=NAMIND(NAME)
+      IFM=0
+      IDF=IW(IDFMT+NAMI-NSYST)
+      IF(IDF.NE.0) IFM=IW(IDF+3)
+      IF(IFM.EQ.3) THEN
+         ND1=(ND2-1)/NBYTWD+1
+      ELSE IF(IFM.EQ.2) THEN
+         ND1=(ND2-1)/(NBYTWD/2)+1
+      ELSE IF(IFM.EQ.1) THEN
+         ND1=ND2
+      ELSE
+         ND1=ND2
+      END IF
+      JW1(1)=1
+      IND= MBANK(JW2,NAME,NR,ND1)
+      IF(IND.EQ.0) GOTO 20
+      JW1(IND+ND1)=0
+      IF(IFM.EQ.3) THEN
+         CALL BUN8W(JW2(ID(1)+1),1,JW1(IND+1),1,ND2)
+      ELSE IF(IFM.EQ.2) THEN
+         CALL BUN16W(JW2(ID(1)+1),1,JW1(IND+1),1,ND2)
+      ELSE IF(IFM.EQ.1) THEN
+         CALL BUN32W(JW2(ID(1)+1),1,JW1(IND+1),1,ND2)
+      ELSE
+         CALL UCOPY(JW2(ID(1)+1),JW1(IND+1),ND2)
+      END IF
+      GOTO 100
+C
+C     ERROR IN WBANK
+C
+   10 JW2(2)=0
+      JW1(2)=5
+      GOTO 30
+C
+C     INSUFFICIENT SPACE
+C
+   20 JWTWO=JW1(2)
+      JW2(2)=0
+      JW1(2)=JWTWO
+   30 JW1(IRC+JW1(2))=JW1(IRC+JW1(2))+1
+      IF(JW1(LUP).NE.0.AND.JW1(LUW).NE.0)
+     +   CALL BBRET(JW1,JW1(2),'BKFRW',NAME)
+      GOTO 101
+C
+  100 RETURN
+  101 RETURN 1
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK bkfrw
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

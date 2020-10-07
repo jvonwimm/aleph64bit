@@ -1,0 +1,198 @@
+head	1.2;
+access;
+symbols
+	alpha126_22:1.2
+	alpha122_22:1.2
+	alpha126_21:1.2
+	alpha126_20:1.2
+	alpha126_19:1.2
+	alpha126_18:1.2
+	alpha126_17:1.2
+	alpha126_16:1.2
+	alpha126_15:1.2
+	alpha126_14:1.2
+	alpha126_13:1.2
+	alpha126_12:1.2
+	alpha126_11:1.2
+	alpha126_10:1.2
+	alpha126_09:1.2
+	alpha126_08:1.2
+	alpha126_07:1.2
+	alpha126_06:1.2
+	alpha126_05:1.2
+	alpha126_04:1.2
+	alpha126_03:1.2
+	alpha126_02:1.2
+	alpha126_1:1.2
+	alpha125_17:1.2
+	alpha125_16:1.2
+	alpha125_15:1.2
+	alpha125_14:1.2
+	alpha125_13:1.2
+	alpha125_12:1.2
+	alpha125_11:1.2
+	alpha125_10:1.2
+	alpha125_09:1.2
+	alpha125_08:1.2
+	alpha125_07:1.2
+	alpha125_06:1.2
+	alpha125_05:1.2
+	alpha125_04:1.2
+	alpha125_03:1.2
+	alpha125_02:1.2
+	alpha125_01:1.2
+	alpha124_19:1.2
+	alpha125:1.2
+	alpha124_18:1.2
+	alpha124_17:1.2
+	alpha124_16:1.2
+	alpha124_15:1.2
+	alpha124_14:1.2
+	alpha124_13:1.2
+	alpha124_12:1.2
+	alpha124_11:1.2
+	alpha124_10:1.2
+	alpha124_09:1.2
+	alpha124_08:1.2
+	alpha124_07:1.2
+	alpha124_7:1.2
+	alpha124_06:1.2
+	alpha124_05:1.2
+	alpha124_04:1.2
+	alpha124_03:1.2
+	alpha124_02:1.2
+	alpha124_01:1.2
+	alpha124:1.2
+	alpha123_12:1.2
+	alpha123_11:1.2
+	alpha123_10:1.2
+	alpha123_9:1.2
+	alpha123_8:1.2
+	alpha123_7:1.2
+	alpha123_6:1.2
+	alpha123_5:1.2
+	alpha123_4:1.2
+	alpha123_3:1.2
+	alpha123_2:1.2
+	alpha123:1.2
+	alpha122_48:1.1
+	alpha122_47:1.1
+	alpha122_46:1.1
+	alpha122_45:1.1
+	alpha122_44:1.1
+	alpha122_43:1.1
+	alpha122_42:1.1
+	alpha122_41:1.1
+	alpha122_40:1.1
+	alpha122_39:1.1
+	alpha122_38:1.1
+	alpha122_37:1.1
+	alpha122_36:1.1
+	alpha122_35:1.1
+	alpha122_34:1.1
+	alpha122_33:1.1
+	alpha122_32:1.1
+	alpha122_31:1.1
+	alpha122_30:1.1
+	alpha122_29:1.1
+	alpha122_28:1.1
+	alpha122_27:1.1
+	alpha122_26:1.1
+	alpha122_25:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	98.10.01.15.05.39;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.03.06.12.45.21;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE QXTRAP(IALTK,LAY1,LAY2)
+C**********************************************************
+C
+C  Author : A. Bonissent. J. Carr, March 03 1997
+C
+C! Say if a track intersects active regions of VDET
+C
+C     IALTK = Alpha track number
+C     LAY1, LAY0 = 0 if tracks does not intersect active region
+C                  1 if tracks does intersect active region
+C
+C
+C***********************************************************
+#ifndef DOC
+C
+      IMPLICIT NONE
+      REAL BFLD
+      INTEGER IPREVNT,LAY1,LAY2,IALTK,IER,ITRK,KVTXT,NEX,IVHI
+      INTEGER IEXFLAG,IWAF,IWFF,ILAY,IPHI,IVIEW
+      INTEGER NLINK
+      SAVE IPREVNT
+      DATA IPREVNT /0/
+C
+#include "vtxtjj.h"
+#include "qdecl.h"
+#include "qcde.h"
+#include "qmacro.h"
+C
+      LAY1 = 0
+      LAY2 = 0
+      IF(KNEVT.NE.IPREVNT)THEN
+        BFLD=QMFLD
+        CALL VTRKEX(BFLD,IER)
+        IF(IER.GT.0 .AND. IER.NE.5) THEN
+           WRITE(*,'(A,3I6)') 
+     &     ' ***QXTRAP*** ERROR IN VTRKEX Run Evt Error=',
+     &       KRUN,KNEVT,IER
+        ENDIF
+        IPREVNT = KNEVT
+      ENDIF
+      ITRK = IALTK-KFCHT+1
+C     find number of intersections of track with VDET wafers
+      KVTXT=NLINK('VTXT',ITRK)
+      IF(KVTXT.GT.0) THEN
+         NEX=IW(KVTXT+LMHROW)
+C        test if extrapolation near edge of wafer in W
+C        ( takes something like 3 sigma outside physical region )
+         DO IVHI=1,NEX
+           IEXFLAG=ITABL(KVTXT,IVHI,JVTXHF)
+           IF(IAND(IEXFLAG,16).GT.0)THEN
+             IWAF = ITABL(KVTXT,IVHI,JVTXWI)
+             CALL VADEWA(IWAF, ILAY, IWFF, IPHI, IVIEW)
+             IF(ILAY.EQ.1)LAY1=1
+             IF(ILAY.EQ.2)LAY2=1
+           ENDIF
+         ENDDO
+      ENDIF
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@d34 4
+a37 2
+        IF(IER.GT.0) THEN
+           WRITE(*,*) ' ********** ERROR IN VTRKEX *******'
+@

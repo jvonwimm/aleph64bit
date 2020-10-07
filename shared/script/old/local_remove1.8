@@ -1,0 +1,148 @@
+#! /bin/csh
+#============================================================================
+#                             LOCAL_REMOVE
+#                                                       F.Ranjard 17/08/93
+#============================================================================
+# To remove from the current directory old version given by its version number 
+#============================================================================
+# P1 = ALEPH program name
+# ===========================================================================
+# alremove1.0
+# 17/08/93 remove directory src${mnemonic}${oldv}
+#          remove files *${oldv}*.*
+# alremove1.1
+# 14/09/93 write history on prog_dir/spy instead of prog_dir/alib.log
+# alremove1.2
+# 14/10/93 set echo on if last argument is "-v"
+# alremove1.3
+# 27/10/93 give the right list of existing versions
+# alremove1.4
+# 22/09/94 use $ALEPH instead of /aleph
+# alremove1.5
+# 24/10/94 remove some confusions between ref_dir and prog_dir
+#          remove files on all operating systems sharing the same file system
+# alremove1.6
+# 28/11/95 use $ALEPH_ROOT instead of /al
+# alremove1.7
+# 20/01/96 use OP_SYS to get list of operating systems
+# alremove1.8
+# 3/02/97 take release cycle # from prog_name.version file
+#============================================================================
+# set echo on if last argument is "-v"
+#============================================================================
+set exec_name = "local_remove1.8"
+set nar = $#argv
+if (nar != 0) then
+  if ($argv[${nar}] == "-v") then
+     set echo on
+     set argv[${nar}] = ""
+  endif
+endif
+#*******>
+
+if ($1 == "-h") then
+   echo ""
+   echo "usage:"
+   echo "  local_remove <prog_name>"
+   echo "  will propose a list of all version numbers avalaible on the directory"
+   echo "  on which resides prog_name"
+   echo "  the user has to choose one of them or RETURN"
+   echo ""
+   echo "example"
+   echo "  local_remove galeph"
+   echo ""
+   exit(1)
+endif
+#*******>
+unset noclobber
+set UNAME = `uname`
+set alib_dir = "${ALEPH}/script/alib.dir"
+set prog_dir = `pwd`
+set cycle = ""
+set mnemonic = ""
+#===> first parameter
+if ($1 == "") then
+  echo -n "Enter Aleph program name [eg:alephlib <CR>=exit]-> "
+   set prog_name = $<
+   if (${prog_name} == "") goto exec_end
+else
+   set prog_name = $1
+endif
+ 
+set idir = `egrep ^" ${prog_name} " ${alib_dir} | awk '{print $2}'`
+
+set mnemonic = `egrep ^" ${prog_name} " ${alib_dir} | awk '{print $3}'`
+if (${idir} == "") then
+   echo "*** WARNING not official ALEPH program"
+   goto exec_end
+else
+   set prog_dir = "${ALEPH}/${idir}"
+   set ref_dir  = "${ALEPH_ROOT}/${MASTER}/${idir}"
+   set cycle = `egrep " = " ${prog_dir}/${prog_name}.version | awk '{print $3}'`
+endif
+ 
+echo " the ${prog_name} released version has the number ${cycle} "
+
+#******> remove old version if required
+  set sys = ${OS}
+
+  cd ${ALEPH_ROOT}/${sys}/${idir}
+
+  set initial = `echo ${mnemonic} | awk '{print substr($0,1,1)}'`
+  set ls1 = `ls -d  *${mnemonic}*`
+  set ls2 = `echo ${ls1} | tr -d '[a-z][A-Z]./#_~'`
+  set ns2 = $#ls2
+#*****
+  @ i = 0
+  @ k = 0
+  foreach eli ( $ls2[*] )
+    @ i++
+    set eli = $ls2[$i]
+    if ( $eli != "" ) then
+      @ k++
+      @ j = $k
+      foreach elj ( $ls2[*] )
+        if ( $j > $i ) then
+          if ( $ls2[$j] == $eli ) then
+            set ls2[$j] = ""
+            @ ns2 = ${ns2} - 1
+          endif
+        endif
+        @ j++
+        if ($j > $ns2) goto nexti
+      end
+    endif
+nexti:
+    if ($i >= $ns2) goto end_loop
+  end
+end_loop:
+
+#***********
+  echo " The following versions are present on ${prog_dir} : ${ls2}"
+  echo -n " Do you want to remove one of them. If yes give the number [CR=no remove]-> "  
+  set oldv = $<
+  if (${oldv} != "") then
+    if (${oldv} == ${cycle}) then
+      echo " you ask to remove the released version ${mnemonic}${oldv}"
+      echo -n " please confirm yes/no [CR=no]-> "
+      set answer = $<
+      set answer = `echo ${answer} | awk '{print substr($0,1,1)}'`
+      if (${answer} != "y") goto next
+    endif   
+    rm -i ${initial}*${oldv}*.*
+    rm -i lib${mnemonic}*${oldv}*
+    rm -r src${mnemonic}${oldv}*
+    rm -i ${ref_dir}/${initial}*${oldv}*.*
+  endif
+
+#*******> spy
+  set dmyh = `date '+%d-%h-19%y %T'`
+  echo "${exec_name} ${UNAME} ${user} ${dmyh} ${prog_name} ${oldv}" >> ${ALEPH_ROOT}/${sys}/${idir}/spy
+  echo "${exec_name} ${UNAME} ${user} ${dmyh} ${prog_name} ${oldv}" >> ${ref_dir}/spy
+
+#*******> exec_end
+exec_end:
+ exit
+ 
+ 
+

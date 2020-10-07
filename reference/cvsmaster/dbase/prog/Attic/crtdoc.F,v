@@ -1,0 +1,323 @@
+head	1.2;
+access;
+symbols
+	dbase01:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.02.13.10.50.21;	author flr;	state dead;
+branches;
+next	1.1;
+
+1.1
+date	97.02.12.10.06.03;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.02.12.10.06.03;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release dbase02
+@
+text
+@      PROGRAM CRTDOC
+C----------------------------------------------------------------------
+C! create the DOCumentation files
+C!
+C!   Author   :-    F.RANJARD                   22-JAN-1990
+C!
+C!   data cards:
+C!        ******** drop existing ADAMO table from DOC file ******
+C!        ******** write new table instead **********************
+C!        * open/write existing DOCumentation file
+C!        FDOC  'DBS:ADBSCONS.TEST123 | DAF'
+C!        * open/read file containing ADAMO tables TAB and COL
+C!        FBS   'DBASE:ADBS123.FULLDAF | DAF'
+C!        * read 'TAB2' and 'COL2' create and fill 'CPRO'
+C!        BBS   'TAB2'  'COL2'  'CPRO'
+C!        * drop 'TAB2' and 'COL2' from FDOC before writing 'CPRO'
+C!        DROP
+C!        ENDQ
+C!        *******************************************************
+C!        ******* create a NEWDOC file *************************
+C!        ******* write new table onto it **********************
+C!        ******* copy all tables except ADAMO ones ************
+C!        * open/read data base file
+C!        FDBA  'DBS:ADBSDOC.DAF123'
+C!        * open/read file containing ADAMO tables TAB and COL
+C!        FBS   'DBASE:ADBS123.FULLDAF | DAF'
+C!        * read '.TAB' and '.COL' create and fill 'CADB'
+C!        BBS   '.TAB'  '.COL'  'CADB'
+C!        * drop '.TAB' and '.COL'
+C!        DROP
+C!        * open/write NEWDOCumentation file
+C!        FOUT  'DBS:NEWDOC.DAF123 | DAF'
+C!        * number of block on NEWDOC
+C!        OUTB  50
+C!        ENDQ
+C!
+C!   Libraries required: ALEPHLIB, BOS77, CERNLIB
+C!
+C!   Description
+C!   ===========
+C!  read a file containing ADAMO tables TAB and COL,
+C!  build from them a new table OUT
+C!  drop TAB and COL if it is required
+C!  write OUT onto a new file FOUT or onto an existing file FDOC
+C!  copy banks from FDBA to FOUT if required
+C!  2 input files can be read in sequence with 2 different sets of
+C!  TAB and COL tables
+C?
+C!======================================================================
+#ifndef DOC
+      CHARACTER*4 NAFILE(10),TAB,COL,OUT,TOU,CHAINT,PASSW,NAME
+      CHARACTER*40 TFIL,FTYP,FDEV,TOUT,TFULL
+      CHARACTER*120 MSG,MSGE,MSGB
+#include "lbos.h"
+#include "tdocjj.h"
+#include "tcoljj.h"
+#include "ttabjj.h"
+      DATA NAFILE / 'STC ','LTC ','DOC ','RAW ','KIN ','GAL ','JUL ',
+     &              'POT ','DST ','MDST'/
+      DATA PASSW/'ADAM'/
+#include "bmacro.h"
+C
+C ------------------------------------------------------------------
+C
+C - Initialize BOS
+       CALL BNAMES (NAMAX)
+       CALL BOS (IW,LBOS)
+       IW(5) = 7
+       IW(7) = 100000
+       IBLANK = INTCHA('    ')
+C
+C - Read data card file
+       CALL BREADC
+C
+C - open existing ADBSDOC.DAF in write mode and get TDOC bank
+C
+       CALL ACDARG ('FDOC','DAF','*',TFIL,FTYP,FDEV,IER)
+       IF (IER.NE.0) THEN
+          JTDOC = 0
+          LUDOC = NUNIDO(99)
+       ELSE
+          LUDOC = NUNIDO(14)
+          LUDOC = JUNIDO(0)
+          IRECL = JULREC(FTYP,FDEV)
+#if defined(ALEPH_DEC) &&  ! defined(UNIX)
+C         open the DAF in write mode
+          CLOSE(LUDOC)
+          OPEN(LUDOC,STATUS='OLD',NAME=TFIL,ACCESS='DIRECT',RECL=IRECL,
+     +      SHARED,ERR=90)
+#endif
+         IW(1)=3
+         CALL BDABF(LUDOC,IRECL,'    ',PASSW)
+         IBF = NLINK ('+BUF',LUDOC)
+         IF (IBF.EQ.0) THEN
+            WRITE(IW(6),*) ' Programming error:',
+     &                     ' bank +BUF does not exist'
+            GOTO 90
+         ENDIF
+         JTDOC = MDARD (IW,LUDOC,'TDOC',0)
+         GOTO 20
+ 90      JTDOC = 0
+         LUDOC = NUNIDB(99)
+      ENDIF
+ 20   CONTINUE
+C
+C - open existing DOC.DAF in read mode
+C
+       TFULL = '    '
+       LUFUL = NUNIDB(15)
+       LUFUL = JUNIDB(0)
+       CALL AOPDBS (TFULL,IER)
+       IF (IER.NE.0) THEN
+          CALL AWERRC(IW(6),'CRTDOC',TFULL,IER)
+       ENDIF
+       JTDOC = MDARD (IW,LUFUL,'TDOC',0)
+C
+C - open new OUT.DAF in write mode
+C
+C     OUTfile name
+      LUOUT = 22
+      CALL ACDARG ('FOUT','DAF','*',TOUT,FTYP,FDEV,IER)
+      IF(IER.GT.0) THEN
+         CALL AWERRC (IW(6),'CRTDOC',TOUT,IER)
+      ENDIF
+C     number of blocks for OUT file
+      JOUTB = NLINK ('OUTB',0)
+      IF (JOUTB.GT.0) NBOUT = IW(JOUTB+1)
+      IF (IER.NE.0 .OR. NBOUT.EQ.0) LUOUT = 0
+C
+C Create OUT DAF on unit LUOUT=22
+C
+      IF (LUOUT .NE. 0) THEN
+         LUN  = LUOUT
+         NREC = NBOUT
+         TFIL = TOUT
+         IRECL=JULREC(FTYP,FDEV)
+#include "erase.h"
+#include "owdaf.h"
+      ENDIF
+C
+C - create TDOC bank if not there
+C
+       IF (JTDOC.EQ.0) THEN
+         CALL AUBOS ('TDOC',0,LMHLEN+NAMAX*LTDOCA,JTDOC,IGARB)
+         IF (JTDOC.EQ.0) THEN
+            WRITE (IW(6),*)
+     &      ' Programming error: not enough space for TDOC ',
+     &      NAMAX,LTDOCA
+            STOP
+         ELSE
+           CALL BKFMT ('TDOC','2I,(A)')
+           IW(JTDOC+LMHCOL)=LTDOCA
+           IW(JTDOC+LMHROW)=1
+           KTDOC = JTDOC+LMHLEN
+           CALL UFILL(IW(KTDOC+1),1,LTDOCA,IBLANK)
+           IW(KTDOC+JTDONA) = INTCHA('TDOC')
+           IW(KTDOC+JTDOUN) = INTCHA('DOC ')
+           IW(KTDOC+JTDONC) = LTDOCA
+           IW(KTDOC+JTDOBF) = INTCHA('2I,(')
+           IW(KTDOC+JTDOBF+1) = INTCHA('A)  ')
+         ENDIF
+       ENDIF
+C
+C - define formats
+       CALL BKFMT ('.Tab','2I,(I,4A,I)')
+       CALL BKFMT ('.Col','2I,(I,7A,3I)')
+       CALL BKFMT ('.TAB','2I,(I,4A)')
+       CALL BKFMT ('TAB2','2I,(I,4A)')
+       CALL BKFMT ('.COL','2I,(I,7A,I)')
+       CALL BKFMT ('COL2','2I,(I,7A,I)')
+C
+C - Open and read .BS files, write OUT bank
+       NRBS = -1
+ 10    NRBS = NRBS+1
+       JBBS = NLINK('BBS ',NRBS)
+       IF (JBBS.EQ.0) THEN
+          WRITE(IW(6),*) ' ***no more data card*** BBS nr= ',NRBS
+       ELSE
+          TAB = CHAINT(IW(JBBS+1))
+          COL = CHAINT(IW(JBBS+2))
+          OUT = CHAINT(IW(JBBS+3))
+          TOU = 'T'//OUT(2:4)
+          LUBS= 1
+          CALL READBS ('FBS ',LUBS,TAB,COL,OUT)
+C
+C         add OUT format into TDOC
+          IF (JTDOC.NE.0) THEN
+             LC = LCOLS(JTDOC)
+             LR = LROWS(JTDOC)
+             IROW = LOCTAB(IW(JTDOC+LMHLEN+1),LC,LR,JTDONA,OUT)
+             IF (IROW.LE.0) THEN
+                IF (LFRROW(JTDOC).LT.2) THEN
+                   NW = IW(JTDOC)+4*LCOLS(JTDOC)
+                   CALL AUBOS ('TDOC',0,NW,JTDOC,IGARB)
+                   IF (JTDOC.EQ.0) GOTO 11
+                ENDIF
+                KTDOC = KNEXT(JTDOC)
+                CALL UFILL(IW(KTDOC+1),1,LTDOCA,IBLANK)
+                IW(KTDOC+JTDONA) = INTCHA(OUT)
+                IW(KTDOC+JTDOUN) = INTCHA('DOC ')
+                IW(KTDOC+JTDONC) = LTCOLA
+                IW(KTDOC+JTDOBF) = INTCHA('2I,(')
+                IW(KTDOC+JTDOBF+1) = INTCHA('5A,I')
+                IW(KTDOC+JTDOBF+2) = INTCHA(',2A)')
+                IW(JTDOC+LMHROW) = LROWS(JTDOC)+1
+                KTDOC = KNEXT(JTDOC)
+                CALL UFILL(IW(KTDOC+1),1,LTDOCA,IBLANK)
+                IW(KTDOC+JTDONA) = INTCHA(TOU)
+                IW(KTDOC+JTDOUN) = INTCHA('DOC ')
+                IW(KTDOC+JTDONC) = LTTABA
+                IW(KTDOC+JTDOBF) = INTCHA('2I,(')
+                IW(KTDOC+JTDOBF+1) = INTCHA('A,I)')
+                IW(JTDOC+LMHROW) = LROWS(JTDOC)+1
+              ENDIF
+           ENDIF
+ 11       CONTINUE
+C
+C         write OUT onto LUDOC if it is required
+          IF (LUDOC.GT.0.AND.LUDOC.LT.99) THEN
+             JDROP = NLINK('DROP',NRBS)
+             JOUT  = NLINK (OUT,0)
+             IF (JDROP.NE.0 .AND. JOUT.NE.0) THEN
+                NRTAB = NDANR(LUDOC,TAB,'GE',-1)
+                CALL BDADR(LUDOC,TAB,NRTAB)
+                NRCOL = NDANR(LUDOC,COL,'GE',-1)
+                CALL BDADR(LUDOC,COL,NRCOL)
+             ENDIF
+             CALL BDAWR(IW,LUDOC,OUT,0)
+             CALL BDAWR(IW,LUDOC,TOU,0)
+          ENDIF
+C
+C         write OUT onto OUT.DAF if required
+          IF (LUOUT.GT.0.AND.LUOUT.LT.99) THEN
+             CALL BDAWR(IW,LUOUT,OUT,0)
+             CALL BDAWR(IW,LUOUT,TOU,0)
+C            copy all banks except TAB and COL
+  200        JNAME = MDARS (IW,LUFUL)
+             IF (IW(2) .NE. 0) GOTO 10
+             IF (JNAME .EQ. 0) THEN
+                WRITE (IW(6),*) ' not enough space, skip it '
+                GOTO 200
+             ENDIF
+             NAME = CHAINT (IW(JNAME-3))
+             NR = IW(JNAME-2)
+             IF (NAME.EQ.TAB) GOTO 200
+             IF (NAME.EQ.COL) GOTO 200
+             CALL BDAWR(IW,LUOUT,NAME,NR)
+             IDRP = MDROP(IW,NAME,NR)
+             IF ((IW(16)-IW(15)).LT.5000) CALL BGARB(IW)
+             GOTO 200
+          ENDIF
+          GOTO 10
+       ENDIF
+       CALL SORTIQ(IW(JTDOC+LMHLEN+1),LCOLS(JTDOC),LROWS(JTDOC),JTDONA)
+       CALL AUBPRS('TDOC')
+C
+ 997   CONTINUE
+       IF (LUDOC.GT.0 .AND. LUDOC.LT.99) THEN
+          CALL BDAWR(IW,LUDOC,'TDOC',0)
+          CALL BDAPR(LUDOC,'    ')
+       ENDIF
+       IF (LUOUT.GT.0 .AND. LUOUT.LT.99) THEN
+          CALL BDAWR(IW,LUOUT,'TDOC',0)
+          CALL BDAPR(LUOUT,'    ')
+       ENDIF
+C
+       CALL BOSIO
+       CALL BOSTA
+       STOP
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@@
+
+
+1.1.1.1
+log
+@1st release of dbase library
+@
+text
+@@

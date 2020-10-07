@@ -1,0 +1,294 @@
+KCAR 0 / $TEXT
+POFF
+*     run #     run's title
+RUN   231     'HERWIG 5.9 IPROC=200'
+*    first event  last event   accepted
+TRIG     1  100
+*    unit # / first event   last event to debug
+DEBU  6     /   1           6
+*FILO '/aleph/scweek/ast/herwig200c.EPIO'
+*HSTO 'WEEK:HERWIGQPM.HIS'
+RMAR 629  21
+*RMAR 345  27204
+*  vertex smearing  x        y        z  (1997 values)
+SVRT              0.0140  0.0005    0.79
+*
+* D a t a  c a r d s  f o r  H E R W I G
+*
+* data card GENE for HERWIG steering parameters
+* EBEAM - beam energy
+* IPROC - HERWIG process identifier
+*         100 = q qbar (all flavours mixed, default)
+*         110 = q qbar gluon (all flavours mixed)
+*         100+IF = q qbar       with IF = 1 2 3 4 5 6
+*         110+IF = q qbar gluon with IF = 1 2 3 4 5 6
+*                                         d u s c b t
+*         107 = gluon gluon (gluon)
+*         127 = gluon gluon
+*         200 = W+ W-
+*         250 = Z  Z
+*         300 = Z  H    (see Herwig documentation for H decay options)
+*         400 = nu nu H (                  "                         )
+*         550 = photon W  (see Herwig documentation for options)
+*       gamma - gamma options, see Herwig documentation for more details
+*         500 =  QPM
+*         1500 = double resolved
+*         5000 = single resolved
+*         8000 = VDM
+*         9000 = with DIS for tagging
+*         9100 =        "
+*        10000 + removes soft underlying event
+* IPRINT - HERWIG print level
+*         0 = Print program title only
+*         1 = Print selected input parameters (default)
+*         2 = 1  and table of particle codes and properties
+*         3 = 2  and tables of Sudakov form factors
+* IHARD - 0 = initial process simulated by HERWIG (default)
+*         3 = initial process simulated by DYMU3
+* IPPART    = switch ON/OFF to print PART bank
+* MAXER     = maximum error count above error code 100 for gamma gamma proc
+*     EBEAM    IPROC    IPRINT    IHARD  IPPART MAXER
+GHRW  91.5     100      1         0      0      400
+*
+* data card GGSW for redefinition of standard model parameters
+* QCDLAM - lambda-qcd                           (default 0.18 gev)
+*      fitted as 0.179 by GR for 5.9 (0.181 as of 22.4.98)
+*      reset as 0.164  Isotropic    (fitted by Gerald Rudolph for 5.6)
+*      reset as 0.170  Anisotropic  (fitted by Gerald Rudolph for 5.6)
+* NFLAV - number of flavours                    (default 6)
+* DMZ - width of the Z0 in GeV                  (default  2.56 Gev)
+*                                          (e-w fit 1997  2.4948 GeV)
+* SWEIN - sin**2 of Weinberg angle              (default 0.2293)
+*                                          (e-w fit 1997  0.23196)
+* SCABI - sin**2 of Cabibbo angle               (default 0.0488)
+*     QCDLAM   NFLAV   DMZ   SWEIN   SCABI
+GGSW    0.181    5     2.50  0.2319  0.0488 
+*
+* data card GBFR for setting up of different fragmentation parameters
+* for light udsc and heavy b quarks ( PSPB instead of PSPLT, CLSMR=0.)
+* it overwrites values possibly setup by other data cards and reset possible
+* modification of quark masses through GMAS cards !!!
+* QCDLAM - lambda-qcd                           
+* CLMAX   - Maximum cluster mass parameter 
+* CLSMR   - Gaussian smearing of direction of the perturbative quark's 
+*           momentum.
+* PSPLT   - specifies the mass spectrum if clusters split up
+*           (default = 1.). The masses of the two new clusters
+*            are generated uniformly in Mass**PSPLT.
+* PSPB    - equivalent of PSPLT for b quarks
+* DECWT   - Weight used in cluster decays
+* GLUMA   - gluon mass
+* PRECO   - color reconnection proba
+* VMIN2   - scale for partons reconnection
+*     QCDLAM CLMAX CLSMR PSPLT PSPB  DECWT GLUMA  PRECO VMIN2
+GBFR  0.189  3.41  0.60  0.945 0.334 0.68  0.778  0.     0.1
+*GBFR 0.187  3.40  0.66  0.886 0.320 0.70  0.793  0.111  0.1 !  new after fix
+* data card GMLT to control lifetimes and decay
+* PLTCUT  - particles with lifetime greater than this are set stable
+* MAXDKL  - veto decays outside a given cylinder (default = 1 TRUE)
+* PRVTX   - print vertex information (default = 0 FALSE)
+*       PLTCUT  MAXDKL  PRVTX
+GMLT    1.E-8     0      1
+* data card GBMI to control B mixing
+* MIXING  - allows B meson oscillation (default = 1 TRUE)
+* XMIX  1 - Bs mass difference/average width (default = 10.0)
+*       2 - Bd mass difference/average width (default =  0.7)
+* YMIX  1 - Bs width difference/average width (default = 0.2)
+*       2 - Bd width difference/average width (default = 0.0)
+*        MIXING       XMIX         YMIX
+GBMI       1       10.0  0.7     0.2  0.0
+* data card GBDE for controlling B cluster hadronization
+* B1LIM   - controls the probability of decaying into 1
+*           or more B hadrons (default = 0.)
+* BDECAY  - B decay package used, can be HERWig(1),
+*           EUROdec(2) or CLEO(3)   (default = 'HERW')
+*           B1LIM  BDECAY
+GBDE        0.0    'HERW'
+*
+* data card GPAR for redefinition of HERWIG parameters
+* CLMAX   - Maximum cluster mass parameter (default = 3.35)
+*      tuned as 3.04 by GR for 5.9 (2.99 as of 22.4.98)
+*      reset as 3.42 Isotropic     (Fitted by Gerald Rudolph for 5.6)
+*      reset as 3.45 Anisotropic   (Fitted by Gerald Rudolph for 5.6)
+*           The maximum allowed mass of a cluster made from
+*           quarks i and j is determined as follows:
+*           Mass**CLPOW < CLMAX**CLPOW + (RMASS(i)+RMASS(j))**CLPOW
+* CLPOW     Defined above (Default = 2.)
+* PSPLT   - specifies the mass spectrum if clusters split up
+*           (default = 1.). The masses of the two new clusters
+*            are generated uniformly in Mass**PSPLT.
+* THMAX   - maximum thrust in hard subprocess e+e- --> qqbar g
+*           (default = 0.9)
+* VQCUT   - Quark virtuality cutoff (added to quark masses in parton
+*           showers), (default = 0.48). It is needed if the quark
+*           effective masses become small to avoid divergences in
+*           parton showers. The condition is
+*           1/Q(i) + 1/Q(j) < 1/QCDLAM for all i and j,
+*           where Q(i) = RMASS(i) + VQCUT.
+* VGCUT   - Gluon virtuality cutoff (added to effective mass in parton
+*           showers), (default = 0.10), analog to VQCUT.
+* QDIQK   - Maximum scale for gluon ---> diquarks (default = 0.0)
+*           QDIQK greater than twice the lightest diquark mass
+*           enables gluons to split non-pertubatively into diquarks
+*           as well as quarks.
+* PDIQK   - Gluon --> diquarks rate parameter (default = 5.0)
+*           The probability of the splitting is PDIQK*dQ/Q for
+*           scales Q below QDIQK.
+* REMOPT  - Set to zero to get old cluster treatment (default = 1)
+*       CLMAX CLPOW PSPLT THMAX VQCUT VGCUT QDIQK PDIQK REMOPT
+GPRM     2.99  2.    1.   0.9   0.48  0.10    0.    5.    1
+*
+* DATA CARD GHRC FOR CONTROLLING FURTHER OPTIONS
+* AZSOFT  - Soft gluon azimuthal correlations
+*           0./1. = off/on (default = 1.)
+* AZSPIN  - Gluon spin azimuthal correlations
+*           0./1. = off/on (default = 1.)
+* CLDIR   - Decay of perturbative clusters, 0 = isotropic,
+*           1 (default) = along quark direction
+* CLSMR   - If CLDIR = 1 Gaussian smearing of direction of the
+*           perturbative quark's momentum. (default = 0.)
+*           tuned as 0.404 by GR for 5.9 (reset to .423 as of 22.4.98)
+* BTCLM   - to adjust mass parameter in remnant formations
+*           (default = 1.)
+* ETAMIX  - etaprime/eta mixing angle in degrees (default = -20.)
+*           changed to +70 as the phase definition was 90 deg shifted
+* PRSOF   - fraction of events with underlying soft processes
+*           (default = 1.)
+*
+*       AZSOFT AZSPIN CLDIR CLSMR BTCLM ETAMIX PRSOF
+GHRC      1.     1.    1    0.423    1.    70.   1.
+*
+* data card GFSR for controlling photon emission off quarks
+* VPCUT   - for photon emission, analogous to VQCUT.
+*           (default = 0.4)
+* ALPFAC  - Multiplication for alpha-em to enhance FSR.
+*           (default = 1., should not be increased above 5.)
+*     VPCUT  ALPFAC
+GFSR    0.4     1.
+* data card GISR for controlling initial state radiation
+* TMNISR  - Minimum shat/s
+*           (default = 0.0001)
+* ZMXISR  - Maximum, set to 0. to turn ISR off
+*           (default = 0.999999)
+* COLISR  - set to 1 to make ISR photons collinear with beams
+*           (default = 0)
+*      TMNISR   ZMXISR   COLISR
+GISR   0.0001  0.999999    0
+*
+* data card GCLR to control colour rearrangement
+* CLRECO  - Include colour rearrangement (default = 0 , FALSE)
+* PRECO   - Probability for rearrangement (default = 0.111)
+*           (QCD tunings by GR indicated all done with PRECO = 0.)
+* EXAG    - Lifetime scaling for weak bosons (default = 1.)
+*      CLRECO   PRECO     EXAG
+GCLR     0      0.0000     1.
+*
+* data card GSUD for controlling Sudakov form factors.
+* SUDORD  - If =1 (default) the 2-loop alphas is incorporated using
+*           the veto algorithm, if =2 no vetoes are used.
+* LWSUD   - Unit to write calculated form factors to.
+*           (default = 0, they are not written out)
+* LRSUD   - Unit to read calculated form factors from.
+*           (default = 0, they are not read in)
+*     SUDORD  LWSUD LRSUD
+GSUD    1       0     0
+*
+* data card GPOL for controlling beam polarization
+*           Fraction of transverse and longitudinal beam
+*           polarizations (default all 0.)
+*      e-   TR1     TR2     LONG    e+   TR1    TR2     LONG
+GPOL         0.      0.      0.          0.     0.       0.
+*
+* data card GHMB specifying W and Z decay options
+* (defaults = 0 all modes allowed) through array MODBOS
+GHMB   0 0 0 0 0
+*
+* data card GHWT for additional tuning options
+* (defaults = 1.)
+*     SNGWT DECWT VECWT TENWT       PWT i=1,7
+GHWT    1.    1.    1.    1.    1. 1. 1. 1. 1. 1. 1.
+*
+* data card GMAS for redefinition of particle masses
+* IPART - HERWIG particle code
+* XMAS - mass value defined by user
+* GMAS IPART / XMAS   will set RMASS(IPART) = XMAS
+* some examples:
+GMAS  1  /  0.320 !  set light quark masses
+GMAS  2  /  0.320
+GMAS  6  /  175.6 !  sets top mass
+*GMAS  13 / 0.645 ! sets gluon effective mass (default = 0.75) GR for 5.9
+GMAS  198 /  80.35
+GMAS  199 /  80.35    sets W+ W- masses to 80.35 GeV
+GMAS  200 / 91.1   sets Z0 mass to 91.1 GeV  (e-w fit 1997 91.1882 GeV)
+GMAS  201 / 150.   sets Higgs mass to 150. GeV (e-w fit 1997 115.0 GeV)
+END$
+ENDQ
+*
+* example cards for GG physics.
+*
+*
+* data card GGQPM more especially for QPM processes
+* EMMIN/MAX   Min/max mass (W)    (defaults 10.  1.E8 )
+* PTMIN/MAX   Min/max pt of hadron jet (defaults 10.  1.E8)
+* CTMAX       Angular cut for WW (default = 0.9999)
+*     EMMIN EMMAX PTMIN PTMAX CTMAX
+GQPM   2.0 100.0   1.   50.   1.
+*
+* Data card GGGEN for Equivalent Photon or WW Approximations,
+* use for antitage.
+* Q2WWMN/MX    Min/max Q**2 in EPA (defaults 0.0   4.0)
+*                BJORKEN-Y (energy fraction) in DIS
+* YWWMIN/MAX for the 'on-shell' photon WW approx
+* YBMIN/MAX for the virtual photon  EPA
+* defaults 0. and 1.
+*     Q2WWMN  Q2WWMX YBMIN YBMAX  YWWMIN  YWWMAX 
+GGEN    0.0     10.   0.    1.0    0.0     1.0 
+*
+* data card GGQ2 limiting Q**2 and hadronic mass, 
+* parameters for the tagging electron.
+* WHMIN minimum allowd hadronic mass (default 0.) 
+* Q2MIN/MAX in deep inelastic  defaults (0.   s )
+* PHOMAS damp structure functions  for off shell photons 
+* (default 0. no damping)
+* ISPAC  change meaning of QSPAC
+* QSPAC  sets scale of structure functions of incoming hadrons
+*    WHMIN  Q2MIN   Q2MAX   PHOMAS ISPAC QSPAC
+GGQ2  3.0    10.    7000.    0.5     2    1.0
+*
+* Tag cuts (AMCSEL)
+*       no. of tags   THETAmin   THETAmax
+GCUT        0          0.100       3.142
+*  Min tag energy
+ETAG   20.
+*   Min no tracks with abs(costheta) greater than (rad)
+TKCU    2                       0.001
+*
+* Choose PDF for each beam. (1-8) as follows 
+*     'DOph','DG','LAC','GS','GRVph','ACF','WHIT','SaSph'
+* with various sets
+*          BEAM 1       BEAM 2
+*        CALC SET       CALC SET
+GPDF      8    1          8   1
+*                                 
+* data card GSTA to set particles stable/unstable
+* IPART - HERWIG particle code
+*
+* GSTA  IPART / 'OFF' ! will set particle IPART stable
+* example:
+* GSTA    21 / 'OFF'  ! makes pi0 stable inside HERWIG
+* the following are tracked by GEANT and set stable internally,
+* uncomment them to let HERWIG decay them.
+* GSTA 60 / 'ON'        ! K0 Short
+* GSTA 78 / 'ON'        ! Lambda
+* GSTA 86 / 'ON'        ! Sigma+
+* GSTA 81 / 'ON'        ! Sigma-
+* GSTA 88 / 'ON'        ! XI0
+* GSTA 83 / 'ON'        ! XI-
+* GSTA 90 / 'ON'        ! Omega-
+* GSTA 96 / 'ON'        ! LambdaBar
+* GSTA 104 / 'ON'       ! SigmaBar-
+* GSTA 99 / 'ON'        ! SigmaBar+
+* GSTA 106 / 'ON'       ! XIbar0
+* GSTA 101 / 'ON'       ! XIbar+
+* GSTA 108 / 'ON'       ! OmegaBar+
+END$

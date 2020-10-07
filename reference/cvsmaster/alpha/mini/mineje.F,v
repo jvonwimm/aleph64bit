@@ -1,0 +1,136 @@
+head	1.1;
+access;
+symbols
+	alpha126_22:1.1
+	alpha122_22:1.1
+	alpha126_21:1.1
+	alpha126_20:1.1
+	alpha126_19:1.1
+	alpha126_18:1.1
+	alpha126_17:1.1
+	alpha126_16:1.1
+	alpha126_15:1.1
+	alpha126_14:1.1
+	alpha126_13:1.1
+	alpha126_12:1.1
+	alpha126_11:1.1
+	alpha126_10:1.1
+	alpha126_09:1.1
+	alpha126_08:1.1
+	alpha126_07:1.1
+	alpha126_06:1.1
+	alpha126_05:1.1
+	alpha126_04:1.1
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	99.03.22.14.06.56;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE MINEJE
+C
+CKEY MDST /USER
+C-----------------------------------------------------------------------
+C! Fill EJET bank from DJET.
+C
+C     Author: Stephen Haywood      05-Feb-91
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+#include "djetjj.h"
+#include "ejetjj.h"
+#include "minfac.h"
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+C++   Loop over different energy flow algorithms.
+C
+      DO 1000 IBNK=0,3
+C
+      KDJET = NLINK('DJET',IBNK)
+      IF(KDJET.LE.0) GOTO 1000
+C
+C++   Create EJET bank.
+C
+      NEJET = LROWS(KDJET)
+      IF(NEJET.LE.0) GOTO 1000
+      LEN = LMHLEN + LEJETA * NEJET
+      CALL AUBOS('EJET',IBNK,LEN, KEJET,IGARB)
+      CALL BLIST(IW,'S+','EJET')
+      IF(IGARB.GE.2) THEN
+         RETURN
+      ELSE IF(IGARB.NE.0) THEN
+         KDJET = NLINK('DJET',IBNK)
+      ENDIF
+      IW(KEJET+LMHCOL) = LEJETA
+      IW(KEJET+LMHROW) = NEJET
+C
+C++   Fill EJET bank.
+C
+      DO 100 I=1,NEJET
+         RW(KROW(KEJET,I)+JEJEPX) = FLOAT(ITABL(KDJET,I,JDJEPX))/EFACTM
+         RW(KROW(KEJET,I)+JEJEPY) = FLOAT(ITABL(KDJET,I,JDJEPY))/EFACTM
+         RW(KROW(KEJET,I)+JEJEPZ) = FLOAT(ITABL(KDJET,I,JDJEPZ))/EFACTM
+         RW(KROW(KEJET,I)+JEJEPE) = FLOAT(ITABL(KDJET,I,JDJEE0))/EFACTM
+  100 CONTINUE
+C
+ 1000 CONTINUE
+C
+      RETURN
+      END
+#endif
+@

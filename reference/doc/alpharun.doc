@@ -1,0 +1,278 @@
+			Documentation for ALPHARUN
+			==========================
+
+
+	ALPHARUN is an executable to run alpha with your own fortran or C
+files and your own cards file. It can be used to submit your alpha job.
+
+
+
+***************
+* Version 9.0 *
+***************
+With this version, you have three ways to use ALPHARUN.
+
+ALPHARUN as on VAX
+------------------
+You run ALPHARUN without any options, and you answer to the questions.
+You can have several fortran files or C files (you give all the name
+on one line separate by a space).
+
+(e.g. : alpharun
+
+     ***********************************************
+     ***********      ALPHA JOB    9.0  ************
+     ***********************************************
+     *     this version will not use historian     *
+     ***********************************************
+
+ With this job, you can run ALPHA with your own FORTRAN and/or C code,
+ and your own CARDS.
+ You run this job with the current version of ALPHA and the current
+ version of all the libraries.
+
+ CR : Carriage Return
+ When you press the key RETURN, you select what is between the brackets
+ (the default), else you type the name of your file.
+
+ If you do not want to specify an option, you must put one BLANK
+
+
+Enter the name for the binary  [CR = ]
+(e.g. : /users/username/myexec)  : myexample
+
+Enter the number for the version of alpha [CR = 122]
+(e.g. : 114)  : 122
+
+Enter the name of the fortran file(s) [CR = myexample.f, SPACE = nothing]
+(e.g. : /users/username/myprog.f) : 
+
+Enter the name of the C file(s) [CR = myexample.c, SPACE = nothing]
+(e.g. : /users/username/myprog.c) :  
+
+Enter the name of the obj file(s) [CR = myexample.o, SPACE = nothing]
+(e.g. : /users/username/my_obj.o) : 
+
+Enter the path where you find your include file(s) [CR = , SPACE = nothing]
+(e.g. : /users/username/) : 
+
+ Link to JULIA (Y or N) [CR = y] : 
+
+Do you want to use PVM [CR = n] : 
+
+
+       *****************************************
+       ***  Cards in the current directory   ***
+       *****************************************
+neu.cards
+
+ Enter the name of the alpha cards [CR = /aleph/phy/alpha.cards]:
+
+ Do you want to use the debug mode (y/n)? [CR = n]
+(only your fortran and the alpha package will be in the debug mode)
+(e.g. : n)  :
+
+ Do you want to submit your job (y/n)? [CR = y]
+(e.g. : n)  : y
+
+ Enter the time limit [CR = 10000]: 
+
+ Enter the machine where to submit [CR = shift9]  Your choice : shift9, saga or afal18 etc: 
+
+
+
+alpha version   = 115
+historian used  = y
+fortran file(s) =
+c       file(s) =
+obj     file(s) =
+card    file    = /aleph/phy/alpha.cards
+julia           = n
+enfl            = n
+qiptag          = n
+Debug mode      = n
+exec    name    = alpt
+
+
+ Are these options correct (y/n)? : y
+
+Save these options in [CR = /u3/xu/closier/test/alpha.opt]
+(e.g. : /users/username/my_alpha.opt) :
+
+If you want to sbmit your job you get the following instruction.
+  Inputs OK.
+ Do you really want to submit the job (y/n)? n
+ 
+ The /u3/xu/closier/dev/jojo.job has been kept and you can use it for the next time
+
+If you don't want to submit your job you get this.
+
+Do you want to create the binary and run it with these options (y/n)? : n
+ Do you want to create the binary  with these options (y/n)? : n
+
+   **************************************************************
+   ***    Compilation  and creation of the makefile alpha.mk  ***
+   **************************************************************
+f77 -w -o myexample  /aleph/phy/qmain.o /aleph/phy/qusig.o  /aleph/phy/alenflw.o -I/al/reference/cvs/inc -I/al/reference/cvs/alpha122/inc  -Wl,-u,ftrack_,-u,hmfind_,-u,mpredg_,-u,mpredm_,-u,muass_ -Wl,-u,aboldr_,-u,babend_,-u,dafrds_ -L/aleph/lib -L/aleph/phy  -lalpha122 -lmini101 -ljulia -lalephlib -lbos77   `cernlib  mathlib packlib shift`
+
+   ********************
+   ***  Execution   ***
+   ********************
+...
+
+Do you want to keep the executable (y/n)? :n
+
+
+
+
+
+ALPHARUN with UNIX style
+------------------------
+You run ALPHARUN with some options. These options are -help, -f, -F, -o
+-b, -t, -m, -p, -c, -C, -g, -h, -v, -r, -s, -e, -j, and <exec_name>
+
+Description of each option :
+-help : give the way how to use ALPHARUN
+
+(e.g. : alpharun -help
+Usage : -help 
+      : [-f fortran_file] [-c c_file] [-C card_file] [-g] [-j]
+        [-v version] [-o obj_file] [-s file_opt] [-p] [-r]
+        [-I include_path] [-m machine] [-t time_limit] <binary_name> 
+      : [-b] -F filename 
+ 
+Where: 
+     -help                   get this help
+     -(f)<string>            expected fortran file  (my_fortran.f)
+     -(c)<string>            expected C file  (my_cfile.c)
+     -(o)<string>            expected object file  (my_objfile.o)
+     -(C)ards<string>        expected card file  (my_cards.cards)
+     -debu(g)                the debug options are used to compile
+     -(j)ulia                julia is used
+     -(I)nclude<string>      expected include path
+     -(b)atch                to run in batch
+     -(m)achine<string>      machine where you will submit your job
+     -(t)ime limit<number>   time limit of your job
+     -(p)vm                  PVM is used
+     -(v)<number>            version of alpha
+     -(s)ave<string>         expected name of the file to save the options
+     -(r)un                  runs the binary after creating it
+     <binary_name>             expected name for the binary
+     -(F)ile<string>         expected filename which contains alpha options
+
+
+-f : With this option, you must give the name of your fortran file
+     that you want to use.
+     This option can be forgotten.
+     If you want to put two fortran files, you must give two times the
+     option -f with the right file.
+
+(e.g. : alpharun -f my_file1.f -f my_file2.f my_exec
+alpharun will create my_exec with the fortran file my_file.f.)
+
+-c : With this option, you must give the name of your C file that you
+     want to use.
+     This option can be forgotten.
+     If you want to put two C files, you must give two times the
+     option -c with the right file.
+
+(e.g. : alpharun -c my_file.c my_exec
+alpharun will create my_exec with the C file my_file.c.)
+
+-g : With this option, your own code and the alpha package will be
+     compiled with the debug option.
+
+-o : With this option, you must give the name of your object file that you
+     want to use.
+     This option can be forgotten.
+
+(e.g. : alpharun -o my_obj.o my_exec
+alpharun will create my_exec with the object file my_obj.o.)
+
+
+-C : With this option, you must give the name of your cards file that
+     you want to use.
+     This option can be forgotten and the default is the value of the
+     environment variable ALPHACARDS.
+
+(e.g. : alpharun -C my_cards.cards my_exec)
+
+
+-j : If this option is given, it means that you want to use JULIA library
+
+(e.g. : alpharun -e -j my_exec
+alphrun will create the executable my_exec with the Energy Flow and Julia.)
+
+
+-p : if this option is given, you will use the PVM libraries to link your ALPHA
+     job
+
+
+-b : With this option you precise that you want to run your ALPHA job in batch
+
+
+-t : You must give a number after this option which will be the time limit for 
+     your batch job
+
+
+-m : you must give the machine where you want to submit your job after this 
+     option
+
+
+-r : When you give this option, the executable is run after its
+     creation
+
+(e.g. : alpharun -r my_alpha
+alpharun will execute the file alpt after its creation.)
+
+
+-s : With this option, you must give the name of the file where you
+     want to save the alpha options.
+     The default is the file called alpha.opt in your current directory.
+
+(e.g. : alpharun -s /users/username/alp.opt alpt
+the options will be save in the file /users/username/alp.opt and the
+exec alpt will not be execute after its creation)
+
+
+<exec_name> : You need to give the name of a executable.
+
+(e.g. : alpharun my_exec )
+
+-F : see below 'ALPHARUN with a file'
+
+
+ALPHARUN with a file
+--------------------
+
+-F : This option is used with the name of a file which contains the
+     good options.
+     This option is used without any other option.
+
+(e.g. : alpharun -F my_alpha.opt
+alpharun will read all the informations which are in the file
+my_alpha.opt and runs with them.)
+
+
+The format of the file 'my_alpha.opt' must be :
+
+my_exec
+my_file.f
+my_file.c
+/aleph/phy/alpha.cards
+n
+n
+my_obj.o
+y
+121
+n
+y
+
+
+y
+my_file.corr
+1000
+shift9
+y
+
+

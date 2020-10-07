@@ -1,0 +1,374 @@
+NREF 9700
+*----------------------------------------------------------------------
+*     RUN#   RUN'S TITLE
+RUN   1121   'KORALW1.53.1 WW with 4f bkg, 189 GeV, mW=80.35'
+*            FIRST_EVENT   LAST_EVENT   TO BE GENERATED
+TRIG            1          100
+*    UNIT# / FIRST_EVENT   LAST_EVENT TO DEBUG
+DEBU     6 /    1          10
+* requested time left at the end of job (in sec)
+TIME 100
+* event file (EPIO format)
+*FILO '/tmp/valassi/krlw03/run1121.epio | EPIO'
+* histogram file
+*HSTO '/tmp/valassi/krlw03/run1121.his'
+* Ranmar initialization
+RMAR   1  2  3  4
+* specify database if not the current one
+*FDBA 'DBASE:ADBSTEST.DAF | DAF'   ! VMS syntax
+*----------------------------------------------------------------------
+ENDQ
+KCAR 0 / $TEXT
+POFF
+*-----modify here if wanted--------------------------------------------
+*SVRT   0.0140  0.0005  0.79 ! vertex smearing x y z 97 values
+*XVRT   0.02    0.00    0.1  ! vertex offset: an example ...
+SVRT  0.0155   0.0005   0.689      !  206.5
+*----------------------------------------------------------------------
+*GKEY card
+*Initial state radiation = xpar(1011)
+*     KeyISR=0  ISR OFF
+* =>  KeyISR=1  ISR ON
+*     KeyISR=2  ISR ON with extrapolation procedure as in YFSWW
+*     KeyISR=3  ISR ON with extrapolation for t-channel dominated processes
+*Final state radiation, INACTIVE
+* =>  KeyFSR=0  Final State Radiation switch, INACTIVE
+*Next-to-leading-log
+*     KeyNLL=0  sets Next-to Leading alpha/pi terms to zero
+* =>  KeyNLL=1  alpha/pi in YFS formfactor is kept
+*Coulomb correction = xpar(1014)
+*     KeyCul=0  Coulomb correction OFF
+*     KeyCul=1  Coulomb correction ON without screening
+* =>  KeyCul=2  Coulomb correction ON with Chapovsky-Khoze screening
+*Branching ratios = xpar(1021)
+*     KeyBra= 0 Born branching ratios, no mixing
+*     KeyBra= 1 Arbitrary values from the input with no cross-checks
+* =>  KeyBra= 2 Branching ratios with mixing and QCD calculated in IBA from CKM
+*     KeyBra= 3 Branching ratios pre-set in the source-code
+*Massless/massive kinematics
+*     KeyMas= 0 Massles kinematics for W decay products
+* =>  KeyMas= 1 Massive kinematics for W decay products
+* KEYISR KEYFSR KEYNLL KEYCUL KEYBRA KEYMAS
+GKEY   1      0      1      2      2      1
+*Z width in the propagator
+*     KeyZet= 0 Z width in Z propagator: s/M_Z *GAMM_Z
+* =>  KeyZet= 1 Z width in Z propagator:   M_Z *GAMM_Z
+*     KeyZet= 2 no (0) Z width in Z propagator.
+*Spin effects in W decays
+*     KeySpn= 0 spin effects in W decays OFF
+* =>  KeySpn= 1 spin effects in W decays ON
+*Reduction of massive FS to massles Matr.El.
+* =>  KeyRed= 0 sophisticated for CC03 
+*     KeyRed= 1 crude, 4-mom. non conserving, for CC03 
+*     KeyRed= 2 no reduction, for CC03 
+*W width in the propagator
+*     KeyWu = 0 W width in W propagator: s/M_W *GAMM_W
+* =>  KeyWu = 1 W width in W propagator:   M_W *GAMM_W 
+*     KeyWu = 2 no (0) W width in W propagator.
+*Presampler
+*     KeySmp =0 Presampler set as in KORALW versions 1.02 to 1.20
+*     KeySmp =1 New option, useful for unweighted 4f events far from WW peaks
+* =>  KeySmp =2 second presampler for unweighted 4f events
+*Mixing angle = xpar(1041)
+*     KeyMix= 0 causes sinw2 to be according to LEP2 prescription
+* =>  KeyMix= 1 renormalization scheme G_mu
+*     KeyMix= 2 Bare Born (tests)
+* KEYZET KEYSPN KEYRED KEYWU  KEYSMP KEYMIX
+       1      1      0     1       2      1
+*4f matrix element
+*     Key4f = 0 external matrix el. OFF
+* =>  Key4f = 1 external matrix el. ON
+*Anomalous couplings
+* =>  KeyAcc=0 anomalous WWV couplings in internal CC03 matr. el. OFF
+*     KeyAcc>0 anomalous WWV couplings in internal CC03 matr. el. ON
+*                1= Hagiwara notation ( complex)
+*                2= notation CERN 96-01 Vol 1 p 525 Delta_Z,x_g,x_Z,y_g,Y_Z
+*                3= notation CERN 96-01 Vol 1 p 525 alpha_Wphi,alpha_B,alpha_W
+*ZZ type final state
+*     KeyZon= 0 ZZ type final state OFF
+* =>  KeyZon= 1 ZZ type final state ON
+*WW type final state 
+*     KeyWon= 0 WW type final state OFF
+* =>  KeyWon= 1 WW type final state ON
+*W- decay channel
+* =>  KeyDwm= 0  decay channel of W-(Z1) ON (inclusive), exclusive=1-9 for W
+*                1:ud, 2:cd, 3:us, 4:cs, 5:ub, 6:cb, 7:e, 8:mu, 9:tau
+*W+ decay channel
+* =>  KeyDwp= 0  decay channel of W+(Z2) ON (inclusive), exclusive=1-11 for Z
+*                1:dd, 2:uu, 3:ss, 4:cc, 5:bb, 6:ee, 7:mumu, 8:tautau, 
+*                9:nuenue 10: numunumu 11:nutaunutau
+* KEY4f  KEYACC KEYZON KEYWON KEYDWM KEYDWP
+      1       0      1      1      0      0
+*----------------------------------------------------------------------
+* MSKW CARD
+* Mask for WW events (only used for KeyDWM=0, KeyDWP=0, KeyWon=1, KeyZon=1!)
+* Wm=column# / Wp=row#
+*     1:ud 2:cd 3:us 4:cs 5:ub 6:cb 7:el 8:mu 9:ta / Wp=row#
+*MSKW    0    0    0    0    0    0    0    0    0
+*        1    1    0    0    0    0    0    0    0
+*        0    0    0    0    0    0    0    0    0
+*        0    0    0    0    0    0    0    0    0
+*        0    0    0    0    0    0    0    0    0
+*        0    0    0    0    0    0    0    0    0
+*        0    0    0    0    0    0    0    0    0
+*        0    0    0    0    0    0    0    0    0
+*        0    0    0    0    0    0    0    0    0
+*QQQQ-ONLY MASK FOLLOWS
+*MSKW    1    1    1    1    1    1    0    0    0
+*        1    0    1    1    1    1    0    0    0
+*        1    1    0    1    1    1    0    0    0
+*        1    1    1    1    1    1    0    0    0
+*        1    1    1    1    0    1    0    0    0
+*        1    1    1    1    1    0    0    0    0
+*        0    0    0    0    0    0    0    0    0
+*        0    0    0    0    0    0    0    0    0
+*        0    0    0    0    0    0    0    0    0
+*DEFAULT MASK FOLLOWS
+*MSKW    1    1    1    1    1    1    1    1    1
+*        1    0    1    1    1    1    1    1    1
+*        1    1    0    1    1    1    1    1    1
+*        1    1    1    1    1    1    1    1    1
+*        1    1    1    1    0    1    1    1    1
+*        1    1    1    1    1    0    1    1    1
+*        1    1    1    1    1    1    1    1    1
+*        1    1    1    1    1    1    1    1    1
+*        1    1    1    1    1    1    1    1    1
+*----------------------------------------------------------------------
+* MSKZ CARD
+* Mask for ZZ events (only used for KeyDWM=0, KeyDWP=0, KeyWon=1, KeyZon=1!)
+* Z1=column# / Z2=row#
+*     1:d  2:u  3:s  4:c  5:b  6:el 7:mu 8:ta 9:ve 10vm 11vt
+*MSKZ    0    0    0    0    0    0    0    0    0    0    0
+*        1    1    0    0    0    0    0    0    0    0    0
+*        0    0    0    0    0    0    0    0    0    0    0
+*        0    0    0    0    0    0    0    0    0    0    0
+*        0    0    0    0    0    0    0    0    0    0    0
+*        0    0    0    0    0    0    0    0    0    0    0
+*        0    0    0    0    0    0    0    0    0    0    0
+*        0    0    0    0    0    0    0    0    0    0    0
+*        0    0    0    0    0    0    0    0    0    0    0
+*        0    0    0    0    0    0    0    0    0    0    0
+*        0    0    0    0    0    0    0    0    0    0    0
+*DEFAULT MASK FOLLOWS
+*MSKZ    1    0    0    0    0    0    0    0    0    0    0
+*        0    1    0    0    0    0    0    0    0    0    0
+*        1    1    1    0    0    0    0    0    0    0    0
+*        1    1    0    1    0    0    0    0    0    0    0
+*        1    1    1    1    1    0    0    0    0    0    0
+*        1    1    1    1    1    1    0    0    0    0    0
+*        1    1    1    1    1    1    1    0    0    0    0
+*        1    1    1    1    1    1    1    1    0    0    0
+*        1    1    1    1    1    0    1    1    1    0    0
+*        1    1    1    1    1    1    0    1    1    1    0
+*        1    1    1    1    1    1    1    0    1    1    1
+*----------------------------------------------------------------------
+* GENE Card 
+* CMSENE : CMS energy [GeV]
+* AMAZ   : Z mass [GeV]
+* GAMMZ  : Z width [GeV]
+* AMAW   : W mass [GeV]
+* GAMMW  : W width [GeV], For GAMMW < 0 RE-CALCULATED inside program
+*          [If KeyBra=1, it is corrected for alphaQCD, otherwise not]
+* AMH    : Higgs mass
+* AGH    : Higgs width
+* VVMIN  : Photon spectrum parameter (dummy IR cut)
+* VVMAX  : Photon spectrum parameter (max generated v, v = 1-sprim/s)
+* WTMAX  : max wt used for rejection in unweighted mode (<0 reset to default)
+* WTMAX_CC03 : same for CC03
+*     CMSENE     AMAZ   GAMMZ   AMAW  GAMMW   AMH   AGH  
+GENE    200.  91.1888  2.4974  80.35  -2.03  115.    1.  
+*   VVMIN   VVMAX WTMAX WTMAX_CC03
+    1.E-6    0.99   -1.        -1.
+*----------------------------------------------------------------------
+* YFSW CARD.
+* Kandy mechanism for O(alpha) is invoked only if card YFSW is present.
+* Card YFSW with no filename: run YFSWW default executable
+*YFSW
+* Card YFSW with a filename: run YFSWW user-specified executable
+YFSW '$ALEPH/kin/ywrewt.exe'
+*----------------------------------------------------------------------
+* YOUT CARD.
+* Kandy mechanism for O(alpha) is invoked only if card YFSW is present.
+* Card YOUT not present: YFSWW output on same file as KRLW03
+* Card YOUT with no filename: output on 'out.ywrewt'
+*YOUT
+* Card YOUT with a filename: user-specified output
+YOUT 'out.ywrewt'
+*----------------------------------------------------------------------
+* YUNW CARD.
+* Kandy mechanism for O(alpha) is invoked only if card YFSW is present.
+* Card YUNW not present: unweighted evts without O(alpha) corrections - FASTER!
+* Card YUNW present: unweighted evts with O(alpha) corrections - SLOW!
+* In both cases, if YFSW is present, weights are stored in bank KWGT
+*YUNW
+*----------------------------------------------------------------------
+* GKAC CARD.
+* Anomalous couplings (MUST SET KEYACC=1 TO ACTIVATE THEM!!!!!!!!!!) 
+* Definition follows Hagiwara et al., Nucl. Phys. B282 (1987) 253.
+*   WWgamma vertex Real part 
+*      g1   kappa  lambda   g4     g5  kappa-tilde lambda-tilde
+*GKAC  1.0    1.0    0.0    0.0    0.0      0.0          0.0
+*   WWgamma vertex Imaginary part 
+*      g1   kappa  lambda   g4     g5  kappa-tilde lambda-tilde
+*      0.0    0.0    0.0    0.0    0.0      0.0          0.0
+*   WWZ vertex Real part 
+*      g1   kappa  lambda   g4     g5  kappa-tilde lambda-tilde
+*      1.0    1.0    0.0    0.0    0.0      0.0          0.0
+*   WWZ vertex Imaginary part 
+*      g1   kappa  lambda   g4     g5  kappa-tilde lambda-tilde
+*      0.0    0.0    0.0    0.0    0.0      0.0          0.0
+*----------------------------------------------------------------------
+* GCWW CARD
+* Cuts on final state fermions for WW-like events (including ZZ overlap)
+* Fermions n=1-4 are ordered as follows in the cards:
+*         (WW or WW/ZZ events)
+*         1 =     fermion decay product of W-/Z1 (    quark d)
+*         2 = antifermion decay product of W-/Z2 (antiquark u)
+*         3 =     fermion decay product of W+/Z2 (    quark u)
+*         4 = antifermion decay product of W+/Z1 (antiquark d)
+* For energy/mass cuts, maximum<=0 means no maximum
+* SPMxx : min/max invariant mass (sqrt of s') after ISR      [GeV]
+* EnMxx : min/max energy of fermion number n                 [GeV]
+* SnmMxx: min/max invariant masses of fermions n and m       [GeV]
+* CnMxx : min/max cos(theta) of fermion n
+* CnmMxx: min/max cos(theta) between fermions n and m
+*         SPMIN  SPMAX  
+*GCWW        0.     0.
+*         E1MIN  E2MIN  E3MIN  E4MIN  E1MAX  E2MAX  E3MAX  E4MAX
+*            0.     0.     0.     0.     0.     0.     0.     0.
+*        S12MIN S13MIN S14MIN S23MIN S24MIN S34MIN
+*           40.     0.     0.     0.     0.    40.
+*        S12MAX S13MAX S14MAX S23MAX S24MAX S34MAX
+*          120.     0.     0.     0.     0.   120.
+*         C1MIN  C2MIN  C3MIN  C4MIN   C1MAX  C2MAX  C3MAX  C4MAX
+*           -1.    -1.    -1.    -1.      1.     1.     1.     1.    
+*        C12MIN C13MIN C14MIN C23MIN C24MIN C34MIN
+*           -1.    -1.    -1.    -1.    -1.    -1.
+*        C12MAX C13MAX C14MAX C23MAX C24MAX C34MAX
+*            1.     1.     1.     1.     1.     1.
+*----------------------------------------------------------------------
+* GCZZ CARD
+* Cuts on final state fermions for ZZ-like events (including WW overlap)
+* Fermions n=1-4 are ordered as follows in the cards:
+*         (ZZ or ZZ/WW events)
+*         1 =     fermion decay product of Z1/W1 (    quark d)
+*         2 = antifermion decay product of Z1/W2 (antiquark d)
+*         3 =     fermion decay product of Z2/W2 (    quark u)
+*         4 = antifermion decay product of Z2/W1 (antiquark u)
+* For energy/mass cuts, maximum<=0 means no maximum
+* SPMxx : min/max invariant mass (sqrt of s') after ISR      [GeV]
+* EnMxx : min/max energy of fermion number n                 [GeV]
+* SnmMxx: min/max invariant masses of fermions n and m       [GeV]
+* CnMxx : min/max cos(theta) of fermion n
+* CnmMxx: min/max cos(theta) between fermions n and m
+*         SPMIN  SPMAX  
+*GCZZ        0.     0.
+*         E1MIN  E2MIN  E3MIN  E4MIN  E1MAX  E2MAX  E3MAX  E4MAX
+*            0.     0.     0.     0.     0.     0.     0.     0.
+*        S12MIN S13MIN S14MIN S23MIN S24MIN S34MIN
+*            0.     0.     0.     0.     0.     0.
+*        S12MAX S13MAX S14MAX S23MAX S24MAX S34MAX
+*            0.     0.     0.     0.     0.     0.
+*         C1MIN  C2MIN  C3MIN  C4MIN   C1MAX  C2MAX  C3MAX  C4MAX
+*           -1.    -1.    -1.    -1.      1.     1.     1.     1.    
+*        C12MIN C13MIN C14MIN C23MIN C24MIN C34MIN
+*           -1.    -1.    -1.    -1.    -1.    -1.
+*        C12MAX C13MAX C14MAX C23MAX C24MAX C34MAX
+*            1.     1.     1.     1.     1.     1.
+*----------------------------------------------------------------------
+* GCE1 CARD
+* Cuts on e-nu-x-x events (singleW-like, at least 1 electron or 1 positron)
+* CMAXEM: maximum cos(theta) of e-
+* CMINEM: minimum cos(theta) of e-
+* CMAXEP: maximum cos(theta) of e+
+* CMINEP: minimum cos(theta) of e+
+*        CMAXEM    CMINEM   CMAXEP    CMINEP
+*GCE1     0.998    -0.998    0.998    -0.998
+*----------------------------------------------------------------------
+* GCE2 CARD
+* Cuts on e-nu-e-nu events
+* ENEME2: minimum energy of e-                  [GeV]
+* ENEPE2: minimum energy of e+                  [GeV]
+* SCUTE2: minimum invariant mass of e+ and e-   [GeV]
+* PTSME2: minimum sum of |pT(e+)| and |pT(e-)|  [GeV]
+*        ENEME2   ENEPE2   SCUTE2   PTSME2
+*GCE2        0.       0.       2.       2.
+*----------------------------------------------------------------------
+* GCEE CARD
+* Cuts on final state fermions for e+e-x+x- events (excluding e-nu-e-nu)
+* For energy/mass cuts, maximum<=0 means no maximum
+* Fermions are indicated as follows:
+*         em = e-
+*         ep = e+
+*         ex = either e- or e+
+*         fm = fermion x     (can be a second e-)
+*         fp = antifermion x (can be a second e+)
+* For eeee events, apply ep/em (rather than fp/fm) cuts to both pairs
+* (and also take into account combinatorics!)
+* EnnMxx: min/max energy of fermion n                        [GeV]
+* SnmMxx: min/max invariant masses of fermions n and m       [GeV]
+* CnnMxx: min/max cos(theta) of fermion n
+* CnmMxx: min/max cos(theta) between fermions n and m
+*      EEMMINEE  EEPMINEE  EFMMINEE  EFPMINEE
+*GCEE        0.        0.        0.        0.
+*      EEMMAXEE  EEPMAXEE  EFMMAXEE  EFPMAXEE
+*            0.        0.        0.        0.
+*      SEEMINEE  SFFMINEE  SEEMAXEE  SFFMAXEE
+*            0.        0.        0.        0.
+*      CEMMINEE  CEPMINEE  CFMMINEE  CFPMINEE
+*           -1.       -1.       -1.       -1.
+*      CEMMAXEE  CEPMAXEE  CFMMAXEE  CFPMAXEE
+*            1.        1.        1.        1.
+*      CEEMINEE  CFFMINEE  CEEMAXEE  CFFMAXEE
+*           -1.       -1.        1.        1.
+*      EEXMINEE  EEXMAXEE  CEXMINEE  CEXMAXEE
+*            0.        0.       -1.        1.
+*----------------------------------------------------------------------
+* GCUU CARD
+* Cuts on u-d-u-d events
+* SPCTUU: minimum sqrt(s') in udud events       [GeV]
+* SCUTUU: minimum invariant mass of uu or dd    [GeV]
+*        SPCTUU   SCUTUU
+*GCUU        0.    0.270
+*----------------------------------------------------------------------
+*** Single-W modifications are switched on for theta < xpar(20) in degrees
+* switched off
+XPAR 20 / 0.
+* correction at all angles
+*XPAR 20 / 180.
+*----------------------------------------------------------------------
+*** SELECTO standard cuts for KORALW 1.42 and higher (CERN-TH/98-242 page 15)
+* "arbitr"  = minimum visible pT^2 (def: 600. GeV^2)
+*XPAR 14 / 600.
+* "arbitr1" = minimum pair invariant mass in e+e-ff~ (def: 8. GeV^2)
+*XPAR 15 / 8.
+* "themin"  = minimum theta relative to beam (def: 1.d-6 rad)
+*XPAR 16 / 0.000001
+* "arbitr2" = maximum pT^2 of photons in e+e-ff~ (def: 300. GeV^2; <=0:NoCut)
+*XPAR 17 / 300.
+*** No cuts:
+**XPAR 14 / 0.
+**XPAR 15 / 0.
+**XPAR 16 / 0.
+**XPAR 17 / 0.
+*----------------------------------------------------------------------
+*** Unweighted events (default=0.) or weighted events (=1.)
+*XPAR 1031 / 1.
+*----------------------------------------------------------------------
+** Kandy stuff (not used unless card YFSW is present)
+** xpar(1088) 1. = wtext additive (default), 2. = multiplicative
+*XPAR 1088 / 1.
+** xpar(2001) 6. = fast tabulated EW radcor (default), 5. = slower exact
+*XPAR 2001 / 5.
+*----------------------------------------------------------------------
+END$
+* Possibility to modify branching ratios; if br to electron is not 1,
+* then br's are renormalised to it.
+* Fraction (a1 to charged) (K0 to Ks) (K0bar to Ks) ( K* to K0 pi-)
+*GKBR              0.5           0.5         0.5           0.6667
+* Next are br's of tau. First is electron. If not 1, they are renorm.
+* Look at documentation for decay modes definition
+*1.     0.9732  0.6217  1.4221  1.0180
+*0.0405 0.0781  0.2414  0.0601  0.0281
+*0.0045 0.0010  0.0062  0.0096  0.0169
+*0.0

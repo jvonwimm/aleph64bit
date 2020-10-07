@@ -1,0 +1,248 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	98.03.10.14.55.39;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.43.36;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.43.37;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@precision fixes for 1992 repro
+@
+text
+@      SUBROUTINE THTRAN(P,ORIG,DPHI,PA)
+C
+C----------------------------------------------------------------------
+C! Transform helix to another coordinate system with z axis parallel
+C! to the original
+CKEY TPCDES HELIX TRANSFORM / USER
+C   Author: R. Johnson   28-12-90
+C Modified: M.Cattaneo   980310 Use DOUBLE PRECISION for SP0,CP0, to avoid 
+C                               numerical problems
+C
+C     Input:
+C       - P(5)       /R     Helix parameters in original frame
+C                           1/r,tanl,phi0,d0,z0
+C                           (d0>0 = positive ang. mom. about z axis)
+C                           (r>0  = counterclockwise rotation)
+C       - ORIG(3)    /R     Origin of the new coordinate system
+C                           in the old system
+C       - DPHI       /R     Phi of the x axis of the new coordinate
+C                           system in the old system
+C     Output:
+C       - PA(5)     /R      Helix parameters in new frame.
+C
+C
+C   Remarks:  only translations and rotations about the z axis are
+C             possible in this case.  Rotations about x and y are
+C             ignored since the helix model always assumes a helix
+C             about the z axis.
+C
+C----------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "alcons.h"
+#include "bcs.h"
+C
+      DIMENSION P(*),PA(*),ORIG(*)
+      DOUBLE PRECISION XC,YC
+      DOUBLE PRECISION SP0,CP0
+      DATA EPS/0.001/
+C
+#include "bmacro.h"
+C
+      DX=ORIG(1)
+      DY=ORIG(2)
+      DZ=ORIG(3)
+      IF (DX.EQ.0. .AND. DY.EQ.0.
+     &        .AND. DZ.EQ.0. .AND. DPHI.EQ.0.) THEN
+        DO 11 I=1,5
+          PA(I)=P(I)
+   11   CONTINUE
+      ELSE
+        SP0=SIN(P(3))
+        CP0=COS(P(3))
+C
+C++     Translate the point of closest approach to old z axis to
+C++     a point in the new coordinate system
+C
+        X=P(4)*SP0 - DX
+        Y=-P(4)*CP0 - DY
+        Z= P(5) - DZ
+C
+C++     Get the radius of curvature
+C
+        IF (P(1).EQ.0.) THEN
+          RHO=1.0E22*SGN
+          SGN=1.0
+          CALL ALTELL ('THTRAN: Inverse radius of curvature=0.',
+     &                  0,'RETURN')
+        ELSE
+          RHO=1.0/P(1)
+          SGN=SIGN(1.0,P(1))
+        ENDIF
+C
+C++     Find the point of closest approach to the new z axis.
+C++     Get D0.  For high momentum tracks, expand the sqare root
+C++     in order to avoid numerical problems.
+C
+        B=(X**2 + Y**2)*(P(1)**2)
+        A=2.0*P(1)*(CP0*Y - SP0*X)
+        IF (ABS(A).LT.EPS) THEN
+          D0=-RHO*0.5*(A+B)
+        ELSEIF (ABS(B).LT.EPS) THEN
+          RADC=SQRT(1.0+A)
+          D0=RHO*(1.0-RADC-0.5*B/RADC)
+        ELSE
+          D0=RHO*(1.0-SQRT(1.0+A+B))
+        ENDIF
+C
+C++     Find the center of the circle and get phi0
+C
+        XC=-DBLE(RHO*SP0)+DBLE(X)
+        YC= DBLE(RHO*CP0)+DBLE(Y)
+        PHIC=DATAN2(YC,XC)
+        PHI0=PHIC-SGN*PIBY2
+        IF (PHI0.LT.0.) THEN
+          PHI0=PHI0+TWOPI
+        ELSEIF (PHI0.GE.TWOPI) THEN
+          PHI0=PHI0-TWOPI
+        ENDIF
+C
+C++     Find the turning angle from the old point to the new
+C
+        ALPHA=P(3)-PHI0
+        IF (ALPHA.LT.-PI) THEN
+          ALPHA=ALPHA+TWOPI
+        ELSEIF (ALPHA.GE.PI) THEN
+          ALPHA=ALPHA-TWOPI
+        ENDIF
+C
+C++     Get the new Z at the point of closest approach
+C
+        Z0= Z - RHO*ALPHA*P(2)
+C
+C++     Finally rotate around new z axis and output results
+C
+        PA(1)=P(1)
+        PA(2)=P(2)
+        PA(3)=PHI0-DPHI
+        PA(4)=D0
+        PA(5)=Z0
+      ENDIF
+C
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d7 3
+a9 1
+C     Author:   R. Johnson   28-12-90
+d37 1
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

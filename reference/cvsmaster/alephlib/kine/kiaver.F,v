@@ -1,0 +1,180 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.2
+	aleph304_5:1.2
+	aleph304_4:1.2
+	aleph304_3:1.2
+	aleph304_2:1.2
+	aleph304_1:1.2
+	aleph304:1.2
+	aleph303_3:1.2
+	aleph303_2:1.2
+	aleph303_1_mc1:1.2
+	aleph303_1:1.2
+	aleph303:1.2
+	aleph302_9:1.2
+	aleph302_8:1.2
+	aleph302_7:1.2
+	aleph302_6:1.2
+	aleph302_5:1.2
+	aleph302_4:1.2
+	aleph302_3:1.2
+	aleph302_2:1.2
+	aleph302_1:1.2
+	aleph302:1.2
+	aleph216:1.2
+	aleph215_3:1.2
+	aleph215_2:1.2
+	aleph215:1.2
+	aleph214:1.2
+	aleph213:1.2
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.04.23.16.02.40;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.42.29;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.42.30;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@remove ajjpar.h , include HAC parameters
+Modified Files:
+ 	kiaver.F
+@
+text
+@      SUBROUTINE KIAVER (AVER,IPROG)
+C ----------------------------------------------------------------
+C - F.Ranjard - 890201
+C
+C! Return the ALEPHLIB version # and the program origin
+CKEY KINE KINGAL VERSION  /  USER INTERNAL
+C  Return the ALEPHLIB version # used during KINGAL processing.
+C  if no KINGAL processing return the ALEPHLIB version# used during
+C  GALEPH processing.
+C
+C - structure: SUBROUTINE subprogram
+C              User Entry Name: KIAVER
+C              External References: NAMIND(BOS77)
+C              Comdecks referenced: BCS, KGJJPAR, AJJPAR, BMACRO
+C              Banks referenced: KJOB, AJOB
+C
+C - usage    : CALL KIAVER (AVER,IPROG)
+C - output   : AVER  = ALEPHLIB version # used during the 1st step
+C                      of the generation.
+C                      0. means not a montecarlo file
+C              IPROG = 1 means KINGAL generation
+C                      2       GALEPH generation
+C                      0       not a montecarlo file
+#ifndef DOC
+      SAVE
+      REAL AVER
+      INTEGER IPROG
+#include "bcs.h"
+#include "ajobjj.h"
+#include "kjobjj.h"
+#include "bmacro.h"
+C -------------------------------------------------------------------
+C
+C - If KJOB exists (KINGAL was run) then get alephlib version #
+      JKJOB = IW(NAMIND('KJOB'))
+      IF (JKJOB .NE. 0) THEN
+         IPROG = 1
+         AVER = REAL(ITABL(JKJOB,1,JKJOAV)) / 10.
+      ELSE
+C     if KJOB does there but AJOB exists then get alephlib version#
+         JAJOB = IW(NAMIND('AJOB'))
+         IF (JAJOB .NE. 0) THEN
+            IPROG = 2
+            AVER  = REAL(ITABL(JAJOB,1,JAJOAV)) / 10.
+         ELSE
+C        there is no KJOB nor AJOB ==> not a montecarlo file
+            IPROG = 0
+            AVER  = 0.
+         ENDIF
+      ENDIF
+C
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d29 2
+a30 2
+#include "ajjpar.h"
+#include "kgjjpar.h"
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

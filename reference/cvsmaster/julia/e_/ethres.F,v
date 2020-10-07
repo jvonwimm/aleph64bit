@@ -1,0 +1,327 @@
+head	1.3;
+access;
+symbols
+	jul313_3:1.3
+	jul313_2:1.3
+	jul313_1:1.3
+	jul313:1.3
+	jul312_1:1.3
+	jul312:1.3
+	jul311:1.3
+	jul310_1:1.3
+	jul310:1.3
+	jul309_1:1.3
+	jul309:1.3
+	jul308_6:1.3
+	jul308_5:1.3
+	jul308_4:1.3
+	jul308_3:1.3
+	jul308_2:1.3
+	jul308_1:1.3
+	jul308:1.3
+	jul307_4:1.3
+	jul307_3:1.3
+	jul307_2:1.3
+	jul307_1:1.3
+	jul307:1.3
+	jul306_3:1.3
+	jul306_2:1.3
+	jul306_1:1.3
+	jul306:1.3
+	jul305_4:1.3
+	jul305_3:1.3
+	jul305_2:1.3
+	jul305_1:1.3
+	jul305:1.3
+	jul304_3:1.2
+	jul304_2:1.2
+	jul304_1:1.2
+	jul304:1.2
+	jul303_7:1.2
+	jul303_6:1.2
+	jul303_5:1.2
+	jul303_4:1.2
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2
+	jul280_1:1.2
+	jul280:1.2
+	jul279:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	97.11.07.11.18.50;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.03.12.14.58.43;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.18.06;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.18.07;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@Prepare Julia 305
+@
+text
+@      SUBROUTINE ETHRES
+C------------------------------------------------------------
+C
+C! Cleans ETDI,EWDI banks if Module Energy from wires is below threshold
+CKEY ECAL CLEAN  / USER
+C  B. Bloch -Devaux  October 25,1989
+C  Modified: M.Cattaneo 06/11/1997
+C     Rename 'LOCAL' common for work bank indices to something more unique
+C!
+C  Structure : SUBROUTINE
+C              External references:NAMIND,WBANK,WDROP,BKFRW(BOS77)
+C                                  UCOPY(CERNLIB)
+C                                  EMDTOW(ALEPHLIB)
+C              Comdecks references:BCS,BMACRO
+C  Input : none
+C  Output : none
+C  Banks  : input  - EWDI, ETDI
+C                    EWTH (data cards)
+C           output - JDETDI (work bank dropped at the end)
+C                  - JDEWDI (work bank dropped at the end)
+C  Action : removes from ETDI and EWDI addresses in modules below thresh
+C           except for random triggers ( no pad suppression )
+C-----------------------------------------------------------------------
+#ifndef DOC
+      DIMENSION LTHR(36),DWTHR(36)
+      LOGICAL LTHR
+      LOGICAL TLCAL,TRAND,TPHYS,TSATR,FAIL
+C LOCAL COMMON for work bank indices
+      COMMON /CMETHR/ JDETDI,JDEWDI
+#include "bcs.h"
+#include "rcurnt.h"
+      DATA IFIR/0/
+#include "bmacro.h"
+C ---------------------------------------------------------------------
+      IF (IFIR.EQ.0) THEN
+         IFIR = 1
+         JDETDI = 0
+         JDEWDI = 0
+         NETDI = NAMIND ('ETDI')
+         NEWDI = NAMIND ('EWDI')
+         NEVEH = NAMIND ('EVEH')
+      NAECDF = NAMIND('ECDF')
+C     set threshold: look at EWTH data card to reset the threshold
+         RWTHR = 50000.
+         JETHR = IW(NAMIND('EWTH'))
+         IF (JETHR.NE.0) THEN
+            IF (IW(JETHR).GE.1) RWTHR = REAL(IW(JETHR+1))
+         ENDIF
+      ENDIF
+C   in any case do not apply suppression to random triggers
+C
+      CALL RTRIGF(IRUNRC,TLCAL,TRAND,TPHYS,TSATR,FAIL)
+      IF (TRAND) RETURN
+      JEWDI = IW(NEWDI)
+      IF (JEWDI.LE.0) GOTO 999
+      IF (LROWS(JEWDI).EQ.0) GOTO 999
+C
+         DO 2 II= 1,36
+      DWTHR(II) = 0.
+ 2       LTHR(II) = .TRUE.
+C
+C-   Look for eventual shift of wires
+C
+      KECDF = IW(NAECDF)
+      NECDF = 0
+      IF ( KECDF.NE.0) NECDF = LROWS(KECDF)
+      DO IL=1,NECDF
+        IMODU = ITABL(KECDF,IL,1)
+        DWTHR(IMODU) = RTABL(KECDF,IL,2)
+      ENDDO
+C   Create JDEWDI work bank
+      CALL WBANK (IW,JDEWDI,LCOLS(JEWDI)*LROWS(JEWDI)+LMHLEN,*999)
+      IW(JDEWDI+LMHCOL) = LCOLS(JEWDI)
+C
+      DO 11 I = 1,LROWS(JEWDI)
+        IMODU = ITABL(JEWDI,I,1)
+        IF (IMODU.GE.1 .AND. IMODU.LE.36) THEN
+          RWSUM = 0.
+          DO 12 J = 1,45
+            RWSUM = RWSUM+REAL(ITABL(JEWDI,I,J+1))
+ 12       CONTINUE
+      IF ( RWSUM.GE.RWTHR+DWTHR(IMODU)) LTHR(IMODU) = .FALSE.
+        ENDIF
+ 11   CONTINUE
+C  There are planes below threshold
+      DO 10 I = 1,LROWS(JEWDI)
+C      Get plane address
+        IAD = ITABL(JEWDI,I,1)
+C      Reset module if below threshold
+        IF ( .NOT.LTHR(IAD)) THEN
+C          add that line to JDEWDI bank
+            KEWDI = KROW(JEWDI,I)
+            KWORK = KNEXT(JDEWDI)
+            CALL UCOPY(IW(KEWDI+1),IW(KWORK+1),LCOLS(JEWDI))
+            IW(JDEWDI+LMHROW) = IW(JDEWDI+LMHROW)+1
+        ENDIF
+  10  CONTINUE
+C
+C   compress JDEWDI and copy it to EWDI, then drop JDEWDI
+      IF (LROWS(JDEWDI).LT.LROWS(JEWDI)) THEN
+         LEN = LROWS(JDEWDI)*LCOLS(JDEWDI)+LMHLEN
+         CALL WBANK (IW,JDEWDI,LEN,*998)
+         CALL BKFRW (IW,'EWDI',0,IW,JDEWDI,*998)
+      ENDIF
+ 998  CALL WDROP (IW,JDEWDI)
+      JETDI = IW(NETDI)
+      IF (JETDI.LE.0) GO TO 999
+      IF (LROWS(JETDI).EQ.0) GO TO 999
+C   Create JDETDI work bank
+      CALL WBANK (IW,JDETDI,LCOLS(JETDI)*LROWS(JETDI)+LMHLEN,*999)
+      IW(JDETDI+LMHCOL) = LCOLS(JETDI)
+C  There are towers and noisy ones
+      DO 20 I = 1,LROWS(JETDI)
+C      Get tower address
+        IAD = ITABL(JETDI,I,1)
+        ITET = IBITS(IAD,16,8)
+        IPHI = IBITS(IAD,2,9)
+C   Protect against bad raw data - suppress illegal adresses
+C
+             IF(ITET.GT.228.OR.IPHI.GT.384
+     +        .OR.ITET.LT.1.OR.IPHI.LT.1)THEN
+                 IERR=1
+                 CALL RERROR('ETHRES',IERR,'Illegal ECAL tower adr.')
+             ELSE
+        CALL EMDTOW(ITET,IPHI,ISC,IMD,IRG)
+        IMOD = IMD + 12 * (ISC-1)
+C    Reset channel if inside module where Wire energy below threshold
+        IF ( .NOT.LTHR(IMOD)) THEN
+C          add that line to JDETDI bank
+            KETDI = KROW(JETDI,I)
+            KWORK = KNEXT(JDETDI)
+            CALL UCOPY(IW(KETDI+1),IW(KWORK+1),LCOLS(JETDI))
+            IW(JDETDI+LMHROW) = IW(JDETDI+LMHROW)+1
+        ENDIF
+       ENDIF
+  20  CONTINUE
+C
+C   compress JDETDI and copy it to ETDI, then drop JDETDI
+      IF (LROWS(JDETDI).LT.LROWS(JETDI)) THEN
+         LEN = LROWS(JDETDI)*LCOLS(JDETDI)+LMHLEN
+         CALL WBANK (IW,JDETDI,LEN,*997)
+         CALL BKFRW (IW,'ETDI',0,IW,JDETDI,*997)
+      ENDIF
+ 997  CALL WDROP (IW,JDETDI)
+C
+ 999  RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+ Modified Files:
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+@
+text
+@d7 3
+d28 2
+a29 1
+      COMMON /LOCAL/ JDETDI,JDEWDI
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK ethres
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

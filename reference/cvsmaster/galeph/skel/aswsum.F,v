@@ -1,0 +1,389 @@
+head	1.5;
+access;
+symbols
+	gal309_3:1.5
+	gal309_2:1.5
+	gal309_1:1.5
+	gal309:1.5
+	gal308_2:1.4
+	gal308_1:1.4
+	gal308:1.4
+	gal307_2:1.4
+	gal307_1:1.4
+	gal307:1.4
+	gal306_3:1.3
+	gal306_2:1.3
+	gal306_1:1.3
+	gal306:1.3
+	gal305_3:1.3
+	gal305_2:1.3
+	gal305_1:1.3
+	gal305:1.3
+	gal304_11:1.3
+	gal304_10:1.3
+	gal304_9:1.3
+	gal304_8:1.3
+	gal304_7:1.3
+	gal304_6:1.3
+	gal304_5:1.3
+	gal304_4:1.3
+	gal304_3:1.3
+	gal304_2:1.3
+	gal304_1:1.3
+	gal304:1.3
+	gal303_3:1.3
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.5
+date	99.12.03.14.10.57;	author flr;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	98.07.03.14.47.40;	author flr;	state Exp;
+branches
+	1.4.2.1;
+next	1.3;
+
+1.3
+date	96.05.08.10.22.31;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.06.30.07.14.00;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.01.49;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.50;	author flr;	state Exp;
+branches;
+next	;
+
+1.4.2.1
+date	99.12.02.12.25.44;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.5
+log
+@gal309 - Y2K compliant
+@
+text
+@*DK aswsum
+      SUBROUTINE ASWSUM
+C ----------------------------------------------------------------------
+C. - F.RANJARD - 850328    modified - 920131
+C! Print statistic for this run
+C. - Called from    ASCJOB                            from this .HLB
+C. - Calls          TIMEX                             from KERNLIB
+C.                  GFTITL                            from GEANT3 pam
+C.                  BOSTA                             from BOS77.hlb
+C.
+C -----------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "version.h"
+#include "jqcom.h"
+#include "iocom.h"
+#include "jobcom.h"
+#include "alfgeo.h"
+#include "gcbank.h"
+      CHARACTER*40 TITL(LST2)
+      PARAMETER (LPAC=3)
+      CHARACTER*8 TPAC(LPAC)
+      CHARACTER*2 TNAM(LGEO)
+      CHARACTER*4 TGET, TSAV, TJET, TLUND*7
+      CHARACTER*4 CHAINT,CTABL
+      CHARACTER*6 TGEN(3)
+C
+      DATA TGEN /'RNDM  ', 'RANECU', 'RANMAR'/
+      DATA TLUND /'GUDSCBT'/
+      DATA TPAC /'GHEISHA ','TATINA  ','CASCADE '/
+      DATA TITL /'TOTAL NUMBER OF TRACKS PER EVENT        '
+     1          ,'TOTAL NUMBER OF "PRIMARIES" PER EVENT   '
+     2          ,'MAXIMUM STACK SIZE PER EVENT            '/
+C
+#include "bmacro.h"
+C - Lth character element of the NRBOSth row of the bank with index ID
+      CTABL(ID,NRBOS,L) = CHAINT(ITABL(ID,NRBOS,L))
+C ----------------------------------------------------------------------
+C
+C - get time elapsed since beginning of job
+      CALL TIMEX (TIMEJO(3))
+C
+C - get number of triggers processed and time per trigger
+      TIME = 0.
+      IF(NEVTJO.GT.0) TIME = (TIMEJO(3)-TIMEJO(1)-TIMEJO(5))/NEVTJO
+C
+C - print title
+      WRITE(LOUTIO,801) TITLJO,VERSJO,CORVER,JDATJO,JTIMJO
+  801 FORMAT(1H1,//10X,A40,2X,'VERSION',F7.2,2X,'CORRECTIONS',F7.2,3X,
+     &            'DATE',I10,2X,'TIME',I5//)
+      WRITE (LOUTIO,'(3X,''ALEPHLIB '',T15,'':'',F7.2)') AVERJO
+      WRITE (LOUTIO,'(3X,''TPCSIM   '',T15,'':'',F7.2)') TVERJO
+      WRITE (LOUTIO,'(3X,''GEANT    '',T15,'':'',F7.2)') GVERSN*100.
+C
+      WRITE (LOUTIO,'(3X,''ADBSCONS '',T15,'':'',I5,I9/)')IDAFJO,
+     &       IDCHJO
+C
+C - print summary of data cards used for this run
+      IF(MGETJO.EQ.0) THEN
+        TGET = 'none'
+      ELSE
+        TGET = 'all'
+      ENDIF
+      IF(MSAVJO.EQ.0) THEN
+        TSAV = 'none'
+      ELSE
+        TSAV = 'all'
+      ENDIF
+      WRITE(LOUTIO,810) TGET, TSAV
+      WRITE(LOUTIO,816) (TPROJO(J),J=1,MPROJO)
+  810 FORMAT(3X,'STEERING   : READ     ',A4,4X,'SAVE    ',A4)
+  816 FORMAT(3X,'             PROCESS  ',12A8)
+C
+      IF (MGETJO.NE.0) THEN
+        WRITE (LOUTIO,811)
+      ELSE
+        IF (TKINJO.EQ.'USER') THEN
+          WRITE (LOUTIO,806) BKINJO
+        ELSE IF (TKINJO.EQ.'LUND') THEN
+          WRITE(LOUTIO,812) BKINJO(4)
+        ELSE IF (TKINJO.EQ.'JET') THEN
+          WRITE(LOUTIO,813) (BKINJO(J),J=4,6)
+        ELSE IF (TKINJO.EQ.'PART') THEN
+          ITYP=NINT(BKINJO(4))
+          JPART = IW(NAPART)
+          WRITE(LOUTIO,814) CTABL(JPART,ITYP,2),CTABL(JPART,ITYP,3),
+     &                        CTABL(JPART,ITYP,4),(BKINJO(J),J=5,8)
+        ELSE IF (TKINJO.EQ.'SJET') THEN
+          ITYP = INT (ABS (BKINJO(4))-500.) + 1
+          TJET = TLUND(ITYP:ITYP)//'   '
+          IF (BKINJO(4) .LT. 0.) TJET = TLUND(ITYP:ITYP)//'bar'
+          WRITE (LOUTIO,822) TJET,(BKINJO(J),J=5,8)
+        ENDIF
+      ENDIF
+  806 FORMAT(/3X,'KINEMATICS : USER parameters ',8F10.4)
+  811 FORMAT(/3X,'KINEMATICS : was read in ')
+  812 FORMAT(/3X,'KINEMATICS : LUND events (beam energy =',F6.1,' Gev)')
+  813 FORMAT(/3X,'KINEMATICS : LUND single jet (beam energy ='
+     1       ,F6.1,' Gev',3X,'theta =',F6.3,3X,'phi =',F6.3,')')
+  814 FORMAT(/3X,'KINEMATICS : single ',3A4,' (momentum range =',2F8.3
+     1       ,' Gev',3X,'cos(theta) range =',2F6.3,')'  )
+  822 FORMAT (/3X,'KINEMATICS : LUND single jet ',A4,' (energy range =',
+     &         2F8.3,' Gev',3X,'cos(theta) range =',2F6.3,')' )
+C
+      WRITE(LOUTIO,815) (TCUTJO(J),J=1,5)
+  815 FORMAT(/3X,'TRACKING   : particles with energy below threshold '
+     1                ,'are stopped'
+     2                /16X,'electron cut          =',F8.4,' Gev'
+     3                /16X,'gamma cut             =',F8.4,' Gev'
+     5                /16X,'charged hadron cut    =',F8.4,' Gev'
+     4                /16X,'neutral hadron cut    =',F8.4,' Gev'
+     6                /16X,'muon cut              =',F8.4,' Gev'
+     7                )
+      CALL ALSEED (IRGEN,ISD1,ISD2)
+      IF (IRGEN .EQ. 3) THEN
+        WRITE (LOUTIO,817) TGEN(IRGEN),ISD1,ISD2
+      ELSE
+        WRITE (LOUTIO,817) TGEN(IRGEN)
+      ENDIF
+  817 FORMAT(/3X,'RANDOM NUMBER GENERATOR is ',A6:' with lab. seeds ',
+     &        2I7)
+      IHPAC = MOD (IPACJO,10)
+      IF (IHPAC.GT.0 .AND. IHPAC.LE.LPAC) THEN
+        WRITE (LOUTIO,818) TPAC(IHPAC)
+  818   FORMAT(/3X,'HADRONIC  package is ',A8)
+      ELSE
+        WRITE(LOUTIO,'(''NO HADRONIC package'')')
+      ENDIF
+      ITPAC = MOD (IPACJO/10,10)
+      IF (ITPAC.EQ.1) WRITE (LOUTIO,'(3X,''FAST tracking'')')
+      IRPAC = IPACJO/100
+      IF (IRPAC.EQ.1) WRITE (LOUTIO,'(3X,''RDST in use'')')
+C
+      WRITE(LOUTIO,819) ALFIEL
+  819 FORMAT(/3X,'MAGNETIC FIELD : nominal value = ',F6.3,' Kgauss')
+C
+      WRITE(LOUTIO,820) ALRMAX,ALZMAX
+  820 FORMAT(/3X,'GEOMETRY   : fiducial volume is RMAX = ',F8.1,' cm',
+     1        2X,'and ZMAX = ',F8.1,' cm')
+      M=0
+      DO 2 L=1,LGEO
+        IF(IGEOJO(L).GT.0) THEN
+          M=M+1
+          TNAM(M)=TGEOJO(L)
+        ENDIF
+    2 CONTINUE
+      WRITE(LOUTIO,821) (TNAM(L),L=1,M)
+  821 FORMAT(16X,'components present in the setup are : ',15(A2,2X))
+C
+C - print statistics for this run
+      WRITE(LOUTIO,800) IRUNJO
+  800 FORMAT(/3X,'RUN NUMBER',T25,I10)
+      WRITE(LOUTIO,802) NEVTJO
+  802 FORMAT(3X,'EVENTS ',T25,I10)
+      WRITE(LOUTIO,803) TIMEJO(5),TIME
+  803 FORMAT(3X,'TIME SPENT',T25,'before 1st event',F8.3,' sec',T54
+     1         ,'per event ',F8.3,' sec')
+      WRITE(LOUTIO,805) NRNDJO
+  805 FORMAT(3X,'LAST RANDOM NUMBER ',T25,3I15)
+C
+      IF (IPROJO(2).NE.0) THEN
+C - print pseudo-histograms on number of tracks / event
+        DO 1 I=1,LST2
+          WRITE(LOUTIO,807) TITL(I),NSTAJO(LBIN+1,I),LBIN*MBINJO(I)
+     1                    ,(NSTAJO(LBIN+L,I),L=2,3)
+          WRITE(LOUTIO,808) (N*MBINJO(I),N=1,LBIN),
+     &                      (NSTAJO(N,I),N=1,LBIN)
+    1   CONTINUE
+  807   FORMAT(/3X,A40/3X,'# of events with zero track = ',I3,
+     1            5X,'with more than ',I4,' tracks = ',I4,
+     2            5X,'max. # of tracks = ',I5)
+  808   FORMAT(20I6)
+      ENDIF
+C
+C - print error codes
+      WRITE(LOUTIO,804) (N,N=1,LERR),NERRJO
+  804 FORMAT(/3X,'ERROR CODES  (definitions in ASCRUN : 804 format)'/
+     &        3X,'1. - not enough space to book BOS bank (ALBOS)',
+     &        T58,'2. - MUON error : array too small (MUDGTZ)'/
+     &        3X,'3. - HCAL error (HCAL module)',
+     &        T58,'4. - ECAL error : missing banks (ECAL module)'/
+     &        3X,'5. - ITC  error : bank too small (ITDAQ)',
+     &        T58,'6. - event did not terminate (ASEVEH)'/
+     &        3X,'7. - VDET error',
+     &        T58,'8. - not used'/
+     &        3X,'9. - LCAL error : wrong data',
+     &        T58,'10.- User reject at KINE process'/
+     &        3X,'11.- CALO error : missing banks (CALO module)'/
+     +        3X,20I5/3X,20I5)
+C
+C - print BOS statistics
+      CALL BOSTA
+C
+C - print ZEBRA statistics
+      CALL MZEND
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.4
+log
+@gal307 look at galeph/news/news.h
+@
+text
+@d50 1
+a50 1
+     &            'DATE',I8,2X,'TIME',I5//)
+@
+
+
+1.4.2.1
+log
+@gal308_2 Y2K fix in skel/ geom/ hcal/
+@
+text
+@d50 1
+a50 1
+     &            'DATE',I10,2X,'TIME',I5//)
+@
+
+
+1.3
+log
+@replace TIMAx by TIMEx
+@
+text
+@d156 1
+a156 1
+  803 FORMAT(3X,'TIME SPENT',T25,'before 1st event',F8.3,' sec',T50
+@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ cahtra.h gmacro.h lccomc.h lcnamc.h ljjpar.h siconst.h
+ sigeco.h version.h
+ itmsk1.F itmsk2.F itnois.F itres.F itxtlk.F
+ lcadc.F lcamp.F lcasig.F lcbhab.F lcbkpr.F lcdigi.F lcfral.F
+ lchit.F lcirun.F lcnami.F lcnois.F lcpad.F lcroc.F lcsamp.F
+ lcsatu.F lcshow.F lcstrt.F lctrak.F lctrdi.F lctrht.F lcwire.F
+ lcwsum.F lcwtri.F
+ muasig.F mubook.F muirun.F muunoi.F muwsum.F
+ trignews.h
+ siasig.F sitrak.F siwsum.F
+ asasig.F asbook.F ascjob.F ascrun.F asctra.F asevst.F asfxxx.F
+ asieve.F asigea.F asijob.F asimod.F asinit.F asipac.F asirun.F
+ askine.F asksin.F asktrk.F aspeve.F asprun.F asread.F asredc.F
+ asreve.F asrkin.F asrtyp.F asrust.F astdeb.F astgea.F astrac.F
+ astrig.F aswkin.F aswrtp.F aswsum.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+ xtrcom.h
+ ecalnews.h geomnews.h lcalnews.h news.h skelnews.h vdetnews.h
+@
+text
+@d7 1
+a7 1
+C. - Calls          TIMAX                             from KERNLIB
+d41 1
+a41 1
+      CALL TIMAX (TIMEJO(3))
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d10 2
+a11 1
+C ---------------------------------------------------------------------
+d13 1
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

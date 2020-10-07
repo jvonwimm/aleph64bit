@@ -1,0 +1,64 @@
+#! /bin/csh
+#==========================================================
+# 9/4/97                                         FLR
+#                        copydbase
+# copydbase file.ext to other local /aleph/dbase/ disks
+# copy adbs216.daf
+# will copy adbs216.daf to other local disks
+# copy database from shift50 to afal01, csf to shift9
+#==========================================================
+#
+# set echo on if last arg is "-v"
+set verbflr = ""
+
+set nar = $#argv
+if (nar != 0) then
+  if ($argv[${nar}] == "-v") then
+     set echo on
+     set verbflr =    "-v"
+     set argv[${nar}] = ""
+     @ nar = ${nar} - 1 
+  endif
+endif
+#
+set file = $1
+set dcos = "OSF1"
+#
+if (${SERVICE} == "AFAL") set local1 = "shift50:${ALEPH_ROOT}/${dcos}/dbase"
+if (${SERVICE} == "SHIFTALEPH") set local1 = "afal01:${ALEPH_ROOT}/${dcos}/dbase"
+
+cd ${ALEPH}/dbase
+rcp -p ${file} ${local1}/${file}
+
+
+#
+exit:
+unsetenv NORETRY
+exit
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

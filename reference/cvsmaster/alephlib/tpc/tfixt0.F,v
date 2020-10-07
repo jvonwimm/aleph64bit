@@ -1,0 +1,134 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.1
+	aleph315:1.1
+	aleph314_2:1.1
+	aleph314_1:1.1
+	aleph314:1.1
+	aleph313_1:1.1
+	aleph313:1.1
+	aleph312_1:1.1
+	aleph312:1.1
+	aleph311_1:1.1
+	aleph311:1.1
+	aleph310_3:1.1
+	aleph310_2:1.1
+	aleph310_1:1.1
+	aleph310:1.1
+	aleph309_1:1.1
+	aleph309:1.1
+	aleph308_3:1.1
+	aleph308_2:1.1
+	aleph308_1:1.1
+	aleph308:1.1
+	aleph307_6:1.1
+	aleph307_5:1.1
+	aleph307_4:1.1
+	aleph307_2:1.1
+	aleph307_1:1.1
+	aleph307:1.1
+	aleph306:1.1
+	aleph305_4:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	2000.05.02.08.53.59;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.10.28.16.30.10;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@fix t0 for early 2000 high energy runs
+@
+text
+@      FUNCTION TFIXT0(IRUN,IEVT)
+C--------------------------------------------------------------------
+C! Correct for 1997 hardware problem which shifted T0 by several ns.
+C! during periods of high luminosity at start of fill.
+C!
+C!    Author:    I. Tomalin    3-10-97
+C!    Modified:  W. Wiedenamnn 29/04/2000 include also run range  
+C!                                        for t0 problem in 2000
+C!    
+C! INPUT:
+C!   INTE IRUN: Run number
+C!   INTE IEVT: Event number
+C! OUTPUT:
+C!   REAL TFIXT0: Offset which should be applied to TPC t0 in ns.
+C!-------------------------------------------------------------------
+      SAVE
+      DATA LRUN/0/
+C
+#include "tft0jj.h"
+#include "bcs.h"
+#include "bmacro.h"
+C!-------------------------------------------------------------------
+       TFIXT0 = 0.0
+C
+C Only bother looking at data in dodgy period.
+       IF ((IRUN.GE.43700.AND.IRUN.LE.44200).or.
+     +     (IRUN.GE.53250.AND.IRUN.LE.53467)) THEN
+C
+C Access database bank containing corrections.
+        IF (IRUN.NE.LRUN) THEN
+C If new run then read it from the database.
+          IF (LRUN.GT.0) KTFT0 = NDROP('TFT0',LRUN)
+          LRUN = IRUN
+          LDBAS = JUNIDB(0)
+          KTFT0 = MDARD(IW,LDBAS,'TFT0',IRUN)
+        ELSE
+C Else just relink it.
+          KTFT0 = NLINK('TFT0',IRUN)
+        ENDIF
+C
+        IF (KTFT0.GT.0) THEN
+C Loop over periods needing different corrections in this run.
+          DO 10 I = 1,LROWS(KTFT0)
+            IF (IEVT.LE.ITABL(KTFT0,I,JTFTEV)) THEN
+              TFIXT0 = RTABL(KTFT0,I,JTFTT0)
+              GOTO 99
+            END IF
+   10     CONTINUE
+        END IF
+      END IF
+C
+   99 CONTINUE
+      END
+@
+
+
+1.1
+log
+@corr file 305.4
+@
+text
+@d7 3
+a9 1
+C!
+d26 2
+a27 1
+       IF (IRUN.GE.43700.AND.IRUN.LE.44200) THEN
+@
+

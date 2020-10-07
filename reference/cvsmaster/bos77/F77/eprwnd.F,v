@@ -1,0 +1,120 @@
+head	1.2;
+access;
+symbols
+	bos3589:1.2
+	bos3189:1.1
+	bos3089:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.01.29.15.49.15;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.03.11.12.53.04;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release bos3589: new epio routines
+@
+text
+@      SUBROUTINE EPRWND(LUNIT,IBUF,IERR)
+C.
+C.  REWINDING AN OUTPUT UNIT CLOSES THE UNIT AND WRITES AN END  OF  FILE
+C.   MARK  (ROUTINE  EPEOF).  AFTER A REWIND OPERATION (AND ONLY IN THAT
+C.  CASE) THE USER MAY SWITCH FROM READING TO WRITING OR VICE VERSA.
+C.
+C. THE PHYS. HEADER IS RESET TO THE STANDARD HEADER AFTER A REWIND.
+C. THE BLOCK AND RECORD COUNTS ARE RESET TO ZERO.
+C.
+C. INPUT:
+C.
+C. LUNIT    LOGICAL UNIT
+C.
+C. IBUF     USER PROVIDED UNIT BUFFER. MUST NOT BE TOUCHED BY USER.
+C.
+C. OUTPUT:
+C.
+C. IERR     ERROR FLAG. SEE SEPARATE LIST.
+*
+* epiocom.inc
+*
+      COMMON/EPCOMM/NMUNIT,NWUNIT,NCONT,ISTART,LASTUT,LREF,LIST(350)
+      EQUIVALENCE (NOUTUT,LIST(8))
+*
+      DIMENSION IBUF(2)
+C--- CHECK WHETHER SAME USER UNIT AS LAST TIME
+      IF(LASTUT.EQ.LUNIT)  GOTO 1551
+C--- NEW UNIT - GET REF
+      CALL EPUNIT(LUNIT,IERR)
+      IF(IERR.EQ.0)  GOTO 1552
+      GOTO 77777
+ 1551 IERR=0
+      IF(LREF.NE.0)  GOTO 1552
+      IERR=13
+      CALL EPERRH(LUNIT,IERR)
+      GOTO 77777
+ 1552 CONTINUE
+C--- CLOSE IF OUTPUT UNIT
+      IF(LIST(ISTART+16).NE.1)  GOTO 10
+        CALL EPCLOS(LUNIT,IBUF,IERR)
+        IF(IERR.NE.0) GOTO 77777
+        IF(LIST(ISTART+33).NE.2)CALL EPEOF(LUNIT,IERR)
+   10 CONTINUE
+      IF(IERR.NE.0)  GOTO 77777
+*
+      IF(LIST(ISTART+33).EQ.0)REWIND LUNIT
+      IF(LIST(ISTART+33).EQ.2 .AND. LIST(ISTART+25).NE.0)
+     1  call cfrew(LIST(ISTART+25),0)
+*
+C--- RESET STATUS WORDS AS NECESSARY
+      LIST(ISTART+11)=0
+      LIST(ISTART+12)=0
+C
+C     THE CHANNEL NUMBER AND RAB ADDRESS FOR THE VAX MUST BE REMEMBERED
+C     THEREFORE WE DONT ZERO ALL THE WAY TO NWUNIT
+C     THE SAME HOLDS FOR UNIVAC, AND ALSO FOR THE APOLLO STREAM_$ID
+      CALL UZERO(LIST,ISTART+14,ISTART+23)
+77777 RETURN
+      END
+
+
+@
+
+
+1.1
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@a0 1
+#if defined(UNIX)
+d19 3
+d24 1
+d45 1
+d47 3
+a49 6
+      IF(LIST(ISTART+33).EQ.2) THEN
+#if defined(ARDEB)
+         write (6,*) ' EPRWND LUNIT LDES= ',LUNIT,list(istart+25)
+#endif
+         IF (LIST(ISTART+25).NE.0) call cfrew(LIST(ISTART+25),0)
+      ENDIF 
+d60 2
+a61 1
+#endif
+@

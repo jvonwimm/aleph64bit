@@ -1,0 +1,267 @@
+head	1.5;
+access;
+symbols
+	alpha124_18:1.4
+	alpha124_17:1.4
+	alpha124_16:1.4
+	alpha124_15:1.4
+	alpha124_14:1.3
+	alpha124_13:1.2
+	alpha124_12:1.1.1.1
+	alpha124_11:1.1.1.1
+	alpha124_10:1.1.1.1
+	alpha124_09:1.1.1.1
+	alpha124_08:1.1.1.1
+	alpha124_07:1.1.1.1
+	alpha124_7:1.1.1.1
+	alpha124_06:1.1.1.1
+	alpha124_05:1.1.1.1
+	alpha124_04:1.1.1.1
+	alpha124_03:1.1.1.1
+	alpha124_02:1.1.1.1
+	alpha124_01:1.1.1.1
+	alpha124:1.1.1.1
+	alpha123_12:1.1.1.1
+	alpha123_11:1.1.1.1
+	alpha123_10:1.1.1.1
+	alpha123_9:1.1.1.1
+	alpha123_8:1.1.1.1
+	alpha123_7:1.1.1.1
+	alpha123_6:1.1.1.1
+	alpha123_5:1.1.1.1
+	alpha123_4:1.1.1.1
+	alpha123_3:1.1.1.1
+	alpha123_2:1.1.1.1
+	alpha123:1.1.1.1
+	alpha122_48:1.1.1.1
+	alpha122_47:1.1.1.1
+	alpha122_46:1.1.1.1
+	alpha122_45:1.1.1.1
+	alpha122_44:1.1.1.1
+	alpha122_43:1.1.1.1
+	alpha122_42:1.1.1.1
+	alpha122_41:1.1.1.1
+	alpha122_40:1.1.1.1
+	alpha122_39:1.1.1.1
+	alpha122_38:1.1.1.1
+	alpha122_37:1.1.1.1
+	alpha122_36:1.1.1.1
+	alpha122_35:1.1.1.1
+	alpha122_34:1.1.1.1
+	alpha122_33:1.1.1.1
+	alpha122_32:1.1.1.1
+	alpha122_31:1.1.1.1
+	alpha122_30:1.1.1.1
+	alpha122_29:1.1.1.1
+	alpha122_28:1.1.1.1
+	alpha122_27:1.1.1.1
+	alpha122_26:1.1.1.1
+	alpha122_25:1.1.1.1
+	alpha122_24:1.1.1.1
+	alpha122_23:1.1.1.1
+	alpha122_22:1.1.1.1
+	alpha122_21:1.1.1.1
+	alpha122_20:1.1.1.1
+	alpha122_19:1.1.1.1
+	alpha122_18:1.1.1.1
+	alpha122_17:1.1.1.1
+	alpha122_16:1.1.1.1
+	alpha122_15:1.1.1.1
+	alpha122_14:1.1.1.1
+	alpha122_13:1.1.1.1
+	alpha122_12:1.1.1.1
+	alpha122_11:1.1.1.1
+	alpha122_10:1.1.1.1
+	alpha122_9:1.1.1.1
+	alpha122_8:1.1.1.1
+	alpha122_6:1.1.1.1
+	alpha122_5:1.1.1.1
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.5
+date	99.12.08.09.02.29;	author flr;	state dead;
+branches;
+next	1.4;
+
+1.4
+date	99.08.25.14.17.15;	author boucrot;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	99.08.25.13.56.35;	author boucrot;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	99.08.25.09.44.15;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.03.14.12.42.52;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.42.53;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.5
+log
+@alpha125 - Y2K compliant
+@
+text
+@      SUBROUTINE GTYEAR
+CKEY QSELEP/INTERNAL
+C-------------------------------------------------------------------------------
+C! Auxiliary to QSELEP
+C  Author                           I. Ten Have     27-Jul-1994
+C               Fix Y2K bug         J. Boucrot      29-Jul-1999
+C  Calculates the year the data was taken in or the year a MC run is
+C  supposed to represent.
+C-------------------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+#include "qdecl.h"
+#include "qcde.h"
+C
+C Private variables and common initialised by LTINIT.
+C
+      INTEGER LASTRN,NLPTEV,YEARID,LTFWCD
+      LOGICAL LTFRST
+      COMMON /LTPRIV/ LASTRN,NLPTEV,LTFRST,YEARID,LTFWCD
+C
+C Variables.
+C
+      INTEGER IDBANK,NLINK
+C
+      REAL LTSCFA
+      PARAMETER(LTSCFA = 1000000.)
+C
+      INTEGER NCNT,IYY
+C
+      PARAMETER(NCNT = 25)
+      INTEGER LEPCNT(NCNT)
+C
+C     QSELEP counters
+C
+      INTEGER LTNCHR,LTQLPR,LTECHR,LTACHR,LTBOSC,LTBOSS,LTNJET,LTJTAS,
+     @@        LTPTFL,LTHVDQ,LTHAD ,LTNLEP,LTYLEP,LTCONV,LTELMU,LTNEMI,
+     @@        LTNEPL,LTNMMI,LTNMPL,LTNCNV,LTCALL,LTNEFO,LTGTYF,LTCPDF,
+     @@        LTBRFL
+C
+      PARAMETER(LTNCHR= 1,LTQLPR= 2,LTECHR= 3,LTACHR= 4,LTBOSC= 5,
+     @@          LTBOSS= 6,LTNJET= 7,LTJTAS= 8,LTPTFL= 9,LTHVDQ=10,
+     @@          LTHAD =11,LTNLEP=12,LTYLEP=13,LTCONV=14,LTELMU=15,
+     @@          LTNEMI=16,LTNEPL=17,LTNMMI=18,LTNMPL=19,LTNCNV=20,
+     @@          LTCALL=21,LTNEFO=22,LTGTYF=23,LTCPDF=24,LTBRFL=25)
+C
+       COMMON /LPTPUB/ LEPCNT
+#include "qmacro.h"
+C-------------------------------------------------------------------------------
+      YEARID = 0
+      IF (XMCEV) THEN
+        IDBANK = NLINK('ASIM',0)
+        IF (IDBANK.GT.0) THEN 
+           IYY=ITABL(IDBANK,1,1)/100
+           IF (IYY.GT.80) THEN
+              YEARID=1900+IYY
+           ELSE
+              YEARID=2000+IYY 
+           ENDIF
+        ENDIF
+        IF (YEARID.LT.1989) YEARID = 0
+      ELSE
+        IF (KRUN.LT.25000) THEN
+          IF (KRUN.GE.4000) YEARID = 1989
+          IF (KRUN.GE.6000) YEARID = 1990
+          IF (KRUN.GE.10000) YEARID = 1991
+          IF (KRUN.GE.14000) YEARID = 1992
+          IF (KRUN.GE.20000) YEARID = 1993
+        ELSE
+          IDBANK = NLINK('EVEH',0)
+          IF (IDBANK.GT.0) THEN 
+             IYY=IW(IDBANK+4)/10000 
+             IF (IYY.GT.80) THEN
+                YEARID=1900+IYY
+             ELSE
+                YEARID=2000+IYY 
+             ENDIF
+          ENDIF   
+          IF (YEARID.LT.1989) YEARID = 0
+        ENDIF
+      ENDIF
+C
+      RETURN
+C
+      END
+#endif
+@
+
+
+1.4
+log
+@*** empty log message ***
+@
+text
+@@
+
+
+1.3
+log
+@*** empty log message ***
+@
+text
+@d29 1
+@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@d28 1
+a28 1
+      INTEGER NCNT
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d6 1
+a6 1
+C
+d51 9
+a59 2
+        IF (IDBANK.GT.0) YEARID = (ITABL(IDBANK,1,1)/100)+1900
+        IF (YEARID.LT.1989.OR.YEARID.GT.1999) YEARID = 0
+d69 9
+a77 2
+          IF (IDBANK.GT.0) YEARID = (IW(IDBANK+4)/10000)+1900
+          IF (YEARID.LT.1989.OR.YEARID.GT.1999) YEARID = 0
+@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

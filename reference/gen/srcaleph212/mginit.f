@@ -1,0 +1,220 @@
+      SUBROUTINE MGINIT(LRGEO,IRUNR,IERR,NEWNR)
+C
+C----------------------------------------------------------*
+C! Initialize MUON reconstruction
+C!
+C!    Author:   Weimin Wu/Giorgio Capon     10-06-1987
+C!    modified :F.Ranjard                   26-02-1988
+C!    Description
+C!    ===========
+C!    This routine is called once per run for
+C!    initialization of the MUON reconstruction program.
+C!
+C!    called by READRN
+C!
+C!---------------------------------------------------------*
+      SAVE
+      INTEGER LMHLEN, LMHCOL, LMHROW
+      PARAMETER (LMHLEN=2, LMHCOL=1, LMHROW=2)
+C
+      COMMON /BCS/   IW(1000)
+      INTEGER IW
+      REAL RW(1000)
+      EQUIVALENCE (RW(1),IW(1))
+C
+      PARAMETER(JMBAID=1,JMBAVR=2,JMBASN=4,JMBANS=5,JMBATZ=6,JMBAWG=7,
+     +          JMBAXT=8,JMBAYT=10,JMBAXS=12,JMBAYS=14,JMBAPX=16,
+     +          JMBAPY=17,JMBAPT=18,JMBAP2=19,JMBAAD=20)
+      PARAMETER(JMENID=1,JMENVR=2,JMENSN=4,JMENNS=5,JMENTZ=6,JMENWG=7,
+     +          JMENXT=8,JMENYT=10,JMENXS=12,JMENYS=14,JMENPX=16,
+     +          JMENPY=17,JMENPT=18,JMENP2=19,JMENAD=20)
+      PARAMETER(JMMMID=1,JMMMVR=2,JMMMSN=4,JMMMNS=5,JMMMTZ=6,JMMMWG=7,
+     +          JMMMXT=8,JMMMYT=10,JMMMXS=12,JMMMYS=14,JMMMPX=16,
+     +          JMMMPY=17,JMMMPT=18,JMMMP2=19,JMMMAD=20)
+      PARAMETER(JMPBID=1,JMPBVR=2,JMPBHN=4,JMPBMS=5,JMPBMT=6)
+      PARAMETER(JMPEID=1,JMPEVR=2,JMPEHN=4,JMPEMS=5,JMPEMT=6)
+      PARAMETER(JMPMID=1,JMPMVR=2,JMPMHN=4,JMPMMS=5,JMPMMT=6)
+      PARAMETER(JMSBID=1,JMSBVR=2,JMSBSB=4,JMSBWB=5,JMSBZB=6,JMSBRB=7,
+     +          JMSBCB=8,JMSBEL=9,JMSBMB=10,JMSBMT=11)
+      PARAMETER(JMSCID=1,JMSCMU=2,JMSCST=3,JMSCTS=7)
+      PARAMETER(JMSEID=1,JMSEVR=2,JMSESE=4,JMSEXW=5,JMSEYW=6,JMSEXC=7,
+     +          JMSEYC=8,JMSEZE=9,JMSEEL=10,JMSEME=11,JMSEMT=12)
+      PARAMETER(JMSLID=1,JMSLVR=2,JMSLSM=4,JMSLZW=5,JMSLWZ=6,JMSLRM=7,
+     +          JMSLCM=8,JMSLUM=9,JMSLIM=11,JMSLEL=12,JMSLMM=13,
+     +          JMSLMT=14)
+      PARAMETER(JMTBID=1,JMTBVR=2,JMTBMT=4,JMTBNX=5,JMTBNY=6,JMTBN8=7,
+     +          JMTBL8=8)
+      PARAMETER(JMTEID=1,JMTEVR=2,JMTEMT=4,JMTENX=5,JMTENY=6,JMTEN8=7,
+     +          JMTENE=8,JMTEL8=28)
+      PARAMETER(JMTYID=1,JMTYVR=2,JMTYMT=4,JMTYXM=5,JMTYYM=6,JMTYN8=7,
+     +          JMTYL8=8)
+      PARAMETER(JMUOID=1,JMUOVR=2,JMUOCN=4,JMUONS=5,JMUOWE=6,JMUOHE=7,
+     +          JMUOWN=8,JMUOWT=9,JMUOHT=10,JMUOOT=11,JMUODS=12,
+     +          JMUOWS=13,JMUODX=14,JMUOWX=15,JMUODY=16,JMUOWY=17,
+     +          JMUOZI=18,JMUOWA=20,JMUOHA=21,JMUOLS=22,JMUOET=23,
+     +          JMUOSX=24,JMUOA1=25,JMUOA2=26,JMUOSY=27,JMUOY1=28,
+     +          JMUOY2=29)
+CD MBSCJJ
+      PARAMETER(JMBSID=1,JMBSVR=2,JMBSSN=4,JMBSNS=5,JMBSPX=6,
+     +JMBSPY=7,JMBSPT=8,JMBSP2=9,JMBSAD=10)
+CD MSSLJJ
+      PARAMETER(JMSSID=1,JMSSVR=2,JMSSLN=4,JMSSWL=5,JMSSWS=6,
+     +JMSSLS=7,JMSSXY=8,JMSSEB=9,JMSSMB=10,JMSSMT=11)
+CD MTSYJJ
+      PARAMETER(JMTSID=1,JMTSVR=2,JMTSMT=4,JMTSNX=5,
+     +JMTSNY=6,JMTSN8=7,JMTSL8=8)
+      PARAMETER (NSUBCO=3,NLAYRS=2,NSLBAR=24,NSLMDA=38,NSLEND=16)
+      PARAMETER (NSLBSM=16)
+      COMMON/MRDDAT/XPITCH,YPITCH,XXOFFS(NSUBCO,NLAYRS), YYOFFS(NSUBCO,
+     +NLAYRS),ZZOFFS(NSUBCO,NLAYRS),WDEIMU,WD16MU(NSUBCO),OFTBMU
+      COMMON/MBG1DA/WIDTHB(NSLBAR),ZWIDTB(NSLBAR),CENDVB(NSLBAR), RINTEB
+     +(NSLBAR),INPHIB(NSLBAR),THICKB
+      COMMON/MMG1DA/ZWIDTM(NSLMDA),WIDTHM(NSLMDA),CENDVM(NSLMDA), RINTEM
+     +(NSLMDA),INPHIM(NSLMDA),ZMODUL(NSLMDA),THICKM
+      COMMON/MCG1DA/XCENTR(NSLEND),YCENTR(NSLEND),XWIDTH(NSLEND), YWIDTH
+     +(NSLEND),ZENCAP(NSLEND),THICKC
+      COMMON/MSG1DA/WTPLBN(NSLBSM),XTPYBT(NSLBSM)
+      INTEGER ALGTDB
+      CHARACTER LISTM*44
+      DATA LISTM/'MUONMBACMENCMMMCMSELMSLMMSBLMTYMMTBYMTEYMSSL'/
+C!    set of intrinsic functions to handle BOS banks
+C - # of words/row in bank with index ID
+      LCOLS(ID) = IW(ID+1)
+C - # of rows in bank with index ID
+      LROWS(ID) = IW(ID+2)
+C - index of next row in the bank with index ID
+      KNEXT(ID) = ID + LMHLEN + IW(ID+1)*IW(ID+2)
+C - index of row # NRBOS in the bank with index ID
+      KROW(ID,NRBOS) = ID + LMHLEN + IW(ID+1)*(NRBOS-1)
+C - # of free words in the bank with index ID
+      LFRWRD(ID) = ID + IW(ID) - KNEXT(ID)
+C - # of free rows in the bank with index ID
+      LFRROW(ID) = LFRWRD(ID) / LCOLS(ID)
+C - Lth integer element of the NRBOSth row of the bank with index ID
+      ITABL(ID,NRBOS,L) = IW(ID+LMHLEN+(NRBOS-1)*IW(ID+1)+L)
+C - Lth real element of the NRBOSth row of the bank with index ID
+      RTABL(ID,NRBOS,L) = RW(ID+LMHLEN+(NRBOS-1)*IW(ID+1)+L)
+C
+C
+      IBOS = ALGTDB (LRGEO,LISTM,IRUNR)
+      IF (IBOS .EQ. 0) THEN
+C     at least one bank is missing ==> IERR=1 and RETURN
+         IERR = 1
+         NEWNR = 0
+      ELSEIF (IBOS .GT. 0) THEN
+C     all banks are there and have not been reloaded ==> RETURN
+         IERR = 0
+         NEWNR = 0
+      ELSE
+C     all banks are there but at least 1 bank has been reloaded
+C     ===> set the variables in common blocks
+         IERR = 0
+         NEWNR = 1
+C
+C    fill the constants charecterizing the Muon Chambers globally
+C
+         JMUON = IW(NAMIND('MUON'))
+         WDEIMU=RTABL(JMUON,1,JMUOWE)
+         OFTBMU=RTABL(JMUON,1,JMUOOT)
+         XPITCH=RTABL(JMUON,1,JMUODX)
+         YPITCH=RTABL(JMUON,1,JMUODY)
+C
+C        Same for all SLOTS
+C
+         DO 111 NSUB=1,3
+            ZZOFFS(NSUB,1)=RTABL(JMUON,1,JMUOZI)
+            ZZOFFS(NSUB,2)=RTABL(JMUON,1,JMUOZI+1)
+ 111     CONTINUE
+C
+C       For barrel  : NSUB=3
+C
+         JMBAC = IW(NAMIND('MBAC'))
+         XXOFFS(3,1)=RTABL(JMBAC,1,JMBAXS)
+         XXOFFS(3,2)=RTABL(JMBAC,1,JMBAXS+1)
+         YYOFFS(3,1)=RTABL(JMBAC,1,JMBAYS)
+         YYOFFS(3,2)=RTABL(JMBAC,1,JMBAYS+1)
+C
+C    WD16MU depends on WDEIMU and WDGP16 which comes from MBAC
+C
+         WD16MU(3)=2.*WDEIMU +RTABL(JMBAC,1,JMBAWG)
+C
+C       For middle angle : NSUB=2
+C
+         JMMMC = IW(NAMIND('MMMC'))
+         XXOFFS(2,1)=RTABL(JMMMC,1,JMMMXS)
+         XXOFFS(2,2)=RTABL(JMMMC,1,JMMMXS+1)
+         YYOFFS(2,1)=RTABL(JMMMC,1,JMMMYS)
+         YYOFFS(2,2)=RTABL(JMMMC,1,JMMMYS+1)
+C
+C    WD16MU depends on WDEIMU and WDGP16 which comes from MMMC
+C
+         WD16MU(2)=2.*WDEIMU +RTABL(JMMMC,1,JMMMWG)
+C
+C       For endcap : NSUB=1
+C
+         JMENC = IW(NAMIND('MENC'))
+         XXOFFS(1,1)=RTABL(JMENC,1,JMENXS)
+         XXOFFS(1,2)=RTABL(JMENC,1,JMENXS+1)
+         YYOFFS(1,1)=RTABL(JMENC,1,JMENYS)
+         YYOFFS(1,2)=RTABL(JMENC,1,JMENYS+1)
+C
+C    WD16MU depends on WDEIMU and WDGP16 which comes from MENC
+C
+         WD16MU(1)=2.*WDEIMU +RTABL(JMENC,1,JMENWG)
+C
+C      fill constants characterizing the subdetectors,namely
+C      Middle Angle,Barrel,Endcap
+C
+C     Fill common block for Middle angle
+C
+         THICKM =RTABL(JMMMC,1,JMMMTZ)
+         JMSLM = IW(NAMIND('MSLM'))
+         DO 12 NSL=1,NSLMDA
+            RINTEM(NSL)=RTABL(JMSLM,NSL,JMSLRM)
+            INPHIM(NSL)=ITABL(JMSLM,NSL,JMSLIM)
+            CENDVM(NSL)=RTABL(JMSLM,NSL,JMSLCM)
+            WIDTHM(NSL)=RTABL(JMSLM,NSL,JMSLWZ)
+            ZWIDTM(NSL)=RTABL(JMSLM,NSL,JMSLZW)
+C
+            ZMODUL(NSL)=RTABL(JMSLM,NSL,JMSLUM)
+            IF(NSL.GT.10) ZMODUL(NSL)=RTABL(JMSLM,NSL,JMSLUM+1)
+            IF(NSL.GT.19) ZMODUL(NSL)=RTABL(JMSLM,NSL,JMSLUM)
+            IF(NSL.GT.29) ZMODUL(NSL)=RTABL(JMSLM,NSL,JMSLUM+1)
+ 12      CONTINUE
+C
+C        Fill common block for Barrel
+C
+         THICKB=RTABL(JMBAC,1,JMBATZ)
+         JMSBL = IW(NAMIND('MSBL'))
+         DO 15 NSL=1,NSLBAR
+            RINTEB(NSL)=RTABL(JMSBL,NSL,JMSBRB)
+            INPHIB(NSL)=1+MOD(NSL-1,12)
+            CENDVB(NSL)=RTABL(JMSBL,NSL,JMSBCB)
+            WIDTHB(NSL)=RTABL(JMSBL,NSL,JMSBWB)
+            ZWIDTB(NSL)=RTABL(JMSBL,NSL,JMSBZB)
+ 15      CONTINUE
+C
+C       fill common block for Endcap
+C
+         THICKC=RTABL(JMENC,1,JMENTZ)
+         JMSEL = IW(NAMIND('MSEL'))
+         DO 16 NSL=1,NSLEND
+            XWIDTH(NSL)=RTABL(JMSEL,NSL,JMSEXW)
+            YWIDTH(NSL)=RTABL(JMSEL,NSL,JMSEYW)
+            XCENTR(NSL)=RTABL(JMSEL,NSL,JMSEXC)
+            IF (NSL.GT.8) XCENTR(NSL)=-XCENTR(NSL)
+            YCENTR(NSL)=RTABL(JMSEL,NSL,JMSEYC)
+            ZENCAP(NSL)=RTABL(JMSEL,NSL,JMSEZE)
+ 16      CONTINUE
+C
+C        fill common block for Special barrel
+C
+         JMSSL = IW(NAMIND('MSSL'))
+         DO 17 NSL=1,NSLBSM
+            WTPLBN(NSL)=RTABL(JMSSL,NSL,JMSSWL)
+            XTPYBT(NSL)=RTABL(JMSSL,NSL,JMSSXY)
+ 17      CONTINUE
+C
+      ENDIF
+C
+      END

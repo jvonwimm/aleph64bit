@@ -1,0 +1,560 @@
+      SUBROUTINE BCALINFO(dummy)
+*=========================================================================
+*	BCAL object reconstruction program
+*-------------------------------------------------------------------------
+*
+* Author	: I.C. PARK	- 19970424
+*
+* Description	:
+*
+*	This routine may be called inside ALPHA to have physics objects
+*	reconstructed from BCAL. Mainly the objects are the scattered
+*	beam particles
+*
+* Input		: nothing
+* Output	: by COMMON
+* Banks		: BPTR, BCSC, BCSL, BCGN are used
+*-----------------------------------------------------------------------
+#include "qcde.h"
+#include "bcalinfo.h"
+      logical first/.true./
+      integer ireco(4),itrue(4),Nbc(4)
+      real    P3(3),ENR(4),THR(4),PHR(4),ENT(4),THT(4),PHT(4)
+#include "qmacro.h"
+*= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+      IF (First) THEN
+        write(*,*)'+---------------------------------------------+'
+        write(*,*)'|                BCALINFO v. 1.0              |'
+        write(*,*)'|---------------------------------------------|'  
+        IF (Gain_PMT(1).eq.0.0 .or. Gain_APD(1).eq.0.0) THEN
+        Gain_PMT(1)= 0.085
+        Gain_PMT(2)= 0.122
+        Gain_PMT(3)= 0.14
+        Gain_PMT(4)= 0.059
+        Gain_APD(1)= 0.105
+        Gain_APD(2)= 0.099
+        Gain_APD(3)= 0.076
+        Gain_APD(4)= 0.073
+        ENDIF
+        First=.FALSE.
+      ENDIF
+*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+*	reset common variables
+*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+      KFBCR=0
+      KLBCR=0
+      KNBCR=0
+      KFBCT=0
+      KLBCT=0
+      KNBCT=0
+      NbR=0
+      NbT=0
+      call vzero(IMbR,4)
+      call vzero(ENbR,4)
+      call vzero(THbR,4)
+      call vzero(PHbR,4)
+      call vzero(IMbT,4)
+      call vzero(ENbT,4)
+      call vzero(THbT,4)
+      call vzero(PHbT,4)
+      call vzero(BEraw,4)
+      call vzero(BRcen,4)
+      call vzero(BPcen,4)
+*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+*	access BCAL information
+*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+      IF (XMCEV) THEN
+        CALL bcsimu(Nbc,EnR,ThR,PhR,EnT,ThT,PhT)
+      ELSE
+        call bcdata(Nbc,EnR,ThR,PhR)
+      ENDIF
+*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+*	fill bcinfo.inc
+*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+      do i=1,4
+        if (Nbc(i).ne.0) then
+          NbR=NbR+1
+          IMbR(NbR)=i
+          ENbR(NbR)=ENR(i)
+          THbR(NbR)=THR(i)
+          PHbR(NbR)=PHR(i)
+          if (XMCEV) then
+            NbT=NbT+1
+            IMbT(NbT)=i
+            ENbT(NbT)=ENT(i)
+            THbT(NbT)=THT(i)
+            PHbT(NbT)=PHT(i)
+          endif
+        endif
+      enddo
+*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+*	create & save as ALPHA track
+*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+* save reco
+      KNBCR=NbR
+      if (KNBCR.ne.0) then
+        do i=1,KNBCR
+          ireco(i)=KVNEW(dummy)
+          P3(1)=ENbR(i)*SIN(THbR(i))*COS(PHbR(i))
+          P3(2)=ENbR(i)*SIN(THbR(i))*SIN(PHbR(i))
+          P3(3)=ENbR(i)*COS(THbR(i))
+          call QVSET3(ireco(i),P3)
+        enddo
+        KFBCR=ireco(1)
+        KLBCR=KFBCR+KNBCR-1
+      endif
+* save true
+      KNBCT=NbT
+      if (KNBCT.ne.0) then
+        do i=1,KNBCT
+          itrue(i)=KVNEW(dummy)
+          P3(1)=ENbT(i)*SIN(THbT(i))*COS(PHbT(i))
+          P3(2)=ENbT(i)*SIN(THbT(i))*SIN(PHbT(i))
+          P3(3)=ENbT(i)*COS(THbT(i))
+          call QVSET3(itrue(i),P3)
+        enddo
+        KFBCT=itrue(1)
+        KLBCT=KFBCT+KNBCT-1
+      endif
+*      write(*,*)'----- BCALINFO 1 -----'
+*= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+      RETURN
+      END
+*_________________________________________________________________________
+
+      subroutine bcsimu(Nbc,EnR,ThR,PhR,EnT,ThT,PhT)
+*=========================================================================
+*  BCAL simulation
+*-------------------------------------------------------------------------
+*
+*  Author	: Inkyu PARK - 19970222
+*
+*  Input	: None
+*  Output	: Nbc/I(4)	- Number of MC objects in the module i
+*		  EnR/R(4)	- Energy deposit in the module i
+*		  ThR/R(4)	- Theta angle of centroid
+*		  PhR/R(4)	- Phi angle of centroid
+*		  EnT/R(4)	- True energy deposit
+*		  ThT/R(4)	- True theta angle of MC sum track
+*		  PhT/R(4)	- True phi angle of MC sum track
+*
+*  Description	:
+*
+*	A BCAL module can not distinguish multiple particles. Here all 
+*	MC particles in a BCAL module acceptance are used to give 
+*	reconstructed energy. MC true quantities are derived from the 
+*	sum track of all engaged particles.
+*
+*-----------------------------------------------------------------------
+#include "qcde.h"
+      integer 	Nbc(4),isum(4),Npar,Ipar(2,50)
+      real	P(4),V(3),ENR(4),THR(4),PHR(4),ENT(4),THT(4),PHT(4)
+      real      Ppar(4,50),Vpar(3,50)
+#include "qmacro.h"
+*= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+*	reset common array
+*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+      do imod=1,4
+        Nbc(imod)=0
+        ENR(imod)=0.0
+        THR(imod)=0.0
+        PHR(imod)=0.0
+        ENT(imod)=0.0
+        THT(imod)=0.0
+        PHT(imod)=0.0
+        isum(imod)=KVNEW(dummy)
+      enddo
+*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+*	loop on all MC
+*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+      do Imod=1,4
+        Npar=0
+        call vzero(Ipar,50)
+        call vzero(Ppar,4*50)
+        call vzero(Vpar,3*50)
+        do imct=kfmct,klmct
+        if (KSTABC(imct).ge.1) then
+        if (ABS(QCT(imct)).GE.0.995) then
+          Kcharge=KCH(imct)
+          Kparcod=KTPCOD(imct)
+          if (kparcod .eq. 1) then			! gamma
+            iparcod = 0
+          elseif (kparcod.eq.2 .or. kparcod.eq.3) then	! electron
+            iparcod = 1
+          elseif (kparcod.eq.5 .or. kparcod.eq.6) then	! muon
+            iparcod = 2
+          elseif (kparcod.ge.8.and. kparcod.lt.16) then	! hadron
+            iparcod = 3
+          else						! etc.
+            iparcod = 4
+          endif
+          call QVGET4(P,imct)
+          ivtx=KORIV(imct)
+          V(1)=QVX(ivtx)
+          V(2)=QVY(ivtx)
+          V(3)=QVZ(ivtx)
+          call BCAL_TAG(QELEP/2.0,Kcharge,P,V,Imodule)
+          if (Imodule.EQ.Imod) then
+            Npar=Npar+1
+            Ipar(1,Npar)=Iparcod
+            Ipar(2,Npar)=Kcharge
+            do i=1,4
+              Ppar(i,Npar)=P(i)
+            enddo
+            do i=1,3
+              Vpar(i,Npar)=V(i)
+            enddo
+            call qvaddn(isum(imod),imct)
+          endif
+        endif
+        endif
+        enddo
+        call bcalmc(QELEP/2.0,Npar,Ipar,Ppar,Vpar,
+     |              En,Th,Ph,Ierr)
+        if (Ierr.eq.0.and.En.gt.0.0) then
+          Nbc(Imod)=1
+          ENR(Imod)=En
+          THR(Imod)=Th
+          PHR(Imod)=Ph
+        endif
+      enddo
+*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+*	result
+*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+      do imod=1,4
+        if (Nbc(imod).ne.0) then
+          ENT(imod)=QE(isum(imod))
+          THT(imod)=ACOS(QCT(isum(imod)))
+          PHT(imod)=QPH(isum(imod))
+        endif
+      enddo
+*= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+      return
+      end
+*_________________________________________________________________________
+
+      subroutine bcdata(Nbc,EnR,ThR,PhR)
+*=============================================================================
+*   BCAL OBJECT INFORMATION
+*-----------------------------------------------------------------------------
+*
+*  Author	: Inkyu PARK - 19970222
+*
+*  Input	: None
+*  Output	: Nbc/I(4)	- Number of MC objects in the module i
+*		  EnR/R(4)	- Energy deposit in the module i
+*		  ThR/R(4)	- Theta angle of centroid
+*		  PhR/R(4)	- Phi angle of centroid
+*
+*  Description	:
+*
+*	Access BCAL banks in data and extract information and fill
+*
+*----------------------------------------------------------------
+#include "qcde.h"
+#include "bcalinfo.h"
+      integer 	Nbc(4)
+      real	ENR(4),THR(4),PHR(4)
+      integer	adcsil(16,6),adcsum
+      integer   PMT(4),APD(4),SIL(4,6,16)
+      parameter (Nadc=3,Ncha=8,Nmul=16,Ncom=2)
+      integer Jmod(Ncha,Nadc)/
+     | 0,0,0,0,0,0,1,1,1,1,1,1,2,2,2,2,2,2,3,3,3,3,3,3 /
+      integer Jpad(Nmul)/
+     |  0, 2, 4, 6, 8,10,12,14,15,13,11, 9, 7, 5, 3, 1 /
+      integer Jwaf(Ncha,Ncom,Nadc)/
+     |	4,5,2,3,0,1,1,0,        5,4,3,2,1,0,0,1,
+     |	3,2,5,4,1,0,3,2,        2,3,4,5,0,1,2,3,
+     |	5,4,4,5,3,2,0,1,        4,5,5,4,2,3,1,0/
+      logical first/.true./
+      
+#include "qmacro.h"
+*= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+*      WRITE(*,*)'----- BCALINFO 0 -----'
+*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+*	reset array
+*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+      call vzero(PMT,4)
+      call vzero(APD,4)
+      call vzero(SIL,4*6*16)
+      do imod=1,4
+        Nbc(imod)=0
+        ENR(imod)=0.0
+        THR(imod)=0.0
+        PHR(imod)=0.0
+      enddo
+*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+*	Banking
+*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      nBLUM=NAMIND('BLUM')
+      kBLUM=IW(nBLUM)
+*      IF (kBLUM .ne. 0) THEN
+*        write(*,*)'BCALINFO : Random Trigger Event?',KRUN,KEVT
+*        write(*,*)'BCALINFO : KCLAS-29',JBIT(KCLASW,29)
+*        write(*,*)'BCALINFO : BPTR-BPSC-BPSL',IW(NAMIND('BCTR')),
+*     |             IW(NAMIND('BCSC')),IW(NAMIND('BCSL'))
+*      ENDIF
+*	-------------------
+*	Trigger information
+*	-------------------
+      MskTrg=0
+      call vzero(ModTrg,4)
+      nBCTR = NAMIND('BCTR')
+      kBCTR = IW(nBCTR)
+      IF (kBCTR .EQ. 0) GOTO 999
+      MskTrg = IW(kBCTR+2+1)
+      do imod=1,4
+        idx=8-imod
+        if (IBITS(INT(MskTrg),idx,1).eq.1) ModTrg(imod)=1
+      enddo
+*	------------------------
+*	Scintillator information
+*	------------------------
+      nBCSC = NAMIND('BCSC')
+      kBCSC = IW(nBCSC)
+      IF (kBCSC .EQ. 0) GOTO 999
+c      write(*,*)'number of scints',IW(kBCSC+1)
+      DO i=1,IW(kBCSC+1)
+        Isci=IBITS(IW(kBCSC+2+i),16,16)+1
+        Kadc=IBITS(IW(kBCSC+2+i),0,16)
+        if (Isci .le. 4) then
+          Ipmt=Isci
+          PMT(Ipmt)=Kadc
+        elseif (Isci .gt. 4) then
+          Iapd=Isci-4
+          APD(Iapd)=Kadc
+        endif
+      ENDDO
+*	-------------------
+*	Silicon Information
+*	-------------------
+      nBCSL = namind('BCSL') 
+      kBCSL = IW(nBCSL)
+      IF (kBCSL .EQ. 0) GOTO 999
+c      write(*,*)'number of silicons infos.',IW(kBCSL+1)
+      DO i=1,IW(kBCSL+1)
+        Iacm=IBITS(INT(IW(kBCSL+2+i)),16,16)	! Iacm 3*8*16 (0->383)
+        IADC=INT(Iacm/Nmul/Ncha)+1
+        ICHA=MOD(MOD(Iacm,Nmul*Ncha),Ncha)+1
+        IMUL=INT(MOD(Iacm,Nmul*Ncha)/Ncha)+1
+        ICOM=(IMUL-1)/8+1
+        Imod=Jmod(ICHA,IADC)+1
+        Ipad=Jpad(IMUL)+1
+        Iwaf=Jwaf(ICHA,Icom,IADC)+1
+        SIL(Imod,Iwaf,Ipad)=FLOAT(IBITS(IW(kBCSL+2+i),0,16))
+      ENDDO
+      nBCGN = namind('BCGN')
+      kBCGN = IW(nBCGN)
+      IF (kBCGN .NE. 0) THEN
+*        write(*,*)'----- BCALGAIN 0 -----'
+*        write(*,*)' BCAL++ gains are changed in (KRUN:KEVT)',KRUN,KEVT
+*        write(*,*)' Old:',Gain_PMT,Gain_APD
+        DO i=1,4
+          Gain_PMT(i)=RW(kBCGN+2+i)
+          Gain_APD(i)=RW(kBCGN+2+i+4)
+        ENDDO
+*        write(*,*)' New:',Gain_PMT,Gain_APD
+*        write(*,*)'----- BCALGAIN 1 -----'
+      ENDIF
+*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+*	result
+*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+      do imod=1,4
+        adcpmt=real(PMT(imod))*Gain_PMT(imod)/2.0
+        adcapd=real(APD(imod))*Gain_APD(imod)/2.0
+        adcsum=0
+        do iwaf=1,6
+        do ipad=1,16
+          adcsil(ipad,iwaf)=SIL(imod,iwaf,ipad)
+          adcsum=adcsum+adcsil(ipad,iwaf)
+        enddo
+        enddo
+        if (adcpmt.gt.0.0 .and. adcapd.gt.0.0 .and. adcsum.gt.0) then
+          call bcaldata(QELEP/2.0,imod,adcpmt,adcapd,adcsil,
+     |                  En,Th,Ph,Rcen,Pcen,Ierr)
+          if (Ierr .eq. 0) then
+            Nbc(imod)=1
+            ENR(imod)=En
+            THR(imod)=Th
+            PHR(imod)=Ph
+            BEraw(imod)=adcapd
+            BRcen(imod)=Rcen
+            BPcen(imod)=Pcen
+*            if (En .eq. 0.0) then
+*            write(*,*)'BCAL object',imod,En,Th,Ph,adcpmt,adcapd,adcsum
+*            endif
+          endif
+        endif
+      enddo
+*      WRITE(*,*)'----- BCALPHYS 1 -----'
+      RETURN
+C= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+  999 CONTINUE
+*      WRITE(*,*)'BCDATA   : ',nBCTR,kBCTR
+      RETURN
+      END
+C_______________________________________________________________________
+
+      LOGICAL FUNCTION XBCA(itrk)
+*=======================================================================
+*	BCAL gain setting
+*-----------------------------------------------------------------------
+*
+* Author	: I.C. PARK	- 19971203
+*
+* Description	:
+*	
+*	BCAL++ PMT and APD gains are set in SOR. So user should call
+*	this routine in QUSREC
+*
+*----------------------------------------------------------------------
+#include "qcde.h"
+#include "bcalinfo.h"
+#include "qmacro.h"
+*= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+      XBCA=.FALSE.
+      IF (XMCEV) RETURN
+      IF (itrk.ge.KFBCR .and. itrk.LE.KLBCR) XBCA=.TRUE.
+C= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+      RETURN
+      END
+C_______________________________________________________________________
+
+      REAL FUNCTION QBCAER(itrk)
+*=======================================================================
+*	Raw energy of BCAL object
+*-----------------------------------------------------------------------
+*
+* Author	: I.C. PARK	- 19971211
+*
+* Description	:
+*	
+*	Return the raw energy of BCAL++ object. Currently we use APD 
+*	ADC count.
+*
+*----------------------------------------------------------------------
+#include "qcde.h"
+#include "bcalinfo.h"
+#include "qmacro.h"
+*= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+      QBCAER=0.0
+      Index=itrk-KFBCR+1
+      IF (Index.le.0 .or. Index.gt.4) RETURN
+      Imodule=IMbR(Index)
+      QBCAER=BEraw(Imodule)
+C= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+      RETURN
+      END
+C_______________________________________________________________________
+
+      REAL FUNCTION QBCARC(itrk)
+*=======================================================================
+*	R position of centroid of BCAL object
+*-----------------------------------------------------------------------
+*
+* Author	: I.C. PARK	- 19971211
+*
+* Description	:
+*	
+*	Return the R position of centroid reconstruction
+*
+*----------------------------------------------------------------------
+#include "qcde.h"
+#include "bcalinfo.h"
+#include "qmacro.h"
+*= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+      QBCARC=0.0
+      Index=itrk-KFBCR+1
+      IF (Index.le.0 .or. Index.gt.4) RETURN
+      Imodule=IMbR(Index)
+      QBCARC=BRcen(Imodule)
+C= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+      RETURN
+      END
+C_______________________________________________________________________
+
+      REAL FUNCTION QBCAPC(itrk)
+*=======================================================================
+*	Phi position of a BCAL object
+*-----------------------------------------------------------------------
+*
+* Author	: I.C. PARK	- 19971211
+*
+* Description	:
+*	
+*	Return the Phi position of a BCAL++ object.
+*
+*----------------------------------------------------------------------
+#include "qcde.h"
+#include "bcalinfo.h"
+#include "qmacro.h"
+*= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+      QBCAPC=0.0
+      Index=itrk-KFBCR+1
+      IF (Index.le.0 .or. Index.gt.4) RETURN
+      Imodule=IMbR(Index)
+      QBCAPC=BPcen(Imodule)
+C= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+      RETURN
+      END
+C_______________________________________________________________________
+
+      INTEGER FUNCTION KBCALTAG(itrk)
+*=======================================================================
+*	Checking tag
+*-----------------------------------------------------------------------
+*
+* Author	: I.C. PARK	- 19971218
+*
+* Input		: itrk	/I
+*
+* Description	:
+*	
+*	Return the module number if the track passes a BCAL module.
+*	0: can not be tagged by BCAL
+*	i: should be tagged by BCAL module i
+*
+*----------------------------------------------------------------------
+#include "qcde.h"
+#include "bcalinfo.h"
+      REAL P(4),V(3)
+#include "qmacro.h"
+*= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+      KBCALTAG=0
+      IF (KCLASS(itrk) .EQ. KMONTE) THEN
+        if (KSTABC(itrk).ge.1) then
+        if (ABS(QCT(itrk)).GE.0.995) then
+          Kcharge=KCH(itrk)
+          Kparcod=KTPCOD(itrk)
+          if (Kparcod .eq. 1) then			! gamma
+            iparcod = 0
+          elseif (Kparcod.eq.2 .or. Kparcod.eq.3) then	! electron
+            iparcod = 1
+          elseif (Kparcod.eq.5 .or. Kparcod.eq.6) then	! muon
+            iparcod = 2
+          elseif (Kparcod.ge.8.and. Kparcod.lt.16) then	! hadron
+            iparcod = 3
+          else						! etc.
+            iparcod = 4
+          endif
+          call QVGET4(P,imct)
+          ivtx=KORIV(imct)
+          V(1)=QVX(ivtx)
+          V(2)=QVY(ivtx)
+          V(3)=QVZ(ivtx)
+          call BCAL_TAG(QELEP/2.0,Kcharge,P,V,Imodule)
+          KBCALTAG=Imodule
+        endif
+        endif
+      ELSE
+        Index=itrk-KFBCR+1
+        IF (Index.le.0 .or. Index.gt.4) RETURN
+        Imodule=IMbR(Index)
+        KBCALTAG=Imodule
+      ENDIF
+C= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+      RETURN
+      END
+C_______________________________________________________________________
+

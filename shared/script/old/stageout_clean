@@ -1,0 +1,135 @@
+#!/bin/csh
+#=========================================================================
+#                             stageout_clean
+# 02/04/96                                                      F.Blin
+#=========================================================================
+# 18/04/96 added parameter -t -> no erase only test
+# 30/05/96 changed HOST -> STAGE_HOST
+#=========================================================================
+
+#set echo on
+if (${STAGE_HOST} != "shift9") then
+   echo "Please run on shift9"
+   exit
+endif
+set test = 0
+if ("$1" == "-t") set test = 1
+#
+set dat_file = `date | awk '{print $3}'`
+set tmp = /aleph/tmp/stageout_clean_${dat_file}
+ls -ld /shift/shift9/data*/* | grep -v "xu" | grep -v "lost+found" > $tmp
+ls -ld /shift/shift9/data*/xu/* | grep -v "aleph" | grep -v "stage" >> $tmp
+
+#  -s   gives statistics on pool utilization.
+stageqry -p $ALSTOUT -s > tmp_s 
+if !(-z tmp_s) then
+    set n_line = `wc -l tmp_s | awk '{print $1}'`
+    set i = 0
+    set MIN_GB = 3
+    set flag = 0
+    while ($i <= $n_line)
+      @ i++
+      set line = `head -$i tmp_s | tail -1`
+#      echo $line
+      if ($flag == 1) then
+         set word_free = `echo $line | awk '{print substr($4,0,index($4,".")-1)}'`
+         if ($word_free < $MIN_GB) echo "Warning in pool->$pool_name only ${word_free}G FREE" >> $tmp
+         set flag = 0
+      else
+         set word_1 = `echo $line | awk '{print $1}'`
+         if ($word_1 == "POOL") set flag = 1
+         if ($flag == 1) set pool_name = `echo $line | awk '{print $2}'`
+      endif
+    end
+endif
+\rm -f tmp_s 
+
+#State   current status:
+#       STAGEIN currently reading from tape to disk
+#       STAGEOUT        space has been reserved for stageout file
+#       STAGEWRT        currently copying from disk to tape
+#       WAITING_SPC     waiting for space
+#       WAITING_REQ     waiting for the same request by another job to complete
+#       STAGED  successfully staged to EOF
+#       STAGED_LSZ      successfully staged to specified size
+#       STAGED_TPE      successfully staged but blocks were skipped
+#       PUT_FAILED      stageput failed
+#size actual size / requested size (in Mbytes).
+
+set year_months = ('01' '02' '03' '04' '05' '06' '07' '08' '09' '10' '11' '12')
+set day_months = ('31' '28' '31' '30' '31' '30' '31' '31' '30' '31' '30' '31')
+set today_y = `date '+%y'`
+set today_m = `date '+%m'`
+set today_d = `date '+%d'`
+@ n = 1
+while (${n} <= 12)
+      if (${year_months[$n]} == ${today_m}) then
+         if (${n} > 1) @ n_previous = ${n} - 1
+         if (${n} < 2) @ n_previous = 12
+         if (${n} < 2) @ today_y = ${today_y} - 1
+         set m_previous = ${year_months[${n_previous}]}
+         set last_d_previous = ${day_months[${n_previous}]}
+         goto STAGEQRY_P
+      endif
+      @ n++
+end
+
+STAGEQRY_P:
+if ($test == 0) echo "++++`date`" >> /aleph/log/stageout_clean.log
+stageqry -p $ALSTOUT > tmp_p 
+if !(-z tmp_p) then
+    set today = `date '+%y/%m/%d'`
+    set n_line = `wc -l tmp_p | awk '{print $1}'`
+    set i = 1
+    while ($i <= ${n_line} - 1)
+      set flag = 0
+      @ i++
+      set line = `head -$i tmp_p | tail -1`
+#      echo $line
+      set tape = `echo $line | awk '{print $1}'`
+      set Fseq = `echo $line | awk '{print $2}'`
+      set info = `stageqry -p $ALSTOUT -V $tape -q $Fseq -l`
+#      echo $info
+      set state = `echo ${info} | awk '{print $17}'`
+      set size_all = `echo ${info} | awk '{print $19}'`
+      set size = `echo ${info} | awk '{print substr($19,0,index($19,"/")-1)}'`
+      set min_day = 0
+      if (${state} == "PUT_FAILED") set min_day = 3
+      if (${state} == "STAGEOUT") set min_day = 7
+      if (${state} == "PUT_FAILED" && ${size} == 0.0) set flag = 1
+      set user = `echo $info | awk '{print $23}'`
+      set last_access = `echo $info | awk '{print $29}'`
+#      echo "->$tape $Fseq $flag $state $size $last_access $today"
+      if ($today != $last_access && $min_day != 0) then
+         set last_y = `echo $last_access | awk '{print substr($0,0,2)}'`
+         set last_m = `echo $last_access | awk '{print substr($0,4,2)}'`
+         set last_d = `echo $last_access | awk '{print substr($0,7,2)}'`
+#         echo "last_m=$last_m today_m=$today_m last_d=$last_d min_day=$min_day"
+         if ($last_m == $today_m) then
+            if (($last_d + $min_day) <= $today_d) set flag = 1
+         endif
+         if ($m_previous == $last_m) then
+            @ n_day = ($last_d_previous - $last_d) + $today_d
+            if ($n_day > $min_day) set flag = 1
+         endif
+      endif
+      if (${flag} == 1) then
+         if ($test == 1) then
+            echo "stageclr ${tape} ${Fseq} $user $size_all $last_access $state"
+         else
+            set command = `stageclr -p $ALSTOUT -V ${tape} -q ${Fseq}`
+            set rc = ${status}
+            if (${rc} != 0) echo "VVV stageclr problem with ${tape} ${Fseq} rc=${rc}" >> /aleph/log/stageout_clean.log
+            if (${rc} == 0) echo "stageclr -V ${tape} -q ${Fseq} $user $size_all $last_access $state" >> /aleph/log/stageout_clean.log
+         endif
+      endif
+    end
+endif
+\rm -f tmp_p 
+#
+if !(-z $tmp) then
+    if ($test == 0) cat $tmp >> /aleph/log/stageout_clean.log
+    if ($test == 1) cat $tmp 
+endif
+\rm -f $tmp 
+exit

@@ -1,0 +1,190 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.29.16.13.24;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.05;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.06;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ Removed Files:
+ guinti.F
+@
+text
+@*DK edwbru
+      SUBROUTINE EDWBRU
+C-----------------------------------------------------------------
+C!  SIMULATE NOISE ON WIRE READOUT
+C
+C   AUTHOR   : B. MICHEL, D. PALLIN 05/89
+C   MODIFIED :
+C   Called by : ECDIGI
+C   Calls     : EPRIMI  from this HLB
+C             : RANNOR       Genlib
+C----------------------------------------------------------------
+#ifndef DOC
+      SAVE
+C
+#include "ehpash.h"
+#include "ecnamc.h"
+#include "bcs.h"
+#include "ecsize.h"
+#include "ewdijj.h"
+#include "ewtmco.h"
+C
+C NOISE PER PLANE AND FOR THE SUM IN KEV
+C ST3EC1 , ST3BA1 : SAMPLING IN STACK 3 FOR END-CAPS AND BARREL
+      PARAMETER (NTMODU = LCOMP * LMODU)
+      PARAMETER(PLCOHE=300,PLUNCO=1000,SMCOHE=17100,SMUNCO=7550)
+      DIMENSION JSUM(NTMODU),SAMTIM(8),SAMSUM(8)
+      EXTERNAL EPRIMI
+      DATA(SAMTIM(I),I=1,8)/0.,512.,1024.,1536.,2048.,2560.,3072.,3584./
+#include "bmacro.h"
+C
+      DO 11 I=1,8
+   11 SAMSUM(I) = 0.
+      DO 12 I=1,NTMODU
+      DO 12 J=1,LEWDIA
+   12 IWIRES(J,I) = 0
+      DO 5 J=1,NTMODU
+      JSUM(J) = 0
+ 5    IWIRES(1,J)=J
+C
+      KEWHT=IW(NAEWHT)
+      IF(KEWHT.EQ.0)GO TO  13
+      NEWHT=LROWS(KEWHT)
+C
+      DO 1 J=1,NEWHT
+      KLINE=KROW(KEWHT,J)
+      JJ=IW(KLINE+1)
+      DO 1 I=2,LWPLA + 1
+      IWIRES(I,JJ)=IW(KLINE+I)
+      JSUM(JJ)=JSUM(JJ)+IWIRES(I,JJ)
+C Stack 3
+      IF(I.GE.35)                   THEN
+         IF(JJ.LT.13.OR.JJ.GT.24)THEN
+C            End caps
+             IWIRES(I,JJ)=NINT(REAL(IWIRES(I,JJ))/ST3EC1)
+         ELSE
+C            Barrel
+             IWIRES(I,JJ)=NINT(REAL(IWIRES(I,JJ))/ST3BA1)
+         ENDIF
+C
+       ENDIF
+ 1    CONTINUE
+ 13   CONTINUE
+C
+C   Add analog sum sampling
+C
+      OFFSET=EPRIMI(SAMTIM(1))
+      DO 2 J=1,NTMODU
+        DO 3 K=2,8
+        SAMSUM(K)=FLOAT(JSUM(J))*(EPRIMI(SAMTIM(K))-OFFSET)
+ 3      IWIRES(K+46,J)=IFIX(SAMSUM(K))
+C
+C   Noise simulation
+C
+      CALL RANNOR(SIG1,SIG2)
+      PLCO=PLCOHE*SIG1
+      SMCO=SMCOHE*SIG1
+      DO 4 K=2,LEWDIA
+      CALL RANNOR(SIG1,SIG2)
+      IF(K.LT.JEWDSS)        THEN
+                PLUN=PLUNCO*SIG1
+                BRUIT=PLCO+PLUN
+      ELSE
+                SMUN=SMUNCO*SIG2
+                BRUIT=SMCO+SMUN
+      ENDIF
+ 4    IWIRES(K,J)=IWIRES(K,J)+IFIX(BRUIT)
+ 2    CONTINUE
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d13 1
+d32 1
+a32 1
+  11  SAMSUM(I) = 0.
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

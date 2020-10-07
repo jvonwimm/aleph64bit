@@ -1,0 +1,5 @@
+CKEY KINE PART KLIN
+      IF (NAPAR .EQ. 0) THEN
+         NAPAR = NAMIND ('PART')
+         NAKLI = NAMIND ('KLIN')
+      ENDIF

@@ -1,0 +1,116 @@
+head	1.3;
+access;
+symbols
+	alephio53:1.3
+	v4:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	96.03.13.15.01.34;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.01.18.13.51.06;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.52.33;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.52.34;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@import alephio 52 from historian. Modify aclose.F to NOT call brwnd twice
+for the same file. update version.h to 5.3
+@
+text
+@#ifndef IBM.OR..
+      SUBROUTINE NOTIMA(X)
+C -------------------------------------------------------
+CKEY IO
+C. - F.Ranjard - 850615
+C! dummy subroutines for NO IBM machines
+C. - TIMAx subroutines give time in 168 units but these
+C.   subroutines exist only on IBM.
+C.   So for the time being call TIMEx instead on other
+C.   machines.
+C ------------------------------------------------------
+#ifndef DOC
+      ENTRY TIMAST (X)
+      CALL TIMEST (X)
+      GOTO 999
+      ENTRY TIMAD(X)
+      CALL TIMED(X)
+      GOTO 999
+      ENTRY TIMAL(X)
+#if defined(RS6K)
+      X = 1000.
+#else
+      CALL TIMEL(X)
+#endif
+      GOTO 999
+      ENTRY TIMAX (X)
+      CALL TIMEX(X)
+ 999  CONTINUE
+      RETURN
+      END
+#endif
+#endif
+@
+
+
+1.2
+log
+@ Modified Files:
+	acdarg.F afilin.F afilou.F ainqui.F amount.F aoptap.F astage.F
+	awrtap.F
+ Modified Files:
+	cmphost.h ctolow.h gtchdecl.h version.h
+ Removed Files:
+	albitw.h
+ Modified Files:
+ 	altell.F babend.F jalrec.F noibm.F opensq.F sdrsx.F sibsdr.F
+	sxsdr.F
+@
+text
+@d1 1
+a1 2
+*DK noibm
+#ifndef IBM
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 1
+a2 1
+#ifndef IBM.OR..NOT.CERN
+d12 1
+@
+
+
+1.1.1.1
+log
+@import alephio 4
+@
+text
+@@

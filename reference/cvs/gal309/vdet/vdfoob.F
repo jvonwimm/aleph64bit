@@ -1,0 +1,148 @@
+*DK vdfoob
+      SUBROUTINE VDFOOB(IMOD,NHMAX)
+C!----------------------------------------------------------------------
+CKEY VDET DIGITIZE
+C!
+C! Reformat output banks according to on-line conventions
+C!
+C!  Author         A. Bonissent 15-Jan-1994
+C
+C     Input : IMOD : Module number,
+C             NHMAX number of hits in this module
+C!
+C!  Description
+C!  ===========
+C! Format depends on year
+C!
+C!
+C! Input :  VCLU, VWC1, VWC2  banks
+C!
+C! Output : VPLH, VHLS  banks
+C!
+C-----------------------------------------------------------------------
+C
+#ifndef DOC
+      SAVE NAVPLH,NAVHLS,NAVCLU,NAVWCX,NAVTRS
+      SAVE NPH,IR
+C
+      DIMENSION NAVWCX(2)
+      PARAMETER (NSPH=12)
+      DIMENSION NBCLN(2),NVDCR(2),VDSLP(2),VDPAL(2),VDELC(2)
+      DIMENSION MXCNO(2),MXCSI(2),VELGV(2),VDLCO(2),IOFSET(2),NBITSH(2)
+#include "vclujj.h"
+#include "vwc1jj.h"
+#include "vhlsjj.h"
+#include "vplhjj.h"
+#include "vtrsjj.h"
+#include "bcs.h"
+      LOGICAL FIRST
+      DATA FIRST /.TRUE./
+#include "bmacro.h"
+C
+      IF(FIRST)THEN
+        FIRST=.FALSE.
+        NAVPLH=NAMIND('VPLH')
+        NAVHLS=NAMIND('VHLS')
+        NAVCLU=NAMIND('VCLU')
+        NAVWCX(1)=NAMIND('VWC1')
+        NAVWCX(2)=NAMIND('VWC2')
+        NAVTRS=NAMIND('VTRS')
+      ENDIF
+      CALL VFNDEL
+     $   (IMOD,NBCLN,NVDCR,VDSLP,VDPAL,VDELC,
+     $    MXCSI,MXCNO,VELGV,VDLCO,IOFSET,NBITSH)
+C
+C If output banks do not exist, create them
+C
+C First, clusters bank
+C
+      IF(IW(NAVHLS).EQ.0)THEN
+         NROWS = NHMAX
+         NDATA = NROWS*LVHLSA+LMHLEN
+         CALL ALBOS('VHLS',0,NDATA,KVHLS,IGARB)
+         IW(KVHLS+LMHCOL)=LVHLSA
+         IW(KVHLS+LMHROW)=0
+      ENDIF
+C
+C Now, strips bank
+C
+      IF(IW(NAVPLH).EQ.0)THEN
+         NROWS = NHMAX*NSPH
+         NDATA = NROWS*LVPLHA+LMHLEN
+         CALL ALBOS('VPLH',0,NDATA,KVPLH,IGARB)
+         NPH = 0
+         IW(KVPLH+LMHCOL)=LVPLHA
+         IW(KVPLH+LMHROW)=0
+      ENDIF
+C
+      KVHLS=IW(NAVHLS)
+      KVCLU=IW(NAVCLU)
+      NVCLU=LROWS(KVCLU)
+C
+C Check that there is enough space in clusters bank
+C
+      IF(LFRROW(KVHLS).LT.NVCLU)THEN
+         NDATA = (LROWS(KVHLS)+NVCLU)*LVHLSA+LMHLEN
+         CALL ALBOS('VHLS',0,NDATA,KVHLS,IGARB)
+      ENDIF
+      KVCLU=IW(NAVCLU)
+      NTS = 0
+      DO 30 ICLU=1,NVCLU
+      NTS = NTS + ITABL(KVCLU,ICLU,JVCLCS)
+   30 CONTINUE
+      KVPLH=IW(NAVPLH)
+C
+C Check that there is enough space in strips bank
+C
+      IF(LFRROW(KVPLH).LT.NTS)THEN
+         NDATA = ((NPH+NTS+1)/2)*LVPLHA+LMHLEN
+         CALL ALBOS('VPLH',0,NDATA,KVPLH,IGARB)
+      ENDIF
+      KVCLU=IW(NAVCLU)
+      KVHLS=IW(NAVHLS)
+      KVPLH=IW(NAVPLH)
+      DO 10 ICLU=1,NVCLU
+      IV = ITABL(KVCLU,ICLU,JVCLVI)
+      IFS = ITABL(KVCLU,ICLU,JVCLFS)
+      NBS = ITABL(KVCLU,ICLU,JVCLCS)
+      KVWCX = IW(NAVWCX(IV))
+C
+C Change strip number and get readout direction
+C according to Julia convention and
+C make encoded address and fill row in cluster bank
+C
+      CALL VAENCL(IWRD,IMOD,IV,IFS,NBS,IFSJ,IRD)
+      NCLU=LROWS(KVHLS)+1
+      IW(KVHLS+LMHROW)=NCLU
+      IW(KROW(KVHLS,NCLU)+JVHLHC)=IWRD
+C
+      DO 20 IST=1,NBS
+      IGS = IFSJ+(IST-1)*IRD
+      PULSH = RTABL(KVWCX,IGS,JVWCCC)/(VELGV(IV)*VDLCO(IV))
+      NPH = NPH+1
+      JPLS = MAX (INT (NBITSH(IV) * PULSH) + IOFSET(IV), 0)
+C
+C In case the pulse height is too large, make
+C sure that what we have makes sense
+C
+      JMAX=2**14-1
+      IF(JPLS.GT.JMAX)JPLS=JMAX
+        IF (MOD(NPH,2) .NE. 0)THEN
+          IR = (NPH+1)/2
+          KVP = KROW (KVPLH,IR)
+C
+C  Packing is done according to the IBM I*2 convention, with the first
+C  data word is packed into the upper 16 bits, the second in the lower
+C
+          IW(KVPLH+LMHROW)=LROWS(KVPLH)+1
+          IW(KVP+1) = 0
+          CALL MVBITS (JPLS,0,16,IW(KVP+1),16)
+        ELSE
+          KVP = KROW (KVPLH,IR)
+          CALL MVBITS (JPLS,0,16,IW(KVP+1),0)
+        ENDIF
+   20 CONTINUE
+   10 CONTINUE
+  999 RETURN
+      END
+#endif

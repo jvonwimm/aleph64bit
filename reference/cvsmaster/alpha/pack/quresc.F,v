@@ -1,0 +1,160 @@
+head	1.2;
+access;
+symbols
+	alpha126_22:1.2
+	alpha122_22:1.2
+	alpha126_21:1.2
+	alpha126_20:1.2
+	alpha126_19:1.2
+	alpha126_18:1.2
+	alpha126_17:1.2
+	alpha126_16:1.2
+	alpha126_15:1.2
+	alpha126_14:1.2
+	alpha126_13:1.2
+	alpha126_12:1.2
+	alpha126_11:1.2
+	alpha126_10:1.2
+	alpha126_09:1.2
+	alpha126_08:1.2
+	alpha126_07:1.2
+	alpha126_06:1.2
+	alpha126_05:1.2
+	alpha126_04:1.2
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1
+	alpha124:1.1
+	alpha123_12:1.1
+	alpha123_11:1.1
+	alpha123_10:1.1
+	alpha123_9:1.1
+	alpha123_8:1.1
+	alpha123_7:1.1
+	alpha123_6:1.1
+	alpha123_5:1.1
+	alpha123_4:1.1
+	alpha123_3:1.1
+	alpha123_2:1.1
+	alpha123:1.1
+	alpha122_48:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	2001.02.06.07.58.24;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.07.17.09.50.16;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE QURESC
+CKEY FILL /USER       
+C-----------------------------------------------------------------------
+C!  User-interface for calling rescaling routines before the
+C!  Energy-Flow
+C!  called from QFILL
+C                                 F.Ligabue      07-97
+C-----------------------------------------------------------------------
+#ifndef DOC
+C      
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@a9 33
+C
+C    HCALENSC : HCAL ONLINE BUG CORRECTION      
+C
+C link the following files:
+C
+C /al/reference/phy/hcalensc.F   /al/reference/phy/qcorfic.F  (on UNIX) 
+C phy:hcalensc.F      phy:qcorfic.F         (on ALWS)
+C    
+C then      
+C
+C      CALL HCALENSC
+C-----------------------------------------------
+C
+C   correct for even-odd HCAL intermodule data/MC discrepancy 
+C
+C 1 -  link the following file:
+C       /al/reference/phy/calresc_impd.F   (on UNIX)
+C       phy:calresc_impd.F                 (on ALWS)
+C 2 -  Put the data card HCIM in your CARDS file
+C 3 -  then
+C
+C      CALL CALRESC_IMPD 
+C-----------------------------------------------------
+C   
+C   rescale ECAL and HCAL for systematic studies.
+C
+C 1 -  link the following file:
+C       /al/reference/phy/calresc_syst.F   (on UNIX)
+C       phy:calresc_syst.F                 (on ALWS)
+C 2 - Put the data card CALS in your CARDS file
+C 3 - then
+C
+C      CALL CALRESC_SYST    
+d11 1
+@
+

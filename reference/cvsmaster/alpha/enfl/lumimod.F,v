@@ -1,0 +1,229 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	alpha126_22:1.1.1.1
+	alpha126_21:1.1.1.1
+	alpha126_20:1.1.1.1
+	alpha126_19:1.1.1.1
+	alpha126_18:1.1.1.1
+	alpha126_17:1.1.1.1
+	alpha126_16:1.1.1.1
+	alpha126_15:1.1.1.1
+	alpha126_14:1.1.1.1
+	alpha126_13:1.1.1.1
+	alpha126_12:1.1.1.1
+	alpha126_11:1.1.1.1
+	alpha126_10:1.1.1.1
+	alpha126_09:1.1.1.1
+	alpha126_08:1.1.1.1
+	alpha126_07:1.1.1.1
+	alpha126_06:1.1.1.1
+	alpha126_05:1.1.1.1
+	alpha126_04:1.1.1.1
+	alpha126_03:1.1.1.1
+	alpha126_02:1.1.1.1
+	alpha126_1:1.1.1.1
+	alpha125_17:1.1.1.1
+	alpha125_16:1.1.1.1
+	alpha125_15:1.1.1.1
+	alpha125_14:1.1.1.1
+	alpha125_13:1.1.1.1
+	alpha125_12:1.1.1.1
+	alpha125_11:1.1.1.1
+	alpha125_10:1.1.1.1
+	alpha125_09:1.1.1.1
+	alpha125_08:1.1.1.1
+	alpha125_07:1.1.1.1
+	alpha125_06:1.1.1.1
+	alpha125_05:1.1.1.1
+	alpha125_04:1.1.1.1
+	alpha125_03:1.1.1.1
+	alpha125_02:1.1.1.1
+	alpha125_01:1.1.1.1
+	alpha124_19:1.1.1.1
+	alpha125:1.1.1.1
+	alpha124_18:1.1.1.1
+	alpha124_17:1.1.1.1
+	alpha124_16:1.1.1.1
+	alpha124_15:1.1.1.1
+	alpha124_14:1.1.1.1
+	alpha124_13:1.1.1.1
+	alpha124_12:1.1.1.1
+	alpha124_11:1.1.1.1
+	alpha124_10:1.1.1.1
+	alpha124_09:1.1.1.1
+	alpha124_08:1.1.1.1
+	alpha124_07:1.1.1.1
+	alpha124_7:1.1.1.1
+	alpha124_06:1.1.1.1
+	alpha124_05:1.1.1.1
+	alpha124_04:1.1.1.1
+	alpha124_03:1.1.1.1
+	alpha124_02:1.1.1.1
+	alpha124_01:1.1.1.1
+	alpha124:1.1.1.1
+	alpha123_12:1.1.1.1
+	alpha123_11:1.1.1.1
+	alpha123_10:1.1.1.1
+	alpha123_9:1.1.1.1
+	alpha123_8:1.1.1.1
+	alpha123_7:1.1.1.1
+	alpha123_6:1.1.1.1
+	alpha123_5:1.1.1.1
+	alpha123_4:1.1.1.1
+	alpha123_3:1.1.1.1
+	alpha123_2:1.1.1.1
+	alpha123:1.1.1.1
+	alpha122_48:1.1.1.1
+	alpha122_47:1.1.1.1
+	alpha122_46:1.1.1.1
+	alpha122_45:1.1.1.1
+	alpha122_44:1.1.1.1
+	alpha122_43:1.1.1.1
+	alpha122_42:1.1.1.1
+	alpha122_41:1.1.1.1
+	alpha122_40:1.1.1.1
+	alpha122_39:1.1.1.1
+	alpha122_38:1.1.1.1
+	alpha122_37:1.1.1.1
+	alpha122_36:1.1.1.1
+	alpha122_35:1.1.1.1
+	alpha122_34:1.1.1.1
+	alpha122_33:1.1.1.1
+	alpha122_32:1.1.1.1
+	alpha122_31:1.1.1.1
+	alpha122_30:1.1.1.1
+	alpha122_29:1.1.1.1
+	alpha122_28:1.1.1.1
+	alpha122_27:1.1.1.1
+	alpha122_26:1.1.1.1
+	alpha122_25:1.1.1.1
+	alpha122_24:1.1.1.1
+	alpha122_23:1.1.1.1
+	alpha122_22:1.1.1.1
+	alpha122_21:1.1.1.1
+	alpha122_20:1.1.1.1
+	alpha122_19:1.1.1.1
+	alpha122_18:1.1.1.1
+	alpha122_17:1.1.1.1
+	alpha122_16:1.1.1.1
+	alpha122_15:1.1.1.1
+	alpha122_14:1.1.1.1
+	alpha122_13:1.1.1.1
+	alpha122_12:1.1.1.1
+	alpha122_11:1.1.1.1
+	alpha122_10:1.1.1.1
+	alpha122_9:1.1.1.1
+	alpha122_8:1.1.1.1
+	alpha122_6:1.1.1.1
+	alpha122_5:1.1.1.1
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.03.14.12.42.30;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.42.31;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE LUMIMOD
+C-----------------------------------------------------------------------
+C! Compute pad - wire differences in LCAL
+C
+C  Patrick Janot - 16 May 1990
+C-----------------------------------------------------------------------
+#ifndef DOC
+#include "parabank.h"
+#include "parcut.h"
+#include "qcde.h"
+      DIMENSION QT(KCQVEC,1), KT(KCQVEC,1), QV(KCQVRT,1), KV(KCQVEC,1)
+#include "qhac.h"
+#include "qmacro.h"
+C-----------------------------------------------------------------------
+      CALL vzero(wirl(1),4)
+      CALL vzero(padl(1),4)
+      CALL vzero(difl(1),4)
+      IF ( nplsd .LE. 0 .AND. nplpd .LE. 0 ) GOTO 999
+C
+C -- Correction factor of raw pad energy ( due to thresholds )
+C
+      facteur = .08
+      iecns = 0
+      naecns = namind('ECNS')
+      IF ( naecns .GT. 0 ) iecns = iw(naecns)
+      IF ( iecns .GT. 0 ) facteur = rtabl(iecns, 1, 26)
+C
+C -- Wire energy  per module
+C
+      DO 1 kplan = 1 , nplpd
+        iaddr = itabl(iplpd, kplan, jplpad)
+        modu  = iaddr/64 + 1
+        IF ( modu .LE. 0 .OR. modu .GT. 4 ) GOTO 1
+        ipla  = iaddr - 64*(modu-1)
+        IF ( ipla .LE. 0 .OR. ipla .GE. 39 ) GOTO 1
+        enel  = itabl(iplpd, kplan , jplpen) * 1.E-3
+        wirl(modu) = wirl(modu) + enel
+    1 CONTINUE
+C
+C -- Pad energy per module
+C
+      DO 2 itow = 1 , nplsd
+        iaddr = itabl(iplsd, itow, jplsad)
+        modu  = iaddr/512 + 1
+        IF ( modu .LE. 0 .OR. modu .GT. 4 ) GOTO 2
+        iclu  = itabl(iplsd, itow, jplspe)
+        IF ( iclu .LE. 0 ) GOTO 2
+        eraw  = rtabl(ipeco, iclu, jpecer)
+        corr = 1.
+        IF ( eraw .GT. 0.01) corr = 1. + facteur/sqrt(eraw)
+        efrac = itabl(iplsd, itow, jplse1)
+     .        + itabl(iplsd, itow, jplse2)
+     .        + itabl(iplsd, itow, jplse3)
+        efrac = efrac * 5.E-3 * corr
+C       IF ( krun .LT. 4000 ) efrac = efrac * 1.45
+        padl(modu) = padl(modu) + efrac
+    2 CONTINUE
+C
+C  Difference pad-wire
+C
+      DO 3 modu = 1 , 4
+        difl(modu) = padl(modu)-wirl(modu)
+        IF ( idbg .GE. 10 ) WRITE (IW(6),*) 'Module/Pad/Fil/Diff : ',
+     .  modu,padl(modu),wirl(modu),difl(modu)
+    3 CONTINUE
+C
+C  That's it
+C
+  999 RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

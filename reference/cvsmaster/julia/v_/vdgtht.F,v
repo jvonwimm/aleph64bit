@@ -1,0 +1,177 @@
+head	1.2;
+access;
+symbols
+	jul313_3:1.2
+	jul313_2:1.2
+	jul313_1:1.2
+	jul313:1.2
+	jul312_1:1.2
+	jul312:1.2
+	jul311:1.2
+	jul310_1:1.2
+	jul310:1.2
+	jul309_1:1.2
+	jul309:1.2
+	jul308_6:1.2
+	jul308_5:1.2
+	jul308_4:1.2
+	jul308_3:1.2
+	jul308_2:1.2
+	jul308_1:1.2
+	jul308:1.2
+	jul307_4:1.2
+	jul307_3:1.2
+	jul307_2:1.2
+	jul307_1:1.2
+	jul307:1.2
+	jul306_3:1.2
+	jul306_2:1.2
+	jul306_1:1.2
+	jul306:1.2
+	jul305_4:1.2
+	jul305_3:1.2
+	jul305_2:1.2
+	jul305_1:1.2
+	jul305:1.2
+	jul304_3:1.2
+	jul304_2:1.2
+	jul304_1:1.2
+	jul304:1.2
+	jul303_7:1.2
+	jul303_6:1.2
+	jul303_5:1.2
+	jul303_4:1.2
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.1
+	jul284:1.1
+	jul283_1:1.1
+	jul283:1.1
+	jul282_1:1.1
+	jul282:1.1
+	jul281_3:1.1
+	jul281_2:1.1
+	jul281_1:1.1
+	jul281:1.1
+	jul280_1:1.1
+	jul280:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.12.03.11.02.42;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.05.06.15.53.07;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@Julia version 285
+@
+text
+@      SUBROUTINE VDGTHT(IV,NRBK,IHIT,IVDHT,IERR)
+C ----------------------------------------------------------------------
+C!  Given the VDZT (IV=1) or VDXY (IV=2) bank number (NRBK)
+C!  and the hit number (IHIT), this truth finding routine returns
+C!  the true hit number IVDHT in VDHT bank
+C!
+C -  Author         Alain Bonissent  5-Nov-1994
+C! Modified November 1996, handle properly strips which 
+C!                belong to two clusters (after splitting)
+CKEY V_DECK VDET
+C
+C  Input :   IV    - view
+C            NRBK  - bank number for VDZT or VDXY
+C            IHIT  - row number in the bank
+C
+C  Output :  IVDHT - true hit row number in the VDHT bank
+C            IERR  - zero if sucess
+C
+C ----------------------------------------------------------------------
+#ifndef DOC
+      INTEGER MAXHIT
+      PARAMETER(MAXHIT = 50)
+      INTEGER NLINK
+      INTEGER NSTR(MAXHIT),JVDHT(MAXHIT), IERR, IVDHT, NMAX, IV, KVDZT,
+     $   KVDXY, IH, IHIT, NBA, IKOD, NMATC, IT, NRBK
+      REAL QFRAC(MAXHIT), QMAX
+#include "vdztjj.h"
+#include "vdxyjj.h"
+#include "bcs.h"
+#include "bmacro.h"
+      IERR=0
+C
+C--  Prevent returning the previous ivdht, if nmatc=0
+C
+      IVDHT = 0
+      NMAX=MAXHIT
+      IF(IV.EQ.1)THEN
+         KVDZT=NLINK('VDZT',NRBK)
+         IH=ITABL(KVDZT,IHIT,JVDZIH)
+         NBA=ITABL(KVDZT,IHIT,JVDZIW)
+         NRVS = NRBK
+      ELSEIF(IV.EQ.2)THEN
+         KVDXY=NLINK('VDXY',NRBK)
+         IH = ITABL(KVDXY,IHIT,JVDXIH)
+         NBA = ITABL(KVDXY,IHIT,JVDXIW)
+         NRVS = NRBK+1
+      ENDIF
+      IKOD = 1
+      CALL VTRURL(IKOD,NBA,IH,IHIT,NRVS,NMAX,
+     $   NMATC,JVDHT,NSTR,QFRAC,IERR)
+      IF(IERR.NE.0)GO TO 999
+      QMAX=0.
+      DO 10 IT=1,NMATC
+      IF(QFRAC(IT).GT.QMAX.AND.JVDHT(IT).NE.0)THEN
+         IVDHT=JVDHT(IT)
+         QMAX=QFRAC(IT)
+      ENDIF
+   10 CONTINUE
+      IF(IVDHT.EQ.0) THEN
+         IERR=-20
+C this will happen often now delta ray production is simulated
+C         CALL RERROR('VDGTHT',1,'No match IVDHT=0')
+      ENDIF
+  999 CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@re-installed jul280 from the historian source because some routines were missing.
+@
+text
+@d8 2
+d41 1
+d46 1
+d49 1
+a49 1
+      CALL VTRUTH(IKOD,NBA,IH,NMAX,
+@

@@ -1,0 +1,219 @@
+head	1.3;
+access;
+symbols
+	aleph316_2:1.3
+	aleph316_1:1.3
+	aleph316:1.3
+	aleph315_7:1.3
+	aleph315_6:1.3
+	aleph315_5:1.3
+	aleph315_4:1.3
+	aleph315_3:1.3
+	aleph315_2:1.3
+	aleph315_1:1.3
+	aleph315:1.3
+	aleph314_2:1.3
+	aleph314_1:1.3
+	aleph314:1.3
+	aleph313_1:1.3
+	aleph313:1.3
+	aleph312_1:1.3
+	aleph312:1.3
+	aleph311_1:1.3
+	aleph311:1.3
+	aleph310_3:1.3
+	aleph310_2:1.3
+	aleph310_1:1.3
+	aleph310:1.3
+	aleph309_1:1.3
+	aleph309:1.3
+	aleph308_3:1.3
+	aleph308_2:1.3
+	aleph308_1:1.3
+	aleph308:1.3
+	aleph307_6:1.3
+	aleph307_5:1.3
+	aleph307_4:1.3
+	aleph307_2:1.3
+	aleph307_1:1.3
+	aleph307:1.3
+	aleph306:1.3
+	aleph305_4:1.3
+	aleph305_3:1.3
+	aleph305_2:1.3
+	aleph305_1:1.3
+	aleph305:1.3
+	aleph304_5:1.3
+	aleph304_4:1.3
+	aleph304_3:1.3
+	aleph304_2:1.3
+	aleph304_1:1.3
+	aleph304:1.3
+	aleph303_3:1.3
+	aleph303_2:1.3
+	aleph303_1_mc1:1.3
+	aleph303_1:1.3
+	aleph303:1.3
+	aleph302_9:1.2
+	aleph302_8:1.2
+	aleph302_7:1.2
+	aleph302_6:1.2
+	aleph302_5:1.2
+	aleph302_4:1.2
+	aleph302_3:1.2
+	aleph302_2:1.2
+	aleph302_1:1.2
+	aleph302:1.2
+	aleph216:1.2
+	aleph215_3:1.2
+	aleph215_2:1.2
+	aleph215:1.2
+	aleph214:1.2
+	aleph213:1.2
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	97.05.21.16.30.12;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.05.24.16.07.22;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.40.07;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.40.08;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@Increase MAXMCX in fyrela.h
+@
+text
+@      PARAMETER (LWORDB = 65536)
+      PARAMETER (MAXMCX = 2000, MAXMES = 500)
+      COMMON /FYRELA/ IHTYPE,ICALTO
+     &               ,ITRCAL(MAXMES),ICALTR(2,MAXMES)
+     &               ,LTKNUM,LVXNUM,IMEATR,KINTRK,KINVER
+     &               ,FSHDRO,FTKDRO,CUTRAC,BFLCLT,ENMINC
+     &               ,INDKIN,INDVER,JDKEKS,JDVNFO,JDVOUT
+     &               ,JDKOFN,JDKNFO
+      LOGICAL FSHDRO,FTKDRO
+      PARAMETER (LFXWBK = 7)
+      INTEGER  JDFXWB(LFXWBK)
+      EQUIVALENCE (JDFXWB(1),INDKIN)
+      COMMON /FYCHAR/ ELISAD
+      CHARACTER*48 ELISAD
+#if defined(DOC)
+C!           FXXX necessary constants or pointers
+  IHTYPE : history type (=0 means LUND or no history code)
+  ICALTO : Total no. of CAL objects
+  ITRCAL : (n) CAL object no. track n is assoc.'d with
+  ICALTR : (1,j) counts no. of meas'd tracks assoc.'d to CAL obj.# j
+  ICALTR : (2,j) has pointer to first meas'd track assoc.'d to CAL obj.# j
+  LTKNUM : # of tracks kept in FKIN (tracks not dropped)
+  LVXNUM : # of vertices kept in FVER (vertices not dropped)
+  KINTRK : No. of tracks produced by event generator (if known)
+  KINVER : No. of vertices produced by event generator (if known)
+  FSHDRO : IF true THEN drop history of interactions in calo.
+  FTKDRO : IF true THEN drop history of interactions in central det.
+  CUTRAC : IF not 0. THEN drop track with momentum < CUTRAC
+  ENMINC : minimum energy in ECAL for a CAL object to have good coord.
+  BFLCLT : mag. field constant used often in helix routines
+  INDKIN : Index of work bank with KINE indices obtained from BWIND
+  INDVER : Index of work bank with VERT indices obtained from BWIND
+  JDKEKS : index of wkbk giving new track# or 0
+           no. of words (=1) / KINE bank
+           ===========================================
+            1  : = 0 means the KINE bank is dropped
+                 > 0 means new track# after dropping
+           ============================================
+  JDVNFO : index of wkbk giving new vertex# or 0
+           no. of words (=1) / VERT bank
+           ============================================
+            1  : = 0 means the VERT bank is dropped
+                 > 0 means new vertex# after dropping
+           ============================================
+  JDVOUT : work bank giving for each vertex# (FVER numbering)
+           the # of daughters and offset to the 1st daugther
+           no. of words (=2) / final vertex
+           ========================================================
+            1  : offset to 1st daughter
+            2  : # of daughters
+           ========================================================
+  JDKNFO : work bank giving new track # for each old KINE #
+           no. of words (=1) / KINE track
+           ============================================
+            1  : = 0 means no new track#
+                 > 0 means new track# (FKINE numbering)
+           ============================================
+  JDKOFN : work bank giving old KINE # for each new track #
+           no. of words (=3) / new track (FKINE numbering)
+           ==============================================
+            1  : KINE track#  of new track# i
+            2  : # of daughters of mother track# i-1
+            3  : offset to the 1st daughter of mother track# i-1
+           ==============================================
+  LFXWBK : # of FXXX work banks
+  JDFXWB : FXXX work bank indices
+#endif
+@
+
+
+1.2
+log
+@In fyrela.h, # as first character of DOC line breaks CPP
+@
+text
+@d2 1
+a2 1
+      PARAMETER (MAXMCX = 1000, MAXMES = 500)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d34 1
+a34 1
+           # of words (=1) / KINE bank
+d40 1
+a40 1
+           # of words (=1) / VERT bank
+d47 1
+a47 1
+           # of words (=2) / final vertex
+d53 1
+a53 1
+           # of words (=1) / KINE track
+d59 1
+a59 1
+           # of words (=3) / new track (FKINE numbering)
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

@@ -1,0 +1,80 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	alpha122_5:1.1.1.1
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	96.03.14.12.41.01;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.41.02;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@C
+C  Inline functions for QIPBTAG routines.  As these include the
+C  variable declarations, they should be the first inline comdeck
+C  included
+C
+      INTEGER IPTT,IVEW,ITYP,IFLG
+      INTEGER TTYPE,TVIEW,TVDPAT,TPACK
+      LOGICAL TWOHIT,INNERHIT,ONEHIT,TWORPHIT,TWOZHIT,RPHIT,ZHIT
+      LOGICAL THREED,RPHI,RZ
+C
+C  These select tracks based on vdet hit pattern
+C
+      ONEHIT(IPTT) = (IAND(IPTT,3).GT.0.AND.
+     &                IAND(ISHFT(IPTT,-4),3).GT.0).OR.
+     &               (IAND(ISHFT(IPTT,-2),3).GT.0.AND.
+     &                IAND(ISHFT(IPTT,-6),3).GT.0)
+      INNERHIT(IPTT) = (IAND(IPTT,3).GT.0.AND.
+     &                IAND(ISHFT(IPTT,-4),3).GT.0)
+      TWOHIT(IPTT) = IAND(IPTT,3).GT.0 .AND.
+     &               IAND(ISHFT(IPTT,-2),3).GT.0 .AND.
+     &               IAND(ISHFT(IPTT,-4),3).GT.0 .AND.
+     &               IAND(ISHFT(IPTT,-6),3).GT.0
+      RPHIT(IPTT) = IAND(IPTT,3).GT.0 .OR.
+     &               IAND(ISHFT(IPTT,-2),3).GT.0
+      ZHIT(IPTT) = IAND(ISHFT(IPTT,-4),3).GT.0 .OR.
+     &               IAND(ISHFT(IPTT,-6),3).GT.0
+      TWORPHIT(IPTT) = IAND(IPTT,3).GT.0 .AND.
+     &               IAND(ISHFT(IPTT,-2),3).GT.0
+      TWOZHIT(IPTT) = IAND(ISHFT(IPTT,-4),3).GT.0 .AND.
+     &               IAND(ISHFT(IPTT,-6),3).GT.0
+C
+C  Split and pack the track flag fields
+C
+      TTYPE(IFLG) = IAND(IFLG,15)
+      TVIEW(IFLG) = IAND(ISHFT(IFLG,-4),3)
+      TVDPAT(IFLG) = IAND(ISHFT(IFLG,-6),255)
+      TPACK(ITYP,IVEW,IPTT) = ITYP+ISHFT(IVEW,4)+ISHFT(IPTT,6)
+@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

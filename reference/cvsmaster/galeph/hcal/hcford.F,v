@@ -1,0 +1,263 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.29.16.22.12;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.18;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.19;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+@
+text
+@*DK hcford
+      SUBROUTINE HCFORD
+C --------------------------------------------
+C
+C!    Implements the module FORMAT TUBE SIGNAL
+C!
+C!       Author      : G.Zito     86/05/21
+C!       Modified    : G.Catanesi, F.Ranjard  89/05/22
+C!
+C!       Input bank  :       HWHT McHcTubeSignal
+C!       Output bank :       HWDI McHcTubeDigitising
+C!
+C!      -Called by : HCDIGI
+C!      -Calls     : MVBITS  from CERNLIB
+C-------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "jobcom.h"
+#include "bcs.h"
+#include "iocom.h"
+#include "hccoun.h"
+#include "hcnamc.h"
+#include "hwhtjj.h"
+#include "hwdijj.h"
+#include "hctrig.h"
+#include "hcgega.h"
+      DIMENSION ITUPR(5),LCLUP(5),ILAPR(5),MODPR(5)
+#include "bmacro.h"
+C ----------------------------------------------
+      JHWHT = IW(NAHWHT)
+      IF (JHWHT.EQ.0) RETURN
+      NHWHT = LROWS (JHWHT)
+      KHWHT = JHWHT + LMHLEN
+C
+      JHWDI = IW(NAHWDI)
+      IF (JHWDI.EQ.0) RETURN
+      KHWDI = JHWDI + LMHLEN
+C
+C          Loop on tubes
+C
+      IF(NHWHT.EQ.0) RETURN
+      IPO1=0
+      IMO1 = 0
+      ILA1 = 0
+      ITU1 = -1
+      LCLU = 1
+      NHWDI = 0
+C
+C - loop over hits
+C
+      DO 10 I = 1, NHWHT
+         N = IW(KHWHT+1)
+         ITU = MOD(N,1000)
+         N = N/1000
+         ILA = MOD(N,100)
+         N = N/100
+         IMO = MOD(N,100)
+         N = N/100
+         IPO = N
+C
+C - new hit: is it adjacent to the previous one
+         IF(IPO.NE.IPO1.OR.IMO.NE.IMO1.OR.ILA.NE.ILA1 .OR. (ITU-1
+     &   ).NE.ITU1) THEN
+C
+C          new tube is not adjacent: create a new cluster
+            IPO1 = IPO
+            IMO1 = IMO
+            IWRN = 0
+            IMUP = 0
+            ILA1 = ILA
+            LCLU = 1
+            ILN = ILA - 1
+            IMN = IMO
+C
+            IF(IPO.EQ.LPBAR) THEN
+C          Barrel
+               IMN = (IMO-1)/ 2+ 1
+               IMN = IMN + LPHCTR
+               IF (MOD(IMO,2) .EQ. 0) THEN
+                  ITN = NHCTU1(ILA)*2 - ITU
+                  IRD = -1
+               ELSE
+                  ITN = ITU - 1
+                  IRD = 1
+               ENDIF
+            ELSE
+C          End-cap
+               IMOD = IMO
+               IF(IPO.EQ.LPECB) IMOD = IMO + LPHCTR/2
+               IF(ITU.GT.NHCTRE) THEN
+                  IMN = IXHCSE(IMOD)
+                  ITN = ITU - NHCTRE - 1
+               ELSE
+                  IMN = IXHCFI(IMOD)
+                  ITN = ITU - 1
+               ENDIF
+C
+C -        are we at the boudary of elrctonic region ?
+               IF (MOD(ITU,NHCTRE).EQ.0) THEN
+C              store this tube and restart a new cluster
+                  ITU  = -1
+               ENDIF
+            ENDIF
+C
+C -      fill new digit
+            NHWDI = NHWDI + 1
+            KHWDI = KROW (JHWDI,NHWDI)
+            CALL MVBITS(IMN,0,8,IW(KHWDI+1),24)
+            CALL MVBITS(ILN,0,8,IW(KHWDI+1),16)
+            CALL MVBITS(LCLU,0,8,IW(KHWDI+1),8)
+            CALL MVBITS(ITN,0,8,IW(KHWDI+1),0)
+C
+         ELSE
+C
+C        adjacent tube: Increase cluster width
+C
+            IF (IPO.EQ.LPBAR) THEN
+               IF (IRD.EQ.1) ITN = ITN + 1
+            ELSE
+               ITN = ITN + 1
+               IF (MOD(ITU,NHCTRE) .EQ. 0) ITU = -1
+            ENDIF
+C           set cluster size and last tube in digit
+            LCLU = LCLU + 1
+            CALL MVBITS(LCLU,0,8,IW(KHWDI+1),8)
+            CALL MVBITS(ITN,0,8,IW(KHWDI+1),0)
+C
+C        end of current hit
+         ENDIF
+         ITU1 = ITU
+C
+C        If cluster size is 15 then force new digitising
+         IF(LCLU.EQ.15) ITU1 = -1
+C
+         KHWHT = KHWHT + LHWHTA
+   10 CONTINUE
+C
+      IW(JHWDI+2) = NHWDI
+C
+      IF(FHCDEB)THEN
+         WRITE(LOUTIO,500) NHWDI
+         KHWDI = JHWDI + LMHLEN
+         DO 30 I=1,NHWDI,5
+            JMAX = MIN (5,NHWDI-I+1)
+            DO 20 J=1,JMAX
+               N = IW(KHWDI+1)
+               ITUPR(J)= IBITS (N,0,8)
+               LCLUP(J)= IBITS (N,8,8)
+               ILAPR(J)= IBITS (N,16,8)
+               MODPR(J)= IBITS (N,24,8)
+   20       KHWDI = KHWDI + LHWDIA
+            WRITE (LOUTIO,510) I,I+4,(MODPR(J),ILAPR(J),ITUPR(J) ,LCLUP
+     +      (J),J=1,JMAX)
+   30    CONTINUE
+      ENDIF
+      RETURN
+  500 FORMAT (/1X,'+++HCFORD+++ HWDI McTubeDigitising ',I5/ 8X,5(4X,
+     +'  Mo  La  Tu  Cl'))
+  510 FORMAT (1X,I3,'-',I3,5(4X,4I4))
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d17 1
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

@@ -1,0 +1,80 @@
+      SUBROUTINE ELONGI(ICLN,ITR,IT,R3ES,R4ES)
+C----------------------------------------------------------------------
+C!  STEERING ROUTINE TO COMPUTE THE R3 AND R4 ELECTRON IDENTIFICATORS
+C!
+C!   AUTHOR: A. FALVARD
+C!   MODIFIED:
+C?
+C!======================================================================
+#ifndef DOC
+#include "bcs.h"
+#include "e4com0.h"
+#include "e4com1.h"
+#include "ecmode.h"
+#include "ezluge.h"
+#include "etopos.h"
+#include "e4iden.h"
+#include "eibpr2.h"
+#include "etpinf.h"
+      PARAMETER (RLIMIT=1000.)
+      IF(PTTP.LE.1.)THEN
+        R3ES=RLIMIT
+        R4ES=RLIMIT
+        GOTO 999
+      ENDIF
+      IF(NBE4ST(IT).EQ.0)GOTO 999
+      CALL ECTOPO(IT)
+      IF(BARREL.OR.ENDCAP.AND..NOT.OVERLD)THEN
+        CALL ECLOPE(IT,CX,CY,CZ)
+        CALL ECMOPL(IT,CX,CY,CZ)
+        CALL ECENER(IT,ICLN)
+        CALL ECPRLO(BSASTA,USASTA)
+        BSA=BSASTA
+C
+C  PARAMETRISATION BADIER-BARDADIN SAADI
+C
+        BSAST0=1./(5.2093+2.77*ALOG10(PTTP))
+        USAST0=BSAST0*(1.857+0.044*ALOG(PTTP))
+C
+C  PARAMETRISATION MODIFIEE POUR GERBES TRONQUEES
+C
+        BSAST0=0.182+0.0180*ALOG(1./PTTP)
+        USAST0=0.316+0.0328*ALOG(1./PTTP)
+        SIGBSA=BSAST0*SQRT(0.01+0.025/PTTP)
+        SIGUSA=USAST0*SQRT(0.025+0.085/PTTP)
+C
+C  USING PARAMETERS IN THE DATA BASE (BANK EIBP)
+C
+        BSAST0=FBSA00+SBSA00*ALOG(1./PTTP)+C1BSA0*(ALOG(PTTP))**2
+        USAST0=FUSA00+SUSA00*ALOG(1./PTTP)+C1USA0+C2USA0*PTTP
+        SIGBSA=FSBSA0+SSBSA0*ALOG(1./PTTP)+C1SBSA*(ALOG(PTTP))**2
+        SIGUSA=USAST0*SQRT(FSUSA0+SSUSA0/PTTP)+C1SUSA+C2SUSA*PTTP
+C
+C
+        IF(IW(NAMIND('AJOB')).NE.0)THEN
+          IF(BARREL)THEN
+C
+C  DEBUT NOUVEAUTES   26/10/93      (A. FALVARD)
+C
+            BSAST0=0.18901+0.025051*ALOG(1./PTTP)+0.11433E-2
+     *      *(ALOG(PTTP))**2
+            SIGBSA=1./(13.207+17.319*ALOG(PTTP))
+            SIGBSA=SIGBSA*0.923
+          ELSEIF(ENDCAP)THEN
+            BSAST0=0.17370+0.010945*ALOG(1./PTTP)-0.13903E-2
+     *      *(ALOG(PTTP))**2
+            SIGBSA=1./(13.903+18.305*ALOG(PTTP))
+            SIGBSA=0.9018*SIGBSA
+C
+C  FIN NOUVEAUTES   FALVARD 26/10/93
+C
+          ENDIF
+        ENDIF
+C
+        R3ES=(BSASTA-BSAST0)/SIGBSA
+        R4ES=(USASTA-USAST0)/SIGUSA
+      ENDIF
+      RETURN
+  999 CONTINUE
+      END
+#endif

@@ -1,0 +1,239 @@
+head	1.4;
+access;
+symbols
+	gal309_3:1.4
+	gal309_2:1.4
+	gal309_1:1.4
+	gal309:1.4
+	gal308_2:1.4
+	gal308_1:1.4
+	gal308:1.4
+	gal307_2:1.4
+	gal307_1:1.4
+	gal307:1.4
+	gal306_3:1.4
+	gal306_2:1.4
+	gal306_1:1.4
+	gal306:1.4
+	gal305_3:1.4
+	gal305_2:1.4
+	gal305_1:1.4
+	gal305:1.4
+	gal304_11:1.4
+	gal304_10:1.4
+	gal304_9:1.4
+	gal304_8:1.4
+	gal304_7:1.4
+	gal304_6:1.4
+	gal304_5:1.4
+	gal304_4:1.4
+	gal304_3:1.3
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.4
+date	96.05.28.15.44.25;	author flr;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.05.23.12.38.01;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.06.30.07.08.42;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.35;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.36;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@many corrections for gal303 were missing
+@
+text
+@      SUBROUTINE LCHIT
+C-------------------------------------------------------------
+C! Controls tracking in LCal
+C. - J.Dines Hansen & P.Hansen - 860417
+C.                               modified by F.Ranjard - 890317
+C. - Called by   GUSTEP                          from this .HLB
+C. - Calls       LCSHOW, LCTRAK                  from this .HLB
+C.               BLIST                           from BOS
+C -----------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "iocom.h"
+#include "jobcom.h"
+#include "lccomc.h"
+      PARAMETER (LWROW = 50, LSROW = 100)
+#include "lcnamc.h"
+#include "lshijj.h"
+#include "lwhijj.h"
+#include "tmacrod.h"
+#include "tmacrof.h"
+C -------------------------------------------------------------
+      IF(FBEGJO(5)) THEN
+C - Drop existing banks
+         CALL BDROP (IW,'LWHTLTHTLSHILWHI')
+C
+C - Book hit banks at the beginning of events
+C
+C -  Wire plane history bank LWHI
+         LEN = LWROW * LLWHIA + LMHLEN
+         CALL ALBOS ('LWHI',0,LEN,KINDX,IGARB)
+         IW(KINDX+LMHCOL) = LLWHIA
+C
+C - Tower history bank LSHI
+         LEN = LSROW * LLSHIA + LMHLEN
+         CALL ALBOS ('LSHI',0,LEN,KINDX,IGARB)
+         IW(KINDX+LMHCOL) = LLSHIA
+C
+C - Add to the 'E' list or 'T' list
+         CALL BLIST(IW,'E+','LSHI')
+         CALL BLIST(IW,'T+','LWHILTHTLWHT')
+C
+C - Count events with tracks hitting LCAL
+         KWS = IW(NALCWS)
+         IF(KWS .LE. 0) GOTO 10
+         IW(KWS+LMHLEN+1) = IW(KWS+LMHLEN+1) + 1
+   10    CONTINUE
+C
+C - Set LC print flag
+         IF(FDEBJO) THEN
+         IF (IPRIJO(5) .NE. 0) LCPRNT = MAX0 (ICLCJO(1),1)
+         ELSE
+            LCPRNT = 0
+         ENDIF
+C
+C - Set begin of event flag to false
+         FBEGJO(5) = .FALSE.
+      ENDIF
+C
+C ========
+C
+      IF(FELEC) THEN
+C      e+/e- : create geantino and stop e+/e-
+        IF (ITRKEL(8).EQ.1) THEN
+         DO I=1,LNTRK
+           TRKNXT(I) = TRKELE(I)
+         ENDDO
+         CALL CATINO
+         ITRKEL(9) = NOMOR
+        ENDIF
+C
+      ELSEIF(FTINO) THEN
+C      develop geantino shower
+        CALL LCSHOW
+C
+      ELSE
+C      full tracking for hadron/muon
+        CALL LCTRAK
+      ENDIF
+C
+  999 CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.3
+log
+@extend geantino parametrisation to lcal
+@
+text
+@a12 1
+#include "trkcom.h"
+d19 2
+a20 1
+#include "gmacro.h"
+d59 4
+a62 3
+C - Use shower parametrisation if electron
+C - and full tracking if hadron or muon
+      IF(ITRKEL(4).EQ.2.OR.ITRKEL(4).EQ.3) THEN
+d70 1
+d72 1
+d74 1
+d76 1
+@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ cahtra.h gmacro.h lccomc.h lcnamc.h ljjpar.h siconst.h
+ sigeco.h version.h
+ itmsk1.F itmsk2.F itnois.F itres.F itxtlk.F
+ lcadc.F lcamp.F lcasig.F lcbhab.F lcbkpr.F lcdigi.F lcfral.F
+ lchit.F lcirun.F lcnami.F lcnois.F lcpad.F lcroc.F lcsamp.F
+ lcsatu.F lcshow.F lcstrt.F lctrak.F lctrdi.F lctrht.F lcwire.F
+ lcwsum.F lcwtri.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+ xtrcom.h
+@
+text
+@a0 1
+*DK lchit
+d20 1
+d62 8
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d10 1
+a11 1
+      SAVE
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

@@ -1,0 +1,104 @@
+      SUBROUTINE HCBOUN
+C.** **************************************************************
+C
+CKEY HCALDES HCAL TOWER THETA / INTERNAL
+C! Compute theta (proj) boundaries of Hcal towers
+C
+C. G. CATANESI 2/12/1985      modified by - F.Ranjard - 880216
+C.
+C.                                                                *
+C! define universal constants
+      REAL PI, TWOPI, PIBY2, PIBY3, PIBY4, PIBY6, PIBY8, PIBY12
+      REAL RADEG, DEGRA
+      REAL CLGHT, ALDEDX
+      PARAMETER (PI=3.141592653589)
+      PARAMETER (RADEG=180./PI, DEGRA=PI/180.)
+      PARAMETER (TWOPI = 2.*PI , PIBY2 = PI/2., PIBY4 = PI/4.)
+      PARAMETER (PIBY6 = PI/6. , PIBY8 = PI/8.)
+      PARAMETER (PIBY12= PI/12., PIBY3 = PI/3.)
+      PARAMETER (CLGHT = 29.9792458, ALDEDX = 0.000307)
+C!    GEOMETRY COMMONS FOR HADRON CALORIMETER
+      PARAMETER( LPHC=3,LSHC=3,LPECA=1,LPECB=3,LPBAR=2)
+      PARAMETER( LHCNL=23,LHCSP=2,LHCTR=62,LHCRE=3)
+      PARAMETER (LHCNO = 3)
+      PARAMETER( LPHCT = 4)
+      PARAMETER( LPHCBM = 24,LPHCES = 6)
+      COMMON /HCALGE/HCRMIN(LSHC),HCRMAX(LSHC),HCZMIN(LSHC),HCZMAX(LSHC)
+     &              , NHCSUB,NHCTWR,NHCPHC,NHCREF,IHCTID(LHCRE-1)
+     &              , HCTUTH,HCIRTH,HCLSLA,NHCPLA(LPHC),HCTIRF(LPHC)
+     &              , HCSMTH
+      COMMON / HBAR / NHCBMO,NHCBFS,NHCBBS,NHCBLA,HCLTNO(LHCNO)
+     &              , HCWINO(LHCNO),HCDEWI,NHBLA2,NHBLI3,NHBLO3
+     &              , NEITHC(LHCNL),NEITSP(LHCNL,LHCSP)
+     &              , HCSPLT(LHCNL,LHCSP), HFSPBL,HFSRBL,HCPHOF
+C
+      COMMON /HEND/  HCDREC,HCDSTP,HCAPSL,HFSPEC,NHCSEX
+     &           ,NHCEFS,NHCEBS,NHCTRE,NHCINL,NHCOUL
+     &           ,NHCIND,NHCOUD
+C
+       PARAMETER (LHCBL=4,LHCEI=10,LHCEO=20,LHNLA=4)
+      COMMON /HCCONS/ HCTHRF,HCRSIZ,HCZSIZ,NHCBAR,NHCECA
+     &               ,NHCEIT,HCEIWI,HCDOWI,HCTUGA,HCSEPO
+     &               ,HCSABL,HCSAEC,HCTUEN,XLNHCE(LHCBL)
+     &               ,HCTLEI(LHNLA,LHCEI),HCTLEO(LHNLA,LHCEO)
+     &               ,HCTAEI(LHCEI),HCTAEO(LHCEO),HTINBL,HTINEC(2)
+     &               ,HTPIEC,HTPOEC,HBWREC,HBWCEC(2),HBSREC
+     &               ,HBSCEC,HBWRBL,HBSCBL,NHMBDF(2),NHTY4D
+     &               ,NHTY3D,NHTY2D,NHMBFL(2),NHBDOU,NHDLEC
+     &               ,NHDET0,NHDEBS,NHL8EC(LHCNL-1),HCTUSH,XHCSHI(LHCBL)
+
+      PARAMETER (LHCTR1=LHCTR+1)
+      COMMON /HCSEVA/ NTHCFI(LHCRE),HCAPDE(LPHCT),HCFITW(LHCRE)
+     &               ,HCBLSP(LHCNL,LHCSP),NHCTU1(LHCNL),HCTHUL(LHCTR1)
+     &               ,PHCTOR(LHCTR),IHCREG(LHCTR)
+     &               ,HCLARA(LHCNL),HCLAWI(LHCNL)
+     &               ,YBAST1,YBARMX,ZENST1,ZENDMX
+     &               ,XBARR0,XENDC0
+C
+C
+      ARSINH(X)=ALOG(X+SQRT(X*X+1.))
+C
+C ------------------------------------------------------------
+C.
+C.  THETA SUBDIVISION IN HADRONIC CALIRIMETER
+C.
+      ZMAX= HCRSIZ * TAN(PIBY2-HCTHRF) +.1
+      RMAX= HCZSIZ * TAN(HCTHRF) +.1
+C.
+C.    PROJECTED SIZE OF PADS (COSTANTS)
+C.
+      EPS1= HCRSIZ / NHCBAR * ARSINH(ZMAX / HCRSIZ)
+      EPS2= HCZSIZ / NHCECA * ARSINH(RMAX / HCZSIZ)
+C.
+C.  LOOP TO CALCULATE THETA VALUES IN BARREL
+C.
+      JJ=0
+      NHC = LHCTR/2 + 1
+      HCTHUL(NHC)= PIBY2
+   10 CONTINUE
+      JJ=JJ+1
+      ZNEW = HCRSIZ * SINH( JJ * EPS1 /HCRSIZ)
+      IF (ZNEW.LE.ZMAX) THEN
+         HCTHUL(NHC-JJ) = PIBY2 - ATAN2( ZNEW , HCRSIZ )
+                                                                 GOTO 10
+      ENDIF
+C.
+C.  LOOP TO CALCULATE THETA VALUES IN END-CAPS
+C.
+      KK=1
+   20 CONTINUE
+      KK=KK+1
+      RNEW = HCZSIZ * SINH( KK * EPS2 / HCZSIZ )
+      IF (RNEW.LE.RMAX) THEN
+         HCTHUL(KK-1) = ATAN2( RNEW , HCZSIZ )
+                                                                 GOTO 20
+      ENDIF
+C
+C   GET THETA VALUES .GT. 90.deg
+C
+      DO 30 N=1,NHC-1
+         HCTHUL(NHC*2-N) = PI - HCTHUL(N)
+   30 CONTINUE
+C
+      RETURN
+      END

@@ -1,0 +1,108 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	mini202_9:1.1.1.1
+	mini202_8:1.1.1.1
+	mini202_7:1.1.1.1
+	mini202_6:1.1.1.1
+	mini202_5:1.1.1.1
+	mini202_4:1.1.1.1
+	mini202_2:1.1.1.1
+	mini202_1:1.1.1.1
+	mini202:1.1.1.1
+	mini201_1:1.1.1.1
+	mini104_1:1.1.1.1
+	mini103_1:1.1.1.1
+	mini102_7:1.1.1.1
+	mini102_5:1.1.1.1
+	mini102_4:1.1.1.1
+	mini102_3:1.1.1.1
+	mini102_2:1.1.1.1
+	mini102_1:1.1.1.1
+	mini102:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.08.15.11.09.42;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.08.15.11.09.43;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE MINFZF
+C
+CKEY MDST /INTERNAL
+C-----------------------------------------------------------------------
+C! Fill FZFR from DFMC.
+C
+C     Author: Stephen Haywood      21-Nov-90
+C
+C     Input  : DFMC bank
+C     Output : FZFR bank
+C
+C     Called by MINFIL
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+#include "fzfrjj.h"
+#include "dfmcjj.h"
+#include "bmacro.h"
+C
+C++   Pick up DFMC bank.
+C
+      KDFMC = NLINK('DFMC',0)
+      IF (KDFMC.LE.0) RETURN
+      NDFMC = LROWS(KDFMC)
+      IF(NDFMC.LE.0) RETURN
+C
+C++   Create the FZFR bank.
+C
+      LEN = LMHLEN + LFZFRA * NDFMC
+      CALL AUBOS('FZFR',0,LEN, KFZFR,IGARB)
+      CALL BLIST(IW,'S+','FZFR')
+      IF(IGARB.GE.2) THEN
+         RETURN
+      ELSE IF(IGARB.NE.0) THEN
+         KDFMC = NLINK('DFMC',0)
+      ENDIF
+      IW(KFZFR+LMHCOL) = LFZFRA
+      IW(KFZFR+LMHROW) = NDFMC
+C
+C++   Fill FZFR bank.
+C
+      DO I=1,NDFMC
+         RW(KROW(KFZFR,I)+JFZFZF) = FLOAT(ITABL(KDFMC,I,JDFMZF))/1000.
+      ENDDO
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@1st release of mini under cvs
+@
+text
+@@

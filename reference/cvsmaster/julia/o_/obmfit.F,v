@@ -1,0 +1,246 @@
+head	1.2;
+access;
+symbols
+	jul313_3:1.2
+	jul313_2:1.2
+	jul313_1:1.2
+	jul313:1.2
+	jul312_1:1.2
+	jul312:1.2
+	jul311:1.2
+	jul310_1:1.2
+	jul310:1.2
+	jul309_1:1.2
+	jul309:1.2
+	jul308_6:1.2
+	jul308_5:1.2
+	jul308_4:1.2
+	jul308_3:1.2
+	jul308_2:1.2
+	jul308_1:1.2
+	jul308:1.2
+	jul307_4:1.2
+	jul307_3:1.2
+	jul307_2:1.2
+	jul307_1:1.2
+	jul307:1.2
+	jul306_3:1.2
+	jul306_2:1.2
+	jul306_1:1.2
+	jul306:1.2
+	jul305_4:1.2
+	jul305_3:1.2
+	jul305_2:1.2
+	jul305_1:1.2
+	jul305:1.2
+	jul304_3:1.2
+	jul304_2:1.2
+	jul304_1:1.2
+	jul304:1.2
+	jul303_7:1.2
+	jul303_6:1.2
+	jul303_5:1.2
+	jul303_4:1.2
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.09.10.14.59.32;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.09.10.13.19.51;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@Replace explicit BOS macro decln. by bmacrod.h
+@
+text
+@      SUBROUTINE OBMFIT (NEWROW)
+COS   ==========================
+COS   modified version of VBMFIT, O.Schneider, Sept 1996
+C----------------------------------------------------------------------
+C!  - Beamspot position fit
+C!
+C!   Author   :- D. Brwon                   8-APR-1993
+C!  First written by G. Redlinger
+C!
+C!   Bug fix: Steve Wasserbaech, April 1995
+C!   Use existing first-event-in-chunk number when NEWROW = .FALSE.
+C!   Modified: SW, 18 October 1995
+C!   Switch to VBPC; introduce track deweighting in first iteration;
+C!   protect against failure in VCBFIT.
+C?
+C!======================================================================
+#ifndef DOC
+C     IMPLICIT NONE
+      SAVE FIRST, NAVBPC
+#include "bcs.h"
+#include "rcurnt.h"
+#include "vbpcjj.h"
+#include "alpbjj.h"
+#include "obscom.h"
+C
+      INTEGER NAVBPC, KVBPC, NLOOP, ILOOP, IPAR, LEN
+#ifdef ALP2
+      INTEGER KALPB,IGARB
+#endif
+      INTEGER IP
+      INTEGER NAMIND, NLINK
+      REAL BPVEC(3), BPERR(3), BP(2)
+      LOGICAL NEWROW, FIRST
+      DATA FIRST / .TRUE. /
+      EXTERNAL NLINK
+C
+#include "bmacrod.h"
+#include "bmacro.h"
+C----------------------------------------------------------------------
+C
+      IF (FIRST) THEN
+        FIRST = .FALSE.
+        NAVBPC = NAMIND('VBPC')
+      ENDIF
+      KVBPC = IW(NAVBPC)
+      IF (KVBPC .LE. 0) GO TO 999
+C
+C  Make sure the VBPC row number (= LEP energy regime) is valid:
+C
+      IF (IVBPC .LE. 0) GO TO 999
+C
+C  Start by assuming a (0,0) beam position:
+C
+      BP(1) = 0.
+      BP(2) = 0.
+C
+C  Iterate, trimming harder each time:
+C
+      NLOOP = ITABL(KVBPC,IVBPC,JVBPNI)
+      DO ILOOP=1,NLOOP
+        BSD0SCUT = RTABL(KVBPC,IVBPC,JVBPSC-1+ILOOP)
+C
+C  In the first iteration, deweight the tracks with small
+C  d0 uncertainties, in case they are cosmics:
+C
+        IF (ILOOP .EQ. 1) THEN
+          S2MIN = RTABL(KVBPC,IVBPC,JVBPSM)**2
+        ELSE
+          S2MIN = 0.
+        ENDIF
+C
+C  Perform the fit:
+C
+        CALL OCBFIT(BP,BPVEC,BPERR)
+C
+C  If the fit failed, don't continue iterating:
+C
+        IF (BPERR(1) .EQ. 0.) GO TO 100
+C
+C  Update the beam position for the next fit:
+C
+        BP(1) = BPVEC(1)
+        BP(2) = BPVEC(2)
+      ENDDO
+C
+C  Scale the uncertainties:
+C
+      DO IPAR=1,2
+        BPERR(IPAR) = BPERR(IPAR)*RTABL(KVBPC,IVBPC,JVBPKX-1+IPAR)
+      ENDDO
+C
+C  Write these entries into a BOS bank.  Only create a new row
+C  if requested.  If the row is just being updated, don't change
+C  the starting event number.  ALPB is created the first time in
+C  VBSINR, with first event number = 1.
+C
+ 100  CONTINUE
+#ifdef ALP2
+      KALPB = NLINK('ALP2',IRUNRC)
+#endif
+      IF (KALPB .LE. 0) GO TO 820
+C
+      IF (NEWROW) THEN
+        LEN = IW(KALPB) + LCOLS(KALPB)
+#ifdef ALP2
+        CALL AUBOS('ALP2',IRUNRC,LEN,KALPB,IGARB)
+        IF (IGARB .EQ. 2) GO TO 800
+#else
+        CALL WBANK(IW,KALPB,LEN,*800)
+#endif
+        IP = KNEXT(KALPB)
+        IW(KALPB+LMHROW) = IW(KALPB+LMHROW)+1
+        IW(IP+JALPFE) = IBSFEV
+      ELSE
+        IP = KROW(KALPB,LROWS(KALPB))
+      ENDIF
+      IW(IP+JALPXP) = NINT(BPVEC(1)/BSPFAC)
+      IW(IP+JALPXE) = NINT(BPERR(1)/BSEFAC)
+      IW(IP+JALPYP) = NINT(BPVEC(2)/BSPFAC)
+      IW(IP+JALPYE) = NINT(BPERR(2)/BSEFAC)
+C
+C  done
+C
+      GO TO 999
+C
+  800 CONTINUE
+#ifdef ALP2
+      CALL RERROR ('OBMFIT', -1,'No Space to enlarge ALP2 !!')
+#else
+      CALL RERROR ('OBMFIT', -1,'No Space to enlarge ALP2 work bank !!')
+#endif
+      GO TO 999
+C
+  820 CONTINUE
+#ifdef ALP2
+      CALL RERROR ('OBMFIT', -2, 'ALP2 is NOT defined ')
+#else
+      CALL RERROR ('OBMFIT', -2, 'ALP2 work bank is NOT defined ')
+#endif
+      GO TO 999
+C
+  999 RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@mods to LEP BOM for Julia 283
+@
+text
+@d37 1
+a37 4
+C     BOS macro declarations:
+      INTEGER ID,NRBOS,L,KI,KI1,KI2
+      INTEGER LCOLS,LROWS,KNEXT,KROW,LFRWRD,LFRROW,ITABL
+      REAL RTABL
+@

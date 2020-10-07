@@ -1,0 +1,100 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.07.14.02.54;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.55;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK vdgdis
+      SUBROUTINE VDGDIS(NFROM,NTO,DIST)
+C!----------------------------------------------------------------------
+C! Find the distance between two elements
+C!  of the Geant geometry description
+CKEY VDET GEOM
+C!
+C!
+C!  Author         A. Bonissent 15-Feb-1994
+C!
+C!  Description
+C!  ===========
+C!  Navigate into the tree, in bank VPOS, until the mother of the mother
+C!                of ... the mother of NFROM be NTO;
+C!           during this process, the translations are accumulated.
+C!           Rotations are not taken into account
+C!
+C! Input :   NFROM - Character*4, starting volume                     I
+C!           NTO   - Character*4, ending                              I
+C!           DIST  - array of distances in the 3 dimansions           I
+C!
+C! Input : VPOS bank
+C!
+C-----------------------------------------------------------------------
+#ifndef DOC
+      DIMENSION DIST(3)
+      CHARACTER*4 NFROM,NTO,NLOC,NCURR,CHAINT
+#include "vposjj.h"
+#include "bcs.h"
+#include "bmacro.h"
+      KVPOS = IW(NAMIND('VPOS'))
+      IF(KVPOS.EQ.0)THEN
+          CALL ALTELL ('VDGDIS : VPOS bank missing',0,'STOP')
+      ENDIF
+      NVPOS = LROWS(KVPOS)
+      NCURR = NFROM
+      DO 11 IDIM=1,3
+         DIST(IDIM)=0.
+   11 CONTINUE
+   13 CONTINUE
+      IF(NCURR.NE.NTO)THEN
+         DO 10 IVPOS = 1, NVPOS
+         NLOC = CHAINT(ITABL(KVPOS,IVPOS,JVPODA))
+         IF(NLOC.EQ.NCURR)THEN
+            NCURR = CHAINT(ITABL(KVPOS,IVPOS,JVPOMO))
+            DO 12 IDIM=1,3
+            DIST(IDIM)=DIST(IDIM)+RTABL(KVPOS,IVPOS,JVPOPO+IDIM-1)
+   12       CONTINUE
+            GO TO 13
+         ENDIF
+   10    CONTINUE
+C
+C  This statement should never be executed, except in case of an error
+C
+         CALL ALTELL ('VDGDIS : Could not find volumes',0,'STOP')
+      ENDIF
+  999 CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

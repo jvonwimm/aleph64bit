@@ -1,0 +1,9 @@
+*CD ajjpar
+#include "acutjj.h"
+#include "afidjj.h"
+#include "ajobjj.h"
+#include "akinjj.h"
+#include "aprojj.h"
+#include "arunjj.h"
+#include "asevjj.h"
+#include "atitjj.h"

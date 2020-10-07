@@ -1,0 +1,189 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.29.16.22.22;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.19;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.20;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+@
+text
+@*DK hchit
+      SUBROUTINE HCHIT
+C --------------------------------------------
+C
+C! Main routine to process each track element
+C!
+C!       Author   :G.Catanesi      86/11/24
+C!       Mod.     :G.Catanesi      87/11/19
+C!       Mod.     :L.Silvestris    18/3/93
+C!       input:  McTrackElement stored in common TRKCOM
+C!       output bank: HCSE McHcTubeSegments
+C!
+C!
+C!   -Called by : GUSTEP
+C!   -Calls     : HCCOIN (detailed geometry)  from this .HLB
+C!                HCSHOW (geantino electron param) from this .HLB
+C!                HCIEVE, HNEWTK (general) from this .HLB
+C!
+C -------------------------------------------
+#ifndef DOC
+      SAVE
+#include "iocom.h"
+#include "jobcom.h"
+#include "gcking.h"
+#include "hccoun.h"
+#include "hcloc.h"
+#include "tmacrod.h"
+      LOGICAL FCHRG,FSENS
+#include "tmacrof.h"
+C ----------------------------------------------------
+C
+      FCHRG = TRKELE(14) .NE. 0.
+      FSENS = ITRKEL(7).GT.0
+C-----------------------------------------------------
+C?   evaluate the portion number
+C
+      IF (TRKVOL(2:2).EQ.'B') THEN
+         IHCPOR = 2
+      ELSE IF (TRKELE(3).GT.0.) THEN
+         IHCPOR = 1
+      ELSE
+         IHCPOR = 3
+      ENDIF
+C
+C?  initialize same variables at the beginning
+C?          of the event
+      IF(FBEGJO(7)) THEN
+         CALL HCIEVE
+      ENDIF
+C
+      IF(FHCDB2) CALL HNEWTK
+C
+C============ detailed geometry used in full generator and geantino
+C
+C - IF geantino particle THEN
+C      deposit energy following /CAPANO/ parameters and RETURN
+C   ELSE it is a track element
+C      IF charged particle in a sensitive volume THEN
+C         treat the track element: deposit energy
+C      ENDIF
+C   ENDIF
+C   IF muon THEN RETURN
+C   IF charged had. which does not stop with had. mechanism RETURN
+C   ENDIF
+C
+      IF (FTINO) THEN
+         CALL HCSHOW
+         GOTO 10
+      ELSE
+         IF (FSENS .AND. FCHRG) THEN
+            IF((ITRKEL(8).EQ.0) .AND. (ITRKEL(9).EQ.0))RETURN
+            NHCC01 = NHCC01 + 1
+            CALL HCCOIN
+         ENDIF
+      ENDIF
+      IF (FMUON) GOTO 10
+      IF (FHADC .AND. .NOT.FTRHAD) GOTO 10
+C
+   10 CONTINUE
+      FBEGJO(7) = .FALSE.
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d18 2
+a19 1
+C -------------------------------------------------------------
+d21 1
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

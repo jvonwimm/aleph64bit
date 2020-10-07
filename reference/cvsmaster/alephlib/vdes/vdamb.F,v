@@ -1,0 +1,184 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.44.01;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.44.02;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE VDAMB(IAMB,MAXTRK)
+C ----------------------------------------------------------------
+C!  Simple subroutine to count the ambiguity bits by track
+CKEY VDETDES
+C
+C  Input:  MAXTRK       = Dimension of IAMB array, should
+C                         be large enough to contain the largest event
+C                         (IE around 200)
+C          FRFT and VDCO must be in the bank list
+C
+C  Output: IAMB, an integer array numbered by FRFT track number,
+C          bits:          meaning
+C          8             r-phi ambiguity
+C          9             z ambiguity
+C  14-9-92 Dave Brown
+C
+#ifndef DOC
+      SAVE FIRST,NVDCO,NFRFT
+      INTEGER IAMB(*),MAXTRK
+      INTEGER NAMIND
+      INTEGER NVDCO,IVDCO,NFRFT,IFRFT,NHIT,IHIT,NTRK,ITRK,QF
+      INTEGER IMOD,ILAY,IWAF,IPHI,IVIEW,JAMB
+      LOGICAL FIRST
+      DATA FIRST/.TRUE./
+C
+#include "bcs.h"
+#include "bmacrod.h"
+#include "bmacro.h"
+C
+C  Initialize the name indices the first time through
+C
+      IF(FIRST)THEN
+        FIRST = .FALSE.
+        NVDCO = NAMIND('VDCO')
+        NFRFT = NAMIND('FRFT')
+      END IF
+C
+C  Find the VDCO and FRFT banks
+C
+      IVDCO = IW(NVDCO)
+      IFRFT = IW(NFRFT)
+C
+C  If no FRFT bank, return
+C
+      IF(IFRFT .LE. 0)RETURN
+C
+C  Zero the upper bits
+C
+      NTRK = MIN(LROWS(IFRFT),MAXTRK)
+      DO 600 ITRK=1,NTRK
+        IAMB(ITRK) = IAND(IAMB(ITRK),255)
+ 600  CONTINUE
+C
+C  If no VDCO bank, return
+C
+      IF(IVDCO .LE. 0)RETURN
+C
+C  Loop over the hits
+C
+      NHIT = LROWS(IVDCO)
+      DO 700 IHIT=1,NHIT
+C
+C  Get the quality flag, track number
+C
+        ITRK = ITABL(IVDCO,IHIT,8)
+        QF = ITABL(IVDCO,IHIT,7)
+        JAMB = IAND(ISHFT(QF,-2),3)
+        IF(ITRK .LE. MAXTRK)THEN
+          IAMB(ITRK) = IOR(IAMB(ITRK),ISHFT(JAMB,8))
+        END IF
+ 700  CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

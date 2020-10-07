@@ -1,0 +1,71 @@
+head	1.3;
+access;
+symbols
+	V0060:1.3
+	V0059:1.3
+	V0058:1.3
+	V0057:1.3
+	V0056:1.3
+	V0055:1.3
+	V0054:1.3
+	V0053:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.3
+date	2001.05.18.09.50.56;	author jacotf;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	2001.04.24.11.52.47;	author jacotf;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2001.04.19.13.10.45;	author jacotf;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@Brigitte MCPRODS table modified
+@
+text
+@CREATE TABLE MCPRODS  (
+               Kingalkey   VARCHAR2(100) ,
+               Description VARCHAR2(255) ,
+               NbEvents    INTEGER       ,
+               Energy      INTEGER);
+CREATE UNIQUE INDEX I_MCPRODS_KinKey on MCPRODS (Kingalkey,Description,NbEvents,Energy);
+@
+
+
+1.2
+log
+@Add an INDEX on MCPRODS
+@
+text
+@d4 3
+a6 2
+               NbEvents    INTEGER       );
+CREATE UNIQUE INDEX I_MCPRODS_KinKey on MCPRODS (Kingalkey,Description,NbEvents);
+@
+
+
+1.1
+log
+@New Brigitte table MCPRODS
+@
+text
+@d5 1
+a5 1
+
+@
+

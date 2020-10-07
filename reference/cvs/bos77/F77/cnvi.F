@@ -1,0 +1,24 @@
+      SUBROUTINE CNVI(NUM,NT,STRUT)
+      EXTERNAL STRUT
+      CHARACTER     STR*256, STP*12
+      COMMON/FMTSTR/STR
+      COMMON/STRSTR/JS,IAST,IBST
+      INTEGER NUM(*)
+
+*     ...
+      DO 19 L=1,NT
+      CALL PNVI(NUM(L),STP,JSP)
+   12 IF(JS.EQ.0) THEN
+         STR=' '
+         JS=IAST-1
+      ELSE IF(JS+JSP+2.LE.IBST) THEN
+         JS=JS+1
+      ELSE
+         CALL STRUT
+         GOTO 12
+      END IF
+      STR(JS+1:JS+JSP)=STP(1:JSP)
+      JS=JS+JSP
+   19 CONTINUE
+      RETURN
+      END

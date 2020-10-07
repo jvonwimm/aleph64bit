@@ -1,0 +1,257 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.42.16;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.42.17;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      REAL FUNCTION HTULEN(ITUB,ILAY,IMOD,IPOR,IPOS)
+C-------------------------------------------------------------
+CKEY HCALDES HCAL TUBE LENGTH /USER
+C
+C!   Return the active length of each tube in HCAL
+C!   If 0. the tube is absent or dead
+C!
+C!                    Author : G.Catanesi 23/5/89
+C!                    Mod by: Andrea Venturi & L.Silvestris 24/6/92
+C!                    to take in account the shift of tubes in barrel...
+C!
+C!         INPUT:
+C!                 ITUB/I = Tube#
+C!                 ILAY/I = Layer#
+C!                 IMOD/I = Module#
+C!                 IPOR/I = Portion#
+C!                 IPOS/I = position sign (for the barrel only)
+C!
+C----------------------------------------------------------------
+#ifndef DOC
+#include "hcgeom.h"
+C
+      HTUACL = 0.
+C
+C   Evaluate eightfold and double_eightfold number
+C
+      CALL HNEIGH(ITUB,ILAY,IPOR,IHEIF,IDHEI)
+      IF(IHEIF.EQ.0)GOTO 99
+C
+      IF (IPOR.EQ.LPBAR) THEN
+C
+C  Barrel Case  ============================================
+C
+         IF (IMOD.NE.NHMBDF(1).AND.IMOD.NE.NHMBDF(2)) THEN
+C
+C  Standard module case
+C
+            IF ((IHEIF.LE.NHBLI3) .OR.
+     &        (IHEIF.GT.(NEITHC(ILAY)-NHBLO3)))THEN
+                 HTUACL = XLNHCE(3)
+            ELSEIF((IHEIF.GT.NHBLI3) .AND.
+     &        (IHEIF.LE.(NHBLI3+NHBLA2)))THEN
+                 HTUACL = XLNHCE(2)
+            ELSE
+                 HTUACL = XLNHCE(1)
+            ENDIF
+C
+C  Kills last 2 eigthfold of first plane in modules 15 and 22
+C
+            IF((IMOD.EQ.NHMBFL(1).OR.IMOD.EQ.NHMBFL(2)) .AND.
+     &         (ILAY.EQ.1))THEN
+                  ILAST = NEITHC(ILAY) - NHBDOU
+                  IF(IHEIF.GT.ILAST)GOTO 99
+            ENDIF
+C
+         ELSE
+C
+C  Special case (modules 6 and 7)
+C
+            ISEC = NHTY4D + NHTY3D
+            ITHR = ISEC + NHTY2D
+            IF(IHEIF.LE.NHTY4D)THEN
+                 HTUACL = XLNHCE(4)
+            ELSEIF((IHEIF.GT.NHTY4D).AND.(IHEIF.LE.ISEC))THEN
+                 HTUACL = XLNHCE(3)
+            ELSEIF((IHEIF.GT.ISEC).AND.(IHEIF.LE.ITHR))THEN
+                 HTUACL = XLNHCE(2)
+            ELSEIF((IHEIF.GT.ITHR) .OR.
+     &             (IHEIF.GT.(NEITHC(ILAY)-NHBLO3)))THEN
+                 HTUACL = XLNHCE(1)
+            ELSE
+                 HTUACL = XLNHCE(3)
+            ENDIF
+         ENDIF
+C
+         XBAR = HTUACL / 2.
+         IS = IPOS
+         IF(MOD(IMOD,2).NE.0) IS=-IS
+C
+C   Take into account the tubes shift in XBAR
+C
+C   There are 4 types of tubes
+         DO J=1,4
+            IF (ABS(XBAR-XLNHCE(J)*.5) .LT. 0.5) THEN
+               IF (IS.GE.0)  THEN
+                  XBAR=XBAR-HCTUSH-XHCSHI(J)
+               ELSE
+                  XBAR=XBAR+XHCSHI(J)
+               ENDIF
+               GOTO 10
+            ENDIF
+         ENDDO
+C
+ 10      HTULEN = XBAR*2.
+C
+      ELSE
+C
+C Endcap Case ===========================================
+C
+C   Evaluate angle and length of the double_eightfold profile
+C
+            DTUBL = HTXDTL(IDHEI,ILAY)
+            IF(DTUBL.EQ.0.)GOTO 99
+            ANGLE = HTXANG(IDHEI,ILAY)
+            STEP  = HTXSPL(IDHEI,ILAY)
+C
+C Calculates Tube_profile length
+C
+            IF(ANGLE.GT.0.) THEN
+C           Tube_profile length 30 degrees case
+                 TUBL = DTUBL - (STEP*.5+MOD((ITUB-1),(2*NHCEIT))*STEP)
+C
+            ELSEIF (ANGLE.LT.0.) THEN
+C           Tube_profile length -30 degrees case
+                 IF(MOD(IHEIF,2).EQ.0)THEN
+                    TUBL = HCTLEI(3,IDHEI)
+                 ELSE
+                    TUBL = DTUBL
+                 ENDIF
+C
+            ELSE
+C           Tube_profile length 0 degrees case
+                 TUBL = DTUBL
+                 IF((IHEIF.EQ.4) .AND. (ILAY.GT.NHCINL))
+     &                TUBL = HCTLEO(3,IDHEI)
+            ENDIF
+C
+C Evaluate non active zones at the boundaries of the tube profile
+C
+            XOUT = HTINEC(1)
+            XINN = HTINEC(2)
+C
+C Subtract these zones to the tube-profile length
+C
+            HTULEN = TUBL - XOUT - XINN
+            IF(HTULEN.LE.0.)GOTO 99
+C
+         ENDIF        ! ==========================================
+C
+         RETURN
+C
+C The tube is absent or dead
+C
+99       CONTINUE
+         HTULEN = 0.
+         END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

@@ -1,0 +1,153 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	96.02.07.11.40.17;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.40.18;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      PARAMETER (NMEC = 4 )
+      COMMON /VDSUPP/ VDAPLN(NMEC,2) , VMETIL(NMEC,2) , VDSPTR(NMEC) ,
+     &                VDSPER(NMEC,2) ,  VDSPCB(NMEC) , VDSPCA(NMEC) ,
+     &                VDSPCR(NMEC) ,  VDSPCT(NMEC) , VDSPSA(NMEC) ,
+     &                VDSPGA(NMEC) ,  VDSPSP(NMEC) , NVDSPS(NMEC) ,
+     &                VDHYL1 , VDHYL2 , VDHYL3 , VDHYL4 , VDHYL5 ,
+     &                VDHYCE , VDHYCW , VDHYCL , VDHYCT ,
+     &                VDHYST(NMEC) , VDALIR , VDALOR , VDALLA ,
+     &                VDALTC , VDALTA , VDSPAT
+#if defined(DOC)
+
+    This common stores the variables related to the (passive) support
+    of Mini-Vertex. The variables are preset in the subroutine VDIGEO
+
+    VDAPLN(2) : INNER AND OUTER RADIUS OF THE SUPPORT RING
+    VDSPTR : RADIUS THICKNESS OF THE SUPPORT RINGS
+    VDSPER(2) : DISTANCES OF THE EXTERNAL RINGS IN Z FROM THE INTERNAL
+    VDONES
+    VDSPCB : ALLUMINIUM EQUIVALENT THICKNESS OF THE CABLE
+    VDSPCA : CARBON FIBER TUBE FIRST ANGLE
+    VDSPCR : CARBON FIBER INTERNAL RADIUS
+    VDSPCT : CARBON FIBER TUBE THICKNESS
+    VDSPSA : ANGLE COVERED BY A SECTOR
+    VDSPGA : ANGLE COVERED BY A GAP
+    VDSPSP : ANGULAR POSITION OF THE FIRST SECTOR
+    NVDSPS : NUMBER OF SECTORS
+    VDHYL1 : Z SIDE CERAMIC WIDTH
+    VDHYL2 : Z SIDE CERAMIC POSITION
+    VDHYL3 : PHI SIDE WIDTH
+    VDHYL4 : CONNECTION LENGTH
+    VDHYL5 : CONNECTION WIDTH
+    VDHYCE : CERAMIC THICKNESS
+    VDHYCW : CHIP WIDTH
+    VDHYCL : CHIP LENGTH
+    VDHYCT : CHIP THICKNESS
+    VDHYST(2) : SEPARATOR THICKNESSES
+    VDALIR : ALLUMINA INNER RADIUS
+    VDALOR : ALLUMINA OUTER RADIUS
+    VDALLA : ALLUMINA LENGTH
+    VDALTC : CARBON SHEET THICKNESS
+    VDALTA : ALLUMINIUM SHEET THICKNESS
+    VDSPAT : EQUIVALENT THICKNESS OF THE ALUMINA
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

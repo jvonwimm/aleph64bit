@@ -1,0 +1,204 @@
+#!/usr/local/bin/perl 
+require "complete.pl"; 
+require "ctime.pl";
+###############################################################################
+#                              create_assign
+# 05/03/97                                                       F.BLIN
+###############################################################################
+# to create $ALDOC/${PROG}${CYCLE}.assign and $ALDOC/all.assign
+# call :/aleph/script/progl
+#       /aleph/script/create_all_assign
+#
+# parameters: program cycle [any order]
+# eg: create_assign 305 julia
+#                  outputs : $ALDOC/jul305.assign
+#                            $ALDOC/all.assign
+#                            $ALDOC/progl.lis
+###############################################################################
+$ALROOT = $ENV{'ALROOT'};
+$ALINC = $ENV{'ALINC'};
+$ALDOC = $ENV{'ALDOC'};
+$dir_prog = "";
+$CYCLE = "";
+$PROG_name = "";
+
+foreach $i (0.. $#ARGV){
+   $new_PAR = shift(@ARGV);
+   &help if ($new_PAR eq "-h");
+   $PROG_name = $new_PAR if ($new_PAR=~ /^[a-zA-Z]+$/);
+   $CYCLE = $new_PAR if ($new_PAR=~ /^(\d+)$/);
+}
+
+$PROG_name =~ tr/A-Z/a-z/;
+&help if ($PROG_name eq "");
+
+$PROG_name = "alephlib" if ($PROG_name eq "aleph");
+$PROG = "";
+$PROG = $PROG_name if ($PROG_name eq "alephio");
+$PROG_assign = "";
+$PROG = substr($PROG_name,0,5) if ($PROG_name eq "alephlib");
+$PROG = substr($PROG_name,0,3) if ($PROG_name eq "julia" || $PROG_name eq "galeph");
+$PROG_assign = "${PROG}${CYCLE}";
+$PROG_assign = "ALB${CYCLE}" if ($PROG eq "aleph");
+$PROG_assign = "ALI${CYCLE}" if ($PROG eq "alephio");
+#$PROG_assign = "ALEPHI" if ($PROG eq "alephio");
+$PROG_assign =~ tr/a-z/A-Z/;
+&help if ($PROG_assign eq "");
+
+if ($PROG_name eq "alephio"){ 
+    $dir_prog = "$ALROOT/$PROG";
+    $file_out = ${PROG};
+   }
+else {
+   $dir_prog = "${ALROOT}/${PROG}${CYCLE}"; 
+   $file_out = "${PROG}${CYCLE}";
+}
+
+if(!-e "$dir_prog"){
+  print "Please check : Directory: ${dir_prog} does not exist !...\n";
+  exit;
+}
+
+if(-e "$ALDOC/${PROG}${CYCLE}.assign"){
+  print "Please check : file $ALDOC/${PROG}${CYCLE}.assign exist !...\n";
+  exit;
+}
+
+print "$PROG_assign $PROG_name ${CYCLE}\n";
+print "Directory -> $dir_prog \n";
+
+$l_dir_prog = length($dir_prog) ;
+
+@all_sets = `ls -F $dir_prog | grep "/" | grep -v [[:upper:]] | grep -v "^c/" | grep -v "^inc/"` ;
+@all_sets = "F77/\n" if ($#all_sets == 0);
+$ij = 0;
+@sub_name = ();
+
+open(INPUT,">>$ALDOC/${PROG}${CYCLE}.assign");
+
+foreach $i (0 .. $#all_sets){
+    $set_name = substr($all_sets[$i],0,index($all_sets[$i],"/"));
+    $l_begin = $l_dir_prog + length($set_name) + 2;
+    @files_F = `ls $dir_prog/$set_name/*.F`;
+
+    for ($ii=0 ; $ii<=$#files_F; $ii++){
+        @all_lines = ();
+        $jj = 0;
+        $name = substr($files_F[$ii],$l_begin,index($files_F[$ii],".F") - $l_begin) ;
+        $name =~ tr/a-z/A-Z/;
+        $ij = $ij + 1;
+        $sub_name[$ij] = " $name\n";
+#        print "$name ${files_F[$ii]}";
+        @temp = `cat ${files_F[$ii]}`;
+        &search_lines;
+        print INPUT "@all_lines";
+    }
+}
+close(INPUT);
+system("/afs/cern.ch/aleph/shared/script/progl $PROG_name $CYCLE");
+system("/afs/cern.ch/aleph/shared/script/create_all_assign");
+exit;
+#############################################################################
+sub clean_line {
+
+        $_[0] =~ s/^\s+//;
+        $_[0] =~ s/^\d+//;
+        $_[0] =~ s/\s+$//;
+        while (index($_[0]," ") > -1) {$_[0] =~ s/(\s+)//;}
+return;
+}
+#############################################################################
+sub search_lines {
+
+    $line = "";
+    for ($j=1; $j<$#temp; $j++){
+        $line = $temp[$j];
+        $flag_write = "NO";
+        $line =~ tr/a-z/A-Z/;
+#        print " $line \n" if (index($line,"AUBOS") != -1);
+#        print " $line \n" if (index($line,"ALBOS") != -1);
+        next if (substr($line,0,1) eq "C");
+        next if (substr($line,5,1) ne " ");
+        next if (substr($line,0,1) eq "#");
+        &clean_line($line);
+        if (substr($line,0,2) eq "DO"){
+#           print "$line \n";
+	   $n = substr($line,2,1);
+#	   print "do $n \n";
+           next if ($n > 0 && $n < 10);
+        }
+        next if (substr($line,0,4) eq "SAVE");
+        next if (substr($line,0,4) eq "DATA");
+        next if (substr($line,0,4) eq "OPEN");
+        next if (substr($line,0,4) eq "READ");
+        next if (substr($line,0,4) eq "REAL");
+        next if (substr($line,0,5) eq "WRITE");
+        next if (substr($line,0,6) eq "FORMAT");
+        next if (substr($line,0,7) eq "INTEGER");
+        next if (substr($line,0,8) eq "IMPLICIT");
+        next if (substr($line,0,8) eq "EXTERNAL");
+        next if (substr($line,0,9) eq "PARAMETER");
+        next if (substr($line,0,9) eq "DOUBLE PRECISION");
+        if (index($line,"=") == -1){
+            $flag_write = "OK" if (index($line,"CALLAUBOS") != -1);
+            $flag_write = "OK" if (index($line,"CALLALBOS") != -1); 
+            $flag_write = "OK" if (index($line,"NAMIND(") != -1);
+            $flag_write = "OK" if (index($line,"MBANK(") != -1);
+            $flag_write = "OK" if (index($line,"MBANK(") != -1);
+            $flag_write = "OK" if (index($line,"ALGTDB(") != -1);
+            $flag_write = "OK" if (index($line,"AGETDB(") != -1);
+            $flag_write = "OK" if (index($line,"IW(NA") != -1);
+            next if ($flag_write eq "NO");
+        }
+        $flag_write = "OK" if (index($line,"NAMIND(") != -1);
+	$flag_write = "OK" if (index($line,"NLINK") != -1 && index($line,"=") != -1);
+        $flag_write = "OK" if (index($line,"NBANK(") != -1);
+        $flag_write = "OK" if (index($line,"MBANK(") != -1);
+        $flag_write = "OK" if (index($line,"ALGTDB(") != -1);
+        $flag_write = "OK" if (index($line,"AGETDB(") != -1);
+        $flag_write = "OK" if (index($line,"IW(NA") != -1);
+        $flag_write = "OK" if (index($line,"CALLAUBOS") != -1);
+        if ($flag_write eq "NO"){
+           $lbra = index($line,"(");
+           $lvra = index($line,"=");
+           $flag_write = "OK" if ($lvra > 5 && ($lbra == -1 || $lbra > 5));  
+           $flag_write = "OK" if ($lbra > 5 && ($lvra == -1 || $lvra > 5));  
+       }
+        if ($flag_write eq "OK"){
+
+	   $n_next = $j;
+           while(1){
+	       $n_next++;
+	       $next_line = $temp[$n_next];
+               if (substr($next_line,5,1) ne " " && substr($next_line,0,5) eq "     "){
+		  $next_line = substr($next_line,6);
+                  &clean_line($next_line);
+#                  print "add1 j=$j n_next=$n_next next_line=$next_line \n";
+                  $line = "${line}${next_line}";
+#                  print "add2 line=$line \n";
+	      }
+               else {
+                  last;
+               }  
+           
+           }    
+         for ($k=1 ; $k<=$#all_lines; $k++){next if ("${line}\n" eq "$all_lines[$k]");}
+	   $n_line = $j + 1;
+	   $n_line = sprintf("%04d",$n_line);
+           $name = pack(A7,"$name");
+	   $jj++;
+           $all_lines[$jj] = "${PROG_assign}- $name-line${n_line}:${line}\n";
+#           print "$jj all_lines=$all_lines[$jj]";
+        }
+    }
+    return;
+}
+###############################################################################
+sub help {
+    print "Syntax     : create_assign  program_name [- cycle]\n";
+
+    print "  examples : create_assign julia 281 \n";
+    exit;
+}
+
+##############################################################################

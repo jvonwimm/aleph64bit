@@ -1,0 +1,1099 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  uphy1-0:1.1.1.1 flr:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.08.16.13.38.25;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.08.16.13.38.26;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE QJCONE (jt, CNAM, ICLASS, R, Ee, iwc, mn)
+C-------------------------------------------------------------------------------
+C A JET-FINDING PACKAGE BASED AROUND THE CONE ALGORITHM
+C AUTHOR    WARRICK NEWTON
+C DATE      09 JULY 1996
+C-------------------------------------------------------------------------------
+C INTERFACE CALLED BY THE USER WHICH IN TURN CALLS THE JET-FINDING CODE.  THIS
+C IS REQUIRED TO MAKE THE ALGORITHM LOOK LIKE A STANDARD ALPHA PACKAGE.
+C
+C INPUT VALUES
+C     REAL 
+C       R       cone size
+C       Ee      minimum energy in cone for that cone to represent a possible jet
+C     INTEGER
+C       iwc     which of three possible cone types to use
+C       mn      minimum number of tracks allowed in cone/jet
+C RETURNED VALUES
+C     INTEGER
+C       jt      number of jets found
+C     CHARACTER
+C       CNAM    name of vectors containing jet axes
+C
+C CALLS MADE TO:
+C       jetfinder
+C
+C The PARAMETER sm determines how many jets are RETURNED to the user.
+C The PARAMETER sz determines the maximum number of tracks allowed in a jet
+C and also the maximum number of jets the algorithm can use whilst RUNNING.
+C-------------------------------------------------------------------------------
+#include "qdecl.h"
+#include "qcde.h"
+#include "qctbuf.h"
+      INTEGER sm, sz
+      PARAMETER (sm=10)
+      PARAMETER (sz=99)
+      INTEGER ICLASS, iwc, jt, ijt(sz), mn, good(sz+1), i, j 
+      INTEGER arr(sz+1), in(sz+1, sz)
+      REAL R, Ee
+      CHARACTER *(*) CNAM
+#include "qmacro.h"
+        CALL QJSET0(ICLASS)
+        CALL VZERO (good, sz+1)
+        DO i = 1, KTBI
+          good(i) = KTBIT(i)
+        ENDDO
+        CALL jetfinder (R, Ee, iwc, good, jt, ijt, mn, sm, sz, arr, in) 
+        IF (jt .ne. -100) THEN
+          DO i = 1, ABS(jt)
+            j = KVSAVC(ijt(i), CNAM, ICLASS)
+          ENDDO
+        ELSE
+          DO i = 1, sm
+            j = KVSAVC(ijt(i), CNAM, ICLASS)
+          ENDDO
+        ENDIF
+      RETURN
+      END
+
+      SUBROUTINE cone (jt, good, wc, icn, R, keep, in, ijt, sz, arr,
+     &  mntemp) 
+C-------------------------------------------------------------------------------
+C FIND ALL TRACKS WHICH LAY INSIDE A CONE AND MOVE THE CONE TO THE AXIS OF
+C THESE TRACKS.  ITERATE UNTIL THE LIST OF TRACKS IN THE JET DOES NOT CHANGE
+C 
+C ARGUMENT MEANINGS
+C     REAL 
+C       R       cone size
+C       Ee      minimum energy in cone for that cone to represent a possible jet
+C     INTEGER
+C       wc          which of three possible cone types to use
+C       icn         ALPHA track number of cone axis
+C       good(sz+1)  array containing list of tracks to be used
+C       mntemp      minimum number of tracks allowed in cone/jet
+C       sz          defines the array sizes
+C       arr(sz+1)   just a temporary array
+C       jt          current jet number
+C       ijt(sz)     array containing jet-axis track numbers
+C       in(sz+1,sz) array of all tracks in all jets
+C     LOGICAL
+C       keep        decision on whether the jet is suitable or not
+C
+C FUNCTIONS USED:
+C       etaphi
+C-------------------------------------------------------------------------------
+      IMPLICIT NONE
+#include "qdecl.h"
+#include "qcde.h"
+      INTEGER sz, wc, icn, jt, good(sz+1), ijt (sz), i, arr (sz+1),
+     &  in (sz+1, sz), j, mntemp, itmp
+      REAL dm, R, etaphi
+      LOGICAL keep
+#include "qmacro.h"
+C-------------------------------------------------------------------------------
+C--- Create a track, ijt(i), to represent a jet (the sum of tracks in the cone).
+C--- Check to see if the track is in the cone, if so add to list.
+C-------------------------------------------------------------------------------
+        IF (ijt(jt) .eq. 0) THEN
+          ijt(jt) = KVNEW(dm)
+        ELSE
+          CALL QVZERO (ijt(jt))
+        ENDIF
+C-------------------------------------------------------------------------------
+C--- The array arr is the list of tracks found in cone on previous iteration.
+C--- This array is also used as an argument to call shared.
+C--- Check to see if the track is in the cone, if so add to list.
+C-------------------------------------------------------------------------------
+        arr(sz+1) = 0
+
+  123   CALL wipe (jt, in, sz)
+        DO itmp = 1, good(sz+1)
+          i = good(itmp)
+          IF (.not. XLOCK(i)) THEN
+            IF (wc .eq. 1 .and. QCOSA(icn,i) .ge. cos(R)
+     &        .or.
+     &        wc .ge. 2 .and. etaphi(i, icn) .le. R)
+     &      THEN
+              in(sz+1, jt) = in(sz+1, jt) + 1
+              in(in(sz+1, jt), jt) = i
+            ENDIF
+          ENDIF
+        ENDDO
+        IF (in(sz+1, jt) .lt. mntemp) THEN
+          CALL QVZERO (icn)
+          RETURN
+        ENDIF
+
+C-------------------------------------------------------------------------------
+C--- find the axis of the particles in the cone
+C-------------------------------------------------------------------------------
+        IF (wc .eq. 3) THEN
+          CALL jetaxis (icn, jt, in, sz)
+        ELSE
+          CALL QVZERO (icn)
+          DO i = 1, (in(sz+1, jt))
+            CALL QVADDN (icn, in(i, jt))
+          ENDDO
+        ENDIF
+
+C-------------------------------------------------------------------------------
+C--- check to see if track list of cone is the same as previous iteration
+C-------------------------------------------------------------------------------
+        IF (in(sz+1, jt) .eq. arr(sz+1)) THEN
+          DO i = 1, in(sz+1, jt)
+            IF (in(i, jt) .ne. arr(i)) THEN
+              DO j = 1, in(sz+1, jt)
+                arr(j) = in(j, jt)
+              ENDDO
+              arr(sz+1) = in(sz+1, jt)
+              GOTO 123
+            ENDIF
+          ENDDO
+        ELSE
+          DO i = 1, in(sz+1, jt)
+            arr(i) = in(i, jt)
+          ENDDO
+          arr(sz+1) = in(sz+1, jt)
+          GOTO 123
+        ENDIF
+
+C-------------------------------------------------------------------------------
+C--- A possible protojet has been found.
+C--- Is it a subjet or copy of a previous jet?  If so reject it.
+C--- Is a previous jt a subjet of the possible jet?  If so reject that.
+C--- Otherwise we keep the jet.
+C-------------------------------------------------------------------------------
+        keep = .true.
+        DO  i = 1, (jt - 1)
+          CALL shared (jt, i, keep, arr, in, ijt, sz)
+          IF (.not. keep) THEN
+            CALL QVZERO (icn)
+            RETURN
+          ENDIF
+        ENDDO
+        CALL QVCOPY (ijt(jt), icn)
+        CALL QVZERO (icn)
+        jt = jt + 1
+      RETURN
+      END
+
+      REAL FUNCTION eta (i)
+C-------------------------------------------------------------------------------
+C--- ETA IS THE PSEUDORAPIDITY OF ALPHA TRACK i  DEFINED AS - ln tan(x/2)
+C-------------------------------------------------------------------------------
+      IMPLICIT NONE
+#include "qdecl.h"
+#include "qcde.h"
+      INTEGER i
+#include "qmacro.h"
+C-------------------------------------------------------------------------------
+C--- Ensure tracks along beam do not create a problem for tangent
+C-------------------------------------------------------------------------------
+        IF (QCT(i) .gt. 0.9999999) THEN
+          eta = 50.
+        ELSEIF (QCT(i) .lt. -0.9999999) THEN
+          eta = -50.
+        ELSE
+          eta = - log (tan (0.5 * acos (QCT(i))))
+        ENDIF
+      RETURN
+      END
+
+      REAL FUNCTION etaphi (i, j)
+C-------------------------------------------------------------------------------
+C--- ETAPHI MEASURES SEPARATION OF ALPHA TRACKS iAND j  IN PSEUDORAPIDITY-PHI
+C--- SPACE
+C ARGUMENT MEANING
+C     INTEGER
+C       i,j          alpha track numbers between which the separation is to be
+C                    found
+C
+C FUNCTIONS USED:
+C       eta
+C-------------------------------------------------------------------------------
+      IMPLICIT NONE
+#include "qdecl.h"
+#include "qcde.h"
+      INTEGER i, j
+      REAL eta
+      REAL phii, phij, delta_phi
+#include "qmacro.h"
+C-------------------------------------------------------------------------------
+C--- Deal with the ambiguity in phi if track is exactly along beam direction.
+C--- Calculate the actual difference, delta phi, in phi between two tracks.
+C-------------------------------------------------------------------------------
+        IF (abs(QCT(i)) .gt. 0.9999999) THEN
+          phii = 0.
+        ELSE
+          phii = QPH(i)
+        ENDIF
+        IF (abs(QCT(j)) .gt. 0.9999999) THEN
+          phij = 0.
+        ELSE
+          phij = QPH(j)
+        ENDIF
+        delta_phi = abs(phii - phij)
+        IF (delta_phi .gt. QQPI) THEN
+          delta_phi = 2 * QQPI - delta_phi
+        ENDIF
+        etaphi = ((eta(i) -  eta(j))**2. + (delta_phi)**2.)**0.5
+      RETURN
+      END
+
+      SUBROUTINE finite (i, j, wc, arr, in, ijt, sz)
+C-------------------------------------------------------------------------------
+C TAKES PAIRS OF JETS WHICH SHARE TRACKS AND ASSIGNS THE SHARED TRACKS TO THE
+C CLOSEST JET SO EACH TRACK IS UNIQUELY ASSIGNED TO ONLY ONE JET, OR DELETES ONE
+C OF THE JETS IF THE SHARED ENERGY IS TOO MUCH OF THE LOWER ENERGY JET
+C
+C ARGUMENT MEANINGS 
+C     INTEGER
+C       i,j         ALPHA track numbers of two jets which share tracks
+C       wc          which of three possible cone types to use
+C       arr(sz+1)   just a temporary array
+C       in(sz+1,sz) array of all tracks in all jets
+C       ijt(sz)     array containing jet-axis track numbers
+C       sz          defines the array sizes
+C
+C CALLS MADE TO 
+C        wipe
+C
+C FUNCTIONS USED:
+C       etaphi
+C-------------------------------------------------------------------------------
+      IMPLICIT NONE
+#include "qdecl.h"
+#include "qcde.h"
+      INTEGER sz, i, ijt (sz), in (sz+1, sz), j, wc,
+     &  arr (sz+1), k, itk, n
+      REAL comeng, etaphi
+#include "qmacro.h"
+C-------------------------------------------------------------------------------
+C--- Sum the energy of the tracks common to two protojets.
+C--- Determine which has the least energy.
+C-------------------------------------------------------------------------------
+        comeng = 0.
+        DO k = 1, arr(sz+1)
+          comeng = comeng + QE(arr(k))
+        ENDDO
+
+        IF (QE(ijt(i)) .lt. QE(ijt(j))) THEN
+          itk = i
+        ELSE
+          itk = j
+        ENDIF
+
+C-------------------------------------------------------------------------------
+C--- If the energy of tracks in the overlap is more than a set fraction of the
+C--- energy of the least energetic jet then remove the least energetic jet.
+C--- Otherwise, assign tracks in the overlap to the jet which they are nearest.
+C-------------------------------------------------------------------------------
+        IF ((comeng / QE(ijt(itk))) .gt. 0.75) THEN
+          CALL QVZERO(ijt(itk))
+          CALL wipe(itk, in, sz)
+          RETURN
+        ELSE
+          DO k = 1, arr(sz+1)
+            IF ((wc .eq. 1 .and.
+     &        QCOSA(arr(k),ijt(i)) .gt. QCOSA(arr(k),ijt(j)))
+     &        .or.
+     &        (wc .ge. 2 .and.
+     &        etaphi(arr(k), ijt(i)) .lt. etaphi(arr(k), ijt(j))))
+     &      THEN
+
+C--- remove the track from j.
+              DO n = 1, in(sz+1, j)
+                IF (in(n, j) .eq. arr(k)) THEN
+                  in (n, j) = 0
+                ENDIF
+              ENDDO
+            ELSE
+
+C--- remove the track from i
+              DO n = 1, in(sz+1, i)
+                IF (in(n, i) .eq. arr(k)) THEN
+                  in (n, i) = 0
+                ENDIF
+              ENDDO
+            ENDIF
+          ENDDO
+        ENDIF
+      RETURN
+      END
+
+      SUBROUTINE jetaxis (axis, jet, in, sz)
+C-------------------------------------------------------------------------------
+C CALCULATE THE AXIS OF THE TRACKS IN THE CONE/JET USING ENERGY WEIGHTED SUMS
+C
+C ARGUMENT MEANINGS
+C     INTEGER
+C       axis        ALPHA track number representing the axis
+C       jet         number pointing to the jet whose axis is to be defined
+C       in(sz+1,sz) array of all tracks in all jets
+C       sz          defines the size of the arrays
+C
+C FUNCTIONS USED:
+C       eta
+C-------------------------------------------------------------------------------
+      IMPLICIT NONE
+#include "qdecl.h"
+#include "qcde.h"
+      INTEGER sz, i, j, k, in (sz+1, sz), axis, jet
+      REAL phii, Et, ARR4 (4), jteta, jttheta, jtphi, eta, energy
+#include "qmacro.h"
+C-------------------------------------------------------------------------------
+C--- If there are no tracks then there is no axis.
+C--- If there is only one track, the axis lays exactly along this track.
+C-------------------------------------------------------------------------------
+
+        j = 0
+        k = 0
+        DO i = 1, in(sz+1, jet)
+          IF (in(i, jet) .ne. 0) THEN
+            j = j + 1
+            k = in(i, jet)
+          ENDIF
+        ENDDO
+        
+        IF (j .eq. 0) RETURN
+        IF (j .eq. 1) THEN
+          CALL QVZERO (axis)
+          CALL QVCOPY (axis, k)
+          RETURN
+        ENDIF
+C-------------------------------------------------------------------------------
+C--- Find the total transverse energy of the tracks in the cone.
+C--- Find the total energy of the tracks in the cone.
+C--- Find the transverse energy weighted sum of the all etas and phis.
+C--- Due to the discontinuity in phi, use arbitrary zero-point phi from axis.
+C-------------------------------------------------------------------------------
+        Et = 0.
+        jteta = 0.
+        jtphi = 0.
+        jttheta = 0.
+        energy = 0.
+        DO j = 1, in (sz+1, jet)
+          IF (in(j, jet) .ne. 0) THEN
+            i = in (j, jet)
+            energy = energy + QE(i)
+            Et = Et + QPT(i)
+            jteta = jteta + QPT(i) * eta (i)
+
+            IF (abs(QCT(i)) .gt. 0.9999999) THEN
+              phii = 0.
+            ELSE
+              phii = abs(QPH(i) - QPH(axis))
+              IF (phii .gt. QQPI) THEN
+                phii = phii - 2 * QQPI
+              ENDIF
+              IF (QPH(i) .lt. QPH(axis)) THEN
+                phii = -phii
+              ENDIF
+            ENDIF
+
+            jtphi = jtphi + QPT(i) * phii
+          ENDIF
+        ENDDO
+
+        IF (Et .eq. 0.) THEN
+          write (6, *) '_JETFINDER_ finds a transverse energy of zero',
+     &      'It would be wise to ignore this event',
+     &      'KRUN', KRUN, 'KEVT', KEVT, 'KNEVT', KNEVT
+        ELSE
+          jteta = (1. / Et) * jteta
+          jtphi = (1. / Et) * jtphi
+        ENDIF
+
+C-------------------------------------------------------------------------------
+C--- Transform jtphi from the phi frame defined by axis to the "normal" one.
+C--- Create the four-vectors for the track representing this jet.
+C--- Set the mass to zero or it can get set to a very small -ve value.
+C-------------------------------------------------------------------------------
+        jtphi = jtphi + QPH(axis)
+
+        jttheta = 2. * (atan (exp (- jteta)))
+        ARR4 (1) = sin (jttheta) * cos (jtphi) * energy
+        ARR4 (2) = sin (jttheta) * sin (jtphi) * energy
+        ARR4 (3) = cos (jttheta) * energy
+        ARR4 (4) = energy
+        CALL QVZERO (axis)
+        CALL QVSET4 (axis, ARR4)
+        CALL QVSETM (axis, 0.)
+      RETURN
+      END
+
+      SUBROUTINE jetfinder (R,Ee,wc,good,jt,ijt,mn,sm,sz,arr,in) 
+C-------------------------------------------------------------------------------
+C SUBROUTINE JETFINDER USES ALL GOOD TRACKS AS AN INITIAL AXIS FOR JET-FINDING
+C AND CHECKS THE RESULTING PROTOJETS FOR SUITABILITY, THEN RETURNS THE EJTS TO
+C THE USER
+C
+C INPUT VALUES:
+C     REAL
+C       R       cone size
+C       Ee      minimum energy in cone for that cone to represent a possible jet
+C
+C     INTEGER
+C       wc          which of three possible cone types to use
+C       good(sz+1)  array containing list of tracks to be used
+C       mn          minimum number of tracks allowed in cone/jet
+C       sm          maximum number of jets returned
+C       sz          maximum number of tracks to use
+C       arr(sz+1)   just a temporary array 
+C
+C RETURNED VALUES
+C     INTEGER
+C       jt          number of jets found
+C       ijt(sz)     array containing jet-axis track numbers
+C       in(sz+1,sz) array of all tracks in all jets      
+C
+C CALLS MADE TO:
+C       welcome
+C       cone
+C       order
+C       more_jets
+C       wipe
+C       shared
+C       finite
+C       jetaxis
+C FUNCTIONS USED:
+C       etaphi
+C-------------------------------------------------------------------------------
+      IMPLICIT NONE
+#include "qdecl.h"
+#include "qcde.h"
+      INTEGER oldev /0/, sz, sm
+      SAVE oldev
+      INTEGER i, j, k, tf, icn, wc, jt, arr (sz+1), mn, mntemp
+      INTEGER ijt (sz), in (sz+1, sz)
+      INTEGER good(sz+1), itmp
+      REAL dm, R, Ee, etaphi, delta, ARR4(4)
+      LOGICAL keep, firstcall /.true./
+#include "qmacro.h"
+
+C-------------------------------------------------------------------------------
+C--- find out how many tracks are for jetfinding use
+C--- sort the array of tracks into increasing numerical order
+C-------------------------------------------------------------------------------
+        good(sz+1) = 0
+        DO i = 1, sz
+          IF (good(i) .ne. 0) good(sz+1) = good(sz+1) + 1
+        ENDDO
+
+        DO k = 1, sz - 1
+          j = 0
+          DO i = 1, sz - k
+            IF (good(i) .ne. 0) THEN
+              IF (good(i) .le. good(i+1)) GOTO 114
+              IF (good(i+1) .eq. 0) GOTO 114
+            ELSE
+              IF (good(i+1) .eq. 0) GOTO 114
+            ENDIF
+            itmp = good(i)
+            good(i) = good(i+1)
+            good(i+1) = itmp
+            j = 1
+ 114      ENDDO
+          IF (j .eq. 0) GOTO 2069
+        ENDDO
+ 2069   CONTINUE
+
+C-------------------------------------------------------------------------------
+C--- if minimum number of tracks allowed is 0 then set it to 1
+C-------------------------------------------------------------------------------
+        mntemp = mn
+        IF (mntemp .eq. 0) mntemp = 1
+
+C-------------------------------------------------------------------------------
+C--- if this is the first time the jet finding package has been called then
+C--- write a welcome message
+C-------------------------------------------------------------------------------
+        IF (firstcall) THEN
+          CALL welcome (mntemp, sz)
+          firstcall = .false.
+        ENDIF
+
+C-------------------------------------------------------------------------------
+C--- Zero the arrays used
+C--- Remember: the # of tracks in jet, i, at any time is stored at in(sz+1, i)
+C--- icn is the track (created here) to represent the axis of the cone.
+C--- Remember that the number of jets stored is one less than jt.
+C--- keep is a logical which tells us if a jet is a subjet of one already found
+C-------------------------------------------------------------------------------
+        IF (oldev .ne. KNEVT) THEN
+          oldev = KNEVT
+          icn = KVNEW (dm)
+          DO i = 1, sz
+            ijt(i) = 0
+          ENDDO
+        ELSE
+          DO i = 1, sz
+            IF (ijt(i) .ne. 0) THEN
+              CALL QVZERO(ijt(i))
+            ENDIF
+          ENDDO
+          CALL QVZERO (icn)
+        ENDIF
+
+        jt = 1
+        keep = .true.
+C-------------------------------------------------------------------------------
+C--- use each track as an initial cone axis to search for a jet
+C-------------------------------------------------------------------------------
+        DO itmp = 1, good(sz+1)
+          i = good(itmp)
+          IF (.not. XLOCK(i)) THEN
+            CALL QVCOPY (icn, i)
+            CALL cone (jt, good, wc, icn, R, keep, in, ijt, sz, arr,
+     &        mntemp) 
+          ENDIF
+        ENDDO
+
+C-------------------------------------------------------------------------------
+C--- There are TF jets found by using each track as initial axis for search
+C--- order sorts the jets into decreasing energy
+C-------------------------------------------------------------------------------
+        CALL order (jt, in, ijt, sz, arr)
+        tf = jt - 1
+
+C-------------------------------------------------------------------------------
+C--- If no jets have been found then exit from the algorithm
+C-------------------------------------------------------------------------------
+        IF (tf .eq. 0) THEN
+   45     jt = 0
+          GOTO 269
+        ENDIF
+
+C-------------------------------------------------------------------------------
+C--- Look between pairs of jets to try and identify other possible protojets
+C-------------------------------------------------------------------------------
+        IF (tf .ge. 2) THEN
+          CALL more_jets (keep, icn, tf, good, jt, R, wc, in, ijt, sz,
+     &      arr, mntemp)
+        ENDIF
+
+C-------------------------------------------------------------------------------
+C--- if a jet does not contain the threshold energy (Ee) then we remove it
+C-------------------------------------------------------------------------------
+        DO i = 1, jt - 1
+          IF (QE(ijt(i)) .le. Ee) THEN
+            CALL QVZERO(ijt(i))
+            CALL wipe(i, in, sz)
+          ENDIF
+        ENDDO
+        CALL order (jt, in, ijt, sz, arr)
+
+C-------------------------------------------------------------------------------
+C--- Loop over every pair of jets and find any which share tracks (i.e. overlap)
+C--- The subroutine SHARED tells us which tracks (if any) a pair of jets shares
+C--- The subroutine FINITE assigns shared tracks to the "correct" jet
+C--- The axis of the jets must be found if there are shared tracks
+C-------------------------------------------------------------------------------
+        DO i = 1, (jt - 2)
+          DO j = (i + 1), (jt - 1)
+            IF (in(sz+1, i) .ne. 0 .and. in(sz+1, j) .ne. 0) THEN
+              CALL shared (i, j, keep, arr, in, ijt, sz)
+              IF (arr(sz+1) .ne. 0) THEN
+                CALL finite (i, j, wc, arr, in, ijt, sz)
+                IF (wc .eq. 3) THEN
+                  CALL jetaxis (ijt(i), i, in, sz)
+                  CALL jetaxis (ijt(j), j, in, sz)
+                ELSE
+                  CALL QVZERO(ijt(i))
+                  DO k = 1, in(sz+1, i)
+                    IF (in(k, i) .ne. 0) THEN
+                      CALL QVADDN(ijt(i), in(k, i))
+                    ENDIF
+                  ENDDO
+                  CALL QVZERO(ijt(j))
+                  DO k = 1, in(sz+1, j)
+                    IF (in(k, j) .ne. 0) THEN
+                      CALL QVADDN(ijt(j), in(k, j))
+                    ENDIF
+                  ENDDO
+                ENDIF
+              ENDIF
+            ENDIF
+          ENDDO
+        ENDDO
+
+C-------------------------------------------------------------------------------
+C--- if any jets fail the energy cut they are removed and the jets are reordered
+C--- jets have had tracks removed so test to ensure they still pass the minimum
+C-------------------------------------------------------------------------------
+        DO i = 1, (jt - 1)
+          k = 0
+          DO j = 1, in(sz+1, i)
+            IF (in(j, i) .ne. 0) k = k + 1
+          ENDDO
+          IF (QE(ijt(i)) .lt. Ee .or. k .lt. mntemp) THEN
+            CALL QVZERO(ijt(i))
+            CALL wipe(i, in, sz)
+          ENDIF
+        ENDDO
+        CALL order (jt, in, ijt, sz, arr)
+
+C-------------------------------------------------------------------------------
+C--- Set jt to be the number of jets really found.
+C-------------------------------------------------------------------------------
+        jt = jt - 1
+        IF (jt .eq. 0) GOTO 269
+
+C-------------------------------------------------------------------------------
+C---unassigned tracks lying within cones are put in the closest jet.  
+C-------------------------------------------------------------------------------
+        DO itmp = 1, good(sz+1)
+          i = good(itmp)
+C-------------------------------------------------------------------------------
+C--- if a track is already in a jet or locked go on to the next track
+C-------------------------------------------------------------------------------
+          IF (XLOCK(i)) GOTO 268
+          DO j = 1, jt
+            DO k = 1, in(sz+1, j)
+              IF (i .eq. in(k, j)) GOTO 268
+            ENDDO
+          ENDDO
+          k = 0
+          IF (wc .eq. 1) THEN
+            delta = cos(R)
+            DO j = 1, jt
+              IF (QCOSA(ijt(j),i) .ge. delta) THEN
+                delta = QCOSA(ijt(j),i)
+                k = j
+              ENDIF
+            ENDDO
+          ELSE
+            delta = R
+            DO j = 1, jt
+              IF (etaphi(ijt(j),i) .le. delta) THEN
+                delta = etaphi(ijt(j),i)
+                k = j
+              ENDIF
+            ENDDO
+          ENDIF
+C--- If the track is not within any cone then move on to the next track
+          IF (k .eq. 0) GOTO 268
+C--- track i is forced into jet k
+          in(sz+1, k) = in(sz+1, k) + 1
+          in(in(sz+1, k), k) = i
+          IF (wc .eq. 3) THEN
+            CALL jetaxis (ijt(k), k, in, sz)
+          ELSE
+            CALL QVADDN(ijt(k), i)
+          ENDIF
+  268   ENDDO
+C--- make sure the jets are in the correct energy order
+        jt = jt + 1
+        CALL order (jt, in, ijt, sz, arr)
+        jt = jt - 1
+C-------------------------------------------------------------------------------
+C--- if more than sm jets have been found write an error message and
+C--- remove all one-track jets
+C-------------------------------------------------------------------------------
+        IF (jt .gt. sm) THEN
+          j = 0
+C--- Remove all jets with only one track, only needed if mntemp=1
+          IF (mntemp .eq. 1) THEN
+            DO i = 1, jt
+              IF (in(sz+1, i) .eq. 1) THEN
+                CALL QVZERO (ijt(i))
+                CALL wipe (i, in, sz)
+                j = 1
+              ENDIF
+            ENDDO
+          ENDIF
+
+          IF (j .eq. 1) THEN
+C--- reorder the jets by energy
+            jt = jt + 1
+            CALL order (jt, in, ijt, sz, arr)
+            jt = jt - 1
+            write(6, *) '*********************************************',
+     &        '*********************************'
+            write (6, *) '********ALL ONE-TRACK JETS ARE DELETED',
+     &        ' BECAUSE TOO MANY JETS WERE FOUND******'
+            write (6, '(1x, a, i5, a, i5, a, i7)' ) 'KRUN = ', KRUN,
+     &        ' KEVT = ', KEVT, ' KNEVT = ', KNEVT
+            write(6, *) '*********************************************',
+     &        '*********************************'
+            tf = -jt
+          ENDIF
+          IF (jt .gt. sm) THEN
+            write(6, *) '*********************************************',
+     &        '*********************************'
+            write(6, '(1x, 2a, 1i2, a, 1i2)')
+     &        '_JETFINDER_ has found too many jets. ',
+     &        ' The number found was ', jt, ' and the limit is ', sm
+            write (6, '(1x, a, i5, a, i5, a, i7)' ) 'KRUN = ', KRUN,
+     &        'KEVT = ', KEVT, ' KNEVT = ', KNEVT
+            write(6, '(1X, 1A, 1I2, 1A)') '************ONLY THE FIRST ',
+     &        sm, ' JETS ARE RETURNED TO THE USER*******************'
+            jt = sm
+            tf = -100
+          ENDIF
+        ENDIF
+
+C-------------------------------------------------------------------------------
+C--- At the end of the program, the track lists contain a lot of noughts, which
+C--- we are not interested in; reorder the lists to  give relevant information
+C-------------------------------------------------------------------------------
+
+  269   CONTINUE
+C--- rebuild all the jets to create pointers between tracks and jets
+        DO i = 1, jt
+          k = 0
+          DO j = 1, in(sz+1, i)
+            IF (in(j, i) .ne. 0) THEN
+              k = k + 1
+              in(k, i) = in(j, i)
+            ENDIF
+          ENDDO
+          DO j = k+1, sz
+            in(j, i) = 0
+          ENDDO
+          in(sz+1, i) = k
+          CALL QVZERO (ijt(i))
+          DO j = 1, k 
+            CALL QVADDN(ijt(i), in(j, i))
+          ENDDO
+
+          IF (wc .eq. 3) THEN
+            CALL QVCOPY (icn, in(1, i))
+            CALL jetaxis (icn, i, in, sz)
+            CALL QVSETM(ijt(i), 0.)
+            CALL QVGET4(ARR4, icn)
+            CALL QVSET4(ijt(i), ARR4)
+          ENDIF
+        ENDDO
+C--- zero the rest of the array that might be returned to the user
+        DO i = jt + 1, sm
+          ijt(i) = 0
+          DO j = 1, sz+1
+            in(j, i) = 0
+          ENDDO
+        ENDDO
+        IF (tf .lt. 0) jt = tf
+
+      RETURN
+      END
+
+      SUBROUTINE more_jets (keep, icn, tf, good, jt, R, wc, in, ijt,
+     &  sz, arr, mntemp)
+C-------------------------------------------------------------------------------
+C LOOK BETWEEN PAIRS OF JETS TO SEE IF THEY CAN BE COMBINED TO FORM ONE JET
+C 
+C ARGUMENT MEANINGS
+C     REAL
+C       R       cone size
+C     INTEGERS
+C       icn         ALPHA track number of cone axis
+C       tf          number of jets found in first stage
+C       good(sz+1)  array containing list of tracks to be used
+C       jt          current jet number
+C       wc          which of three possible cone types to use
+C       in(sz+1, sz)array containing all track numbers in all jets
+C       ijt(sz)     list of all jet axis track numbers
+C       sz          defines the array sizes
+C       arr(sz+1)   just a temporary array
+C       mntemp      minimum number of tracks allowed in cone/jet
+C     LOGICAL
+C       keep        decision made as to whether jet is suitable
+C       
+C CALLS MADE TO:
+C       wipe
+C       jetaxis
+C       cone
+C
+C FUNCTIONS USED:
+C       etaphi
+C-------------------------------------------------------------------------------
+      IMPLICIT NONE
+#include "qdecl.h"
+#include "qcde.h"
+      INTEGER sz, i, j, k, m, n, p, icn, tf, wc, good(sz+1),
+     &  ijt (sz), in (sz+1, sz), jt, arr(sz+1), mntemp
+      REAL dm, R, Rsep, R12, etaphi
+      LOGICAL keep
+#include "qmacro.h"
+C-------------------------------------------------------------------------------
+C--- Look at lowest energy pair of jets first.
+C--- Try and find a jet between if the angle between, R12, is less than Rsep.
+C--- Find the centroid of the two jets avoiding double counting.
+C-------------------------------------------------------------------------------
+        DO i = tf, 1, -1
+          IF (in(sz+1, i) .ne. 0) THEN
+            DO j = i - 1, 1, -1
+              IF (in(sz+1, i) .ne. 0 .and. in(sz+1, j) .ne. 0) THEN
+                IF (wc .eq. 1) THEN
+                  R12 = acos(QCOSA(ijt(i), ijt(j)))
+                ELSE
+                  R12 = etaphi(ijt(i), ijt(j))
+                ENDIF
+                Rsep = 1.3 * R
+                IF (R12 .le. Rsep) THEN
+                  CALL QVZERO (icn)
+                  IF (wc .eq. 3) THEN
+                    CALL wipe (jt, in, sz)
+                    in(sz+1, jt) = in(sz+1, i)
+                  ENDIF
+                  p = 0
+                  DO k = 1, in(sz+1, j)
+                    n = 0
+                    DO m = 1, in(sz+1, i)
+                      IF (in(k, j) .eq. in(m, i)) THEN
+                        n = 1
+                      ENDIF
+                      IF (p .eq. 0) THEN
+                        IF (wc .le. 2) THEN
+                          CALL QVADDN (icn, in(m, i))
+                        ELSE
+                          in(m, jt) = in (m, i)
+                        ENDIF
+                      ENDIF
+                    ENDDO
+                    p = 1
+                    IF (n .ne. 1) THEN
+                      IF (wc .le. 2) THEN
+                        CALL QVADDN (icn, in(k, j))
+                      ELSE
+                        in(sz+1, jt) = in(sz+1, jt) + 1
+                        in(in(sz+1, jt), jt) = in (k, j)
+                      ENDIF
+                    ENDIF
+                  ENDDO
+                  IF (wc .eq. 3) THEN
+C-------------------------------------------------------------------------------
+C--- copy an arbitrary track from the two jets to act as the arbitrary phi
+C--- needed in jetaxis due to the discontinuity in phi
+C-------------------------------------------------------------------------------
+                    CALL QVCOPY (icn, in(1, jt))
+                    CALL jetaxis (icn, jt, in, sz)
+                  ENDIF
+                  CALL cone (jt, good, wc, icn, R, keep, in, ijt, sz,
+     &              arr, mntemp)
+                ENDIF
+              ENDIF
+            ENDDO
+          ENDIF
+        ENDDO
+      RETURN
+      END
+
+      SUBROUTINE order (jt, in, ijt, sz, arr)
+C-------------------------------------------------------------------------------
+C--- SORT THE JETS SO THAT IJT(1) HAS THE HIGHEST ENERGY AND IJT(99) THE LOWEST
+C--- THE METHOD USED IS A "RIPPLE" SORT OR "BUBBLE" SORT
+C
+C ARGUMENT MEANINGS
+C     INTEGER
+C       jt          current jet number
+C       in(sz+1,sz) array of all tracks in all jets
+C       ijt(sz)     array of all tracks in all jets
+C       sz          defines array sizes
+C       arr(sz+1)   array for swapping jet information around
+C
+C-------------------------------------------------------------------------------
+      IMPLICIT NONE
+#include "qdecl.h"
+#include "qcde.h"
+      INTEGER sz, ijt (sz), in (sz+1, sz), jt, i, j, m, s, arr(sz+1),
+     &  dum1
+#include "qmacro.h"
+        DO s = 1, (jt - 1) - 1
+          m = 0
+          DO i = 1, (jt - 1) - s
+            IF (QE(ijt(i)) .ge. QE(ijt(i+1))) GOTO 1140
+            dum1 = ijt(i)
+            ijt(i) = ijt(i+1)
+            ijt(i+1) = dum1
+
+            arr(sz+1) = in(sz+1, i)
+            DO j = 1, in(sz+1, i)
+              arr(j) = in(j, i)
+            ENDDO
+
+            in(sz+1, i) = in(sz+1, i+1)
+            DO j = 1, in(sz+1, i+1)
+              in(j, i) = in(j, i+1)
+            ENDDO
+
+            in(sz+1, i+1) = arr(sz+1)
+            DO j = 1, arr(sz+1)
+              in(j, i+1) = arr(j)
+            ENDDO
+            m = 1
+ 1140     ENDDO
+          IF (m .eq. 0) GOTO 2000
+        ENDDO
+ 2000   CONTINUE
+
+C--- Ignore empty jets
+        m = 1
+        DO i = 1, jt - 1
+          IF (in(sz+1, i) .ne. 0) THEN
+            m = m + 1
+          ENDIF
+        ENDDO
+        jt = m
+
+      RETURN
+      END
+      SUBROUTINE shared (i, j, keep, arr, in, ijt, sz)
+C-------------------------------------------------------------------------------
+C LOOKS AT PAIRS OF PROTOJETS AND FINDS WHICH TRACKS (IF ANY) ARE SHARED BETWEEN
+C THEM.  REMOVES CURRENT JET IF IT IS A REPLICA.
+C
+C ARGUMENT MEANINGS
+C     INTEGER
+C       i, j       ALPHA track numbers of two jets to be looked at
+C       arr(sz+1)  list of shared tracks
+C       in(sz+1,sz)array of all tracks in all jets
+C       ijt(sz)    array containing ALPHA track numbers of all jet axes
+C       sz         defines the array sizes
+C
+C CALLS MADE TO:
+C       wipe
+C-------------------------------------------------------------------------------
+      IMPLICIT NONE
+#include "qdecl.h"
+#include "qcde.h"
+      INTEGER sz, i, ii, j, jj, ijt (sz), in (sz+1, sz), arr (sz+1)
+      LOGICAL keep
+#include "qmacro.h"
+C-------------------------------------------------------------------------------
+C--- the (i)th shared track has it's track number stored in arr(i)
+C--- # tracks common to jets i and j is put in array element arr (sz+1)
+C-------------------------------------------------------------------------------
+        arr(sz+1) = 0
+        keep = .true.
+        DO ii = 1, in(sz+1, i)
+          IF (in(ii, i) .ne. 0) THEN
+            DO jj = 1, in(sz+1, j)
+              IF (in(ii, i) .eq. in(jj, j)) THEN
+                arr(sz+1) = arr(sz+1) + 1
+                arr (arr(sz+1)) = in(ii, i)
+              ENDIF
+            ENDDO
+          ENDIF
+        ENDDO
+        IF (arr(sz+1) .eq. 0) RETURN
+
+        IF (arr(sz+1) .eq. in(sz+1, i)) THEN
+C--- jet i is a subset of jet j
+          CALL QVZERO (ijt(i))
+          CALL wipe(i, in, sz)
+          keep = .false.
+          arr (sz+1) = 0
+        ELSEIF (arr(sz+1) .eq. in(sz+1, j)) THEN
+C--- jet j is a subset of jet i
+          CALL QVZERO (ijt(j))
+          CALL wipe(j, in, sz)
+          arr (sz+1) = 0
+        ENDIF
+      RETURN
+      END
+
+      SUBROUTINE welcome (mntemp, sz)
+C-------------------------------------------------------------------------------
+C PRINT OUT A MESSAGE TO TELL THE USER THEY ARE USING QJCONE
+C
+C ARGUMENT MEANINGS
+C     INTEGER
+C       mntemp     minimum number of tracks allowed in a jet
+C       sz         maximum number of tracks/jets to use - defines array sizes
+C
+C-------------------------------------------------------------------------------
+      IMPLICIT NONE
+#include "qdecl.h"
+#include "qcde.h"
+      INTEGER mntemp, sz
+#include "qmacro.h"
+        WRITE (6, *) '  '
+        WRITE (6, *) '********************', '*********************', 
+     &    '*************************************'
+        WRITE (6, *) 'WELCOME TO THE CONE ALGORITHM FOR JET FINDING'
+        WRITE (6, *) 'Written by Warrick M. Newton of Sheffield.'
+        WRITE (6, *) 'Email ALWS::NEWTONW'
+        WRITE (6, *) 'Some possible causes of error are:-'
+        WRITE (6, *)
+     &    ' values of R and ECUT are not passed as REAL variables'
+        WRITE (6, *)
+     &    ' values of TYPE or MINIMUM not passed as an INTEGER' 
+        WRITE (6, *) 
+     &    ' there are too many tracks in the event', 
+     &    ' - change sz in source code'
+        WRITE (6, *) ' ALPHA is unable to create any more new tracks'
+        WRITE (6, *) 'If you have any problems please mail me giving ', 
+     &    'as much information as you can.  Enjoy using it!'
+        WRITE (6, *) '********************', '*********************', 
+     &    '*************************************'
+        WRITE (6, *) '  '
+        IF (mntemp .gt. sz) THEN
+          CALL QMTERM (' See message below')
+          WRITE (6, *) '_JETFINDING ERROR_,', 
+     &    ' the minimum number of tracks you specified in a jet',  
+     &    ' is larger than the maximum number of tracks the', 
+     &    ' algorithm considers.  You should change the minimum', 
+     &    ' or go to the source code and alter SZ. (See notes there).'  
+        ENDIF
+      RETURN
+      END
+
+      SUBROUTINE wipe (i, in, sz)
+C-------------------------------------------------------------------------------
+C DELETES THE CURRENT JET
+C
+C ARGUMENT MEANINGS
+C     INTEGER
+C       i           ALPHA track number of jet to be blanked
+C       in(sz+1,sz) array of all tracks in all jets
+C       sz          defines the array sizes
+C-------------------------------------------------------------------------------
+      IMPLICIT NONE
+#include "qdecl.h"
+#include "qcde.h"
+      INTEGER sz, i, j, in (sz+1, sz)
+#include "qmacro.h"
+        DO j = 1, sz+1
+          in (j, i) = 0
+        ENDDO
+      RETURN
+      END
+@
+
+
+1.1.1.1
+log
+@2nd try to import uphy
+@
+text
+@@

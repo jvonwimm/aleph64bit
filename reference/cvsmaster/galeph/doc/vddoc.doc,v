@@ -1,0 +1,272 @@
+head	1.3;
+access;
+symbols
+	gal309_3:1.3
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.3
+date	2000.08.28.08.41.27;	author lbrarda;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	2000.08.28.08.41.00;	author lbrarda;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.03.08;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.03.09;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@This is a test (Put back the 'o')
+@
+text
+@*DK vddoc
+#if defined(DOC)
+.chapter Minivertex Detector
+
+                             W.Manner   - 901211
+
+    GALEPH 24.0 - new version of the geometry
+                  introduce FACE 90 and FACE 91, using the setup code.
+
+    ! after number means checked and ok
+    ? after number means corrected but doubtful
+     blank after number means not checked
+
+     Additional material constants:
+     passive face additional electronics and stability ribs are not
+     included.
+
+     a note on radii tiltangles etc. (modified 26-11-90)
+
+     We measure a radius for the support:
+         r(inner layer) = 6.98964 cm
+         r(outer layer) = 10.17346 cm
+     we add/subtract 0.6 cm for the aluminium spacers
+
+     The distance of the centre of the Si wafer from the spacers is:
+         0.160 cm - 0.0150 cm (half width of Si)
+     we keep arbitrairily 0.0280 cm ceramic thickness.
+     the total thickness of the face box is:
+         separator + ceramics + ceramics + chip = 2600 mu
+     where we have set for backward compatibility :
+         separator = chip thickness
+     The wafers are glued to the ceramics at x=0
+     This leads to separator = chip = 1020 mu
+
+     for GEANT we need the radii to the centre of the box ie:
+         r(GEANT) inner layer =  6.98964 - 0.6 - 0.145 = 6.24464
+                  outer layer = 10.17346 + 0.6 + 0.145 = 10.88796
+     we assume here mechanic support 1 in VDME = Munich
+                    mechanic support 2 in VDME = Pisa
+
+     The radii defined in COMMON/VDSUPP/ are
+         inner layer =   6.98964 - 0.6 = 6.38964
+         outer layer =  10.17346 + 0.6 = 10.77346
+     they are stored in VDAPLN (Munich/Pisa,inner/outer)
+     Tilt angles VMETIL on the data base refer to these radii
+     Tilt angles VDTILT calculated in VRDDAF refer to the wafer centre.
+
+     Offset distances from the centre of the wafer to the closest
+     point of the wafer to the detector centre (90.0 deg. point)
+     is calculated from the drawing to be:
+         0.78426  cm (inner layer), 1.18403 cm (outer layer)
+
+     This gives tilt angles (VMETIL) of
+         inner layer: 0.12212847 (Munich + Pisa)
+         outer layer: 0.10946317 (Munich + Pisa)
+     The sign of the tilt is not known, but is the same everywhere
+     and probably positive.
+
+     We calculate possible radii for the inner support ring:
+         ri=7.4, ro=11.3
+     the outer ring is not known
+
+     For VDET 91 the radius and angles for the cf tube position are:
+     radius of tube position: VDSPGA(3)=9.
+     angle of tube 1/4 from the vertical: +-VDSPSP(3) = 36.0 deg.
+     angle of tube 2/3 from the vertical: +-VDSPSA(3) = 24.0 deg.
+
+     ===============================================================
+
+                             P.Cattaneo - 900600
+
+    GALEPH 23.8 - new version of the geometry for '90
+                  new digitization
+
+     ===============================================================
+
+                             F.Forti    - 860612
+
+         As explained elsewhere in this document, relevant routines for
+    Minivertex detector are:
+    VDIRUN : Initializes all minivertex related variables and routines
+             and defines format for banks.
+    VDHIT  : Processes single tracking steps.
+    VDASIG : Closes the Hits generations and creates the hit bank.
+    VDDIGI : Produces digitizing, that is signals on strips.
+
+         Other routines have been implemented to make the job easier:
+    VDCRDT : obtain the VDDT bank by sorting up the VDTD one
+    VDDAQ  : simulate Data Acquisition chain.
+    VADESA : unpack strip address.
+    VAENSA : pack strip address.
+    VADEWA : unpack wafer address.
+    VAENWA : pack wafer address.
+    VDFIRS : calculate and store the signals on the strips produced
+             by a given hit.
+    VDIDIG : initialize variables for the digitization part
+    VDINSS : add strips to the digits bank and to the history banks.
+    VDNOFS : add noise to fired strip clusters
+    VDNOIS : generate noise fired cluster
+    VDNOCL : generate noise on a single strip
+
+         In addition to this ones, some printing routines are
+    implemented in the ALEPHLIB, namely:
+    VDPGEO : print geometrical constants.
+    VDPRHT : print contents of hit bank.
+    VDPRDI : print digitization banks.
+
+.section Hit generation in VDET
+         When the routine VDHIT is called the first time a particle
+    enters an active part of detector, the entry point, as long as the
+    wafer number and the track number are stored in a work bank (with
+    index KHTXVD).
+    The data are taken, as usual, from the common /TRKCOM/.
+         In the successive steps of tracking the energy release of the
+    particle is accumulated in a local variable until the particle
+    exits the active zone of the detector.
+         In the last step the hit is completed by storing the exit point
+    and the total energy release in the work bank.
+         When tracking is finished, the routine VDASIG then copies the
+    work bank into the named bank VDHT.
+
+
+.section Digitization in VDET
+         Digitization in Minivertex is handled in VDDIGI.
+
+         After some booking and counting, the hits are passed to VDFIRS,
+    one at a time. Here read-out geometry is taken into account,
+    including dead zones and strip pitch. The hit's coordinates are
+    rotated in the wafer plane that at the moment is defined to be
+    parallel to the z-axis.
+    Charge partition between the strips is done segmenting the track
+    in many points and then taking into account diffusion and magnetic
+    field effect. The process is done both on the phi and z side.
+    vdnofs add noise to the fired strips and their neighbourings,
+    through calls to VDNOCL.
+    The work bank JDVNOI has three words per row, in the first one
+    it is stored the noisy strip adress, in the second the series noise
+    contribution in e/pf, in the third one the paralle noise
+    contribution in electrons.
+    The work bank JDVDAQ has two words per row, in the first one
+    it is stored the strip adress read by the data aquisition chain,
+    in the second the overall contribution of the noise at the output.
+    VDNOIS, if selected through a proper run condition (see below),
+    generate noisy hits throughout the all detector.
+         The strips produced by a given hit are stored in a local
+    array that, at the end of VDFIRS, is passed to VDINSS, to be
+    inserted in the digitization bank.
+
+.section Minivertex run conditions.
+
+         The contents of data card RUNC 'VDET' are put in an array
+    (ICVDJO) at job initialization time. The first 4 elements are
+    reserved for future use in Minivertex physics. The element 6-10
+    are used for debugging purposes. They are intended to be used only
+    development time and produce quite a lot of printout. In any case
+    all WRITE statements are protected with the general debug flag.
+    In particular:
+        ICVDJO(  1  ) : Bank number of data base GALEPH banks
+        ICVDJO( 2-5 ) : Reserved
+                 6    : Debug Hits generation.
+                 7    : Debug digitization part.
+                 8    : control the noise in VDET. the default 0
+                        activate only VDNOFS. 1 neither VDNOFS nor
+                        VDNOIS, 2 activate both.
+                9-10  : to be defined.
+
+#endif
+@
+
+
+1.2
+log
+@This is a test (deleted the 'o' in vddoc in first line.
+@
+text
+@d1 1
+a1 1
+*DK vddc
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+a1 1
+*DK vddoc
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

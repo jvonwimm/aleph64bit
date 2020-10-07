@@ -1,0 +1,62 @@
++--------+--------+--------+--------+
+|QPCORR  |FORTRAN |TOMALIN |05/05/94|
++--------+--------+--------+--------+
+***********************************************************************
+ 
+                         Function QPCORR
+                        -----------------
+ Corrects particle momenta for the effects of residual distortions in
+ the central tracking detector.
+    This is the so called "sagitta correction".
+ It depends upon cos(theta) and the year of data taking.
+ 
+    Author   :  I.R. Tomalin
+                Based on subroutine QFBDEV written by I. ten Have,
+                and comments from H.Videau and A.Halley.
+    Modified :  I.Tomalin 30/1/97.
+                Add LEP2 corrections and prepare move to ALEPHLIB.
+ 
+ Motivation:
+   Every year, even after the detector alignment is finished and
+ corrections have been made for field distortions etc., it is found
+ that Ebeam/P in Z0 -> mu+mu- events is not precisely 1, presumably
+ because of residual distortions.
+   (Typically, in the region |cos(theta)| > 0.9, Ebeam/p is about 0.94
+ for +ve tracks and 1.06 for -ve tracks. Elsewhere, Ebeam/p is usually
+ consistent with 1 to within a percent or so. The effect is not quite
+ forward-backward symmetric).
+   The relative bias in momentum is proportional to P, so most people
+ analysing hadronic events can ignore it. Exceptions include analyses
+ using the ECAL electron identifiers in the region |cos(theta)| > 0.9,
+ or analyses which are very sensitive to systematic biases in the
+ momenta (e.g. jet charge, tau polarization).
+   This routine provides a correction for the momenta based upon
+ Ebeam/P measurements in Z0 -> mu+mu- events. It assumes that the
+ corrections for -ve and +ve particles are equal in size, but of
+ opposite sign. This is observed to be true, apart from a constant
+ offset, Ebeam/p = 1.002, which is also present in the MC and so not
+ corrected for.
+   In principle, the correction depends upon your track selection
+ cuts, but providing that the corrections have a small effect on your
+ analysis, you can ignore this. Arguement NVDET does correct for this
+ to first approximation however.
+ 
+      FUNCTION QPCORR(ITRK,ASCALE,NVDET,ERCORR)
+
+ Input Arguments:
+    ITRK    (Integer): ALPHA track number.
+    ASCALE  (Logical): Set .TRUE. if ALPHA variables like QX,QY,QZ
+                       are to be rescaled by calling QVSCAL.
+                       N.B. Don't call this routine twice for the
+                       same track with ASCALE = .TRUE. !
+    NVDET   (Integer): If your analysis only uses tracks with at
+                       least 1 VDET hit, set NVDET=1; otherwise =0.
+ Output Arguments:
+    QPCORR  (Real)   : Scale factor applied/to be applied to momentum.
+    ERCORR  (Real)   : Statistical error on this factor.
+ 
+ If corrections are not available for any year, please contact the 
+ tracking group.
+ 
+************************************************************************
+ +++++++++++++++++++++++++++++++++++++++++++

@@ -1,0 +1,71 @@
+head	1.1;
+access;
+symbols
+	bos3589:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	97.01.29.15.49.16;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@release bos3589: new epio routines
+@
+text
+@      SUBROUTINE EPUNIT(LUNIT,IERR)
+C. RETURNS THE INTERNAL UNIT NUMBER, INITIALIZES NEW UNITS
+C. INPUT
+C. LUNIT     LOGICAL UNIT NUMBER
+C. OUTPUT
+C. LREF      INTERNAL UNIT NUMBER (1,2,3...)
+C. IERR      ERROR CONDITION
+C.-- OUTPUT IN COMMON BLOCK :
+C   LREF     INTERNAL UNIT NUMBER
+C   ISTART   START OF UNIT DESCRIPTOR IN LIST
+*
+* epiocom.inc
+*
+      COMMON/EPCOMM/NMUNIT,NWUNIT,NCONT,ISTART,LASTUT,LREF,LIST(350)
+      EQUIVALENCE (NOUTUT,LIST(8))
+
+      DATA INFINI/ 999999 /
+
+      IERR=0
+      IF(LUNIT.NE.LASTUT)  CALL EPUREF(LUNIT)
+      IF(LREF.GT.0)  GOTO 77777
+      IF(LIST(1).EQ.NMUNIT)  GOTO 9901
+C--- OPEN NEW UNIT
+      LIST(1)=LIST(1)+1
+      LREF=LIST(1)
+      K=NCONT+NWUNIT*(LREF-1)
+      CALL UZERO(LIST,K+1,K+NWUNIT)
+      LIST(K+1)=1800
+      LIST(K+2)=INFINI
+      LIST(K+3)=16
+      LIST(K+4)=10101
+      LIST(K+8)=1
+      LIST(K+10)=LUNIT
+      LIST(K+26)=INFINI
+      LIST(K+27)=1
+
+      LIST(K+33)=1
+
+      ISTART=K
+77777 RETURN
+ 9901 CONTINUE
+C--- MAX. NO. OF UNITS REACHED
+      LREF=0
+      IERR=13
+      CALL EPERRH(LUNIT,IERR)
+      GOTO 77777
+      END
+@

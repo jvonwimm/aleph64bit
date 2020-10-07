@@ -1,0 +1,418 @@
+head	1.1;
+access;
+symbols
+	jul313_3:1.1
+	jul313_2:1.1
+	jul313_1:1.1
+	jul313:1.1
+	jul312_1:1.1
+	jul312:1.1
+	jul311:1.1
+	jul310_1:1.1
+	jul310:1.1
+	jul309_1:1.1
+	jul309:1.1
+	jul308_6:1.1
+	jul308_5:1.1
+	jul308_4:1.1
+	jul308_3:1.1
+	jul308_2:1.1
+	jul308_1:1.1
+	jul308:1.1
+	jul307_4:1.1
+	jul307_3:1.1
+	jul307_2:1.1
+	jul307_1:1.1
+	jul307:1.1
+	jul306_3:1.1
+	jul306_2:1.1
+	jul306_1:1.1
+	jul306:1.1
+	jul305_4:1.1
+	jul305_3:1.1
+	jul305_2:1.1
+	jul305_1:1.1
+	jul305:1.1
+	jul304_3:1.1
+	jul304_2:1.1
+	jul304_1:1.1
+	jul304:1.1
+	jul303_7:1.1
+	jul303_6:1.1
+	jul303_5:1.1
+	jul303_4:1.1
+	jul303_3:1.1
+	jul303_2_mc1:1.1
+	jul303_2:1.1
+	jul303_1_mc1:1.1
+	jul303_1:1.1
+	jul303_v:1.1
+	jul303:1.1
+	jul302_6:1.1
+	jul302_5:1.1
+	jul302_4:1.1
+	jul302_3:1.1
+	jul302_2:1.1
+	jul302_1:1.1
+	jul302:1.1
+	jul285_1:1.1
+	jul285:1.1
+	jul284_1:1.1
+	jul284:1.1
+	jul283_1:1.1
+	jul283:1.1
+	jul282_1:1.1
+	jul282:1.1
+	jul281_3:1.1
+	jul281_2:1.1
+	jul281_1:1.1
+	jul281:1.1
+	jul280_1:1.1
+	jul280:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.05.06.15.50.15;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@re-installed jul280 from the historian source because some routines were missing.
+@
+text
+@      SUBROUTINE TPCT0N(IER,DT,EDT,NTR)
+C-----------------------------------------------------------------------
+C! TPC T0 monitoring
+C!
+C!  Author   :- M. Girone, I. Tomalin          15-DEC-1994
+C!  Source: JULIA TPCT0 routine, modified to include the error on DT.
+C!  Modified :- I. Tomalin 18/5/95 to reduce sensitivity to V0's.
+C!
+C!  Output:  IER      /I     If non-zero, then no valid T0 info for
+C!                           this event
+C!           DT       /R     Difference in time between TPC side A
+C!                           and side B in microseconds.
+C!           EDT      /R     Error on the difference in time between
+C!                           TPC side A and side B in microseconds.
+C!           NTR(2)   /I     Number of tracks used in each TPC side.
+C!
+C?
+C!======================================================================
+#ifndef DOC
+C
+#include "bcs.h"
+#include "alcons.h"
+      LOGICAL INPAS0
+#include "frftjj.h"
+#include "frtljj.h"
+#include "tgftjj.h"
+#include "tgtljj.h"
+#include "tpgpar.h"
+#include "tmonit.h"
+#include "tpcojj.h"
+#include "tpgeom.h"
+#include "tpccon.h"
+#include "rlunit.h"
+C
+      DIMENSION CUTLM(2),NEND(2),DVSA(3), DVSB(3)
+      DIMENSION NTR(2),ZV(2),Z2V(2),EZV(2),AVEZV(2),AVEZ2V(2),CHI2(2)
+C
+      PARAMETER(MAXREJ=10)
+      DIMENSION NREJEC(2),LISREJ(MAXREJ,2),CHIWOR(2)
+C
+C Array for histogramming track errors in z0.
+      PARAMETER (ERZMAX=0.5,EZSCAL=1.5,NUMBIN=6)
+      DIMENSION LISTEZ(NUMBIN,2),CUTERZ(2)
+C
+      LOGICAL FIRST
+      DATA FIRST/.TRUE./
+C
+#include "bmacro.h"
+C
+      IF (FIRST) THEN
+        FIRST=.FALSE.
+C
+C------ Initialize cuts on the first call
+C
+        NFRFT=NAMIND('FRFT')
+        NFRTL=NAMIND('FRTL')
+        NFTCL=NAMIND('FTCL')
+        NTGFT=NAMIND('TGFT')
+        NTGTL=NAMIND('TGTL')
+        NTGCL=NAMIND('TGCL')
+        NTPCO=NAMIND('TPCO')
+C
+C Minimum number of tracks in each TPC half.
+        NTRCT    = 1
+C Minimum number of TPC coordinates on track.
+        NHCUT    = 8
+C Cuts on the angle lambda (degrees).
+        CUTLM(1) = 0.
+        CUTLM(2) = 65.
+C Maximum d0 and z0 (cm).
+        CUTD0    = 2.
+        CUTZ0    = 10.
+C Mimimum track momentum (GeV).
+        CUTP     = 1.0
+C Maximum CHI**2/NDF of event vertex in each TPC half.
+        CHIMAX   = 25.0
+C Maximum fraction of tracks rejected because of bad CHI**2.
+        REJMAX   = 0.27
+      ENDIF
+C
+      IER = 2
+      DT = 999999.
+C
+      KFRFT = IW(NFRFT)
+      KFRTL = IW(NFRTL)
+      KFTCL = IW(NFTCL)
+      KTGFT = IW(NTGFT)
+      KTGTL = IW(NTGTL)
+      KTGCL = IW(NTGCL)
+      IF (KFRFT.GT.0.AND.KFRTL.GT.0.AND.KFTCL.GT.0) THEN
+C If these banks exist, we are being called from RCJSUM to calculate
+C PASS0 drift velocity.
+        INPAS0 = .TRUE.
+      ELSE IF (KTGFT.GT.0.AND.KTGTL.GT.0.AND.KTGCL.GT.0) THEN
+C In this case, we are being called from TPCREC to get the TPC bunch
+C number.
+        INPAS0 = .FALSE.
+      ELSE
+C No TPC information.
+        GOTO 999
+      END IF
+      KTPCO = IW(NTPCO)
+      IF (KTPCO.EQ.0) GOTO 999
+C
+      CALL TPDVEL ( ' ', DVSA, DVSB, IER1)
+      IF ( IER1.NE.0 ) GOTO 999
+      VD = 0.5*(DVSA(3) + DVSB(3))
+      IF ( VD.LE.0. ) GOTO 999
+C
+      IER = 1
+      IF (INPAS0) THEN
+        NTRKS = LROWS(KFRFT)
+      ELSE
+        NTRKS = LROWS(KTGFT)
+      END IF
+      IF(NTRKS.LT.(2*NTRCT)) GOTO 999
+      NREJEC(1) = 0
+      NREJEC(2) = 0
+      CHI2(1) = 0.0
+      CHI2(2) = 0.0
+C
+   10 CONTINUE
+C
+C-----Loop over tracks three times:
+C----- (i)   To flag track least consistent with event-half vertex
+C-----       if necessary.
+C----- (ii)  To histogram track errors in z0.
+C----- (iii) To make sums needed to calculate event-half vertex.
+C
+      DO 40 LOOP = 1,3
+C
+        DO 15 I=1,2
+          NTR(I) = 0
+          EZV(I) = 0.0
+          ZV(I) = 0.0
+          Z2V(I) = 0.0
+          CHIWOR(I) = -9.9E9
+   15   CONTINUE
+C
+C----- Initialize this loop
+C
+        IF (LOOP.EQ.1) THEN
+C If the vertex in both TPC halves is OK, then first loop is skipped.
+          IF (MAX(CHI2(1),CHI2(2)).LT.CHIMAX) GOTO 40
+C
+        ELSE IF (LOOP.EQ.2) THEN
+C
+C Initialize array for histogramming.
+          DO 22 N = 1,2
+            DO 21 M = 1,NUMBIN
+              LISTEZ(M,N) = 0
+   21       CONTINUE
+   22     CONTINUE
+C
+        ELSE IF (LOOP.EQ.3) THEN
+C
+C Find typical track error in z0.
+          DO 24 N = 1,2
+            ISUM = 0
+            LAST = NUMBIN
+            CUTERZ(N) = ERZMAX
+            DO 23 M = 1,NUMBIN
+              IF (LISTEZ(M,N).GT.0) THEN
+                CUTERZ(N) = ERZMAX*EZSCAL**FLOAT(M - NUMBIN)
+                ISUM = ISUM + LISTEZ(M,N)
+                IF (ISUM.GE.3.AND.FLOAT(ISUM).GT.0.7*FLOAT(NTR(N))) THEN
+                  IF (M + 1.LE.NUMBIN) THEN
+                    IF (FLOAT(LISTEZ(M + 1,N)).GT.0.2*FLOAT(NTR(N)))
+     +              CUTERZ(N) = ERZMAX*EZSCAL**FLOAT(M + 1 - NUMBIN)
+                  END IF
+                  GOTO 24
+                END IF
+              END IF
+   23       CONTINUE
+   24     CONTINUE
+C
+        END IF
+C
+C----- End of initialization. Now loop over tracks.
+C
+        DO 35 I=1,NTRKS
+          IF (INPAS0) THEN
+            NTPC = ITABL(KFRTL,I,JFRTNT)
+            TANL = RTABL(KFRFT,I,JFRFTL)
+            D0 = RTABL(KFRFT,I,JFRFD0)
+            Z0 = RTABL(KFRFT,I,JFRFZ0)
+            RI = RTABL(KFRFT,I,JFRFIR)
+          ELSE
+            NTPC = ITABL(KTGTL,I,JTGTN1)
+            TANL = RTABL(KTGFT,I,JTGFTL)
+            D0 = RTABL(KTGFT,I,JTGFD0)
+            Z0 = RTABL(KTGFT,I,JTGFZ0)
+            RI = RTABL(KTGFT,I,JTGFIR)
+          END IF
+          IF(NTPC.LT.NHCUT)                                   GOTO 35
+          ALAMDA = RADEG * ATAN(TANL)
+          IF(ABS(ALAMDA).LT.CUTLM(1))                         GOTO 35
+          IF(ABS(ALAMDA).GT.CUTLM(2))                         GOTO 35
+          IF(ABS(D0) .GT.CUTD0 )                              GOTO 35
+          IF(ABS(Z0) .GT.CUTZ0 )                              GOTO 35
+          PP = ABS(BCFGEV)*SQRT(1.0 + TANL**2)/
+     +         MAX(ABS(RI),1.0E-15)
+          IF(PP .LT.CUTP )                                    GOTO 35
+C
+C------- Take only tracks with all coordinates in 1 TPC end
+C
+          NEND(1)=0
+          NEND(2)=0
+          IF (INPAS0) THEN
+            IOFF=KFTCL+LMHLEN+ITABL(KFRTL,I,JFRTIT)
+          ELSE
+            IOFF=KTGCL+LMHLEN+ITABL(KTGTL,I,JTGTIO)
+          END IF
+          DO 25 JJ=1,NTPC
+            IC=IW(IOFF+JJ)
+            ID=ITABL(KTPCO,IC,JTPCIN)
+            IROW=ID/100000
+            ISLOT=(ID-IROW*100000)/1000
+            JEND=IENDTP(ISLOT)
+            NEND(JEND)=NEND(JEND)+1
+   25     CONTINUE
+C
+          IF (NEND(1).NE.0 .AND. NEND(2).NE.0)                GOTO 35
+C
+          IF (NEND(1).GT.0) THEN
+            ISIDE = 1
+          ELSE
+            ISIDE = 2
+          ENDIF
+C
+CMG  get the error on Z0 from the covariance matrix
+          IF (INPAS0) THEN
+            EZ0 = RTABL(KFRFT,I,JFRFEM+15-1)
+          ELSE
+            EZ0 = RTABL(KTGFT,I,JTGFEM+15-1)
+          END IF
+          IF (EZ0.LE.0.0)                                     GOTO 35
+          EZ0 = SQRT(EZ0)
+          IF (LOOP.NE.2) THEN
+            IF (EZ0.GT.CUTERZ(ISIDE))                         GOTO 35
+          END IF
+C
+C Has this track been flagged as inconsistent with event-half vertex ?
+          DO 30 N = 1,NREJEC(ISIDE)
+            IF (LISREJ(N,ISIDE).EQ.I) GOTO 35
+   30     CONTINUE
+C
+          NTR(ISIDE) = NTR(ISIDE) + 1
+C
+          IF (LOOP.EQ.1) THEN
+C
+            IF (CHI2(ISIDE).GT.CHIMAX) THEN
+C Look for worst track.
+               CHITRK = (Z0 - AVEZV(ISIDE))**2/CUTERZ(ISIDE)**2
+               IF (CHITRK.GT.CHIWOR(ISIDE)) THEN
+                 CHIWOR(ISIDE) = CHITRK
+                 LISREJ(NREJEC(ISIDE) + 1,ISIDE) = I
+               END IF
+            END IF
+C
+          ELSE IF (LOOP.EQ.2) THEN
+C
+C Histogram errors in z0 using a logarithmic scale.
+            IEZ = INT(FLOAT(1 + NUMBIN) + LOG(EZ0/ERZMAX)/LOG(EZSCAL))
+            IEZ = MAX(IEZ,1)
+            IF (IEZ.LE.NUMBIN) LISTEZ(IEZ,ISIDE) = LISTEZ(IEZ,ISIDE) + 1
+C
+          ELSE IF (LOOP.EQ.3) THEN
+C
+Cmg    weighted mean of ZV. Don't use individual track errors, as this
+C      increases problems due to V0 tracks with small errors.
+C
+            ZV(ISIDE) = ZV(ISIDE) + Z0/CUTERZ(ISIDE)**2
+            Z2V(ISIDE) = Z2V(ISIDE) + Z0**2/CUTERZ(ISIDE)**2
+            EZV(ISIDE) = EZV(ISIDE) + 1.0/CUTERZ(ISIDE)**2
+C
+          END IF
+C
+   35   CONTINUE
+C
+        IF (LOOP.EQ.1) THEN
+C Add up rejected tracks.
+          IF (CHI2(1).GT.CHIMAX) NREJEC(1) = NREJEC(1) + 1
+          IF (CHI2(2).GT.CHIMAX) NREJEC(2) = NREJEC(2) + 1
+        END IF
+C
+   40 CONTINUE
+C
+      IF ((NTR(1).GE.NTRCT) .AND. (NTR(2).GE.NTRCT)) THEN
+C       weighted z0 and chi**2/NDF of event vertex in each TPC half.
+        DO 60 JSIDE = 1,2
+          AVEZV(JSIDE)  = ZV(JSIDE)/EZV(JSIDE)
+          AVEZ2V(JSIDE) = Z2V(JSIDE)/EZV(JSIDE)
+          CHI2(JSIDE)   = (AVEZ2V(JSIDE) - AVEZV(JSIDE)**2)*EZV(JSIDE)/
+     +                    MAX(NTR(JSIDE) - 1,1)
+   60   CONTINUE
+C
+C If CHI**2/NDF is unacceptable, then try rejecting tracks.
+        DO 75 J = 1,2
+          IF (CHI2(J).GT.CHIMAX) THEN
+C Can we reject any more tracks ?
+            IF (NTR(J)-1.GE.NTRCT.AND.NREJEC(J).LT.MAXREJ.AND.
+     +          FLOAT(NREJEC(J)+1).LE.REJMAX*FLOAT(NTR(J)+NREJEC(J)))
+     +      THEN
+C Yes: so do so.
+              GOTO 10
+            ELSE
+C No: so just blow up the errors to make CHI**2/NDF = 1.
+              EZV(J) = EZV(J)/CHI2(J)
+            END IF
+          END IF
+   75   CONTINUE
+C
+C       weighted  Delta(t0)
+C
+        IER = 0
+        DZV = AVEZV(1) - AVEZV(2)
+        EDZV = SQRT(1./EZV(1)+1./EZV(2))
+        DT = DZV/VD
+        EDT = EDZV/VD
+C
+      ENDIF
+C
+  999 CONTINUE
+      RETURN
+      END
+#endif
+@

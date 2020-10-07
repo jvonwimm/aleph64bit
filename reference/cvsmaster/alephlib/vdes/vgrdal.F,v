@@ -1,0 +1,473 @@
+head	1.5;
+access;
+symbols
+	aleph316_2:1.5
+	aleph316_1:1.5
+	aleph316:1.5
+	aleph315_7:1.5
+	aleph315_6:1.5
+	aleph315_5:1.5
+	aleph315_4:1.5
+	aleph315_3:1.5
+	aleph315_2:1.5
+	aleph315_1:1.5
+	aleph315:1.5
+	aleph314_2:1.5
+	aleph314_1:1.5
+	aleph314:1.5
+	aleph313_1:1.5
+	aleph313:1.5
+	aleph312_1:1.5
+	aleph312:1.5
+	aleph311_1:1.5
+	aleph311:1.5
+	aleph310_3:1.5
+	aleph310_2:1.5
+	aleph310_1:1.5
+	aleph310:1.5
+	aleph309_1:1.4
+	aleph309:1.4
+	aleph308_3:1.4
+	aleph308_2:1.4
+	aleph308_1:1.4
+	aleph308:1.4
+	aleph307_6:1.4
+	aleph307_5:1.4
+	aleph307_4:1.4
+	aleph307_2:1.4
+	aleph307_1:1.4
+	aleph307:1.4
+	aleph306:1.4
+	aleph305_4:1.4
+	aleph305_3:1.4
+	aleph305_2:1.4
+	aleph305_1:1.4
+	aleph305:1.4
+	aleph304_5:1.4
+	aleph304_4:1.4
+	aleph304_3:1.4
+	aleph304_2:1.4
+	aleph304_1:1.4
+	aleph304:1.3
+	aleph303_3:1.2
+	aleph303_2:1.2
+	aleph303_1_mc1:1.2
+	aleph303_1:1.2
+	aleph303:1.2
+	aleph302_9:1.2
+	aleph302_8:1.2
+	aleph302_7:1.2
+	aleph302_6:1.2
+	aleph302_5:1.2
+	aleph302_4:1.2
+	aleph302_3:1.2
+	aleph302_2:1.2
+	aleph302_1:1.2
+	aleph302:1.2
+	aleph216:1.2
+	aleph215_3:1.2
+	aleph215_2:1.2
+	aleph215:1.2
+	aleph214:1.2
+	aleph213:1.2
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.5
+date	98.10.28.08.56.36;	author cattanem;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	97.07.08.15.36.26;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.07.04.08.51.11;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.05.07.17.06.10;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.43.52;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.43.53;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.5
+log
+@alephlib 310 4th test
+@
+text
+@      SUBROUTINE VGRDAL (LUN,IRUN,IFLAG)
+C ----------------------------------------------------------------------
+CKEY VDETDES GEOMETRY
+C!  Read alignment banks and fill the VGPAAL common
+C - Francesco Forti, 18 August 1990
+C - Modified to use new geometry package, S. Wasserbaech, January 1995
+C - Modified to use VNGBVNLC if they exist, F.Ranjard, 4 July 1997
+C - Modified to use laser data also, G. Sguazzoni, September 1998
+C
+C  Check existence of the alignment banks in the BOS common and their
+C  validity range.
+C  If they do not exist yet or are no longer valid try to load them
+C  from the data base file. IFLAG is set to 0 if an error occurs.
+C  The routine uses the alignment banks to compute the complete
+C  transformation that goes from the wafer coordinate to the ALEPH
+C  main coordinates and vice versa and stores it in the common VGPAAL.
+C
+C  Called by :    VDET initialisation routine
+C  Calls     :    FUNCTION ALGTDB               from ALEPHLIB
+C                 VGEXRO, VGCMTR, VGINTR        from ALEPHLIB
+C                 VGRDLS                        from ALEPHLIB
+C
+C - Input:
+C   LUN   / I  Logical unit number of DAF file
+C   IRUN  / I  Run number
+C
+C - Output:
+C   IFLAG / I  = 1 if routine ends successfully;
+C              = 0 if an error occurred
+C ----------------------------------------------------------------------
+#ifndef DOC
+C      IMPLICIT NONE
+#include "vglobl.h"
+#include "vagbjj.h"
+#include "valcjj.h"
+#include "vgpaal.h"
+#include "bcs.h"
+      INTEGER LUN, IRUN, IFLAG, ITP
+      INTEGER I, IRO, ILAY, IWFF, IFAC, IVIEW, IND
+      INTEGER KLC, KGB, IFAIL, NTOAL, NEW, IND1, IND2, LEN, LE
+      INTEGER  ALGTDB,GTSTUP
+      EXTERNAL ALGTDB,GTSTUP
+      EXTERNAL NAMIND, NLINK, NDANR, MDARD, NSWAP
+      INTEGER  NAMIND, NLINK, NDANR, MDARD, NSWAP
+      INTEGER  VNRFAC
+      EXTERNAL VNRFAC
+      REAL VLOC(LVALCA)
+#include "bmacrod.h"
+C
+      CHARACTER*8 LIST1, LIST2
+      CHARACTER*4 NAM1 , NAM2
+      DATA LIST1 /'VAGBVALC'/
+      DATA LIST2 /'VNGBVNLC'/
+      DATA NTOAL /0/
+C
+C     Transformation structures to be used for intermediate results:
+C
+      REAL TELC(LVTEXP), TEGB(LVTEXP), TENO(LVTEXP), TE(LVTEXP)
+C
+#include "bmacro.h"
+C ----------------------------------------------------------------------
+C
+      IF (NTOAL.EQ.0) NTOAL = NAMIND('TOAL')
+      IFLAG = 1
+C
+C  Get the setup code
+      IF (IRUN.LE.2000) THEN
+         ITP = GTSTUP ('VD',IRUN)
+      ELSE
+         ITP = IRUN
+      ENDIF
+C
+C  if TOAL data card is present get OLD alignment from LIST1 banks
+      IF (IW(NTOAL) .GT. 0) GOTO 10
+
+
+C! Get banks in LIST2 from DB depending on run and setup code,
+C  If a bank VA.. or VN.. is given on data cards (NR=-1) keep it
+
+
+      LE = LEN(LIST2)
+      DO I=1,LE,4
+        NAM2 = LIST2(I:I+3)
+        NAM1 = LIST1(I:I+3)
+        IND2  = NLINK(NAM2,-1)
+        IND1  = NLINK(NAM1,-1)
+        IF (IND1.EQ.0 .AND. IND2.EQ.0) THEN
+           CALL BDROP (IW,NAM2)
+           CALL BDROP (IW,NAM1)
+           NEW = NDANR (LUN,NAM2,'LE',ITP)
+           IND2 = MDARD (IW,LUN,NAM2,NEW)
+           IF (IND2.EQ.0) GOTO 10
+           IND2 = NSWAP(NAM2,NEW,NAM1,NEW)
+#if defined(ARDEB)
+           IF (IW(6).GT.0) WRITE(6,*) ' *** VGRDAL*** swap ',
+     &                                NAM2,NAM1,NEW
+#endif
+        ELSEIF (IND2.NE.0) THEN
+           IND2 = NSWAP(NAM2,-1,NAM1,-1)
+#if defined(ARDEB)
+           IF (IW(6).GT.0) WRITE(6,*) ' *** VGRDAL*** swap ',
+     &                                NAM2,NAM1,' -1'
+#endif
+        ENDIF
+      ENDDO
+      GOTO 20
+C
+C  If LIST2 banks don't exist or TOAL data card is there
+C  get banks in LIST1
+ 10   CONTINUE
+      IND = ALGTDB(LUN,LIST1,-ITP)
+C
+C     Return if banks have not been correctly accessed:
+C
+      IF (IND .EQ. 0) THEN
+        IFLAG = 0
+        GO TO 999
+      ENDIF
+C
+C     Get the indices to banks just read in:
+C
+ 20   CONTINUE
+      KLC = IW(NAMIND('VALC'))
+      KGB = IW(NAMIND('VAGB'))
+      IF ((KLC .LE. 0) .OR. (KGB .LE. 0)) THEN
+        IFLAG = 0
+        GO TO 999
+      ENDIF
+C
+C     Initialize the matrices to zero:
+C
+      CALL VZERO(VTEXPD,LVTEXP*NVFLMX*NVWFMX*NVLAYR)
+      CALL VZERO(VTEXPI,LVTEXP*NVFLMX*NVWFMX*NVLAYR)
+C
+C     Construct the global transformation:
+C
+      CALL VGEXRO(1,RW(KROW(KGB,1)+JVAGTR),TEGB)
+C
+C     Modify global transformation using laser data:
+C
+      CALL VGRDLS(LUN,IRUN,TEGB)
+C
+C     Loop on the rows of VALC to get transformation of each wafer:
+C     
+      DO IRO=1,LROWS(KLC)
+C     
+C     Decode the wafer index, and make sure this is a valid wafer:
+C     
+         CALL VADEWA(ITABL(KLC,IRO,JVALWI),ILAY,IWFF,IFAC,IVIEW)
+         IF (IFAC .LE. VNRFAC(ILAY)) THEN
+C     
+C     Modify local alignment for face bending
+C     
+            CALL UCOPY(RW(KROW(KLC,IRO)+JVALTR),VLOC,LVALCA-1)
+            CALL VALFCO(VLOC,ILAY,IWFF,IFAC,IRUN)
+C     
+C     Local alignment of the wafer:
+C     
+            CALL VGEXRO(2,VLOC,TELC)
+C     
+C     Nominal transformation for the wafer:
+C     
+            CALL VGGTNO(ILAY,IWFF,IFAC,TENO)
+C     
+C     Compute the total transformation for the wafer:
+C     
+            CALL VGCMTR(TELC,TENO,TE)
+            CALL VGCMTR(TE,TEGB,VTEXPD(1,IFAC,IWFF,ILAY))
+C     
+C     Compute the inverse transformation:
+C     
+            CALL VGINTR(VTEXPD(1,IFAC,IWFF,ILAY),
+     &           VTEXPI(1,IFAC,IWFF,ILAY),IFAIL)
+            IF (IFAIL .NE. 0) THEN
+               IFLAG = 0
+            ENDIF
+C     
+         ENDIF
+      ENDDO
+C     
+C     Calculate the distance to wafer midplanes:
+C     
+      CALL VGCADI
+C     
+C     Routine is terminated and flag has been set properly.
+C     
+  999 CONTINUE
+      RETURN
+      END
+#endif
+
+
+@
+
+
+1.4
+log
+@check for TOAL in vgrdal
+@
+text
+@d7 2
+a8 1
+C - Modified to use VNGBVNLC if they exist, F.Ranjard 4 July 1997
+d21 1
+d76 1
+d80 1
+d93 1
+a93 1
+           IND2 = NSWAP(NAM2,NEW,NAM1,NEW)      
+d139 4
+d144 1
+a144 1
+C
+d146 1
+a146 1
+C
+d148 9
+a156 9
+C
+        CALL VADEWA(ITABL(KLC,IRO,JVALWI),ILAY,IWFF,IFAC,IVIEW)
+        IF (IFAC .LE. VNRFAC(ILAY)) THEN
+C
+C Modify local alignment for face bending
+C
+          CALL UCOPY(RW(KROW(KLC,IRO)+JVALTR),VLOC,LVALCA-1)
+          CALL VALFCO(VLOC,ILAY,IWFF,IFAC,IRUN)
+C
+d158 3
+a160 3
+C
+          CALL VGEXRO(2,VLOC,TELC)
+C
+d162 3
+a164 3
+C
+          CALL VGGTNO(ILAY,IWFF,IFAC,TENO)
+C
+d166 4
+a169 4
+C
+          CALL VGCMTR(TELC,TENO,TE)
+          CALL VGCMTR(TE,TEGB,VTEXPD(1,IFAC,IWFF,ILAY))
+C
+d171 8
+a178 8
+C
+          CALL VGINTR(VTEXPD(1,IFAC,IWFF,ILAY),
+     &                VTEXPI(1,IFAC,IWFF,ILAY),IFAIL)
+          IF (IFAIL .NE. 0) THEN
+            IFLAG = 0
+          ENDIF
+C
+        ENDIF
+d180 1
+a180 1
+C
+d182 1
+a182 1
+C
+d184 1
+a184 1
+C
+d186 1
+a186 1
+C
+d191 2
+@
+
+
+1.3
+log
+@Alephlib 304
+@
+text
+@d30 1
+a30 1
+C     IMPLICIT NONE
+d36 4
+a39 2
+      INTEGER LUN, IRUN, IFLAG
+      INTEGER ALGTDB,GTSTUP
+a40 1
+      INTEGER I, IRO, ILAY, IWFF, IFAC, IVIEW, IND, NAMIND
+d42 2
+a43 1
+      INTEGER VNRFAC
+a44 1
+      INTEGER KLC, KGB, IFAIL
+d52 1
+d61 1
+d71 3
+d76 1
+d104 2
+a105 1
+C  If they don't exist get banks in LIST1
+@
+
+
+1.2
+log
+@   Improve correction of time dependent bending of the faces (D.Rousseau)
+    VGRDAL: call VALFCO, suppress forced reaccess of VALC,VAGB
+    VALFCO: (new deck) Does the correction
+    VALCOR: Obsolete, removed.
+@
+text
+@d7 1
+d40 1
+d42 1
+d47 2
+a48 2
+      CHARACTER*8 LIST1
+      SAVE LIST1
+d50 1
+d61 1
+a61 2
+C! Get banks in LIST1 from DB depending on run and setup code
+C
+d67 32
+d110 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d41 1
+a63 4
+C
+C! DR drop VALCVAGB to force reaccess
+C
+      CALL BDROP(IW,LIST1)
+a81 6
+C DR modify VALC bank for face bending
+C
+      IF (IRUN.GE.40000.AND.IRUN.LE.40530) THEN
+        CALL VALCOR(KLC,IRUN)
+      ENDIF
+C
+d100 5
+d107 1
+a107 1
+          CALL VGEXRO(2,RW(KROW(KLC,IRO)+JVALTR),TELC)
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

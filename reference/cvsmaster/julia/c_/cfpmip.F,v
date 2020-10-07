@@ -1,0 +1,257 @@
+head	1.2;
+access;
+symbols
+	jul313_3:1.2
+	jul313_2:1.2
+	jul313_1:1.2
+	jul313:1.2
+	jul312_1:1.2
+	jul312:1.2
+	jul311:1.2
+	jul310_1:1.2
+	jul310:1.2
+	jul309_1:1.2
+	jul309:1.2
+	jul308_6:1.2
+	jul308_5:1.2
+	jul308_4:1.2
+	jul308_3:1.2
+	jul308_2:1.2
+	jul308_1:1.2
+	jul308:1.2
+	jul307_4:1.2
+	jul307_3:1.2
+	jul307_2:1.2
+	jul307_1:1.2
+	jul307:1.2
+	jul306_3:1.2
+	jul306_2:1.2
+	jul306_1:1.2
+	jul306:1.2
+	jul305_4:1.2
+	jul305_3:1.2
+	jul305_2:1.2
+	jul305_1:1.2
+	jul305:1.2
+	jul304_3:1.2
+	jul304_2:1.2
+	jul304_1:1.2
+	jul304:1.2
+	jul303_7:1.2
+	jul303_6:1.2
+	jul303_5:1.2
+	jul303_4:1.2
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2
+	jul280_1:1.2
+	jul280:1.2
+	jul279:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.12.14.39.45;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.17.24;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.17.25;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+ Modified Files:
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+@
+text
+@      SUBROUTINE CFPMIP(ITR,ICLUH,NCLUH)
+C***********************************************************************
+C! Det. TPC-HC assoc. param.                                           *
+C!  for one nomip track                                                *
+C!                                                                     *
+C!  AUTHOR   : A. BONISSENT  870911                                    *
+C!                                                                     *
+C!                                                                     *
+C!  BANKS :                                                            *
+C!    INPUT   : NONE                                                   *
+C!    OUTPUT  : NONE                                                   *
+C!    CREATED : NONE                                                   *
+C!                                                                     *
+C!   Itr   = track number                                              *
+C!   Ieco  = list of ecobjects in which track has deposited energy     *
+C!   Neco  = number of ecob                                            *
+C!   Icluh = list of Hclusters in which track has deposited energy     *
+C!   Ncluh = number of hclu                                            *
+C!                                                                     *
+C***********************************************************************
+#ifndef DOC
+#include "alcons.h"
+#include "rparac.h"
+#include "hcnamc.h"
+#include "hclujj.h"
+#include "hsdajj.h"
+#include "trexjj.h"
+#include "bcs.h"
+      DIMENSION ICLUH(*)
+      DIMENSION TXX(3,50),TRTF(4,50),IKSCK(6,50)
+      EXTERNAL NLINK
+#include "bmacro.h"
+      KHCLU=IW(NAHCLU)
+      KHSDA=IW(NAHSDA)
+      KTREX=NLINK('TREX',ITR)
+C
+C?   fill array of coordinates
+C
+      NPTS=LROWS(KTREX)
+      IPT=0
+      DO 40 I=1,NPTS
+      IRG=IABS(ITABL(KTREX,I,JTRERG))/1000
+C
+C? eliminate points which are not in hcal
+C
+      IF(IRG.EQ.3)THEN
+         IPT=IPT+1
+C
+C?   fill (x,y,z)
+C
+         SUM=0.
+         DO 45 KC=1,3
+         XCOOR=RTABL(KTREX,I,JTREX3-1+KC)
+         SUM=SUM+XCOOR**2
+   45    TXX(KC,IPT)=XCOOR
+C
+C?   fill (r,theta,phi)
+C
+         R=SQRT(SUM)
+         TRTF(1,IPT)=R
+         TRTF(2,IPT)=ACOS(TXX(3,IPT)/R)
+         PHI=ATAN2(TXX(2,IPT),TXX(1,IPT))
+         IF(PHI.LT.0.)PHI=PHI+TWOPI
+         TRTF(3,IPT)=PHI
+         CALL HFNDTW(TXX(1,IPT),'ALEPH',IT,JF,KS,ISUBC,IMOD,IPL,IDEAD)
+         IKSCK(1,IPT)=IT
+         IKSCK(2,IPT)=JF
+         IKSCK(3,IPT)=KS
+         IKSCK(4,IPT)=ISUBC
+         IKSCK(5,IPT)=IMOD
+         IKSCK(6,IPT)=IDEAD
+C
+C?   fill (Rms)
+C
+         TRTF(4,IPT)=RTABL(KTREX,I,JTRERM)
+      ENDIF
+   40 CONTINUE
+      NPTS=IPT
+C
+C?   loop on hcal clusters
+C
+      DO 10 IHC=1,NCLUH
+      ICLH=ICLUH(IHC)
+C
+C?   loop on hcal storeys of this cluster
+C
+      ISTFH=ITABL(KHCLU,ICLH,JHCLFS)
+      ISTH=ISTFH
+C
+C?   Set distance to a large value
+C
+      DIST=10000.
+   15 CONTINUE
+C
+C?   Compute distance between storey and track
+C
+      CALL CDTHS(TXX,TRTF,IKSCK,NPTS,ISTH,DLOC)
+      DIST=AMIN1(DLOC,DIST)
+C
+C?   stop if distance is zero
+C
+      IF(DIST.EQ.0.)GO TO 11
+      ISTH=ITABL(KHSDA,ISTH,JHSDNS)
+      IF(ISTH.NE.0)GO TO 15
+   11 CONTINUE
+C
+C?   get track momentum
+C
+      PX=RTABL(KTREX,ITR,JTREP3)
+      PY=RTABL(KTREX,ITR,JTREP3+1)
+      PZ=RTABL(KTREX,ITR,JTREP3+2)
+      P=SQRT(PX**2+PY**2+PZ**2)
+C
+C?   get Hclu energy
+C
+      EHCLU=RTABL(KHCLU,IHC,JHCLEC)
+      IF(DIST.GT.0.)CALL HFILL(JULCA*1000+103,DIST,0.,1.)
+   10 CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK cfpmip
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

@@ -1,0 +1,42 @@
+#!/bin/csh
+#
+#======================================================================
+#                         sycheck_check
+# 21/04/94                                                     F.Blin
+#======================================================================
+#set echo on
+set admin = "fblxu@aloha.cern.ch,hag@aloha.cern.ch,system@aloha.cern.ch"
+set dir_tmp = "$ALEPH/tmp"
+set sycheck_out = "$ALEPH/log/sycheck.out"
+
+### search process cron on shift9
+   set n_cron = `ps -ef | grep cron | grep -v grep | wc -l`
+   if ($n_cron == 0) then
+      echo ">>> WARNING missing process cron on shift9" | Mail -s "shift9 cron problem" $admin
+      exit
+   endif 
+
+set day = `date | awk '{print $3}'`
+set str_search  = `date | awk '{print $1 " " $2 " " $3 " " substr($4,1,3)}'`
+if (${day} < 10 & ${HOST} == "saga01") set str_search  = `date | awk '{print $1 " " $2 " " substr($3,2) " " substr($4,1,3)}'`
+#echo ${str_search}
+
+grep "++++${str_search}" ${sycheck_out} > ${dir_tmp}/tmp_sycheck_check
+if (-z ${dir_tmp}/tmp_sycheck_check) then 
+   if (${HOST} == "shift9") then
+      echo "ps -ef  -->" > ${dir_tmp}/ps_sycheck_check
+      ps -ef | grep aloff >> ${dir_tmp}/ps_sycheck_check
+   endif 
+   echo "tail ${sycheck_out} -->" >> ${dir_tmp}/ps_sycheck_check
+   tail ${sycheck_out} >> ${dir_tmp}/ps_sycheck_check
+   if (${OS} == "IRIX5") then
+       cat ${dir_tmp}/ps_sycheck_check | mail -s "WARNING Please look-at SYCHECK..." ${admin}
+   endif
+   if (${OS} == "OSF1") then 
+       cat ${dir_tmp}/ps_sycheck_check | mailx -s "WARNING Please look-at SYCHECK..." ${admin}
+   endif
+endif
+echo "*** sycheck_check ${str_search} on ${HOST}" >> ${sycheck_out}
+rm -f ${dir_tmp}/ps_sycheck_check
+rm -f ${dir_tmp}/tmp_sycheck_check
+exit

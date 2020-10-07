@@ -1,0 +1,176 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.53.56;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.30;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.31;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE INITDA(LUN,IRECL,NDREC,PASSWD)
+
+*     INITIALIZE DATA SET - THIS SUBPROGRAM CAN RUN WITHOUT BOS
+*     IRECL = NUMBER OF WORDS/RECORD
+*     NDREC  = NUMBER OF RECORDS + 10000*NUMBER OF DIRECTORY RECORDS
+*              if NDREC<10000 then INITDA will choose the best
+*              number of directory records
+*     PASSWD= PASSWORD (STRING OF 4 CHARACTERS)
+*     IRECL AND NREC AT LEAST 20
+*     RECOMMENDED: IRECL = 1000 ... 2000
+*
+*
+      PARAMETER (LUNPR=6)
+      CHARACTER*5 TEXT
+      CHARACTER*4 PASSWD
+
+      LOGICAL UOPEN
+      INTEGER JRECD(8),IRECD(5),IDATE
+      DATA IRECD/4,4*0/
+
+      UOPEN=.FALSE.
+    1 CALL DATIME(IDATE,IDUMMY)
+C ------------------------------------------------------------
+C - ALEPH mods to redefine # of directory records
+C   NDREC = nrdir*10000 + NREC
+C   if NDREC < 10000 then let INITDA define NPRIME and NREC=NDREC
+C   if NDREC > 10000 then NPRIME = NDREC / 10000
+C                         NREC   = MOD (NDREC,10000)
+      IF (NDREC.GT.10000) THEN
+         NPRIME = NDREC /10000
+         NREC   = MOD (NDREC,10000)
+      ELSE
+         NPRIME = 0
+         NREC   = NDREC
+      ENDIF
+C -----------------------------------------------------------
+      WRITE(LUNPR,101) LUN,IRECL,NREC,PASSWD
+      IF(IRECL.LT.20.OR.NREC.LT.20) GOTO 92
+
+      TEXT='OPEN'
+      IF(UOPEN) GOTO 5
+#include "opena.h"
+
+*     DD DSN=...,SPACE=(4*IRECL,(NREC)),DCB=(BLKSIZE=4*IRECL),UNIT=...
+*     DISP=(NEW,CATLG)
+
+*     DETERMINE PRIME NUMBER FOR DIRECTORY SEARCH
+
+    5 CONTINUE
+      IF (NPRIME .EQ. 0) THEN
+         NPRIME=AMAX1(0.05*FLOAT(NREC-3),3.0)+0.5
+         NPRIME=NPRIME+NPRIME-1
+   10    NPRIME=NPRIME+2
+         NP    =SQRT(FLOAT(NPRIME))
+         DO 15 I=3,NP,2
+         J=NPRIME/I
+         IF(I*J.EQ.NPRIME) GOTO 10
+   15    CONTINUE
+      ENDIF
+
+*     INITIALIZE FIRST THREE RECORDS
+
+      DO 17 M=1,8
+   17 JRECD(M)=0
+      TEXT='WRITE'
+      WRITE(UNIT=LUN,REC=1,ERR=90) JRECD
+      WRITE(UNIT=LUN,REC=2,ERR=90) JRECD
+
+      JRECD(1)= IRECL
+      JRECD(2)=  NREC
+      JRECD(3)=     3
+      JRECD(4)=NREC-NPRIME+1
+      JRECD(5)=NPRIME
+      JRECD(6)= IDATE
+      JRECD(7)= IDATE
+      JRECD(8)= INTCHA(PASSWD)
+      WRITE(UNIT=LUN,REC=3,ERR=90) JRECD
+
+*     INITIALIZE REMAINING RECORDS
+
+      IRECD(2)=INTCHA('+DAT')
+      DO 20 IREC=4,NREC
+      WRITE(UNIT=LUN,REC=IREC,ERR=90) IRECD
+      IF(IREC+NPRIME.EQ.NREC) IRECD(2)=INTCHA('+DIR')
+   20 CONTINUE
+C     CLOSE(UNIT=LUN,STATUS='KEEP')
+      WRITE(LUNPR,102)
+      GOTO 100
+
+*     ERROR PRINTOUT
+
+   90 WRITE(LUNPR,103) TEXT
+      GOTO 99
+   92 WRITE(LUNPR,104)
+   99 WRITE(LUNPR,105)
+      STOP
+*
+*     CALL WITH USER OPEN STATEMENT
+*
+      ENTRY INITDU(LUN,IRECL,NDREC,PASSWD)
+      UOPEN=.TRUE.
+      GOTO 1
+  100 RETURN
+  101 FORMAT('0-----------  INITDA   LUN=',I2,5X,'IRECL=',I4,5X,
+     1   'NREC=',I8,5X,'PASSWD=',A4)
+  102 FORMAT('              INITIALIZATION SUCCESSFULLY COMPLETED'/)
+  103 FORMAT(' -----------  IO-ERROR DURING ',A5)
+  104 FORMAT(' -----------  VALUES OF IRECL AND/OR NREC TOO SMALL',
+     1   ' (BELOW 20)')
+  105 FORMAT(' -----------  STOP IN INITDA')
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK initda
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

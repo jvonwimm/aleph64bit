@@ -1,0 +1,250 @@
+head	1.3;
+access;
+symbols
+	jul313_3:1.3
+	jul313_2:1.3
+	jul313_1:1.3
+	jul313:1.3
+	jul312_1:1.3
+	jul312:1.3
+	jul311:1.3
+	jul310_1:1.3
+	jul310:1.3
+	jul309_1:1.3
+	jul309:1.3
+	jul308_6:1.3
+	jul308_5:1.3
+	jul308_4:1.3
+	jul308_3:1.3
+	jul308_2:1.3
+	jul308_1:1.3
+	jul308:1.3
+	jul307_4:1.3
+	jul307_3:1.3
+	jul307_2:1.3
+	jul307_1:1.3
+	jul307:1.3
+	jul306_3:1.3
+	jul306_2:1.3
+	jul306_1:1.3
+	jul306:1.3
+	jul305_4:1.3
+	jul305_3:1.3
+	jul305_2:1.3
+	jul305_1:1.3
+	jul305:1.3
+	jul304_3:1.3
+	jul304_2:1.3
+	jul304_1:1.3
+	jul304:1.2
+	jul303_7:1.2
+	jul303_6:1.2
+	jul303_5:1.2
+	jul303_4:1.2
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.1
+	jul285:1.1
+	jul284_1:1.1
+	jul284:1.1
+	jul283_1:1.1
+	jul283:1.1
+	jul282_1:1.1
+	jul282:1.1
+	jul281_3:1.1
+	jul281_2:1.1
+	jul281_1:1.1
+	jul281:1.1
+	jul280_1:1.1
+	jul280:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	97.10.01.07.09.32;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.03.06.09.55.13;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.05.06.15.50.05;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@Fixes for Linux
+@
+text
+@      SUBROUTINE TFITKF(IER)
+C!
+C!  Refit TGFT tracks using Kalman filter
+C!  Remove hits flagged as outliers from coordinate list
+C!
+C!      Created: 23-OCT-1995    D.Casper
+C!
+#ifndef DOC
+#include "tgftjj.h"
+#include "tgcljj.h"
+#include "tgtljj.h"
+#include "tpcojj.h"
+#include "bcs.h"
+C
+      LOGICAL FIRST/.TRUE./
+#include "rconds.h"
+
+      PARAMETER (MPT = 40)
+      INTEGER IUSED(MPT)
+      DOUBLE PRECISION XSTS(5,MPT),XME(2,MPT),RF(MPT),VMEAS(2,2,MPT)
+      DIMENSION TRACK(6), COV(21)
+      INTEGER SORTARR(MPT)
+      INTEGER LISTRM(MPT)
+      INTEGER  UFTTRA, UFDALI, NAMIND
+      EXTERNAL UFTTRA, UFDALI, NAMIND
+#include "bmacro.h"
+C
+      IF (FIRST)THEN
+        FIRST = .FALSE.
+        NTGFT = NAMIND('TGFT')
+        NTPCO = NAMIND('TPCO')
+        NTGTL = NAMIND('TGTL')
+        NTGCL = NAMIND('TGCL')
+      ENDIF
+      KTGFT = IW(NTGFT)
+      KTPCO = IW(NTPCO)
+      KTGTL = IW(NTGTL)
+      KTGCL = IW(NTGCL)
+      IF( KTGFT.LE.0 .OR. KTPCO.LE.0 .OR. KTGTL.LE.0
+     &  .OR. KTGCL.LE.0)THEN
+        IER = 1
+        CALL RERROR('TFITKF',IER,'Missing input banks')
+        RETURN
+      ENDIF
+
+      NTRK = LROWS(KTGFT)
+      DO ITRK = 1, NTRK
+C
+C++   Fit TPC hits using Kalman filter
+C
+        NTPC = ITABL(KTGTL,ITRK,JTGTN1)
+        IOTGCL = ITABL(KTGTL,ITRK,JTGTIO)
+        ITGFT = KROW(KTGFT,ITRK)
+        ICODE = UFTTRA(ITRK,FIELRC,RW(ITGFT+JTGFIR),
+     +              RW(ITGFT+JTGFCD),NTPC,0,0,
+     +              IW(KTGCL+LMHLEN+IOTGCL+1),IDUM,IDUM,
+     +              TRACK,COV,CHI2,NDEG)
+C
+C++  Only overwrite TGFT and update hit banks if fit succeeded
+C
+        IF (CHI2 .LT. 1.E29 .AND. ICODE.EQ.0) THEN
+            CALL UCOPY(TRACK,RW(ITGFT+JTGFIR),5)
+            CALL UCOPY(COV,RW(ITGFT+JTGFEM),15)
+            RW(ITGFT+JTGFCD) = CHI2
+            IW(ITGFT+JTGFDF) = NDEG
+C
+C++   Get information which we could get much more easily from a common block
+C
+            IRET = UFDALI(NLOW,NHIGH,XSTS,XME,RF,IUSED,VMEAS)
+C           CALL UFSORT(SORTARR)
+C
+C++   Disassociate filtered hits from track
+C
+            NRM = 0
+            DO I = 1, NTPC
+                IF(IUSED(I).EQ.0 .OR. IUSED(I).EQ.-1)THEN
+                    CALL FDETCO('TG',SNGL(RF(I)),ITRK,ITPCO)
+                    IF (ITPCO .NE. 0)THEN
+                        NRM = NRM+1
+                        LISTRM(NRM) = ITPCO
+                    ELSE
+                        IER = 2
+                        CALL RERROR('TFITKF',IER,
+     &                      'Coordinate not found on list')
+                    ENDIF
+                ENDIF
+            ENDDO
+            IF (NRM.GT.0) THEN
+                CALL FRMHIT('TG',ITRK,NRM,LISTRM)
+            ENDIF
+        ELSE
+            CALL RERROR('UFTKAL',ICODE,'Kalman Filter error')
+        ENDIF
+      ENDDO
+
+      RETURN
+      END
+
+#endif
+@
+
+
+1.2
+log
+@Tracking upgrade
+@
+text
+@d24 2
+a25 2
+      INTEGER UFTTRA
+      EXTERNAL UFTTRA
+d69 1
+a69 1
+            CALL UFDALI(NLOW,NHIGH,XSTS,XME,RF,IUSED,VMEAS)
+@
+
+
+1.1
+log
+@re-installed jul280 from the historian source because some routines were missing.
+@
+text
+@a1 2
+C-----------------------------------------
+C!  Dummy routine to replace TFITKF
+d3 2
+a4 1
+C!   Author   :- Dave Casper           26-OCT-1995
+d6 1
+a6 3
+C!   Purpose   : Dummy routine
+C!   Inputs    : None
+C!   Outputs   : IER (I*4) : automatic success code
+a7 2
+C?
+C!=========================================
+d9 88
+a96 10
+C +
+C Declarations.
+C -
+      IMPLICIT NONE
+      INTEGER IER
+C + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+C Entry Point.
+C - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      IER = 0
+  999 RETURN
+d98 1
+@

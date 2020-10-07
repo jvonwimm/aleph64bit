@@ -1,0 +1,45 @@
+#! /bin/csh
+#==============================================================
+#                         alwho
+# F.Blin                                            13/12/93 
+#==============================================================
+# to run /aleph/bin/alwho_call
+#==============================================================
+# P? full or short =full_flag in alwho_call     default = short
+# P? surname       =last_name in alwho_call   
+# P? name          =first_namein alwho_call   
+#==============================================================
+#-->full_flag
+set PAR1 = "SHORT"
+#-->surname
+set PAR2 = "WXYZ"
+#-->name
+set PAR3 = "WXYZ"
+@ i = 1
+while ($i <= $#argv)
+    set tmp = `echo ${argv[$i]} | tr '[a-z]' '[A-Z]'`
+    if (${tmp} == "/FULL" || ${tmp} == "FULL") then
+       set PAR1 = "FULL"
+    else
+       if (${PAR2} == "WXYZ") then
+          set PAR2 = ${tmp}
+       else 
+           set PAR3 = ${tmp}
+       endif
+    endif
+    @ i = $i + 1
+end 
+#if (${PAR3} == "WXYZ") then
+#  set PAR3 = " "
+#endif
+#echo "FS=${PAR1} last_name=${PAR2} first_name=${PAR3}"
+
+#--> run alwho_call
+setenv PAR1 ${PAR1}
+setenv PAR2 ${PAR2}
+setenv PAR3 ${PAR3}
+#cd /aleph/src/alwho
+alwho_call
+exit
+
+

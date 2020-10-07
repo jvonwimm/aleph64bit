@@ -1,0 +1,251 @@
+head	1.5;
+access;
+symbols
+	jul313_3:1.5
+	jul313_2:1.5
+	jul313_1:1.5
+	jul313:1.5
+	jul312_1:1.5
+	jul312:1.5
+	jul311:1.5
+	jul310_1:1.5
+	jul310:1.5
+	jul309_1:1.5
+	jul309:1.5
+	jul308_6:1.5
+	jul308_5:1.5
+	jul308_4:1.5
+	jul308_3:1.5
+	jul308_2:1.5
+	jul308_1:1.5
+	jul308:1.5
+	jul307_4:1.5
+	jul307_3:1.5
+	jul307_2:1.5
+	jul307_1:1.5
+	jul307:1.5
+	jul306_3:1.5
+	jul306_2:1.5
+	jul306_1:1.5
+	jul306:1.5
+	jul305_4:1.5
+	jul305_3:1.5
+	jul305_2:1.5
+	jul305_1:1.5
+	jul305:1.5
+	jul304_3:1.5
+	jul304_2:1.5
+	jul304_1:1.5
+	jul304:1.5
+	jul303_7:1.5
+	jul303_6:1.5
+	jul303_5:1.5
+	jul303_4:1.5
+	jul303_3:1.5
+	jul303_2_mc1:1.5
+	jul303_2:1.5
+	jul303_1_mc1:1.5
+	jul303_1:1.5
+	jul303_v:1.5
+	jul303:1.5
+	jul302_6:1.5
+	jul302_5:1.5
+	jul302_4:1.4
+	jul302_3:1.4
+	jul302_2:1.4
+	jul302_1:1.4
+	jul302:1.5;
+locks; strict;
+comment	@c @;
+
+
+1.5
+date	97.04.15.15.00.03;	author cattanem;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	97.03.07.11.47.04;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.03.07.11.44.15;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.03.06.10.35.54;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.03.06.09.55.09;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.5
+log
+@Add kinks to JULIA
+@
+text
+@      SUBROUTINE RVDPRE(IRET)
+C----------------------------------------------------------------------
+C!  - Steer VDET track preselection
+C!
+C!   Author   :- M.Cattaneo,D.Casper             5-MAR-1997
+C!               Code originally in RECEVT as modified by D.Casper
+C!               for tracking upgrade.
+C!
+C!   V0 and nuclear interaction pre-processing switched off with VNSL card
+C!   YNKF card disables kinks
+C!   YNLV card disables long V0's
+C!   YNSV card disables secondary vertices
+C!
+C!  Output   IRET = 0      Event OK
+C!                <>0      Event rejected
+C?
+C!======================================================================
+#ifndef DOC
+#include "rflags.h"
+#include "rparac.h"
+#include "bcs.h"
+#include "frftjj.h"
+#include "fxtrjj.h"
+#include "yknkjj.h"
+#include "ynvhjj.h"
+      LOGICAL INIT
+
+      SAVE INIT,NFRFT,NFXTR,NVNSL,NYNKF,NYNVH,NYNSV,NYNLV,NYKNK
+#include "bmacro.h"
+      DATA INIT/.TRUE./
+C--------------------------------------------------------------------
+C
+      IF (INIT) THEN
+        INIT = .FALSE.
+        NFRFT = NAMIND('FRFT')
+        NFXTR = NAMIND('FXTR')
+        NVNSL = NAMIND('VNSL')
+        NYNKF = NAMIND('YNKF')
+        NYNVH = NAMIND('YNVH')
+        NYNSV = NAMIND('YNSV')
+        NYNLV = NAMIND('YNLV')
+        NYKNK = NAMIND('YKNK')
+      ENDIF
+
+      IRET = 0
+C
+C     Find primary vertex for VDET track pre-selection
+C
+      IF (FDETRF(JULYT)) THEN
+        CALL YTOPOL
+      ELSE IF (FDETRF(JULYR)) THEN
+        CALL YFMAIN
+      ENDIF
+C
+C     Create FXTR bank for VDET track preselection
+C
+      KFRFT = IW(NFRFT)
+      IF(KFRFT.NE.0) THEN
+C     Drop FXTR if it already exists
+        IF(IW(NFXTR).NE.0) CALL BDROP(IW,'FXTR')
+        NTRK = LROWS(KFRFT)
+        NWFXTR = NTRK*LFXTRA + LMHLEN
+        CALL AUBOS('FXTR',0,NWFXTR,KFXTR,IGARB)
+        CALL BLIST(IW,'T+','FXTR')
+        IF(IGARB.NE.2)THEN
+          IW(KFXTR+LMHCOL) = LFXTRA
+          IW(KFXTR+LMHROW) = NTRK
+          KVNSL = IW(NVNSL)
+          IF(KVNSL.EQ.0)THEN
+C      Identify V0s for VDET track preselection
+            IF(IW(NYNLV).EQ.0) CALL FLNGV0
+C      Identify pairs of tracks which make up a kink
+            IF (IW(NYNKF).EQ.0) THEN
+              CALL YKSRCH(.FALSE.)
+C      Flag outgoing tracks from kinks in FXTR
+              KFXTR = IW(NFXTR)
+              KYKNK = IW(NYKNK)
+              IF (KYKNK.GT.0) THEN
+                DO IROW = 1, LROWS(KYKNK)
+                  IYTK = ITABL(KYKNK,IROW,JYKNOT)
+                  IF (IYTK.GT.0) IW(KROW(KFXTR,IYTK)+JFXTKN) = 1
+                ENDDO
+              ENDIF
+            ENDIF
+C      Identify material interactions for VDET track preselection
+            IF (IW(NYNSV).EQ.0) THEN
+              CALL YSVRTX(IERYNC)
+              IF(IERYNC.EQ.0)THEN
+                KYNVH = IW(NYNVH)
+                KFXTR = IW(NFXTR)
+                IF (KYNVH.NE.0)THEN
+                  DO IROW = 1, LROWS(KYNVH)
+                    IYTK = ITABL(KYNVH,IROW,JYNVTN)
+                    IYVX = ITABL(KYNVH,IROW,JYNVVN)
+                    IF (IYTK.GT.0 .AND. IYVX.GT.0)
+     &                  IW(KROW(KFXTR,IYTK)+JFXTNC) = 1
+                  ENDDO
+                ENDIF
+              ENDIF
+            ENDIF
+          ENDIF
+        ENDIF
+      ENDIF
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.4
+log
+@Bug fix in rvdpre
+@
+text
+@d76 1
+d90 1
+d94 3
+a96 1
+                    IF (IYTK.GT.0) IW(KROW(KFXTR,IYTK)+JFXTNC) = 1
+@
+
+
+1.3
+log
+@Bug fix in rvdpre
+@
+text
+@d42 1
+a42 1
+C        NYKNK = NAMIND('YKNK')
+@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@d50 2
+a52 2
+      ELSE IF (FDETRF(JULYR)) THEN
+        CALL YTOPOL
+@
+
+
+1.1
+log
+@Tracking upgrade
+@
+text
+@d51 1
+a51 1
+      ELSE IF (FDETRF(JULYR))
+@

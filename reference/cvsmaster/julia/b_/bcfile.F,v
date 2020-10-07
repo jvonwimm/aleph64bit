@@ -1,0 +1,167 @@
+head	1.1;
+access;
+symbols
+	jul313_3:1.1
+	jul313_2:1.1
+	jul313_1:1.1
+	jul313:1.1
+	jul312_1:1.1
+	jul312:1.1
+	jul311:1.1
+	jul310_1:1.1
+	jul310:1.1
+	jul309_1:1.1
+	jul309:1.1
+	jul308_6:1.1
+	jul308_5:1.1
+	jul308_4:1.1
+	jul308_3:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	98.11.09.14.44.32;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@julia 308.3 changes for BCAL
+@
+text
+@      SUBROUTINE BCFILE(adc,iPmt,iApd,iSil)
+C ----------------------------------------------------------------------------
+C! Translate BCAL raw data from ADC to Module mapping
+C
+C     Author:  Peter Morawitz, 6.11.98 
+C              Code from Gonzalo Merino incorporated into JULIA framework
+C     Modified Marco Cattaneo, 9.11.98
+C              Cleaned up for JULIA
+C
+C     Adapted from online subroutine fill_energy(adc,iPmt,iApd,iSil)
+C
+C     ENTRY BCINIT( irun, iret ) is called once per run to initialise map.
+C     
+C ----------------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+#include "bcs.h"
+#include "bd1bjj.h"
+#include "bd2bjj.h"
+#include "bd3bjj.h"
+
+      INTEGER irun, iret
+      LOGICAL DB_inited / .FALSE. /
+
+      INTEGER n_ch_sil,n_ch_scnt,n_ch_tot
+      PARAMETER (n_ch_sil=384, n_ch_scnt = 8,  n_ch_tot  = 392)
+      INTEGER adc(n_ch_tot)
+
+      INTEGER N_Mod,N_Waf,N_Pad
+      PARAMETER ( N_Mod = 4 , N_Waf = 6 , N_Pad = 16 )
+      INTEGER iPmt(N_Mod),iApd(N_Mod),iSil(N_Mod,N_Waf,N_Pad)
+
+C*  Mapping between [N_SIL_ADC][N_MULTPX][N_SIL_ADC_CH] and
+C*                  [N_MOD][N_PADS][N_WAFERS]
+      INTEGER N_SIL_ADC_CH,N_SIL_ADC ,N_MULTPX
+      PARAMETER (N_SIL_ADC_CH  =8, N_SIL_ADC =3, N_MULTPX =16)
+
+      INTEGER PAD_CODE(N_MULTPX)
+      INTEGER WAFER_CODE(N_SIL_ADC_CH,N_MULTPX,N_SIL_ADC)
+      INTEGER MOD_CODE(N_SIL_ADC_CH,N_SIL_ADC)
+C*
+      INTEGER i,j,ijk
+      INTEGER nadc,nch,nmtx,npad,nwaf,nmod
+
+      INTEGER  agetdb, NAMIND
+      EXTERNAL agetdb, NAMIND
+
+      INTEGER imultpx,ipadcode,isilach,isiladc,info
+      INTEGER kbd1b,kbd2b,kbd3b
+C ----------------------------------------------------------------------------
+
+      IF( .NOT. DB_Inited ) THEN
+        CALL RERROR('BCFILE',-1,'BCAL++ Dbase not initialised' )
+        GOTO 999
+      ENDIF
+
+      DO  j = 1, n_ch_scnt
+        IF (j .LE.4 ) THEN
+          iPmt(j) =  adc(j)
+        ELSE
+          iApd(j-4) = adc(j)
+        ENDIF
+      ENDDO
+c
+c From adc channel to phisical channel ==> get sil(nmod,nwaf,npad)
+c
+      DO ijk = 0 , n_ch_sil-1
+        nadc = int(ijk/n_multpx/n_sil_adc_ch)+1
+        nch  = mod(mod(ijk,n_multpx*n_sil_adc_ch),n_sil_adc_ch)+1
+        nmtx = int(mod(ijk,n_multpx*n_sil_adc_ch)/n_sil_adc_ch)+1
+c
+        npad = pad_code(nmtx)+1
+        nwaf = wafer_code(nch,nmtx,nadc)+1
+        nmod = mod_code(nch,nadc)+1
+c
+        iSil(nmod,nwaf,npad) = adc(ijk+n_ch_scnt+1)
+      ENDDO
+      GOTO 999
+C-----------------------------------------------------------------------
+C-----------------------------------------------------------------------
+      ENTRY BCINIT( irun, iret )
+C-----------------------------------------------------------------------
+C ---   Entry to read the Database constants into local arrays
+C-----------------------------------------------------------------------
+
+      iret = AGETDB('BD1BBD2BBD3B',irun)
+      IF(iret.EQ.0) THEN
+        DB_Inited = .FALSE.
+        CALL RERROR('BCINIT',-1,'BCAL++ Dbase banks missing' )
+        GOTO 999
+      ELSEIF( iret .GT. 0 ) THEN
+C Current values still valid, do nothing
+        DB_Inited = .TRUE.
+        GOTO 999
+      ENDIF
+
+      KBD1B = IW(NAMIND('BD1B'))
+      DO I=1,16
+        imultpx  = IW(KBD1B+LMHLEN+JBD1MU+(I-1)*LBD1BA)
+        ipadcode = IW(KBD1B+LMHLEN+JBD1PA+(I-1)*LBD1BA)
+
+        pad_code(imultpx)=ipadcode
+      ENDDO
+
+      KBD2B = IW(NAMIND('BD2B'))
+      DO I=1,384
+        isilach =IW(KBD2B+LMHLEN+JBD2SC+(I-1)*LBD2BA)
+        imultpx =IW(KBD2B+LMHLEN+JBD2MU+(I-1)*LBD2BA)
+        isiladc =IW(KBD2B+LMHLEN+JBD2SI+(I-1)*LBD2BA)
+
+        info    =IW(KBD2B+LMHLEN+JBD2IF+(I-1)*LBD2BA)
+
+        WAFER_CODE(isilach,imultpx,isiladc)=info
+      ENDDO
+
+      KBD3B = IW(NAMIND('BD3B'))
+      DO I=1,24
+        isilach =IW(KBD3B+LMHLEN+JBD3SC+(I-1)*LBD3BA)
+        isiladc =IW(KBD3B+LMHLEN+JBD3SI+(I-1)*LBD3BA)
+
+        info    =IW(KBD3B+LMHLEN+JBD3IF+(I-1)*LBD3BA)
+
+        MOD_CODE(isilach,isiladc)=info
+      ENDDO
+      DB_Inited = .TRUE.
+
+  999 RETURN
+      END
+#endif
+@

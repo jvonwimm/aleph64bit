@@ -1,0 +1,76 @@
+      SUBROUTINE PRSBANK
+C -----------------------------------------------------------
+C! get bank documentation
+C - J.Knobloch,9-4-87
+C - modified by J.Knobloch    16-9-87
+C               F.Ranjard     01-10-91
+C                             make an historian library
+C                             increase the number of banks to 1000
+C                             increase the number of entries to 100
+C       **********************************************************
+C
+C              interactive documentation system for BOS-banks
+C              used in the ALEPH-offline software
+C     Files read:   DOC:SBANK.LBF  on unit 14 in CONTENT
+C                   DOC:ALL.ASSIGN on unit 13 in LINADD
+C                   assignment statements and BOS routine
+C                   in GALEPH,JULIA and ALEPHLIB
+C     If no '/output=...' given ,then output to VT100-compatible termina
+C        otherwise output to file specified
+C -----------------------------------------------------------------
+#ifndef DOC
+#include "version.h"
+#include "sbkpar.h"
+#include "paging.h"
+#include "fildat.h"
+#include "sbkcom.h"
+C
+      CHARACTER*4 STRING
+      CHARACTER*40 FILNAM
+C ---------------------------------------------------------------
+C
+      CALL LINADD
+      LINES=0
+      CALL PAGE
+C
+C     check presence of 'output' qualifier
+      IF(XOUTPT)THEN
+        OPEN(LOUT,FILE=CHOUTP,STATUS='NEW')
+      ENDIF
+C
+      WRITE (LOUT,*) ' SBANK version ',IVERS
+      CALL PAGE
+C
+C     P1 should be a bank name , wild cards at end of name are possible
+      STRING=CHARGV(1:4)
+      IF(STRING.EQ.'    ')STRING='*   '
+      MODE=INDEX(STRING,'*')
+C
+C     if no bank name is given - print list of all banks
+      IF(CHARGV(1:4).EQ.'    ')THEN
+        CALL NAMESL(STRING,MODE)
+        GOTO 88
+      ENDIF
+C
+C     mode=0 means no wildcard in bankname
+      IF(MODE.EQ.0)THEN
+C      print content description of bank -- is default
+        IF(XCONTT)CALL CONTENT(STRING,MODE)
+C     otherwise just print the comment
+        IF(.NOT.XCONTT)CALL COMMNT(STRING,MODE)
+C     print where banks are booked
+        IF(XBOOKG)CALL GTBOOK(STRING)
+C     print where banks are referenced
+        IF(XREFER)CALL GTREFER(STRING)
+      ELSE
+        IF(.NOT.XCOMMT.AND..NOT.XCONTT)CALL NAMESL(STRING,MODE)
+        IF(XCONTT.OR.XCOMMT)CALL COMMNT(STRING,MODE)
+        IF(XCONTT.AND..NOT.XCOMMT)CALL CONTENT(STRING,MODE)
+      ENDIF
+C
+   88 IF(XUNDOC)CALL UNDOC(STRING,MODE)
+C
+   99 CONTINUE
+      CLOSE (LOUT)
+      END
+#endif

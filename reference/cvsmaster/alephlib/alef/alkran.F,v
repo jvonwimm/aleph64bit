@@ -1,0 +1,89 @@
+head	1.1;
+access;
+symbols
+	aleph316_2:1.1
+	aleph316_1:1.1
+	aleph316:1.1
+	aleph315_7:1.1
+	aleph315_6:1.1
+	aleph315_5:1.1
+	aleph315_4:1.1
+	aleph315_3:1.1
+	aleph315_2:1.1
+	aleph315_1:1.1
+	aleph315:1.1
+	aleph314_2:1.1
+	aleph314_1:1.1
+	aleph314:1.1
+	aleph313_1:1.1
+	aleph313:1.1
+	aleph312_1:1.1
+	aleph312:1.1
+	aleph311_1:1.1
+	aleph311:1.1
+	aleph310_3:1.1
+	aleph310_2:1.1
+	aleph310_1:1.1
+	aleph310:1.1
+	aleph309_1:1.1
+	aleph309:1.1
+	aleph308_3:1.1
+	aleph308_2:1.1
+	aleph308_1:1.1
+	aleph308:1.1
+	aleph307_6:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	98.04.01.10.34.42;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Mods for Alephlib 307.6
+@
+text
+@      INTEGER FUNCTION ALKRAN (NSEQ,IS)
+C -------------------------------------------------------------------
+C  B. Bloch march 98, to keep seeds of NSEQ random sequence
+C! Build kine run header KRAN
+C - Input  :  NSEQ    = # of random sequences
+C             IS      = array of initial seeds
+C - Output :  ALKRAN  = KRAN bank index
+C                       0 means not enough space to book the bank
+C  ---------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "kranjj.h"
+      DIMENSION IS(4)
+C --------------------------------------------------------------------
+C - Book the bank 'KRAN'
+      CALL AUBOS ('KRAN',0,LMHLEN+LKRANA*NSEQ,JKRAN,IGARB)
+      IF (JKRAN.EQ.0) GOTO 999
+      IW(JKRAN+LMHCOL) = LKRANA
+      IW(JKRAN+LMHROW) = NSEQ
+      CALL BKFMT ('KRAN','I')
+C
+C - fill the  2 words of the row
+C
+      I = 1
+      do J = 1,NSEQ
+         KKRAN = JKRAN + LMHLEN + (J-1)*LKRANA
+         IW(KKRAN+JKRAFS) = IS(I)
+         IW(KKRAN+JKRASS) = IS(I+1)
+         I = I + 2
+      enddo
+C
+ 999  CONTINUE
+      ALKRAN = JKRAN
+      END
+#endif
+@

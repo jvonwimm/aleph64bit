@@ -1,0 +1,175 @@
+#!/bin/csh -f
+
+# Paul Rensing, 2-June-1995
+
+# Given a list of hosts in $hostfile, execute an rsh command on some set of
+# those hosts.
+
+# The commands are executed in parallel and the output is echoed when all are
+# finished.
+
+# There is a time out period, default set in $timeout, which is changable
+# with a command option.
+
+# Interrupting the script causes it to print the current output and exit.
+
+# Modifications:
+
+# Paul Rensing, 15-June-1995
+#  Create special mode which only handles executing the command in
+#  parallel. Make the command recursive to get rid of job status messages.
+
+#25/11/96 FBLXU call by alrsh_new
+
+set timeout = 120
+
+if ( $1 == "-X" ) goto special
+
+set hostfile = $REFERENCE/log/aleph_hosts
+set printname = 1
+
+# turn off file globbing; ie. interpretation of "*", etc. by shell
+set noglob
+
+# the first argument MUST be a host expression. This makes it behave the same
+# as rsh.
+
+if ( $#argv == 0 ) goto usage
+
+set cluster = "`echo $1 | tr 'A-Z' 'a-z'`"
+if ("$cluster" == "aloha") set cluster = 'afal'
+set hosts = "`grep ^$cluster $hostfile`"
+if ( $#hosts > 15 ) goto usage
+shift
+
+if ( "$hosts" == "" ) goto usage
+
+
+while ($#argv)
+   switch ("$1")
+	case -help:
+	   goto usage
+#	case -a:
+#	   set hosts = "`cat $hostfile`"
+#	   breaksw
+	case -h:
+	   shift
+	   set cluster = "`echo $1 | tr 'A-Z' 'a-z'`"
+	   if ("$cluster" == "aloha") set cluster = 'afal'
+	   set hosts = "$hosts `grep ^$cluster $hostfile`"
+	   breaksw
+	case -n:
+	   set printname = 0
+	   breaksw
+	case -t:
+	   shift
+	   set timeout = $1
+	   breaksw
+	case --:
+	   shift
+	default:
+           break
+   endsw
+   shift
+end
+
+set command = "$*"
+
+if ( "$command" == "" ) then
+   goto usage
+endif
+
+if ($printname) echo 'Command "'$command'" to execute on hosts:' $hosts
+
+$0 -X /tmp/$$ "$command" $hosts > /dev/null
+
+if ( $status == "1" ) then
+   echo " "
+   echo "**** Timed Out ****"
+   echo " "
+else if ( $status == "2" ) then
+   echo " "
+   echo "**** Interrupted ****"
+   echo " "
+endif
+
+foreach host ($hosts)
+    if ($printname) echo "======== $host : rsh $command"
+    cat /tmp/$$.$host
+    /bin/rm /tmp/$$.$host
+end
+
+exit
+
+usage:
+echo "Usage: `basename $0` host_expr [-n] [-t timeout] [-h host_expr] [--] command"
+echo "      host_expr is a regular expression to specify host"
+echo "           (see man grep for the regular expressions)"
+echo
+echo "      -n   no hostname line"
+echo "      -t   timeout time in seconds [default = $timeout]"
+echo "      -h   additional host specifications"
+echo "      --   terminate local option processing"
+echo " "
+echo "  examples: "
+echo "      alrsh saga -h shift50 who"
+echo '   runs "who" on SAGA and shift50 machines'
+echo '      alrsh afal0 "who | wc -l"'
+echo "  counts the number of users on afal00 to afal09"
+echo "      alrsh afal1 -n 'echo $HOST; uname -a'"
+#echo "  Don't use lrsh with afal, because we have too many machines"
+
+exit 1
+
+
+# -------------------------------------------
+# Special mode for use in scripts
+#
+# Syntax:
+#   alrsh -X filebase command hosts
+#
+#   filebase = base name of output files; output files will be called
+#                 $filebase.<host> 
+#   command = the command to execute; must be one word!!
+#   hosts = list of hosts
+#
+#  example:
+#    alrsh -X /tmp/foo "quota -v" afal01 afal10 shift9
+#  will produce files: /tmp/foo.afal01 /tmp/foo.afal10 /tmp/foo.shift9
+
+special:
+
+# shift out the -X
+shift
+set filebase = "$1"
+shift
+set command = "$1"
+shift
+set hosts = "$*"
+
+set rc = "0"
+onintr buttin
+
+foreach host ($hosts)
+    rsh $host "$command" >&! $filebase.$host & 
+end 
+
+# wait for all the processes to finish
+while ( $timeout > 0 )
+   sleep 1
+   jobs >! $filebase.joblist
+   if ( -z $filebase.joblist ) goto done
+   @ timeout = $timeout - 1
+end
+
+set rc = "1"
+
+done:
+
+/bin/rm -f $filebase.joblist
+exit $rc
+
+buttin:
+
+set rc = "2"
+goto done

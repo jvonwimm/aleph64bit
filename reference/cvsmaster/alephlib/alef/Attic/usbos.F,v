@@ -1,0 +1,59 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  aleph212:1.1.1.1 ALEPH212:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.02.07.11.40.38;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.02.07.11.40.39;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE USBOS (NAME,NR,LE,KNDX,IGARB)
+C ------------------------------------------------------------
+CKEY ALEF BOS BANK / USER
+C - F.Ranjard - 900220
+C! user routine called when not enough space
+C  dummy routine on the ALEPHLIB
+C - Input    : NAME   / CHAR4 = bank name
+C              NR     / I     = bank number
+C              LE     / I     = bank length
+C              KNDX   / I     = bank index
+C              IGARB  / I     = garbage collection flag
+C - Called by: AUBOS when not enough space after a garbage
+C              collection.
+C
+C -------------------------------------------------------------
+#ifndef DOC
+      CHARACTER*4 NAME
+#include "bcs.h"
+C --------------------------------------------------------------
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

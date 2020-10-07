@@ -1,0 +1,167 @@
+head	1.1;
+access;
+symbols
+	alpha126_22:1.1
+	alpha122_22:1.1
+	alpha126_21:1.1
+	alpha126_20:1.1
+	alpha126_19:1.1
+	alpha126_18:1.1
+	alpha126_17:1.1
+	alpha126_16:1.1
+	alpha126_15:1.1
+	alpha126_14:1.1
+	alpha126_13:1.1
+	alpha126_12:1.1
+	alpha126_11:1.1
+	alpha126_10:1.1
+	alpha126_09:1.1
+	alpha126_08:1.1
+	alpha126_07:1.1
+	alpha126_06:1.1
+	alpha126_05:1.1
+	alpha126_04:1.1
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	99.03.22.14.07.21;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE MINPYF
+C
+CKEY MDST /USER
+C-----------------------------------------------------------------------
+C! Fill PYFR bank from DTRA.
+C
+C     Author: Stephen Haywood      03-Apr-90
+C
+C     DVER bank also used.
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+#include "dtrajj.h"
+#include "dverjj.h"
+#include "pyfrjj.h"
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+C
+      KDTRA = NLINK('DTRA',100)
+      IF (KDTRA.LE.0) THEN
+         CALL MINUPD('DTRA')
+         KDTRA = NLINK('DTRA',100)
+         IF (KDTRA.LE.0) RETURN
+      ENDIF
+      NFRFT = LROWS(KDTRA)
+      IF (NFRFT.LE.0) RETURN
+C
+      KDVER = NLINK('DVER',100)
+      IF (KDVER.LE.0) THEN
+         CALL MINUPD('DVER')
+         KDVER = NLINK('DVER',100)
+         IF (KDVER.LE.0) RETURN
+      ENDIF
+      KDVER = NLINK('DVER',0)
+      IF (KDVER.LE.0) RETURN
+C
+C++   Determine how many main vertices will be created.
+C
+      NPYER = 0
+      DO I=1,LROWS(KDVER)
+         IF(ITABL(KDVER,I,JDVEMV).GT.0) NPYER = NPYER + 1
+      ENDDO
+      IF(NPYER.LE.0) RETURN
+C
+C++   Create PYFR bank.
+C++   Must estimate the maximum number of rows.
+C
+      NPYFR = NFRFT * NPYER
+      LEN = LMHLEN + LPYFRA * NPYFR
+      CALL AUBOS('PYFR',0,LEN, KPYFR,IGARB)
+      CALL BLIST(IW,'S+','PYFR')
+      IF(IGARB.GE.2) THEN
+         RETURN
+      ELSE IF(IGARB.NE.0) THEN
+         KDTRA = NLINK('DTRA',100)
+      ENDIF
+      IW(KPYFR+LMHCOL) = LPYFRA
+      IW(KPYFR+LMHROW) = NPYFR
+C
+C++   Fill PYFR bank.
+C
+      NPYFR = 0
+      DO 100 I=1,NFRFT
+         MAPVB = ITABL(KDTRA,I,JDTRVB)
+         DO 150 IDVER=1,NPYER
+            MATCH = JBIT(MAPVB,IDVER)
+            IF(MATCH.NE.1) GOTO 150
+            NPYFR = NPYFR + 1
+            IW(KROW(KPYFR,NPYFR)+JPYFTN) = I
+            IW(KROW(KPYFR,NPYFR)+JPYFVN) = IDVER
+  150    CONTINUE
+  100 CONTINUE
+C
+C++   Compress bank to required size.
+C
+      LEN = LMHLEN + LPYFRA * NPYFR
+      CALL AUBOS('PYFR',0,LEN, KPYFR,IGARB)
+      IW(KPYFR+LMHROW) = NPYFR
+C
+      RETURN
+      END
+#endif
+@

@@ -1,0 +1,73 @@
+head	1.2;
+access;
+symbols
+	mini202_4:1.1
+	mini202_2:1.1
+	mini202_1:1.1
+	mini202:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	98.11.11.10.42.35;	author flr;	state dead;
+branches;
+next	1.1;
+
+1.1
+date	98.09.16.15.02.09;	author jachol;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@remove bprint word mindel minalgo
+@
+text
+@      SUBROUTINE BPRINT(CLIST)                                                  
+*     ------------------------                                                  
+                                                                                
+* Print bos bank names in list CLIST.                                           
+* Like BPRNT but avoid printing error.                                          
+                                                                                
+      COMMON /BCS/ IW(100000)                                                   
+      DIMENSION RW(1)                                                           
+      EQUIVALENCE (RW(1),IW(1))                                                 
+                                                                                
+      CHARACTER*130 LIST                                                        
+      CHARACTER*  4 NLIST,NAME                                                  
+      CHARACTER*  1 CLIST                                                       
+                                                                                
+      I = 0                                                                     
+                                                                                
+   10 K = 0                                                                     
+      LIST = ' '                                                                
+  100 I = I + 1                                                                 
+      NAME = NLIST(IW,I,CLIST)                                                  
+      IF(NAME.EQ.' ') GOTO 200                                                  
+      K = K + 1                                                                 
+      LIST(-3+5*K:5*K) = NAME                                                   
+      IF(K.EQ.25) GOTO 200                                                      
+      GOTO 100                                                                  
+                                                                                
+  200 IF(K.LE.0) RETURN                                                         
+      WRITE(6,'(A130)') LIST                                                    
+      GOTO 10                                                                   
+                                                                                
+      END                                                                      #endif 
+
+
+@
+
+
+1.1
+log
+@mini202 - 1st version for LEP1 and LEP2
+@
+text
+@@

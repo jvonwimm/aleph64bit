@@ -1,0 +1,126 @@
+head	1.1;
+access;
+symbols
+	alio83:1.1
+	alio82:1.1
+	alio81:1.1
+	alio80:1.1
+	alio74:1.1
+	alio73:1.1
+	alio72:1.1
+	alio71:1.1
+	alio70:1.1
+	alio68:1.1
+	alio69:1.1
+	alio67:1.1
+	alio66:1.1
+	alio65:1.1
+	alio64:1.1
+	alio63:1.1
+	alio62:1.1
+	alio61:1.1
+	alio60:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.04.23.10.00.52;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@move alph, dbas, a part of alef and a part of c to alephio
+Modified Files:
+ 	version.h
+ Added Files:
+ 	adbrow.F adbrpn.F adbrun.F adbswp.F adbver.F agetdb.F agtfil.F
+	albos.F aldawr.F aldtyp.F aleveh.F alfind.F alfmt.F algtbk.F
+ 	algtdb.F algtlu.F algtro.F algtyp.F alinst.F alk7fil.F
+ 	alk7fru.F alk7op.F alk7tru.F alredb.F alrune.F alrunh.F
+ 	alrunr.F alseed.F alstho.F alstin.F alstri.F altabl.F alvsn.F
+ 	aopdbs.F aublis.F aubos.F aubprs.F bkcari.F bkinca.F bkrhab.F
+ 	bkrhal.F bkrhaw.F bktobk.F cafiht.F chahol.F dafrds.F gtdbas.F
+ 	gtstup.F igtfmt.F jhocha.F julrec.F junial.F junidb.F
+ 	kbytrec.F loctab.F nameru.F ubpack.F uclean.F uindxs.F usbos.F
+ 	usgtdb.F utcblk.F utccop.F utcofo.F utwocl.F utwoex.F
+Removed Files:
+	noibm.F
+@
+text
+@      INTEGER FUNCTION JUNIAL(INOUT,NUMBER,NDUMMY)
+C-----------------------------------------------------------------------
+C      D.SCHLATTER
+C!   return  logical units for input or output files
+CKEY ALEF IO UNIT
+C
+C     INPUT:     INOUT   /C       = 'INput'  or
+C                                 = 'OUtput'
+C                NUMBER  /I       = index  of file [1,6]
+C                             for INPUT:
+C                                   MOD(index,3) = 1 for data
+C                                   MOD(index,3) = 2 for 1. select file
+C                                   MOD(index,3) = 3 for 2. select file
+C                             for OUTPUT:
+C                                   MOD(index,2) = 1 for data
+C                                   MOD(index,2) = 2 for select file
+C
+C     OUTPUT     JUNIAL  /I       = logical unit
+C
+C     ENTRY:     NUNIAL           redefine logical units
+C-----------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+      CHARACTER*(*) INOUT
+      INTEGER INUNIT(9),UTUNIT(10)
+C-----------------------------------------------------------------------
+      DATA INUNIT/20,30,40,21,31,41,22,32,42/
+C         20,21,,,  at  MOD(ind,3)=1  for input data
+C         30,31,,,  at  MOD(ind,3)=2  for 1. select file
+C         40,41,,,  at  MOD(ind,3)=3  for 2. select file
+      DATA UTUNIT/50,60,51,61,52,62,53,63,54,64/
+C         50,51,,,  at  MOD(ind,2)=1  for output data
+C         60,61,,,  at  MOD(ind,2)=2  for 1. select file
+C-----------------------------------------------------------------------
+C
+      JUNIAL = 0
+C           up to now only 2 input and 5 output streams supported
+      MM=2*3
+      IF(INOUT(1:2).EQ.'OU') MM=5*2
+      IF(NUMBER.LT.1.OR.NUMBER.GT.MM) THEN
+        WRITE(IW(6),'(A)') ' _JUNIAL_  too many data streams requested'
+        RETURN
+      ENDIF
+
+      IF(INOUT(1:2).EQ.'OU') THEN
+        JUNIAL=UTUNIT(NUMBER)
+      ELSE
+        JUNIAL=INUNIT(NUMBER)
+      ENDIF
+      RETURN
+C
+      ENTRY NUNIAL(INOUT,NUMBER,NEWNUM)
+      NUNIAL=0
+C!            set logical numbers
+      MM=2*3
+      IF(INOUT(1:2).EQ.'OU') MM=5*2
+      IF(NUMBER.LT.1.OR.NUMBER.GT.MM) THEN
+        WRITE(IW(6),'(A)') ' _NUNIAL_  too many data streams requested'
+        RETURN
+      ENDIF
+
+      IF(INOUT(1:2).EQ.'OU') THEN
+        UTUNIT(NUMBER)=NEWNUM
+      ELSE
+        INUNIT(NUMBER)=NEWNUM
+      ENDIF
+
+      END
+#endif
+@

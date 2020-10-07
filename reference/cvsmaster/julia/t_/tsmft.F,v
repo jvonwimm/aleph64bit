@@ -1,0 +1,124 @@
+head	1.1;
+access;
+symbols
+	jul313_3:1.1
+	jul313_2:1.1
+	jul313_1:1.1
+	jul313:1.1
+	jul312_1:1.1
+	jul312:1.1
+	jul311:1.1
+	jul310_1:1.1
+	jul310:1.1
+	jul309_1:1.1
+	jul309:1.1
+	jul308_6:1.1
+	jul308_5:1.1
+	jul308_4:1.1
+	jul308_3:1.1
+	jul308_2:1.1
+	jul308_1:1.1
+	jul308:1.1
+	jul307_4:1.1
+	jul307_3:1.1
+	jul307_2:1.1
+	jul307_1:1.1
+	jul307:1.1
+	jul306_3:1.1
+	jul306_2:1.1
+	jul306_1:1.1
+	jul306:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	98.02.26.10.08.58;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@TPC smearing routines
+@
+text
+@      SUBROUTINE TSMFT
+C!SMEAR AND refit frft  tracks IN MC EVENTS
+CKEY TPC SMEARING
+C
+C  Author      : A. BONISSENT 050298
+C
+C----------------------------------------------------------------------
+#ifndef DOC
+      SAVE NATPCO, NATSMR, FIRST
+      LOGICAL FIRST
+      DATA FIRST /.TRUE./
+#include "bcs.h"
+#include "bmacro.h"
+      IF(FIRST)THEN
+        FIRST=.FALSE.
+        NATPCO = NAMIND('TPCO')
+        NATSMR = NAMIND('TSMR')
+      ENDIF
+      KTPCO = IW(NATPCO)
+C
+C check data card TSMR : -1 means no smearing
+C
+      KTSMR = IW(NATSMR)
+      IF(KTSMR.NE.0)THEN
+        IF(IW(KTSMR+1).EQ.-1)GO TO 999
+      ENDIF
+C Skip events without TPCO bank, nothing to do.
+      IF(KTPCO.EQ.0)GO TO 999
+C
+C Save TPCO bank into TPCO 1000
+C Skip all smearing if new banks cannot be created
+C
+      NDATA = IW(KTPCO)
+      CALL AUBOS('TPCO',1000,NDATA,K1000,IGARB)
+      IF(IGARB.EQ.2)GO TO 998
+      KTPCO = IW(NATPCO)
+      CALL UCOPY(IW(KTPCO+1),IW(K1000+1),NDATA)
+C
+C Copy FRFT 0 and 2 into 10 and 12
+C
+      DO NRFR = 0,2,2
+        KFR0 = NLINK('FRFT',NRFR)
+        IF(KFR0.NE.0)THEN
+          NDATA = IW(KFR0)
+          CALL AUBOS('FRFT',10+NRFR,NDATA,KFR10,IGARB)
+          IF(IGARB.EQ.2)GO TO 998
+          KFR0 = NLINK('FRFT',NRFR)
+          CALL UCOPY(IW(KFR0+1),IW(KFR10+1),NDATA)
+        ENDIF
+      ENDDO                 
+C
+      CALL TPHSMR
+      CALL TREFIT
+C
+C Restore original TPCO bank
+C
+      KTPCO = IW(NATPCO)
+      K1000 = NLINK('TPCO',1000)
+      NDATA = IW(K1000)
+      CALL UCOPY(IW(K1000+1),IW(KTPCO+1),NDATA)
+      CALL NDROP('TPCO',1000)
+  999 CONTINUE
+      RETURN
+  998 CONTINUE
+C 
+C Cleanup in case of BOS space insufficient
+C
+      CALL RERROR('TSMFT',1,'Insufficient BOS space, skip TPC smearing')
+      CALL NDROP('TPCO',1000)
+      CALL NDROP('FRFT',10)
+      CALL NDROP('FRFT',12)
+      RETURN
+      END
+#endif
+@

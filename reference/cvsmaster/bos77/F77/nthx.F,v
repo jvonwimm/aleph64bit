@@ -1,0 +1,133 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.56.19;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.36;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.37;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      FUNCTION NTHX(X,NDIM,N)
+C
+C     DETERMINE INDEX OF N'TH ELEMENT OF X(1)...X(NDIM)
+C
+C     FOR N LESS EQUAL 1 THE INDEX OF THE LOWEST ELEMENT, FOR N GREATER
+C     EQUAL NDIM THE INDEX OF THE HIGHEST ELEMENT IS RETURNED
+C
+      REAL X(NDIM)
+      NTHX=1
+C
+C     FIND LOWEST ELEMENT
+C
+      IF(N.GT.1) GOTO 20
+      DO 10 I=1,NDIM
+   10 IF(X(I).LT.X(NTHX)) NTHX=I
+      GOTO 100
+C
+C     FIND HIGHEST ELEMENT
+C
+   20 IF(N.LT.NDIM) GOTO 40
+      DO 30 I=1,NDIM
+   30 IF(X(I).GT.X(NTHX)) NTHX=I
+      GOTO 100
+C
+C     INITIALIZE SEARCH, USE QUASI RANDOM LOOP FOR EFFICIENCY IN CASE OF
+C     SORTED X-ARRAY
+C
+   40 LIMLOW=0
+      LIMHIG=0
+      KPLUS=SQRT(FLOAT(NDIM))+0.3
+      K=1-KPLUS
+      DO 80 L=1,NDIM
+      K=K+KPLUS
+      IF(K.GT.NDIM) K=MOD(K,KPLUS)+1
+C
+C     TEST K'TH ELEMENT AGAINST LIMITS
+C
+      IF(LIMLOW.EQ.1.AND.X(K).LE.XLOW) GOTO 80
+      IF(LIMHIG.EQ.1.AND.X(K).GE.XHIG) GOTO 80
+      NLOW=0
+      NHIG=0
+      DO 50 I=1,NDIM
+      IF(X(I)-X(K)) 42,50,44
+   42 NLOW=NLOW+1
+      GOTO 50
+   44 NHIG=NHIG+1
+   50 CONTINUE
+C
+C     UPDATE LOWER LIMIT
+C
+      IF(NLOW.GE.N) GOTO 60
+      LIMLOW=1
+      XLOW=X(K)
+C
+C     UPDATE HIGHER LIMIT
+C
+   60 IF(NHIG.GT.NDIM-N) GOTO 70
+      LIMHIG=1
+      XHIG=X(K)
+C
+C     TEST
+C
+   70 IF(LIMLOW.EQ.1.AND.LIMHIG.EQ.1.AND.
+     1 XLOW.EQ.XHIG) GOTO 90
+   80 CONTINUE
+   90 NTHX=K
+  100 RETURN
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK nthx
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

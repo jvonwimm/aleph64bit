@@ -1,0 +1,157 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  uphy1-0:1.1.1.1 flr:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.08.16.13.38.14;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.08.16.13.38.15;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE FSIMLIST(ICLASS)
+C--------------------------------------------------------------------
+C! Give a listing of the ENFLW objects with their lock status
+C
+C  P. Janot   02 october 1990
+C
+C  Modif -- 29 aug 1995 ( P.Janot ) Read particles from class KRECO
+C--------------------------------------------------------------------
+#include "qcde.h"
+#include "parcut.h"
+      CHARACTER*50 namls(5)
+      CHARACTER*3 namp(6)
+      DATA namp/'  ?','!e!','?e?','mu!','mu?','   '/
+      DATA namls/'          Charged particles:',
+     .           '          Particles coming from vzero:',
+     .           '          Photons:',
+     .           '          Neutral hadrons:',
+     .           '          Low angle particles (LCAL-SICAL):'/
+#include "qmacro.h"
+C--------------------------------------------------------------------
+      IF ( iclass .EQ. kreco) THEN
+        WRITE(6,100) krun,kevt
+        DO 1000 ikpar = 1 , 5
+          IF ( kfrtot(ikpar) .GT. klstot(ikpar) ) GOTO 1000
+          IF ( ikpar .LE. 2 ) THEN
+            WRITE(6,200) namls(ikpar)
+          ELSEIF ( ikpar .EQ. 3 ) THEN
+            WRITE(6,201) namls(ikpar)
+          ELSEIF ( IKPAR .EQ. 4 ) THEN
+            WRITE(6,202) namls(ikpar)
+          ELSE
+            write(6,203) namls(ikpar)
+          ENDIF
+          DO 1500 itk = kfrtot(ikpar), klstot(ikpar)
+            IF     ( ikpar .EQ. 1 ) THEN
+              kkk = kan(klstot(1) - itk  +1)
+              kis = 0
+            ELSEIF ( ikpar .EQ. 2 ) THEN
+              kkk = kav(klstot(2) - itk  + 1 )
+              kis = kam(klstot(2) - itk  + 1 )
+            ELSE
+              kkk = 0
+              kis = 0
+            ENDIF
+            CALL idmuon(itk,nexp,nfir,n10,n03,nmu,idf,ehc,idt,
+     .                  xmult,rapp,ang,ishad,sudnt,imcf)
+            CALL idelec(itk,idip,idif,rt,rl,idt)
+            CALL infoga(itk,iclu,nchflg,ncrflg,nga)
+            IF ( ikpar .LE. 2 ) THEN
+              WRITE(6,300) itk,kkk,
+     .        qx(itk),qy(itk),qz(itk),
+     .        qe(itk),qch(itk),xlock(itk),kis,
+     .        namp(idt+1),idf,nexp,nfir,n10,n03,nmu,ehc,
+     .        idip,idif,rt,rl,dzzz(itk)
+            ELSEIF (ikpar .EQ. 3 ) THEN
+              WRITE(6,301) itk,kkk,
+     .        qx(itk),qy(itk),qz(itk),
+     .        qe(itk),qch(itk),xlock(itk),
+     .        nchflg,ncrflg,nga
+            ELSEIF ( ikpar .EQ. 4 ) THEN
+              WRITE(6,302) itk,kkk,
+     .        qx(itk),qy(itk),qz(itk),
+     .        qe(itk),qch(itk),xlock(itk),
+     .        100.*propec(itk-kfrtot(4)+1)
+            ELSE
+              WRITE(6,303) itk,kkk,
+     .        qx(itk),qy(itk),qz(itk),
+     .        qe(itk),qch(itk),xlock(itk)
+            ENDIF
+ 1500     CONTINUE
+ 1000   CONTINUE
+        WRITE(6,400)
+      ENDIF
+      RETURN
+C----------------------------------------------------------------
+ 100  FORMAT(/
+     . ' ==========================================================='/
+     . '   Listing of FSIM objects - Run ',i5,' Evt ',i5)
+ 200  FORMAT(
+     . ' ==========================================================='/
+     .   1X,A50/
+     . ' -----------------------------------------------------------'/
+     . ' itk itk0      Px        Py        Pz',
+     . '        E     ch  lck iv0 idt idf nx nf 10 03 mu  hc ',
+     . ' eid kf     rt       rl       d0 '/
+     . ' -----------------------------------------------------------')
+ 201  FORMAT(
+     . ' ==========================================================='/
+     .   1X,A50/
+     . ' -----------------------------------------------------------'/
+     . ' itk itk0      Px        Py        Pz',
+     . '        E     ch  lck nt cr ng '/
+     . ' -----------------------------------------------------------')
+ 202  FORMAT(
+     . ' ==========================================================='/
+     .   1X,A50/
+     . ' -----------------------------------------------------------'/
+     . ' itk itk0      Px        Py        Pz',
+     . '        E     ch  lck   %(ECAL)'/
+     . ' -----------------------------------------------------------')
+ 203  FORMAT(
+     . ' ==========================================================='/
+     .   1X,A50/
+     . ' -----------------------------------------------------------'/
+     . ' itk itk0      Px        Py        Pz',
+     . '        E     ch  lck '/
+     . ' -----------------------------------------------------------')
+ 300  FORMAT(1X,I3,2X,I3,2X,F8.4,2X,F8.4,
+     .       2X,F8.4,2X,F8.4,2X,F3.0,3X,L1,1X,I3,1X,A3,1X,6(I3),1X,F5.2,
+     .       2(1X,I2),3(1X,F8.2))
+ 301  FORMAT(1X,I3,2X,I3,2X,F8.4,2X,F8.4,
+     .       2X,F8.4,2X,F8.4,2X,F3.0,3X,L1,3(1X,I2))
+ 302  FORMAT(1X,I3,2X,I3,2X,F8.4,2X,F8.4,
+     .       2X,F8.4,2X,F8.4,2X,F3.0,3X,L1,3X,F6.2)
+ 303  FORMAT(1X,I3,2X,I3,2X,F8.4,2X,F8.4,
+     .       2X,F8.4,2X,F8.4,2X,F3.0,3X,L1)
+ 400  FORMAT(' ============== E n d    o f    L i s t i n g ',
+     .       '=============='/)
+      END
+@
+
+
+1.1.1.1
+log
+@2nd try to import uphy
+@
+text
+@@

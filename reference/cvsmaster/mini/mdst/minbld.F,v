@@ -1,0 +1,823 @@
+head	1.9;
+access;
+symbols
+	mini202_9:1.9
+	mini202_8:1.9
+	mini202_7:1.9
+	mini202_6:1.9
+	mini202_5:1.9
+	mini202_4:1.9
+	mini202_2:1.8
+	mini202_1:1.8
+	mini202:1.7
+	mini201_1:1.6
+	mini104_1:1.5
+	mini103_1:1.4
+	mini102_7:1.3
+	mini102_5:1.3
+	mini102_4:1.2
+	mini102_3:1.1.1.1
+	mini102_2:1.1.1.1
+	mini102_1:1.1.1.1
+	mini102:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.9
+date	98.11.03.11.09.43;	author jachol;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	98.10.27.11.55.38;	author jachol;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	98.09.16.15.02.10;	author jachol;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	98.05.07.06.38.28;	author jachol;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	98.02.19.13.30.24;	author jachol;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	97.05.20.14.36.50;	author jachol;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.10.18.20.03.36;	author jachol;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.09.17.13.22.30;	author jachol;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.08.15.11.09.37;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.08.15.11.09.38;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.9
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE MINBLD(NWANT,WLIST,KEEP,CLASS)
+C
+CKEY MDST /INTERNAL
+C-----------------------------------------------------------------------
+C! Build Mini banks for data.
+C
+C     Author: Stephen Haywood      06-Jan-93
+C     Modify: Agnieszka Jacholkowska   30-Sep-98
+C
+C     Input  : NWANT  = number of banks listed on MINI card
+C              WLIST  = Wish-list of banks to be written on Mini
+C              KEEP   = flag indicating whether event should be kept
+C              CLASS  = logical array set according to class word
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+C
+      CHARACTER*800 WLIST
+      CHARACTER*4 NAME
+      LOGICAL WANT,CLASS
+      DIMENSION CLASS(32)
+      INTEGER IDTYP
+C
+#include "bmacro.h"
+C
+C++   Logical function to decide whether a bank is wanted.
+C++   An empty list means want all banks.
+C
+      WANT(NAME) = WLIST.EQ.' ' .OR. INDEX(WLIST(1:4*NWANT),NAME).GT.0
+C
+C++   Determine whether this is a LEP1 or LEP2 data
+C
+      IDTYP = 0
+      CALL MINDTYP(IDTYP)
+      IF (IDTYP.GT.0) THEN
+C         WRITE(6,'(//40X,''**** Mini-DST LEP'',I2,'' ****'')')
+C     &   IDTYP
+      ELSE
+         WRITE(6,'(//40X,''**** Mini-DST Unkown Type'',I2,'' ****'')')
+     &   IDTYP
+      ENDIF
+C
+      CALL ABRUEV(IRUN,IEVT)
+C
+C!      IGEOYR=0
+C!      IASIM=IW(NAMIND('ASIM'))
+C!      IF (IASIM.GT.0) THEN
+C!         IYG=ITABL(IASIM,1,1)
+C!         IGEOYR=1900+IYG/100
+C!      ENDIF
+C
+C++   Add EVEH (compulsory) and REVH to Mini list.
+C
+      CALL MINLIS('EVEH')
+      IF (WANT('REVH')) THEN
+         KREVH = NLINK('REVH',0)
+         IF (KREVH.GT.0) CALL MINLIS('REVH')
+      ENDIF
+C
+C++   Add X1RG  to Mini list.
+C
+      IF (WANT('X1RG')) THEN
+         KX1RG = NLINK('X1RG',0)
+         IF (KX1RG.GT.0) CALL MINLIS('X1RG')
+      ENDIF
+C
+C++   Add PLPD  to Mini list.
+C
+      IF (WANT('PLPD')) THEN
+         KPLPD = NLINK('PLPD',0)
+         IF (KPLPD.GT.0) CALL MINLIS('PLPD')
+      ENDIF
+C
+C++   If LUPA, add it to Mini list.
+C
+      IF (WANT('LUPA')) THEN
+         KLUPA = NLINK('LUPA',0)
+         IF (KLUPA.GT.0) CALL MINLIS('LUPA')
+      ENDIF
+C
+C++   Fill Sical banks and if SILH exists, add it to Mini list.
+C
+      IF (WANT('DSIC')) THEN
+         CALL MINSIC
+      ENDIF
+C
+C++   If this is a simple lumi event, don't create more banks.
+C
+      IF (KEEP.LE.0) RETURN
+C
+C++   Store version information for interesting events - compulsory.
+C
+      CALL MINVRS
+C
+C++   Save BOM information.
+C
+      IF (WANT('BOMB')) THEN
+         IF (LROWS(NLINK('BOMB',0)).GT.0) CALL MINLIS('BOMB')
+      ENDIF
+C
+C++   Fill event information banks.
+C
+      IF (WANT('DEVT')) CALL MINEVT
+C
+C++   Fill trigger banks.
+C
+      IF (WANT('DTBP')) CALL MINTBP
+C
+C++   Fill vertex banks.
+C
+      IF (WANT('DVER')) CALL MINVER
+C
+C++   Fill track banks.
+C
+      IF (WANT('DTRA')) CALL MINTRA
+C
+C++   Save dE/dx from wires.
+C
+      IF (WANT('PTEX')) THEN
+         IF (LROWS(NLINK('PTEX',0)).GT.0) CALL MINLIS('PTEX')
+      ENDIF
+C
+C++   Save dE/dx from pads.
+C
+      IF (WANT('PTPX')) THEN
+         IF (LROWS(NLINK('PTPX',0)).GT.0) CALL MINLIS('PTPX')
+      ENDIF
+C
+C++   Fill photon identification banks.
+C
+      IF (WANT('DGID')) CALL MINGID
+      IF (WANT('DGAC')) CALL MINGAC
+C
+C++   Fill electron identification banks.
+C
+      IF (WANT('DEID')) CALL MINEID
+C
+C++   Fill NEW lepton identification banks.
+C
+      IF (WANT('DDLT')) CALL MINDLT
+      IF (WANT('DMLT')) CALL MINMLT
+      IF (WANT('DLJT')) CALL MINJLT
+C
+C++   Fill NEW kink banks.
+C
+      IF (WANT('DKNK')) CALL MINKNK
+C
+C++   Fill NEW odd-even energy sums banks.
+C
+      IF (WANT('DWES')) CALL MINEWS
+C
+C++   Save muon identification banks.
+C
+      IF (WANT('MUID')) CALL MINMUI
+C
+C++   Multiple scaterring angle for charged tracks for lepton events.
+C
+      IF (CLASS(24)) THEN
+         IF (WANT('DMSC')) CALL MINMSC
+      ENDIF
+C
+C++   Fill energy flow banks.
+C
+      IF (WANT('DENF')) CALL MINENF
+      IF (WANT('DENW')) CALL MINENW
+      IF (WANT('DJET')) CALL MINJET
+C
+C++   Copy extra new POT/DST - nuclear interactions and V0s.
+C
+      IF (WANT('YNLI')) THEN
+         IF (LROWS(NLINK('YNLI',0)).GT.0) CALL MINLIS('YNLI')
+      ENDIF
+C
+      IF (WANT('YNVH')) THEN
+         IF (LROWS(NLINK('YNVH',0)).GT.0) CALL MINLIS('YNVH')
+      ENDIF
+C
+      IF (WANT('YLV0')) THEN
+         IF (LROWS(NLINK('YLV0',0)).GT.0) CALL MINLIS('YLV0')
+      ENDIF
+C
+      DO IY = 1,20
+        IF (WANT('YSMO')) THEN
+          IF (LROWS(NLINK('YSMO',IY)).GT.0) CALL MINLIS('YSMO')
+        ENDIF
+      ENDDO
+C
+C++   Modifications specific to LEP1 and LEP2.
+C
+C+++++++++++++++++++++++++++++++++++++++++++++
+C
+C++   Here starts LEP 2.
+C
+      IF(IDTYP.EQ.2) THEN
+         IF (WANT('DECO')) CALL MINECO
+         IF (WANT('DHCO')) CALL MINHCO
+         IF (.NOT. (CLASS(16).OR.CLASS(17)) .OR.
+     &     CLASS(5) .OR. CLASS(20) .OR. CLASS(24)) THEN
+C
+C++      Fill calorimeter relations bank.
+C
+           IF (WANT('DCRL')) CALL MINCRL
+C
+C++      Fill Ecal tower and wire banks.
+C
+           IF (WANT('DEWI')) CALL MINEWI
+C
+C++      Fill Hcal tower and digital pattern banks.
+C
+           IF (WANT('DHRL')) CALL MINHRL
+           IF (WANT('DPOB')) CALL MINPOB
+         ENDIF
+C
+C++   Copy extra POT/DST banks for all LEP2 events.
+C
+c muons
+         IF (WANT('HPDI')) THEN
+           IF (LROWS(NLINK('HPDI',0)).GT.0) CALL MINLIS('HPDI')
+         ENDIF
+         IF (WANT('HROA')) THEN
+           IF (LROWS(NLINK('HROA',0)).GT.0) CALL MINLIS('HROA')
+         ENDIF
+         IF (WANT('HMAD')) THEN
+           IF (LROWS(NLINK('HMAD',0)).GT.0) CALL MINLIS('HMAD')
+         ENDIF
+         IF (WANT('MUID')) THEN
+           IF (LROWS(NLINK('MUID',0)).GT.0) CALL MINLIS('MUID')
+         ENDIF
+         IF (WANT('MCAD')) THEN
+           IF (LROWS(NLINK('MCAD',0)).GT.0) CALL MINLIS('MCAD')
+         ENDIF
+         IF (WANT('MUEX')) THEN
+           IF (LROWS(NLINK('MUEX',0)).GT.0) CALL MINLIS('MUEX')
+         ENDIF
+         IF (WANT('MHIT')) THEN
+           IF (LROWS(NLINK('MHIT',0)).GT.0) CALL MINLIS('MHIT')
+         ENDIF
+         IF (WANT('MTHR')) THEN
+           IF (LROWS(NLINK('MTHR',0)).GT.0) CALL MINLIS('MTHR')
+         ENDIF
+         IF (WANT('MUDG')) THEN
+           IF (LROWS(NLINK('MUDG',0)).GT.0) CALL MINLIS('MUDG')
+         ENDIF
+         IF (WANT('PCRL')) THEN
+           IF (LROWS(NLINK('PCRL',0)).GT.0) CALL MINLIS('PCRL')
+         ENDIF
+         IF (WANT('PPOB')) THEN
+           IF (LROWS(NLINK('PPOB',0)).GT.0) CALL MINLIS('PPOB')
+         ENDIF
+         IF (WANT('PPDS')) THEN
+           IF (LROWS(NLINK('PPDS',0)).GT.0) CALL MINLIS('PPDS')
+         ENDIF
+c Eflow
+         IF (WANT('PHCO')) THEN
+           IF (LROWS(NLINK('PHCO',0)).GT.0) CALL MINLIS('PHCO')
+         ENDIF
+         IF (WANT('PEWI')) THEN
+           IF (LROWS(NLINK('PEWI',0)).GT.0) CALL MINLIS('PEWI')
+         ENDIF
+         IF (WANT('PWEI')) THEN
+           IF (LROWS(NLINK('PWEI',0)).GT.0) CALL MINLIS('PWEI')
+         ENDIF
+C
+C++ If want HTUB, ensure do not pick up HTUB/1.
+C
+         IF (WANT('HTUB')) THEN
+           KHTU1 = NSWAP('HTUB',1,'HTU1',0)
+           CALL BLIST(IW,'E+','HTU1')
+           IF (LROWS(NLINK('HTUB',0)).GT.0) CALL MINLIS('HTUB')
+         ENDIF
+c lcal
+         IF (WANT('LCRA')) THEN
+           IF (LROWS(NLINK('LCRA',0)).GT.0) CALL MINLIS('LCRA')
+         ENDIF
+c bcal++
+         IF (WANT('BCTR')) THEN
+           IF (LROWS(NLINK('BCTR',0)).GT.0) CALL MINLIS('BCTR')
+         ENDIF
+         IF (WANT('BCSC')) THEN
+           IF (LROWS(NLINK('BCSC',0)).GT.0) CALL MINLIS('BCSC')
+         ENDIF
+         IF (WANT('BCSL')) THEN
+           IF (LROWS(NLINK('BCSL',0)).GT.0) CALL MINLIS('BCSL')
+         ENDIF
+         IF (WANT('BCHG')) THEN
+           IF (LROWS(NLINK('BCHG',0)).GT.0) CALL MINLIS('BCHG')
+         ENDIF
+c
+         IF (WANT('HCCV')) THEN
+           IF (LROWS(NLINK('HCCV',0)).GT.0) CALL MINLIS('HCCV')
+         ENDIF
+c Itc
+         IF (WANT('PIDI')) THEN
+           IF (LROWS(NLINK('PIDI',0)).GT.0) CALL MINLIS('PIDI')
+         ENDIF
+c
+         IF (WANT('EIDT')) THEN
+           IF (LROWS(NLINK('EIDT',0)).GT.0) CALL MINLIS('EIDT')
+         ENDIF
+         IF (WANT('XTHH')) THEN
+           IF (LROWS(NLINK('XTHH',0)).GT.0) CALL MINLIS('XTHH')
+         ENDIF
+C+++++++++++++++++++++++++++++++++++++++++++++
+C
+C++   Here starts LEP 1 or unknown type data.
+C
+      ELSEIF(IDTYP.LE.1) THEN
+         IF (.NOT. (CLASS(16).OR.CLASS(17)) .OR.
+     &     CLASS(5) .OR. CLASS(20) .OR. CLASS(24)) THEN
+C
+C++      Fill calorimeter relations bank.
+C
+           IF (WANT('DCRL')) CALL MINCRL
+C
+C++      Fill Ecal tower and wire banks.
+C
+           IF (WANT('DECO')) CALL MINECO
+           IF (WANT('DEWI')) CALL MINEWI
+C
+C++      Fill Hcal tower and digital pattern banks.
+C
+           IF (WANT('DHCO')) CALL MINHCO
+           IF (WANT('DHRL')) CALL MINHRL
+           IF (WANT('DPOB')) CALL MINPOB
+         ENDIF
+C
+C++   Copy extra POT/DST banks for lepton events.
+C
+C11/02/98      IF (CLASS(24)) THEN
+         IF (CLASS(24).OR.CLASS(5)) THEN
+           IF (WANT('ETDI')) THEN
+              IF (LROWS(NLINK('ETDI',0)).GT.0) CALL MINLIS('ETDI')
+           ENDIF
+           IF (WANT('HPDI')) THEN
+              IF (LROWS(NLINK('HPDI',0)).GT.0) CALL MINLIS('HPDI')
+           ENDIF
+C
+C++      If want HTUB, ensure do not pick up HTUB/1.
+C
+           IF (WANT('HTUB')) THEN
+             KHTU1 = NSWAP('HTUB',1,'HTU1',0)
+             CALL BLIST(IW,'E+','HTU1')
+             IF (LROWS(NLINK('HTUB',0)).GT.0) CALL MINLIS('HTUB')
+           ENDIF
+           IF (WANT('MHIT')) THEN
+             IF (LROWS(NLINK('MHIT',0)).GT.0) CALL MINLIS('MHIT')
+           ENDIF
+           IF (WANT('MTHR')) THEN
+             IF (LROWS(NLINK('MTHR',0)).GT.0) CALL MINLIS('MTHR')
+           ENDIF
+           IF (WANT('MUDG')) THEN
+             IF (LROWS(NLINK('MUDG',0)).GT.0) CALL MINLIS('MUDG')
+           ENDIF
+           IF (WANT('PEST')) THEN
+             IF (LROWS(NLINK('PEST',0)).GT.0) CALL MINLIS('PEST')
+           ENDIF
+           IF (WANT('PHST')) THEN
+             IF (LROWS(NLINK('PHST',0)).GT.0) CALL MINLIS('PHST')
+           ENDIF
+           IF (WANT('PLSD')) THEN
+             IF (LROWS(NLINK('PLSD',0)).GT.0) CALL MINLIS('PLSD')
+           ENDIF
+         ENDIF
+      ENDIF
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.8
+log
+@*** empty log message ***
+@
+text
+@d306 1
+a306 1
+C++   Here starts LEP 1.
+d308 1
+a308 1
+      ELSEIF(IDTYP.EQ.1) THEN
+@
+
+
+1.7
+log
+@mini202 - 1st version for LEP1 and LEP2
+@
+text
+@d8 1
+a8 1
+C     Modify: Agnieszka Jacholkowska   04-Feb-98
+d166 1
+d183 6
+d245 9
+a270 4
+         ENDIF
+c V0 tracks
+         IF (WANT('YSMO')) THEN
+           IF (LROWS(NLINK('YSMO',0)).GT.0) CALL MINLIS('YSMO')
+@
+
+
+1.6
+log
+@*** empty log message ***
+@
+text
+@d23 1
+d32 12
+d46 6
+a51 6
+      IGEOYR=0
+      IASIM=IW(NAMIND('ASIM'))
+      IF (IASIM.GT.0) THEN
+         IYG=ITABL(IASIM,1,1)
+         IGEOYR=1900+IYG/100
+      ENDIF
+d157 1
+a157 1
+C++   Fill further calorimeter banks - for non-qqbar events.
+d159 3
+a161 1
+C++      Modification for Runs LEP2.
+d163 26
+a188 2
+C     IF(IRUN .GT. 40000) THEN
+      IF(IGEOYR .GE. 1996 .OR.IRUN .GT. 40000) THEN
+a199 1
+CC         IF (WANT('DECO')) CALL MINECO
+a203 1
+CC         IF (WANT('DHCO')) CALL MINHCO
+d207 90
+a296 1
+      ELSE
+a314 1
+      ENDIF
+d316 1
+a316 26
+C++   Multiple scaterring angle for charged tracks for lepton events.
+C
+      IF (CLASS(24)) THEN
+         IF (WANT('DMSC')) CALL MINMSC
+      ENDIF
+C
+C++   Fill energy flow banks.
+C
+      IF (WANT('DENF')) CALL MINENF
+      IF (WANT('DJET')) CALL MINJET
+C
+C++   Copy extra new POT/DST - nuclear interactions and V0s.
+C
+      IF (WANT('YNLI')) THEN
+         IF (LROWS(NLINK('YNLI',0)).GT.0) CALL MINLIS('YNLI')
+      ENDIF
+C
+      IF (WANT('YNVH')) THEN
+         IF (LROWS(NLINK('YNVH',0)).GT.0) CALL MINLIS('YNVH')
+      ENDIF
+C
+      IF (WANT('YLV0')) THEN
+         IF (LROWS(NLINK('YLV0',0)).GT.0) CALL MINLIS('YLV0')
+      ENDIF
+C
+C++   Copy extra POT/DST banks for all LEP2 events.
+d319 34
+a352 140
+C04/03/98      IF (CLASS(24).OR.CLASS(5)) THEN
+c muons
+      IF (WANT('HPDI')) THEN
+         IF (LROWS(NLINK('HPDI',0)).GT.0) CALL MINLIS('HPDI')
+      ENDIF
+      IF (WANT('HROA')) THEN
+         IF (LROWS(NLINK('HROA',0)).GT.0) CALL MINLIS('HROA')
+      ENDIF
+      IF (WANT('HMAD')) THEN
+         IF (LROWS(NLINK('HMAD',0)).GT.0) CALL MINLIS('HMAD')
+      ENDIF
+      IF (WANT('MUID')) THEN
+         IF (LROWS(NLINK('MUID',0)).GT.0) CALL MINLIS('MUID')
+      ENDIF
+      IF (WANT('MCAD')) THEN
+         IF (LROWS(NLINK('MCAD',0)).GT.0) CALL MINLIS('MCAD')
+      ENDIF
+      IF (WANT('MUEX')) THEN
+         IF (LROWS(NLINK('MUEX',0)).GT.0) CALL MINLIS('MUEX')
+      ENDIF
+      IF (WANT('MHIT')) THEN
+         IF (LROWS(NLINK('MHIT',0)).GT.0) CALL MINLIS('MHIT')
+      ENDIF
+      IF (WANT('MTHR')) THEN
+         IF (LROWS(NLINK('MTHR',0)).GT.0) CALL MINLIS('MTHR')
+      ENDIF
+      IF (WANT('MUDG')) THEN
+         IF (LROWS(NLINK('MUDG',0)).GT.0) CALL MINLIS('MUDG')
+      ENDIF
+c Eflow
+      IF (WANT('PHCO')) THEN
+         IF (LROWS(NLINK('PHCO',0)).GT.0) CALL MINLIS('PHCO')
+      ENDIF
+      IF (WANT('PCPA')) THEN
+         IF (LROWS(NLINK('PCPA',0)).GT.0) CALL MINLIS('PCPA')
+      ENDIF
+      IF (WANT('PEWI')) THEN
+         IF (LROWS(NLINK('PEWI',0)).GT.0) CALL MINLIS('PEWI')
+      ENDIF
+      IF (WANT('PWEI')) THEN
+         IF (LROWS(NLINK('PWEI',0)).GT.0) CALL MINLIS('PWEI')
+      ENDIF
+C
+C++   If want HTUB, ensure do not pick up HTUB/1.
+C
+      IF (WANT('HTUB')) THEN
+         KHTU1 = NSWAP('HTUB',1,'HTU1',0)
+         CALL BLIST(IW,'E+','HTU1')
+         IF (LROWS(NLINK('HTUB',0)).GT.0) CALL MINLIS('HTUB')
+      ENDIF
+c      IF (WANT('PCRL')) THEN
+c         IF (LROWS(NLINK('PCRL',0)).GT.0) CALL MINLIS('PCRL')
+c      ENDIF
+c      IF (WANT('PPOB')) THEN
+c         IF (LROWS(NLINK('PPOB',0)).GT.0) CALL MINLIS('PPOB')
+c      ENDIF
+c      IF (WANT('PPDS')) THEN
+c         IF (LROWS(NLINK('PPDS',0)).GT.0) CALL MINLIS('PPDS')
+c      ENDIF
+c      IF (WANT('PCOB')) THEN
+c         IF (LROWS(NLINK('PCOB',0)).GT.0) CALL MINLIS('PCOB')
+c      ENDIF
+c      IF (WANT('PHHY')) THEN
+c         IF (LROWS(NLINK('PHHY',0)).GT.0) CALL MINLIS('PHHY')
+c      ENDIF
+c      IF (WANT('PCHY')) THEN
+c         IF (LROWS(NLINK('PCHY',0)).GT.0) CALL MINLIS('PCHY')
+c      ENDIF
+c      IF (WANT('PEST')) THEN
+c         IF (LROWS(NLINK('PEST',0)).GT.0) CALL MINLIS('PEST')
+c      ENDIF
+c      IF (WANT('PHST')) THEN
+c         IF (LROWS(NLINK('PHST',0)).GT.0) CALL MINLIS('PHST')
+c      ENDIF
+c      IF (WANT('HNTO')) THEN
+c         IF (LROWS(NLINK('HNTO',0)).GT.0) CALL MINLIS('HNTO')
+c      ENDIF
+c      IF (WANT('EWHE')) THEN
+c         IF (LROWS(NLINK('EWHE',0)).GT.0) CALL MINLIS('EWHE')
+c      ENDIF
+c      IF (WANT('PLSD')) THEN
+c         IF (LROWS(NLINK('PLSD',0)).GT.0) CALL MINLIS('PLSD')
+c      ENDIF
+c      IF (WANT('ETDI')) THEN
+c         IF (LROWS(NLINK('ETDI',0)).GT.0) CALL MINLIS('ETDI')
+c      ENDIF
+c      IF (WANT('PECO')) THEN
+c         IF (LROWS(NLINK('PECO',0)).GT.0) CALL MINLIS('PECO')
+c      ENDIF
+c      IF (WANT('SILU')) THEN
+c         IF (LROWS(NLINK('SILU',0)).GT.0) CALL MINLIS('SILU')
+c      ENDIF
+c      IF (WANT('ECNS')) THEN
+c         IF (LROWS(NLINK('ECNS',0)).GT.0) CALL MINLIS('ECNS')
+c      ENDIF
+c lcal
+      IF (WANT('LCRA')) THEN
+         IF (LROWS(NLINK('LCRA',0)).GT.0) CALL MINLIS('LCRA')
+      ENDIF
+c bcal++
+      IF (WANT('BCTR')) THEN
+         IF (LROWS(NLINK('BCTR',0)).GT.0) CALL MINLIS('BCTR')
+      ENDIF
+      IF (WANT('BCSC')) THEN
+         IF (LROWS(NLINK('BCSC',0)).GT.0) CALL MINLIS('BCSC')
+      ENDIF
+      IF (WANT('BCSL')) THEN
+         IF (LROWS(NLINK('BCSL',0)).GT.0) CALL MINLIS('BCSL')
+      ENDIF
+      IF (WANT('BCGN')) THEN
+         IF (LROWS(NLINK('BCGN',0)).GT.0) CALL MINLIS('BCGN')
+      ENDIF
+      IF (WANT('BCHG')) THEN
+         IF (LROWS(NLINK('BCHG',0)).GT.0) CALL MINLIS('BCHG')
+      ENDIF
+c
+      IF (WANT('HCCV')) THEN
+         IF (LROWS(NLINK('HCCV',0)).GT.0) CALL MINLIS('HCCV')
+      ENDIF
+c Itc
+      IF (WANT('PIDI')) THEN
+         IF (LROWS(NLINK('PIDI',0)).GT.0) CALL MINLIS('PIDI')
+      ENDIF
+c
+      IF (WANT('EIDT')) THEN
+         IF (LROWS(NLINK('EIDT',0)).GT.0) CALL MINLIS('EIDT')
+      ENDIF
+      IF (WANT('XTHH')) THEN
+         IF (LROWS(NLINK('XTHH',0)).GT.0) CALL MINLIS('XTHH')
+      ENDIF
+C
+C++   If want EFOL, ensure do (not) pick up EFOL/3.
+C
+      IF (WANT('EFOL')) THEN
+         KEFOL = NLINK('EFOL',3)
+         IF (KEFOL.GT.0) CALL MINLIS('EFOL')
+      ENDIF
+C
+C
+      IF (CLASS(24).OR.CLASS(5)) THEN
+@
+
+
+1.5
+log
+@*** empty log message ***
+@
+text
+@d8 1
+a8 1
+C     Modify: Agnieszka Jacholkowska   01-Sep-94
+d216 1
+a216 1
+C++   Copy extra POT/DST banks for lepton events.
+d219 137
+a355 7
+      IF (CLASS(24).OR.CLASS(5)) THEN
+         IF (WANT('ETDI')) THEN
+            IF (LROWS(NLINK('ETDI',0)).GT.0) CALL MINLIS('ETDI')
+         ENDIF
+         IF (WANT('HPDI')) THEN
+            IF (LROWS(NLINK('HPDI',0)).GT.0) CALL MINLIS('HPDI')
+         ENDIF
+a356 1
+C++      If want HTUB, ensure do not pick up HTUB/1.
+d358 1
+a358 23
+         IF (WANT('HTUB')) THEN
+            KHTU1 = NSWAP('HTUB',1,'HTU1',0)
+            CALL BLIST(IW,'E+','HTU1')
+            IF (LROWS(NLINK('HTUB',0)).GT.0) CALL MINLIS('HTUB')
+         ENDIF
+         IF (WANT('MHIT')) THEN
+            IF (LROWS(NLINK('MHIT',0)).GT.0) CALL MINLIS('MHIT')
+         ENDIF
+         IF (WANT('MTHR')) THEN
+            IF (LROWS(NLINK('MTHR',0)).GT.0) CALL MINLIS('MTHR')
+         ENDIF
+         IF (WANT('MUDG')) THEN
+            IF (LROWS(NLINK('MUDG',0)).GT.0) CALL MINLIS('MUDG')
+         ENDIF
+         IF (WANT('PEST')) THEN
+            IF (LROWS(NLINK('PEST',0)).GT.0) CALL MINLIS('PEST')
+         ENDIF
+         IF (WANT('PHST')) THEN
+            IF (LROWS(NLINK('PHST',0)).GT.0) CALL MINLIS('PHST')
+         ENDIF
+         IF (WANT('PLSD')) THEN
+            IF (LROWS(NLINK('PLSD',0)).GT.0) CALL MINLIS('PLSD')
+         ENDIF
+@
+
+
+1.4
+log
+@new mini103
+@
+text
+@d55 7
+d105 1
+a105 1
+C++   Save dE/dx.
+d111 6
+d218 2
+a219 1
+      IF (CLASS(24)) THEN
+@
+
+
+1.3
+log
+@update mineco
+@
+text
+@d119 8
+d138 1
+d153 1
+a153 1
+           IF (WANT('DHCO')) CALL MINHCO
+d188 14
+@
+
+
+1.2
+log
+@update DECO
+@
+text
+@d33 7
+d127 2
+a128 1
+      IF(IRUN .GT. 40000) THEN
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d31 2
+d118 6
+a123 2
+      IF (.NOT. (CLASS(16).OR.CLASS(17)) .OR.
+     &  CLASS(5) .OR. CLASS(20) .OR. CLASS(24)) THEN
+d127 1
+a127 1
+         IF (WANT('DCRL')) CALL MINCRL
+d131 21
+a151 2
+         IF (WANT('DECO')) CALL MINECO
+         IF (WANT('DEWI')) CALL MINEWI
+d155 4
+a158 3
+         IF (WANT('DHCO')) CALL MINHCO
+         IF (WANT('DHRL')) CALL MINHRL
+         IF (WANT('DPOB')) CALL MINPOB
+@
+
+
+1.1.1.1
+log
+@1st release of mini under cvs
+@
+text
+@@

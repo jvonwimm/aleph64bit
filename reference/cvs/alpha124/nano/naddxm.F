@@ -1,0 +1,270 @@
+      SUBROUTINE NADDXM(ITK,N,RMASS,QH,RI,NS,TL,RIEXP,SIGMA,IER)
+CKEY ALPHA DEDX FROM NANO /INTERNAL
+C-----------------------------------------------------------------------
+C! NANO-reading version of R. Johnson's QDEDXM subroutine
+C! On production, RI, RSIG, TL and NS from TPCSIM are stored.
+C!
+C!   Author   :- R. Johnson   10-5-90
+C!   Modified :- Yves A. Maumary       27-OCT-1992 For SANDY 111
+C!   Modified :- Gerrit Graefe         26-APR-1994 For ALPHA with
+C!                                                 NanoDst input
+C!   Modified :- Gerrit Graefe         10-MAY-1994 Added Dave Caspers bug
+C!                                                 fixes for early 92 MC
+C!
+C! Analyse dE/dx for Monte Carlo events by faking the ionization
+C! with a gaussian random number.  If called for real data, the
+C! result will be the same as if QDEDX were called.
+C!
+C!
+C!    Input:   ITK      /I       ALPHA track number
+C!             N        /I       Number of hypothesis to try
+C!             RMASS(n) /R       Mass hypotheses
+C!             QH(n)    /R       Charge hypotheses (sign doesn't matter)
+C!    Output:  RI       /R       Measured ionization (1.O=minion, Q=1)
+C!             NS       /I       Number of useful wire samples on track
+C!             TL       /R       Useful length of the track (cm)
+C!             RIEXP(n) /R       Expected ionization for the given
+C!                               mass hypothesis (1.0=minion, Q=1)
+C!             SIGMA(n) /R       Sigma of dE/dx measurement error,
+C!                               including the momentum error.
+C!                               Note that one can calculate a
+C!                               chi-squared with 1 d.o.f. as:
+C!                               chi2 = ((RI-RIEXP)/SIGMA)**2
+C!             IER      /I       Error return= 0 for success
+C!                               1= can't find track bank or not
+C!                                  a reconstructed charged track
+C!                               3= track has no dE/dx information
+C!                               4= can't find calibration banks
+C!                                  TC1X, TC2X, and/or TC3X, TC4X
+C!                               6= No MC truth
+C!   Input to the entry point NMTAIL.  This entry may be called to
+C!   -----                    ------   set the parameter TAIL, which
+C!                                     otherwise defaults to 999. It
+C!                                     only need be called once.
+C!             TAIL     /R        If the dE/dx from TPCSIM is more than
+C!                                TAIL sigmas from the "true" mean dE/dx
+C!                                then the TPCSIM dE/dx will be kept.
+C!                                This is to allow one to retain some
+C!                                of the simulation of tails, which
+C!                                usually arise from track overlap.
+C!                                If TAIL is set less than 3.0, then
+C!                                the value 3.0 is used. Set to a large
+C!                                value if you don't want this feature.
+C!
+C=======================================================================
+#ifndef DOC
+      IMPLICIT NONE
+      SAVE
+#include "qdecl.h"
+#include "qcde.h"
+#include "qncde.h"
+#include "rhahjj.h"
+C
+      INTEGER ITK,NS,IER,IERR1
+      REAL    RMASS(*),QH(*),RI,TL,RIEXP(*),SIGMA(*)
+      INTEGER I,N,KBESTM
+      REAL    Q
+C
+C    Parameters for correction of number of samples for 1992 MC data.
+      INTEGER IGAVER,IJCOR,KRHAH,NAMIND
+      REAL    XLO,XMID,XHI,XBK,SCALE_LO,SCALE_HI,XSAMPL
+      LOGICAL WIRBUG
+      CHARACTER*8 PNAME
+      CHARACTER*4 CHAINT
+      PARAMETER (XLO = 0.)
+      PARAMETER (XMID = 260.)
+      PARAMETER (XHI = 340.)
+      PARAMETER (SCALE_LO = 1.2)
+      PARAMETER (XBK = XLO + (XMID-XLO)/SCALE_LO)
+      PARAMETER (SCALE_HI = (XHI-XBK)/(XHI-XMID))
+C
+C
+      INTEGER JUVER,IRUN,JTYP,IMC,IREC
+      REAL    TLMN,RPLIM,RMCM,RIEX1,SIGM1,R5,DX,RITRU,SGTRU,BG,SMP,SMPL
+      REAL    SEED,SDEN,XRAN,YRAN
+      LOGICAL XFIRST
+      DATA TLMN/3./,RPLIM/999./,XFIRST/.TRUE./
+C
+      REAL    TAIL
+C
+#include "qmacro.h"
+#include "qnmacr.h"
+C-----------------------------------------------------------------------
+      IF(QCH(ITK).EQ.0.)THEN
+        IER=1
+        RETURN
+      ENDIF
+C
+C If this is not MC then just run NADDX
+      IF(KRUN.GT.2000.AND.(.NOT.XMCEV))THEN
+        CALL NADDX(ITK,N,RMASS,QH,RI,NS,TL,RIEXP,SIGMA,IER)
+        RETURN
+      ENDIF
+      IF(.NOT.XMCEV)THEN
+        IER=6
+        RETURN
+      ENDIF
+C
+      IF(XFIRST)THEN
+        XFIRST=.FALSE.
+C
+        WRITE(KUPRNT,8913) IRUN
+ 8913   FORMAT(/' You are using NADDXM to analyze dE/dx in Monte'/
+     &    ' Carlo events.  Note that the only information taken from'/
+     &    ' the detailed TPC simulation (TPCSIM) is the number of'/
+     &    ' isolated wire hits on each track and the total track'/
+     &    ' length corresponding to those hits.  The dE/dx itself is'/
+     &    ' simulated by finding the true particle type, using the'/
+     &    ' KBESTM routine in ALPHA, and using its mass to derive the'/
+     &    ' velocity of the particle.  This WILL NOT be correct for'/
+     &    ' tracks which decay in flight or overlap with other tracks,'/
+     &    ' so beware.  QDEDXK is called to translate the velocity'/
+     &    ' and the number of hits and track length into a mean dE/dx'/
+     &    ' and a resolution, using database constants for run ',I8,','/
+     &    ' which have been fit to data.  A gaussian random number'/
+     &    ' then is used to generate an output dE/dx distributed'/
+     &    ' around the expected mean with a width equal to the'/
+     &    ' expected resolution.  Keep in mind that this simulation is'/
+     &    ' simplistic.  It will be better to use the dE/dx straight'/
+     &    ' from TPCSIM once that program is adjusted to give the'/
+     &    ' correct resolution and relativistic rise (volunteers?).')
+      ENDIF
+C
+C++   Find the appropriate run number in data to simulate
+C
+      KRHAH=IW(NARHAH)
+      IF (KRHAH.NE.0) THEN
+        WIRBUG = .FALSE.
+        DO 891 I=1,LROWS(KRHAH)
+          PNAME(1:4)=CHAINT(ITABL(KRHAH,I,JRHAPN))
+          PNAME(5:8)=CHAINT(ITABL(KRHAH,I,JRHAPN+1))
+          IF (PNAME.EQ.'GALEPH')THEN
+            IGAVER=ITABL(KRHAH,I,JRHAAV)
+          ELSEIF (PNAME.EQ.'JULIA') THEN
+            IJCOR=ITABL(KRHAH,I,JRHACV)
+            JUVER=ITABL(KRHAH,I,JRHAPV)
+          ENDIF
+  891   CONTINUE
+      ELSE
+        IERR1=IERR1+1
+        IF(IERR1.LE.10)THEN
+          CALL QWMESE
+     &  ('+++ NADDXM +++ Can`t find RHAH bank. Will do no corrections')
+        ENDIF
+      ENDIF
+C
+C++   Version 252 of JULIA was used starting with the 1991 runs.
+C++   The calibration of the earlier runs is very different, so they
+C++   need a special simulation, unless they get reprocessed someday.
+C
+C The 1990 data was reprocessed recently so the latest version
+C version of JULIA is now being used for all data.
+C
+C++   Version 264 of JULIA was used for 1992 data.  This also
+C++   requires a different set of constants.
+      IRUN=10001
+      IF(JUVER.GE.264)THEN
+        IRUN=16001
+      ELSEIF(JUVER.GE.252)THEN
+        IRUN=10001
+C      ELSE
+C        IRUN=6001
+      ENDIF
+C
+C++   Also, two bugs in the wire reduction code (TWRRED, in ALEPHLIB,
+C++   called by GALEPH) and dead pad simulator (TPKILL in JULIA)
+C++   resulted in bad wire data for the first 92 production.  The
+C++   number of samples must be corrected before before being used
+C++   to predict the resolution.  While the corrected distribution
+C++   has the right mean and general shape, it is not perfectly
+C++   smooth due to binning effects.
+      WIRBUG=.FALSE.
+      IF (IGAVER.LT.145 .OR. IJCOR.LT.26408) WIRBUG =.TRUE.
+C
+C++   Get the mass of the true particle.  If there is no MC match,
+C++   then call it a pion.
+C
+      Q = 0.
+      RMCM = 0.
+C
+      IF(ITK.GT.KLCHT.OR.ITK.LT.KFCHT)THEN
+        CALL QWMESE('### NADDXM ### ONLY for reconstructed tracks!')
+        IER=1
+        RETURN
+      ENDIF
+      IMC=KBESTM(ITK)
+      IF(IMC.NE.0)THEN
+        Q = QCH(IMC)
+        JTYP = KTPCOD(IMC)
+        RMCM = QCMASS(JTYP)
+      ELSE
+        Q = 1.
+        JTYP = 8
+        RMCM = QPMASS('pi+')
+      ENDIF
+C
+C++   Compare the measured dE/dx with the expected dE/dx
+C
+      CALL NADDX(ITK,1,RMCM,Q,RI,NS,TL,RIEX1,SIGM1,IER)
+      IF(IER.NE.0) RETURN
+      R5 = (RI-RIEX1)/SIGM1
+C
+C++   In case TPCSIM+JULIA put this particle way out on the
+C++   tail of the dE/dx, then keep the TPCSIM dE/dx, since the
+C++   fake method here will not simulate the tails.  Otherwise
+C++   get the dE/dx by smearing by a gaussian.  Don't simulate
+C++   the tails past RPLIM here; that is done above.
+C
+      IF(ABS(R5).LT.RPLIM)THEN
+        DX=TL/FLOAT(NS)
+C
+C++   Due to the problems described above, the number of samples must be
+C++   corrected for some 1992 MC data.
+C
+        IF(WIRBUG)THEN
+            XSAMPL = NS
+            IF(XSAMPL.GT.XLO .AND. XSAMPL.LT.XHI)THEN
+                IF(XSAMPL .LE. XBK)THEN
+                    XSAMPL = SCALE_LO * (XSAMPL - XLO) + XLO
+                ELSE
+                    XSAMPL = XHI - (XHI - XSAMPL)/SCALE_HI
+                ENDIF
+            ENDIF
+            NS = INT(XSAMPL + 0.5)
+        ENDIF
+C DWC add to make routine always produce same answer for a given track
+      SDEN = FLOAT(KRUN)+FLOAT(KEVT)
+      IF (SDEN.EQ.0.)  SDEN=FLOAT(KRUN)
+      SEED = FLOAT(KTNO(ITK))/SDEN
+        CALL RDMIN(SEED)
+        CALL RANNOR(XRAN,YRAN)
+ 8450   CONTINUE
+        CALL QDEDXK(IRUN,QP(ITK),Q,RMCM,DX,NS,RI,RITRU,SGTRU)
+        R5=(RI-RITRU)/(SGTRU*RITRU)
+        IF(ABS(R5).GT.RPLIM) GOTO 8450
+        DO 8460 I=1,N
+          BG = QP(ITK)/RMASS(I)
+          RIEXP(I) = QKBLOK(IRUN,BG,Q)
+          SIGMA(I) = SGTRU*RIEXP(I)
+ 8460   CONTINUE
+      ELSE
+        CALL NADDX(ITK,N,RMASS,QH,RI,NS,TL,RIEXP,SIGMA,IER)
+        IF(IER.NE.0) RETURN
+      ENDIF
+C
+      RETURN
+C
+      ENTRY NMTAIL(TAIL)
+C
+C++   Call this entry to set the parameter which determines how much
+C++   of the "tail" produced by TPCSIM will be kept.  This is only
+C++   relevant for Monte Carlo.
+C
+      IF(ABS(TAIL).LT.TLMN)THEN
+        RPLIM = TLMN
+      ELSE
+        RPLIM = ABS(TAIL)
+      ENDIF
+      RETURN
+      END
+#endif

@@ -1,0 +1,759 @@
+head	1.8;
+access;
+symbols
+	jul313_3:1.8
+	jul313_2:1.8
+	jul313_1:1.8
+	jul313:1.8
+	jul312_1:1.8
+	jul312:1.8
+	jul311:1.8
+	jul310_1:1.8
+	jul310:1.8
+	jul309_1:1.8
+	jul309:1.8
+	jul308_6:1.8
+	jul308_5:1.8
+	jul308_4:1.8
+	jul308_3:1.8
+	jul308_2:1.8
+	jul308_1:1.8
+	jul308:1.8
+	jul307_4:1.7
+	jul307_3:1.7
+	jul307_2:1.7
+	jul307_1:1.7
+	jul307:1.7
+	jul306_3:1.7
+	jul306_2:1.7
+	jul306_1:1.7
+	jul306:1.7
+	jul305_4:1.7
+	jul305_3:1.7
+	jul305_2:1.7
+	jul305_1:1.7
+	jul305:1.7
+	jul304_3:1.7
+	jul304_2:1.7
+	jul304_1:1.7
+	jul304:1.7
+	jul303_7:1.7
+	jul303_6:1.7
+	jul303_5:1.7
+	jul303_4:1.7
+	jul303_3:1.7
+	jul303_2_mc1:1.7
+	jul303_2:1.7
+	jul303_1_mc1:1.7
+	jul303_1:1.7
+	jul303_v:1.7
+	jul303:1.7
+	jul302_6:1.6
+	jul302_5:1.6
+	jul302_4:1.6
+	jul302_3:1.6
+	jul302_2:1.6
+	jul302_1:1.6
+	jul302:1.7
+	jul285_1:1.6
+	jul285:1.6
+	jul284_1:1.6
+	jul284:1.6
+	jul283_1:1.4
+	jul283:1.4
+	jul282_1:1.4
+	jul282:1.4
+	jul281_3:1.4
+	jul281_2:1.4
+	jul281_1:1.4
+	jul281:1.4
+	jul280_1:1.3
+	jul280:1.3
+	jul279:1.2
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.8
+date	98.08.25.12.46.01;	author cattanem;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	97.05.07.06.51.08;	author cattanem;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	96.10.09.16.25.27;	author cattanem;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.10.09.14.59.41;	author cattanem;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.06.03.10.29.25;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.03.12.15.48.43;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.11.29.17.21.32;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.20.36;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.20.37;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.8
+log
+@julia 308
+@
+text
+@      SUBROUTINE VINIRU
+C--------------------------------------------------------------------
+C!   Initialize the VDET run
+C!   AUTHOR    : G. BAGLIESI   861007
+C!   Input      : VDG1, VDRD, VDPA banks
+C!   Output     : Filled VDPARM and VDGEOS commons
+C!
+C!    called by : RPRRUN
+C!    calls     : VDIGEP
+C!
+C!    modifications:
+C!    08/01/90   test for MC event (HGM)
+C!    14-5-90    Rearrange DB logic, get module mapping banks,
+C!               reduce bank lists, etc.  D. Brown
+C!    4-2-91     Changes for 91 D. Brown
+C!    16-4-93    get DB banks depending on setup code through ALGTDB
+C!               instead of MDARD
+C!
+C!  Modified 16-1-94 by Dave Brown for the VDET upgrade
+C!  Modified March 1995 A. Bonissent, M. Thulasidas
+C!                 reorganise and debug
+C!  Modified 16-9-96 by I. Tomalin:
+C!              Set MKVDXY to .TRUE. if in PASS0 and using new VDET
+C!              and PVGG card.
+C!  Modified 3-7-98 by Manoj Thulasidas:
+C!              Include VDPR and VDCM in the list of banks to be
+C!              loaded with the set up code
+C!
+C--------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "rcurnt.h"
+#include "rlunit.h"
+#include "rflags.h"
+#include "vrecon.h"
+#include "vprtnc.h"
+#include "vrcnjj.h"
+#include "vphojj.h"
+#include "vtcejj.h"
+#include "vhppjj.h"
+C
+C  Functions
+C
+      INTEGER  ALGTDB,GTSTUP,NAMIND,NBANK,VNELRM,VDGINI,VDYEAR
+      EXTERNAL ALGTDB,GTSTUP,NAMIND,NBANK,VNELRM,VDGINI,VDYEAR
+C
+C  Local variables
+C
+      INTEGER IFLAG,JFLAG
+      INTEGER IVS,KVPHO,KVRCN,KVTRP,KVTPA,KVTCE,KVDEM,KVHPP
+      INTEGER IVIEW,IND
+
+#include "bmacro.h"
+C
+C  Initialize some variables
+C
+      NEVNTS = 0
+      DO IVIEW=1,2
+        NRAWHT(IVIEW) = 0
+        NFNLHT(IVIEW) = 0
+        NMATHT(IVIEW) = 0
+        NNOSHT(IVIEW) = 0
+      END DO
+C
+C Get database banks
+C
+      IVS  = GTSTUP ('VD',IRUNRC)
+      IFLAG = ALGTDB(LRCONS,
+     $   'VPHOVRCNVTRPVTPAVTCEVDEMVHPPVDRLVDPRVDCM',-IVS)
+      KVPHO = IW(NAMIND('VPHO'))
+      KVRCN = IW(NAMIND('VRCN'))
+      KVTRP = IW(NAMIND('VTRP'))
+      KVTPA = IW(NAMIND('VTPA'))
+      KVTCE = IW(NAMIND('VTCE'))
+      KVDEM = IW(NAMIND('VDEM'))
+      KVHPP = IW(NAMIND('VHPP'))
+      IF(KVPHO.LE.0 .OR. KVRCN.LE.0 .OR. KVTRP.LE.0 .OR.
+     &     KVTPA.LE.0 .OR. KVTCE.LE.0 .OR. KVDEM.LE.0 .OR.
+     &     KVHPP.LE.0 )THEN
+        CALL RERROR('VINIRU',1,'Failed to read database banks')
+        GOTO 999
+      END IF
+C
+C  Set control flags; overwrite if reprocessing  or PASS0
+C
+      IF ( FREPRO ) THEN
+        MKVDXY = .TRUE.
+        MKVFPH = .FALSE.
+        MKVHOT = .FALSE.
+      ELSE IF ( FPASS0 ) THEN
+        MKVDXY = .FALSE.
+        IVSET = GTSTUP('VD',IRUNRC)
+        IF (IW(NAMIND('PVGG')).GT.0.AND.IVSET.GE.8)
+     +  MKVDXY = .TRUE.
+        MKVFPH = .TRUE.
+        MKVHOT = .TRUE.
+      ELSE
+        MKVDXY = ITABL(KVRCN,1,JVRCMX).EQ.-1
+        MKVFPH = ITABL(KVRCN,1,JVRCMF).EQ.-1
+        MKVHOT = ITABL(KVRCN,1,JVRCMH).EQ.-1
+      END IF
+C
+C  Unpack PH offset information
+C
+      IPHOFF = ITABL(KVPHO,1,JVPHPO)
+C
+C  Unpack the single strip noise and the line-driver decay factor
+C
+      SNOISE(1) = RTABL(KVTCE,1,JVTCWN)
+      SNOISE(2) = RTABL(KVTCE,1,JVTCUN)
+      DECFAC = RTABL(KVTCE,1,JVTCDF)
+C
+C  Final reclustering parameters
+C
+      MNPULS = ITABL(KVRCN,1,JVRCPU)
+      MXUNBD = ITABL(KVRCN,1,JVRCMU)
+      MXSIGM = ITABL(KVRCN,1,JVRCMS)
+      FNLSUM = ITABL(KVRCN,1,JVRCFS)
+C
+C  Hit position parameters
+C
+      SEPSIG = RTABL(KVHPP,1,JVHPSS)
+      POSSIG = RTABL(KVHPP,1,JVHPPS)
+      ERRNOM(1) = RTABL(KVHPP,1,JVHPWE)
+      ERRNOM(2) = RTABL(KVHPP,1,JVHPUE)
+C
+C  Common mode suppression parameters
+C
+      MINCMD = ITABL(KVRCN,1,JVRCMN)
+      HCUTCM = RTABL(KVRCN,1,JVRCHC)
+      LCUTCM = RTABL(KVRCN,1,JVRCLC)
+C
+C  Hot channel suppression parameters
+C
+      MXOCUP(1) = RTABL(KVRCN,1,JVRCMZ)
+      MXOCUP(2) = RTABL(KVRCN,1,JVRCMP)
+      NHOTMN   = 100
+C
+C Setup
+C
+      CALL VRDDAF(LRCONS,IRUNRC,IFLAG)
+C
+C Get alignment constants from database
+C
+      CALL VGRDAL(LRCONS,IRUNRC,IND)
+C
+      IF (IND .EQ. 0)THEN
+        CALL RERROR('VINIRU',3,'Failed to read alignment banks')
+      END IF
+      IF (IFLAG .EQ. 0)THEN
+        CALL RERROR('VINIRU',3,'Failed to initialize geometry')
+      END IF
+C
+C  Maximum # of channels in a readout module
+C
+      NRCHAN = MAX(VNELRM(1),VNELRM(2))
+C
+C read maps, gains, and hot channels
+C
+      MCEVNT = IW(NAMIND('AJOB')).NE.0
+        IFLAG = ALGTDB(LRCONS,'VMREVMPC',-IVS)
+        JFLAG = ALGTDB(LRCONS,'VMGN',-IRUNRC)
+        IF (IFLAG .EQ. 0 .OR. JFLAG.EQ. 0)THEN
+          CALL RERROR('VINIRU',2,'Failed to initialize bond maps')
+        END IF
+        CALL VDMPIN
+      IF(.NOT.MCEVNT)THEN
+C
+C  Load the common VRECON
+C
+      CALL VDRCUN
+C
+C  Process hot channel information
+C
+        CALL VHOTIN
+C
+C  Cable swaps
+C
+        JFLAG = ALGTDB(LRCONS,'VCAB',-IRUNRC)
+        IF( JFLAG.EQ.0 )
+     +    CALL RERROR('VINIRU',4,'Failed to read cable swap bank')
+C
+C  Generic constants
+C
+        IF(VDYEAR().NE.95)THEN
+C Old Vdet
+          CHNOFF(1) = 1      !  online chanels are offset to wrt bond ma
+          CHNOFF(2) = 1      !  online chanels are offset to wrt bond ma
+        ELSE
+C New Vdet
+          CHNOFF(1) = 0      !  offset is taken into account by
+          CHNOFF(2) = 0      !  geography package
+        ENDIF
+C
+C  linedriver decay
+C
+        IF(IVS.LE.3)THEN
+          IDCLIN = 2           ! Line driver 2 affected
+        ELSE IF (IVS.LE.6)THEN
+          IDCLIN = 1           ! Line driver 1 affected
+        ELSE
+          IDCLIN = 0
+        END IF
+C
+C  Fix the timing problem early in 1992
+C
+        IF(IVS.EQ.4.AND.IRUNRC.LE.14831)THEN
+            DECFAC = .22
+        END IF
+C
+C  For now, no 'special condition' flags are set, but once something
+C  happens which needs special care for the reconstruction, the prefered
+C  method will be to use this section to set one of the
+C  10 condition flags CONFLAG and it's associated real value CONPAR.
+C  These flags can be read in the appropriate reconstruction routine,
+C  where appropriate action can be taken.  This avoids dispersing
+C  time-dependent kludge constants througout the code, where they'll
+C  be hard to find and fix later.  Note that a completely general
+C  method for handling miscablings is already incorporated with the
+C  VCAB bank.  Variations in gains, alignment, etc. are handled
+C  by standard database banks.
+C
+C  ex;  IF(IRUNRC.GT.30100.AND.IRUNRC.LT.30200)THEN
+C          CONFLG(1) = 2        !  Fix the pedestal offset in mx7 #2 chip
+C          CONPAR(1) = 31.1     !  Offset value
+C        END IF
+C
+      ELSE
+C
+C Generic MC special setup
+C
+        CHNOFF(1) = 0        !  In MC strips are readout as channels
+        CHNOFF(2) = 0        !  In MC strips are readout as channels
+        IF(VDYEAR().EQ.95)THEN
+          CHNOFF(1) = 32
+          CHNOFF(2) = 2
+        ENDIF
+        IDCLIN = 0              !  No line driver decay
+        DECFAC = 0.0
+      END IF
+C
+C  Cleanup bos
+C
+ 999  CONTINUE
+      CALL BGARB(IW)
+      RETURN
+      END
+#endif
+@
+
+
+1.7
+log
+@Mods to Pass0
+@
+text
+@d25 3
+d68 2
+a69 1
+      IFLAG = ALGTDB(LRCONS,'VPHOVRCNVTRPVTPAVTCEVDEMVHPPVDRL',-IVS)
+@
+
+
+1.6
+log
+@Declare ALLEP1 as logical in vdrcun, viniru
+@
+text
+@d23 2
+a24 2
+C!              Set MKVDXY to .TRUE. if in PASS0 and running at high
+C!              energy using PVGG card.
+d41 2
+a42 3
+      LOGICAL  ALLEP1
+      INTEGER  ALGTDB,       GTSTUP,NAMIND,NBANK,VNELRM,VDGINI,VDYEAR
+      EXTERNAL ALGTDB,ALLEP1,GTSTUP,NAMIND,NBANK,VNELRM,VDGINI,VDYEAR
+d88 2
+a89 1
+        IF (IW(NAMIND('PVGG')).GT.0.AND..NOT.ALLEP1(IRUNRC)) 
+@
+
+
+1.5
+log
+@Mods for JULIA 284
+@
+text
+@d41 2
+a42 1
+      INTEGER  ALGTDB,ALLEP1,GTSTUP,NAMIND,NBANK,VNELRM,VDGINI,VDYEAR
+@
+
+
+1.4
+log
+@Mods for julia 281 release. See news for details
+@
+text
+@d22 3
+d41 2
+a42 2
+      INTEGER  ALGTDB, GTSTUP, NAMIND, NBANK, VNELRM, VDGINI, VDYEAR
+      EXTERNAL ALGTDB, GTSTUP, NAMIND, NBANK, VNELRM, VDGINI, VDYEAR
+d88 2
+@
+
+
+1.3
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+ 	gambnk.F gapeco.F gasteer.F
+ 	hcalib.F hcalrd.F hcatow.F hcbhis.F hcfclu.F hchist.F hclcra.F
+ 	hcltst.F hclufi.F hcos.F hcsimm.F hdgdeb.F hdgfil.F hdgpot.F
+ 	hdgsum.F hdprec.F hdspre.F hflnoi.F hinijo.F hiniru.F hmener.F
+ 	hmfind.F hmroad.F hnoise.F hnoisy.F hpatco.F hphnoi.F hplink.F
+ 	hprana.F hpranp.F hprdig.F hpreda.F hprpot.F hprsum.F hprunc.F
+ 	hrcomp.F hrcpat.F hrdcal.F hroad.F hslink.F hslowc.F hspare.F
+ 	hsptre.F hstofi.F htrack.F htubfi.F htwcr.F
+ 	iasign.F iattma.F ibnkin.F icaswt.F icftoi.F iclimb.F icrcco.F
+ 	ideadw.F idigpr.F ienang.F ifind1.F ifind2.F ifitp.F iftrak.F
+ 	igetti.F igettp.F igicha.F iheler.F iinijo.F iiniru.F iintrk.F
+ 	imatch.F inigap.F insect.F intrak.F ipakdi.F ipdsti.F iphcor.F
+ 	ipreda.F iprsum.F ipstat.F irefin.F ireopd.F isave.F ishuff.F
+ 	ishufl.F islowc.F isrch.F itbook.F itccut.F itcopr.F itcrec.F
+ 	itcrep.F itctpc.F itctrk.F itcxng.F iterr.F itextn.F ithist.F
+ 	itidy1.F itidy2.F itlnk1.F itlnk2.F itpcan.F itrak.F itrecf.F
+ 	itreci.F itree.F itrkci.F itrkeq.F itrkzr.F itrmca.F
+@
+text
+@d39 1
+a39 1
+      EXTERNAL VNELRM
+d167 1
+a167 1
+C  Cable swapps
+d169 3
+a171 1
+        JFLAG = ALGTDB(LRCONS,'VSWP',-IRUNRC)
+d210 1
+a210 1
+C  VSWP bank.  Variations in gains, alignment, etc. are handled
+@
+
+
+1.2
+log
+@julia version 279
+@
+text
+@a0 1
+*DK viniru
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d20 4
+a25 2
+#include "implicit.h"
+#include "vdimpl.h"
+d28 2
+a29 2
+#include "vdflgs.h"
+#include "vtcejj.h"
+a30 1
+#include "rlunit.h"
+d32 4
+a35 1
+#include "vdbmcr.h"
+d39 2
+a40 1
+      INTEGER  ALGTDB, GTSTUP, NLINK
+d44 4
+a47 4
+      INTEGER NEVTP,IND, IVS, JVPHO,JVRCN,JVTRP,JVTPA,JVTCE,JVDEM
+      INTEGER  NAMIND
+      INTEGER JVMRE,JVMPC,NRUNH,IVIEW
+      CHARACTER*8 LIST
+d50 1
+a50 1
+C  Zero the run monitor variables
+d53 1
+a53 1
+      DO 1001 IVIEW=1,2
+d58 4
+a61 1
+ 1001 CONTINUE
+d63 14
+d78 1
+a78 4
+C  Flags for MC, real 1990,1991, 1992 data (hopefully the hardware
+C  wont' change after 1992).
+C  Flags for MC, real 1990,1991, 1992 data (hopefully the hardware
+C  wont' change after 1992).
+d80 13
+a92 4
+      MCEVNT = IW(NAMIND('AJOB')).NE.0
+      LR1990 = .NOT.MCEVNT.AND.(IVS.EQ.2)
+      LR1991 = .NOT.MCEVNT.AND.(IVS.EQ.3)
+      LR1992 = .NOT.MCEVNT.AND.(IVS.GE.4)
+d94 1
+a94 1
+C read nominal geometry from database
+d96 1
+a96 4
+      CALL VRDDAF(LRCONS,IRUNRC,IND)
+      IF (IND .EQ. 0)THEN
+        CALL RERROR('VINIRU',2,'Failed to read geometry banks')
+      END IF
+d98 1
+a98 2
+C  Get the setup-code dependent information; Pulseheight packing,
+C  module map information, and other reconstruction constants
+d100 3
+a102 7
+      IND = ALGTDB(LRCONS,'VPHOVRCNVTRPVTPAVTCEVDEMVDSM',-IVS)
+      JVPHO = IW(NAMIND('VPHO'))
+      JVRCN = IW(NAMIND('VRCN'))
+      JVTRP = IW(NAMIND('VTRP'))
+      JVTPA = IW(NAMIND('VTPA'))
+      JVTCE = IW(NAMIND('VTCE'))
+      JVDEM = IW(NAMIND('VDEM'))
+d104 1
+a104 1
+C  Unpack PH offset information
+d106 4
+a109 5
+      IF(JVPHO .GT. 0)THEN
+        IPHOFF = ITABL(JVPHO,1,1)
+      ELSE
+        IPHOFF = 1024
+      END IF
+d111 1
+a111 1
+C  Get the single strip noise (offline units!!!)
+d113 4
+a116 9
+      IF(JVTCE .GT. 0)THEN
+        USNOIS = RTABL(JVTCE,1,JVTCUN)
+        WSNOIS = RTABL(JVTCE,1,JVTCWN)
+        DECFAC = RTABL(JVTCE,1,JVTCDF)
+      ELSE
+        USNOIS = 34.0
+        WSNOIS = 34.0
+        DECFAC = 0.0
+      END IF
+d118 1
+a118 1
+C For real data, read cuts and maps from the database
+d120 3
+a122 4
+      IF(.NOT.MCEVNT)THEN
+        IND = ALGTDB(LRCONS,'VMREVMPC',-IVS)
+        JVMRE = IW(NAMIND('VMRE'))
+        JVMPC = IW(NAMIND('VMPC'))
+d124 1
+a124 2
+C  For 1990 data, look for the VHOT bank in the database (for 1991, it's
+C  on the run header).
+d126 3
+a128 5
+        IF(LR1990)THEN
+          LIST = 'VHOTVMGN'
+        ELSE
+          LIST = 'VMGN'
+        END IF
+d130 1
+a130 1
+C  Get the run-number dependent constants
+d132 1
+a132 5
+        IND = ALGTDB(LRCONS,LIST,-IRUNRC)
+        IF (IND .EQ. 0)THEN
+          CALL RERROR('VINIRU',1,'Failed to read maps')
+        ENDIF
+      ENDIF
+d137 1
+d141 3
+d145 1
+a145 2
+C  Determine run-number dependent changes.
+C  First, correct for number of dummy pulses offset in early data
+d147 1
+a147 1
+      IF(MCEVNT)THEN
+d149 1
+a149 1
+C  No special flags
+d151 8
+a158 5
+        SWAPP9 = .FALSE.
+        LPHNEW = .FALSE.
+        CHNOFF = 0
+        DECFAC = 0.0
+      ELSE IF (LR1990)THEN
+d160 1
+a160 3
+C  Fix time-dependent bugs in ONLINE
+C  First, correct the early data for the module 9-10 (address 8-9)
+C  phi side swap.
+d162 1
+a162 5
+        IF(IRUNRC .LT. 7495)THEN
+          SWAPP9 = .TRUE.
+        ELSE
+          SWAPP9 = .FALSE.
+        END IF
+d164 1
+a164 1
+C  Next, get the strip offset right
+d166 1
+a166 5
+        IF(IRUNRC .LT. 7770)THEN
+          CHNOFF = 2
+        ELSE
+          CHNOFF = 1
+        END IF
+d168 1
+a168 1
+C  Pulse-height format
+d170 1
+a170 8
+        IF(IRUNRC .LT. 7960)THEN
+          LPHNEW = .FALSE.
+        ELSE
+          LPHNEW = .TRUE.
+        END IF
+      ELSE IF (LR1991.OR.LR1992)THEN
+        LPHNEW = .FALSE.
+        CHNOFF = 1
+d172 1
+a172 1
+C  Fix cabling error in 1992
+d174 9
+a182 1
+        SWAPP9 = LR1992.AND.IRUNRC.LT.14480
+d184 1
+a184 3
+C  Kludge fix for timing problem early in 1992; this can't be done
+C  by the database, since the timing constant is stored by setup
+C  code, and this affects only a few runs.
+d186 6
+a191 2
+        IF(LR1992.AND.IRUNRC.LE.14831)THEN
+          DECFAC = .22
+a192 1
+      END IF
+d194 1
+a194 1
+C  Unpack the mapping information
+d196 3
+a198 1
+      CALL VDMPIN
+d200 16
+a215 1
+C  Load the common VRECON
+d217 1
+a217 1
+      CALL VDRCUN
+d219 1
+a219 1
+C  Process hot channel information
+d221 9
+a229 3
+      CALL VHOTIN
+C
+C  Initialize Beam Position
+d231 1
+a231 1
+      CALL VBSINR
+d233 2
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

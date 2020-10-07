@@ -1,0 +1,66 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	94.12.07.14.01.34;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.35;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*CD tpgeot
+      COMMON /TPGEOT/ NTPTRW(LTSTYP),NTPTPR(LTTSRW,LTSTYP),
+     &                TPTRBG(LTSTYP),TPTRST(LTSTYP),TPTRHG(LTSTYP),
+     &                TPTPHC(LTTPAD,LTTSRW,LTSTYP),
+     &                TPTPHW(LTTPAD,LTTSRW,LTSTYP),
+     &                ITPADG(LTTPAD,LTTSRW,LTSTYP)
+C
+#if defined(DOC)
+C-----------------------------------------------------------------------
+C TPC Trigger pad readout geometry
+C
+C    NTPTRW(is)    = No of trigger pad rows in each sector type
+C    NTPTPR(ir,is) = No of trigger pads on each row of each sector type
+C    TPTRBG(is)    = First trigger padrow radius of each sector type
+C    TPTRST(is)    = Radial step between trigger padrow centres
+C    TPTRHG(is)    = Trigger pad height
+C    TPTPHC(ip,ir,is) = Phi position at centre of each pad on each padro
+C                       (with respect to sector axis)
+C    TPTPHW(ip,ir,is) = Half phi width of each pad on each padrow
+C    ITPADG(ip,ir,is) = ????? (ask R. Richter)
+C-----------------------------------------------------------------------
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

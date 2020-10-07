@@ -1,0 +1,196 @@
+*DK itdaq
+      SUBROUTINE ITDAQ
+C.
+C...ITDAQ  2.10  890413  13:11                         R.Beuselinck.
+C.
+C!  Simulate ITC readout.  Produce the raw data bank and trigger bits.
+C.
+C.  Called by: ITDIGI                                from this .HLB
+C.      Calls: WBANK, WDROP, BLIST                   from BOS77
+C.             ITSDIG, ITRPP                         from this .HLB
+C.             ALBOS                                 from ALEPHLIB
+C.
+C.  Work banks used:
+C.   JDITNW, JDITAB, JDITDC, JDIZSC          - created and dropped
+C.                                             in this routine.
+C.   JDITFN  - read only.
+C.
+C.  Named banks used:
+C.   IDIG - raw data (DST bank).
+C.   IDHR - correlation bank. Digits to Hits Relation.
+C.   ITTR - level 1 trigger bank.
+C.   IXRP - ITC R-Phi mask bits for level 3.
+C.
+C-----------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "jobcom.h"
+#include "iocom.h"
+#include "bcs.h"
+#include "itnamc.h"
+#include "itsumc.h"
+C
+      REAL TAB(2),TSTRT,TSTOP
+      EQUIVALENCE (TSTRT,TAB(1)),(TSTOP,TAB(2))
+      INTEGER IDAB(2),IRPBT(3),IZPBT(3),IRPHM(6),ISPBT
+      LOGICAL LAST
+#include "bmacro.h"
+C -----------------------------------------------------------
+C
+C - Set index of local working banks to 0
+      JDITNW = 0
+      JDITAB = 0
+      JDITDC = 0
+      JDIZSC = 0
+C
+C--  Access the front end signals bank.
+C--
+      IF (JDITFN.EQ.0) GO TO 999
+      LWFN = LCOLS(JDITFN)
+      LNFN = LROWS(JDITFN)
+C
+C--  Create work banks for digitising.  Each bank has one word per wire.
+C--  Preset JDITNW bank to -layer number for each wire.
+C--  Maximum number of entries required for most work banks is LNFN/2.
+C--
+C--   JDITNW is set to +layer no. if wire is hit.
+      CALL WBANK(IW,JDITNW,960,*998)
+      ND = 3*(LNFN/2)
+      CALL WBANK(IW,JDITAB,ND,*998)
+      ND = LNFN/2
+C--   JDITDC stores TDC count. JDIZSC stores Z-scalar.
+      CALL WBANK(IW,JDITDC,ND,*998)
+      CALL WBANK(IW,JDIZSC,ND,*998)
+      DO 10 I=1,4
+        II = (I-1)*96
+        CALL VFILL(IW(JDITNW+II+1),96,-I)
+   10 CONTINUE
+      DO 20 I=5,8
+        II = (I-5)*144 + 4*96
+        CALL VFILL(IW(JDITNW+II+1),144,-I)
+   20 CONTINUE
+C
+C--  Loop over the signals for each hit wire in turn and find the first
+C--  pulses to arrive at each end
+C--
+      TSTRT = 9999.
+      TSTOP = 9999.
+      NWIRS = 0
+      DO 50 I=1,LNFN
+        II = KROW(JDITFN,I)
+        IDH  = IW(II+1)
+        IWIR = IW(II+2)
+        IEND = IW(II+3)
+        TFE  = RW(II+4)
+        LAST = (I.EQ.LNFN).OR.(IWIR.NE.IW(II+2+LWFN))
+        IF (IEND.LT.0) IEND = 2
+        IF (TFE.LT.TAB(IEND)) THEN
+          TAB(IEND) = TFE
+          IDAB(IEND) = IDH
+        ENDIF
+        IF (LAST) THEN
+C
+C--       Store data for digitisings and trigger.
+C--       Flip the sign of JDITNW entries if wire is hit.
+C--
+          CALL ITSDIG(NWIRS,IWIR,TAB,IDAB)
+          TSTRT = 9999.
+          TSTOP = 9999.
+        ENDIF
+   50 CONTINUE
+      IF (NWIRS.GT.LNFN/2) THEN
+        WRITE(LOUTIO,'(//A,2I6)')
+     +  ' *** FATAL ERROR IN ITDAQ. NWIRS,LNFN=',NWIRS,LNFN
+        CALL ALTELL('ITDAQ ',5,'NEXT')
+        GOTO 999
+      ENDIF
+C
+C--  Create raw data bank.
+C--
+      CALL ALBOS('IDIG',0,NWIRS+LMHLEN,JIDIG,IGARB)
+      IW(JIDIG+LMHCOL) = 1
+      IW(JIDIG+LMHROW) = NWIRS
+      NDCUIT = NWIRS
+C
+C--  Fill data part from work banks JDITNW, JDITDC, JDIZSC.
+C--
+      NHIT = 0
+      DO 100 I=1,960
+        IF (IW(JDITNW+I).LT.0) GO TO 100
+        NHIT = NHIT + 1
+        II = JIDIG + LMHLEN + NHIT
+        IW(II) = I
+        IRD = IW(JDITDC+NHIT)
+        IZD = IW(JDIZSC+NHIT)
+        CALL MVBITS(IRD,0,9,IW(II),10)
+        CALL MVBITS(IZD,1,9,IW(II),19)
+        IF (IRD.EQ.0) IW(II) = IBSET(IW(II),28)
+        IF (IZD.EQ.0) IW(II) = IBSET(IW(II),29)
+  100 CONTINUE
+C
+C--  Simulate trigger processors.
+C--
+      CALL ITRPP(IW(JDITNW+1),IW(JDITAB+1),IRPBT,IZPBT,ISPBT,IRPHM)
+C
+C--  Create the trigger bank.  Fill the 72 correlation bits from either
+C--  the R-phi basic trigger or from the R-phi-Z trigger (default)
+C--  according to the ITC run flag 3.
+C--  Fill the 24 'special' trigger bits.
+C--
+      NRL1 = 1
+      NDL1 = 4
+      CALL ALBOS('ITTR',NRL1,NDL1+LMHLEN,ITTR,IGARB)
+      IW(ITTR+LMHCOL) = NDL1
+      IW(ITTR+LMHROW) = 1
+C
+      IF (ICITJO(3).EQ.0) THEN
+        IW(ITTR+3) = IZPBT(1)
+        IW(ITTR+4) = IZPBT(2)
+        IW(ITTR+5) = IZPBT(3)
+      ELSE IF (ICITJO(3).EQ.1) THEN
+        IW(ITTR+3) = IRPBT(1)
+        IW(ITTR+4) = IRPBT(2)
+        IW(ITTR+5) = IRPBT(3)
+      ENDIF
+      IW(ITTR+6) = ISPBT
+C
+C--  Fill the IXRP bank with the results of the R-phi trigger masks.
+C--  This information is wanted by the level 3.
+C--
+      NDX = 6
+      CALL ALBOS('IXRP',0,NDX+LMHLEN,IXRP,IGARB)
+      IW(IXRP+LMHCOL) = NDX
+      IW(IXRP+LMHROW) = 1
+      DO 150 I=1,NDX
+        IW(IXRP+LMHLEN+I) = IRPHM(I)
+  150 CONTINUE
+C
+C--  Fill the digit => hits correlations.
+C--
+      CALL ALBOS('IDHR',0,2*NWIRS+LMHLEN,JIDHR,IGARB)
+      IW(JIDHR+LMHCOL) = 2
+      IW(JIDHR+LMHROW) = NWIRS
+C
+      DO 200 I=1,NWIRS
+        II = JDITAB + (I-1)*3
+        KKDH = KROW(JIDHR,I)
+        IW(KKDH+1) = IW(II+2)
+        IW(KKDH+2) = IW(II+3)
+  200 CONTINUE
+C
+C--  Put output banks on the event list and delete work banks.
+C--
+      CALL BLIST(IW,'E+','IDIGIDHRITTRIXRP')
+      IW(1) = LITWBK
+      CALL WDROP(IW,JDITWB)
+      GOTO 999
+C
+C--  Handle lack of BOS space.
+C--
+  998 IW(1) = LITWBK
+      CALL WDROP(IW,JDITWB)
+      CALL ALTELL('ITDAQ: not enough space for ITxx banks ',1,'NEXT')
+C
+  999 CONTINUE
+      END
+#endif

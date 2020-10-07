@@ -1,0 +1,113 @@
+head	1.3;
+access;
+symbols
+	alio83:1.3
+	alio82:1.3
+	alio81:1.3
+	alio80:1.3
+	alio74:1.3
+	alio73:1.3
+	alio72:1.3
+	alio71:1.3
+	alio70:1.3
+	alio68:1.3
+	alio69:1.3
+	alio67:1.3
+	alio66:1.3
+	alio65:1.3
+	alio64:1.3
+	alio63:1.3
+	alio62:1.3
+	alio61:1.3
+	alio60:1.3
+	alephio53:1.3
+	v4:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	96.03.13.15.01.07;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.01.18.13.49.54;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.52.27;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.52.28;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@import alephio 52 from historian. Modify aclose.F to NOT call brwnd twice
+for the same file. update version.h to 5.3
+@
+text
+@C! ALREAD variable declarations
+C - variables set  by *CA STBFORMA
+      CHARACTER     BFORMA*7, BFORM2*3
+C - variables set  by *CA GTCHUNIT
+      CHARACTER     CHUNIT*2, DSNAME*10
+C - variables set  by *CA GTVSN
+      CHARACTER     CHMED*4, CHTAPE*16, CHOPT*80
+C - input arguments
+      CHARACTER*(*) ANAME, ATYPE, FDEVI
+C - local variables
+      CHARACTER     FTYP3*3, MSG*120, SUBR*8
+      CHARACTER     CHRECL*5, CHDEF*120
+      CHARACTER     FNAME*80
+C - external functions
+C - internal commom block to the package KERNLIB M432
+      COMMON /SLATE/ ND432,NE432,NF432,NG432,DUM432(36)
+@
+
+
+1.2
+log
+@ Modified Files:
+	acdarg.F afilin.F afilou.F ainqui.F amount.F aoptap.F astage.F
+	awrtap.F
+ Modified Files:
+	cmphost.h ctolow.h gtchdecl.h version.h
+ Removed Files:
+	albitw.h
+@
+text
+@a0 1
+*CD gtchdecl
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d8 1
+a8 1
+      CHARACTER     CHMED*4, CHTAPE*12, CHOPT*80
+@
+
+
+1.1.1.1
+log
+@import alephio 4
+@
+text
+@@

@@ -1,0 +1,54 @@
+#!/bin/csh -f
+# U.Schafer Mar 14 1994 
+# script to execute commands on remote hosts via rsh. See helptext below
+ set groups="  shift+saga    dxal+afal  "
+ set al_hosts=/aleph/log/aleph_hosts
+ set com0=$0
+ set all=^`echo $groups | tr " " "+" | sed 's/+/|^/g'`
+ set switch=""
+ set com=`getopt abchn $*;exit $status` || goto helptext
+ echo `date` `id | cut -f2 -d"(" | cut -f1 -d")"` `uname -n`>> /al/shared/temp/rsh.log
+ unalias shift
+ set switch=""
+ while ("$com[1]" != "--")
+   set switch="$switch $com[1]"
+   shift com
+ end
+ shift com
+ set switch=`echo "$switch"| sed 's/-//g;s/ //g'`
+ if ("$switch" !~ *[abc]* ) set switch="${switch}c"
+ if ( "$switch" =~ *h* ) then
+helptext:
+   cat <<endtxt
+Usage: $com0:t -switch 'command'
+       will execute the command on all ALEPH UNIX systems
+       switches:   -h       help
+                   -a       execute on all systems
+                   -b       execute on all hosts of the service
+                   -c       execute on all hosts of the cluster
+                   -n       print host name before rsh starts
+
+      $com0:t makes use of rsh command and requires entry in .rhosts       
+endtxt
+   exit
+ endif
+ if ($#com < 1 ) goto helptext
+ alias desc ""
+ set host_group=`echo $HOST |cut -c1-4`
+ if ("$switch" =~ *a*) set hosts=`egrep "$all" $al_hosts`
+ if ("$switch" =~ *b*) then
+   set group='^'`echo $groups | tr " " "\12" |grep $host_group|sed 's/+/|^/g'`
+   set hosts=`egrep "$group" $al_hosts`
+ endif
+ if ("$switch" =~ *c*) set hosts=`grep "^$host_group" $al_hosts`
+ if ( "$switch" =~ *n* ) then
+   echo Command execution on hosts
+   echo $hosts
+   echo "" 
+   alias desc 'echo ---------- $al_host ----------'
+ endif
+ foreach al_host ($hosts)
+   desc
+   rsh $al_host $com
+ end
+ exit

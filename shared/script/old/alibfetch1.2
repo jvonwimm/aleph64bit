@@ -1,0 +1,266 @@
+#! /bin/csh
+#============================================================================
+#                             alibfetch
+#                                              FLR 
+#============================================================================
+# get aleph library fortran files from CERNVM using sfetch
+# split fortran file into subroutine files
+# get specific galeph or julia files
+#============================================================================
+# All ALEPH CERNVM disks on file -> ${alib_dir}/alibdisk
+#
+# the /aleph/ directory of an ALEPH library is found in ${alib_dir}/pub/progl
+# the last version number installed is taken from ${prog_dir}/alib.log
+# if it exists.
+# at the end ${prog_dir}/alib.log is updated with the new version number.
+#
+# source files are stored on ${prog_dir/src${prog_name}${cycle}
+# special fortran files are stored on ${prog_dir}
+# object files and library files are stored on ${lib_dir}
+# usually ${prog_dir} and {lib_dir} are identical
+# ----------------------------------------------
+#
+# -> fetch from CERNVM.CERN.CH
+#            get ${file_name}.${file_type}
+#            if ${prog_name}= alpha julia or galeph -> get ${file_type_corr}
+#            if ${prog_name}= alpha -> get qxxxx .inc${cycle}
+#            if ${prog_name}= alephlib -> get ${file_name_c}.${file_type_c}
+#============================================================================
+# P1 -> prog_name eg: alephlib
+# P2 -> cycle     eg: 154
+# P3 -> ref_dir   eg: al/reference/gen
+#============================================================================
+# alibfetch1.0
+# 04/07/94 - fetch source files from CERNVM
+# alibfetch1.1
+# 03/08/94 - move alc.c from ref_dir to src_dir
+# alibfetch1.2
+# 22/09/94 - use $ALEPH instead of /aleph
+# ===========================================================================
+#include "~/flr/bin/verbflr.h"
+#
+set exec_name = "alibfetch1.2"
+set nar = $#argv
+if (nar != 0) then
+  if ($argv[${nar}] == "-v") then
+     echo "${exec_name}"
+     set echo on
+     set argv[${nar}] = ""
+  endif
+endif
+# =========================================================================
+set UNAME = `uname`
+unset noclobber
+set alib_dir = "${ALEPH}/alib"
+set file_name_c = "alc"
+set file_type_c = "c"
+set mnemonic = ""
+set cycle = ""
+set cycle_new = ""
+set file_type = ""
+set ref_dir = `pwd` 
+#===> first parameter: prog_name
+if ($1 == "") then
+  echo -n "Enter Aleph program name [eg:alephlib <CR>=exit]-> "
+   set prog_name = $<
+   if (${prog_name} == "") goto exec_end
+else
+   set prog_name = $1
+endif
+ 
+#===> second parameter: cycle
+if ($2 == "") then
+   if (${cycle_new} == "") then
+      set string_cr = "<CR>=exit"
+   else
+      set string_cr = "<CR>=${cycle_new}"
+   endif
+   echo -n "Enter version number[${string_cr}]-> "
+   set cycle = $<
+   if (${cycle} == "") then
+      if (${cycle_new} == "") then
+         goto exec_end
+      else
+         set cycle = ${cycle_new}
+      endif
+   endif
+else
+   set cycle = $2
+endif
+ 
+#===> 3rd parameter: reference directory
+if ($3 == "") then
+   echo -n "Enter directory[<CR>=${ref_dir}]-> "
+   set p = $<
+   if (${p} != "") set ref_dir = ${p}
+else
+   set ref_dir = $3
+endif
+#
+# =============================================================================
+#                  set idir, prog_dir and mnemonic
+#
+set idir = `egrep ^" ${prog_name} " ${alib_dir}/pub/progl | awk '{print $2}'`
+set mnemonic = `egrep ^" ${prog_name} " ${alib_dir}/pub/progl | awk '{print $4}'`
+set prog_dir = /al/${OS}/${idir}
+#
+if (${idir} == "") then
+   set flag =  " not official ALEPH program -STOP"
+   goto spy 
+endif
+# ===============================================================================
+#                   set file_name and file_type
+#
+set file_name = ${mnemonic}${cycle}
+# 
+set file_type = `egrep ^" ${prog_name} " ${prog_dir}/f77_options | awk '{print $2}'`
+if (${file_type} == "") then
+   set flag = " no file_type found in ${prog_dir}/f77_options - STOP"
+   goto spy
+endif
+#
+# =============================================================================
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> begin
+begin:
+cd ${ref_dir}
+ 
+# ================================================================
+#                    fetch source files from CERNVM
+echo `date` "===== START of ${exec_name} ${user} ${file_name} " >> ${ref_dir}/spy
+set disk_ibm_name = "pub"
+set transfert_type = "ascii"
+set disk_ibm = `egrep "${disk_ibm_name} " ${alib_dir}/alibdisk | awk '{print $2 "." $3}'`
+ 
+#====> fetch ${file_type}
+sfetch ${file_name}.${file_type} -t cernvm:${file_name}.${file_type} -u ${disk_ibm} \
+       -f ${transfert_type}
+
+#====> fetch ${file_type_c}
+if (${prog_name} == "alephlib") then
+   sfetch ${file_name_c}.${file_type_c} -t cernvm:${file_name_c}.${file_type_c} -u ${disk_ibm} \
+          -f ${transfert_type}
+endif
+
+#====> fetch file type = NEWS
+   set file_news = ${file_name}
+   if (${prog_name} == "alephio") set file_news = ${prog_name}
+   if (${prog_name} == "bos77") set file_news = ${prog_name}
+   if (${prog_name} == "look") set file_news = ${prog_name}
+   sfetch ${file_name}.news -t cernvm:${file_news}.news -u ${disk_ibm} -f ${transfert_type}
+
+#====> fetch  correction file
+if (${prog_name} == "julia" || ${prog_name} == "galeph" || ${prog_name} == "alpha") then
+   set mnemonic_corr = `echo ${prog_name} | awk '{print substr($0,1,1) "cor"}'`
+   if (${prog_name} == "alpha") then
+      set mnemonic_corr = `echo ${prog_name} | awk '{print substr($0,1,2) "cor"}'`
+   endif
+   set file_corr = ${mnemonic_corr}${cycle}
+   sfetch ${file_corr}.f -t cernvm:${file_corr}.${file_type} -u ${disk_ibm} \
+          -f ${transfert_type}
+endif
+
+#====> fetch .inc${cycle}
+if (${prog_name} == "alpha") then
+   set disk_ibm_phy = `egrep "phy " ${alib_dir}/alibdisk | awk '{print $2 "." $3}'`
+   sfetch qmacro.inc${cycle} -t cernvm:qmacro.inc${cycle} -u ${disk_ibm_phy} -f ${transfert_type}
+   sfetch qcde.inc${cycle} -t cernvm:qcde.inc${cycle} -u ${disk_ibm_phy} -f ${transfert_type}
+   sfetch qdecl.inc${cycle} -t cernvm:qdecl.inc${cycle} -u ${disk_ibm_phy} -f ${transfert_type}
+   sfetch qhac.inc${cycle} -t cernvm:qhac.inc${cycle} -u ${disk_ibm_phy} -f ${transfert_type}
+   sfetch qnmacr.inc${cycle} -t cernvm:qnmacr.inc${cycle} -u ${disk_ibm_phy} -f ${transfert_type}
+   sfetch qncde.inc${cycle} -t cernvm:qncde.inc${cycle} -u ${disk_ibm_phy} -f ${transfert_type}
+endif
+ 
+#********
+ 
+set src_dir = ${ref_dir}/src${file_name}
+if !(-e ${ref_dir}/${file_name}.${file_type}) then
+   echo "*** FATAL ${exec_name} failed -> ${ref_dir}/${file_name}.${file_type} is unknown"\
+ >> ${prog_dir}/spy
+   if (-d ${src_dir}) rm -r ${src_dir} 
+   goto exec_end
+endif
+# ================= end of fetch from CERNVM ===================================
+ 
+# ================= move to src_dir ========================================
+if !(-d ${src_dir}) mkdir ${src_dir}
+cd ${src_dir} 
+echo `date`" ${exec_name} move ${ref_dir}/${file_name}.${file_type} to ${src_dir}/${file_name}.f" >> ${prog_dir}/spy 
+mv -f ${ref_dir}/${file_name}.${file_type} ${file_name}.f
+if (${prog_name} == "alephlib") then
+   echo `date`" ${exec_name} move ${ref_dir}/${file_name_c}.${file_type_c} to ${src_dir} "> \
+         ${prog_dir}/spy
+   mv ${ref_dir}/${file_name_c}.${file_type_c} ${src_dir}/${file_name_c}.${file_type_c}
+endif   
+#
+# ================ begin of fnice, fsplit, put in lower case ======================
+#*******> fnice : reformat .f files
+# mv ugly input to ${file_name}.fugly and create a nice ${file_name}.f
+#     a) removes training blancs
+#     b) removes all col 72/80
+#     c) change \ to \\
+if (-e ${file_name}.f) then
+   echo `date`" -> fnice for ${file_name}.f" >> ${prog_dir}/spy
+   fnice ${file_name}.f && rm ${file_name}.fugly
+else
+   set flag = "ERROR:{file_name}.f does not exist"
+   goto spy
+endif
+if (${prog_name} == "julia" || ${prog_name} == "galeph" || ${prog_name} == "alpha" ) then
+   if (-e ${file_corr}.f) then
+      echo `date`" -> fnice for ${file_corr}.f" >> ${prog_dir}/spy
+      fnice ${file_corr}.f && rm ${file_corr}.fugly
+   endif
+endif 
+#*******> fplit : split the fortran into subroutines and functions
+echo `date`" -> fsplit" >> ${prog_dir}/spy
+fsplit ${file_name}.f > split.log && rm ${file_name}.f
+rm split.log
+if (-e ${file_name}.f) then
+   set flag = "ERROR in fsplit"
+   goto spy
+endif
+#********** put in lower case
+if (${UNAME} != "OSF1") then
+  set files = `ls *.f`
+  foreach file ( $files[*] )
+    set tmp = `echo ${file} | tr '[A-Z]' '[a-z]'`
+    mv -f ${file} ${tmp}
+  end
+endif
+# =================== end of fnice fsplit ==================================
+
+
+if (${prog_name} == "galeph") goto galeph
+if (${prog_name} == "julia") goto julia
+goto spy
+
+galeph:
+# get guser
+set file_name_gj = "guser"
+set string_gj = "qnext.f grndm.f gstmed.f gufld.f guhadr.f guinti.f guphad.f gusear.f gustep.f gutrak.f"
+goto comp_gj
+
+julia:
+# get jmuid
+set file_name_gj = "jmuid"${cycle}
+set string_gj = "ftrack.f hmfind.f mpredg.f mpredm.f muass.f"
+ 
+comp_gj:
+cat ${string_gj} > ${ref_dir}/${file_name_gj}.f
+goto spy
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> spy
+spy:
+#*******> spy
+set dmyh = `date '+%d-%h-19%y %T'`
+echo `date` "===== END of ${exec_name} ${user} ${file_name} " >> ${ref_dir}/spy
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> exec_end
+exec_end:
+ exit
+ 
+ 
+ 

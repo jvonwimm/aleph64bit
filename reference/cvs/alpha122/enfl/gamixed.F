@@ -1,0 +1,595 @@
+      SUBROUTINE GAMIXED
+C-----------------------------------------------------------------------
+C! Determine the energy carried by neutral particles (photons, hadrons)
+C  isolated or within charged clusters
+C
+C  Patrick Janot -- 18 Apr 1990
+C
+C  Modif -- 17 oct 1990. Prevent Neutr. Had. Energies to exceed QELEP/2
+C  Modif -- 17 oct 1990. Store particle id information
+C-----------------------------------------------------------------------
+#ifndef DOC
+#include "parcut.h"
+#include "parabank.h"
+#include "cuphco.h"
+#include "intval.h"
+      PARAMETER ( maxc = 200 )
+      PARAMETER ( rcyl = 200. , zcyl = 260.)
+      PARAMETER ( corr1 = 1.00, corr2 = 1.27, corr3 = 1.43 )
+      DIMENSION ephot(7), eremn(7)
+      COMMON / hlkbk / kcha, nchj(maxc)
+      DIMENSION iecobjj(maxc),ihcobjj(maxc),henejj(maxc)
+      DIMENSION evecjj(4,maxc)
+      DIMENSION pintr(6), poutr(6)
+      DIMENSION pga(20,20)
+#include "qcde.h"
+#include "qhac.h"
+#include "qmacro.h"
+C-----------------------------------------------------------------------
+      keidpe(ki)=iw(iw(kjqdet(ki)+jqdeae)+jeidpe)
+C     kphcpc(i) = itabl(iphco,ktn(i),jphcpc)
+C     kpecpc(i) = itabl(ipeco,ktn(i),jpecpc)
+C
+C --  Define the event vertex
+C
+      xver = 0.
+      yver = 0.
+      zver = 0.
+      CALL evtver(xver,yver,zver)
+C
+C -- Loop on  cal-objects
+C
+      acut   = 12.
+      hadtot = 0.
+      splash = 0.
+      hadkil = 0.
+      ene12 = 0.
+      ngmlt = 0
+      CALL vzero(kag(1),200)
+      CALL vzero(nphoch(1),200)
+      CALL vzero(nphocr(1),200)
+      IF ( idbg .GE. 1 ) CALL looses('MUTOTAL ',nbmuon+1)
+      IF ( idbg .GE. 1 ) CALL looses('ELTOTAL ',nelect+1)
+C
+      IF ( idbg .GE. 10 ) WRITE (IW(6),*) ' Number of Calobjets : ',
+     &     npcob
+      DO 10000 icaobj = 1 , npcob
+        IF ( idbg .GE. 10 ) THEN
+          WRITE (IW(6),*) '------------------------------'
+          WRITE (IW(6),*) 'Calobject # ',icaobj
+          WRITE (IW(6),*) '------------------------------'
+        ENDIF
+        hadene = 0.
+        kcalh = 0
+        enecht = 0.
+        kcha = 0
+        enecal = 0.
+        phottt = 0.
+        kcalo  = 0
+        CALL vzero(nchj(1),maxc)
+        CALL vzero(iecobjj(1),maxc)
+        CALL vzero(ihcobjj(1),maxc)
+        CALL vzero(henejj(1),maxc)
+        CALL vzero(evecjj(1,1),4*maxc)
+C
+C -- Loop on HCAL-objects belonging to this calobject
+C
+        ihcobj = kpdir('HCAL', kreco)
+    1   IF ( ihcobj .EQ. 0 ) GOTO 100
+        IF ( kphcpc(ihcobj) .NE. icaobj ) GOTO 10
+C -- Already locked ?
+        IF ( xlock(ihcobj) ) GOTO 10
+        IF ( idbg .GE. 1 ) CALL looses('BADHCAL ',1)
+C -- Index in PHCO
+        icluhc = ktn(ihcobj)
+C -- Good cluster ?
+        IF ( idbg .GE. 11 ) WRITE (IW(6),*)
+     .     'HCAL cleaning flag : ',iokph(icluhc)
+        IF ( nclea .EQ. 1 .AND. iokph(icluhc) .LE. 0 ) THEN
+          CALL qltrk(ihcobj)
+C -- Store the energetic killed clusters.
+          IF ( qphcec(ihcobj) .GT. 10. ) THEN
+            vec(4) = qphcec(ihcobj)
+            vec(3) = vec(4) * cos(qphcth(ihcobj))
+            vec(2) = vec(4) * sin(qphcth(ihcobj)) * sin(qphcph(ihcobj))
+            vec(1) = vec(4) * sin(qphcth(ihcobj)) * cos(qphcph(ihcobj))
+            CALL addvec(vec,7,ktn(ihcobj),0,0.)
+          ENDIF
+          hadkil = hadkil + qphcec(ihcobj)
+          IF ( idbg .GE. 10 ) WRITE (IW(6),*) 'HCAL killed : ',
+     .    qx(ihcobj),qy(ihcobj),  qz(ihcobj),qe(ihcobj)
+          GOTO 10
+        ENDIF
+        IF ( idbg .GE. 1 ) CALL looses('BADHCAL ',2)
+C -- Kill background :
+        hene = qphcec(ihcobj)
+        IF ( nclea .EQ. 1 ) hene = hene-enoph(icluhc)
+        IF ( idbg .GE. 10 .AND. enoph(icluhc) .GT. 0. )
+     &  WRITE (IW(6),*) enoph(icluhc),' withdrawn from ',qphcec(ihcobj)
+        IF ( hene .LE. 0. ) GOTO 10
+        IF ( idbg .GE. 1 ) CALL looses('BADHCAL ',3)
+        hadtot = hadtot + hene
+C -- Remove muons and lock linked ECAL clusters < 1 GeV
+        DO 19 ibmuon = 1 , nbmuon
+          IF ( muonhc(ibmuon) .NE. icluhc ) GOTO 19
+          CALL qltrk(muonch(ibmuon))
+          hene = hene - enmuon(ibmuon)
+          ich = muonch(ibmuon)
+          DO 18 ieco = 1 , knecal(ich)
+            iecobj = kecal(ich,ieco)
+            IF ( qpecer(iecobj) .LT. 1. ) CALL qltrk(iecobj)
+   18     CONTINUE
+   19   CONTINUE
+        IF ( hene .LE. 0. ) GOTO 10
+        IF ( idbg .GE. 1 ) CALL looses('BADHCAL ',4)
+C -- Store hadronic object
+C but...
+C Avoid correct the energy twice in ene12! (already done in PHST)
+C       ene12 = ene12 + eluph(icluhc)*qphcec(ihcobj)/qphcer(ihcobj)
+        ene12 = ene12 + eluph(icluhc)
+        kcalh = kcalh + 1
+        henejj (kcalh) = hene
+        ihcobjj(kcalh) = ihcobj
+        hadene = hadene + henejj(kcalh)
+C -- y tracks linked ?
+C       IF ( knchgd(ihcobj) .NE. 0 ) THEN
+          DO 20 ichtr = 1 , knchgd(ihcobj)
+            nchtr  = kchgd(ihcobj,ichtr)
+            DO lcha = 1 , kcha
+              IF ( nchj(lcha) .EQ. nchtr ) GOTO 20
+            ENDDO
+            IF ( xlock(nchtr) ) GOTO 20
+            enecht = enecht + qe(nchtr)
+            kcha = kcha + 1
+            nchj(kcha) = nchtr
+   20     CONTINUE
+        IF ( idbg .GE. 1 ) THEN
+            CALL looses('RELKHC  ',1)
+            IF ( qe(ihcobj) .GT. 5. ) CALL looses('RELKHC  ',2)
+        ENDIF
+        IF ( (knchgd(ihcobj) .EQ. 0   .AND.
+     .        knecal(ihcobj) .EQ. 0 ) .OR.
+     .           qe(ihcobj) .GE. 5. ) THEN
+C       ELSEIF ( knecal(ihcobj) .EQ. 0 .OR.
+C    .           qe(ihcobj) .GE. 5. ) THEN
+          IF ( idbg .GE. 1 ) THEN
+            CALL looses('RELKHC  ',6)
+            IF ( qe(ihcobj) .GT. 5. ) CALL looses('RELKHC  ',7)
+          ENDIF
+   22     CALL relkhc(ihcobj,nchtr,angl,delten)
+          IF ( nchtr .EQ. 0 ) GOTO 21
+          IF ( idbg .GE. 11 ) THEN
+            WRITE (IW(6),*) 'Isolated HCAL cluster vs track ',nchtr
+            WRITE (IW(6),*) ' Delta (theta) = ',angl,' degrees'
+            WRITE (IW(6),*) ' Delta (  E  ) = ',delten,' GeV'
+          ENDIF
+          ene = qe(ihcobj) + delten
+          IF (( ene .GT. 3. .AND. angl .GT. 3.5 ) .OR.
+     .        ( ene .GT. 2. .AND. angl .GT. 5.  ) .OR.
+     .        (                   angl .GT. 10. ) )  GOTO 21
+          DO lcha = 1 , kcha
+            IF ( nchj(lcha) .EQ. nchtr ) GOTO 21
+          ENDDO
+          IF ( xlock(nchtr) ) GOTO 21
+          IF ( idbg .GE. 10 )
+     &    WRITE (IW(6),*) 'Isolated HCAL cluster linked to track ',nchtr
+          enecht = enecht + qe(nchtr)
+          kcha = kcha + 1
+          nchj(kcha) = nchtr
+          IF ( idbg .GE. 1 ) THEN
+            CALL looses('RELKHC  ',11)
+            IF ( qe(ihcobj) .GT. 5. ) CALL looses('RELKHC  ',12)
+          ENDIF
+          IF ( qe(ihcobj) .GT. 5. ) GOTO 22
+   21     CONTINUE
+        ENDIF
+C
+C -- End of loop on HCAL object from calobject
+C
+   10   CONTINUE
+        ihcobj = kfollo(ihcobj)
+        GOTO 1
+  100   CONTINUE
+C
+C -- ECAL-objects from  calobject
+C
+        iecobj = kpdir('ECAL', kreco )
+  101   IF ( iecobj .EQ. 0 ) GOTO 200
+C -- Belongs to the calobject ?
+        IF ( kpecpc(iecobj) .NE. icaobj ) GOTO 110
+C -- Already locked ?
+        IF ( xlock(iecobj) ) GOTO 110
+C -- Index in PECO
+        icluec = ktn(iecobj)
+C
+C -- SiCAL (If no NOSC card is present)
+C
+        IF ( kpeckd(iecobj) .EQ. 256 ) THEN
+          IF ( NLINK('NOSC',0) .LE. 0 ) CALL lumiad(iecobj)
+          GOTO 110
+        ENDIF
+C
+C -- Lumi
+C
+        IF ( kpeckd(iecobj) .EQ. 192 ) THEN
+          CALL lumica(iecobj,iok)
+          IF ( iok .EQ. 1 .OR. nclea .NE. 1) CALL lumiad(iecobj)
+          GOTO 110
+        ENDIF
+C
+C -- Bad clusters.
+C
+        ibadc = lkform(icluec,iecobj,corfac)
+        IF ( nclea .EQ. 1 .AND. ibadc .EQ. 1 ) THEN
+          IF ( qpecec(iecobj) .GT. 5. ) THEN
+            vec(4) = qpecec(iecobj)
+            vec(3) = vec(4) * cos(qpecth(iecobj))
+            vec(2) = vec(4) * sin(qpecth(iecobj)) * sin(qpecph(iecobj))
+            vec(1) = vec(4) * sin(qpecth(iecobj)) * cos(qpecph(iecobj))
+            CALL addvec(vec,7,ktn(iecobj),0,1.)
+          ENDIF
+          CALL qltrk(iecobj)
+          GOTO 110
+        ENDIF
+C -- Ene12 (NB: .2265 = RTABL(kegth,2,jegtt1))
+        ie12 = 0
+        IF ( qpecth(iecobj) .LT. .2265 .OR.
+     .       qpecth(iecobj) .GT. qqpi-.2265 ) THEN
+          ene12 = ene12 + qe(iecobj)
+          ie12 = 1
+        ENDIF
+C -- Avoid too large correction (correction code = 2,3 or 4)
+        cccorr = 1.
+C
+C This correction was made to compensate for over-corrections
+C in PECO. Now (hopefully) corrected in PECO /1 with GAPECO
+C
+C       IF ( kpeccc(iecobj) .GE. 2 .AND.
+C    .       qpecec(iecobj)-qpecer(iecobj) .GE. 1.5 ) THEN
+C         cccorr = ( 1. + 1.5/(1.+qpecer(iecobj)) )
+C    .           * qpecer(iecobj)/qpecec(iecobj)
+C         rw(ipeco+lmhlen+(icluec-1)*iw(ipeco+1)+jpecec) =
+C    .    qpecec(iecobj) * cccorr
+C       ENDIF
+C -- Gampec
+        emig = .200
+  115   CALL gamread(icluec,emig,nga,pga,irt)
+        IF ( idbg .GE. 1 ) CALL looses('GAMPEC  ',1-irt)
+C -- Error Gampec
+        IF ( irt .LT. 0 ) THEN
+          IF ( idbg .GE. 10 ) THEN
+            WRITE (IW(6),*) 'Cluster : ',qpecer(iecobj),
+     .                 ' GeV killed by GAMPEC; irt = ',irt
+            WRITE (IW(6),*) qx(iecobj),qy(iecobj),qz(iecobj),qe(iecobj)
+          ENDIF
+          IF ( qpecec(iecobj) .GT. 5. ) THEN
+            vec(4) = qpecec(iecobj)
+            vec(3) = vec(4) * cos(qpecth(iecobj))
+            vec(2) = vec(4) * sin(qpecth(iecobj)) * sin(qpecph(iecobj))
+            vec(1) = vec(4) * sin(qpecth(iecobj)) * cos(qpecph(iecobj))
+            CALL addvec(vec,7,ktn(iecobj),0,1.)
+          ENDIF
+          CALL qltrk(iecobj)
+          GOTO 110
+        ENDIF
+C
+C  Count the photons identified in the ECAL cluster
+C
+        CALL vzero(ephot(1),7)
+        CALL vzero(eremn(1),7)
+        dmea = 0.
+        DO 120 iga = 1 , nga
+          vec(4) = pga(1,iga)
+          vec(3) = pga(1,iga) * COS(pga(2,iga))
+          vec(2) = pga(1,iga) * SIN(pga(2,iga)) * SIN(pga(3,iga))
+          vec(1) = pga(1,iga) * SIN(pga(2,iga)) * COS(pga(3,iga))
+C -- Crack correction
+          corcr = 1.2/(1. + pga(1,iga))
+C -- Zero suppression correction
+          corzz = 1.
+C         IF ( libver .LT. 135 ) THEN
+C           corzz = 0.97 + .05/pga(1,iga)**2 + .008*SQRT(pga(1,iga))
+C           IF ( corzz .GT. 1.25 ) corzz = 1.25
+C           IF ( pga(1,iga)*(corzz-1.) .GT. .1)
+C    .      corzz = (pga(1,iga)+.1)/pga(1,iga)
+C         ENDIF
+C -- corfac = cleaning correction
+          DO ivec = 1, 4
+            vec(ivec) = vec(ivec) * corfac * corzz
+            IF ( pga(13,iga) .EQ. 1. ) vec(ivec) =
+     .                                vec(ivec) * (1. + corcr)
+            ephot(ivec) = ephot(ivec) + vec(ivec)
+          ENDDO
+          ngmlt = ngmlt + 1
+          kag(ngmlt) = icluec
+          nphoch(ngmlt) = MIN0(knchgd(iecobj),1)
+          nphocr(ngmlt) = NINT(pga(13,iga))
+          pseudow = FLOAT(nphoch(ngmlt) + 10*nphocr(ngmlt))/10.
+          CALL addvec(vec,3,ktn(iecobj),0,pseudow)
+          IF ( ie12.EQ.0 .AND. ABS(vec(3)/vec(4)) .GT. .978)
+     .    ene12 = ene12 + vec(4)
+          IF ( idbg .GE. 10 ) THEN
+            WRITE (IW(6),*) 'Photon : ',vec,pga(13,iga)
+            WRITE (IW(6),*) 'ST1/2  : ',pga(9,iga),pga(10,iga)
+          ENDIF
+          IF ( idbg .GE. 1 ) CALL looses('PHOTON  ',1)
+          ratii  = vec(4)/qpecec(iecobj)
+          ephot(5) = ephot(5) + pga(9,iga)*ratii
+          ephot(6) = ephot(6) + pga(10,iga)*ratii
+          ephot(7) = ephot(7) + (1.-pga(9,iga)-pga(10,iga))*ratii
+          dmea = dmea + vec(4)*pga(16,iga)
+  120   CONTINUE
+        IF ( ephot(4) .NE. 0. ) dmea = dmea / ephot(4)
+C
+C -- Don't forget the electrons!
+C
+        kelect = 0
+        DO 130 ielect = 1 , nelect
+          IF ( npelec(ielect) .NE. icluec ) GOTO 130
+          kelect = kelect + 1
+          icht = nlecch(ielect)
+          pcelec(ielect) = AMIN1(qelep/2., cccorr * pcelec(ielect))
+          dimeich = 0.
+          IF ( dmea .LT. 15. ) dimeich = freq(2.-dmea/1.5)
+          peich = pcelec(ielect) - dimeich*ephot(4)
+          IF ( knchgd(iecobj) .EQ. 1 ) THEN
+            pceoth = AMIN1(qelep/2., cccorr * qpecec(iecobj))
+            peich = AMAX1(peich,pceoth - ephot(4))
+          ENDIF
+          IF ( idbg .GE. 11 ) THEN
+            WRITE (IW(6),*) 'Electron n0 ',ielect,', cluster n0', icluec
+            WRITE (IW(6),*) 'pcelec/ephot/dmean/frac/peich : ',
+     .                  pcelec(ielect),ephot(4),dmea,dimeich,peich
+          ENDIF
+          sigmann = 0.
+          IF ( peich .GT. 0. ) THEN
+           sigmapt = 6E-4*qp(icht)**2*SQRT(1.-qct(icht)**2)
+           sigmaec = .17*SQRT(peich) + .02*peich
+           sigmatt = SQRT(sigmapt**2+sigmaec**2)
+           sigmann = (peich-qp(icht))/sigmatt
+          ENDIF
+C Brem?
+          IF ( sigmann .GT. 3. ) THEN
+            vec(4) = peich-qp(icht)
+            vec(3) = vec(4) * COS(qpecth(iecobj))
+            vec(2) = vec(4) * SIN(qpecth(iecobj)) * SIN(qpecph(iecobj))
+            vec(1) = vec(4) * SIN(qpecth(iecobj)) * COS(qpecph(iecobj))
+            ephot(1) = ephot(1) + vec(1)
+            ephot(2) = ephot(2) + vec(2)
+            ephot(3) = ephot(3) + vec(3)
+            ephot(4) = ephot(4) + vec(4)
+            ngmlt = ngmlt + 1
+            kag(ngmlt) = icluec
+            nphoch(ngmlt) = MIN0(knchgd(iecobj),1)
+            IF ( kpeccc(iecobj) .EQ. 1 ) nphocr(ngmlt) = 1
+            pseudow = FLOAT(nphoch(ngmlt) + 10*nphocr(ngmlt))/10.
+            CALL addvec(vec,3,ktn(iecobj),0,pseudow)
+            pcelec(ielect) = qp(icht)
+            IF ( idbg .GE. 10 ) WRITE (IW(6),*) 'Brems. photon : ',vec
+            IF ( idbg .GE. 1 ) CALL looses('PHOTON  ',2)
+          ENDIF
+C Electron
+          pintr(1) = qfrfir(icht)
+          pintr(2) = qfrftl(icht)
+          pintr(3) = qfrfp0(icht)
+          pintr(4) = qfrfd0(icht)
+          pintr(5) = qfrfz0(icht)
+          pintr(6) = qfrfal(icht)
+          CALL expfrf( rcyl, zcyl, pintr, poutr, icode)
+          IF ( icode .NE. 0 ) THEN
+            xout = SQRT( (poutr(1)-xver)**2
+     .                 + (poutr(2)-yver)**2
+     .                 + (poutr(3)-zver)**2 )
+            ephot(3) = ephot(3) + pcelec(ielect)*(poutr(3)-xver)/xout
+            ephot(2) = ephot(2) + pcelec(ielect)*(poutr(2)-yver)/xout
+            ephot(1) = ephot(1) + pcelec(ielect)*(poutr(1)-zver)/xout
+          ELSE
+            ephot(3) = ephot(3) + qx(icht)*pcelec(ielect)/qp(icht)
+            ephot(2) = ephot(2) + qy(icht)*pcelec(ielect)/qp(icht)
+            ephot(1) = ephot(1) + qz(icht)*pcelec(ielect)/qp(icht)
+          ENDIF
+          ephot(4) = ephot(4) + pcelec(ielect)
+          ephot(5) = ephot(5) + qeidei(icht,1)/.845/qpecer(iecobj)
+          ephot(6) = ephot(6) + qeidei(icht,2)/.845/qpecer(iecobj)
+          ephot(7) = ephot(7) + qeidei(icht,3)/.845/qpecer(iecobj)
+          IF ( idbg .GE. 10 )
+     &     WRITE (IW(6),*) ' Electron (TPC/ECAL) : ',
+     &            qp(icht),pcelec(ielect)
+  130   CONTINUE
+C
+C -- Other linked tracks.
+C
+        kchar = 0
+        DO 140 ichtr = 1 , knchgd(iecobj)
+          nchtr  = kchgd(iecobj,ichtr)
+          IF ( xlock(nchtr) ) GOTO 140
+          kchar = kchar + 1
+          DO lcha = 1 , kcha
+            IF ( nchj(lcha) .EQ. nchtr ) GOTO 140
+          ENDDO
+          enecht = enecht + qe(nchtr)
+          kcha = kcha + 1
+          nchj(kcha) = nchtr
+  140   CONTINUE
+        IF ( idbg .GE. 10 ) WRITE (IW(6),*) 'kelect/kchar : ',
+     &       kelect,kchar
+C
+C Crack correction on the remaining energy
+C
+        ratio = 1.
+        IF ( kpeccc(iecobj) .EQ. 1 ) ratio =
+     .  qpecer(iecobj)/qpecec(iecobj) * (1.+1.2/(1. + qpecer(iecobj)))
+        eremn(4) = qpecec(iecobj)*ratio - ephot(4)
+        IF ( idbg .GE. 10 ) THEN
+          WRITE (IW(6),*) 'kpeccc(iecobj)/ratio : ',kpeccc(iecobj),ratio
+          WRITE (IW(6),*) 'ephot(4)/qpecec/qpecer : ',
+     .                ephot(4),qpecec(iecobj),qpecer(iecobj)
+          WRITE (IW(6),*) 'ephot(5,6,7) : ',ephot(5),ephot(6),ephot(7)
+        ENDIF
+C
+C  Get rid of this PECO if the remaining energy < 100 MeV
+C
+        IF ( eremn(4) .LE. 0.10 ) THEN
+          CALL qltrk(iecobj)
+          GOTO 110
+        ENDIF
+C
+C Check if residual energy is not fake residual e.m.
+C
+        IF ( eremn(4) .LT. 0.50*SQRT(ephot(4)) ) THEN
+          CALL qltrk(iecobj)
+          GOTO 110
+        ENDIF
+C
+C Just compute the fractions in stacks 1, 2 and 3
+C
+        eremn(1) = qx(iecobj)*ratio - ephot(1)
+        eremn(2) = qy(iecobj)*ratio - ephot(2)
+        eremn(3) = qz(iecobj)*ratio - ephot(3)
+        eremn(5) = AMAX1(qpece1(iecobj) - ephot(5),0.)
+        eremn(6) = AMAX1(qpece2(iecobj) - ephot(6),0.)
+        eremn(7) = AMAX1(1.-qpece1(iecobj)-qpece2(iecobj)-ephot(7),0.)
+        eremnt = eremn(5) + eremn(6) + eremn(7)
+        IF ( eremnt .LE. 0. ) THEN
+          CALL qltrk(iecobj)
+          GOTO 110
+        ENDIF
+        eremn(5) = eremn(5) / eremnt
+        eremn(6) = eremn(6) / eremnt
+        eremn(7) = eremn(7) / eremnt
+C
+C  First find the e/pi ratio
+C
+        corrt = corr1 * eremn(5)
+     .        + corr2 * eremn(6)
+     .        + corr3 * eremn(7)
+        IF ( ABS(qct(iecobj)) .LT. 0.8 ) THEN
+          corrt = corrt * epibar
+        ELSE
+          corrt = corrt * epiend
+        ENDIF
+        IF ( corrt .LE. 1. ) corrt = 1.
+        IF ( kelect .GE. 1 .AND. kchar .EQ. 0 ) corrt = 1.
+        IF ( idbg .GE. 10 ) THEN
+          WRITE (IW(6),*) 'Remaining  : ',eremn(4)
+          WRITE (IW(6),*) 'St1/2/3    : ',eremn(5),eremn(6),eremn(7)
+          WRITE (IW(6),*) 'e/pi ratio : ',corrt
+        ENDIF
+C
+C  Store the remaining energy/momentum as hadronic one
+C
+        kcalo = kcalo + 1
+C
+C  and apply the e/pi ratio to the remaining 4-vector
+C
+        evecjj(1,kcalo) = eremn(1)*corrt
+        evecjj(2,kcalo) = eremn(2)*corrt
+        evecjj(3,kcalo) = eremn(3)*corrt
+        evecjj(4,kcalo) = eremn(4)*corrt
+        iecobjj(kcalo)  = iecobj
+        phottt = phottt + ephot(4)
+        enecal = enecal + eremn(4)*corrt
+C
+C  Next ECAL cluster
+C
+  110   CONTINUE
+        iecobj = kfollo(iecobj)
+        GOTO 101
+  200   CONTINUE
+C
+C -- Search for the remainiing hadronic neutral energy :
+C
+        IF ( enecht .LT. 0. ) enecht = 0.
+        IF ( idbg .GE. 10 ) THEN
+          DO icha = 1 , kcha
+            icht = nchj(icha)
+            IF ( icht .GT. 0 ) WRITE (IW(6),*) icha,icht,qe(icht)
+          ENDDO
+        ENDIF
+        IF ( enecal + hadene .LE. 0. ) GOTO 10000
+        sig2 = (sigec * enecal + sighc * hadene)
+     .       / (        enecal +         hadene)
+        IF ( idbg .GE. 10 ) THEN
+          WRITE (IW(6),*) 'Enecal/Hadene/enecht/sig2 : ',
+     .                enecal,hadene,enecht,sig2
+          WRITE (IW(6),*) 'kcalo/kcalh/kcha   : ',kcalo,kcalh,kcha
+        ENDIF
+        IF ( enecal+hadene-enecht .GT. sig2*SQRT(enecht) ) THEN
+          CALL vzero( vec(1) , 4 )
+C -- ECAL
+          DO icalo = 1 , kcalo
+            IF ( .NOT.xlock(iecobjj(icalo)) ) THEN
+C -- Add the ECAL energy-momentum
+              vec(1) = vec(1) + evecjj(1,icalo)
+              vec(2) = vec(2) + evecjj(2,icalo)
+              vec(3) = vec(3) + evecjj(3,icalo)
+              vec(4) = vec(4) + evecjj(4,icalo)
+              CALL qltrk(iecobjj(icalo))
+            ENDIF
+          ENDDO
+C -- HCAL
+          DO icalh = 1 , kcalh
+            vec4 = henejj(icalh)
+            vec(4) = vec(4) + vec4
+            vec(3) = vec(3) + vec4 * cos(qphcth(ihcobjj(icalh)))
+            vec(2) = vec(2) + vec4 * sin(qphcth(ihcobjj(icalh)))
+     .                             * sin(qphcph(ihcobjj(icalh)))
+            vec(1) = vec(1) + vec4 * sin(qphcth(ihcobjj(icalh)))
+     .                             * cos(qphcph(ihcobjj(icalh)))
+            CALL qltrk(ihcobjj(icalh))
+          ENDDO
+C -- Rescale Calorimetric energy if > QELEP/2.
+          IF ( vec(4) .GT. qelep/2. ) THEN
+            factor = qelep/(2.*vec(4))
+            vec(1) = vec(1) * factor
+            vec(2) = vec(2) * factor
+            vec(3) = vec(3) * factor
+            vec(4) = vec(4) * factor
+          ENDIF
+C -- Energy  TPC. 3-impulsion extrapolated to the ECAL entry plate :
+          DO icha = 1 , kcha
+            icht = nchj(icha)
+            IF ( icht .GT. 0 ) THEN
+              vec(4) = vec(4) - qe(icht)
+              pintr(1) = qfrfir(icht)
+              pintr(2) = qfrftl(icht)
+              pintr(3) = qfrfp0(icht)
+              pintr(4) = qfrfd0(icht)
+              pintr(5) = qfrfz0(icht)
+              pintr(6) = qfrfal(icht)
+              CALL expfrf( rcyl, zcyl, pintr, poutr, icode)
+              IF ( icode .NE. 0 ) THEN
+                xout = SQRT( (poutr(1)-xver)**2
+     .                     + (poutr(2)-yver)**2
+     .                     + (poutr(3)-zver)**2 )
+                vec(3) = vec(3) - qp(icht) * (poutr(3)-xver) / xout
+                vec(2) = vec(2) - qp(icht) * (poutr(2)-yver) / xout
+                vec(1) = vec(1) - qp(icht) * (poutr(1)-zver) / xout
+              ELSE
+                vec(3) = vec(3) - qx(icht)
+                vec(2) = vec(2) - qy(icht)
+                vec(1) = vec(1) - qz(icht)
+              ENDIF
+            ENDIF
+          ENDDO
+          hthrsh =  (.35*enecal + .5*hadene)/(enecal+hadene)
+C
+          IF ( vec(4) .GT. hthrsh .OR. nclea .NE. 1 ) THEN
+C         IF ( vec(4) .GT. .5 .OR. nclea .NE. 1 ) THEN
+            CALL addvec(vec,4,icaobj,0,enecal/(enecal+hadene))
+            IF ( idbg .GE. 10 ) THEN
+              WRITE (IW(6),*) 'Hadron : ',vec
+              WRITE (IW(6),*) 'ECAL/HCAL/TPC : ',enecal,hadene,enecht
+            ENDIF
+          ENDIF
+        ENDIF
+C -- End of loop on calobjects .
+10000 CONTINUE
+C
+C     Drop temporary banks
+C
+      CALL bdrop(iw,'ECSLEFSR')
+C
+      RETURN
+      END
+#endif

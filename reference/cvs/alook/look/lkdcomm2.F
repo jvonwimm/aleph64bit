@@ -1,0 +1,59 @@
+      SUBROUTINE LKDCOMM2(TABLE,ATTRIB,N,ICOL,ILOC,NBID,IRET)
+C -------------------------------------------------------------------
+C - author : A. Bonissent
+C! Take the description of one attribute, and put it into the COMMON
+C
+C TABLE : Table name
+C ATTRIB : Attribute name
+C N      : Format (Real=1, Int=2, string=50)
+C ICOL   : Column nb
+C ILOC   : position within dimensionned attribute
+C NBID   : Max value of ILOC
+C IRET   : return code 0=OK
+C -----------------------------------------------------------------
+#ifndef DOC
+      CHARACTER*(*) ATTRIB
+#include "phead.h"
+#include "bcs.h"
+      CHARACTER*10 ATTWK
+C -----------------------------------------------------------------
+      IRET=0
+      IF(ICOL.GT.MAXATTR)THEN
+        WRITE(IW(6),*)' ***********************************************'
+        WRITE(IW(6),*)' TOO MANY ATTRIBUTES, ONLY THE FIRST ', MAXATTR,
+     >            ' WILL BE DISPLAYED'
+        WRITE(IW(6),*)' ***********************************************'
+        IRET=1
+        GO TO 999
+      ENDIF
+      IPOS = ICOL
+      JLEN=4
+      JALEN=LEN(ATTRIB)
+      CALL CLTOU(ATTRIB)
+      CALL CLTOU(TABLE)
+      TMAIN=TABLE
+      TABLIS(IPOS)=TABLE
+      DO 10 I=1,10
+   10 ATTWK(I:I)=' '
+      NCAR=MIN0(JALEN,10)
+      IBEG=10-NCAR
+      ATTWK(IBEG+1:10)=ATTRIB(1:NCAR)
+      ATTLIS(IPOS)=ATTWK
+      NLIS(IPOS)=N
+      ICOLIS(IPOS)=ICOL
+      WRITE(HEADR(IPOS),900)ATTLIS(IPOS)
+  900 FORMAT(A)
+      CALL LKRMVSP(HEADR(IPOS),NNBL)
+      CALL LKSCENTER(HEADR(IPOS),NNBL)
+      NATTR=IPOS
+      HEADRD(IPOS)='          '
+      IF(NBID.NE.1)THEN
+        HEADRD(IPOS)='(        )'
+        WRITE(HEADRD(IPOS)(2:9),'(I8)')ILOC
+        CALL LKRMVSP(HEADRD(IPOS),NNBL)
+        CALL LKSCENTER(HEADRD(IPOS),NNBL)
+      ENDIF
+  999 CONTINUE
+      RETURN
+      END
+#endif

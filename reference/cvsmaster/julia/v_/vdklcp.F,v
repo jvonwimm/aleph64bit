@@ -1,0 +1,512 @@
+head	1.3;
+access;
+symbols
+	jul313_3:1.3
+	jul313_2:1.3
+	jul313_1:1.3
+	jul313:1.3
+	jul312_1:1.3
+	jul312:1.3
+	jul311:1.3
+	jul310_1:1.3
+	jul310:1.3
+	jul309_1:1.2
+	jul309:1.2
+	jul308_6:1.2
+	jul308_5:1.2
+	jul308_4:1.2
+	jul308_3:1.2
+	jul308_2:1.2
+	jul308_1:1.2
+	jul308:1.2
+	jul307_4:1.1
+	jul307_3:1.1
+	jul307_2:1.1
+	jul307_1:1.1
+	jul307:1.1
+	jul306_3:1.1
+	jul306_2:1.1
+	jul306_1:1.1
+	jul306:1.1
+	jul305_4:1.1
+	jul305_3:1.1
+	jul305_2:1.1
+	jul305_1:1.1
+	jul305:1.1
+	jul304_3:1.1
+	jul304_2:1.1
+	jul304_1:1.1
+	jul304:1.1
+	jul303_7:1.1
+	jul303_6:1.1
+	jul303_5:1.1
+	jul303_4:1.1
+	jul303_3:1.1
+	jul303_2_mc1:1.1
+	jul303_2:1.1
+	jul303_1_mc1:1.1
+	jul303_1:1.1
+	jul303_v:1.1
+	jul303:1.1
+	jul302_6:1.1
+	jul302_5:1.1
+	jul302_4:1.1
+	jul302_3:1.1
+	jul302_2:1.1
+	jul302_1:1.1
+	jul302:1.1
+	jul285_1:1.1
+	jul285:1.1
+	jul284_1:1.1
+	jul284:1.1
+	jul283_1:1.1
+	jul283:1.1
+	jul282_1:1.1
+	jul282:1.1
+	jul281_3:1.1
+	jul281_2:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	99.10.11.09.36.49;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.08.25.12.45.58;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.07.08.16.25.48;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@for julia 310
+@
+text
+@      SUBROUTINE VDKLCP(IER)
+C----------------------------------------------------------------------
+C! sets quality flag for hits in VDXY,VDZT banks according to dead chip
+C! making sure that the multiplexed hits get killed together
+C!        Manoj Thulasidas 24-June-1996
+CKEY VDET
+C! - Output IER =0 OK ,
+C!              =-1 problem with banks
+C!              = 1 routine will do nothing
+C!
+C! - Input banks : VDXY, VDZT, VDCE, VDGC, VDMR
+C! - Output banks: VDXY, VDZT only the word(quality flag)
+C!
+C
+C       It takes the first element in the VDEM bank and applies that
+C       efficiency to all the hits in both views.  Ad-hoc correction.
+C                     24-June-1996 Manoj Thulasidas
+C
+C       Introduced the new bank VDCE instead of the VDEM bank.
+C       It is the VDet Chip Efficiency map
+C       It is built from the data base banks
+C          VDPR (Vdet efficiency Periods and weights)
+C          VDCM (Vdet Chip efficiency map, compact form)
+C                     03-Jul-1998 Manoj Thulasidas
+C
+C       Add protections for garbage collection.
+C       Modification of the logic of the VKILL bank to delete the correct hits.
+C                     07-Oct-1999 Paschal Coyle, Thomas Kachelhoffer
+C
+C!======================================================================
+#ifndef DOC
+      IMPLICIT NONE
+C
+#include "bcs.h"
+#include "vdxyjj.h"
+#include "vdztjj.h"
+#include "vdcejj.h"
+C
+      SAVE
+      INTEGER IER
+C  Functions
+C  Local variables
+C
+      REAL EFFCUT, UW
+      PARAMETER ( EFFCUT = 0.5 )
+      INTEGER IVDCE,IVDXY,IVDZT,IVNEX
+      INTEGER KVDCE,KVDXY,KVDZT,KEVEH,KVDGC,KVDMR,KVKIL,KRVKIL
+      INTEGER NVDXY,NVDZT
+      INTEGER MVDXY,MVDZT,MVDCE,NEVEH,MVDGC
+      INTEGER NHXY,NHZT,IHXY,IHZT,JL,NKILL,NVDGC,IVDGC
+      INTEGER NDATA, IGARB
+      INTEGER NPERI,IPERI,NCOUN
+      LOGICAL FIRST, NOTDO
+C - bit 30 (IMCNEF=536870912) is set in VDXY and VDZT quality flag
+C   to indicate a MC inefficiency rejected hit.
+      INTEGER IMCNEF
+      PARAMETER (IMCNEF=536870912)
+C
+C  BOS functions
+C
+      INTEGER NAMIND, NLINK
+      EXTERNAL NAMIND, NLINK
+C
+C  Variables for inline functions
+C
+      INTEGER I,J
+      INTEGER ISEED,IDICE
+      REAL RNVEC(100), CHIPEF
+C
+C  Inline functions
+C
+      INTEGER IOR
+C
+C  Define variables used in BMACRO
+C
+#include "bmacrod.h"
+C
+      DATA FIRST/.TRUE./,NOTDO/.FALSE./
+#include "bmacro.h"
+C -------------------------------------------------------------
+C  initialization
+C
+      IER=1
+      IF(FIRST) THEN
+        FIRST=.FALSE.
+C Make the VDCE bank from VDPR (periods) and VDCM (Chip efficiency map
+C in compact form)
+C Return code is not necessary because if there is a problem, then VDCE
+C bank would be missing and that error will be trapped automatically
+        CALL VDMKCE
+        MVDXY = NAMIND('VDXY')
+        MVDZT = NAMIND('VDZT')
+        MVDCE = NAMIND('VDCE')
+        MVDGC = NAMIND('VDGC')
+        NEVEH = NAMIND('EVEH')
+C       check-up on the efficiency map VDCE banks,
+        IVDCE=IW(MVDCE)
+        IF(IVDCE.LE.0) THEN
+          NOTDO=.TRUE.
+          IER=-1
+          RETURN
+        ENDIF
+        NPERI=LROWS(IVDCE)
+        IF(NPERI.LE.0) THEN
+          NOTDO=.TRUE.
+          RETURN
+        ENDIF
+C       set index to start on efficiency map for highest period
+        IPERI=NPERI
+        KVDCE=KROW(IVDCE,IPERI)
+        NCOUN=0
+      ENDIF
+C
+C     If we had an error in initialization just return
+C
+      IF(NOTDO) RETURN
+      IER=0
+C
+C     Normal operation start
+C
+C  make a VKIL bank parallel to the VDGC (global coord) bank
+      CALL BDROP(IW,'VKIL')
+      KVDGC = IW(MVDGC)
+      NVDGC = LROWS(KVDGC)
+      NDATA = NVDGC+LMHLEN
+      CALL ALBOS('VKIL',0,NDATA,KVKIL,IGARB)
+      IF ( IGARB .EQ. 2 ) THEN
+        IER = -1
+        RETURN
+      ENDIF
+      IW(KVKIL+LMHCOL)=1
+      IW(KVKIL+LMHROW)=NVDGC
+C
+C     choose period
+C
+      IVDCE=IW(MVDCE)
+      KVDCE=KROW(IVDCE,IPERI)
+      NCOUN=NCOUN+1
+      IF(NCOUN.GT.IW(KVDCE+JVDCPR)) THEN
+        IPERI=IPERI+1
+        IF(IPERI.GT.NPERI) IPERI=1
+        KVDCE=KROW(IVDCE,IPERI)
+        NCOUN=1
+      ENDIF
+C  set seed for random number 1000*run no + event no + 107
+      KEVEH = IW(NEVEH)
+      ISEED=1000*IW(KEVEH+2)+IW(KEVEH+6)+107
+      CALL RMARIN(ISEED,0,0)
+      CALL RANMAR(RNVEC,100)
+      IDICE=1
+C
+C  Loop over all VDXY banks and flag hits to be killed
+C
+      IVDXY  = IW(MVDXY)
+      IF(IVDXY .LE. 0) GO TO 3
+ 2    CONTINUE
+      NHXY  = LROWS(IVDXY)
+      NVDXY = IW(IVDXY-2)
+      IVNEX = IW(IVDXY-1)
+C  VDMR bank, with NR=NVDXY+IVIEW-1 has the relation from VDXY hit to
+C  VDGC hit number
+      KVDMR = NLINK('VDMR',NVDXY+1)
+      DO 20 IHXY=1,NHXY
+        KVDXY=KROW(IVDXY,IHXY)
+C  Get the VDGC cluster number
+        IVDGC = ITABL(KVDMR,IHXY,1)
+        KRVKIL = KROW(KVKIL,IVDGC)
+C  VKIL is parallel to VDMR, and the entry is set to 1 if the cluster
+C  is to be killed (since a multiplexed cluster was killed already)
+        IF(ITABL(KVKIL,IVDGC,1).EQ.1) THEN
+          IW(KVDXY+JVDXQF)=IOR(IW(KVDXY+JVDXQF),IMCNEF)
+        ELSE IF (ITABL(KVKIL,IVDGC,1).EQ.0) THEN
+C  This is a new one and therefore should consider deleting
+          UW=RW(KVDXY+JVDXUC)
+C  get the chip number
+          CALL VDGTCH(UW,NVDXY,2,JL)
+C          flag hit if efficiency set low
+          CHIPEF = RW(KVDCE+JVDCEF-1+JL)
+          IF(CHIPEF.LT.EFFCUT) THEN
+            IW(KVDXY+JVDXQF)=IOR(IW(KVDXY+JVDXQF),IMCNEF)
+C  set the flag to say that the multiplexed ones need to be killed
+            IW(KRVKIL+1)=1
+          ELSE
+C          kill a few random clusters to simulate inefficiency
+            IDICE=IDICE+1
+            IF(IDICE.GT.100) THEN
+              CALL RANMAR(RNVEC,100)
+              IDICE=1
+            ENDIF
+            IF(CHIPEF.LT.RNVEC(IDICE)) THEN
+              IW(KVDXY+JVDXQF)=IOR(IW(KVDXY+JVDXQF),IMCNEF)
+C  set the flag to say that the multiplexed ones need to be killed
+              IW(KRVKIL+1)=1
+            ELSE
+C  set the flag to say the multiplexed ones should NOT be killed
+              IW(KRVKIL+1)=-1
+            ENDIF 
+          ENDIF
+        ELSE IF (ITABL(KVKIL,IVDGC,1).EQ.-1) THEN 
+C  this one has already been considered and should NOT be deleted
+        ENDIF
+ 20   CONTINUE
+C  Update pointer, and return for next bank
+      IVDXY=IVNEX
+      IF(IVDXY .GT. 0) GO TO 2
+C
+C  all done with VDXY, now do VDZT
+C
+ 3    CONTINUE
+C
+C  Now loop over all VDZT banks and flag hits
+C
+      IVDZT = IW(MVDZT)
+      IF(IVDZT .LE. 0) RETURN
+ 5    CONTINUE
+C  loop over all the hits of the VDZT bank
+      NHZT  = LROWS(IVDZT)
+      NVDZT = IW(IVDZT-2)
+      IVNEX = IW(IVDZT-1)
+C  VDMR bank, with NR=NVDZT+IVIEW-1 has the relation from VDZT hit to
+C  VDGC hit number
+      KVDMR = NLINK('VDMR',NVDZT)
+      DO 50 IHZT=1,NHZT
+        KVDZT=KROW(IVDZT,IHZT)
+C  Get the VDGC cluster number
+        IVDGC = ITABL(KVDMR,IHZT,1)
+        KRVKIL = KROW(KVKIL,IVDGC)
+C  VKIL is parallel to VDMR, and the entry is set to 1 if the cluster
+C  is to be killed (since a multiplexed cluster was killed already)
+        IF(ITABL(KVKIL,IVDGC,1).EQ.1) THEN
+          IW(KVDZT+JVDZQF)=IOR(IW(KVDZT+JVDZQF),IMCNEF)
+        ELSE IF (ITABL(KVKIL,IVDGC,1).EQ.0)THEN 
+          UW=RW(KVDZT+JVDZWC)
+C  get the chip number
+          CALL VDGTCH(UW,NVDZT,1,JL)
+C          flag hit if efficiency set low
+          CHIPEF = RW(KVDCE+JVDCEF-1+JL)
+          IF(CHIPEF.LT.EFFCUT) THEN
+            IW(KVDZT+JVDZQF)=IOR(IW(KVDZT+JVDZQF),IMCNEF)
+C  set the flag to say that the multiplexed ones need to be killed
+            IW(KRVKIL+1)=1
+          ELSE
+C          kill a few random clusters to simulate inefficiency
+            IDICE=IDICE+1
+            IF(IDICE.GT.100) THEN
+              CALL RANMAR(RNVEC,100)
+              IDICE=1
+            ENDIF
+            IF(CHIPEF.LT.RNVEC(IDICE)) THEN
+              IW(KVDZT+JVDZQF)=IOR(IW(KVDZT+JVDZQF),IMCNEF)
+C  set the flag to say that the multiplexed ones need to be killed
+              IW(KRVKIL+1)=1
+            ELSE
+              IW(KRVKIL+1)=-1
+            ENDIF
+          ENDIF
+        ELSE IF (ITABL(KVKIL,IVDGC,1).EQ.-1) THEN 
+C  do nothing
+        ENDIF
+ 50   CONTINUE
+C  Update pointer, and return for next bank
+      IVDZT = IVNEX
+      IF(IVDZT .GT. 0) GO TO 5
+C
+      RETURN
+C
+      END
+#endif
+@
+
+
+1.2
+log
+@julia 308
+@
+text
+@d15 1
+a15 1
+C       It takes the first element in the VDEM bank and applies that 
+d21 1
+a21 1
+C       It is built from the data base banks 
+d23 1
+a23 1
+C          VDCM (Vdet Chip efficiency map, compact form) 
+d26 4
+d49 1
+a49 1
+      INTEGER MVDXY,MVDZT,MVDCE,NEVEH,MVDGC      
+d56 1
+a56 1
+      INTEGER IMCNEF       
+d78 1
+a78 1
+      DATA FIRST/.TRUE./,NOTDO/.FALSE./ 
+d121 13
+a150 8
+C  make a VKIL bank parallel to the VDGC (global coord) bank
+      CALL BDROP(IW,'VKIL')
+      KVDGC = IW(MVDGC)
+      NVDGC = LROWS(KVDGC)
+      NDATA = NVDGC+LMHLEN
+      CALL ALBOS('VKIL',0,NDATA,KVKIL,IGARB)
+      IW(KVKIL+LMHCOL)=1
+      IW(KVKIL+LMHROW)=NVDGC
+d172 2
+a173 1
+        ELSE
+d182 1
+a182 1
+            IW(KVKIL+1)=1
+d193 5
+a197 2
+              IW(KVKIL+1)=1
+            ENDIF
+d199 2
+d232 1
+a232 1
+        ELSE
+d241 1
+a241 1
+            IW(KVKIL+1)=1
+d252 3
+a254 1
+              IW(KVKIL+1)=1
+d257 2
+@
+
+
+1.1
+log
+@add vdklcp
+@
+text
+@d11 1
+a11 1
+C! - Input banks : VDXY, VDZT, VDEM, VDGC, VDMR
+d19 7
+d33 1
+a33 1
+#include "vdemjj.h"
+d40 1
+a40 1
+      REAL EFFCUT
+d42 2
+a43 2
+      INTEGER IVDEM,IVDXY,IVDZT,IVNEX
+      INTEGER KVDEM,KVDXY,KVDZT,KEVEH,KVDGC,KVDMR,KVKIL,KRVKIL
+d45 1
+a45 1
+      INTEGER MVDXY,MVDZT,MVDEM,NEVEH,MVDGC      
+d64 1
+a64 1
+      REAL RNVEC(100)
+d82 5
+d89 1
+a89 1
+        MVDEM = NAMIND('VDEM')
+d92 3
+a94 3
+C       check-up on the efficiency map VDEM banks,
+        IVDEM=IW(MVDEM)
+        IF(IVDEM.LE.0) THEN
+d99 1
+a99 1
+        NPERI=LROWS(IVDEM)
+d106 1
+a106 1
+        KVDEM=KROW(IVDEM,IPERI)
+d119 2
+a120 2
+      IVDEM=IW(MVDEM)
+      KVDEM=KROW(IVDEM,IPERI)
+d122 1
+a122 1
+      IF(NCOUN.GT.IW(KVDEM+JVDEPR)) THEN
+d125 1
+a125 1
+        KVDEM=KROW(IVDEM,IPERI)
+a141 22
+
+C
+C  Loop over the VDGC bank and flag hits
+C
+      DO IVDGC = 1, NVDGC
+        JL = 1
+C  Kill hit if efficiency set low
+        KRVKIL = KROW(KVKIL,IVDGC)
+        IF(RW(KVDEM+JVDEEF-1+JL).LT.EFFCUT) THEN
+          IW(KRVKIL+1)=1
+        ELSE
+C  Kill a few random clusters to simulate inefficiency
+          IDICE=IDICE+1
+          IF(IDICE.GT.100) THEN
+            CALL RANMAR(RNVEC,100)
+            IDICE=1
+          ENDIF
+          IF(RW(KVDEM+JVDEEF-1+JL).LT.RNVEC(IDICE)) THEN
+            IW(KRVKIL+1)=1                 
+          ENDIF
+        ENDIF
+      ENDDO
+d143 1
+a143 1
+C  Loop over all VDXY banks and flag hits that have been killed
+d158 1
+d160 1
+a160 1
+C  is to be killed
+d163 23
+d212 1
+d214 1
+a214 1
+C  is to be killed
+d217 23
+@

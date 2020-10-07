@@ -1,0 +1,189 @@
+head	1.2;
+access;
+symbols
+	V0060:1.2
+	V0059:1.2
+	V0058:1.2
+	V0057:1.2
+	V0056:1.2
+	V0055:1.2
+	V0054:1.2
+	V0053:1.2
+	V0052:1.2
+	V0051:1.2
+	V0050:1.2
+	V0049:1.2
+	V0048:1.2
+	V0047:1.2
+	V0046:1.2
+	V0045:1.2
+	V0044:1.2
+	V0043:1.2
+	V0042:1.2
+	V0041:1.2
+	V0040:1.2
+	V0039:1.2
+	V0038:1.2
+	V0037:1.2
+	V0036:1.2
+	V0035:1.2
+	V0034:1.2
+	V0033:1.2
+	V0032:1.2
+	V0031:1.2
+	V0030:1.2
+	V0029:1.2
+	V0028:1.2
+	V0027:1.2
+	V0026:1.2
+	V0025:1.2
+	V0024:1.2
+	V0023:1.2
+	V0022:1.2
+	V0021:1.2
+	V0020:1.2
+	V0019:1.2
+	V0018:1.2
+	V0017:1.2
+	V0016:1.2
+	V0015:1.2
+	V0014:1.1.1.1
+	V0013:1.1.1.1
+	V0000:1.1.1.1
+	V0001:1.1.1.1
+	v1:1.1.1.1
+	jacotf:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	2000.03.22.16.51.27;	author bonissen;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2000.03.01.10.29.02;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	2000.03.01.10.29.02;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@new features, plus colonel
+@
+text
+@import java.io.*;
+import java.awt.*;  
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import java.util.*;              // Utilities.
+
+public class errorMessage{
+  Dialog d;
+  TextArea ta;
+  int ncols;
+  Frame f;
+
+  errorMessage(Frame finput, String s){
+     if(finput == null){
+         f = new Frame();
+     }else{
+         f = finput;
+     }
+     ncols = 0;
+     d = new Dialog(f,true);
+     d.setBackground(Color.white);
+     ta = new TextArea("",10,80,TextArea.SCROLLBARS_NONE);
+     ta.setEditable(false);
+     //     ta.setFont(new Font("Courier",Font.BOLD,20));
+     ta.setFont(scanbook.myFont);
+     d.add("North",ta);
+     newline(s);
+     Panel p = new Panel();
+     Button b = new Button("OK");
+     b.addActionListener(new ActionListener(){
+        public void actionPerformed(ActionEvent e) {
+         d.dispose();
+   }});
+     p.add("Center",b);
+     d.add("South",p);
+  }
+  void newline(String sin){
+     int pos;
+     if( (pos = sin.indexOf("\n")) > -1){
+       newline(sin.substring(0,pos));
+       newline(sin.substring(pos+1));
+       return;
+     }
+     String s = sin.trim();
+     int siz = s.length() + 4;
+     if(siz > ncols){ncols = siz;}
+     ta.append("\n");
+     ta.append("  ");
+     ta.append(s);
+     ta.append("  ");
+  }
+  void display(){
+     String s = ta.getText();
+     StringTokenizer lines = new StringTokenizer(s,"\n");
+     ta.setText("\n");
+     int nlines = 0;
+     while(lines.hasMoreElements()){
+       String currentLine = lines.nextToken();
+       StringBuffer buf = new StringBuffer(currentLine);
+       int toAdd = (ncols - currentLine.length()) / 2;
+       for(int i=0; i<toAdd;i++){
+           buf.insert(0,' ');
+           buf.append(' ');
+       } 
+       ta.append(buf.toString()+"\n");
+       nlines++;
+     }
+     newline("  ");
+     ta.setColumns(ncols);
+     ta.setRows(nlines+4);
+     Toolkit.getDefaultToolkit().beep();
+     d.pack();
+     d.show();
+  }
+}
+
+
+
+
+
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d11 8
+a18 1
+  errorMessage(Frame f,String s){
+d56 1
+d66 1
+d70 1
+@
+
+
+1.1.1.1
+log
+@ import jscanbook
+@
+text
+@@

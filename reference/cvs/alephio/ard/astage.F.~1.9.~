@@ -1,0 +1,91 @@
+      SUBROUTINE ASTAGE(LUNIT,CHDEF,IER)
+C----------------------------------------------------------------------
+CKEY ALREAD DROP STAGE / INTERNAL
+C   Author: T. Wildish (IBM code)   June 1989
+C   modified by F.Ranjard           May 1992 , February 1993
+C   modified by U.Schafer           March 1994
+C
+C!  Purpose   : drop all staged data disks and submit tape
+C!              writing for output datasets automatically
+C!  Cray      : Also calls ADSPOS to dispose of any disk files
+C   Inputs    : LUNIT    <0  -unit no. to be staged in
+C                        =0  end of job  : stageput on CRAY
+C                        >   unit no. to be staged out
+C               CHDEF / A stageout parameters on UNIX
+C
+C   Outputs   : IER      0 if all OK, 1 if STAGE DROP failed
+C
+C----------------------------------------------------------------------
+#ifndef DOC
+      SAVE  LSTAGE, STGMSG
+#include "bcs.h"
+      CHARACTER*(*) CHDEF
+      PARAMETER (MSTAGE=20)
+      INTEGER LSTAGE(MSTAGE), NSTAGE, SYSTEM
+      EXTERNAL SYSTEM
+      CHARACTER  MSG*120, SUBR*8 , TF*1
+      CHARACTER*120 STGMSG(MSTAGE)
+      LOGICAL STAGE
+      DATA STAGE /.FALSE./
+      DATA NSTAGE /0/
+C ------------------------------------------------------------------
+      IER = 0
+      SUBR = ' ASTAGE '
+C
+      IF ( LUNIT.GT.0) THEN
+         STAGE = .TRUE.
+#if defined(UNIX) || defined(ALEPH_DEC)
+C      register stageout parameters
+         IF (NSTAGE.LT.MSTAGE) THEN
+            NSTAGE = NSTAGE+1
+            STGMSG(NSTAGE) = CHDEF
+         ENDIF
+#endif
+C
+      ELSEIF (LUNIT.LT.0) THEN
+C     at least one tape is staged in
+         STAGE  = .TRUE.
+C
+      ELSE
+C     end of job
+#if defined(IBM)
+         IF (STAGE) CALL VMCMS ('EXEC STAGE DROP',IER)
+#endif
+#if defined(UNIX)
+C      stageout all tapes registered
+         DO I=1,NSTAGE
+#if defined(ALEPH_OUTSIDE)
+            MSG = 'alstageout -F F '//
+     &            STGMSG(I)(1:LNBLNK(STGMSG(I)))
+#else
+            jx=icfila('/',stgmsg(I),1,lnblnk(stgmsg(I)))
+            tf=stgmsg(I)(jx+1:jx+1)
+            call cltou(tf)
+            if (tf.eq.'Z') then
+               MSG = 'alstageout -C C '//STGMSG(I)(1:LNBLNK(STGMSG(I)))
+            else
+               MSG = 'stageput '// STGMSG(I)(1:LNBLNK(STGMSG(I)))
+            endif
+#endif
+#include "prmsg.h"
+            IST = SYSTEM (MSG(1:LNBLNK(MSG))) / 256
+            IF (IST.NE.0) IER=1
+         ENDDO
+C      dispose of any disk files
+         CALL ADSPOS(0,' ',' ',' ',IER)
+#else
+#if defined(ALEPH_DEC)
+C      stageout all tapes registered
+         DO I=1,NSTAGE
+            MSG = 'alstageout -F F '//
+     &            STGMSG(I)(1:LNBLNK(STGMSG(I)))
+#include "prmsg.h"
+            STATUS = LIB$SPAWN (MSG,,,,,,IST)
+C            IF (IST.NE.1) IER=1
+         ENDDO
+#endif
+#endif
+      ENDIF
+C
+      END
+#endif

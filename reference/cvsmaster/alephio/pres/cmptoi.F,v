@@ -1,0 +1,147 @@
+head	1.2;
+access;
+symbols
+	alio83:1.2
+	alio82:1.2
+	alio81:1.2
+	alio80:1.2
+	alio74:1.2
+	alio73:1.2
+	alio72:1.2
+	alio71:1.2
+	alio70:1.2
+	alio68:1.2
+	alio69:1.2
+	alio67:1.2
+	alio66:1.2
+	alio65:1.2
+	alio64:1.2
+	alio63:1.2
+	alio62:1.2
+	alio61:1.2
+	alio60:1.2
+	alephio53:1.2
+	v4:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.01.18.13.52.38;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.52.42;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.52.43;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@ Modified Files:
+	acdarg.F afilin.F afilou.F ainqui.F amount.F aoptap.F astage.F
+	awrtap.F
+ Modified Files:
+	cmphost.h ctolow.h gtchdecl.h version.h
+ Removed Files:
+	albitw.h
+ Modified Files:
+ 	altell.F babend.F jalrec.F noibm.F opensq.F sdrsx.F sibsdr.F
+	sxsdr.F
+ Modified Files:
+	ardnews.h news.h
+ Modified Files:
+	cfrvax.F cmpban.F cmpdro.F cmpin2.F cmpini.F cmplis.F cmpsum.F
+	cmptoi.F cotest.F detest.F dmpban.F dmpchr.F dmpfmt.F udmper.F
+@
+text
+@      LOGICAL FUNCTION CMPTOI(STR,I)
+C-----------------------------------------------------------------------
+C!     Convert a character string to integer
+CKEY PRESS CMPTOI COMPRESS /INTERNAL
+C!     AUTHOR: D.Harvatis   MAR 89
+C!
+C!     INPUT :   STR  : character string to be converted to integer.
+C!     OUTPUT:   I    : integer variable in which the converted value
+C!                      will be placed.
+C!     RETURN VALUE   : .FALSE. for successfull conversion
+C!                      .TRUE. if conversion fails
+C-----------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+      CHARACTER*(*) STR
+      LOGICAL START
+C-----------------------------------------------------------------------
+      START=.TRUE.
+      L=LEN(STR)
+      K0=ICHAR('0')
+      I=0
+      IS=1
+      J=0
+C     find sign
+      IF (STR(1:1).EQ.'-') THEN
+          IS=-1
+          J=1
+      ELSE IF (STR(1:1).EQ.'+') THEN
+          J=1
+      END IF
+10        J=J+1
+C         skip leading spaces
+          IF ((STR(J:J).EQ.' ').AND.(START)) GO TO 10
+C         in case of '.',SPACE, or end of string terminate conversion
+          IF ((STR(J:J).EQ.'.').OR.(J.GT.L).OR.(STR(J:J).EQ.' '))
+     +     GO TO 11
+          K=ICHAR(STR(J:J))-K0
+C         if character not digit -> failed
+          IF ((K.LT.0).OR.(K.GT.9)) GO TO 12
+          LIM=(2147483647-K)/10
+C         if too large -> failed
+          IF (I.GT.LIM) GO TO 12
+          START=.FALSE.
+          I=I*10+K
+          GO TO 10
+C
+C     succesfull conversion
+11    I=IS*I
+      CMPTOI=.FALSE.
+      RETURN
+C
+C     character that is not a digit or SPACE or '.' found
+C     convertion failed
+C     I = so far found value
+12    I=IS*I
+      CMPTOI=.TRUE.
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK cmptoi
+@
+
+
+1.1.1.1
+log
+@import alephio 4
+@
+text
+@@

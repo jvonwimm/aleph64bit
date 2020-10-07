@@ -1,0 +1,106 @@
+head	1.2;
+access;
+symbols
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.02.17.16.58.49;	author cattanem;	state dead;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.43.19;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.43.20;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@bug fix in clas24
+@
+text
+@      SUBROUTINE PRWORK(IWORK)
+C-----------------------------------------------------------------------
+C! Print tabular work bank
+C!
+C  Author  S. Orteu       22-JUN-1987
+C
+C Can be used to print named banks, but the information on formats
+C won't be used. So it's suitable to print named banks whose
+C format has not been defined
+C
+C - structure : SUBROUTINE subprogram
+C               User Entry Names: PRWORK
+C               External References: BPRWRK, CHAINT
+C               Common decks       : BCS, BMACRO
+C
+C - usage   : CALL PRWORK (INDEX)
+C - input   : INPUT : index of work bank
+C-----------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "bcs.h"
+      CHARACTER*4 NAME,CHAINT
+      EXTERNAL CHAINT
+      LOGICAL FTABL
+#include "bmacro.h"
+C
+      FTABL(K) =LCOLS(K).LT.256 .AND. LROWS(K).LT.50000
+C-----------------------------------------------------------------------
+      IF (IWORK.EQ.0. OR. IW(IWORK) .EQ. 0) THEN
+         WRITE(IW(6),*) 'Bank doesn''t exist'
+         GOTO 999
+      ENDIF
+      NCOL = LCOLS(IWORK)
+      NROW = LROWS(IWORK)
+      NDATA = NCOL*NROW
+      NAME = CHAINT(IW(IWORK-3))
+      LUNP=IW(6)
+      IF (FTABL(IWORK)) THEN
+          WRITE(IW(6),1000) NAME,NCOL,NROW,IW(IWORK)
+          CALL BPRWRK(IW(IWORK+3),1,NDATA,LUNP,NCOL)
+       ELSE
+          WRITE(IW(6),*) 'Non-tabular bank. It will be skipped'
+       END IF
+ 999  RETURN
+ 1000 FORMAT(/1X,'+++PRWORK+++ Bank ',A4,' has ',I3,
+     &  ' columns and ',I6,' rows and the total length is ',I6)
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

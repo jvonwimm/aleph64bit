@@ -1,0 +1,88 @@
+NREFCARD
+DBVSCARD
+RUN  NUMRUN  'KEYWORD PRODUCTION' 
+TRIG     1  NUMEVT    
+DEBU 6 / 1  3     !    FIRST,LAST EVENT TO BE debugged
+TIME    10
+FILOCARD
+*FILO '/aleph/scwork/???/qq183_10k.epio|EPIO'
+*  use RANMAR generator for random numbers
+*  INSEED : first seed (range assigned per institute)
+*  LOSEED : second seed (incremented locally for new runs)
+*     INSEED  LOSEED (1-30000)
+RMAR     RMAR1           RMAR2
+ENDQ
+*-----------------------------------------------
+KCAR 0 / $TEXT
+POFF
+*       x        y        z    vertex smearing x y z for 98
+SVRTCARD
+PMA3 20433 / 0.054      ! truncation after 54 mev to avoid infinite loops
+MSTJ 28 / 0      ! External Tau library off as Tauola does it .....
+*-------------------------------------------------------------------
+*  here is a global tuning including BE_32c model by G.Rudolph 
+*  November 2001 fot Pythia 6.1 3rd iteration
+MSTJ  11  /  3    ! mixed scheme in frag
+MSTJ  12  /  2    !  old diquark + popcorn ( ie =3 in JETSET 7.4)
+MSTJ  46  /  3    ! azimuthal isotropy in PS ( def)
+*   parton shower parameters :
+PARJ 81 / 0.283   ! LAMBDA QCD was .291 in Jetset 7.4
+PARJ 82 / 1.74   ! M min.     was 1.52
+*   flavor-neutral fragmentation parameters  :
+PARJ 21 / 0.382   ! SIGMA MT   was .371
+PARJ 41 / 0.506   ! a          was .4
+PARJ 42 / 0.800   ! B          was .805
+PARJ 54 / -0.040 ! Epsilon_c  
+PARJ 55 / -0.0020 ! Epsilon_b  was -0.0035
+*   following is standard ....
+PARJ   1  / 0.108  ! qq/q
+PARJ   2  / 0.286  ! s/u
+PARJ   3  / 0.690  ! su/du
+PARJ  11  / 0.553  ! V_ud
+PARJ  12  / 0.470  ! V_s
+PARJ  13  / 0.65   ! V_cb
+PARJ  14  / 0.120  ! = PARJ(16) P(1+)
+PARJ  15  / 0.040  ! = PARJ(17)/5.  P(0+)
+PARJ  16  / 0.120  ! = 3.*PARJ(17)/5.  P(1+)
+PARJ  17  / 0.20   ! PARJ(14-17) give higher meson nonets (tensor... P(2+)
+PARJ  19  / 0.55   ! leading baryon suppre 
+PARJ  26  / 0.276  ! eta-prime suppress.
+*    special for BE_32
+MSTJ 51  / 2   !   BE on Gaussian
+MSTJ 52  / 9   !   part. involved 
+MSTJ 54  / 2   !   BE_32 model
+PARJ 92  / 1.12   !  /\_BE
+PARJ 93  / 0.331   ! sigma_BE
+*-----------------------end-global tuning-------------------------------
+*                             ------------- 
+* IFLAVOR select subprocesses   !! INTEGER !!
+* IFLAVOR =  FLAVOR CODE  10= q qbar 5 FLAVOURS,
+*                         11= e+ e-
+*                         13= mu+ mu-
+*                         15= tau+tau-,
+*                         12= nu nu~
+*                         1= d d~
+*                         2= u u~
+*                         3= s s~
+*                         4= c c~
+*                         5= b b~
+* ECMS     Center of mass energy in Gev
+* IPRINT   0=noprintout ,1=PRINTOUT of PART bank , 2= as 1 plus Decay table
+* AMZ      Z mass
+* AMH      Higgs mass
+* AMtop    Top mass
+*     IFLAVOR        ECMS   IPRINT     AMZ     AMH     AMtop     
+GKK4  IPROCESS      CMSENE    0      91.187   100.0    175.0   
+* ISR/FSR switches  !! REAL !!
+* KeyISR = 0,1 ISR OFF/ON
+* KeyFSR = 0,1 FSR OFF/ON
+* KeyINT = 0,2 ISR-FSR interference  0 = OFF / 2 = ON
+*  !! WARNING : don't switch keyISr = 0 and KeyFSR = 0 at the same time
+* KeyQSR = 0,1 photon emission from the final quarks is ON/OFF ( Keep it off 
+*       KeyISR    KeyFSR    KeyINT     KEYQSR  
+*GKKR      1.         1.         2.      1.    ! ISR/FSR/INT for leptons
+GKKR    1.           KEYFSRINT           1.    ! ISR only for quarks
+*
+END$
+
+

@@ -1,0 +1,46 @@
+   ALE:BOS77 .OLB, _D.OLB, .NEWS, BOS77:*
+   $ALROOT/bos77/
+
+   +++++++++++++++++++ BECAREFUL ++++++++++++++++++++++++++++++++++
+   This version is maintained with CVS
+   on UNIX the source resides on $ALROOT/bos77/F77, $ALROOT/bos77/inc
+   setenv ALROOT /al/reference/cvs
+
+   on ALWS the source resides on BOS77 a sub-directory of ALE
+   $ define BOS77 $2$DKB200:[GENERAL_A.ALE.BOS77]
+    
+   OpenVMS version must be extracted with -DDEC
+   OSF1    version must be extracted with -DDEC -DUNIX
+   SGI     version must be extracted with -DSGI
+   HP      version must be extracted with -DHP
+   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+   -------------------------------------------------------------------
+ ! 960419 - 3189     - remove mods in bbeprd given by O.Callot for
+                       the previous version (3089) because it was no
+                       longer possible to read MINI MC.
+
+ ! 960221 - 3089     - mods FLR2389 everywhere
+                       this version is prepared for cvs
+                       suppress ETA and CY205 flags
+                       replace VAX flag with DEC flag
+                       introduce UNIX flag to distinguish between
+                       DEC OpenVMS (previous VAX flag) and DEC OSF1
+                     - mods SWA2389 in
+                       NSWAP
+                       reset links as it is done in BSWAP.(SWA)
+                     - mods OCA2389 in
+                       BBEPRD
+                       try to avoid to read several times the same
+                       physical record.
+                       BLO32W
+                       special VAX version to speed up the reading
+                     - mods FLR2389B in
+                       BBEPF, BBOSF
+                       introduce a facility to NOT write format on
+                       output file. Require a call to ALFMT before
+                       trying to read the output file.
+                       to NOT write format put the data card:
+                       
+
+   --------------------------------------------------------------------

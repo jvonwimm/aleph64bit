@@ -1,0 +1,358 @@
+head	1.3;
+access;
+symbols
+	alpha126_22:1.3
+	alpha122_22:1.3
+	alpha126_21:1.3
+	alpha126_20:1.2
+	alpha126_19:1.2
+	alpha126_18:1.2
+	alpha126_17:1.2
+	alpha126_16:1.2
+	alpha126_15:1.2
+	alpha126_14:1.2
+	alpha126_13:1.2
+	alpha126_12:1.2
+	alpha126_11:1.2
+	alpha126_10:1.2
+	alpha126_09:1.2
+	alpha126_08:1.2
+	alpha126_07:1.2
+	alpha126_06:1.2
+	alpha126_05:1.2
+	alpha126_04:1.2
+	alpha126_03:1.2
+	alpha126_02:1.2
+	alpha126_1:1.2
+	alpha125_17:1.2
+	alpha125_16:1.2
+	alpha125_15:1.2
+	alpha125_14:1.2
+	alpha125_13:1.2
+	alpha125_12:1.2
+	alpha125_11:1.2
+	alpha125_10:1.2
+	alpha125_09:1.2
+	alpha125_08:1.2
+	alpha125_07:1.2
+	alpha125_06:1.2
+	alpha125_05:1.2
+	alpha125_04:1.2
+	alpha125_03:1.2
+	alpha125_02:1.2
+	alpha125_01:1.2
+	alpha124_19:1.2
+	alpha125:1.2
+	alpha124_18:1.2
+	alpha124_17:1.2
+	alpha124_16:1.2
+	alpha124_15:1.2
+	alpha124_14:1.2
+	alpha124_13:1.2
+	alpha124_12:1.2
+	alpha124_11:1.2
+	alpha124_10:1.2
+	alpha124_09:1.2
+	alpha124_08:1.2
+	alpha124_07:1.2
+	alpha124_7:1.2
+	alpha124_06:1.2
+	alpha124_05:1.2
+	alpha124_04:1.2
+	alpha124_03:1.2
+	alpha124_02:1.2
+	alpha124_01:1.2
+	alpha124:1.2
+	alpha123_12:1.2
+	alpha123_11:1.2
+	alpha123_10:1.2
+	alpha123_9:1.2
+	alpha123_8:1.2
+	alpha123_7:1.2
+	alpha123_6:1.2
+	alpha123_5:1.2
+	alpha123_4:1.2
+	alpha123_3:1.2
+	alpha123_2:1.2
+	alpha123:1.2
+	alpha122_48:1.2
+	alpha122_47:1.2
+	alpha122_46:1.2
+	alpha122_45:1.2
+	alpha122_44:1.2
+	alpha122_43:1.2
+	alpha122_42:1.2
+	alpha122_41:1.2
+	alpha122_40:1.2
+	alpha122_39:1.2
+	alpha122_38:1.2
+	alpha122_37:1.2
+	alpha122_36:1.2
+	alpha122_35:1.2
+	alpha122_34:1.2
+	alpha122_33:1.2
+	alpha122_32:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	2003.03.12.13.17.55;	author alphy;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.08.05.08.44.29;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.06.24.11.10.59;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@*** empty log message ***
+@
+text
+@      INTEGER FUNCTION KNHCMC(ITK)
+C***********************************************************************
+C Find MC track alpha with matched PHCO part belonging to input EFLW objects
+C The matching is circuitous -- using PHMH bank, FKIN number of MC input, and
+C PHCO parts of EFLW objects
+C Author: Paul Bright-Thomas
+C Mods:   03/03/97 PBT Created.
+C         04/03/97 PBT Note that LCAL clusters are also in PHCO/PHMH
+C         05/03/97 PBT New level of indirection, via PHCO links to PCOB object
+C           For KEFOTY(I)>4, only KEFOLC is filled, with PCOB object
+C           Then necessary to search all PHCO rows for link to this PCOB,
+C           and keep this PHCO object as a match to input EFLW object.
+C           Can then search PHMH for FKIN match.
+C           Allow for (remote) possibility of PHCO and PCOB link to same EFLW
+C         05/03/97 PBT While PHMH bank missing, resort to angular matches.
+C         06/03/97 PBT Angular matches indicated by -1.< SHCMC < 0.
+C      06/03/97 PBT Faster for ITMC, use KFMCT and ITFK
+C***********************************************************************
+#ifndef DOC
+#include "qdecl.h"
+#include "qcde.h"
+#include "qhac.h"
+#include "mcef.h"
+      INTEGER ITK
+      INTEGER KPHMH,NPHMH,IPHMH,NMCUSE
+      INTEGER KPHCO,NPHCO,IPHCO,JPHCO
+      INTEGER KFVER,NFVER,IVEND,JVEND
+      INTEGER ITFK,ITMFK,ITEF,ITMC,ITPH,ITFKPH
+     +        ,ITEFPE,ITEFPC,ITEFPT,ITEFPH,ITEFTY
+     +        ,JTPHCO(MXMTCH),ITPHCO,IPC,IMMX
+      CHARACTER*4 VNNAM,CHAINT
+      REAL    EFKIN,AHCMC,CTHCMC,CTMX
+      INTEGER IEFMC,DUMMY
+#include "qmacro.h"
+C***********************************************************************
+C-- Reset the return value
+      KNHCMC = 0
+C-- Reset the array of PHCO objects.
+      DO 10 II = 1,MXMTCH
+        JTPHCO(II) = 0
+ 10   END DO
+C-- Were we given an EF track number ?
+      IF( ITK.LT.KFEFT .OR. ITK.GT.KLEFT ) GOTO 999
+C-- Get PHCO number for ALPHA EF particle ... quit if no ECAL component.
+      ITEFPH = KEFOLH(ITK)
+      ITEFPC = KEFOLC(ITK)
+      IF( ITEFPH.LE.0 .AND. ITEFPC.LE.0 ) GOTO 999
+C-- PBT debug
+      IF( FCDEBU ) THEN
+        ITEFPT = KEFOLT(ITK)
+        ITEFPE = KEFOLE(ITK)
+        ITEFTY = KEFOTY(ITK)
+        IF( ITEFTY.GE.5 ) THEN
+C          WRITE(6,*) ' KNHCMC I: Got a residual/LCAL/SICAL'
+          DUMMY = 1
+        ENDIF
+      ENDIF
+C-- Store relevant PHCO row numbers, coming from ITEFPH or match to ITEFPC
+      JPHCO = 0
+      IF( ITEFPH.GT.0 ) THEN
+        JPHCO         = JPHCO + 1
+        JTPHCO(JPHCO) = ITEFPH
+      ENDIF
+C-- Link the PHCO bank
+      KPHCO  = 0
+      NAPHCO = NAMIND('PHCO')
+      IF( NAPHCO.GT.0 ) KPHCO = IW(NAPHCO)
+      IF( KPHCO.GT.0 )  NPHCO = LROWS(KPHCO)
+      IF( KPHCO.EQ.0 ) GOTO 199
+C-- Search PHCO for rows matching PCOB
+      DO 100 IPHCO = 1,NPHCO
+        IPC = ITABL(KPHCO,IPHCO,JPHCPC)
+        IF( IPC.EQ.ITEFPC .AND.
+     +      ITEFPC.GT.0 .AND. JPHCO.LT.MXMTCH ) THEN
+          JPHCO         = JPHCO + 1
+          JTPHCO(JPHCO) = IPHCO
+        ENDIF
+ 100  END DO
+C-- Are there any PHCO objects to match ?
+ 199  IF( JPHCO.LE.0 ) GOTO 299
+C-- Link the PHMH bank
+      KPHMH  = 0
+      NAPHMH = NAMIND('PHMH')
+      IF( NAPHMH.GT.0 ) KPHMH = IW(NAPHMH)
+      IF( KPHMH.GT.0 )  NPHMH = LROWS(KPHMH)
+      IF( KPHMH.EQ.0 ) GOTO 499
+C-- Loop over all inpute JTPHCO clusters
+      DO 220 JJ = 1,MIN(JPHCO,MXMTCH)
+        ITPHCO = JTPHCO(JJ)
+C-- EFLW ECAL: loop over PHMH to find EFLW obj w matching PHCO cluster
+ 201    DO 200 IPHMH = 1,NPHMH
+C-- Get PHCO number for this cluster-FKIN match
+          ITFKPH = ITABL(KPHMH,IPHMH,JPHMCO)
+          IF( ITFKPH.NE.ITPHCO ) GOTO 200
+C-- Get FKIN number for this cluster-FKIN match
+          ITFK   = ITABL(KPHMH,IPHMH,JPHMTN)
+          IF( ITFK.LE.0 ) GOTO 200
+C-- Search all ALPHA MC objects for same FKIN index
+C          DO 230 ITMC = KFMCT,KLMCT
+C            ITMFK = KTN(ITMC)
+C            IF( ITMFK.EQ.ITFK ) GOTO 235
+C 230      END DO
+          ITMC = KFMCT-1+ITFK
+ 235      IF( ITMC.LE.0 .OR. ITMC.GT.KLMCT ) GOTO 200
+C-- Check for repetition in mathcing to this input
+          NMCUSE = 0
+          DO 250 KK = 1,MIN(NEFMC(NEFIN),MXMTCH)
+            IF( ITEFMC(NEFIN,KK).EQ.ITMC ) NMCUSE = NMCUSE + 1
+ 250      END DO
+          IF( NMCUSE.GT.0 ) GOTO 200
+C-- We have a match ... check array bounds
+          IF( NEFMC(NEFIN).GE.MXMTCH ) THEN
+            CALL QWMESE(' KNHCMC - increase MXMTCH limit.')
+            GOTO 999
+          ENDIF
+C-- Increment count of matched EF objects,
+          KNHCMC       = KNHCMC + 1
+          NEFMC(NEFIN) = NEFMC(NEFIN) + 1
+C-- Save ALPHA number of matching MC track
+          ITEFMC(NEFIN,NEFMC(NEFIN)) = ITMC
+C-- Save matching energy
+          EFKIN  = MIN(QE(ITK),QE(ITMC))
+          SEFMC(NEFIN,NEFMC(NEFIN))  = EFKIN
+C-- PBT debug
+          IF( FCDEBU ) WRITE(6,1001) ITK,NEFIN,NEFMC(NEFIN),KNHCMC
+     +      ,ITFK,ITFKPH,ITPHCO,ITMC,EFKIN,QE(ITMC),QE(ITK),KEFOTY(ITK)
+ 1001     FORMAT(' KNHCMC I: ',8(1X,I3),3(1X,F6.2),1X,I2)
+C
+ 200    END DO     ! End loop over PHMH
+C
+ 220  END DO       ! End loop over PHCO matches
+C
+      IF( FCDEBU .AND. KNHCMC.EQ.0 .AND. NMCUSE.EQ.0 ) THEN
+        WRITE(6,1003) ITK,QE(ITK),(JTPHCO(JJ),JJ=1,JPHCO)
+ 1003   FORMAT(' KNHCMC W: No PHMH match made ',I3,1X,F6.3,5(1X,I3))
+      ENDIF
+C
+ 299  GOTO 999
+C****************************
+C A N G U L A R
+C****************************
+ 499  IF( FCWARN .AND. KNEVT.EQ.1 .AND. NEFIN.EQ.1 ) WRITE(6,*)
+     +  ' KNHCMC W: No PHMH matching information - no HCAL-MC matches.'
+C-- Put in some clumsy angular matching
+C-- Match if:
+C--           stable and not a gamma
+C--           end vertex in ECAL or HCAL
+C--           within 100 mrad of the input track
+C--
+C-- Link the vertex bank
+      KFVER  = 0
+      NAFVER = NAMIND('FVER')
+      IF( NAFVER.GT.0 ) KFVER = IW(NAFVER)
+      IF( KFVER.GT.0 )  NFVER = LROWS(KFVER)
+      IF( KFVER.EQ.0 ) GOTO 999
+C-- Loop over all MC tracks and keep any which satisfy these criteria.
+      CTMX = 0.
+      IMMX = 0
+      DO 500 ITMC = KFMCT,KLMCT
+C-- Test stability
+        IF( KSTABC(ITMC).LT.0 ) GOTO 500
+C-- Test enters HCAL (or ECAL, since most FKIN hadrons appear to end in ECAL)
+        IVEND = KENDV(ITMC)
+        IF( IVEND.LE.0 ) GOTO 500
+        JVEND = KVN(IVEND)
+        VNNAM  = CHAINT(ITABL(KFVER,JVEND,JFVEVN))
+        IF( VNNAM(1:1).NE.'H' .AND. VNNAM(1:1).NE.'E' ) GOTO 500
+C-- No gammas can have made it through .... anything else is fair game.
+        IF( XPEQOR(ITMC,'gamma') ) GOTO 500
+C-- Test charge
+C        IF( QCH(ITMC).EQ.0. ) GOTO 500
+C-- Test energy
+C        IF( QE(ITK).GT.1.5*QE(ITMC) ) GOTO 500
+C-- Test angular match
+        CTHCMC = QCOSA(ITMC,ITK)
+        IF( CTHCMC.GT.CTMX ) THEN
+          CTMX = CTHCMC
+          IMMX = ITMC
+        ENDIF
+        IF( CTHCMC.LT.CTAMH  ) GOTO 500
+C-- Bingo ... we have match; Check for repetition in matching to this input
+        NMCUSE = 0
+        DO 580 KK = 1,MIN(NEFMC(NEFIN),MXMTCH)
+          IF( ITEFMC(NEFIN,KK).EQ.ITMC ) NMCUSE = NMCUSE + 1
+ 580    END DO
+        IF( NMCUSE.GT.0 ) GOTO 500
+C-- Increment count of matched EF objects,
+        KNHCMC       = KNHCMC + 1
+        NEFMC(NEFIN) = NEFMC(NEFIN) + 1
+C-- Save ALPHA number of matching MC track
+        ITEFMC(NEFIN,NEFMC(NEFIN)) = ITMC
+C-- Save matching angle  ...
+        AHCMC = -ACOS(MIN(CTHCMC,0.999999))
+        SEFMC(NEFIN,NEFMC(NEFIN))  = AHCMC
+C-- PBT debug
+        IF( FCDEBU ) WRITE(6,1012) ITK,NEFIN,NEFMC(NEFIN),KNHCMC
+     +    ,ITFK,ITFKPH,ITEFPH,ITMC,AHCMC,QE(ITMC),QE(ITK),KEFOTY(ITK)
+     +    ,CQTPN(ITMC)
+ 1012   FORMAT(' KNHCMC I: ',8(1X,I3),1X,F6.3,2(1X,F6.2),1X,I2,1x,A6)
+C
+ 500  END DO
+      IF( FCDEBU .AND. KNHCMC.EQ.0 .AND. NMCUSE.EQ.0 ) THEN
+        WRITE(6,1013) ITK,IMMX,CTMX
+ 1013   FORMAT(' KNHCMC W: No angular match made - closest was '
+     +   ,2(I3,1X),F8.4)
+      ENDIF
+C
+ 999  RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@d17 1
+a17 1
+C         06/03/97 PBT Faster for ITMC, use KFMCT and ITFK
+@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@d25 3
+a27 3
+      INTEGER NAPHMH,KPHMH,NPHMH,IPHMH,NMCUSE
+      INTEGER NAPHCO,KPHCO,NPHCO,IPHCO,JPHCO
+      INTEGER NAFVER,KFVER,NFVER,IVEND,JVEND
+@

@@ -1,0 +1,132 @@
+KCAR 0 / $TEXT                                                                  
+POFF                                                                            
+*     RUN #             RUN'S TITLE                                             
+RUN   1714  'Tau:Korl07, 91.25 GEV, RUN 1714, RMAR 2401 1714'                   
+*     FIRST EVENT    LAST EVENT    TO BE GENERATED                              
+TRIG     1           5000                                                       
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG                                 
+DEBU  6     /      1          3                                                 
+* requested time left at the end of job (in sec)                                
+TIME 120                                                                        
+*    to save event file (EPIO format)                                           
+*FILO 'K7KORL07  | EPIO   | CART FL0291.1.SL SIZE 200 RECFM F AUTOPUT'          
+*FILO 'K7KORL07 EPIO A | EPIO'                                                  
+*    to save histograms                                                         
+*HSTO 'K7KORL07 HIST A'                                                         
+*  vertex smearing x     y       z      92 values
+*SVRT          0.0180   0.0010   1.00
+*  vertex smearing x     y       z      93 values
+*SVRT          0.0110   0.0005   0.70
+*  vertex smearing x     y       z      94 values                                 
+SVRT           0.0124   0.0005   0.72                                            
+*XVRT    0.01 0.0 0.1   ! offset x,y,z of vertex position
+RMAR   401  1714                                                               
+*  GBE7 CARD.   (WARNING ! JETSET7.3 PARTICLE CODES !)                          
+* ENE    : beam energy (in GeV);                                                
+* KFB    : defines which beam is along +Z ( =11 e- , = -11 e+ );                
+* E1     : longitudinal polarization of the beam which is along +Z;             
+* E2     : longitudinal polarization of the beam which is along -Z;             
+*      ENE     KFB    E1-x    E1-y   E1-z    E2-x    E2-y    E2-z               
+GBE7   45.625  11      0.      0.     0.      0.      0.      0.                
+*  GTAU CARD.                                                                   
+* JAK1   : tau1 decay mode (= tau- if KFB = 7, = tau+ if KFB = -7);             
+* JAK2   : tau2 decay mode (= tau+ if KFB = 7, = tau- if KFB = -7);             
+*          JAK1 and JAK2 possible values:  1 = e- mode ,2 = mu-mode,            
+*          3 = pi-mode ,  4 = rho-mode ,    5 = A1-mode ,6 = K-mode             
+*          7 = K*-mode ,  8 = 3pi-pi0 mode, 9 = 3pi0pi-mode,                    
+*         10 = 5pi mode, 11 = 6pi mode, 12-17 = KKpi or Kpipi modes             
+*          0 = all modes (according to branching ratios)                        
+*         -1 = no decay                                                         
+* ISPIN  : taus polarization on (= 1), off (= 0);                               
+*              spin effects in decay switched OFF/ON                            
+* ITDKRC : = 0 without radiative correction in tau decay,                       
+*          = 1 with       "          "           "      ;                       
+* XK0DEC : soft-hard photon separation cut in tau decay                         
+*          (in unit of tau energy) must be larger than  5.E-04;                 
+* GV     : GV coupling tau-W;                                                   
+* GA     : GA coupling tau-W;                                                   
+*      JAK1   JAK2   ISPIN   ITDKRC    XK0DEC    GV      GA                     
+GTAU     0       0     1       1        0.001    1.      -1.                    
+*GKR7 card                                                                               
+*...  Monte carlo parameters :                                                  
+* KORL07 CARDS : MASSES AND ENERGIES ARE IN GEV.                                
+* AMZ    : Z0 MASS (IN GEV)        * AMTOP  : TOP MASS (IN GEV)                 
+* AMH    : HIGGS MASS (IN GEV)     * AMNUTA : NEUTRINO TAU MASS (IN GEV)        
+* AMNEUT : NEUTRINO MASS (IN GEV) USED IN THE NU-NUBAR OPTION (ITFIN=3)         
+*      ASSUMED UNIQUE (= AMNUTA BY DEFAULT)                                     
+*      OR MASS OF QUARK TO BE GENERATED (IN QUARK MODE ITFIN>3)                 
+* SINW2  : SIN**2(THETA_W)         * GAMM   : Z0 WIDTH (IN GEV)                 
+* for KEYGSW > 1, SINW2 and GAMM are calculated by the program;                 
+* KEYGSW : degree of radiative corrections (from 0 to 4);                       
+*         = 0, no _gamma_ exchange in the s channel, only _Z0_
+*         = 1, photon and Z0, no vacuum polarization,Born approximation         
+*         = 4, all GSW corrections included in a way numerically                
+*              consistent with the implementation of QED bremsstrahlung;        
+* KEYRAD   The type of the QED bremsstrahlung  on (> 0), off (= 0);                                 
+*         =  0, no QED bremsstrahlung,                                          
+*         =  1, with QED order alpha bremsstrahlung initial-final interf.       
+*             single bremsstrahlung                                             
+*         = 10, - single initial state bremmstrhalung with an "ad hoc"
+*                 exponentiated photon spectrum
+*         = 11, - as KEYRAD = 12 but with different kinematics of EW
+*                 corrections implementation and boosts from tau+- rest
+*                 frames to laboratory
+*         = 12, - exponentiated initial and/or final state bremmstrahlung
+*                (YFS2/YFS3). New steering parameter KEYYFS (see below)
+*  ===>    STANDARD VALUE FOR YFS2/YFS3 = 12       <===                             
+*    next are backward compatibility options to emulate KORL06 version
+*         = =111, 112 included for backward compatibility with version 3.8
+*                    KORL06). Only in initial state, bremmsthalung is
+*                    exponentiated and single final state bremmstrahlung is
+*                    generated (as in the default option of KORALZ 3.8)
+* KEYWLB : type of electroweak library (1 = Stuart or DIZET, 2 = Hollik)        
+* Warning : FOR ITFIN = 1 OR 2, KEYWLB MIGHT BE CHOSEN EQUAL TO 1 OR 2,         
+*       BUT FOR ITFIN > 2 THE OPTION KEYWLB = 1 MUST BE USED!);                 
+* ===>  USE DIZET for official productions !!!!!   
+* ITFIN  : final state produced,                                                
+*   = 1 FOR TAUS,           *          = 501 for u-ubar production,             
+*   = 2 FOR MUONS,          *          = 502 for d-dbar production,             
+*   = 3 FOR NEUTRINOS,      *          = 503 for s-sbar production,             
+*   = 4 for electrons ( s channel)     = 504 FOR C-CBAR PRODUCTION,             
+*                                      = 505 FOR B-BBAR PRODUCTION,             
+*                                      = 506 FOR T-TBAR PRODUCTION;             
+* Warning : the mass terms are neglected in the matrix elements, but not        
+*           in the phase space; so, the results of the calculations have        
+*           to be taken with great care for b-bbar final state (and are         
+*           practically useless for t-tbar final state) except for some         
+*           specific studies of kinematics!                                     
+* NNEUT  : number of neutrino families in the neutrino option (ITFIN=3);        
+* XK0    : soft/ hard photon limit (single bremms.),                            
+*          for KEYRAD = 0, this parameter is dummy,                             
+*          for KEYRAD = 1, the recommended value is 1.E-02,                     
+*          otherwise, it is used only for the final state brems. and the        
+*          recommended value is 1.E-03;                                         
+* VVMIN  : minimum V-variable (dimensionless), defines also the minimum         
+*          photon energy (in beam energy units), the recommended value          
+*          1.E-05 to 1.E-06;                                                    
+* VVMAX  : same definition for the maximum V-variable;                          
+*          maximum v, (v=1-s'/s, sqrt(s')=final pair mass)                      
+* KEYYFS : standard value for YFS3 steering = 1000011  
+*      for advanced users :
+*          1000001 initial state only
+*          1000010 final state only 
+*          1000011 initial + final state 
+*          1000000 born without any bremss.                          
+*     AMZ  AMTOP  AMH  AMNUTA AMNEUT  SINW2  GAMM  KEYGSW  KEYRAD KEYWLB        
+GKR7  91.18 175.  100.  0.001  0.01  0.2293  2.484    4      12    1           
+*    ITFIN  NNEUT  XK0    VVMIN  VVMAX KEYYFS                                   
+        1     3   0.010  0.00001   1.  1000011                                  
+*GKBR card
+* possibility to modify branching ratios. if br to electron is not 1.           
+* then br's are renormalised to it                                             
+*   Fraction(a1 to charged) (K0 to Ks) (K0bar to Ks) ( K* to K0 pi-)            
+*GKBR        0.5                  0.5         0.5      0.6667                   
+* next are br's of tau . First is electron . 
+* look at documentation for decay modes definition                              
+*1.     0.9732  0.6217  1.4221  1.0180                                          
+*0.0405 0.0781  0.2414  0.0601  0.0281                                          
+*0.0045 0.0010  0.0062  0.0096  0.0169                                          
+*0.0056 0.0045  0.0219  0.0180  0.0096                                          
+*0.0088 0.0146                                                                  
+PMA1  20213 / 1.251         !  Set a1 mass                                      
+END$                                                                            

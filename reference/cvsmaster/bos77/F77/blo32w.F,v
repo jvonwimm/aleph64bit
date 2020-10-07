@@ -1,0 +1,64 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.05.03.14.54.52;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.04.15.15.33.49;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@replace ${VENDOR} by ALEPH_${VENDOR}
+Modified Files:
+  F77/ 	blo32w.F cfribm.F ctoibm.F epblin.F epdacr.F epdefu.F ephead.F
+ 	epinit.F epopen.F
+@
+text
+@#if defined(ALEPH_DEC) &&  ! defined(UNIX)
+      SUBROUTINE BLO32W( source, n1, target, n2, n3 )
+C
+C?   SOURCE is an array of 16 bit words
+C?   TARGET is an array of 32 bits words
+C?   This routine fills N3 (32b) words starting at TARGET(N2)
+C?   from SOURCE(N1). (16b) words are NOT swapped.
+C
+      INTEGER*2 SOURCE(1)
+      INTEGER   TARGET(1)
+      INTEGER N1, N2 N3
+      CALL lib$movc3( 4*n3, source(n1), target(n2) )
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@add blo32w.F a VAX version
+@
+text
+@d1 1
+a1 1
+#if defined(DEC) &&  ! defined(UNIX)
+@

@@ -1,0 +1,296 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.53.28;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.29;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.30;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE HPR(H,N,A,E,IOPT)
+C
+C
+C                 - - - - ----
+C        CALL HPR(H,N,A,E,IOPT)
+C
+C     WHERE H( ) = ARRAY OF N HISTOGRAM CONTENTS
+C           A,E  = LOWER AND UPPER LIMIT OF HISTOGRAM
+C           IOPT = OPTION SELECTED, SEE BELOW.
+C
+C     HPR PRINTS THE CONTENT OF A HISTOGRAM, ACCORDING TO THE SELECTED
+C     OPTION IOPT.
+C
+C     IOPT = 1   THE CONTENT IS PRINTED VERTICALLY
+C     IOPT = 2   A NUMBERED LINE IS PRINTED (IN ADDITION)
+C     IOPT = 3   THE SCALE IS PRINTED (IN ADDITION)
+C     IOPT = 4   UP TO 10 LINES OF X'S ARE PRINTED (IN ADDITION)
+C     IOPT = 5   MEAN VALUES ETC ARE PRINTED (IN ADDITION)
+C     IOPT = 6   THE INTEGRATED CONTENT IS PRINTED VERTICALLY
+C                                                 (IN ADDITION)
+C     THUS WITH IOPT=6 ALL OPTIONS ARE SELECTED, THE STANDARD PRINTOUT
+C     IS SELECTED WITH IOPT=4.
+C
+C     FURTHER OPTIONS - FOR IOPT = 0 NOTHING IS PRINTED, BUT AT THE
+C     NEXT CALL THE NORMALIZED CONTENT IS PRINTED (SUM = 1.0).
+C     THE CALL WITH IOPT=0 CAN BE E.G. CALL HPR(0,0,0,0,0).
+C     FOR NEGATIVE IOPT ONLY THE SELECTED OPTION IS PRINTED, E.G. FOR
+C     IOPT = -5 ONLY THE MEAN VALUES ETC, CALCULATED FROM THE HISTOGRAM
+C     CONTENT IS PRINTED.
+C
+C     IF N IS > 120, TWO OF MORE BINS ARE COMBINED INTO ONE FOR PRINTING
+C
+C     SUBROUTINE CALLED - PVERT, CFMT, MHISTQ
+C
+C
+      CHARACTER*128 PX
+      COMMON/CCONVT/PX(10)
+#include "doublsum.h"
+      REAL H(*),G(120),SP(13)
+      CHARACTER*8 RPR(13)
+      EXTERNAL MHISTQ
+      DATA    IOPTL/1/
+C     ...
+      CALL GLUNP(LUNP)
+      IF(LUNP.EQ.0) GOTO 100
+      IC=ICHAR('0')-1
+      IF(IOPT.EQ.0.OR.IOPT+6.LT.0) GOTO 100
+      MM=1
+    1 M=N/MM
+      IF(M.GT.120) THEN
+         MM=MM+MM
+         GOTO 1
+      END IF
+      LM=M
+C
+C     SUM, INTEGRATE CONTENT, FIND LIMITS ETC
+C
+      IF(IOPT+2.NE.0.AND.IOPT+3.NE.0.AND.IOPT+5.NE.0) THEN
+C
+C        COPY H TO G
+C
+         K=0
+         DO 6 I=1,N,MM
+         JEND=MIN0(N,I+MM-1)
+         SUM=0.0
+         DO 4 J=I,JEND
+    4    SUM=SUM+H(J)
+         IF(IOPT+1.EQ.0.AND.IOPTL.GE.5) SUM=H(JEND)
+         K=K+1
+    6    G(K)=SUM
+C
+C        FIND LM, IMIN, IMAX, NPOS, NNEG ...
+C
+         LM=0
+         IMIN=1
+         IMAX=1
+         NPOS=0
+         NNEG=0
+         GSUM=0.0
+         DO 8 I=1,M
+         IF(G(I).EQ.0.0) GOTO 8
+         GSUM=GSUM+G(I)
+         LM=I
+         IF(G(I).GT.0.0) THEN
+            NPOS=NPOS+1
+            IF(G(I).GT.G(IMAX)) IMAX=I
+         ELSE
+            NNEG=NNEG+1
+            IF(G(I).LT.G(IMIN)) IMIN=I
+         END IF
+    8    CONTINUE
+         IF(IOPT+1.EQ.0.AND.IOPT.GE.5) LM=LASTM
+         LASTM=LM
+C
+C
+C
+         IF(IOPT.GT.0.AND.IOPT.LT.5) THEN
+            WRITE(LUNP,101) GSUM,N,A,E
+         END IF
+C
+C
+C
+         IF(LM.EQ.0) GOTO 100
+         DO 10 I=1,M
+         IF(IOPTL.EQ.0.AND.GSUM.NE.0.0D0) G(I)=G(I)/GSUM
+   10    CONTINUE
+      END IF
+C
+C     PRINT MEAN VALUES ETC (5) ----------------------------------------
+C
+      IF(IOPT.GE.5.OR.IOPT+5.EQ.0) THEN
+         CALL MHISTP(H,N,A,E)
+      END IF
+C
+C     PRINT UP TO 10 LINES OF X'S (4) ----------------------------------
+C
+      IF(IOPT.GE.4.OR.IOPT+4.EQ.0.AND.G(IMAX).GT.0.0) THEN
+         DO 34 J=1,10
+   34    PX(J)=' '
+         IF(NNEG*10.LT.LM) THEN
+C
+C           PLOT ONLY POSITIVE CONTENTS
+C
+            FAC=10.0/G(IMAX)
+            DO 36 I=1,LM
+            K=G(I)*FAC+0.5
+            IF(K.GT.0) THEN
+               JA=11-K
+               DO 35 J=JA,10
+   35          PX(J)(I+8:I+8)='X'
+            END IF
+   36       CONTINUE
+         ELSE
+C
+C           PRINT POSITIVE AND NEGATIVE CONTENTS
+C
+            GMIN=AMIN1(G(IMIN),0.0)
+            GMAX=AMAX1(G(IMAX),0.0)
+            FAC=9.0/(GMAX-GMIN)
+   37       LMIN=-GMIN*FAC+0.5
+            LMAX=+GMAX*FAC+0.5
+            IF(LMAX+LMIN.GT.9) THEN
+               FAC=FAC*0.98
+               GOTO 37
+            END IF
+            LMIN=-LMIN
+            DO 136 I=1,LM
+            IF(G(I).EQ.0.0) GOTO 136
+            IF(G(I).GT.0.0) THEN
+               L=+G(I)*FAC+0.5
+               LA=LMAX+1-L
+               LB=LMAX
+               LL=LMAX+1
+            ELSE
+               L=-G(I)*FAC+0.5
+               L=-L
+               LA=LMAX+2
+               LB=LMAX+1-L
+               LL=LMAX+1
+            END IF
+            DO 135 L=LA,LB
+  135       PX(L)(I+8:I+8)='X'
+            PX(LL)(I+8:I+8)='0'
+  136       CONTINUE
+         END IF
+         WRITE(LUNP,102)
+         DO 38 J=1,10
+   38    WRITE(LUNP,102)  PX(J)
+      END IF
+C
+C     PRINT BIN CONTENT VERTICAL (1) -----------------------------------
+C
+      IF(IOPT.GE.1.OR.IOPT+1.EQ.0) THEN
+         LL=-5
+         IF(IOPTL.EQ.0) LL=-6
+         CALL PVERT(G(1),LM,LL)
+      END IF
+C
+C     PRINT NUMBERED LINE (2) ------------------------------------------
+C
+      IF(IOPT.GE.2.OR.IOPT+2.EQ.0) THEN
+         ML=((LM+9)/10)*10
+         DO 52 I=1,2
+   52    PX(I)=' '
+         DO 54 J=1,ML
+         PX(1)(8+J:8+J)='-'
+         IF(MOD(J,2).NE.1) THEN
+            I=MOD(J,10)+1
+            PX(2)(8+J:8+J)=CHAR(I+IC)
+            IF(I.EQ.1) THEN
+               I=MOD(J/10,10)+1
+               PX(1)(8+J:8+J)=CHAR(I+IC)
+            END IF
+         END IF
+   54    CONTINUE
+         DO 56 J=1,2
+   56    WRITE(LUNP,102)  PX(J)
+         END IF
+C
+C     PRINT SCALE (3) --------------------------------------------------
+C
+      IF(IOPT.GE.3.OR.IOPT+3.EQ.0) THEN
+         ML=((LM+9)/10)*10
+         LN=ML/10+1
+         ST=(E-A)/FLOAT(M)
+         IF(LN.GT.12) LN=12
+         DO 62 I=1,LN
+   62    SP(I)=A+ST*10.0*FLOAT(I-1)
+         CALL CFMT(SP,LN,RPR,TA)
+         WRITE(LUNP,103) TA,(RPR(I),I=1,LN)
+      END IF
+C
+C     PRINT INTEGRATED CONTENT (6) -------------------------------------
+C
+      IF(IOPT.GE.6.OR.IOPT+6.EQ.0) THEN
+         GSUM=0.0
+         DO 72 I=1,LM
+         GSUM=GSUM+G(I)
+   72    G(I)=GSUM
+         CALL PVERT(G(1),LM,-6)
+      END IF
+C
+C
+C
+  100 IOPTL=IOPT
+      RETURN
+  101 FORMAT('0HISTOGRAM CONTENT',G12.4,' IN',I4,' BINS BETWEEN',
+     1   G12.4,' AND',G12.4)
+  102 FORMAT(3X,A128)
+  103 FORMAT(1X,A4,1X,13(A8,2X))
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK hpr
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

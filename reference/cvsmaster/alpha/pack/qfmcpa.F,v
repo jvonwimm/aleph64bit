@@ -1,0 +1,519 @@
+head	1.8;
+access;
+symbols
+	alpha126_22:1.8
+	alpha126_21:1.8
+	alpha126_20:1.8
+	alpha126_19:1.8
+	alpha126_18:1.8
+	alpha126_17:1.8
+	alpha126_16:1.8
+	alpha126_15:1.8
+	alpha126_14:1.8
+	alpha126_13:1.8
+	alpha126_12:1.8
+	alpha126_11:1.8
+	alpha126_10:1.8
+	alpha126_09:1.8
+	alpha126_08:1.8
+	alpha126_07:1.8
+	alpha126_06:1.8
+	alpha126_05:1.8
+	alpha126_04:1.8
+	alpha126_03:1.8
+	alpha126_02:1.8
+	alpha126_1:1.8
+	alpha125_17:1.8
+	alpha125_16:1.8
+	alpha125_15:1.8
+	alpha125_14:1.8
+	alpha125_13:1.8
+	alpha125_12:1.8
+	alpha125_11:1.8
+	alpha125_10:1.8
+	alpha125_09:1.7
+	alpha125_08:1.7
+	alpha125_07:1.7
+	alpha125_06:1.7
+	alpha125_05:1.7
+	alpha125_04:1.7
+	alpha125_03:1.7
+	alpha125_02:1.7
+	alpha125_01:1.7
+	alpha124_19:1.7
+	alpha125:1.7
+	alpha124_18:1.7
+	alpha124_17:1.7
+	alpha124_16:1.7
+	alpha124_15:1.7
+	alpha124_14:1.7
+	alpha124_13:1.7
+	alpha124_12:1.7
+	alpha124_11:1.7
+	alpha124_10:1.7
+	alpha124_09:1.7
+	alpha124_08:1.7
+	alpha124_07:1.7
+	alpha124_7:1.7
+	alpha124_06:1.7
+	alpha124_05:1.7
+	alpha124_04:1.7
+	alpha124_03:1.7
+	alpha124_02:1.7
+	alpha124_01:1.7
+	alpha124:1.7
+	alpha123_12:1.7
+	alpha123_11:1.6
+	alpha123_10:1.6
+	alpha123_9:1.6
+	alpha123_8:1.6
+	alpha123_7:1.6
+	alpha123_6:1.6
+	alpha123_5:1.6
+	alpha123_4:1.6
+	alpha123_3:1.6
+	alpha123_2:1.6
+	alpha123:1.6
+	alpha122_48:1.6
+	alpha122_47:1.6
+	alpha122_46:1.6
+	alpha122_45:1.6
+	alpha122_44:1.6
+	alpha122_43:1.6
+	alpha122_42:1.6
+	alpha122_41:1.6
+	alpha122_40:1.6
+	alpha122_39:1.6
+	alpha122_38:1.6
+	alpha122_37:1.6
+	alpha122_36:1.6
+	alpha122_35:1.5
+	alpha122_34:1.5
+	alpha122_33:1.4
+	alpha122_32:1.4
+	alpha122_31:1.4
+	alpha122_30:1.4
+	alpha122_29:1.4
+	alpha122_28:1.4
+	alpha122_27:1.4
+	alpha122_26:1.4
+	alpha122_25:1.4
+	alpha122_24:1.4
+	alpha122_23:1.3
+	alpha122_22:1.3
+	alpha122_21:1.3
+	alpha122_20:1.3
+	alpha122_19:1.3
+	alpha122_18:1.3
+	alpha122_17:1.3
+	alpha122_16:1.3
+	alpha122_15:1.3
+	alpha122_14:1.3
+	alpha122_13:1.3
+	alpha122_12:1.3
+	alpha122_11:1.3
+	alpha122_10:1.3
+	alpha122_9:1.1.1.1
+	alpha122_8:1.1.1.1
+	alpha122_6:1.1.1.1
+	alpha122_5:1.1.1.1
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.8
+date	2000.10.17.06.18.11;	author boucrot;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	99.03.15.08.01.12;	author boucrot;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	97.08.25.11.51.33;	author boucrot;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	97.08.25.07.26.39;	author boucrot;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	97.02.26.08.17.35;	author boucrot;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.09.02.13.02.02;	author boucrot;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.08.27.14.47.01;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.03.14.12.41.42;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.41.43;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.8
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE QFMCPA
+CKEY FILL MC /INTERNAL
+C-----------------------------------------------------------------------
+C! Fill MC particles
+C!                                                  H.Albrecht 18.10.88
+C!                                        Modified: E.Lancon   12.07.89
+C!                                        Modified: J.Boucrot  26.08.97
+C!                                        Modified: J.Boucrot  16.10.00  
+C!called from QFILMC
+C-----------------------------------------------------------------------
+#ifndef DOC
+#include "fverjj.h"
+#include "fkinjj.h"
+#include "ajobjj.h"
+#include "qcdesh.h"
+      PARAMETER ( NRES = 10 ) 
+      DIMENSION PDUM(3),XDUM(3),XHEL(5),XCEN(2)
+      DATA EPSIL / 1.E-06 /
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+C
+      JFKIN = IW(NAFKIN) + LMHLEN
+      LFKIN = IW(JFKIN-1)
+      JFVER = IW(NAFVER)
+C
+C MC particle section in QVEC :
+C
+      KNMCT = IW(JFKIN)
+      KLMCT = KLMCT + KNMCT
+      IF (KLMCT .GE. KLFRT)  CALL QSBANK ('QVEC', KLMCT + 200)
+      JQVEC = KOQVEC + KFMCT * KCQVEC
+      KFFRT = KLMCT + 1
+C
+      IF (KNQLIN+KNMCT .GE. IW(KOQLIN))
+     &  CALL QSBANK ('QLIN',KNQLIN+KNMCT+500)
+C
+      JAJOB = IW(NAAJOB)
+      NAVER = 9999
+      IF (JAJOB .NE. 0)  NAVER  = ITABL (JAJOB,1,JAJOAV)
+      ITK = KFMCT
+      MAINMO = 0
+      DO 10 IGA = 1, KNMCT
+C
+C         protect against weird tracks from KINGAL/GALEPH
+C
+C         zero momentum tracks
+C
+        PT=VMOD(RW(JFKIN+JFKIPX),2)
+        IF (PT.LT.EPSIL) THEN
+           RW(JFKIN+JFKIPY)=EPSIL/1000.
+        ENDIF
+        PZ=RW(JFKIN+JFKIPZ)
+        IF (ABS(PZ).LT.EPSIL) RW(JFKIN+JFKIPZ)=EPSIL
+C
+C         anomalous particle code
+C
+        IF (IGA.EQ.KNMCT) THEN
+           IF (IW(JFKIN+JFKIPA).LT.0.OR.IW(JFKIN+JFKIPA).GT.1000)
+     &         GO TO 20
+        ENDIF
+C
+C         Good tracks : basic track attributes
+C
+        RW(JQVEC+JQVEQX) = RW(JFKIN+JFKIPX)
+        RW(JQVEC+JQVEQY) = RW(JFKIN+JFKIPY)
+        RW(JQVEC+JQVEQZ) = RW(JFKIN+JFKIPZ)
+        RW(JQVEC+JQVEQP) = SQRT (RW(JQVEC+JQVEQX)**2 +
+     &     RW(JQVEC+JQVEQY)**2 + RW(JQVEC+JQVEQZ)**2)
+C
+C         Particle code and charge
+C
+        KVTEST=MOD(KEVERT,10000)
+        IPC = KMCCOD (IW(JFKIN+JFKIPA))
+C        IF (IPC.LE.0) GO TO 10
+        RW(JQVEC+JQVECH) = RW(KOQPAR+IPC*KCQPAR+JQPACH)
+        IW(JQVEC+JQVEPA) = IPC
+        IFP = IW(KOQPLI+IPC)
+        IF (IFP .EQ. 0)  IFP = KFPADR (IPC)
+        IW(JQVEC+JQVENP) = IW(KOQFPA+IFP*KCQFPA+2)
+        IW(KOQFPA+IFP*KCQFPA+2) = ITK
+C
+C Be careful to deal correctly w/ mass and energy since the banks
+C KINE and FKIN store mass, not energy, in ALEPHLIB versions > 9.0
+        IF (NAVER .LT. 90)  THEN
+C
+C Fill in mass. Either from en-mom or from ALEPH part. table
+C Future : mass has to be stored in FKIN and taken from there !!!
+C The following statements may cause problems (accuracy) !!!
+C
+          RW(JQVEC+JQVEQE) = RW(JFKIN+JFKIMA)
+          RW(JQVEC+JQVEQM) = RW(KOQPAR+IPC*KCQPAR+JQPAMA)
+          IF (( RW(JQVEC+JQVEQM) .GE. 0.0005 .AND.
+     +       (RW(JQVEC+JQVEQP) / RW(JQVEC+JQVEQM)) .LT. 500.))
+     +       RW(JQVEC+JQVEQM) = SQRT (AMAX1
+     +       ((RW(JQVEC+JQVEQE) + RW(JQVEC+JQVEQP)) *
+     +       (RW(JQVEC+JQVEQE) - RW(JQVEC+JQVEQP)), 0.))
+        ELSE
+          RW(JQVEC+JQVEQM) = RW(JFKIN+JFKIMA)
+          RW(JQVEC+JQVEQE) = SQRT(RW(JQVEC+JQVEQP)**2 +
+     &        RW(JQVEC+JQVEQM)**2)
+        ENDIF
+ 
+C
+        IW(JQVEC+JQVETN) = IGA
+        IW(JQVEC+JQVESC) = 0
+        IW(JQVEC+JQVECL) = 2
+        IW(JQVEC+JQVEQD) = KOQDET
+        IW(JQVEC+JQVESP) = ITK
+C
+C         Origin and end vertex of track
+C
+        IF (IW(JFKIN+JFKIOV) .EQ. 0)  THEN
+          IW(JQVEC+JQVEOV) = 0
+        ELSE
+          IW(JQVEC+JQVEOV) = IW(JFKIN+JFKIOV) + KFMCV - 1
+        ENDIF
+        IF (IW(JFKIN+JFKIEV) .EQ. 0)  THEN
+          IW(JQVEC+JQVEEV) = 0
+        ELSE
+          IW(JQVEC+JQVEEV) = IW(JFKIN+JFKIEV) + KFMCV - 1
+        ENDIF
+C
+C         mother - daughter - mother relation
+C
+        IW(JQVEC+JQVEND) = 0
+        IW(JQVEC+JQVENO) = 0
+        IW(JQVEC+JQVENM) = 0
+        IM2=0
+        IF (KNQLIN + NRES .GE. IW(KOQLIN))
+     &    CALL QSBANK ('QLIN', KNQLIN + NRES + 500)
+C Take account of the different history codes for Herwig events
+        KHER=KVTEST/100
+        IF (MOD(KHER,10).EQ.1) THEN
+          IMCODE = IW(JFKIN+JFKIHC)
+          IHIST = IMCODE / 1000000
+          IW(JQVEC+JQVEKS) = IHIST
+          IHIST =  IHIST - (IHIST/100)*100
+          IMCODE = IMCODE - IW(JQVEC+JQVEKS)*1000000
+        ELSE
+          IW(JQVEC+JQVEKS) = IW(JFKIN+JFKIHC) / 10000
+        ENDIF
+
+        IF (IGA .LE. KKEVNT)  THEN
+C Herwig events can have particles with 2 mothers
+          IF (MOD(KHER,10).EQ.1) THEN
+            IM2 = IMCODE / 1000
+            IM = IMCODE - IM2*1000
+C Patch to stop initial state gammas being their own mother and
+C force Z0 to be mother of initial partons
+            IF(IM.EQ.0.AND.MAINMO.EQ.0.AND.IHIST.EQ.20) MAINMO=IGA
+            IF(IM.NE.0.AND.MAINMO.EQ.0) IM=0
+            IF(IM.EQ.1) IM=IM+MAINMO-1
+          ELSE
+            IM = MOD (IW(JFKIN+JFKIHC) , 10000)
+          ENDIF
+          IF (IM .NE. 0)  THEN
+            IW(JQVEC+JQVENO) = 1
+            IW(JQVEC+JQVEOL) = KNQLIN
+            KNQLIN = KNQLIN + 1
+            IW(KOQLIN+KNQLIN) = IM + KFMCT - 1
+C add in 2nd mother if there
+            IF (IM2.NE. 0)  THEN
+              IW(JQVEC+JQVENO) = 1 + IW(JQVEC+JQVENO)
+              KNQLIN = KNQLIN + 1
+              IW(KOQLIN+KNQLIN) = IM2+ KFMCT - 1
+            ENDIF
+          ENDIF
+        ELSE
+C We turn to the FVER bank to get the history
+          IM = IW(JFKIN+JFKIOV)
+          IF (IM .NE. 0)  THEN
+            IM = IW(KOQVRT+(IM+KFMCV)*KCQVRT+JQVRIP-KCQVRT)
+            IF (IM .NE. 0)  THEN
+              IW(JQVEC+JQVENO) = 1
+              IW(JQVEC+JQVEOL) = KNQLIN
+              KNQLIN = KNQLIN + 1
+              IW(KOQLIN+KNQLIN) = IM
+            ENDIF
+          ENDIF
+        ENDIF
+C
+        RW(JQVEC+JQVEEM) = -1.
+        RW(JQVEC+JQVECF) = -1.
+        DO 9 IB=1,KLOCKM
+          IW(JQVEC+JQVEBM+IB-1) = 0
+9       CONTINUE
+        IW(JQVEC+JQVELK) = 0
+C
+        RW(JQVEC+JQVEDB) = 0.
+        RW(JQVEC+JQVEZB) = 0.
+C Compute D0 and Z0 if MC track has an Origin Vertex
+C And if ABS(Q) >= 1
+C And if PT .ne. 0.
+        IF( IW(JFKIN+JFKIOV).NE.0 .AND. QMFLD.NE.0. .AND.
+     &      ABS(RW(JQVEC+JQVECH)).GE.1. ) THEN
+          PDUM(1) = RW(JFKIN+JFKIPX)
+          PDUM(2) = RW(JFKIN+JFKIPY)
+          IF (ABS(PDUM(1)).GT.1.E-10 .OR. ABS(PDUM(2)).GT.1.E-10) THEN
+             XDUM(1) = RTABL(JFVER,IW(JFKIN+JFKIOV),JFVEVX)
+             XDUM(2) = RTABL(JFVER,IW(JFKIN+JFKIOV),JFVEVY)
+             XDUM(3) = RTABL(JFVER,IW(JFKIN+JFKIOV),JFVEVZ)
+             PDUM(3) = RW(JFKIN+JFKIPZ)
+             CHRG = RW(JQVEC+JQVECH)
+             CALL TNRHPA(PDUM,XDUM,CHRG,QMFLD,XHEL,XCEN,DUMMY)
+             RW(JQVEC+JQVEDB) = XHEL(4)
+             RW(JQVEC+JQVEZB) = XHEL(5)
+          ENDIF
+        ENDIF
+C
+        RW(JQVEC+JQVESD) = 0.
+        RW(JQVEC+JQVESZ) = 0.
+        RW(JQVEC+JQVECB) = 0.
+        RW(JQVEC+JQVEEW) = 0.
+C
+        ITK = ITK + 1
+        JFKIN = JFKIN + LFKIN
+   10 JQVEC = JQVEC + KCQVEC
+      GO TO 999
+C Anomalies in tracks : particle code out of range:
+ 20   WRITE (IW(6),1003) KEVT,KRUN,KNMCT
+ 1003 FORMAT (/'** QFMCPA : in Event ',I6,'  Run ',I5,
+     &          ' : anomalous FKIN track ',I5,' dropped'/)
+      KNMCT=KNMCT-1
+      KLMCT=KLMCT-1
+C
+ 999  RETURN
+      END
+#endif
+@
+
+
+1.7
+log
+@*** empty log message ***
+@
+text
+@d8 1
+d132 2
+a133 1
+        IF (KVTEST/100.EQ.51) THEN
+d145 1
+a145 1
+          IF (KVTEST/100.EQ.51) THEN
+a228 4
+
+
+
+
+@
+
+
+1.6
+log
+@*** empty log message ***
+@
+text
+@d15 1
+d128 2
+d140 1
+@
+
+
+1.5
+log
+@*** empty log message ***
+@
+text
+@d7 1
+a7 1
+C!                                        Modified: J.Boucrot  26.02.97
+@
+
+
+1.4
+log
+@*** empty log message ***
+@
+text
+@d7 1
+d42 12
+a53 1
+C         basic track attributes
+a55 2
+           PKI=VMOD(RW(JFKIN+JFKIPX),3)
+           IF (PKI.LT.EPSIL) GO TO 20
+d59 3
+d213 1
+a213 1
+C Anomalies in tracks : P=0. , or particle code out of range:
+d223 4
+@
+
+
+1.3
+log
+@*** empty log message ***
+@
+text
+@d15 1
+d43 6
+d87 1
+a87 1
+
+d199 7
+d207 1
+@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@d52 1
+a52 1
+        IF (IPC.LE.0) GO TO 10
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d50 1
+a50 1
+      KVTEST=MOD(KEVERT,10000)
+d52 1
+@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

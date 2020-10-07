@@ -1,0 +1,183 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.30.07.08.45;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.35;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.36;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ cahtra.h gmacro.h lccomc.h lcnamc.h ljjpar.h siconst.h
+ sigeco.h version.h
+ itmsk1.F itmsk2.F itnois.F itres.F itxtlk.F
+ lcadc.F lcamp.F lcasig.F lcbhab.F lcbkpr.F lcdigi.F lcfral.F
+ lchit.F lcirun.F lcnami.F lcnois.F lcpad.F lcroc.F lcsamp.F
+ lcsatu.F lcshow.F lcstrt.F lctrak.F lctrdi.F lctrht.F lcwire.F
+ lcwsum.F lcwtri.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+ xtrcom.h
+@
+text
+@*DK lcnami
+      SUBROUTINE LCNAMI
+C--------------------------------------------------------------
+C! Prepare BOS banks
+C! Author     : P.Hansen & J. Dines Hansen 860801
+C! Modified   : P.Hansen 870920
+C! Desciption :
+C! ============
+C! Set name-indices for LCal BOS banks
+C! Set printing formats
+C!
+C! - called from LCIRUN                          from this .HLB
+C! - calls       NAMIND,BKFMT                    from BOS
+C!
+C -------------------------------------------------
+#ifndef DOC
+      EXTERNAL NAMIND
+#include "iocom.h"
+#include "bcs.h"
+#include "lcnamc.h"
+#include "lccomc.h"
+C -------------------------------------------------------------
+C
+      NALALI = NAMIND('LALI')
+      NALCAL = NAMIND('LCAL')
+      NALLAY = NAMIND('LLAY')
+      NALMTY = NAMIND('LMTY')
+      NALSCO = NAMIND('LSCO')
+      NALSLO = NAMIND('LSLO')
+      NALWRG = NAMIND('LWRG')
+      NALDRE = NAMIND('LDRE')
+      NALCCA = NAMIND('LCCA')
+      NALCPG = NAMIND('LCPG')
+      NALCEL = NAMIND('LCEL')
+      NALSHO = NAMIND('LSHO')
+C
+      NALSHI = NAMIND('LSHI')
+      NALWHI = NAMIND('LWHI')
+      CALL BKFMT('LSHI','I')
+      CALL BKFMT('LWHI','I')
+C
+      NALWHT = NAMIND('LWHT')
+      CALL BKFMT('LWHT','(I)')
+C
+      NALWDI = NAMIND('LWDI')
+      CALL BKFMT('LWDI','(I)')
+C
+      NALTHT = NAMIND('LTHT')
+      CALL BKFMT('LTHT','(I)')
+C
+      NALTDI = NAMIND('LTDI')
+      CALL BKFMT('LTDI','(I)')
+C
+      NALTTR = NAMIND('LTTR')
+      CALL BKFMT('LTTR','(I)')
+C
+      NALWTR = NAMIND('LWTR')
+      CALL BKFMT('LWTR','(I)')
+C
+      RETURN
+C
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d15 1
+a16 1
+      SAVE
+a33 2
+      CALL BKFMT('LCPG','4I,2F')
+C
+d35 1
+a35 3
+      CALL BKFMT('LCEL','3I,F,3I,11F,I')
+      NALCSH = NAMIND('LCSH')
+      CALL BKFMT('LCSH','3I,13F')
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

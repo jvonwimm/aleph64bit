@@ -1,0 +1,514 @@
+head	1.3;
+access;
+symbols
+	alpha126_22:1.3
+	alpha122_22:1.3
+	alpha126_21:1.3
+	alpha126_20:1.3
+	alpha126_19:1.3
+	alpha126_18:1.3
+	alpha126_17:1.3
+	alpha126_16:1.3
+	alpha126_15:1.3
+	alpha126_14:1.3
+	alpha126_13:1.3
+	alpha126_12:1.3
+	alpha126_11:1.3
+	alpha126_10:1.3
+	alpha126_09:1.3
+	alpha126_08:1.3
+	alpha126_07:1.3
+	alpha126_06:1.3
+	alpha126_05:1.3
+	alpha126_04:1.3
+	alpha126_03:1.3
+	alpha126_02:1.3
+	alpha126_1:1.3
+	alpha125_17:1.3
+	alpha125_16:1.3
+	alpha125_15:1.3
+	alpha125_14:1.3
+	alpha125_13:1.3
+	alpha125_12:1.3
+	alpha125_11:1.3
+	alpha125_10:1.3
+	alpha125_09:1.3
+	alpha125_08:1.3
+	alpha125_07:1.3
+	alpha125_06:1.3
+	alpha125_05:1.3
+	alpha125_04:1.3
+	alpha125_03:1.3
+	alpha125_02:1.3
+	alpha125_01:1.3
+	alpha124_19:1.3
+	alpha125:1.3
+	alpha124_18:1.3
+	alpha124_17:1.3
+	alpha124_16:1.3
+	alpha124_15:1.3
+	alpha124_14:1.3
+	alpha124_13:1.3
+	alpha124_12:1.3
+	alpha124_11:1.3
+	alpha124_10:1.3
+	alpha124_09:1.3
+	alpha124_08:1.3
+	alpha124_07:1.3
+	alpha124_7:1.3
+	alpha124_06:1.3
+	alpha124_05:1.3
+	alpha124_04:1.3
+	alpha124_03:1.3
+	alpha124_02:1.3
+	alpha124_01:1.3
+	alpha124:1.3
+	alpha123_12:1.3
+	alpha123_11:1.3
+	alpha123_10:1.2
+	alpha123_9:1.2
+	alpha123_8:1.1
+	alpha123_7:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	99.02.23.08.44.15;	author boucrot;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	99.01.21.13.14.43;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	99.01.16.16.44.07;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE QGTPDDX(IRUN,IEVT,IER)
+C---------------------------------------------------------------------
+C! Get the pad dE/dx from POTS 
+C!
+C!     Author: F. Palla 14-Nov-1998
+C!             Called from QFPTPX 
+C!
+C!     Input: IRUN  /I Run number
+C!            IEVT  /I Event number
+C!
+C!     Output: IER  /I Error return = nonzero if something went wrong 
+C!
+C!
+C!
+C!
+C---------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+C
+#include "alcons.h"
+#include "bcs.h"
+#include "tpcojj.h"
+#include "ptncjj.h"
+#include "frftjj.h"
+#include "ptunjj.h"
+#include "pcoijj.h"
+#include "tpgpar.h"
+#include "tpgeop.h"
+#include "tpgeom.h"      
+#include "tpgeow.h"
+#include "tc1xjj.h"
+#include "tc6xjj.h"
+#include "tp1xjj.h"
+#include "ftcljj.h"
+#include "frtljj.h"
+#include "qtwircl.h"
+#include "qtpadcl.h"
+#include "tpdxjj.h"
+C
+C++ Local variables
+C
+      LOGICAL FIRST/.TRUE./
+      INTEGER GTSTUP
+      INTEGER ALGTDB
+      SAVE NPTNC,NPTUN,NPCOI,NFRFT,NFRTL,NFTCL,NTPCO,NWRN
+      DATA NWRN / 0 /
+#include "bmacro.h"
+C
+C---------------------------------------------------------------------
+C
+C! Get banks from DB depending on run and setup code
+C
+      IF (IRUN.LE.2000) THEN
+        ITP = GTSTUP ('TP',IRUN)
+      ELSE
+        ITP = IRUN
+      ENDIF
+      IRET= ALGTDB(JUNIDB(0),'TC1XTP1X',ITP)
+      IRETS = IRET
+C
+C++  Get TC1X 
+C
+      KTC1X = IW(NAMIND('TC1X'))
+      IF (KTC1X.EQ.0) THEN
+        WRITE(IW(6),*) 'QGTPDDX: ','Constants bank TC1X is missing'//
+     &       ' from the direct access file.'
+      ENDIF
+      IF (IRETS.LT.0) THEN
+        DO 1832 I=1,LTSECT
+          IDX= JTC1SN + (I-1)*2
+          RNRMCL(I)= RTABL(KTC1X,1,JTC1NR)*RTABL(KTC1X,1,IDX)
+ 1832   CONTINUE
+        SLOPCL= RTABL(KTC1X,1,JTC1SL)
+        JTRNCL= ITABL(KTC1X,1,JTC1TP)
+      ENDIF
+C
+      IRETS = IRET
+C
+C++  Get TP1X 
+C
+      KTP1X = IW(NAMIND('TP1X'))
+      IF (KTP1X.EQ.0) THEN
+        WRITE(IW(6),*) 'QGTPDDX: ','Constants bank TP1X is missing'//
+     &       ' from the direct access file.'
+      ENDIF
+      IF (IRETS.LT.0) THEN
+        PADNRM = RTABL(KTP1X,1,JTP1NR)
+        IDX = JTP1SN
+        DO 1833 I=1,LTSECT
+          PNRMCL(I)= PADNRM*RTABL(KTP1X,1,IDX)*RNRMCL(I)
+          IDX = IDX + 1
+ 1833   CONTINUE
+        JPTRCL= ITABL(KTP1X,1,JTP1TP)
+        MNSPTP = ITABL(KTP1X,1,JTP1MS)
+      ENDIF
+C
+C++  Get TC6X 
+C
+      IRET= ALGTDB(JUNIDB(0),'TC6X',IRUN)
+      IF (IRET.EQ.0) THEN
+        WRITE(IW(6),*) 'QGTPDDX: ','Constants bank TC6X is missing'//
+     &       ' from the direct access file.'
+      ENDIF
+      IF (IRET.LT.0) THEN
+        KTC6X=IW(NAMIND('TC6X'))
+        DO 3178 I=1,LTSTYP
+          EDGECL(1,I)=RTABL(KTC6X,I,JTC6AP)
+          EDGECL(2,I)=RTABL(KTC6X,I,JTC6TU)
+ 3178   CONTINUE
+        
+      ENDIF
+C
+      IF(FIRST) THEN
+        NPTNC=NAMIND('PTNC')
+        NPTUN=NAMIND('PTUN')
+        NPCOI=NAMIND('PCOI')
+        NFRFT=NAMIND('FRFT')
+        NFRTL=NAMIND('FRTL')
+        NFTCL=NAMIND('FTCL')
+        NTPCO=NAMIND('TPCO')
+        FIRST=.FALSE.
+      ENDIF
+C
+C++ Check the existence of needed banks
+C
+      IER = 0
+      KPTNC=IW(NPTNC)
+      IF (KPTNC.EQ.0) THEN
+        IER=1
+        GO TO 999
+      ENDIF
+      KPTUN=IW(NPTUN)
+      IF (KPTUN.EQ.0) THEN
+        IER=2
+        GO TO 999
+      ENDIF
+      KPCOI=IW(NPCOI)
+      IF(KPCOI.EQ.0) THEN
+        IER=3
+        GO TO 999
+      ENDIF
+C
+C++ Deal with different cases (in ALPHA)
+C
+      KFRFT=IW(NFRFT)
+      IF(IW(NAMIND('FR12')).NE.0) THEN
+        KFRFT = NLINK('FRFT',3)
+      ELSEIF(IW(NAMIND('FR10')).NE.0) THEN
+        KFRFT = NLINK('FRFT',3)
+      ELSEIF(IW(NAMIND('FRF0')).EQ.0) THEN
+        KFRFT = NLINK('FRFT',3)
+      ENDIF
+c
+      IF(KFRFT.EQ.0) THEN
+        IER=4
+        GO TO 999
+      ENDIF
+      KFRTL=IW(NFRTL)
+      IF(KFRTL.EQ.0) THEN
+        IER=5
+        GO TO 999
+      ENDIF
+      KTPCO=IW(NTPCO)
+      IF(KTPCO.EQ.0) THEN
+        IER=6
+        GO TO 999
+      ENDIF
+      KFTCL=IW(NFTCL)
+      IF(KFTCL.EQ.0) THEN
+        IER=7
+        GO TO 999
+      ENDIF
+C
+C++ Drop output bank if it exists
+C
+      IF(IW(NTPDX).NE.0) CALL BDROP(IW,'TPDX')
+C
+C++ Link to the subcluster bank
+C        
+      KPCOI = IW(NPCOI)        
+C
+C++ Loop over the tracks
+C
+      IC = 0
+      DO 10 ITRK=1,LROWS(KFRTL)
+C       
+C++ Find TPC coordinates for the track
+C
+        NTPC = ITABL(KFRTL,ITRK,JFRTNT)+ITABL(KFRTL,ITRK,JFRTNR)
+        IOFTCL = ITABL(KFRTL,ITRK,JFRTIT)
+C
+C++ Create the output bank for this track
+C
+        LBANK = LMHLEN + NTPC * LTPDXA
+        CALL AUBOS('TPDX',ITRK,LBANK,KTPDX,IGARB)
+        IF (IGARB.NE.0 .OR. KTPDX.EQ.0) GOTO 998
+        IW(KTPDX + LMHCOL) = LTPDXA
+        IW(KTPDX + LMHROW) = 0
+
+        IF(NTPC.LT.0) GOTO 10
+C
+C++ Get the necessary information on the track
+C
+        OMEGA = RTABL(KFRFT,ITRK,JFRFIR)
+        IF (OMEGA .EQ. 0.) GO TO 10
+        TANL = RTABL(KFRFT,ITRK,JFRFTL)
+        IF (TANL .EQ. 0.) GO TO 10
+        COSL = ABS(COS(ATAN(TANL)))
+        D0 = RTABL(KFRFT,ITRK,JFRFD0)
+        IF (OMEGA*D0 .GT. 1.) GO TO 10
+C
+C++ Loop over the TPC coordinates
+C        
+        NSCL = 0
+        DO 20 ICO=1,NTPC
+          IC = IC + 1
+          MCO = IW(KFTCL+LMHLEN+IOFTCL+ICO)
+          ITPCO = KROW(KTPCO,MCO)
+C
+C++ Skip bad coordinates
+C
+          IF(IW(ITPCO+JTPCTN).LE.0) GOTO 20
+C
+C++ Get the sector slot number
+C
+          IND = IW(ITPCO+JTPCIN)
+          IROWG = IND/100000
+          ISLOT = IND/1000 - IROWG*100
+          IPAD = MOD(IND,1000)
+          ISTYP=ITPTYP(ISLOT)
+          IF (ISTYP.EQ.1)THEN
+            IROW = IROWG
+          ELSE
+            IROW = IROWG - NTPDRW(1)
+          ENDIF
+C
+C++ Skip fake coordinates
+C
+          IF(MOD(IW(ITPCO+JTPCOF),10).EQ.5) GOTO 20
+C
+C++  Get number of half pads 
+C
+          NHALF=ITABL(KPCOI,IC,JPCONH)
+          IF(NHALF.GT.0) GOTO 20
+C
+C++ Get RAW coordinates (local coordinate not corrected)
+C++ and R in ALEPH reference frame(corrected)
+C
+          RGLOB = RW(ITPCO+JTPCRV)
+          IF(RGLOB.LE.ABS(D0)) GOTO 20
+          RPRAW = RW(ITPCO+JTPCRR)
+          ZRAW  = RW(ITPCO+JTPCRZ)
+C
+C++ Get the number of wires associated with this coordinate
+C++ (filled in TWIREZ)
+C
+          NWIR = IW(ITPCO+JTPCIT)
+C
+C++ Get Pulseheight, no. pads and quality flag
+C
+          IPULS = ITABL(KPCOI,IC,JPCOPH)*10
+          IQUAL = MOD(ITABL(KPCOI,IC,JPCOTF),1)
+          NPADS = ITABL(KPCOI,IC,JPCONP)
+C
+C++ Cut out coordinates of abnormal size and suspicious subclusters 
+C
+          IF (NPADS .LT. MNPDTP) GO TO 20
+          IF (IQUAL .NE. 0) GO TO 20
+C
+C++ Correct the pulseheight according to calibration
+C
+          QPULS = IPULS * PNRMCL(ISLOT)
+C
+C++ Correct the pulseheight for sector edge effects
+C++ First find the X and Y of the coordinate
+C
+          RPAD = TPPROW(IROWG)
+          PHI_COORD = RPRAW/RPAD
+          X_COORD = RPAD * COS(PHI_COORD)
+          Y_COORD = RPAD * SIN(PHI_COORD)
+C
+C++ Find nearest wire to coord
+C
+          IWIRE = INT((X_COORD - TWIRE1(ISTYP))/TWSTEP(ISTYP) + 0.5)
+          IF (IWIRE.LT.1) IWIRE = 1
+          IF (IWIRE.GT.NTWIRE(ISTYP)) IWIRE = NTWIRE(ISTYP)
+C
+C++ Find distance from coord to sector edge
+C
+          DELY = TWIRLE(IWIRE,ISTYP) - ABS(Y_COORD)
+C
+C++ Apply exponential correction
+C
+          COREDG = 1.-EDGECL(1,ISTYP)*EXP(-DELY/EDGECL(2,ISTYP))
+          QPULS = QPULS/COREDG
+C
+C++   Get intersection of track with radial position of hit
+C
+          KCO = ITPCO
+          KTR = KROW(KFRFT,ITRK)
+          CALL TFILPA(KCO,KTR,PADCRO,WIRCRO)
+          COSPCA = ABS(COS(PADCRO))
+          IF (COSPCA.EQ.0) GOTO 20
+C
+C++ Calculate the sampled track length, including curvature effects
+C++ How the track crosses the pads?
+C
+          ARG = ATAN2(TPDWID(ISTYP)*NPADS,TPDHGT(ISTYP))
+          IF(ARG.GT.ABS(PADCRO)) THEN
+             SMPL = TPDHGT(ISTYP)/COSL/COSPCA
+          ELSE
+
+             ARG = TPDWID(ISTYP)*NPADS/2./
+     &               ABS(SIN(PADCRO))*OMEGA
+             IF(ABS(ARG).GT.1) THEN
+                ARG = 1.
+             ENDIF
+             IF(ABS(SIN(PADCRO)).GT.0.) THEN
+                SMPL = 2./OMEGA*ASIN(ARG)/COSL
+             ELSE 
+                SMPL = 0.
+             ENDIF
+          ENDIF
+          
+          IF(SMPL.LE.1.E-6) GOTO 20
+C
+C++ Calculate difference in r-phi between coordinate and nearest pad
+C
+          RPNRM = 0.5*(NTPDPR(IROW,ISTYP)+1) - RPRAW/TPDSEP(ISTYP)
+          DRPHI = TPDSEP(ISTYP) * (0.5-ABS(AMOD(RPNRM,1.)-0.5))
+C
+C++ Add data to TPDX bank for this track
+C
+          NSCL = NSCL + 1
+          IW(KTPDX + LMHROW) = IW(KTPDX + LMHROW) + 1
+          IOTPDX = KROW(KTPDX,NSCL)
+          IW(IOTPDX + JTPDIN) = IND
+          IW(IOTPDX + JTPDNP) = NPADS
+          IW(IOTPDX + JTPDNW) = NWIR
+          RW(IOTPDX + JTPDTC) = QPULS
+          RW(IOTPDX + JTPDSL) = SMPL
+          RW(IOTPDX + JTPDRZ) = ZRAW
+          RW(IOTPDX + JTPDCA) = COSPCA
+          RW(IOTPDX + JTPDDR) = DRPHI
+C
+ 20     ENDDO
+ 10   ENDDO
+      GOTO 1000
+C
+ 998  WRITE(IW(6),*)
+     +   'QGTPDDX: Not enough room in BOS for named bank TPDX'
+      GOTO 1000
+ 999  nwrn=nwrn+1
+      if (nwrn.le.10)   WRITE(IW(6),*)
+     +   'QGTPDDX: Input TPCO, TGTL or TSCL banks not found'
+      
+ 1000 CONTINUE
+C++ So that's it.  Add TPDX banks to the E list
+C
+      CALL BLIST(IW,'E+','TPDX')
+      CALL AUBPRS('TPDX')
+C
+      RETURN
+      END
+#endif
+
+@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@d310 1
+a310 1
+            SMPL = TPDHGT(ISTYP)/COSL/COSPCA
+a311 1
+            IF(ABS(SIN(PADCRO)).GT.0.) THEN
+d313 10
+a322 5
+              SMPL = 2./OMEGA*ASIN(TPDWID(ISTYP)*NPADS/2./
+     &             ABS(SIN(PADCRO))*OMEGA)/COSL
+            ELSE 
+              SMPL = 0.
+            ENDIF
+d366 1
+@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@d45 2
+a46 1
+      SAVE NPTNC,NPTUN,NPCOI,NFRFT,NFRTL,NFTCL,NTPCO
+d65 1
+a65 1
+        WRITE(6,*) 'GTPDDX: ','Constants bank TC1X is missing'//
+d83 1
+a83 1
+        WRITE(6,*) 'GTPDDX: ','Constants bank TP1X is missing'//
+d101 1
+a101 1
+        WRITE(6,*) 'GTPDDX: ','Constants bank TC6X is missing'//
+d346 2
+a347 1
+ 998  WRITE(6,*) 'GTPDDX:Not enough room in BOS for named bank TPDX'
+d349 3
+a351 1
+ 999  WRITE(6,*) 'Input TPCO, TGTL or TSCL banks not found'
+@

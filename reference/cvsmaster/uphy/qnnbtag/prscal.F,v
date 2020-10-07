@@ -1,0 +1,70 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  uphy1-0:1.1.1.1 flr:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.08.16.13.38.23;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.08.16.13.38.24;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@C!======================================================================
+      SUBROUTINE PR_SCAL(IOP,X1,X2,X3,Y1,Y2,Y3,ZCOS)
+C!======================================================================
+#ifndef DOC
+#include "qcde.h"
+      INTEGER IOP
+      REAL    X1,X2,X3,Y1,Y2,Y3,XX,YY,ZCOS
+#include "qmacro.h"
+C!======================================================================
+C!.ON DEFINI LE COS DE L'ANGLE ENTRE XX ET YY  :  ZCOS
+C!.AVEC 2 OPTIONS : IOP = 1 (2) NORMALISE ( OU PAS)
+C**
+      XX=SQRT(X1**2+X2**2+X3**2)
+      YY=SQRT(Y1**2+Y2**2+Y3**2)
+      IF(XX.EQ.0.0.OR.YY.EQ.0.0) THEN
+        ZCOS  = 999.
+        RETURN
+      ENDIF
+C**
+      ZCOS=X1*Y1+X2*Y2+X3*Y3
+C**
+      IF(IOP.EQ.1) THEN
+        ZCOS=ZCOS/(XX*YY)
+      ELSE
+        ZCOS=ZCOS
+      ENDIF
+C**
+      RETURN
+      END
+
+*AF
+#endif
+@
+
+
+1.1.1.1
+log
+@2nd try to import uphy
+@
+text
+@@

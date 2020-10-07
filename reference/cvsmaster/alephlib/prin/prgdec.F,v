@@ -1,0 +1,175 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.43.17;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.43.18;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE PRGDEC
+C ----------------------------------------------------------------
+C! Print decay  bank GDEC in readable format
+C! B. Bloch-Devaux     870812
+C!
+C!   No arguments
+C!   refers to Banks GDEC (if it exits   ) and PART
+C!
+C --------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+       EXTERNAL NAMIND
+#include "bcs.h"
+C
+      CHARACTER*4 CTABL , CHAINT
+#include "bmacro.h"
+C - Lth CHAR*4 element of the NRBOSth row of the bank with index ID
+      CTABL(ID,NRBOS,L) = CHAINT(ITABL(ID,NRBOS,L))
+C
+C --------------------------------------------------------------------
+C
+      LOUT = IW(6)
+      NAMP = NAMIND('GDEC')
+      NAPAR = NAMIND('PART')
+      JPART=IW(NAPAR)
+      IF (NAMP.EQ.0) THEN
+        WRITE (LOUT,'(''/1X,+++PRGDEC+++ NO GDEC   bank - RETURN'')')
+        RETURN
+      ENDIF
+      WRITE ( LOUT,1010 )
+ 1010  FORMAT(/1X,'+++PRGDEC+++  Decay modes  '/T9,
+     & 'Aleph #',8X,'Branching ratio(%)  ',19X,'decay products',
+     2 /)
+C
+      JPAR = IW(NAMP)
+      NPAR=LROWS (JPAR)
+      J=JPAR+LMHLEN
+      IF (NPAR.GT.0) THEN
+         DO 10 I=1,NPAR
+           WRITE (LOUT,1011) IW(J+1),(CTABL(JPART,IW(J+1),K),K=2,4)
+           DO 20 IM=1,6
+           BR=RTABL(JPAR,I,IM+1)
+           IF (BR.GT.0.) THEN
+                 ID=ITABL(JPAR,I,IM+7)
+                 N1=ID/10000
+                 N2=MOD(ID/100,100)
+                 N3=MOD(ID,100)
+              IF (N1.GT.0) THEN
+                 WRITE (LOUT,1013) BR,ID,(CTABL(JPART,N3,II),II=2,4),
+     &          (CTABL(JPART,N2,II),II=2,4),(CTABL(JPART,N1,II),II=2,4)
+              ELSE
+                 WRITE (LOUT,1013) BR,ID,
+     &          (CTABL(JPART,N3,II),II=2,4),(CTABL(JPART,N2,II),II=2,4)
+              ENDIF
+           ENDIF
+ 20        CONTINUE
+            J=J+LCOLS(JPAR)
+ 10      CONTINUE
+      ENDIF
+C
+      RETURN
+ 1011  FORMAT(T4,I6,2X,3A4)
+ 1013  FORMAT(T24,F10.4,15X,I8,3(5X,3A4))
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

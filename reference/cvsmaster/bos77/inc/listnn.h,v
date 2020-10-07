@@ -1,0 +1,106 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	96.03.11.15.59.15;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.02;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.03;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@C     ------LISTNN
+C     STATEMENTS INSERTED IN SUBPROGRAM
+C     RETURNS NAMI = NAME-INDEX FOR NEXT NAME IN LIST
+C                    OR ZERO
+C
+      LENLS=LEN(LIST)
+      IF(LENLS.EQ.0) THEN
+         JLS=0
+      ELSE IF(LENLS.EQ.1) THEN
+         JLS=INDEX('CERST',LIST)
+         IF(JLS.NE.0) THEN
+            JLS=JLS+ILT
+            NLS=JW(JW(JLS))
+         END IF
+      ELSE
+         NLS=LENLS/4
+         JLS=-1
+      END IF
+      ILS=0
+    3 IF(JLS.EQ.0) THEN
+         NAMI=0
+      ELSE IF(JLS.LT.0) THEN
+         IF(ILS.LT.NLS) THEN
+            ILS=ILS+1
+            NAME=LIST(4*ILS-3:4*ILS)
+            NAMA=INTCHA(NAME)
+#include "namen.h"
+         ELSE
+            JLS=0
+            NAMI=0
+         END IF
+      ELSE
+         IF(ILS.LT.NLS) THEN
+            ILS=ILS+1
+            NAMI=JW(JW(JLS)+ILS)
+         ELSE
+            JLS=0
+            NAMI=0
+         END IF
+      END IF
+C     ------
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*CD listnn
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

@@ -1,0 +1,125 @@
+      SUBROUTINE ALOPEN(LINDAT, LINSEL, LINSE2, LUTDAT, LUTSEL, IER)
+C-----------------------------------------------------------------------
+CKEY ALREAD OPEN EDIR
+C
+C  Author:     D.Schlatter                          April 89
+C  Modified by M.Talby    :                         May   89
+C  Modified by F.Ranjard  :                         Janv  90
+C                          set logical units to 0 at first entry
+C
+C! OPENs BOS select files and others ( sequential, direct, event directo
+C  in READ or WRITE mode according to FILI / FILO cards.
+C
+C    For input, multiple FILI cards refer to the SAME input stream
+C    For Output, multiple FILO cards refer to PARALLEL streams.
+C              The same is true for POT,DST,MDST cards.
+C
+C    for select files:
+C              If card    FILO ' *.EDIR'  is found , a new select file
+C                      with write access will be opened.
+C              Select file ( LUTSEL ) can refer to input data ( LINDAT )
+C                                            or to output data (LUTDAT )
+C              Action:
+C                  -   read FILO card
+C                  -   open new select file
+C                  -   write master data filename to select file
+C                  -   initialize BOS accordingly ( CALL BISELU )
+C
+C              Action:
+C              If card    FILI ' *.EDIR' is found, an old select
+C                      file with read  access will be opened.
+C                  -   read FILI card
+C                  -   open new select file
+C                  -   get master data filename from select file
+C                  -   open master-file  ( CALL AOPEN )
+C                  -   initialize BOS accordingly ( CALL BISELU )
+C
+C    for other files :
+C
+C                  -  read FILI card
+C                  -  CALL AOPEN
+C          or
+C                  -  read FILO card
+C                  -  CALL AOPENW
+C     for tapes
+C                  -  initialize SETUP ( on IBM ) if wanted
+C                  -  read FILI/FILO card
+C                  -  CALL AOPTAP  ( in AOPEN/AOPENW )
+C-----------------------------------------------------------------------
+C  Output:
+C              LINDAT  /I = logical unit for old data file,
+C                         = 0, no  input data file wanted.
+C                           no card  FILI ' *.NATIVE'  or
+C                                    FILI ' *.EPIO'    found
+C              LINSEL  /I = logical unit for old select file,
+C                         = 0, no  input select file wanted.
+C                           no card  FILI ' *.EDIR'   found
+C              LINSE2  /I = logical unit for second select file,
+C                         = 0, no  second input select file wanted.
+C                           no card  FILI ' *.EDIR | THRU *.EDIR' .
+C
+C              LUTDAT  /I = logical unit for new data file
+C                         = 0, no output data file wanted,
+C                           no card  FILO ' *.NATIVE'  or
+C                                    FILO ' *.EPIO'    found
+C              LUTSEL  /I = logical unit for new select file,
+C                         = 0, no output select file wanted,
+C                           no card  FILO ' *.EDIR'   found
+C
+C              IER          = 0 successful opening
+C
+C              IF ( IER.NE.0 ) THEN
+C
+C                IER .LT.  20  :  AOPERD part
+C                IER .EQ.   7  :  no more FILI card
+C                IER .EQ.   8  :  cannot find FILM card on EDIR
+C                IER .EQ.   9  :  cannot open input file
+C                IER .GE.  11  :  wrong FILI or FILM card (ACDARG)
+C
+C                IER .LT.  40  :  AOPEWR part
+C                IER .EQ.  29  :  cannot open output file
+C                IER .GE.  31  :  wrong FILO card (ACDARG return code)
+C
+C  Calls:   AOPERD,AOPEWR,BISELU
+C-----------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+      INTEGER LINDAT(*),LINSEL,LINSE2,LUTDAT(*),LUTSEL
+      INTEGER ACARD1
+      LOGICAL FIRST
+      DATA FIRST/.TRUE./
+C
+      IF(FIRST) THEN
+        FIRST=.FALSE.
+C----Clear card counter
+        IDUM=ACARD1('    ')
+C----set logical units to 0
+        LINDAT(1) = 0
+        LINSEL = 0
+        LINSE2 = 0
+        LUTDAT(1) = 0
+        LUTSEL = 0
+      ENDIF
+C --
+C----Open  input files
+      CALL AOPERD(LINDAT, LINSEL, LINSE2, IER )
+      IF(IER.NE.0) THEN
+        IER = IER+10
+        GOTO 999
+      ENDIF
+C --
+C----Open  output files
+      CALL AOPEWR (LINDAT, LUTSEL, LUTDAT, IER)
+      IF (IER.NE.0) THEN
+         IER = IER+30
+         GOTO 999
+      ENDIF
+C --
+C----Tell BOS what to do, in case of select files
+C----so far, only one input/output stream for select files
+      LOUT = 0
+      IF (LUTSEL.NE.0) LOUT = LUTDAT(1)
+      CALL BISELU(LINDAT,LINSEL,LINSE2,LOUT)
+ 999  RETURN
+      END
+#endif

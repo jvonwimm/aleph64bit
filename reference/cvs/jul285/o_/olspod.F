@@ -1,0 +1,309 @@
+      SUBROUTINE OLSPOD(ISTAT,BOM,QS0,CBITS,CUTS,DEBUG,LUNIT)
+C----------------------------------------------------------------------
+C!  - Get data to put in a row of bank BLQP
+C! 
+C!   Output arguments: ISTAT = integer status flags
+C!                     BOM   = array for LEP BOM data
+C!                     QS0   = array for QS0 data
+C!
+C!   Input  arguments: CBITS = control bits 
+C!                                bits 00-15 for LEP BOM data
+C!                                bits 16-31 for QS0 data
+C!                     CUTS  = array of real numbers (cuts)
+C!                     DEBUG = logical (.TRUE. means debugging "ON")
+C!                     LUNIT = unit for debug printout
+C!
+C!   Author:  O. Schneider
+C!
+C!   History: 07-JUN-1996 first version for private tests
+C!            20-JUN-1996 incorporated in test version of JULIA
+C!            19-JUL-1996 incorporated in JULIA 282
+C?
+C!======================================================================
+#ifndef DOC
+C
+C***********************************************************************
+C
+C     =========================
+C     Non-executable statements
+C     =========================
+C
+      IMPLICIT NONE
+C
+C     Parameters
+C
+      CHARACTER*(*) RNAME 
+      PARAMETER(RNAME='OLSPOD') ! name of this routine
+      INTEGER MCOORD,MSIDE
+      PARAMETER(MCOORD=2,MSIDE=2)
+C
+C     Arguments
+C
+      INTEGER CBITS,LUNIT
+      LOGICAL DEBUG
+      INTEGER ISTAT(MSIDE)
+C                     \-----------> 1=side A or left, 2=side B or right
+      REAL CUTS(MCOORD,2,MSIDE)
+C                 |    |   \------> 1=side A or left, 2=side B or right
+C                 |    \----------> 1=nominal mean,   2=maximum deviation
+C                 \---------------> 1=x,              2=y
+      REAL BOM(MCOORD,MSIDE)
+C                |      \---------> 1=side A or left, 2=side B or right
+C                \----------------> 1=x,              2=y
+      REAL QS0(MCOORD,MSIDE)
+C                |      \---------> 1=side A or left, 2=side B or right
+C                \----------------> 1=x,              2=y
+C
+C     Externals
+C
+      INTEGER NAMIND,NPRNT
+C
+C     Non-static local variables
+C
+      LOGICAL BAD
+      CHARACTER*2 CH2
+      INTEGER ISIDE,I,GAIN,STATUS,K,CONTROL,WHICH
+      INTEGER KLXIP,KBOMQ
+      INTEGER GAINS(4)
+      INTEGER BITS(0:31,MSIDE)
+C            bits  0-15: information taken directly from TURBOIP
+C                       bits  0- 7: gain settings
+C                           bits 0-1: gain for QS0 BPM e+
+C                           bits 2-3: gain for QS4 BPM e+
+C                           bits 4-5: gain for QS0 BPM e-
+C                           bits 6-7: gain for QS4 BPM e-
+C                       bits  8-12: status of BOM data
+C                           bit  8: status of QS0 BPM e+ (0 = OK and used, 1 = BAD or not used)
+C                           bit  9: status of QS4 BPM e+ (0 = OK and used, 1 = BAD or not used)
+C                           bit 10: status of QS0 BPM e- (0 = OK and used, 1 = BAD or not used)
+C                           bit 11: status of QS4 BPM e- (0 = OK and used, 1 = BAD or not used)
+C                           bit 12: availability of data (0 = available, 1 = no data) 
+C                       bits 13-15: unused (set to 0)
+C            bits 16-23: problems identified by JULIA on TURBOIP data (0 = OK, 1 = BAD)
+C                       bits 16-23: unused (set to 0)
+C            bits 24-31: bits for QS0 stuff
+C                       bit  24: status flag for x QS0  (0 = OK and used, 1 = BAD or not used)
+C                       bit  25: status flag for y QS0  (0 = OK and used, 1 = BAD or not used)
+C                       bit  26: status flag for y* QS0  (0 = OK and used, 1 = BAD or not used)
+C                       bit  27: availability of data (0 = available, 1 = no data)
+C                       bits 28-31: unused (set to 0)
+C
+C
+C     Static local variables (i.e. saved variables)
+C
+      LOGICAL FIRST
+      SAVE    FIRST
+      DATA    FIRST/.TRUE./
+      INTEGER NALXIP,NABOMQ
+      SAVE    NALXIP,NABOMQ
+      DATA    NALXIP,NABOMQ/0,0/
+C
+C     HAC parameter definitions
+C
+#include "lxipjj.h"
+#include "bomqjj.h"
+C
+C     BOS common block
+C
+#include "bcs.h"
+C
+C     Standard function definition statements
+C
+#include "bmacrod.h"
+#include "bmacro.h"
+C
+C***********************************************************************
+C
+C     ==================
+C     Initialize routine
+C     ==================
+C
+      IF(FIRST) THEN  
+        FIRST=.FALSE.
+C
+C       Get name indeces of all banks used by this routine
+C
+        NALXIP=NAMIND('LXIP') ! LEP BOM data (from TURBOIP)
+        NABOMQ=NAMIND('BOMQ') ! QS0 positions measurements
+      ENDIF
+C
+C***********************************************************************
+C
+C     ========================
+C     Default output arguments
+C     ========================
+C
+      CALL UZERO(BITS,1,32*MSIDE)
+      CALL UZERO(ISTAT,1,MSIDE)
+      CALL UZERO(BOM,1,MCOORD*MSIDE)
+      CALL UZERO(QS0,1,MCOORD*MSIDE)
+C
+C***********************************************************************
+C
+C     ================
+C     Get TURBOIP data
+C     ================
+C
+      CONTROL=IBITS(CBITS,0,16)
+      WHICH=IBITS(CONTROL,0,2)
+      DO ISIDE=1,MSIDE
+        BITS(12,ISIDE)=1
+      ENDDO
+      KLXIP=IW(NALXIP)
+      IF(KLXIP.LE.0) THEN 
+        CALL RERROR(RNAME,1,'Missing LXIP bank')
+        IF(DEBUG) WRITE(LUNIT,3000) RNAME,'LXIP'
+ 3000   FORMAT(1X,A,': missing ',A,' bank')
+      ELSE IF(WHICH.NE.0) THEN
+C***        IF(DEBUG) I=NPRNT('LXIP',IW(KLXIP-2))
+        DO I=1,LROWS(KLXIP)
+          IF(ITABL(KLXIP,I,JLXISI).NE.0.AND.
+     &       ITABL(KLXIP,I,JLXISI).NE.1) THEN 
+            WRITE(CH2,'(I2)',IOSTAT=STATUS) ITABL(KLXIP,I,JLXISI)
+            CALL RERROR(RNAME,2,'bad TURBOIP side number '//CH2)
+            IF(DEBUG) WRITE(LUNIT,1000) RNAME,
+     &       'bad TURBOIP side number '//CH2
+          ENDIF
+          DO ISIDE=1,MSIDE
+            IF(ITABL(KLXIP,I,JLXISI).EQ.ISIDE-1) THEN
+              BITS(12,ISIDE)=0
+C
+C             Decode gain word
+C
+              GAIN=ITABL(KLXIP,I,JLXIGF)
+              IF(GAIN.LT.0) THEN 
+                CALL RERROR(RNAME,3,'TURBOIP gain codes not available')
+                IF(DEBUG) WRITE(LUNIT,1000) RNAME,
+     &            'TURBOIP gain codes not available'
+                CALL UZERO(GAINS,1,4)
+              ELSE
+                GAINS(1)=MOD(GAIN,10)            ! e+ QS0
+                GAINS(2)=MOD(GAIN,100)/10        ! e+ QS4
+                GAINS(3)=MOD(GAIN,1000)/100      ! e- QS0
+                GAINS(4)=MOD(GAIN,10000)/1000    ! e- QS4
+              ENDIF
+              DO K=1,4
+                IF(GAINS(K).LT.0.OR.GAINS(K).GT.3) THEN
+                  WRITE(CH2,'(I2)',IOSTAT=STATUS) GAINS(K)
+                  CALL RERROR(RNAME,4,'bad TURBOIP gain code '//CH2)
+                  IF(DEBUG) WRITE(LUNIT,1000) RNAME,
+     &              'bad TURBOIP gain code '//CH2
+ 1000             FORMAT(1X,A,': ',A)
+                  GAINS(K)=MIN0(MAX0(GAINS(K),0),3)
+                ENDIF
+                IF(BTEST(GAINS(K),0)) BITS(2*K-2,ISIDE)=1
+                IF(BTEST(GAINS(K),1)) BITS(2*K-1,ISIDE)=1
+              ENDDO
+C
+C             Decode status word
+C
+              STATUS=ITABL(KLXIP,I,JLXIST)
+              IF(STATUS.EQ.2) THEN 
+                BITS(12,ISIDE)=1
+                STATUS=1111
+              ENDIF
+              BITS( 8,ISIDE)=MOD(STATUS,10)            ! e+ QS0
+              BITS( 9,ISIDE)=MOD(STATUS,100)/10        ! e+ QS4
+              BITS(10,ISIDE)=MOD(STATUS,1000)/100      ! e- QS0
+              BITS(11,ISIDE)=MOD(STATUS,10000)/1000    ! e- QS4
+              DO K=8,11
+                IF(BITS(K,ISIDE).LT.0.OR.BITS(K,ISIDE).GT.1) THEN 
+                  WRITE(CH2,'(I2)',IOSTAT=STATUS) BITS(K,ISIDE)
+                  CALL RERROR(RNAME,5,'bad TURBOIP status code '//CH2)
+                  IF(DEBUG) WRITE(LUNIT,1000) RNAME,
+     &              'bad TURBOIP status code '//CH2
+                ENDIF
+              ENDDO
+C
+C             Decode data
+C
+              IF(WHICH.EQ.1) THEN  ! positrons only
+                BOM(1,ISIDE)=-RTABL(KLXIP,I,JLXIXP)
+                BOM(2,ISIDE)=+RTABL(KLXIP,I,JLXIYP)
+                BITS(10,ISIDE)=1 ! e- QS0
+                BITS(11,ISIDE)=1 ! e- QS4
+              ELSE IF(WHICH.EQ.2) THEN ! electrons only
+                BOM(1,ISIDE)=-RTABL(KLXIP,I,JLXIXE)
+                BOM(2,ISIDE)=+RTABL(KLXIP,I,JLXIYE)
+                BITS( 8,ISIDE)=1 ! e+ QS0
+                BITS( 9,ISIDE)=1 ! e+ QS4
+              ELSE ! positron-electron average
+                BOM(1,ISIDE)=-0.5*(RTABL(KLXIP,I,JLXIXP)+
+     &                             RTABL(KLXIP,I,JLXIXE))
+                BOM(2,ISIDE)=+0.5*(RTABL(KLXIP,I,JLXIYP)+
+     &                             RTABL(KLXIP,I,JLXIYE))
+              ENDIF
+            ENDIF
+          ENDDO
+        ENDDO
+      ENDIF
+C
+C***********************************************************************
+C
+C     ============
+C     Get QS0 data
+C     ============
+C
+      CONTROL=IBITS(CBITS,16,16)
+      WHICH=IBITS(CONTROL,0,2)
+      DO ISIDE=1,MSIDE
+        BITS(27,ISIDE)=1
+      ENDDO
+      KBOMQ=IW(NABOMQ)
+      IF(KBOMQ.LE.0) THEN 
+        CALL RERROR(RNAME,6,'Missing BOMQ bank')
+        IF(DEBUG) WRITE(LUNIT,3000) RNAME,'BOMQ'
+      ELSE IF(WHICH.NE.0) THEN
+C***        IF(DEBUG) I=NPRNT('BOMQ',IW(KBOMQ-2))
+        DO ISIDE=1,MSIDE
+          BITS(27,ISIDE)=0
+C
+C         Check that not all words are zero
+C         (I have seen this happen ...)
+C
+          BAD=RTABL(KBOMQ,ISIDE,JBOMQX).EQ.0..AND.
+     &        RTABL(KBOMQ,ISIDE,JBOMQY).EQ.0..AND.
+     &        RTABL(KBOMQ,ISIDE,JBOMQZ).EQ.0..AND.
+     &        RTABL(KBOMQ,ISIDE,JBOMQR).EQ.0.
+          IF(BAD) THEN 
+            CALL RERROR(RNAME,7,'Bad data in BOMQ bank')
+            IF(DEBUG) WRITE(LUNIT,1000) RNAME,'Bad data in BOMQ bank'
+            BITS(24,ISIDE)=1
+            BITS(25,ISIDE)=1
+            BITS(26,ISIDE)=1
+          ELSE
+            QS0(1,ISIDE)=RTABL(KBOMQ,ISIDE,JBOMQX)
+            IF(WHICH.EQ.1) THEN ! y only
+              QS0(2,ISIDE)=RTABL(KBOMQ,ISIDE,JBOMQY)
+              BITS(26,ISIDE)=1
+            ELSE IF(WHICH.EQ.2) THEN ! y* only
+              QS0(2,ISIDE)=RTABL(KBOMQ,ISIDE,JBOMQR)
+              BITS(25,ISIDE)=1
+            ELSE ! average of y and y*
+              QS0(2,ISIDE)=0.5*(RTABL(KBOMQ,ISIDE,JBOMQY)+
+     &                          RTABL(KBOMQ,ISIDE,JBOMQR))
+            ENDIF
+          ENDIF
+        ENDDO
+      ENDIF
+C
+C***********************************************************************
+C
+C     =====================
+C     Set total status flag
+C     =====================
+C
+      DO ISIDE=1,MSIDE
+        DO I=0,31
+          IF(BITS(I,ISIDE).NE.0) ISTAT(ISIDE)=IBSET(ISTAT(ISIDE),I)
+        ENDDO
+      ENDDO
+C
+      IF(DEBUG) THEN 
+        WRITE(LUNIT,2001) RNAME,'status = ',ISTAT,ISTAT
+ 2001   FORMAT(1X,A,': ',A,1X,2I10,2X,2Z9.8)
+        WRITE(LUNIT,2002) RNAME,'BOM=',BOM,', QS0=',QS0
+ 2002   FORMAT(1X,A,':',2(2X,A,4F8.1))
+      ENDIF
+      END
+#endif

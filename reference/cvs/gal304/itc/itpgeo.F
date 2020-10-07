@@ -1,0 +1,61 @@
+*DK itpgeo
+      SUBROUTINE ITPGEO
+C.
+C...ITPGEO  1.11  930721  18:08                        R.Beuselinck
+C.
+C! Print ITC read out geometry
+C.
+C-----------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "itelec.h"
+#include "itexpc.h"
+#include "itparc.h"
+#include "itresc.h"
+#include "itrotc.h"
+#include "itwirc.h"
+#include "iocom.h"
+      WRITE(LOUTIO,1000) WZMXIT,
+     + (I,RWIRIT(I),NWIRIT(I),IWIRIT(I),PHWRIT(I),CELHIT(I),CELWIT(I),
+     +  I=1,8)
+      WRITE(LOUTIO,1001) WSAGIT, EULRIT, DXYZIT
+      WRITE(LOUTIO,1002) HWEFIT
+      WRITE(LOUTIO,1004) (I,DVELIT(I,1),DVELIT(I,2),DVELIT(I,3),
+     +                    DVELIT(I,4),DVELIT(I,5),I=1,8)
+      WRITE(LOUTIO,1005) 'Positive',(I,(RESITP(J,I),J=1,5),I=1,8)
+      WRITE(LOUTIO,1005) 'Negative',(I,(RESITN(J,I),J=1,5),I=1,8)
+      WRITE(LOUTIO,1006) (I,(ZRESIT(J,I),J=1,2),I=1,8)
+      WRITE(LOUTIO,1003) CLOKIT, TSTRIT, TBINIT,
+     + (I,PLENIT(I),EXPFIT(I),I=1,8)
+C
+ 1000 FORMAT(///50X,'ITC geometry'//' Readout geometry:',10X,
+     + 'Sense wire half-length (cm) =',F6.1//
+     + /' Layer   Wire   No. of  Numbering   Phi     Cell    Cell'
+     + /' Number  Radii  Wires    Offset    Offset  Height   Width'
+     + /(1X,I3,5X,F5.2,2X,I4,4X,I5,6X,F6.4,2X,F6.2,3X,F5.2))
+ 1001 FORMAT(//' Alignment constants:',10X,'Wire sag at centre (cm) = ',
+     + F5.4//' Chamber rotation (Euler angles) = ',3F11.7
+     + //' Displacement of ITC origin w.r.t. ALEPH = ',3F10.4)
+ 1002 FORMAT(//' General readout characteristics:'/
+     + /' Wire inefficiency at theta = 90 degrees. : ', F6.3)
+ 1003 FORMAT(//' Time expansion constants for Z-scalars:'/
+     + /' Clock pulse interval for Z coincidence test (ns).: ', F6.2
+     + /' Start time for calculation of ITC theta bin (ns).: ', F6.0
+     + /' Time width of one ITC theta bin (ns).            : ', F6.0
+     +//' Layer   Pulse   Expansion'
+     + /' Number  Length   Factor'
+     + /(1X,I3,T9,F6.2,T19,F6.2))
+ 1004 FORMAT(//
+     + ' Layer    <---- Drift Time Coeffs. ------------------>'
+     + /' Number       C1        C2        C3        C4        C5'
+     + /(I4,T11,5(2PE10.1)))
+ 1005 FORMAT(//
+     + ' Layer    <----- R-Phi ',A,'-phi Resol. Coeffs. ----->'
+     + /' Number       C1        C2        C3        C4        C5'
+     + /(I4,T11,5(2PE10.1)))
+ 1006 FORMAT(//
+     + ' Layer    <--- Z Res. Coeffs. --->'
+     + /' Number       C1        C2'
+     + /(I4,T11,2(2PE10.1)))
+      END
+#endif

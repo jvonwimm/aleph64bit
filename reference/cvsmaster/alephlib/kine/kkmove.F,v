@@ -1,0 +1,203 @@
+head	1.3;
+access;
+symbols
+	aleph316_2:1.3
+	aleph316_1:1.3
+	aleph316:1.3
+	aleph315_7:1.3
+	aleph315_6:1.3
+	aleph315_5:1.3
+	aleph315_4:1.3
+	aleph315_3:1.3
+	aleph315_2:1.3
+	aleph315_1:1.3
+	aleph315:1.3
+	aleph314_2:1.3
+	aleph314_1:1.3
+	aleph314:1.3
+	aleph313_1:1.3
+	aleph313:1.3
+	aleph312_1:1.3
+	aleph312:1.3
+	aleph311_1:1.3
+	aleph311:1.3
+	aleph310_3:1.3
+	aleph310_2:1.3
+	aleph310_1:1.3
+	aleph310:1.3
+	aleph309_1:1.3
+	aleph309:1.3
+	aleph308_3:1.3
+	aleph308_2:1.3
+	aleph308_1:1.3
+	aleph308:1.3
+	aleph307_6:1.3
+	aleph307_5:1.3
+	aleph307_4:1.3
+	aleph307_2:1.3
+	aleph307_1:1.3
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.2
+	aleph304_5:1.2
+	aleph304_4:1.2
+	aleph304_3:1.2
+	aleph304_2:1.2
+	aleph304_1:1.2
+	aleph304:1.2
+	aleph303_3:1.2
+	aleph303_2:1.2
+	aleph303_1_mc1:1.2
+	aleph303_1:1.2
+	aleph303:1.2
+	aleph302_9:1.2
+	aleph302_8:1.2
+	aleph302_7:1.2
+	aleph302_6:1.2
+	aleph302_5:1.2
+	aleph302_4:1.2
+	aleph302_3:1.2
+	aleph302_2:1.2
+	aleph302_1:1.2
+	aleph302:1.2
+	aleph216:1.2
+	aleph215_3:1.2
+	aleph215_2:1.2
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	98.01.15.10.40.58;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.09.03.13.05.49;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.42.31;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.42.32;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@Mods to kine routines, alephlib 307.1
+@
+text
+@      SUBROUTINE KKMOVE
+C -----------------------------------------------------------------
+C -  B.Bloch September 92
+C! Move banks from temporary to memory if needed
+C    Modified December 97 : extend NMX from 100 to 200
+CKEY KINE KINGAL INIT  /   INTERNAL
+C
+C
+C ------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+      CHARACTER*4 BSWP,BLAST
+      PARAMETER ( NLAST = 3 , NMX = 200 )
+      DIMENSION BLAST(NLAST),BSWP(NLAST)
+      DIMENSION NMOVE(NMX)
+      DATA BLAST /'GADM','GRPL','GMOB'/
+      DATA BSWP  /'KADM','KRPL','KMOB'/
+C----------------------------------------------------------------------
+      DO 20  I = 1,NLAST
+         NAMI = NAMIND(BLAST(I))
+C   Bank exists?
+         NL = -1
+         IF ( IW(NAMI).LE.0 ) GO TO 21
+         IND = NAMI+1
+C   Loop on banks with same name
+   18    IND = IW(IND-1)
+C   Count and record extra copies
+         IF ( IND.NE.0 ) THEN
+            NL = IW(IND-2)
+            GO TO 18
+         ENDIF
+C  move temporary banks to memory
+  21     NAMJ = NAMIND(BSWP(I))
+C   Bank exists?
+         IF ( IW(NAMJ).LE.0 ) GO TO 20
+         ND = 0
+         JND = NAMJ+1
+C   Loop on banks with same name
+   19    JND = IW(JND-1)
+C   Count and record extra copies
+         IF ( JND.NE.0 ) THEN
+            NJ = IW(JND-2)
+            ND = ND+1
+            IF ( ND.GT.NMX ) GO TO 998
+            NMOVE(ND) = NJ
+            GO TO 19
+         ENDIF
+         DO 22 L = 1,ND
+            NJ = NMOVE(L)
+            KIND = NSWAP(BSWP(I),NJ,BLAST(I),NL+L)
+            WRITE ( IW(6) ,100) BSWP(I),NJ,BLAST(I),NL+L
+   22    CONTINUE
+         CALL BDROP(IW,BSWP(I))
+   20 CONTINUE
+      GO TO 999
+  998 CONTINUE
+      WRITE (IW(6) ,'(1x,''(+++KKMOVE Too many Banks Increase NMX )'')')
+      CALL EXIT
+  999 RETURN
+  100 FORMAT ( 1X,'++++KKMOVE : Copying  Bank ',A10,'  NR = ',I5,
+     $ 'to Bank ',A10,'  NR = ',I5)
+      END
+#endif
+@
+
+
+1.2
+log
+@add missing #ifdef DOCs
+@
+text
+@d5 1
+d13 1
+a13 1
+      PARAMETER ( NLAST = 3 , NMX = 100 )
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d9 1
+d62 1
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

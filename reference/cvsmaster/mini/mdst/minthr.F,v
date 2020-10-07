@@ -1,0 +1,144 @@
+head	1.2;
+access;
+symbols
+	mini202_9:1.2
+	mini202_8:1.2
+	mini202_7:1.2
+	mini202_6:1.2
+	mini202_5:1.2
+	mini202_4:1.2
+	mini202_2:1.2
+	mini202_1:1.2
+	mini202:1.2
+	mini201_1:1.2
+	mini104_1:1.2
+	mini103_1:1.2
+	mini102_7:1.2
+	mini102_5:1.2
+	mini102_4:1.2
+	mini102_3:1.2
+	mini102_2:1.2
+	mini102_1:1.2
+	mini102:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.08.22.09.04.53;	author jachol;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.08.15.11.09.42;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.08.15.11.09.43;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@update HAC minthr
+@
+text
+@      SUBROUTINE MINTHR (THRU,CTHR)
+C
+CKEY MDST /INTERNAL
+C-----------------------------------------------------------------------
+C! Fill thrust bank DTHR for Mini-DST.
+C
+C     Author: Agnieszka Jacholkowska 1-Oct-94
+C
+C     Input  : QJTHRU output
+C     Output : DTHR bank
+C
+C     Called by QUEVT - MINALGO
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+C
+      PARAMETER (AFACTM=100000.,DFACTM=100000.,EFACTM=10000.)
+#include "dthrjj.h"
+C
+      LOGICAL GOTIT
+C
+      DIMENSION CTHR(4)
+C
+C!    set of intrinsic functions to handle BOS banks
+#include "bmacro.h"
+C
+C
+      GOTIT = .FALSE.
+C
+C++   Create the DTHR bank.
+C
+      IBNK = 0
+      NDTHR = 1
+      LEN = LMHLEN + LDTHRA
+      CALL AUBOS('DTHR',IBNK,LEN, KDTHR,IGARB)
+      IF(IGARB.GE.2) THEN
+         WRITE(IW(6),'('' MINTHR: Cannot create DTHR bank'')')
+         RETURN
+      ELSE IF(IGARB.NE.0) THEN
+         WRITE(IW(6),'('' MINTHR: IGARB NE 0. '')')
+      ENDIF
+c     WRITE(IW(6),'('' MINTHR: DTHR bank lifted'')')
+c     PRINT * ,THRU, CTHR(1), CTHR(2), CTHR(3), CTHR(4)
+      IW(KDTHR+LMHCOL) = LDTHRA
+      IW(KDTHR+LMHROW) = NDTHR
+C
+C++   Loop over THRUST storing information in DTHR.
+C
+      IW(KROW(KDTHR,1)+JDTHTH) = NINT(AFACTM * THRU)
+      IW(KROW(KDTHR,1)+JDTHPX) = NINT(AFACTM * CTHR(1))
+      IW(KROW(KDTHR,1)+JDTHPY) = NINT(AFACTM * CTHR(2))
+      IW(KROW(KDTHR,1)+JDTHPZ) = NINT(AFACTM * CTHR(3))
+      IW(KROW(KDTHR,1)+JDTHPE) = NINT(AFACTM * CTHR(4))
+
+      GOTIT = .TRUE.
+C
+ 1000 CONTINUE
+C
+C++   Add the banks to the Mini list.
+C
+      IF (GOTIT) CALL MINLIS('DTHR')
+C
+      RETURN
+      END
+
+*=======================================================================
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d50 1
+a50 1
+      IW(KROW(KDTHR,1)+JDTHPR) = NINT(AFACTM * THRU)
+d54 1
+a54 1
+      IW(KROW(KDTHR,1)+JDTHE0) = NINT(AFACTM * CTHR(4))
+@
+
+
+1.1.1.1
+log
+@1st release of mini under cvs
+@
+text
+@@

@@ -1,0 +1,42 @@
+KCAR 0 / $TEXT                                                                  
+POFF                                                                            
+*     RUN #     RUN'S TITLE                                                     
+RUN  118       'e+e- --> gamma gamma gamma gamma'                               
+*     FIRST EVENT    LAST EVENT    TO BE GENERATED                              
+TRIG     1              20000                                                 
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG                                 
+DEBU  6     /      1          6                                                 
+*  Keep some time at end of job  (IBM 168 seconds)                              
+TIME    5                                                                       
+*FILO 'GGGG EPIO A'                                                             
+RMAR 89 12345
+*  vertex smearing x     y     z                                                
+SVRT          0.0124    0.0005  0.72                                            
+*                                                                               
+*  Generator parameters                                                         
+*                                                                               
+* ECMS   :  The centre-of-mass energy (GeV)                                     
+* XMIN   :  The minimal energy for the 4 photons, XMIN = Ei/EBEAM               
+* TETMIN :  The minimal polar angle for the four photons (in degrees)           
+* GRTMIN :  The minimal polar angle for three of the four photons               
+*           (in degrees), the fourth being limited by TETMIN                    
+*           [e.g. three photons in the barrel, and one allowed                  
+*            to be detected in the endcap too...]                               
+* DELMIN :  The minimal angle between any two photons (in degrees)              
+* WMAX   :  Maximum weight value.                                               
+*           The program must be run first with WMAX = 0. The                    
+*           events are weighted in this case, but the programs                  
+*           returns the maximum weight value to be included                     
+*           in this card file. When WMAX is given this value                    
+*           the generated events are unweighted.                                
+* IPRINT : the debug level (for experts only)                                   
+*                                                                               
+* *** XMIN and TETMIN MUST be non-zero. DELMIN can be zero                      
+*     since the cross section has no singularity associated                     
+*     to this variable. GRTMIN has to be larger than or equal                   
+*     to TETMIN.                                                                
+*                                                                               
+*    ECMS   XMIN    TETMIN   GRTMIN    DELMIN    WMAX     IPRINT                
+GENE 130.   0.003     1.0      1.0      0.0       0.0       0                   
+*                                                                               
+END$                                                                            

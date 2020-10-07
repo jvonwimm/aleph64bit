@@ -1,0 +1,124 @@
+head	1.2;
+access;
+symbols
+	V0060:1.2
+	V0059:1.2
+	V0058:1.2
+	V0057:1.2
+	V0056:1.2
+	V0055:1.2
+	V0054:1.2
+	V0053:1.2
+	V0052:1.2
+	V0051:1.2
+	V0050:1.2
+	V0049:1.2
+	V0048:1.2
+	V0047:1.2
+	V0046:1.2
+	V0045:1.2
+	V0044:1.2
+	V0043:1.2
+	V0042:1.2
+	V0041:1.2
+	V0040:1.2
+	V0039:1.2
+	V0038:1.2
+	V0037:1.2
+	V0036:1.2
+	V0035:1.2
+	V0034:1.2
+	V0033:1.2
+	V0032:1.2
+	V0031:1.2
+	V0030:1.2
+	V0029:1.2
+	V0028:1.2
+	V0027:1.2
+	V0026:1.2
+	V0025:1.2
+	V0024:1.2
+	V0023:1.2
+	V0022:1.1.1.1
+	V0021:1.1.1.1
+	V0020:1.1.1.1
+	V0019:1.1.1.1
+	V0018:1.1.1.1
+	V0017:1.1.1.1
+	V0016:1.1.1.1
+	V0015:1.1.1.1
+	V0014:1.1.1.1
+	V0013:1.1.1.1
+	V0000:1.1.1.1
+	V0001:1.1.1.1
+	v1:1.1.1.1
+	jacotf:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	2000.03.28.10.06.49;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2000.03.01.10.28.36;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	2000.03.01.10.28.36;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@LOAD DATA                                                                                           
+INFILE *                                                                                            
+INSERT                                                                                              
+CONTINUEIF (1) = '*'                                                                                
+INTO TABLE RUNBYYEAR                                                                                
+FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"'                                                 
+(                                                                                                   
+  ID  ,                                                                                             
+  LepCategory  ,                                                                                    
+  Year  ,                                                                                           
+  FirstRun  ,                                                                                       
+  LastRun  ,                                                                                        
+  FirstFill  ,                                                                                      
+  LastFill  ,                                                                                       
+  FirstNper  ,                                                                                      
+  LastNper  ,                                                                                       
+  WrunselPatt                                                                                       
+)                                                                                                   
+BEGINDATA                                                                                           
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d16 2
+a17 1
+  LastNper                                                                                          
+@
+
+
+1.1.1.1
+log
+@ import jscanbook
+@
+text
+@@

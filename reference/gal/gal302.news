@@ -1,0 +1,57 @@
+   GAL:GAL302.HLB, .CORR, _.FOR, _B.FOR, .OLB, _D.OLB, .INPUT,
+                   .NEWS/
+   GAL:GCOR302.FOR, .OBJ(in debug mode)
+   GAL:IFINTER.FOR , .OBJ must be linked with when running
+                          interactively
+ 
+   GAL302 OLDLIB GAL, TXTLIB, CORR, NEWS, GEO
+   GCOR302 FORTRAN GAL, TEXT GAL
+ 
+   GAL302 UFOR MAXI09
+ 
+   on UNIX :  source on /al/reference/gal/srcgal302
+                        /al/reference/gal/ifinter.f
+              library   /aleph/gal/libgal302.a
+                        /aleph/gal/libgal302_dbx.a
+                        /aleph/gal/ifinter.o
+              link      /aleph/lib/libgaleph.a
+                        /aleph/lib/libgaleph_dbx.a
+                        /aleph/src/galeph
+ -----------------------------------------------------------------------
+ ! 950512 - GALEPH 30.2
+            1st version capable to simulate VDET95.
+            To simulate VDET95 :
+            - use ADBSCONS => 199  on test as ADBSTEST
+            - put a card DATE 96. in your galeph cards file
+ 
+        In *CD -> GALNEWS
+   GALEPH - call ASIGAL to initialize GALEPH.
+            call GPAW in interactive mode.
+            call GZEBRA in NOT interactive mode.
+ 
+        In *CD -> GUSENEWS
+   GUINTI - is purged
+   GAXEPH - reorganized to run with GEANT 3.21
+ 
+        In *CD -> GEOMNEWS
+   remove calls to GSORD which is now a 'do nothing' routine.
+   AGGORD - remove the routine.
+   AGSATT - new routine , copied from GUINTI which is removed.
+            set volume attributes which are not set by *ATT bank.
+   AGGORD - remove the routine, code is included into AGGEAN.
+   AGGEAN - read *ATT banks and call GSATT.
+   AGEOME - call AGSATT before closing the geometry.
+   AGVF92 - '92 vdet face geometry.
+   AGVF95 - '95 vdet face geometry.
+   AGVDET - call AGVF92 or AGVF95 depending on the year.
+ 
+        In *CD -> SKELNEWS
+    ASIGAL - new routine to initialize GALEPH , called by Main program.
+    ASIEVE, ASPRUN - move reading of input file from ASPRUN to ASIEVE.
+ 
+        In *CD -> VDETNEWS
+    VFNDMP - Take into account different multiplexing
+             schemes between VDET92 and VDET200 for the computation
+             of strip capacitances.
+ 
+ ---------------------------------------------------------------

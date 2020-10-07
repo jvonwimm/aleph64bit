@@ -1,0 +1,129 @@
+head	1.1;
+access;
+symbols
+	aleph316_2:1.1
+	aleph316_1:1.1
+	aleph316:1.1
+	aleph315_7:1.1
+	aleph315_6:1.1
+	aleph315_5:1.1
+	aleph315_4:1.1
+	aleph315_3:1.1
+	aleph315_2:1.1
+	aleph315_1:1.1
+	aleph315:1.1
+	aleph314_2:1.1
+	aleph314_1:1.1
+	aleph314:1.1
+	aleph313_1:1.1
+	aleph313:1.1
+	aleph312_1:1.1
+	aleph312:1.1
+	aleph311_1:1.1
+	aleph311:1.1
+	aleph310_3:1.1
+	aleph310_2:1.1
+	aleph310_1:1.1
+	aleph310:1.1
+	aleph309_1:1.1
+	aleph309:1.1
+	aleph308_3:1.1
+	aleph308_2:1.1
+	aleph308_1:1.1
+	aleph308:1.1
+	aleph307_6:1.1
+	aleph307_5:1.1
+	aleph307_4:1.1
+	aleph307_2:1.1
+	aleph307_1:1.1
+	aleph307:1.1
+	aleph306:1.1
+	aleph305_4:1.1
+	aleph305_3:1.1
+	aleph305_2:1.1
+	aleph305_1:1.1
+	aleph305:1.1
+	aleph304_5:1.1
+	aleph304_4:1.1
+	aleph304_3:1.1
+	aleph304_2:1.1
+	aleph304_1:1.1
+	aleph304:1.1
+	aleph303_3:1.1
+	aleph303_2:1.1
+	aleph303_1_mc1:1.1
+	aleph303_1:1.1
+	aleph302:1.1
+	aleph303:1.1
+	aleph302_9:1.1
+	aleph302_8:1.1
+	aleph302_7:1.1
+	aleph302_6:1.1
+	aleph302_5:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	97.04.04.07.59.04;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@aleph302 corr.file no.5 add ysv package
+@
+text
+@      SUBROUTINE YSVSET(NVX,IER)
+C------------------------------------------------------------------------------
+C!  Create workbank to hold vertices to be fit
+C
+C       Author:  D.Casper 04/07/96
+C       
+C           IER = 1 Unable to create workbank
+C           IER = 0 Normal
+C------------------------------------------------------------------------------
+#ifndef DOC
+#include "ysvwrk.h"
+#include "bcs.h"
+C
+#include "bmacro.h"
+C
+        IER = 1
+        CALL WBANK(IW,INDYSVW,LMHLEN+3*NVX,*999)
+        IW(INDYSVW-3) = INTCHA('YSVW')
+        IW(INDYSVW+LMHCOL) = 3
+        IW(INDYSVW+LMHROW) = NVX
+
+        CALL WBANK(IW,INDYSEW,LMHLEN+6*NVX,*999)
+        IW(INDYSEW-3) = INTCHA('YSEW')
+        IW(INDYSEW+LMHCOL) = 6
+        IW(INDYSEW+LMHROW) = NVX
+
+        CALL WBANK(IW,INDYSTW,LMHLEN+4*NVX,*999)
+        IW(INDYSTW-3) = INTCHA('YSTW')
+        IW(INDYSTW+LMHCOL) = 4
+        IW(INDYSTW+LMHROW) = NVX
+
+        CALL WBANK(IW,INDYS0W,LMHLEN+NVX,*999)
+        IW(INDYS0W-3) = INTCHA('YS0W')
+        IW(INDYS0W+LMHCOL) = 1
+        IW(INDYS0W+LMHROW) = NVX
+
+        CALL WBANK(IW,INDYSCW,LMHLEN+NVX,*999)
+        IW(INDYSCW-3) = INTCHA('YSCW')
+        IW(INDYSCW+LMHCOL) = 1
+        IW(INDYSCW+LMHROW) = NVX
+
+        IER = 0
+ 999    CONTINUE
+        RETURN
+        END
+
+#endif
+@

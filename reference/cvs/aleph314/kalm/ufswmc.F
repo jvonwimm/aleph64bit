@@ -1,0 +1,242 @@
+      SUBROUTINE UFSWMC(RADIUS, STATE, T_PROC, COV_OLD, MASS, COV_NEW)
+C! Swim covariance matrix through time T and convert to global coords
+#ifndef DOC
+      DOUBLE PRECISION RADIUS, STATE(5), T_PROC, COV_OLD(5,5), MASS,
+     &  COV_NEW(21)
+      DOUBLE PRECISION TRACK(5), DE
+      DOUBLE PRECISION PHI_NEW, D0_TRK, D_OMEGA
+      DOUBLE PRECISION DT_DRPHI, DT_DPHI, DT_DOMEGA, DOMEGA_DOMEGA,
+     +                   DTANL_DLAMBDA, DPHI0_DOMEGA, DPHI0_DPHI,
+     +                   DPHI0_DRPHI, DD0_DRPHI, DD0_DPHI, DD0_DOMEGA,
+     +                   DZ0_DRPHI, DZ0_DZ, DZ0_DPHI, DZ0_DLAMBDA,
+     +                   DZ0_DOMEGA, DPHI0_DLAMBDA, DD0_DLAMBDA
+      DOUBLE PRECISION FACTOR, DENOM
+
+      DOUBLE PRECISION P_OLD, E_OLD, E_NEW, P_NEW, OMEGA_NEW
+
+      DOUBLE PRECISION INV_RADIUS, INV_STATE5
+
+#include "uftcom.h"
+
+      INV_RADIUS = 1.0D0 / RADIUS
+      INV_STATE5 = 1.0D0 / STATE(5)
+
+      PHI_NEW = STATE(3) + T_PROC
+      CALL UBA2PI(PHI_NEW)
+      D0_TRK = RADIUS*DSIN(PHI_NEW-STATE(1)*INV_RADIUS) +
+     +       2.D0*INV_STATE5*(DSIN(0.5D0*T_PROC))**2
+
+      IF ( ABS(D0_TRK) .GT. RADIUS ) THEN
+        IF ( T_PROC .GT. 0.D0 ) THEN
+          T_PROC = T_PROC - ONE_PI
+        ELSE
+          T_PROC = T_PROC + ONE_PI
+        ENDIF
+        PHI_NEW = STATE(3) + T_PROC
+        CALL UBA2PI(PHI_NEW)
+        D0_TRK  = RADIUS*DSIN(PHI_NEW-STATE(1)*INV_RADIUS) +
+     +          2.D0*INV_STATE5*(DSIN(0.5D0*T_PROC))**2
+      ENDIF
+
+      PHI_NEW = STATE(3) - STATE(1)*INV_RADIUS + T_PROC
+      DENOM = ( STATE(5)*D0_TRK - 1.D0 )**(-1)
+      DT_DRPHI = STATE(5) * DSIN( PHI_NEW ) * DENOM
+      DT_DPHI = - RADIUS * DT_DRPHI
+      DT_DOMEGA = RADIUS * DCOS( PHI_NEW )* DENOM
+      DOMEGA_DOMEGA = 1.D0
+      DTANL_DLAMBDA = ( DCOS(STATE(4)) )**(-2)
+      DPHI0_DOMEGA = DT_DOMEGA
+      DPHI0_DPHI = 1.D0 + DT_DPHI
+      DPHI0_DRPHI = DT_DRPHI
+      DD0_DRPHI = DENOM * DCOS(STATE(3)-STATE(1)*INV_RADIUS)
+      DD0_DPHI = -RADIUS * DD0_DRPHI
+      DD0_DOMEGA =  RADIUS*INV_STATE5*DENOM *
+     +     (STATE(5)*RADIUS - DSIN(STATE(3)-STATE(1)*INV_RADIUS)) -
+     +     D0_TRK * INV_STATE5
+      FACTOR   = DTAN(STATE(4)) * INV_STATE5
+      DZ0_DRPHI = FACTOR * DT_DRPHI
+      DZ0_DZ  = 1.D0
+      DZ0_DPHI = FACTOR * DT_DPHI
+      DZ0_DLAMBDA = T_PROC * DTANL_DLAMBDA * INV_STATE5
+      DZ0_DOMEGA = FACTOR * ( DT_DOMEGA - T_PROC * INV_STATE5 )
+
+C  Check whether user requested constraint
+
+      IF ( FIXED_OME )  THEN
+        DT_DOMEGA = 0.D0
+        DOMEGA_DOMEGA = 0.D0
+        DPHI0_DOMEGA = 0.D0
+        DD0_DOMEGA = 0.D0
+        DZ0_DOMEGA = 0.D0
+      ENDIF
+      IF ( FIXED_TANL )  THEN
+        DTANL_DLAMBDA = 0.D0
+        DZ0_DLAMBDA = 0.D0
+      ENDIF
+      IF ( FIXED_P ) THEN
+        FACTOR = DSIGN(1.D0,STATE(5))*DTAN(STATE(4))/DCOS(STATE(4)) /
+     +             (DBLE(ROVERP*P_FIX))
+        DPHI0_DLAMBDA = DPHI0_DOMEGA*FACTOR
+        DD0_DLAMBDA = DD0_DOMEGA*FACTOR
+        DZ0_DLAMBDA = DZ0_DLAMBDA + DZ0_DOMEGA*FACTOR
+        DZ0_DOMEGA = 0.D0
+        DD0_DOMEGA = 0.D0
+        DPHI0_DOMEGA = 0.D0
+        DOMEGA_DOMEGA = 0.D0
+        DT_DOMEGA = 0.D0
+      ENDIF
+
+C  Multiply 3 5x5 matrices explicitly, just for fun.
+
+      COV_NEW(1) = COV_OLD(5,5) * DOMEGA_DOMEGA * DOMEGA_DOMEGA
+      COV_NEW(2) = COV_OLD(4,5) * DTANL_DLAMBDA * DOMEGA_DOMEGA
+      COV_NEW(3) = COV_OLD(4,4) * DTANL_DLAMBDA * DTANL_DLAMBDA
+      COV_NEW(4) = DOMEGA_DOMEGA * (
+     +   COV_OLD(1,5) * DPHI0_DRPHI + COV_OLD(3,5) * DPHI0_DPHI +
+     +   COV_OLD(5,5) * DPHI0_DOMEGA )
+      COV_NEW(5) = DTANL_DLAMBDA * (
+     +   COV_OLD(1,4) * DPHI0_DRPHI + COV_OLD(3,4) * DPHI0_DPHI +
+     +   COV_OLD(4,5) * DPHI0_DOMEGA )
+      COV_NEW(6) = DPHI0_DOMEGA*DPHI0_DOMEGA*COV_OLD(5,5) +
+     +   DPHI0_DPHI*DPHI0_DPHI*COV_OLD(3,3) +
+     +   DPHI0_DRPHI*DPHI0_DRPHI*COV_OLD(1,1) +
+     +   2.D0 * ( DPHI0_DPHI*DPHI0_DOMEGA*COV_OLD(3,5) +
+     +   DPHI0_DRPHI*DPHI0_DOMEGA*COV_OLD(1,5) +
+     +   DPHI0_DPHI*DPHI0_DRPHI*COV_OLD(1,3) )
+      COV_NEW(7) = DOMEGA_DOMEGA * (
+     +   COV_OLD(1,5) * DD0_DRPHI + COV_OLD(3,5) * DD0_DPHI +
+     +   COV_OLD(5,5) * DD0_DOMEGA )
+      COV_NEW(8) = DTANL_DLAMBDA * (
+     +   COV_OLD(1,4) * DD0_DRPHI + COV_OLD(3,4) * DD0_DPHI +
+     +   COV_OLD(4,5) * DD0_DOMEGA )
+      COV_NEW(9) = DPHI0_DOMEGA*( DD0_DOMEGA*COV_OLD(5,5) +
+     +   DD0_DPHI*COV_OLD(3,5) +
+     +   DD0_DRPHI*COV_OLD(1,5) ) +
+     +   DPHI0_DPHI*( DD0_DOMEGA*COV_OLD(3,5) + DD0_DPHI*COV_OLD(3,3) +
+     +   DD0_DRPHI*COV_OLD(1,3) ) +
+     +   DPHI0_DRPHI*( DD0_DOMEGA*COV_OLD(1,5) + DD0_DPHI*COV_OLD(1,3) +
+     +   DD0_DRPHI*COV_OLD(1,1) )
+      COV_NEW(10)= DD0_DOMEGA*DD0_DOMEGA*COV_OLD(5,5) +
+     +   DD0_DPHI*DD0_DPHI*COV_OLD(3,3) +
+     +   DD0_DRPHI*DD0_DRPHI*COV_OLD(1,1) +
+     +   2.D0 * ( DD0_DPHI*DD0_DOMEGA*COV_OLD(3,5) +
+     +   DD0_DRPHI*DD0_DOMEGA*COV_OLD(1,5) +
+     +   DD0_DPHI*DD0_DRPHI*COV_OLD(1,3) )
+      COV_NEW(11)= DOMEGA_DOMEGA * (
+     +   COV_OLD(1,5) * DZ0_DRPHI + COV_OLD(2,5) * DZ0_DZ +
+     +   COV_OLD(3,5) * DZ0_DPHI + COV_OLD(4,5) * DZ0_DLAMBDA +
+     +   COV_OLD(5,5) * DZ0_DOMEGA )
+      COV_NEW(12)= DTANL_DLAMBDA * (
+     +   COV_OLD(1,4) * DZ0_DRPHI + COV_OLD(2,4) * DZ0_DZ +
+     +   COV_OLD(3,4) * DZ0_DPHI + COV_OLD(4,4) * DZ0_DLAMBDA +
+     +   COV_OLD(4,5) * DZ0_DOMEGA )
+      COV_NEW(13)= DPHI0_DOMEGA*( DZ0_DOMEGA*COV_OLD(5,5) +
+     +   DZ0_DLAMBDA*COV_OLD(4,5) +
+     +   DZ0_DPHI*COV_OLD(3,5) + DZ0_DZ*COV_OLD(2,5)  +
+     +   DZ0_DRPHI*COV_OLD(1,5) ) +
+     +   DPHI0_DPHI*( DZ0_DOMEGA*COV_OLD(3,5) + DZ0_DLAMBDA*COV_OLD(3,4)
+     +   +
+     +   DZ0_DPHI*COV_OLD(3,3) + DZ0_DZ*COV_OLD(2,3)  +
+     +   DZ0_DRPHI*COV_OLD(1,3) ) +
+     +   DPHI0_DRPHI*( DZ0_DOMEGA*COV_OLD(1,5) + DZ0_DLAMBDA*COV_OLD(1,
+     +   4) +
+     +   DZ0_DPHI*COV_OLD(1,3) + DZ0_DZ*COV_OLD(1,2)  +
+     +   DZ0_DRPHI*COV_OLD(1,1) )
+      COV_NEW(14)= DD0_DOMEGA*( DZ0_DOMEGA*COV_OLD(5,5) +
+     +   DZ0_DLAMBDA*COV_OLD(4,5) +
+     +   DZ0_DPHI*COV_OLD(3,5) + DZ0_DZ*COV_OLD(2,5)  +
+     +   DZ0_DRPHI*COV_OLD(1,5) ) +
+     +   DD0_DPHI*( DZ0_DOMEGA*COV_OLD(3,5) + DZ0_DLAMBDA*COV_OLD(3,4) +
+     +   DZ0_DPHI*COV_OLD(3,3) + DZ0_DZ*COV_OLD(2,3)  +
+     +   DZ0_DRPHI*COV_OLD(1,3) ) +
+     +   DD0_DRPHI*( DZ0_DOMEGA*COV_OLD(1,5) + DZ0_DLAMBDA*COV_OLD(1,4)
+     +   +
+     +   DZ0_DPHI*COV_OLD(1,3) + DZ0_DZ*COV_OLD(1,2)  +
+     +   DZ0_DRPHI*COV_OLD(1,1) )
+      COV_NEW(15)= DZ0_DOMEGA*DZ0_DOMEGA*COV_OLD(5,5) +
+     +   DZ0_DLAMBDA*DZ0_DLAMBDA*COV_OLD(4,4) +
+     +   DZ0_DPHI*DZ0_DPHI*COV_OLD(3,3) +
+     +   DZ0_DZ*DZ0_DZ*COV_OLD(2,2)+
+     +   DZ0_DRPHI*DZ0_DRPHI*COV_OLD(1,1) + 2.D0*(
+     +   DZ0_DOMEGA*( DZ0_DLAMBDA*COV_OLD(4,5) + DZ0_DPHI*COV_OLD(3,5) +
+     +   DZ0_DZ*COV_OLD(2,5)  + DZ0_DRPHI*COV_OLD(1,5) ) +
+     +   DZ0_DLAMBDA*( DZ0_DPHI*COV_OLD(3,4) + DZ0_DZ*COV_OLD(2,4) +
+     +   DZ0_DRPHI*COV_OLD(1,4) ) +
+     +   DZ0_DPHI*( DZ0_DZ*COV_OLD(2,3) + DZ0_DRPHI*COV_OLD(1,3) ) +
+     +   DZ0_DZ*DZ0_DRPHI*COV_OLD(1,2) )
+
+C  Modify for fixed momentum constraint
+
+      IF ( FIXED_P )  THEN
+        COV_NEW(5) = COV_NEW(5) + DTANL_DLAMBDA*DPHI0_DLAMBDA*COV_OLD(4,
+     &    4)
+        COV_NEW(6) = COV_NEW(6) + DPHI0_DLAMBDA*DPHI0_DLAMBDA*COV_OLD(4,
+     &    4) +
+     +    2.D0*DPHI0_DLAMBDA*(
+     +    DPHI0_DOMEGA*COV_OLD(4,5) + DPHI0_DPHI*COV_OLD(3,4) +
+     +    DPHI0_DRPHI*COV_OLD(1,4) )
+        COV_NEW(8) = COV_NEW(8) + DTANL_DLAMBDA*DD0_DLAMBDA*COV_OLD(4,4)
+        COV_NEW(9) = COV_NEW(9) + DPHI0_DLAMBDA*DD0_DLAMBDA*COV_OLD(4,4)
+     &    +
+     +    (DPHI0_DLAMBDA*DD0_DOMEGA+DPHI0_DOMEGA*DD0_DLAMBDA)
+     +    *COV_OLD(4,5) +
+     +    (DPHI0_DLAMBDA*DD0_DPHI+DPHI0_DPHI*DD0_DLAMBDA)
+     +    *COV_OLD(3,4) +
+     +    (DPHI0_DLAMBDA*DD0_DRPHI+DPHI0_DRPHI*DD0_DLAMBDA)
+     +    *COV_OLD(1,4)
+        COV_NEW(10)= COV_NEW(10) + DD0_DLAMBDA*DD0_DLAMBDA*COV_OLD(4,4)
+     &    +
+     +    2.D0*DD0_DLAMBDA*(DD0_DOMEGA*COV_OLD(4,5) +
+     +    DD0_DPHI*COV_OLD(3,4) +
+     +    DD0_DRPHI*COV_OLD(1,4) )
+        COV_NEW(13)= COV_NEW(13) +  DPHI0_DLAMBDA*(
+     &    DZ0_DOMEGA*COV_OLD(4,5) +
+     +    DZ0_DLAMBDA*COV_OLD(4,4) +
+     +    DZ0_DPHI*COV_OLD(3,4) + DZ0_DZ*COV_OLD(2,4) +
+     +    DZ0_DRPHI*COV_OLD(1,4) )
+        COV_NEW(14)= COV_NEW(14) + DD0_DLAMBDA*( DZ0_DOMEGA*COV_OLD(4,5)
+     &    +
+     +    DZ0_DLAMBDA*COV_OLD(4,4) +
+     +    DZ0_DPHI*COV_OLD(3,4) + DZ0_DZ*COV_OLD(2,4)  +
+     +    DZ0_DRPHI*COV_OLD(1,4) )
+        COV_NEW(1) = COV_NEW(3) * FACTOR**2
+        COV_NEW(2) = COV_NEW(3) * FACTOR
+        COV_NEW(4) = COV_NEW(5) * FACTOR
+        COV_NEW(7) = COV_NEW(8) * FACTOR
+        COV_NEW(11)= COV_NEW(12) * FACTOR
+      ENDIF
+
+C  The last row is for the scattering angle, which is defined diagonal
+
+      DO  I = 16, 20
+        COV_NEW(I) = 0.D0
+      ENDDO
+      COV_NEW(21) = 1.D0
+
+      RETURN
+
+      ENTRY UOLOSS(TRACK, MASS, DE)
+
+      IF (DE .EQ. 0.D0) RETURN
+
+C  Calculate change in curvature resulting from this change in energy.
+
+      P_OLD = DABS(1.D0/(DBLE(ROVERP) * TRACK(1) / DSQRT(1.D0+TRACK(2)
+     &  **2)))
+      E_OLD = DSQRT(P_OLD**2 + MASS**2)
+      E_NEW = E_OLD + DE
+      P_NEW = DSQRT(E_NEW**2 - MASS**2)
+      OMEGA_NEW = DSQRT(1.D0+TRACK(2)**2)/(DBLE(ROVERP)*P_NEW)
+C     D_OMEGA = OMEGA_NEW - DABS(TRACK(1))
+      D_OMEGA = DSIGN(OMEGA_NEW - DABS(TRACK(1)),TRACK(1))
+      TRACK(1) = DSIGN(OMEGA_NEW,TRACK(1))
+
+C  Now calculate the change in each of the other components of the state vector
+
+      TRACK(3) = TRACK(3) + 0.5D0 * DPHI0_DOMEGA * D_OMEGA
+      TRACK(4) = TRACK(4) + 0.5D0 * DD0_DOMEGA * D_OMEGA
+      TRACK(5) = TRACK(5) + 0.5D0 * DZ0_DOMEGA * D_OMEGA
+
+      RETURN
+      END
+#endif

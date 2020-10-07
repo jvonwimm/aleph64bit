@@ -1,0 +1,96 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	98.06.13.16.52.10;	author janot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@update
+@
+text
+@       SUBROUTINE QUECEF(ITK,IHN,ICH,EEF)
+C----------------------------------------------------------------------
+C  Computes the ECAL Energy fraction
+C
+C  Input  ITK : ALPHA particle number
+C         IHN : Neutral hadron index 
+C         ICH : Charged hadron Flag
+C
+C  Output EEF : ECAL Energy Fraction (parcut)
+C
+C  M. Kado october 1997
+C
+C-----------------------------------------------------------------------
+
+#include "qcde.h"
+#include "parcut.h"
+#include "hadpho.h"
+#include "qmacro.h"   
+       eef = 0.
+       IF (ICH.eq.0) goto 1
+
+C
+C  Compute the ECAL energy fraction for charged hadrons & No links
+C
+       rd1 = rndm(0.)
+       IF (rd1.gt.(exp(-.9*qe(itk)-2.3)+.02)) goto 5
+       eef = 0.
+       goto 2
+ 5     IF (rd1.gt.(exp(-.9*qe(itk)-2.3)+.9*exp(-.25*qe(itk)-.3)))
+     .  goto 6
+       eef = 1.
+       goto 2
+ 6     IF (rd1.gt.(exp(-.9*qe(itk)-2.3)+.9*exp(-.25*qe(itk)-.3)+
+     . .497*(1-exp(-1.5*qe(itk)))+.001*qe(itk))) goto 9
+ 7     rd2 = rndm(0.)
+       IF (rd2.le.0.02.or.rd2.ge.1) goto 7
+       eef = rd2
+       goto 2
+ 9     call rannor(eco,dummy)
+       eef = (.5+.5*eco)/qe(itk)
+       IF ((qe(itk).lt.(.5+.5*eco)).or.(eef.le..01)) goto 9
+
+ 2     goto 20
+ 1     continue
+
+C
+C  Compute the ECAL energy fraction for Neutral hadrons & Satelites
+C
+       rd3 = rndm(0.)
+       IF (rd3.lt..56) THEN
+          eef = 0.
+       ELSEIF (rd3.lt..94.and.rd3.ge..56) THEN
+          eef = 1.
+       ELSE
+ 10       rd4 = rndm(0.)
+          IF (rd4.eq.0.or.rd4.eq.1) goto 10
+          eef = rd4
+       ENDIF
+
+ 20    continue
+    
+C
+C  Fill the parcut section propec
+C
+          propec(IHN) = eef
+
+       END
+
+
+
+
+
+
+@

@@ -1,0 +1,21 @@
+#!/usr/local/bin/tcsh -f
+#=========================================================================
+#                             stageout_clean
+# 02/04/96                                                      F.Blin
+#=========================================================================
+# 18/04/96 added parameter -t -> no erase only test
+#  5/06/96 test on host removed, user and host added in log
+# 21/04/97 changed /aleph by $ALEPH
+# 19/01/98 changed shift9 by shift50 
+#          changed csh by tcsh -f
+#=========================================================================
+/usr/local/bin/stageqry -h stagealeph -p aldataout -a | grep STAGED | awk '{print $1}' > /tmp/tmp_s
+foreach i (`cat /tmp/tmp_s`)
+  set chemin=`/usr/local/bin/stageqry -h stagealeph -M $i -p aldataout -a -f| grep castor`
+  foreach j (`echo $chemin`)
+    echo /usr/local/bin/stageclr -h stagealeph -M $j
+    /usr/local/bin/stageclr -h stagealeph -M $j
+  end
+end
+rm -f /tmp/tmp_s
+exit 0

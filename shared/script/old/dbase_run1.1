@@ -1,0 +1,162 @@
+#! /bin/csh
+#==========================================================
+# 14/10/92                                         F.Blin
+#                        DBASE_RUN
+#==========================================================
+# dbase_run1.0                                    FLR   
+# 28/01/93  introduce number of blocks as default
+# dbase_run1.1                                    FLR
+# 31/08/93  remove spy file                       
+#==========================================================
+#
+#set echo on
+if ($#argv < 1) then
+  echo " "
+  echo "usage: " 
+  echo " dbase_run <version number> [<number of blocks>] [<number of directory blocks>]"
+  echo " "
+  echo " by default the number of blocks is set to 400 and the number of directory blocks to 7."
+  echo " "
+  echo " necessary files are got from cernvm using ftp: "
+  echo "      adbsxxx.epio (xxx being the version number) and bankal.fmt"
+  echo " if SBANK is installed on /aleph/doc necessary files are imported: "
+  echo "       sbank.adr, sbank.lbf and all.assign"
+  echo " /aleph/dbase/runeptoda is then called with the same arguments"
+  echo " temporary files are removed when daf has been created."
+  exit(1)
+else
+  set cycle = $1
+endif
+#
+if (${cycle} == "") goto error_end
+#
+#********
+#
+set sbank = "NO"
+if (-e /aleph/bin/sbank) set sbank = "YES" 
+set alib_dir = "/aleph/alib"
+set doc_dir = "/aleph/doc"
+set dbase_dir = "/aleph/dbase/"
+set ascii_transfert = "ascii"
+set dbase_name = "adbs${cycle}"
+set dbase_type = "epio"
+set dbase_transfert = "binary"
+# 
+set disk_ibm_name = "dbase"
+set disk_ibm_dbase = `egrep "${disk_ibm_name} " ${alib_dir}/alibdisk | awk '{print $2 "." $3}'`
+set disk_ibm_name = "genera"
+set disk_ibm_genera = `egrep "${disk_ibm_name} " ${alib_dir}/alibdisk | awk '{print $2 "." $3}'`
+#  
+# =========   build ftp_tmp input file to ftp
+#
+cd ${dbase_dir}
+if (-e ftp_tmp) rm ftp_tmp
+echo -n "Enter ibm user [<CR>=${USER}]-> "
+set ibm_user = $<
+if (${ibm_user} == "") then
+   set ibm_user = ${USER}
+endif
+echo "Enter password for ${ibm_user} on ibm [<CR>=exit]-> "
+stty -echo
+set ibm_pass = $<
+stty echo
+if (${ibm_pass} == "") goto error_end
+#
+#      get files from DBASE
+#
+echo "cd ${disk_ibm_dbase}" > ftp_tmp
+echo "${ascii_transfert}" >> ftp_tmp
+echo "get bankal.fmt" >> ftp_tmp
+#
+if (${sbank} == "YES") then
+	echo "get sbank.lbf ${doc_dir}/sbank.lbf" >> ftp_tmp
+	echo "get sbank.adr ${doc_dir}/sbank.adr" >> ftp_tmp
+endif
+#  
+echo "${dbase_transfert}" >> ftp_tmp
+echo "get ${dbase_name}.${dbase_type}" >> ftp_tmp
+#
+#   get all.assign from GENERA if sbank required
+#   
+if (${sbank} == "YES") then
+	echo "cd ${disk_ibm_genera}" >> ftp_tmp
+	echo "${ascii_transfert}" >> ftp_tmp
+	echo "get all.assign ${doc_dir}/all.assign" >> ftp_tmp
+endif
+#
+echo "quit" >> ftp_tmp
+#
+# ==== build $HOME/.netrc file which contains ibm_user and ibm_pass for ftp
+#      if it exists then save it to restore it afterwards   
+#
+set mv_tmp = "NO"
+if (-e $HOME/.netrc) then
+   mv -f $HOME/.netrc $HOME/.netrc_tmp
+   set mv_tmp = "YES"
+endif
+echo "#! /bin.csh " > $HOME/.netrc
+echo "machine cernvm.cern.ch login ${ibm_user} password ${ibm_pass}" >> $HOME/.netrc
+chmod 600 $HOME/.netrc
+#
+# =========    call ftp with ftp_tmp input file and $HOME/.netrc
+#
+ftp cernvm.cern.ch < ftp_tmp
+#
+#  restore previous $HOME/.netrc
+#
+if ($mv_tmp == "YES") then
+   mv -f $HOME/.netrc_tmp $HOME/.netrc
+else
+   rm -f $HOME/.netrc
+endif
+# ============ check existence of files 
+#
+if (${sbank} == "YES") then
+	cd ${doc_dir}
+	if !(-f sbank.adr) echo " *** WARNING -> file sbank.adr is not here"
+	if !(-f sbank.lbf) echo " *** WARNING -> file sbank.lbf is not here"
+	if !(-f all.assign) echo " *** WARNING -> file all.assign is not here"
+endif 
+cd ${dbase_dir}
+if !(-f bankal.fmt) echo " *** WARNING -> file bankal.fmt is not here"
+if !(-f ${dbase_name}.${dbase_type}) then
+   echo " *** FATAL -> file ${dbase_name}.${dbase_type} is not here"
+   goto error_end
+endif
+# 
+# ========   call runeptoda to create .daf
+#
+echo " run -> ${dbase_dir}/runeptoda $1 $2 $3 "
+${dbase_dir}/runeptoda $1 $2 $3
+#
+# check existence of .daf
+#
+if !(-f ${dbase_name}.daf) then 
+   echo " *** FATAL -> file ${dbase_name}.daf is not here"
+   goto error_end
+endif
+# ==========================================> normal exit
+#  remove temporary files
+#
+rm -f ftp_tmp
+#
+echo "dbase_run normal exit"
+set dmyh = `date '+%d-%h-19%y %T'`
+exit
+#=============================================> abnormal exit
+error_end:
+echo "dbase_run abnormal exit"
+exit
+ 
+ 
+
+
+
+
+
+
+
+
+
+
+

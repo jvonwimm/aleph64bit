@@ -1,0 +1,134 @@
+# !/bin/csh
+#
+###############################################
+#          Fetch the EDIR files from CERNVM
+#   written by Joel Closier
+###############################################
+#
+# Modification :
+#  7 Sep 1993 : version 3.0  Joel Closier 
+#        Specification of the disk where are located the edir files
+# 11 Oct 1993 : version 3.1 Joel Closier
+#        Check in the file diff.txt how many arguments there are
+# 6 Dec 1993 : version 3.2 Joel Closier
+#        In Repare, don't remove disk.txt
+# 10 mars 1994 : version 3.3 Joel Closier
+#        In repare, disk is choose in /edir.filelist
+# 28 April 1994 : version 3.4 Joel Closier
+#        Remove echo 
+###############################################
+#set echo on
+set FILE_LOG="$ALEPH/log/alfetch.log"
+echo "ALFETCH runs the `date`" >> $FILE_LOG
+cd $ALEDIR
+
+#  create the file .netrc
+cat >$HOME/.netrc << END-OF-CAT
+machine cernvm login anonymous
+macdef init
+cd alsoft.230
+dir edir.filelist
+quit
+
+END-OF-CAT
+#
+#   get the list of the EDIR files to fetch
+ftp_ultra cernvm > $ALEDIR/diff.txt
+rm -f $HOME/.netrc
+set lines=`wc -l $ALEDIR/diff.txt`
+set line=$lines[1]
+while ($line != 0)
+    set com=`head -$line $ALEDIR/diff.txt | tail -1`
+    if ($#com > 2) then
+      if (($com[1] == "EDIR") && ($com[2] == "FILELIST")) then
+#        set FDATE = `date +%m/%d/%y`
+        set FDATE = "01/01/93"
+        if ($com[7] != $FDATE) then
+	   goto fetch
+           exit (0)
+        endif
+      endif
+    endif
+    @ line--
+    continue
+end
+
+exit 0
+
+
+fetch:
+#echo fetch
+#   get the list of the EDIR files to fetch
+if ( -r $ALEDIR/edir.filelist) mv $ALEDIR/edir.filelist $ALEDIR/edir.filelist.old
+sfetch $ALEDIR/edir.filelist -t cernvm:edir.filelist -u alsoft.230
+if !(-r $ALEDIR/edir.filelist.old) touch $ALEDIR/edir.filelist.old
+if !(-r $ALEDIR/edir.filelist) then
+  echo "No update today because of problem" >> $FILE_LOG
+  exit 0
+endif
+diff $ALEDIR/edir.filelist.old $ALEDIR/edir.filelist > $ALEDIR/diff.txt
+
+set lines=`wc -l $ALEDIR/diff.txt`
+set line=$lines[1]
+
+while ($line != 0)
+    set com=`head -$line $ALEDIR/diff.txt | tail -1`
+    if ($#com >= 4) then
+      set disk=$com[2]
+      set file=`echo $com[3].$com[4] | tr "[A-Z]" "[a-z]"`
+      switch ($com[1])
+        case <: 
+              echo "delete $ALEDIR/$file" >> $FILE_LOG
+              rm $ALEDIR/$file
+              breaksw
+        case >: 
+              echo "sfetch $ALEDIR/$file -t cernvm:$file -u pubxu.$disk" >> $FILE_LOG
+              sfetch $ALEDIR/$file -t cernvm:$file -u pubxu.$disk
+              breaksw
+      endsw
+    endif
+    @ line--
+    continue
+end
+rm $ALEDIR/diff.txt
+
+#echo repare
+ls $ALEDIR > $ALEDIR/edir.lst
+awk '{printf "%s.%s\n",$2,$3}' $ALEDIR/edir.filelist | tr "[A-Z]" "[a-z]" > $ALEDIR/dif.txt
+sort +1 -1 $ALEDIR/dif.txt > $ALEDIR/dif1.txt
+diff $ALEDIR/edir.lst $ALEDIR/dif1.txt > $ALEDIR/dif2.txt
+awk '{printf "%s\n",$1}' $ALEDIR/edir.filelist  > $ALEDIR/disk.txt
+
+set lines=`wc -l $ALEDIR/dif2.txt`
+set line=$lines[1]
+
+while ($line != 0)
+    set com=`head -$line $ALEDIR/dif2.txt | tail -1`
+    if ($#com > 1) then
+      set file=`echo $com[2] | tr "[A-Z]" "[a-z]"`
+      set init_file = `echo $com[2] | awk -F. '{print $1}' | tr "[a-z]" "[A-Z]"`
+      switch ($com[1])
+        case <:
+              if (("$ALEDIR/$file" != "$ALEDIR/edir.lst") && ("$ALEDIR/$file" != "$ALEDIR/edir.filelist") && ("$ALEDIR/$file" != "$ALEDIR/disk.txt") && ("$ALEDIR/$file" != "$ALEDIR/lost+found") && ("$ALEDIR/$file" != "$ALEDIR/edir.filelist.old")) then
+                 echo "repare delete $ALEDIR/$file" >> $FILE_LOG
+                 rm $ALEDIR/$file
+              endif
+              breaksw
+        case >:
+              set disk=`grep $init_file $ALEDIR/edir.filelist | awk '{print $1}'`
+              echo "repare sfetch $ALEDIR/$file -t cernvm:$file -u pubxu.$disk" >> $FILE_LOG
+              sfetch $ALEDIR/$file -t cernvm:$file -u pubxu.$disk
+              breaksw
+        default: echo RIEN
+               breaksw
+      endsw
+    endif
+    @ line--
+    continue
+end
+rm $ALEDIR/edir.lst $ALEDIR/dif.txt $ALEDIR/dif1.txt $ALEDIR/dif2.txt
+exit 0
+
+
+
+

@@ -1,0 +1,149 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.07.14.02.54;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.55;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK vdirun
+      SUBROUTINE VDIRUN
+C-----------------------------------------------------------------------
+C! Initialize run for VDET
+CKEY VDET
+C!
+C!
+C!  Author         F.Forti        10/6/86
+C!  Modified       G.Triggiani    17/02/88
+C!  Modified       A. Bonissent   10/05/94
+C!
+C!  Description
+C!  ===========
+C!  Read Data Base constants for VDET, Format hits and digits banks,
+C!
+C!  Called by :    ASIMOD                        from this .HLB
+C!  Calls     :    BKFMT                         from BOS77
+C!                 VRDDAF,VDGDMP,ALTELL          from  ALEPHLIB
+C!
+C---------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "jobcom.h"
+#include "iocom.h"
+C
+      DIMENSION IBID(2)
+      INTEGER VDGDMP
+      INTEGER GTSTUP,ALGTDB
+      EXTERNAL NAMIND
+C
+C Initialize the geometry package
+C
+      CALL VRDDAF(LRDBIO,IRUNJO,IFLAG)
+C
+      IF (IFLAG.NE.1) CALL ALTELL
+     &   ('VDIRUN: Return code from VRDDAF.NE.1. Stop',0,'STOP')
+C
+C
+C Make sure that all banks necessary for digitizing are present
+C
+      IRUN = 1
+      LDBAS = JUNIDB(0)
+      IVSTP = GTSTUP ('VD',IRUN)
+      IRET    = ALGTDB (LDBAS,'VDEPVPHOVDCC',IVSTP)
+      KVDEP = IW(NAMIND('VDEP'))
+      KVPHO = IW(NAMIND('VPHO'))
+      KVDCC = IW(NAMIND('VDCC'))
+      IF(KVDEP.EQ.0.OR.KVPHO.EQ.0.OR.KVDCC.EQ.0)THEN
+         CALL ALTELL('VDIRUN : data base bank missing ',0,'STOP')
+      ENDIF
+C
+C Initialize statistics variables
+C
+      CALL VDFILL('INIT',IBID)
+C
+      CALL BKFMT('VDHT','2I,(3I,7F)')
+      CALL BKFMT('VHLS','I')
+      CALL BKFMT('VPLH','I')
+      CALL BKFMT('VDLH','2I,(6F,3I,F,2I)')
+      CALL BKFMT('VTRS','2I,(I,F,2I)')
+      CALL BKFMT('VDTE','2I,(2F)')
+      CALL BKFMT('VWS1','2I,(F,I)')
+      CALL BKFMT('VWS2','2I,(F,I)')
+      CALL BKFMT('VWC1','2I,(2F,I)')
+      CALL BKFMT('VWC2','2I,(2F,I)')
+      CALL BKFMT('VCLU','I')
+      CALL BKFMT('VTSK','2I,(F,2I)')
+C
+C    PRINT minivertex geometrical constants
+C
+      IF (IPRIJO(1).NE.0) IRET=VDGDMP()
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

@@ -1,0 +1,170 @@
+*DK musmfr
+      SUBROUTINE MUSMFR
+C
+C***************************************************************************
+C
+C T.Wang -851216
+C
+C! deal with track segments produced by a track element
+C       in a simple way :
+C         (1) check if a part of the segment is cross a spacer and
+C             if so then devide it into two pieces or throw it away;
+C         (2) check if the length of the segment is greater than
+C             SGLSMU;
+C         (3) make a random decision of producing a streamer with
+C             firing efficiency PSCRMU.
+C
+C       Output:
+C          fire flag in BOS bank, in some case more track segments
+C          are added
+C
+C       Called by MUSTRM
+C       Calls ALBOS                     in this .HLB
+C
+C***************************************************************************
+C
+#ifndef DOC
+      SAVE
+#include "munamc.h"
+#include "mustjj.h"
+#include "bcs.h"
+#include "jobcom.h"
+#include "iocom.h"
+#include "mugncn.h"
+      LOGICAL LS1,LS2
+#include "bmacro.h"
+C
+C       Link to BOS bank JDMUST
+C
+      IF (JDMUST .EQ. 0) RETURN
+      IF (LROWS(JDMUST) .EQ. 0) RETURN
+      NTBSG = LROWS(JDMUST)
+C
+C       At the return point of this routine, NSTRM includes the
+C       streamers formed by new pieces of segment
+C
+      NSTRM = NTBSG
+C
+C       KOLD -- pointer to the current existing segment
+C       KNEW -- pointer to the current newly-build segment
+C
+      KOLD = JDMUST + LMHLEN
+      KNEW = KNEXT(JDMUST)
+C
+      DO 30 ITBSG=1,NTBSG
+C
+C     Get information about segment from JDMUST, notice Y2 has been
+C     greater than Y1 already
+C
+         X1 = RW(KOLD + JMUSXI)
+         Y1 = RW(KOLD + JMUSYI)
+         Z1 = RW(KOLD + JMUSZI)
+         X2 = RW(KOLD + JMUSXO)
+         Y2 = RW(KOLD + JMUSYO)
+         Z2 = RW(KOLD + JMUSZO)
+         TXY = RW(KOLD + JMUSXY)
+         TYZ = RW(KOLD + JMUSYZ)
+C
+C       Starting point is behind the N1-th spacer and finishing
+C       point is behind the N2-th spacer, LS1 and LS2 indicate if
+C       these two points are inside the spacers.
+C
+         N1 = Y1/PTSPMU
+         N2 = Y2/PTSPMU
+         LS1 = (Y1 - N1*PTSPMU) .GT. DSSPMU
+         LS2 = (Y2 - N2*PTSPMU) .GT. DSSPMU
+C
+C       Y1 and Y2 at the same range
+C       three cases:
+C         (1) Both points inside spacer, give up;
+C         (2) Y2 inside spacer, change X2,Y2 and Z2;
+C         (3) Both points outside spacer, nochange.
+C
+         IF( N1 .EQ. N2 )THEN
+            IF( LS2 )THEN
+               IF( LS1 ) THEN
+                  GOTO 20
+               ELSE
+                  Y2 = N1*PTSPMU + DSSPMU
+                  X2 = X1 + (Y2-Y1)*TXY
+                  Z2 = Z1 + (Y2-Y1)/TYZ
+               ENDIF
+            ENDIF
+C
+C       Check length and random decision
+C
+            XL = SQRT( (X1-X2)** 2+ (Y1-Y2)** 2+ (Z1-Z2)** 2)
+            IF( XL .LT. SGLSMU )GOTO 20
+            R = RNDM(0)
+            IF( R .GT. PSCRMU )GOTO 20
+            IW(KOLD + JMUSFF) = 1
+            RW(KOLD + JMUSYO) = Y2
+C
+C       Y1 and Y2 are not in same region
+C       General case -- decide YN1 and YN2 by spacer position;
+C       The first piece -- if LS1, first piece is given up;
+C                     otherwise, YN1 no change;
+C       The last piece -- if LS1, YN2 change;
+C                    otherwise, YN2 no change.
+C
+         ELSE
+            IPLN = IW(KOLD + JMUSPL)
+            IEIT = IW(KOLD + JMUSET)
+            ITUB = IW(KOLD + JMUSTU)
+            DO 10 N=N1,N2
+               IF( N .EQ. N1 )THEN
+                  IF( LS1 )GOTO 10
+                  XN1 = X1
+                  YN1 = Y1
+                  ZN1 = Z1
+               ELSE
+                  YN1 = N*PTSPMU
+                  XN1 = X1 + (YN1 - Y1)*TXY
+                  ZN1 = Z1 + (YN1 - Y1)/TYZ
+               ENDIF
+               IF( N .EQ. N2 .AND. .NOT. LS2 )THEN
+                  XN2 = X2
+                  YN2 = Y2
+                  ZN2 = Z2
+               ELSE
+                  YN2 = N*PTSPMU + DSSPMU
+                  XN2 = X1 + (YN2 - Y1)*TXY
+                  ZN2 = Z1 + (YN2 - Y1)/TYZ
+               ENDIF
+C
+C       For pieces crossing two spacers, no need to check the length
+C
+               IF( (N.EQ.N1) .OR. (N.EQ.N2) )THEN
+                  XL = SQRT( (XN1-XN2)** 2+ (YN1-YN2)** 2+ (ZN1-ZN2)**
+     +            2)
+                  IF( XL .LT. SGLSMU )GOTO 10
+               ENDIF
+               R = RNDM(0)
+               IF( R .GT. PSCRMU )GOTO 10
+               IF (LFRWRD(JDMUST) .LT. LCOLS(JDMUST)) THEN
+                  NWORD = IW(JDMUST) + 16*LMUSTA
+                  CALL WBANK (IW,JDMUST,NWORD,*40)
+                  KOLD = KROW(JDMUST,ITBSG)
+                  KNEW = KNEXT(JDMUST)
+               ENDIF
+               IW(JDMUST+2) = IW(JDMUST+2) + 1
+               IW(KNEW + JMUSFF) = 1
+               IW(KNEW + JMUSPL) = IPLN
+               IW(KNEW + JMUSET) = IEIT
+               IW(KNEW + JMUSTU) = ITUB
+               RW(KNEW + JMUSYI) = YN1
+               RW(KNEW + JMUSYO) = YN2
+               KNEW = KNEW + LMUSTA
+   10       CONTINUE
+         ENDIF
+   20    CONTINUE
+         KOLD = KOLD + LMUSTA
+   30 CONTINUE
+C
+      RETURN
+C
+   40 CONTINUE
+      CALL ALTELL ('MUSMFR: not enough space for JDMUST ',1,'NEXT')
+      RETURN
+      END
+#endif

@@ -1,0 +1,100 @@
+#!/bin/csh
+#============================================================================
+#                             stagerror
+# 26/04/95                                                             F.Blin
+#============================================================================
+# P1 tape number        
+# p2 time [HH:MM]       
+# only P1 -> search last stagein
+# P1 + P2 -> search stagein at time P2
+# P1 + P2 + P3 -> search stagein at date P2 and time P3 
+#============================================================================
+#set echo on
+#
+if (${HOST} != "shift9") then
+   echo "Please run on shift9"
+   exit
+endif
+if ($#argv == 0) then
+   echo "To get help type stagerror -h"
+   goto USAGE
+endif
+#
+if (-e $HOME/tmp_stagerror) rm -f $HOME/tmp_stagerror
+#set LOGFILE = /aleph/log/stagerror.log
+set begin_date = `date`
+set PAR1 = $1
+set point = `echo $1 | awk '{print index($0,".")}'`
+if (${point} > 0) set PAR1 = `echo $1 | awk '{print substr($0,1,index($0,".")-1)}'`
+set string = "last "
+if ($#argv > 1) then
+   set PAR2 = $2
+   set string = "at time $2 "
+   if ($#argv == 3) then
+      set PAR2 = "$2 $3" 
+      set string = "for day $2 at time $3 "
+   endif
+endif
+set week = `date '+%U'`
+@ last_week_log = ${week} - 6
+set year = `date '+%y'`
+set stage_file = /usr/spool/stage/log
+if ($#argv == 1) then
+   grep stagein ${stage_file} | grep -i ${PAR1} > $HOME/tmp_stagerror
+else
+   grep stagein ${stage_file} | grep -i ${PAR1} | grep "${PAR2}"  > $HOME/tmp_stagerror
+endif
+#
+LOOP_LOG:
+if (-z $HOME/tmp_stagerror) then
+  @ week-- 
+# for year 95 first log file -> /usr/spool/stage/log.9512
+  if (${week} == ${last_week_log}) then
+if ($#argv == 1) then 
+     echo "+++++Not found ${PAR1} in year ${year} for last 6 weeks, in e.g. ${stage_file}++++++++++"
+else
+     echo "+++++Not found ${PAR1} at time ${PAR2} in year ${year} for last 6 weeks, in e.g. ${stage_file}++++++++++"
+
+endif
+     goto END
+  endif
+  rm -f $HOME/tmp_stagerror
+  set stage_file = /usr/spool/stage/log.${year}${week}
+  if !(-e ${stage_file}) goto LOOP_LO
+  if ($#argv == 1) then 
+     grep stagein ${stage_file} | grep -i ${PAR1} > $HOME/tmp_stagerror
+  else
+     grep stagein ${stage_file} | grep -i ${PAR1} | grep "${PAR2}"  > $HOME/tmp_stagerror
+  endif
+  goto LOOP_LOG
+endif
+set line = `tail -1 $HOME/tmp_stagerror`
+if ($#argv == 1) then 
+echo "+++++Now check stage error for ${PAR1} on file ${stage_file} ++++++++++"
+else 
+echo "+++++Now check stage error for ${PAR1} at time ${PAR2} on file ${stage_file} ++++++++++"
+endif
+echo ${begin_date}
+echo "--> ${string}stagein"
+echo ${line}
+set id = `echo ${line} | awk '{print $3}'`
+echo "--> stageqry"
+grep stageqry ${stage_file} | grep ${PAR1}
+echo "--> all ${id}"
+grep ${id} ${stage_file}
+echo "--> grep -i ${PAR1} /u3/xu/albook/aleph/book/bkmbytes.cerntaps"
+grep -i ${PAR1} /u3/xu/albook/aleph/book/bkmbytes.cerntaps
+echo "--> grep ${PAR1} /aleph/log/stagein.log | tail -5"
+grep ${PAR1} /aleph/log/stagein.log | tail -5
+#
+END:
+if (-e $HOME/tmp_stagerror) rm -f $HOME/tmp_stagerror
+exit 0
+#
+USAGE:
+echo "Syntax: stagerror [tape number] [MM/DD] [hh:mm]"
+echo "e.g.         "
+echo "     stagerror AB2001"
+echo "     stagerror AB2001 14:08"
+echo "     stagerror AB2001 04/28 14:08"
+exit 0

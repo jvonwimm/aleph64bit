@@ -1,0 +1,472 @@
+#!/bin/csh
+#======================================================================
+#                         sycheck
+# 06/01/94                                                     F.Blin
+#======================================================================
+#08/06/94 add file -> /aleph/log/data_nocheck in section DF
+#                     [exist also file /etc/STGCONFIG]
+#10/06/94 add procedure -> /aleph/script/reboot_sycheck
+#21/06/94 new logical to check DF on shift9
+#         all disks on file /aleph/log/df_all [add one blank character
+#         at the end of each line]
+#12/07/94 add to check DF for disk /usr on all nodes
+#14/07/94 add to check files daemon on all nodes [all_daemon]
+#22/07/94 suppress afal16
+#26/07/94 add protection for connection refused
+#21/09/94 add nfsd on node afal01
+#         add df -k /usr on shift9
+#         add files nqsdaemon netdaemon logdaemon in all_daemon
+#         add file nqs++daemon all nodes except saga02..saga07
+#         add file stgdaemon only on shift9
+#22/09/94 add afal12
+#10/10/94 add acher@sun2.cern.ch in admin
+#11/10/94 add to check file sendmail in all_daemon
+#01/11/94 suppress dxal10 and add saga08
+#14/11/94 check n_line > 50 in DT/TNEW  
+#24/11/94 suppress df /usr for saga08
+#01/12/94 add afal09,afal11
+#05/12/94 changed al1f08 by al2f01
+#08/12/94 changed to grep nfsd in top -d1 for node afal01
+#28/02/95 suppress for afal00 [*daemon]
+#04/04/95 add afal13, add cron for all nodes, changed ps -ef for all nodes
+#11/04/95 check if DT/TT_ps empty
+#27/04/95 add call stagerror for each stagein error
+#         add check rfstat on ps -ef for all nodes
+#04/05/95 add afal16 in all_nodes
+#08/05/95 modify logical to call stagerror
+#10/05/95 one rsh ps by node 
+#11/05/95 append /aleph/stagerror.out only if $1 == w
+#18/05/95 add afal20
+#19/05/95 format stageout change if ok (0)
+#29/05/95 suppress '!' in echo ( '!"'  changed to '"' ) R.Hag
+#08/06/95 suppress check of obsolete sfmaked daemon
+#22/07/95 suppress afal15 (went to munich) and afal16 (runs windowsNT) R.Hag
+#         add afal22 and afal23 R.Hag
+#11/09/95 check /u3 (disk on afal00, not seen with  df -l -k on shift9)  R.Hag/fblxu
+#18/09/95 erase files > 1Mb in /aleph/data
+#24/10/95 check if (-e /aleph/log/tapes.lock) and time > 1h 
+#==============================================================================
+if ("$1" == "-v") set echo on	
+unset noclobber
+set begin_date = `date`
+ 
+set DT = "/aleph/tmp"
+
+set sycheck_out = "/aleph/log/sycheck.out"
+#set admin = "fblxu@CERNVM.cern.ch,hagxu@CERNVM.cern.ch,system@aloha.cern.ch"
+set admin = "hagxu@CERNVM.cern.ch,system@aloha.cern.ch"
+if (${LOGNAME} != "aloff") set DT = ${HOME}
+ 
+set year_months = ('Jan' 'Feb' 'Mar' 'Apr' 'May' 'Jun' 'Jul' 'Aug' 'Sep' 'Oct' 'Nov' 'Dec')
+set day_months = ('31' '28' '31' '30' '31' '30' '31' '31' '30' '31' '30' '31')
+ 
+set year = `date | awk '{print $6}'`
+set day = `date | awk '{print $3}'`
+set day_previous = ${day}
+set month = `date | awk '{print $2}'`
+set month_previous = ${month}
+@ day_previous = ${day} - 1
+ 
+if (${day_previous} > 0) goto BEGIN
+set n = 1
+set n_previous = 12
+while (${n} <= 12)
+   if (${year_months[$n]} == ${month}) then
+      if (${n} > 1) @ n_previous = ${n} - 1
+      set month_previous = ${year_months[${n_previous}]}
+      set day_previous = ${day_months[${n_previous}]}
+      goto BEGIN
+   endif
+   @ n++
+end
+ 
+BEGIN:
+if (-z ${sycheck_out}) rm -f ${sycheck_out}
+set FSTAGEIN = "/aleph/log/stagein.log"
+set FSTAGEOUT = "/aleph/log/stageout.log"
+set TAPELOCK = "/aleph/log/tapes.lock"
+ 
+if !(-e ${sycheck_out}) then
+   set last_date = ""
+   set last_day = "${day_previous}"
+else
+   set last_date = `grep "++++" ${sycheck_out} | tail -1`
+   set last_day = `echo ${last_date} | awk '{print $3}'`
+endif
+
+set last_month = `echo ${last_date} | awk '{print $2}'`
+set first_day = ${last_day}
+set first_month = ${last_month}
+ 
+@ n_df = 90
+ 
+set date4 = `date | awk '{print $2substr($4,1,2)substr($4,4,2)}'`
+set TT = "tmp_sycheck_${day}${date4}"
+set TOLD = "tmp_sycheck_old_${day}${date4}"
+set TNEW = "tmp_sycheck_new_${day}${date4}"
+set TRSH = "tmp_sycheck_rsh_${day}${date4}"
+set TOUT = "tmp_sycheck_st_${day}${date4}"
+
+#>>>> to check /aleph/log/tapes.lock time > 1h
+if !(-e $TAPELOCK) goto END_TAPELOCK 
+set str_lock = `ls -l $TAPELOCK` 
+set lock_host = `awk '{print $1}' $TAPELOCK | tr "[A-Z]" "[a-z]"` 
+set lock_mail = `awk '{print $2}' $TAPELOCK | tr "[A-Z]" "[a-z]"`
+
+set lock_D = `echo $str_lock | awk '{print $7}'`
+if ($day != $lock_D) goto LOCK_WARN
+
+set lock_H = `echo $str_lock | awk '{print substr($8,1,2)}'` 
+set lock_M = `echo $str_lock | awk '{print substr($8,4,2)}'` 
+@ lock_mm = (((${lock_H}) * 60) + ${lock_M})
+
+set now = `date '+%y %m %d %H %M'`
+set now_H = `echo $now | awk '{print $4}'`
+set now_M = `echo $now | awk '{print $5}'`
+@ check_mm = (((${now_H}) * 60) + ${now_M}) - 60
+#   echo $day $now_H $now_M $check_mm
+#   echo $lock_D $lock_H $lock_M $lock_mm  
+if ($lock_mm >= $check_mm) goto END_TAPELOCK
+
+LOCK_WARN:
+set ps_lock = `rsh $lock_host ps -ef | grep /aleph/script/tape | grep $lock_mail `
+set lock_warn = `echo $str_lock | awk '{print $3" "$6" "$7" "$8" "$9}'`
+echo "WARNING $lock_warn" >> ${DT}/${TOUT}
+cat $TAPELOCK >> ${DT}/${TOUT}
+echo "ps -ef ${ps_lock}" >> ${DT}/${TOUT}
+#cat ${DT}/${TOUT} | mail -s "***TAPES.LOCK" $lock_mail@$lock_host.cern.ch
+cat ${DT}/${TOUT} | mail -s "***TAPES.LOCK" fblxu@cernvm.cern.ch,hagxu@cernvm.cern.ch
+
+END_TAPELOCK:
+#<<<<
+
+set str_echo = '---- errors staging in ----'
+set str_return = "RETRY"
+if !(-e ${sycheck_out}) goto LOOP
+if ("$1" == "") then
+   echo "====> Last lines on file output"
+   tail -10 ${sycheck_out}
+   echo "  "
+endif
+ 
+LOOP:
+set str_search = "${year} ${last_month} ${last_day} "
+#echo "str_search -> ${str_search}"
+#echo "str_return -> ${str_return}"
+if (${str_return} == "RETRY") egrep "${str_search}" ${FSTAGEIN} | grep -v " 0)" >> ${DT}/${TT}
+if (${str_return} == "OUT") egrep "${str_search}" ${FSTAGEIN} | grep " 0) " | grep "(1 " | grep -v "(1 0" >> ${DT}/${TT}
+if (${str_return} == "DF") egrep "${str_search}" ${FSTAGEOUT} | grep -v "(0)" >> ${DT}/${TT}
+ 
+if (${last_day} > 31) goto END
+if (${last_day} != ${day}) then
+   @ last_day++
+   if (${last_month} == ${month}) goto LOOP
+   @ last_day = 1
+   set last_month = ${month}
+   goto LOOP
+endif
+ 
+ALREADY_SYCHECK:
+set last_day = ${first_day}
+set last_month = ${first_month}
+if (-z ${DT}/${TT}) rm -f ${DT}/${TT}
+if !(-e ${DT}/${TT}) goto ${str_return}
+if !(-e ${sycheck_out}) then
+   cp ${DT}/${TT} ${DT}/${TNEW}
+else
+   set n_lines = `wc -l ${DT}/${TT} | awk '{print $1}'`
+#==> 14/11/94
+   if (${n_lines} > 50) then
+     cp ${DT}/${TT} ${DT}/${TT}ERROR
+     echo "TOO MANY ... ${str_echo} see ${DT}/${TT}ERROR" >> ${DT}/${TOUT}
+     rm ${DT}/${TT}
+     goto ${str_return} 
+   endif
+#==<
+   set n_fields = `awk '{print NF}' ${DT}/${TT}`
+   set lines = `awk '{print $0}' ${DT}/${TT}`
+   #echo ${str_return}
+   #echo $n_lines
+   #echo $n_fields
+   #echo $lines
+
+   @ i = 1
+   @ nf = 0
+
+   while ($i <= $n_lines)
+     @ n = $nf + 1
+     @ nf = $nf + ${n_fields[$i]}
+     grep "${lines[$n-$nf]}" ${sycheck_out} > ${DT}/${TOLD}
+     if (-z ${DT}/${TOLD}) then
+        echo "${lines[$n-$nf]}" >> ${DT}/${TNEW}
+#===> call stagerror 
+        if (${str_return} == "RETRY") then 
+#          set t_hm = `echo ${lines[$n-$nf]} | awk '{print substr($4,1,5)}'` 
+           set t_f = `echo ${lines[$n-$nf]} | awk '{print $7}'`
+           /aleph/script/stagerror ${t_f} > ${DT}/${TNEW}_stagerror
+           set n_stagerror = `wc -l ${DT}/${TNEW}_stagerror | awk '{print $1}'`
+           if (${n_stagerror} > 1) then
+              grep "kill received" ${DT}/${TNEW}_stagerror >>  ${DT}/${TNEW}
+              grep "fid mismatch" ${DT}/${TNEW}_stagerror >>  ${DT}/${TNEW}
+              grep "mount cancelled" ${DT}/${TNEW}_stagerror >>  ${DT}/${TNEW}
+              grep "stage returns 28" ${DT}/${TNEW}_stagerror >>  ${DT}/${TNEW}
+              grep -i "error " ${DT}/${TNEW}_stagerror | grep -v "+++++" >>  ${DT}/${TNEW}
+#              grep "write error" ${DT}/${TNEW}_stagerror >>  ${DT}/${TNEW}
+#              grep "ERROR READING" ${DT}/${TNEW}_stagerror >>  ${DT}/${TNEW}
+#              grep "rfio_open error" ${DT}/${TNEW}_stagerror >>  ${DT}/${TNEW}
+#              grep "stat error" ${DT}/${TNEW}_stagerror >>  ${DT}/${TNEW}
+           endif
+           if ("$1" == "-w" || "$1" == "w") cat ${DT}/${TNEW}_stagerror >> /aleph/log/stagerror.out
+           rm -f ${DT}/${TNEW}_stagerror
+        endif
+#===< call stagerror 
+     endif
+     if (-e ${DT}/${TOLD}) rm -f ${DT}/${TOLD}
+     @ i++
+   end
+endif
+rm -f ${DT}/${TT}
+if (-z ${DT}/${TNEW}) rm -f ${DT}/${TNEW}
+if !(-e ${DT}/${TNEW}) goto ${str_return}
+echo "${str_echo}" >> ${DT}/${TOUT} 
+cat ${DT}/${TNEW} >> ${DT}/${TOUT}
+rm -f ${DT}/${TNEW}
+goto ${str_return}
+ 
+RETRY:
+set str_echo = '---- retrys staging in ----'
+set str_return = "OUT"
+goto LOOP
+ 
+OUT:
+set str_echo = '---- errors in staging out ----'
+set str_return = "DF"
+goto LOOP
+ 
+DF:
+set str_return = "MAX_DATA"
+set str_echo = `echo ${n_df} | awk '{print "---- df on shift9, more "$0"% ----"}'`
+ 
+df -l -k > ${DT}/${TT}_df
+df -k /u3 | tail -1 >> ${DT}/${TT}_df
+set n_df_line = `wc -l ${DT}/${TT}_df | awk '{print $1}'`
+set n_line = 3
+set p_df = `awk '{print substr($6,1,length($6)-1)}' ${DT}/${TT}_df`
+set dev_df = `awk '{print $1}' ${DT}/${TT}_df`
+set disk_df = `awk '{print $7}' ${DT}/${TT}_df`
+ 
+while (${n_line} <= ${n_df_line})
+  set p_min = `grep " ${disk_df[${n_line}]} " /aleph/log/df_all | awk '{print substr($1,1,length($1)-1)}'`
+  if (${p_min} == "") @ p_min = ${n_df}
+# echo ${p_df[${n_line}]} ${p_min}
+  if (${p_df[${n_line}]} >= ${p_min}) then
+     grep "${dev_df[${n_line}]} " ${DT}/${TT}_df >> ${DT}/${TT}
+  endif
+  @ n_line++
+end
+rm -f ${DT}/${TT}_df
+
+goto ALREADY_SYCHECK
+ 
+MAX_DATA:
+set MAX_data = 1000 
+ls -aouR /al/shared/data | sort -r -n +3 | head > ${DT}/ls-aouR
+set P_1 = `awk '{print substr($1,1,1)}' ${DT}/ls-aouR`
+set p_Mb = `awk '{print $4}' ${DT}/ls-aouR`
+set file_aouR = `awk '{print $8}' ${DT}/ls-aouR`
+@ n_line = 1
+while (${p_Mb[$n_line]} > ${MAX_data})
+ if (${P_1[$n_line]} != "d") then 
+    rm -f /aleph/data/${file_aouR[$n_line]}
+    set line_aouR = `grep ${p_Mb[$n_line]} ${DT}/ls-aouR | grep ${file_aouR[$n_line]}`
+    echo "rm /aleph/data/${file_aouR[$n_line]} -> ${line_aouR}" >> ${DT}/${TOUT}
+ endif
+ @ n_line++ 
+end 
+rm -f ${DT}/ls-aouR
+
+setenv NORETRY yes
+set node_search = "cernvm"
+set command = `/usr/etc/ping -c 1 ${node_search} | grep ", 0% packet loss" > ${DT}/error_${node_search}.ping`
+if (${status} == 0) then
+   set command = `sfetch ${DT}/vmall_sfetch_test -t''${node_search}:profile.exec '' -u hagxu.191 > ${DT}/error.txt`
+   if (${status} != 0) echo ">>> sfetch ERROR VM: ALL disk read pw" >> ${DT}/${TOUT}
+   rm -f ${DT}/error.txt
+   rm -f ${DT}/vmall_sfetch_test
+   set command = `sfetch ${DT}/vmano_sfetch_test -t''${node_search}:last.kumacold '' -u hagxu.192 > ${DT}/error.txt`
+   if (${status} != 0) echo ">>> sfetch ERROR VM: ANONYMOUS disk read pw" >> ${DT}/${TOUT}
+   rm -f ${DT}/error.txt
+   rm -f ${DT}/vmano_sfetch_test
+endif
+else
+  echo ">>> Link ERROR ${node_search} noticed by ping" >> ${DT}/${TOUT}
+endif
+rm -f ${DT}/error_${node_search}.ping
+ 
+set n_log = $LOGNAME
+if (${n_log} == "fblxu") set n_log = "BLIN"
+if (${n_log} == "aloff") set n_log = "BLIN"
+ 
+set node_search = "al2f01"
+set command = `/usr/etc/ping -c 1 ${node_search} | grep ", 0% packet loss" > ${DT}/error_${node_search}.ping`
+if (${status} == 0) then
+   set command = `sfetch ${DT}/alws_sfetch_test -t ${node_search}:'AL2$USER2:[HAG]LOGIN.COM' -u ${n_log} > ${DT}/error.txt`
+   if !(-z ${DT}/error.txt) echo ">>> sfetch ERROR ALWS" >> ${DT}/${TOUT}
+   rm -f ${DT}/error.txt
+   rm -f ${DT}/alws_sfetch_test
+endif
+else
+  echo ">>> Link ERROR ${node_search} noticed by ping" >> ${DT}/${TOUT}
+endif
+rm -f ${DT}/error_${node_search}.ping
+ 
+set nodes_jobs = ('saga01' 'shift9' 'csf')
+@ n = 1
+set n_machine_jobs = `echo ${nodes_jobs} | awk '{print NF}'`
+while (${n} <= ${n_machine_jobs})
+   set node_search = ${nodes_jobs[${n}]}
+   rsh afal10 qtell -c qstat -b -h ${node_search} > ${DT}/error_${node_search}.rsh
+   if (-z ${DT}/error_${node_search}.rsh) echo ">>> NQS connection refused on ${node_search}, from afal01" >> ${DT}/${TRSH}
+   rm -f ${DT}/error_${node_search}.rsh
+   @ n++
+ end
+if (-e ${DT}/${TRSH}) then
+   cat ${DT}/${TRSH} >> ${DT}/${TOUT}
+   rm -f ${DT}/${TRSH}
+endif
+
+set all_nodes = ('shift9' 'saga01' 'saga02' 'saga03' 'saga04' 'saga05' 'saga06' 'saga07' 'saga08' 'afal00' 'afal01' 'afal02' 'afal03' 'afal04' 'afal05' 'afal06' 'afal07' 'afal08' 'afal09' 'afal10' 'afal11' 'afal12' 'afal13' 'afal14' 'afal17' 'afal18' 'afal19' 'afal20' 'afal22' 'afal23')
+@ n = 1
+set n_machine = `echo ${all_nodes} | awk '{print NF}'`
+@ n_max_rfstat = 3
+ 
+while (${n} <= ${n_machine})
+   set node_search = ${all_nodes[${n}]}
+   #echo ${node_search}
+   set command = `/usr/etc/ping -c 1 ${node_search} | grep ", 0% packet loss" > ${DT}/error_${node_search}.ping`
+   if (${status} == 0) then
+      set command = `sfetch ${DT}/sfetch_${node_search}.check -t ${node_search}:/etc/motd  > ${DT}/error_${node_search}.sfetch`
+      if !(-z ${DT}/error_${node_search}.sfetch) echo ">>> sfetch ERROR ${node_search}" >> ${DT}/${TOUT}
+      rm -f ${DT}/error_${node_search}.sfetch
+      rm -f ${DT}/sfetch_${node_search}.check
+#===>24/11/94 suppress  df -k /usr for saga08
+      if (${node_search} == "saga08") goto NFSD
+      rsh ${node_search} df -k /usr > ${DT}/${TT}_df_${node_search}
+      if !(-z ${DT}/${TT}_df_${node_search}) then 
+         if (${node_search} == "shift9") set p = `awk '{print substr($6,1,length($6)-1)}' ${DT}/${TT}_df_${node_search}`
+         if (${node_search} != "shift9") set p = `awk '{print substr($5,1,length($5)-1)}' ${DT}/${TT}_df_${node_search}`
+         if (${p[2]} >= ${n_df}) echo ">>>WARNING df for disk /usr on node ${node_search} -> ${p[2]}%" >> ${DT}/${TOUT}
+      endif
+      if (-z ${DT}/${TT}_df_${node_search}) echo ">>>WARNING on node ${node_search} -> connect refused" >> ${DT}/${TOUT}
+      rm -f ${DT}/${TT}_df_${node_search}
+
+#====>> nfsd on node afal01
+NFSD:
+      if (${node_search} == "afal01") then
+         set nfsd = `rsh ${node_search} top -d1 -n | grep nfsd | awk '{print substr($9,1,index($9,".")-1)}'`
+         set nfsd_fields = `echo $nfsd | awk '{print NF}'`
+         set n_check = 10
+         set n_p = 1
+         set n_bad = 0
+         while (${n_p} <= ${nfsd_fields})
+           if (${nfsd[$n_p]} > ${n_check}) @ n_bad = ${n_bad} + 1
+           @ n_p++
+         end
+         if (${n_bad}>0) echo "WARNING nfsd on node ${node_search} > ${n_check}%  for ${n_bad} daemons" >> ${DT}/${TOUT}            
+      endif
+#=====<<
+#
+#=====>> ps begin
+      if (${node_search} != "shift9") set ps_string = "axw"
+      if (${node_search} == "shift9") set ps_string = "-ef"
+      rsh ${node_search} "ps ${ps_string}" > ${DT}/${TT}_ps
+      if (-z ${DT}/${TT}_ps) then
+         echo "WARNING looks like rsh ${node_search} did not work" 
+         goto END_PS
+      endif
+#=>> check sendmail
+      set n_sendmail = `grep sendmail ${DT}/${TT}_ps | wc -l`
+      if (${n_sendmail[1]} == 0) echo "WARNING on node ${node_search} sendmail not found" >> ${DT}/${TOUT}
+#     rm -f ${DT}/${TT}_ps_sendmail    #R.Hag never created !
+#=>> check cron
+      set n_cron = `grep /sbin/cron ${DT}/${TT}_ps | wc -l`
+      if (${n_cron[1]} == 0) echo "WARNING on node ${node_search} cron not found" >> ${DT}/${TOUT}
+
+#=>> check rfstat
+      if (${node_search} == "shift9") then
+         set n_rfstat = `grep rfstat ${DT}/${TT}_ps | wc -l` 
+         if (${n_rfstat[1]} >= ${n_max_rfstat}) then 
+            echo "WARNING on node ${node_search} more than ${n_max_rfstat} rfstat ...ALWS problems" >> ${DT}/${TOUT}
+            @ n_max_rfstat = 1
+         else @ n_max_rfstat = 0
+         endif
+      endif
+      if (${node_search} != "shift9" & ${n_max_rfstat} > 0) then
+         set n_rfstat = `grep rfstat ${DT}/${TT}_ps | wc -l` 
+         if (${n_rfstat[1]} >= ${n_max_rfstat}) then 
+            echo "WARNING on node ${node_search} more than ${n_max_rfstat} rfstat ...ALWS problems" >> ${DT}/${TOUT}
+         endif
+      endif
+#=>> file /usr/lib/nqs/nqs++daemon only shift9+saga01+afal01...
+      if (${node_search} != "afal00" & ${node_search} != "saga02" & ${node_search} != "saga03" & ${node_search} != "saga04" & ${node_search} != "saga05" & ${node_search} != "saga06" & ${node_search} != "saga07") then
+         set n_nqs = `grep nqs++ ${DT}/${TT}_ps | wc -l`
+         if (${n_nqs[1]} == 0) echo "WARNING on node ${node_search} nqs++daemon not found" >> ${DT}/${TOUT}
+      endif 
+#=>> check stgdaemon on shift9
+      if (${node_search} == "shift9") then
+         set n_stgdaemon = `grep stgdaemon ${DT}/${TT}_ps | wc -l`
+         if (${n_stgdaemon[1]} == 0) echo "WARNING on node ${node_search} stgdaemon not found" >> ${DT}/${TOUT}
+      endif
+#=>> all_daemon
+      if (${node_search} == "afal00") set all_daemon = ('/usr/local/bin/rfiod')
+      if (${node_search} != "afal00") set all_daemon = ('/usr/local/bin/rfiod' 'nqsdaemon' 'netdaemon' 'logdaemon')
+      @ n_daemon = 1
+      set n_files = `echo ${all_daemon} | awk '{print NF}'`
+      while (${n_daemon} <= ${n_files})
+         set file_search = ${all_daemon[${n_daemon}]}
+         grep ${file_search} ${DT}/${TT}_ps > ${DT}/${TT}_ps_daemon
+         if (-z ${DT}/${TT}_ps_daemon) echo "WARNING on node ${node_search} ${file_search} not found" >> ${DT}/${TOUT}
+         rm -f ${DT}/${TT}_ps_daemon
+         @ n_daemon++
+      end
+END_PS:
+      rm -f ${DT}/${TT}_ps   
+#======<< ps end
+#
+      set command = `dispose .login -t ''${node_search}:/al/$OS/tmp/dispose_${node_search}.check'' > ${DT}/error_${node_search}.dispose`
+      set command = `grep "successful"  ${DT}/error_${node_search}.dispose`
+      if (${status} != 0) echo ">>> dispose ERROR ${node_search}" >> ${DT}/${TOUT}
+      rm -f ${DT}/error_${node_search}.dispose
+      rm -f /al/$OS/tmp/dispose_${node_search}.check
+      /aleph/script/reboot_sycheck ${node_search} ${TT} ${TOUT} ${DT}
+   else
+      echo ">>> Link ERROR ${node_search} noticed by ping" >> ${DT}/${TOUT}
+   endif
+   rm -f ${DT}/error_${node_search}.ping
+   @ n++
+end
+unsetenv NORETRY
+ 
+if (-e ${DT}/${TT}) then
+   cat ${DT}/${TT} >> ${DT}/${TOUT}
+   rm -f ${DT}/${TT}
+endif
+ 
+if ("$1" == "-w" || "$1" == "w") then
+   echo "++++${begin_date} => `date`" >> ${sycheck_out}
+   if !(-z ${DT}/${TOUT}) then
+      set n_lines = `wc -l ${DT}/${TOUT}`
+      set last_line = `tail -1 ${DT}/${TOUT}`
+      cat ${DT}/${TOUT} >> ${sycheck_out}
+      cat ${DT}/${TOUT} | mail -s "${n_lines[1]} sycheck! ${last_line}" ${admin}
+   endif
+else
+   if (-z ${DT}/${TOUT}) goto END
+   echo "===> new WARNING"
+   cat ${DT}/${TOUT}
+endif
+ 
+END:
+rm -f ${DT}/${TOUT}
+if (-z ${sycheck_out}) rm -f ${sycheck_out}
+exit

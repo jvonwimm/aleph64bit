@@ -1,0 +1,350 @@
+head	1.4;
+access;
+symbols
+	jul313_3:1.4
+	jul313_2:1.4
+	jul313_1:1.4
+	jul313:1.4
+	jul312_1:1.4
+	jul312:1.4
+	jul311:1.4
+	jul310_1:1.4
+	jul310:1.4
+	jul309_1:1.4
+	jul309:1.4
+	jul308_6:1.3
+	jul308_5:1.3
+	jul308_4:1.3
+	jul308_3:1.3
+	jul308_2:1.3
+	jul308_1:1.3
+	jul308:1.3
+	jul307_4:1.3
+	jul307_3:1.3
+	jul307_2:1.3
+	jul307_1:1.2
+	jul307:1.2
+	jul306_3:1.2
+	jul306_2:1.2
+	jul306_1:1.2
+	jul306:1.2
+	jul305_4:1.2
+	jul305_3:1.2
+	jul305_2:1.2
+	jul305_1:1.2
+	jul305:1.2
+	jul304_3:1.2
+	jul304_2:1.2
+	jul304_1:1.2
+	jul304:1.2
+	jul303_7:1.2
+	jul303_6:1.2
+	jul303_5:1.2
+	jul303_4:1.2
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2
+	jul280_1:1.2
+	jul280:1.2
+	jul279:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.4
+date	99.04.26.13.39.52;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.06.05.12.45.59;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.03.12.15.34.20;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.19.27;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.19.28;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@Mods for Sical noise
+@
+text
+@      SUBROUTINE SICRPOT
+C----------------------------------------------------------------------
+C!  - SICAL Create POT banks
+C!
+C!   Author   :- B. Bloch          18-SEP-1992
+C!   modified B. Bloch  June 98 : exclude clusters identified as 
+C!                                electronic noise 
+C!                      April 99 : rather keep all identified backgrounds
+C!
+C?   Add SICAL cluster info to PECO/PCRL/PCOB  banks
+C!======================================================================
+#ifndef DOC
+#include "bcs.h"
+#include "rparac.h"
+#include "rflags.h"
+#include "pcrljj.h"
+#include "pecojj.h"
+#include "pcobjj.h"
+#include "sclsjj.h"
+#include "sinamc.h"
+#include "siidjj.h" 
+      LOGICAL FIRST
+      PARAMETER ( ISIRC = 256 )
+      DATA FIRST / .TRUE. /
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+C
+      IF ( FIRST ) THEN
+         NASIID = NAMIND('SIID')   
+         NAPECO = NAMIND('PECO')
+         NAPCOB = NAMIND('PCOB')
+         NAPCRL = NAMIND('PCRL')
+         FIRST = .FALSE.
+      ENDIF
+C    Do nothing if  No SiCAL cluster
+C
+      KSCLS = IW(NASCLS)
+      IF (KSCLS.LE.0) GOTO 999
+      NSCLS = LROWS (KSCLS)
+      IF (NSCLS.LE.0) GOTO 999
+C    Check if any PECO there
+      KPECO = IW(NAPECO)
+      IF (KPECO.GT.0) THEN
+C check if PECO contains only SICAL clusters : THEN drop PECO,PCRL,PCOB
+C this is the case when reprocessing from POT with only SICAL
+C Or when processing GALEPH without writing PECO on POT.....
+        IF ( ITABL(KPECO,1,JPECKD).EQ.ISIRC) THEN
+          CALL BDROP(IW,'PECO')
+          CALL BDROP(IW,'PCRL')
+          CALL BDROP(IW,'PCOB')
+        ENDIF
+      ENDIF
+      KPECO = IW(NAPECO)
+      KPCRL = IW(NAPCRL)
+      KPCOB = IW(NAPCOB)
+      IF (KPECO.LE.0) THEN
+         NTOT = LPECOA *NSCLS + LMHLEN
+         NTOT2= LPCRLA *NSCLS + LMHLEN
+         CALL AUBOS ('PCOB', 0, LMHLEN,KPCOB, IGARB)
+         IF(IGARB .EQ. 2)  GOTO 998
+         NPCOB = 0
+      ELSE
+         NPECO = LROWS (KPECO)
+         NPCRL = LROWS (KPCRL)
+         NPCOB = LROWS (KPCOB)
+         NTOT = LPECOA *( NPECO+NSCLS)+ LMHLEN
+         NTOT2= LPCRLA *( NPCRL+NSCLS)+ LMHLEN
+      ENDIF
+      CALL AUBOS ('PECO', 0, NTOT, KPECO, IGARB)
+      IF(IGARB .EQ. 2)  GOTO 998
+      IW(KPECO+LMHCOL)= LPECOA
+      CALL AUBOS ('PCRL', 0, NTOT2,KPCRL, IGARB)
+      IF(IGARB .EQ. 2)  GOTO 998
+      IW(KPCRL+LMHCOL)= LPCRLA
+C   Redefine pointers
+      KPECO = IW(NAPECO)
+      KPCRL = IW(NAPCRL)
+      KPCOB = IW(NAPCOB)
+      KSCLS = IW(NASCLS)
+      KSIID = IW(NASIID)
+C   Loop on SCLS to book extra PECO and PCRL and update PCOB
+      nkeep = 0
+      DO 10 ICL = 1,NSCLS
+C   First , PECO.....
+         IND= KNEXT(KPECO)
+C   keep clusters identified as noise , fill pointer to PECO
+C         CALL SICLEAN(ICL,IFLAG)
+         KKID = KROW(KSIID,ICL)
+         IW(KKID+JSIIPE) = LROWS(KPECO) + 1
+         nkeep = nkeep + 1
+         NPCOB = NPCOB+1
+         RW(IND+JPECER)= RTABL(KSCLS,ICL,JSCLEC)
+         RW(IND+JPECE1)= 1.
+         RW(IND+JPECE2)= 0.
+         RW(IND+JPECTH)= RTABL(KSCLS,ICL,JSCLTC)
+         RW(IND+JPECPH)= RTABL(KSCLS,ICL,JSCLPC)
+         RW(IND+JPECEC)= RTABL(KSCLS,ICL,JSCLEC)
+         IW(IND+JPECKD)= ISIRC
+         IW(IND+JPECCC)= 0
+         IW(IND+JPECRB)= 0
+         IW(IND+JPECPC)= NPCOB
+         IW(KPECO+LMHROW)= IW(KPECO+LMHROW)+1
+C   Now PCRL.....
+         JND= KNEXT(KPCRL)
+         IW(JND+JPCRPC)= NPCOB
+         IW(JND+JPCRPE)= IW(KPECO+LMHROW)
+         IW(JND+JPCRPF)= 0
+         IW(JND+JPCRPH)= 0
+         IW(JND+JPCRPP)= 0
+         IW(KPCRL+LMHROW)= IW(KPCRL+LMHROW)+1
+  10  CONTINUE
+C   shrink PECO,PCRL to their real size if needed
+      IF ( nkeep.ne.nscls ) then
+         len = LMHLEN + IW(KPECO+LMHROW)*LPECOA
+         CALL AUBOS ('PECO', 0, len, KPECO, IGARB)
+         len = LMHLEN + IW(KPCRL+LMHROW)*LPCRLA
+         CALL AUBOS ('PCRL', 0, len, KPCRL, IGARB)
+       ENDIF
+C   Last PCOB....
+      IW(KPCOB+LMHROW)= NPCOB
+      IF(FDEBRF.AND.JDBDRF(JULSI).GE.2) THEN
+         CALL PRTABL('PECO',0)
+         CALL PRTABL('PCRL',0)
+         CALL PRTABL('PCOB',0)
+      ENDIF
+      GO TO 999
+  998 CALL RERROR ('SICRPOT', -1, 'Unable to extend PCOB/PECO/PCRL ')
+  999 RETURN
+      END
+#endif
+@
+
+
+1.3
+log
+@Mods for julia 307.2
+@
+text
+@d8 1
+d21 1
+d29 1
+d80 1
+d86 4
+a89 3
+C   do not store clusters identified as noise
+         CALL SICLEAN(ICL,IFLAG)
+         IF ( IFLAG.NE.0) GO TO 10
+@
+
+
+1.2
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+ 	gambnk.F gapeco.F gasteer.F
+ 	hcalib.F hcalrd.F hcatow.F hcbhis.F hcfclu.F hchist.F hclcra.F
+ 	hcltst.F hclufi.F hcos.F hcsimm.F hdgdeb.F hdgfil.F hdgpot.F
+ 	hdgsum.F hdprec.F hdspre.F hflnoi.F hinijo.F hiniru.F hmener.F
+ 	hmfind.F hmroad.F hnoise.F hnoisy.F hpatco.F hphnoi.F hplink.F
+ 	hprana.F hpranp.F hprdig.F hpreda.F hprpot.F hprsum.F hprunc.F
+ 	hrcomp.F hrcpat.F hrdcal.F hroad.F hslink.F hslowc.F hspare.F
+ 	hsptre.F hstofi.F htrack.F htubfi.F htwcr.F
+ 	iasign.F iattma.F ibnkin.F icaswt.F icftoi.F iclimb.F icrcco.F
+ 	ideadw.F idigpr.F ienang.F ifind1.F ifind2.F ifitp.F iftrak.F
+ 	igetti.F igettp.F igicha.F iheler.F iinijo.F iiniru.F iintrk.F
+ 	imatch.F inigap.F insect.F intrak.F ipakdi.F ipdsti.F iphcor.F
+ 	ipreda.F iprsum.F ipstat.F irefin.F ireopd.F isave.F ishuff.F
+ 	ishufl.F islowc.F isrch.F itbook.F itccut.F itcopr.F itcrec.F
+ 	itcrep.F itctpc.F itctrk.F itcxng.F iterr.F itextn.F ithist.F
+ 	itidy1.F itidy2.F itlnk1.F itlnk2.F itpcan.F itrak.F itrecf.F
+ 	itreci.F itree.F itrkci.F itrkeq.F itrkzr.F itrmca.F
+@
+text
+@d6 2
+d78 1
+d82 4
+d107 7
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK sicrpot
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

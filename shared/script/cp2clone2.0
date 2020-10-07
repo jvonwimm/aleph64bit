@@ -1,0 +1,226 @@
+#! /bin/csh -f
+#
+# =======================================================================
+#                                                              FLR
+#                     cp2clone
+# =======================================================================
+# copy new files to a afs
+# =======================================================================
+# P1 -> directory to copy
+# P2 -> machine (csf, afal01, shift50)
+# P3 -> number of days (def.=1)
+# ======================================================================
+# cp2clone1.0
+# 980210
+# cp2clone2.0
+# copy to nfs clone
+# ======================================================================
+
+set exec_name = "cp2clone2.0"
+set verbflr = ""
+set nar = $#argv
+if (${nar} != 0) then
+  if ($argv[${nar}] == "-v") then
+     echo "${exec_name}"
+     set verbflr = "-v" 
+     set echo on
+     set argv[${nar}] = ""
+     @ nar = ${nar} - 1 
+  endif
+endif
+#
+if ( $?ENVIRONMENT ) then
+ if (("$ENVIRONMENT" == "INTERACTIVE" || "$ENVIRONMENT" == "LOGIN") && $1 == "-h" ) then
+   echo ""
+   echo "usage:"
+   echo " cp2clone <prog_dir> [<clone>]"
+   echo ""
+   echo "an example:"
+   echo " cp2clone $ALEPH/phy "
+   echo " finds all files modified/created since 10 days on $ALEPH/phy"
+   echo " copy them onto afal01:/al/OSF1/phy if you are shift50,"
+   echo " copy them onto shift50:/al/OSF1/phy if you are on AFAL."
+   echo ""
+   echo " cp2clone $ALEPH/dbase csf"
+   echo " copy all new $ALEPH/dbase files to csf:/al/HPUX10/dbase."
+   echo ""
+   echo " cp2clone $ALROOT/gal308 "
+   echo " copy all new files onto shift50:/al/reference/cvs/gal308."
+   echo ""
+   exit(1)
+ endif
+endif
+#
+unset noclobber
+
+set prog_dir = $1
+set arg2     = $2
+set arg3     = $3
+
+set clone    = ""
+if (${arg2} != "") set arg2 = ${arg2}
+
+set ndays    = "10"
+if (${arg3} != "") set ndays = ${arg3}
+#===========================================================================
+
+set libn = `basename ${prog_dir}`
+set dir = `dirname ${prog_dir}`
+
+set IGNORE = ". HPUX10 OSF1 CVS"
+set origin = `echo ${prog_dir} | awk '{print substr($0,2,3)}'`
+if (${origin} == "afs") then
+   set CURRENT = "/afs/cern.ch/aleph"
+   set OTHER   = "/al"
+else
+   set CURRENT = "/al"
+   set OTHER   = "/afs/cern.ch/aleph"
+endif
+set OTHERCVS = "${OTHER}/reference/cvs"
+
+#==========================================================
+
+if (${dir} == ${ALROOT}) then
+
+#  ==== if the directory does not exist :copy the new version
+
+  if !( -d ${OTHERCVS}/${libn}) then
+    cd ${ALROOT}
+    cp -pr ${libn} ${OTHERCVS}
+    if ($status !=0) then
+       set flag = " ${prog_dir} not copied : STOP"
+       goto spy
+    endif
+
+#  ====
+  else        
+#  ==== existing directory : copy new *.F and *.h files
+
+    cd ${prog_dir}
+    set listdir = `find . -type d -mtime -${ndays} -print`
+    if ("${listdir}" == "") then
+      set flag = " nothing new on ${prog_dir} : EXIT"
+      goto spy
+    endif
+
+#  ---- update CVS directory 
+    set lcvs = `ls CVS/Entries CVS/Tag` 
+    cp -p ${lcvs} ${OTHERCVS}/${libn}/CVS
+    if ($status != 0) then
+      set flag = " ${prog_dir}/CVS not copied : STOP"
+      goto spy
+    endif
+
+#  ---- if $ALROOT/inc directory : copy new *.h files
+    if (${libn} == "inc") then
+      set listfile = `find . \( -name '*.h' \) -mtime -${ndays} -print`
+      if ("${listfile}" != "") then
+        cp -p ${listfile} ${OTHERCVS}/${libn}
+        if ($status != 0) then
+          set flag = " ${listfile} from ${prog_dir} not copied : STOP"
+          goto spy
+        endif
+      endif
+#
+    else
+#       if not $ALROOT/inc directory : copy new *.F and *.h files
+
+      foreach listd ( $listdir[*] )
+        set dirn = `basename ${listd}`
+
+        foreach ign ( $IGNORE[*] )
+          if (${dirn} == ${ign}) then
+            goto nextlistd
+          endif
+        end
+
+        cd ${prog_dir}/${dirn}
+        set listfile = `find . \( -name '*.F' -o -name '*.h' \) -mtime -${ndays} -print`
+
+        if ("${listfile}" != "") then
+          cp  -p ${listfile} ${OTHERCVS}/${libn}/${dirn}
+          if ($status != 0) then
+            set flag = " ${listfile} from ${prog_dir}/${dirn} not copied : STOP"
+            goto spy
+          endif
+        endif
+
+        set lcvs = `ls CVS/Entries CVS/Tag` 
+        cp ${lcvs} ${OTHERCVS}/${libn}/${dirn}/CVS
+        if ($status != 0) then
+          set flag = " ${prog_dir}/${dirn}/CVS not copied : STOP"
+          goto spy
+        endif
+
+        cd ..
+#         end of program subdirectories
+nextlistd:
+      end
+#         end of subdirectories of ALROOT (inc or program)
+    endif
+#         end of dir = ALROOT
+  endif
+#  =====
+else
+#  ========= if not $ALROOT directory : copy library directories
+#
+  if (${dir} == ${ALEPH}) then
+    cd ${prog_dir}
+    set list = `find . -type f -mtime -${ndays} -print` 
+    if ("${list}" == "") then
+       set flag = " nothing new on ${prog_dir} : EXIT"
+       goto spy
+    else
+       set clon2 = ""
+       if (${clone} == "") then
+         set op_sys = ${OS}
+         if (${OS} == "HPUX10") then
+            set clone = "csf"
+         else
+            set clone = "afal01"
+            set clon2 = "shift50"
+         endif
+       else
+         if (${clone} == "csf") then
+           set op_sys = "HPUX10"
+         else
+           set op_sys = "OSF1"
+         endif
+      endif
+
+       set OTHERLIB = "${OTHER}/${op_sys}"
+       rcp -p ${list} ${clone}:${OTHERLIB}/${libn}
+       if ($status != 0) then
+          set flag = " ${list} from ${prog_dir} not copied onto ${clone}: STOP"
+          goto spy
+       endif
+       if (${clon2 != "") then
+         rcp -p ${list} ${clon2}:${OTHERLIB}/${libn}
+         if ($status != 0) then
+          set flag = " ${list} from ${prog_dir} not copied onto ${clon2}: STOP"
+          goto spy
+         endif
+       endif
+
+    endif
+#
+  endif
+#
+endif 
+
+# ================================================================================
+spy:
+#*******> spy
+echo `date` " END of ${exec_name} ${OS} ${user} ${prog_dir} ${flag}" >> ${HOME}/spy
+ 
+# ===============================================================================
+script_end:
+exit
+
+
+
+
+
+
+
+

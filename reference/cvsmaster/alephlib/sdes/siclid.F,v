@@ -1,0 +1,173 @@
+head	1.1;
+access;
+symbols
+	aleph316_2:1.1
+	aleph316_1:1.1
+	aleph316:1.1
+	aleph315_7:1.1
+	aleph315_6:1.1
+	aleph315_5:1.1
+	aleph315_4:1.1
+	aleph315_3:1.1
+	aleph315_2:1.1
+	aleph315_1:1.1
+	aleph315:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	2000.03.20.11.16.40;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Alephlib 315
+@
+text
+@      SUBROUTINE SICLID(ICLU,ITYP,IFLAG)
+C----------------------------------------------------------------------
+C!  - SICAL Returns identification of sical cluster
+C!
+C!   Author   :- B. Bloch          18-Apr-1999
+C!
+C!    Input:      - iclu = cluster number in bank
+C!                  ityp = 1 bank is PECO,
+C!                         2 bank is SCLS,
+C!                         3 bank is SILU
+C!    Output:
+C!                - iflag quality flag 0 = OK,
+C!                                     1= oscillating,2= beam loss,
+C!                                     3=backwards,   4=scraping,
+C!                                     5=offmom
+C!                                    -1= not a Sical cluster,
+C!                                    -2= not enough info
+C?
+C?    if flag is not stored with the data, it is recomputed by SIBKCL
+C!======================================================================
+#ifndef DOC
+      save
+#include "bcs.h"
+#include "pecojj.h"
+#include "siidjj.h"
+#include "sclsjj.h"
+#include "silujj.h"
+      logical first
+      PARAMETER ( ISIRC = 256 )
+      data first / .true./,iev/0/
+#include "bmacro.h"
+C----------------------------------------------------------------------
+      if ( first) then
+         NASIID = NAMIND('SIID')
+         NAPECO = NAMIND('PECO')
+         NASILU = NAMIND('SILU')
+         NASCLS = NAMIND('SCLS')
+         first = .false.
+      endif
+      ksiid = iw(NASIID)
+C  if SIID not here, try to give the answer from SCLS if reading a POT
+      if (ksiid.le.0) then
+         kscls = iw(NASCLS)
+         if ( KSCLS.LE.0) then
+              go to 101
+         else
+           iev = iev + 1
+C
+C  we can recompute the flag for this cluster
+C   if type = 2 ( SCLS) easy, if not have to find out which one it is
+           if (ityp.eq.2) then
+             kcl = iclu
+             go to 20
+           else if (ityp.eq.1) then
+               kpeco = iw(NAPECO)
+               kd = itabl(kpeco,iclu,jpeckd)
+               if ( kd.ne.isirc) go to 101
+               epeco = rtabl(kpeco,iclu,jpecec)
+               tpeco = rtabl(kpeco,iclu,jpecth)
+               ppeco = rtabl(kpeco,iclu,jpecph)
+               do 10 icl = lrows(kscls),1,-1
+                  de = epeco-rtabl(kscls,icl,jsclec)
+                  dt = tpeco-rtabl(kscls,icl,jscltc)
+                  dp = ppeco-rtabl(kscls,icl,jsclpc)
+                  if ( abs(de/epeco).gt.1.e-06 ) go to 10
+                  if ( abs(dt).gt.1.e-06 ) go to 10
+                  if ( abs(dp).gt.1.e-06)  go to 10
+                  kcl = icl
+                  go to 20
+ 10          continue
+             kcl = 0
+C
+             go to 102
+           else if (ityp.eq.3) then
+               ksilu = iw(NASILU)
+               esilu = rtabl(ksilu,iclu,jsilec)
+               tsilu = rtabl(ksilu,iclu,jsilct)
+               psilu = rtabl(ksilu,iclu,jsilcp)
+               do 11 icl = lrows(kscls),1,-1
+                  de = esilu-rtabl(kscls,icl,jsclec)
+                  dt = tsilu-rtabl(kscls,icl,jsclct)
+                  dp = psilu-rtabl(kscls,icl,jsclcp)
+                  if ( abs(de/esilu).gt.1.e-06 ) go to 11
+                  if ( abs(dt).gt.1.e-06 ) go to 11
+                  if ( abs(dp).gt.1.e-06)  go to 11
+                  kcl = icl
+                  go to 20
+ 11            continue
+               kcl = 0
+               go to 102
+           endif
+ 20        if ( kcl.gt.0) then
+               call abruev(irun,ievent)
+C         if (iev.le.10) print *,irun,ievent,' cluster in SCLS is ',kcl
+               call sibkcl(irun,kcl,iflagb)
+               iflag = iflagb
+           else
+C             if (iev.le.10) print *,irun,ievent,' no cluster in SCLS '
+           endif
+         endif
+      else
+        iflag = 0
+        if ( ityp.eq.1) then
+           kclu = iw(napeco)
+           icol = jsiipe
+        elseif ( ityp.eq.2) then
+           kclu = iw(nascls)
+           icol = jsiisc
+        elseif ( ityp.eq.3) then
+           kclu = iw(nasilu)
+           icol = jsiisi
+        else
+           write (iw(6),100) ityp
+           iflag = -1
+        endif
+        if ( kclu.le.0) go to 102
+        nclu = lrows(kclu)
+        if ( iclu.gt.nclu) go to 102
+        if ( ityp.eq.1) then
+C    check if requested cluster is a SICAL cluster
+           ikd = itabl(kclu,iclu,jpeckd)
+           if (ikd.ne.isirc) go to 101
+        endif
+        nclu = lrows(ksiid)
+        do icl = 1,nclu
+         if ( iclu.eq.itabl(ksiid,icl,icol)) then
+           iflag = itabl(ksiid,icl,jsiici)
+           go to 99
+         endif
+        enddo
+      endif
+ 99   return
+101   iflag = -1
+      return
+102   iflag = -2
+      return
+100   format (1x,' SICLID :   unknown cluster type requested ',I10)
+      END
+#endif
+@

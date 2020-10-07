@@ -1,0 +1,360 @@
+QFITW2:  User defined errors and constraints in QFITWW
+
+	Richard J. Cavanaugh,
+	SCRI - Florida State University
+	March 5, 1996
+   
+	In a previous ALEPH note [1], a constrained fitting package for 
+	$W^{+}W^{-}$ events, QFITWW, was introduced.  Another version, QFITW2, 
+	is released which allows the user to define:  1) the covariance matrix 
+	for the measured parameters and/or 2) the constraint functions in the 
+	$\chi^{2}$.
+
+Introduction
+
+	This note is an appendium to [1].  In response to several requests for 
+	more flexibility, another version of QFITWW is being released, QFITW2.  
+	This package allows the user to define: 1) the covariance matrix for 
+	the measured parameters and/or 2) the constraint functions in the 
+	$\chi^{2}$. To maintain similarity, QFITW2 retains the same 
+	input/output arguments of QFITWW along with their defaults:
+
+        CALL QFITW2( EVTYP, IOPT, MASTOL, ITKS, IFTKS, COV, CHISQ, ISTAT )
+
+	(if the definitions of the arguments are unfamiliar, the reader is 
+	encouraged to read [1]. To use QFITW2, the user should link
+	the qfitw2.o object file in UPHY with his/her ALPHA job.  For the 
+	casual user, QFITWW is still maintained in UPHY as qfitww.o.  In this 
+	way, all previous ALPHA jobs that called QFITWW will still run 
+	smoothly with no modifications.
+
+Description
+   
+	The custom covariance matrix and/or constraint functions are defined 
+	via the following subroutines which must be supplied by the user:
+
+		QFWERR:	Allows the user to define the error matrix for 
+			the measured parameters
+
+		QFWFUN:	Allows the user to define the constraint 
+			functions in the $\chi^{2}$
+
+	To invoke the user defined error matrix and/or the user defined 
+	constraint functions, two additional bits are defined in the IOPT 
+	argument of QFITW2:
+	
+
+               bit	mask	description
+               ----     ----    -----------
+		14	1	Use custom error matrix in QFWERR
+                	0	Use default error matrix (same as QFITWW)
+		15	1	Use custom constraint functions in QFWFUN
+
+	Turning these bits on or off in IOPT causes QFITW2 to call the 
+	subroutine QFWERR containing the user defined error matrix and/or 
+	to call the subroutine QFWFUN containing the user defined constraint 
+	functions.  If both bit 14 and bit 15 are set to off in IOPT then, 
+	QFITW2 becomes identical to QFITWW except that the subroutines QFWERR
+	and QFWFUN must still be defined (if only as mere dummy subroutines) 
+	by the user in the ALPHA job.
+
+The QFWERR Subroutine
+   
+	The QFWERR subroutine must contain the following definitions/format:
+
+      SUBROUTINE QFWERR( ITKS, COVM )
+*     ------------------------------------------------------------------
+      PARAMETER( MAXPRM = 13 )
+      INTEGER  ITKS(4)
+      DOUBLE PRECISION COVM(MAXPRM,MAXPRM)
+      INCLUDE '/aleph/phy/qcde.inc'
+      INCLUDE '/aleph/phy/qmacro.inc'
+*     ------------------------------
+      .
+      .
+      .
+*     ------------------------------------------------------------------      
+      RETURN
+      END
+
+	where the one dimensional array ITKS contains the ALPHA track 
+	numbers from the {\em unfitted} input tracks that were passed to 
+	QFITW2.  The user defines the elements of the covariance matrix, 
+	COVM(I,J), for the Ith and Jth measured parameters (same order as 
+	given in [1] or in Appendix I).  COVM is then returned to QFITWW
+	where the inverse is calculated using DFACT and DFINV in 
+	CERNLIB.  If the inverse does not exist, QFITW2 issues a 
+	warning to the log file, sets ISTAT = -2 (illegal input 
+	argument) and, abandons the fit.  Of vital importance are 
+	the use of DOUBLE PRECISION numbers instead of single 
+	precision numbers.  MINUIT requires all numbers to be double 
+	precision (even if the variable is not explicitly passed to 
+	MINUIT)--otherwise, results may be unpredictable.
+
+The QFWFUN Subroutine
+
+	The QFWFUN subroutine must contain the following definitions/format:
+
+      SUBROUTINE QFWFUN( P1, P2, P3, P4, ISRPHT, FUN2 )
+*     ------------------------------------------------------------------
+      DOUBLE PRECISION P1(4), P2(4), P3(4), P4(4), ISRPHT(4), FUN2
+*     ------------------------------
+      TERM2 = 0.0  ! Initialize sum of chi-square constraint terms to zero
+      .
+      .
+      .
+*     ------------------------------------------------------------------      
+      RETURN
+      END
+
+	where P1, P2, P3, P4, ISRPHT are the 4-vectors for the 
+	current fitted tracks (i.e. P1+P2 = W1, P3+P4 = W2, and 
+	ISRPHT is the Initial State Radiated PHoTon 4-vector).  
+	FUN2 represents the sum of all the constraint terms 
+
+ 		FUN2=\sum_{i} f_{i}(\vec{x})
+
+	and is added to the bilinear terms (of the $\chi^{2}$) 
+	within QFITW2 to form the overall $\chi^{2}$:  
+
+		\chi^{2}=(\vec{x}_{0}-\vec{x})^{T}{\bf V}^{-1}
+		(\vec{x}_{0}-\vec{x})+FUN2		
+
+   	Note that if bit number 15 is set in IOPT (i.e. user defined 
+   	constraints are imposed) then, the input argument MASTOL
+   	is no longer relavent since the user supplies the exact form of 
+   	the constraints.  It is also important to note that there is a 
+   	limit to which one can impose constraints (e.g. equal mass constraint 
+   	or 4-momentum conservation). Experience shows that fits with 
+   	constraints tighter than roughly 50 MeV tend to converge less reliably 
+	(i.e. ISTAT = 1 or ISTAT = 2 is often returned) than fits 
+	with constraints imposed to roughly 50 MeV (i.e. ISTAT = 3 is 
+	usually returned).  Complicated constraints (i.e. highly 
+	non-linear with respect to the parameters) may have to be looser than 
+	50 MeV--it is up to the user to determine the degree to which a custom
+	constraint may be imposed and still maintain good convergence.  
+	Different constraint functions (e.g. different mass constraints) 
+	may be used with different calls to QFITWW by defining a 
+	flag in a common block between QUEVNT and QFWFUN (see appendix).  
+	Once again, DOUBLE PRECISION numbers must be used instead of single 
+	precision numbers--otherwise, MINUIT may return unpredictable results.
+		
+Conclusion
+
+	Another version of QFITWW, QFITW2 which supports user defined errors 
+	and constraints, has been presented and is available in UPHY.  For 
+	the casual user, QFITWW is still available in UPHY.
+
+References
+	[1] 	R. J. Cavanaugh. An ALPHA Tool for Constrained Kinematic 
+		Fits to $W^{+}W^{-}$ events:  QFITWW. 
+		ALEPH-96-129
+
+Appendix
+   
+	I  IOPT bit definitions for QFITW2}:
+
+		Bit	'2jlv'			'4jet'
+		---	------			------
+		(1)	$E_{jet1}$		$E_{jet1}$
+		(2)	$E_{jet2}$		$E_{jet2}$
+		(3)	$E_{lepton}$		$E_{jet3}$
+		(4)	ISR $p_{z}$		$E_{jet4}$
+		(5)	$\theta_{jet1}$		ISR $p_{z}$
+		(6)	$\theta_{jet2}$		$\theta_{jet1}$
+		(7)	$\theta_{lepton}$	$\theta_{jet2}$
+		(8)	$\phi_{jet1}$		$\theta_{jet3}$
+		(9)	$\phi_{jet2}$		$\theta_{jet4}$
+		(10)	$\phi_{lepton}$		$\phi_{jet1}$
+		(11)	dummy			$\phi_{jet2}$
+		(12)	dummy			$\phi_{jet3}$
+		(13	dummy			$\phi_{jet4}$
+		(14)	user defined err matrix	user defined error matrix
+		(15)	user defined constrnts	user defined constraints
+
+
+	II  Sample Code for User Provided ALPHA {QUEVNT subroutine:
+		   
+************************************************************************
+*                      User provided ALPHA routine                     *
+************************************************************************
+
+      SUBROUTINE QUEVNT (QT,KT,QV,KV)
+*     ------------------------------------------------------------------      
+      INTEGER IOPT, ITKS(4), IFTKS(7), ISTAT
+      REAL MASTOL, COV(13,13), CHISQ
+      COMMON /MO/ MassTerm  ! Define common block between QUEVNT
+      INTEGER MassTerm      ! and QFWFUN so that different
+*                           ! mass constraints may be tested.
+      .
+      .
+      .   
+      INCLUDE '/aleph/phy/qcde.inc'
+      INCLUDE '/aleph/phy/qmacro.inc'
+*     ------------------------------
+      .
+      .
+      .
+                     
+      IOPT = 8175 + 16384          ! 8175:  set bits 1-4 and 6-13
+*                                  !        (fit all jet energies and angles)
+*                                  ! 16384: set bit 15 (use constraints in 
+*                                  !                    QFWFUN)
+      MassTerm = 1                 ! Flag:  use 1st custom defined equal mass 
+*                                  !        constraint term in QFWFUN
+      call QFITW2('4jet',IOPT,MASTOL,ITKS,IFTKS,COV,CHISQ,ISTAT )
+      .
+      .
+      .
+      
+      IOPT = 8175 + 8192 + 16384   ! 8175:  set bits 1-4 and 6-13
+*                                  !        (fit all jet energies and angles)
+*                                  ! 8192:  set bit 14 (use errors in QFWERR)
+*                                  ! 16384: set bit 15 (use constraints in 
+*                                  !                    QFWFUN)
+      MassTerm = 2                 ! Flag:  use 2nd custom defined equal mass 
+*                                  !        constraint term in QFWFUN
+      call QFITW2('4jet',IOPT,MASTOL,ITKS,IFTKS,COV,CHISQ,ISTAT )
+      .
+      .
+      .
+         
+*     ------------------------------------------------------------------
+      return
+      end
+
+************************************************************************
+	
+	
+	III  Sample Code for User Provided {\tt QFWERR} subroutine:
+
+************************************************************************
+*                User defined errors example routine                   *
+************************************************************************
+
+      SUBROUTINE QFWERR( ITKS, COVM )
+*     ------------------------------------------------------------------
+      PARAMETER( MAXPRM = 13 )
+      INTEGER  ITKS(4)
+      DOUBLE PRECISION COVM(MAXPRM,MAXPRM)
+      INCLUDE '/aleph/phy/qcde.inc'
+      INCLUDE '/aleph/phy/qmacro.inc'
+*     ------------------------------
+      DO I = 1, MAXPRM
+         DO J = 1, MAXPRM                   ! Initialize covariance
+            IF(I.NE.J) COVM(I,J) = 0.0      ! matrix
+            IF(I.EQ.J) COVM(I,J) = 1.0
+         ENDDO
+      ENDDO
+
+      JET1 = ITKS(1)                     ! In this example, only the 
+      JET2 = ITKS(2)                     ! hadronic channel is studied
+      JET3 = ITKS(3)
+      JET4 = ITKS(4)
+
+*     Define jet energy errors
+      COVM(1,1) = ((0.6*SQRT( QE(JET1) ) + 0.6) * (1 + QCT(JET1)**2))**2
+      COVM(2,2) = ((0.6*SQRT( QE(JET2) ) + 0.6) * (1 + QCT(JET2)**2))**2
+      COVM(3,3) = ((0.6*SQRT( QE(JET3) ) + 0.6) * (1 + QCT(JET3)**2))**2
+      COVM(4,4) = ((0.6*SQRT( QE(JET4) ) + 0.6) * (1 + QCT(JET4)**2))**2
+      
+*     Define ISR pz width (naively assume a gaussian dist. with mean zero)
+      COVM(5,5) = (1.5)**2                ! Average initial state
+*                                         ! radiated photon energy (GeV)
+      
+*     Define jet polar angle errors
+      COVM(6,6) = (10.0 / ( QQRADP*SQRT(QP(JET1)) ))**2 ! jet axis errors, 
+      COVM(7,7) = (10.0 / ( QQRADP*SQRT(QP(JET2)) ))**2 ! 10 degrees/root(P)
+      COVM(8,8) = (10.0 / ( QQRADP*SQRT(QP(JET3)) ))**2
+      COVM(9,9) = (10.0 / ( QQRADP*SQRT(QP(JET4)) ))**2
+      
+*     Define jet azimuthal angle errors
+      COVM(10,10) = (10.0 / ( QQRADP*SQRT(QP(JET1)) ))**2
+      COVM(11,11) = (10.0 / ( QQRADP*SQRT(QP(JET2)) ))**2
+      COVM(12,12) = (10.0 / ( QQRADP*SQRT(QP(JET3)) ))**2
+      COVM(13,13) = (10.0 / ( QQRADP*SQRT(QP(JET4)) ))**2
+
+*     ------------------------------------------------------------------      
+      RETURN
+      END
+
+************************************************************************
+
+
+	IV Sample Code for User Provided QFWFUN subroutine:
+
+************************************************************************
+*            User defined constraints example routine                  *
+************************************************************************
+
+      SUBROUTINE QFWFUN( P1, P2, P3, P4, ISRPHT, FUN2 )
+*     ------------------------------------------------------------------
+      DOUBLE PRECISION P1(4), P2(4), P3(4), P4(4), ISRPHT(4), FUN2
+*     ------------------------------
+      INTEGER X, Y, Z
+      DOUBLE PRECISION W1(4), W2(4), TERM, WMASS1, WMASS2, SIGP, SIGM
+      DOUBLE PRECISION NORM, GAMMA
+      COMMON /MO/ MassTerm  ! Define common block between the routine that
+      INTEGER MassTerm      ! called QFITW2 so that different
+*                           ! mass constraints may be used.
+      INCLUDE '/aleph/phy/qcde.inc'
+      INCLUDE '/aleph/phy/qmacro.inc'
+*     ------------------------------
+      FUN2 = 0.0   ! Initialize chi**2 constraint term to zero
+      SIGP = 0.050 ! (GeV), require 4-momentum conservation within 50 MeV
+*                  !       (Convergence less reliable below ~ 50 MeV)
+      
+      X = 1                      !
+      Y = 2                      !     Define some  
+      Z = 3                      !       convenient
+      DO I = 1, 4                !         quantities . . .
+         W1(I) = P1(I) + P2(I)   ! 
+         W2(I) = P3(I) + P4(I)   ! 
+      ENDDO
+        
+*    4-Momentum Constraint terms
+
+      TERM  = ( QELEP - W1(4) - W2(4) - ISRPHT(4) ) / SIGP
+      FUN2 = FUN2 + TERM**2
+
+      TERM  = (   0   - W1(X) - W2(X) ) / SIGP
+      FUN2 = FUN2 + TERM**2
+
+      TERM  = (   0   - W1(Y) - W2(Y) ) / SIGP
+      FUN2 = FUN2 + TERM**2
+
+      TERM  = (   0   - W1(Z) - W2(Z) - ISRPHT(Z) ) / SIGP
+      FUN2 = FUN2 + TERM**2
+        
+*     Different Equal Mass Constraint terms
+
+      WMASS1 = W1(4)**2 - ( W1(X)**2 + W1(Y)**2 + W1(Z)**2 )
+      WMASS1 = SIGN( SQRT(ABS(WMASS1)), WMASS1)
+
+      WMASS2 = W2(4)**2 - ( W2(X)**2 + W2(Y)**2 + W2(Z)**2 )
+      WMASS2 = SIGN( SQRT(ABS(WMASS2)), WMASS2)
+
+      IF( MassTerm.EQ.1 ) THEN  ! Gaussian mass constraint example
+
+         SIGM = 0.050 ! (GeV), require equal mass fitted W bosons within 50 MeV
+*                            (Convergence less reliable below ~ 50 MeV)
+
+         TERM = ( WMASS1 - WMASS2) / SIGM
+         FUN2 = FUN2 + TERM**2
+
+      ELSE IF( MassTerm.EQ.2 ) THEN  ! Briet-Wigner mass constraint example
+
+         GAMMA = 3.0
+         NORM = 3.1415926
+
+         TERM = - 2.0*LOG( NORM*(            GAMMA**2/4.0 /
+     /                          (WMASS1-WMASS2)**2 + GAMMA**2/4.0)  )
+         FUN2 = FUN2 + TERM
+
+      ENDIF
+
+*     ------------------------------------------------------------------      
+      RETURN
+      END
+
+************************************************************************

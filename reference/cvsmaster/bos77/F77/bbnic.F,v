@@ -1,0 +1,222 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.46.49;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.06;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.07;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE BBNIC(JW,LUN,LFA)
+C
+C     CHECK BANK LENGTH, CONVERT MACHINE FORMAT AND
+C     INSERT NAMEINDEX INTO POS. JW(IND-1)
+*     LFA = 1   ONLY FIRST BANK
+*     LFA = 2   ALL EXCEPT FIRST BANK
+C
+      INTEGER JW(*)
+#include "boscom.h"
+#include "param.h"
+      CHARACTER*4 NAME,CHAINT
+      INTEGER LV(3,10)
+*     ...
+      JW2=1
+      IRD=MLINK(JW,'+REC',LUN)
+      IF(IRD.EQ.0) GOTO 90
+      NTOT=JW(IRD)
+      IND=IRD+4
+      NAMC=JW(IND-3)+1
+      NBK=0
+C
+C     NEXT BANK -  CONVERT AND CHECK LENGTH
+C
+   10 NBK=NBK+1
+      IF(NBK.EQ.1.AND.LFA.EQ.2) GOTO 70
+      IF(NBK.EQ.2.AND.LFA.EQ.1) THEN
+         JW2=0
+         GOTO 90
+      END IF
+      CALL CFRIBM(JW(IND-2),3,2)
+      NW=JW(IND)
+      IF(MIN(NTOT,NW+4).LT.4.OR.NW+4.GT.NTOT) THEN
+         IRD=MDROP(JW,'+REC',LUN)
+         GOTO 90
+      END IF
+      IF(JW(IND-3).NE.NAMC) THEN
+C
+C        NEW NAME - CONVERT AND GET NAMEINDEX
+C
+         NAMC=JW(IND-3)
+         NASC=NAMC
+#include "frasc.h"
+         NAMA=NASC
+#include "namez.h"
+         IF(NAMI.EQ.0) THEN
+            NAME=CHAINT(NAMA)
+            NAMI=NAMIND(NAME)
+         END IF
+      END IF
+      JW(IND-3)=NAMA
+      JW(IND-1)=NAMI
+      IF(NW.EQ.0) GOTO 70
+      IST=IND+1
+      ICO=NW
+C
+C     CONVERT DATA TO INTERNAL MACHINE FORMAT
+C     N = INFINITY
+      N = 999 999 999
+      K = 0
+      ID=IW(IDFMT+NAMI-NSYST)
+      IF(ID.EQ.0) THEN
+C        NO FORMAT DEFINED, ASSUME I
+         K=2
+         GOTO 40
+      END IF
+      IF(IW(ID+3).EQ.0) GOTO 25
+      IF(IW(ID+3).EQ.1) THEN
+*        32 BIT WORDS ARE CONVERTED
+         K=2
+      END IF
+      GOTO 40
+   25 I    =3
+      ITERM=3
+      LEV=0
+C
+C     GET NEXT FORMAT CODE
+C
+   30 I=I+1
+      IF(I.GT.IW(ID)) THEN
+         I=ITERM
+         GOTO 30
+      END IF
+C
+C     RIGHT PARENTHESIS
+C
+      IF(IW(ID+I).EQ.0) THEN
+         LV(3,LEV)=LV(3,LEV)+1
+         IF(LV(3,LEV).GE.LV(2,LEV)) THEN
+            ITERM=LV(1,LEV)-1
+            LEV=LEV-1
+         ELSE
+            I=LV(1,LEV)
+         END IF
+C
+C
+C
+      ELSE
+         N=IW(ID+I)/10
+         K=IW(ID+I)-10*N
+         IF(K.EQ.0) THEN
+C
+C        LEFT PARENTHESIS
+C
+            LEV=LEV+1
+            LV(1,LEV)=I
+            LV(2,LEV)=N
+            LV(3,LEV)=0
+C
+C
+C
+         ELSE
+C
+C           FORMAT F OR I OR A
+C
+            IF(IW(ID).NE.4) THEN
+               IF(I.NE.IW(ID)-1)    GOTO 40
+               IF(LEV.EQ.0)         GOTO 40
+               IF(I.NE.LV(1,LEV)+1) GOTO 40
+            END IF
+*           N=INFINITY
+            N=999 999 999
+            GOTO 40
+         END IF
+      END IF
+      GOTO 30
+   40 M=MIN(N,ICO)
+      IF(K.EQ.1) THEN
+C
+C        CONVERT TO FLOATING POINT
+C
+         CALL CFRIBM(JW(IST),M,3)
+      ELSE IF(K.EQ.2) THEN
+C
+C        CONVERT TO INTEGER
+C
+         CALL CFRIBM(JW(IST),M,2)
+      ELSE IF(K.EQ.3) THEN
+C
+C        CONVERT TO A4 FORMAT
+C
+         DO 60 LL=1,M
+         NASC=JW(IST+LL-1)
+#include "frasc.h"
+   60    JW(IST+LL-1)=NASC
+      END IF
+      ICO=ICO-M
+      IF(ICO.LE.0) GOTO 70
+      IST=IST+M
+      GOTO 30
+   70 NW=JW(IND)
+      IND=IND+NW+4
+      NTOT=NTOT-NW-4
+      IF(NTOT.NE.0) GOTO 10
+      JW2=0
+   90 JW(2)=JW2
+  100 RETURN
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK bbnic
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

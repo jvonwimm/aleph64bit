@@ -1,0 +1,104 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.49.11;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.18;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.19;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE BOSRW(LUN)
+C
+C     REWIND UNIT LUN (FORTRAN)
+C
+#include "boscom.h"
+#include "param.h"
+#include "mparam.h"
+      REAL RW(1000)
+      EQUIVALENCE (IW(1),RW(1))
+C     ...
+      IBF= NLINK('+BUF',LUN)
+      IF(IBF.EQ.0) GOTO 100
+#include "unpackio.h"
+      IF(IOMD.NE.0) THEN
+         IF(IW(LUP).GT.0) WRITE(IW(LUP),1001) LUN
+         CALL BABEND('BOSRW')
+      END IF
+      IF(IOST.EQ. 2.AND.IW(IBF+11).NE.0) THEN
+
+*        WRITE LAST BUFFER BEFORE REWIND
+
+         CALL BBFWRS(LUN,IOAC,IW(IBF+4)+1,IW(IBF+11),IW(IBF+2))
+         IW(IBF+4)=IW(IBF+4)+1
+         RW(IBF+8)=RW(IBF+8)+1.0E-6*FLOAT(NBYTWD*(IW(IBF+11)+1))
+         IW(IBF+11)=0
+         IF(IW(LUP).NE.0.AND.IW(LUW).GT.0) THEN
+         IW(LUW)=IW(LUW)-1
+         END IF
+      END IF
+      IOST=MOD(IOST,4)+4
+      REWIND LUN
+      IF(IW(LUP).GT.0) WRITE(IW(LUP),1002) LUN
+#include "packio.h"
+      IBF= NBANK('+BUF',LUN,11)
+  100 RETURN
+ 1001 FORMAT('0BOS--BOSRW-  WRONG UNIT - STOP',
+     1       14X,'UNIT =',I3)
+ 1002 FORMAT('0BOS--BOSRW-  REWIND UNIT',I3)
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK bosrw
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

@@ -1,0 +1,116 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.07.14.02.52;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.53;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK agvfgp
+      SUBROUTINE AGVFGP
+C------------------------------------------------------
+C!  Defines and positions VDET 92 faces in GEANT
+CKEY VDET GEOM FACE
+C - W.Manner - 921103
+C - Modified : A. Bonissent 940215 : use geom. package
+C.  -Called by AGVDET                 from this .HLB
+C.  -Calls GSROTM,GSPOS               from  GEANT3
+C.
+C. - positions volumes VDBX
+C.
+C------------------------------------------------
+#ifndef DOC
+      DIMENSION XYZ(3),DIST(3)
+      INTEGER VNTFAC,VXYZFC,VPHIFC
+#include "iocom.h"
+#include "bcs.h"
+#include "agcons.h"
+C     Find position of the center of box VDBX with respect to
+C     center of silicon active region in the face
+C
+      CALL VDGDIS('VDWA','VDBX',DIST)
+C
+C Compute the position of box VDB2
+C
+         CALL VDB2DD(D2)
+C
+C Dist(1) is the distance.
+C
+      DDD = DIST(1)
+C
+C-----Loop over faces/slots
+C
+      NFAC = VNTFAC()
+      DO 20 IFAC = 1,NFAC
+C
+C-----Define the rotation angle of each side, possibly with inversion
+C
+         IBID = VPHIFC(IFAC,PHI)
+         ROTAN = PHI*RADEG
+         IF(ROTAN.GT.D360)   ROTAN = ROTAN-D360
+         ROTA2 = ROTAN+D90
+         IF(ROTA2.GT.D360)   ROTA2 = ROTA2-D360
+         IAGROT= IAGROT+1
+         CALL GSROTM(IAGROT,D90,ROTAN,D90,ROTA2,0.,0.)
+C
+C-----Find the position of the centre of each face
+C
+         IBID = VXYZFC(IFAC,XYZ)
+C
+C Compute displacements for the center of the box
+C
+         DX = DDD*COS(PHI)
+         DY = DDD*SIN(PHI)
+C   DZ=0 !
+         XX     = XYZ(1)-DX
+         YY     = XYZ(2)-DY
+         ZZ     = XYZ(3)
+         DX2 = D2*COS(PHI)
+         DY2 = D2*SIN(PHI)
+         XX2 = XX+DX2
+         YY2 = YY+DY2
+         ZZ2 = ZZ
+C
+C?----Put in place the faces
+C
+         NSLOT = IFAC
+         CALL GSPOS('VDBX'  ,NSLOT,'VDET',XX,YY,ZZ,IAGROT,'ONLY')
+         CALL GSPOS('VDB2'  ,NSLOT,'VDET',XX2,YY2,ZZ2,IAGROT,'ONLY')
+   20 CONTINUE
+   30 CONTINUE
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

@@ -1,0 +1,158 @@
+head	1.3;
+access;
+symbols
+	gal309_3:1.3
+	gal309_2:1.3
+	gal309_1:1.3
+	gal309:1.3
+	gal308_2:1.3
+	gal308_1:1.3
+	gal308:1.3
+	gal307_2:1.3
+	gal307_1:1.3
+	gal307:1.3
+	gal306_3:1.3
+	gal306_2:1.3
+	gal306_1:1.3
+	gal306:1.3
+	gal305_3:1.3
+	gal305_2:1.3
+	gal305_1:1.3
+	gal305:1.3
+	gal304_11:1.3
+	gal304_10:1.3
+	gal304_9:1.3
+	gal304_8:1.3
+	gal304_7:1.3
+	gal304_6:1.3
+	gal304_5:1.3
+	gal304_4:1.3
+	gal304_3:1.3
+	gal304_2:1.2
+	gal304_1:1.1
+	gal304:1.1
+	gal303_3:1.1
+	gal303_2:1.1
+	gal303_1:1.1
+	v-303:1.1
+	gal302_2:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	96.05.23.12.38.08;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.05.20.15.57.55;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.06.30.14.08.22;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@extend geantino parametrisation to lcal
+@
+text
+@*DK saasig
+      SUBROUTINE SAASIG
+C-----------------------------------------------------------------------
+C!    Delete multihits and reduce SAHI Bank to actual size
+C   called at the end of the event before SADIGI by ASASIG
+C                                   H.Burkhardt   October 1986
+C-----------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "iocom.h"
+#include "jobcom.h"
+#include "jqcom.h"
+#include "sanamc.h"
+#include "satrco.h"
+      DATA NASAHT /0/
+#include "bmacro.h"
+C if multihits are in the same brass tube (same address)
+C keep only the hit which is the closest to the wire
+      IF (NASAHT.EQ.0) NASAHT = NAMIND('SAHT')
+      KSAHT=IW(NASAHT)
+      IF(KSAHT.EQ.0) GOTO 900
+      NHIT=LROWS(KSAHT)
+      KSA=KSAHT+LMHLEN
+      DO 1 IT1=1,NHIT-1
+        ILOW=IT1+1
+        IF(IW(KSA+IT1).EQ.0) GOTO 1
+        IAD1=IBITS(IW(KSA+IT1),16,16)
+        DO 2 IT2=ILOW,NHIT
+          IF(IW(KSA+IT2).EQ.0) GOTO 2
+          IAD2=IBITS(IW(KSA+IT2),16,16)
+          IF(IAD1.EQ.IAD2) THEN
+C           look for shorter dist, mark other hit for deletion
+C           by putting the word to zero
+            IF(IBITS(IW(KSA+IT1),0,16).LT.
+     &         IBITS(IW(KSA+IT2),0,16)) THEN
+              IW(KSA+IT2)=0
+            ELSE
+              IW(KSA+IT1)=0
+              GOTO 1
+            ENDIF
+          ENDIF
+    2   CONTINUE
+    1 CONTINUE
+      IND=0
+      DO 3 IT3=1,NHIT
+C       copy, skip the hits to be deleted
+        IF(IW(KSA+IT3).NE.0) THEN
+          IND=IND+1
+          IW(KSA+IND)=IW(KSA+IT3)
+        ENDIF
+    3 CONTINUE
+      IF(IND.LT.NHIT) THEN
+C       only change bank size if multihits have been found
+C       number of rows
+        IW(KSAHT+2)=IND
+C       now reduce SAHT bank to actual size
+        CALL AUBPRS('SAHT')
+      ENDIF
+      IF(FDEBJO.AND.IPRIJO(6).EQ.1) THEN
+         WRITE (LOUTIO,*)' +++SAASIG+++ # of deleted double hits= ',
+     &                    NHIT-IND
+         CALL SAPRHI
+      ENDIF
+  900 CONTINUE
+      END
+#endif
+@
+
+
+1.2
+log
+@gal304_2 - remove double quotes in saasig.F
+@
+text
+@d15 1
+d19 1
+@
+
+
+1.1
+log
+@release galeph 302.
+ Added Files:
+ saasig.F sabook.F sadigi.F sahist.F sahit.F sairun.F sawsum.F
+@
+text
+@d58 2
+a59 2
+         WRITE (LOUTIO,'(/1X,''+++SAASIG+++ # of deleted double hits= ''
+     &                      ,I4)') NHIT-IND
+@

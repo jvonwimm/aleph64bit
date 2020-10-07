@@ -1,0 +1,143 @@
+*DK eptoda
+      PROGRAM EPTODA
+C.-------------------------------------------------------------------
+C  M.Rumpf  (RUMPF at FRCPN11)
+C  Read Bos/Epio file on unit 20 written by EPIOFMT program.
+C  Write newdaf on unit 21
+C  reorder TADB and TPRO in alphabetic order
+C
+C  the following data cards are mandatory
+C    * open/read EPIO data base file
+C    FEPI   'DBASE:ADBS140.EPIO | EPIO'                      ! vax
+C           'ADBS140 EPIO | EPIO| GIME PUBXU 210 LREC 3600 ' ! ibm
+C           'ADBS140.EPIO | EPIO| FETCH PUBXU 210 LREC 3600' ! cray
+C    * open/write DAF file
+C    FDAF   'ADBS140.DAF | DAF'                              ! vax
+C           'ADBS140 DAF * | DAF'                            ! ibm
+C           'ADBS140.CRAYDAF | DAF | DISPOSE '               ! cray
+C    * create the DAF with so many blocks [and directory blocks]
+C    DAFB    370   7
+C    ENDQ
+C
+C  BOS77 and ALEPHLIB  libraries needed
+C.-------------------------------------------------------------------
+#ifndef DOC
+#include "lbos.h"
+#include "ttabjj.h"
+C
+      CHARACTER*8 SUBR
+      CHARACTER*4 NLIST,NAME,CHAINT
+      CHARACTER*80 TFILE,TFIL
+      CHARACTER*120 MSG,MSGE,MSGB
+      CHARACTER*6  TATYP
+      CHARACTER*68 TDEVI
+C
+C -----------------------------------------------------------------
+      SUBR  = ' EPTODA '
+      LUNEP = 20
+      LUDAFN = 21
+C
+C  Init BOS and read data cards
+C
+      IRECL = 1024
+C
+      CALL BNAMES(NAMAX)
+      CALL BOS (IW,LBOS)
+      LUNPRT = IW(6)
+      IW(7) = 100000
+      IW(5) = 7
+      CALL GETENVF ('EPTODACARDS',TFIL)
+      IF (TFIL.NE.' ') CALL AOPEN(IW(5),TFIL,'CARD','DISK',IER)
+      CALL BREADC
+C
+C Open EPIO file onto unit LUNEP
+C
+       CALL AGTFIL ('FEPI','READ',LUNEP,IER)
+       IF (IER.NE.0) THEN
+          CALL AWERRC (IW(6),'AGTFIL','  ',IER)
+          STOP
+       ENDIF
+C
+C Get DAF file name (becareful DIRECT logical becomes TRUE in AOPEN)
+C
+      CALL ACDARG ('FDAF','DAF','*',TFILE,TATYP,TDEVI,IRETC)
+      IF (IRETC.NE.0) THEN
+         CALL AWERRC (IW(6),'ACDARG',TFILE,IRETC)
+         STOP
+      ENDIF
+      LE = LNBLNK(TFILE)
+C
+C decode DAFB or OUTB data card to get number of records of the DAF
+#include "gtnrec.h"
+C
+C  Open new DAF
+C
+      IF (LUDAFN .NE. 0) THEN
+         LUN = LUDAFN
+         TFIL = TFILE(1:LE)
+#include "erase.h"
+#include "owdaf.h"
+      ENDIF
+C
+C Read BOS/EP file in IW array (old DAF in EPIO format) and write
+C the bank onto the new DAF
+C
+      NBKW  = 0
+      NWRDS = 0
+   10 CONTINUE
+         CALL BEPRD(IW,LUNEP,'E',*101,*102)
+         INDFIR = IW(3)
+         NAME = CHAINT(IW(INDFIR-3))
+         NR   = IW(INDFIR-2)
+C
+C     sort TADB and TPRO in alphabetic order
+         IF (NAME.EQ.'TADB' .OR. NAME.EQ.'TPRO') THEN
+            LC = IW(INDFIR+LMHCOL)
+            LR = IW(INDFIR+LMHROW)
+            CALL SORTIQ (IW(INDFIR+LMHLEN+1),LC,LR,JTTANA)
+         ENDIF
+C
+C     copy the bank from EPIO to DAF
+         CALL BDAWR (IW,LUDAFN,NAME,NR)
+         NWRDS = NWRDS + IW(INDFIR)
+         NBKW = NBKW + 1
+C
+         CALL BDROP(IW,'E')
+         CALL BGARB(IW)
+      GO TO 10
+C
+C  End of data set reached
+C
+  102 WRITE(LUNPRT,1102)
+C
+      WRITE(LUNPRT,1103) NBKW , NWRDS
+      CALL BOSFM
+C
+      CALL BDAPR(LUDAFN,'    ')
+      CALL BOSTA
+      CALL ACLOSE (0,IER)
+C
+      STOP
+  101 WRITE(LUNPRT,1101)
+      STOP
+C
+ 90   WRITE (LUNPRT,1090) IOP
+      STOP
+C
+ 1090 FORMAT(1X,' error when opening the DAF  - IOSTAT= ',I10)
+ 1100 FORMAT(1X,' Bank ',A4,4I9,' ADDED on DAF from EPIO')
+ 1101 FORMAT(1X,'Error reading EPIO file')
+ 1102 FORMAT(1X,'End of data set on EPIO file')
+ 1103 FORMAT(1X,I8,' banks written on DAF with a total of',I7,' words')
+ 1105 FORMAT(1X,' Bank ',A4,4I9,' ADDED on DAF from data cards')
+ 1106 FORMAT (1X, ' Bank ',A4,4I9,4X,'READ from EPIO      ')
+      END
+      SUBROUTINE TIMEL(T)
+C.--------------------------------------------------------------------
+C Dummy routine
+C Necessary for DARES from BOS to run interactively
+C.--------------------------------------------------------------------
+      T = 10.
+      RETURN
+      END
+#endif

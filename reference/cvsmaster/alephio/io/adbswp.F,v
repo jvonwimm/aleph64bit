@@ -1,0 +1,104 @@
+head	1.1;
+access;
+symbols
+	alio83:1.1
+	alio82:1.1
+	alio81:1.1
+	alio80:1.1
+	alio74:1.1
+	alio73:1.1
+	alio72:1.1
+	alio71:1.1
+	alio70:1.1
+	alio68:1.1
+	alio69:1.1
+	alio67:1.1
+	alio66:1.1
+	alio65:1.1
+	alio64:1.1
+	alio63:1.1
+	alio62:1.1
+	alio61:1.1
+	alio60:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.04.23.09.58.57;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@move alph, dbas, a part of alef and a part of c to alephio
+Modified Files:
+ 	version.h
+ Added Files:
+ 	adbrow.F adbrpn.F adbrun.F adbswp.F adbver.F agetdb.F agtfil.F
+	albos.F aldawr.F aldtyp.F aleveh.F alfind.F alfmt.F algtbk.F
+ 	algtdb.F algtlu.F algtro.F algtyp.F alinst.F alk7fil.F
+ 	alk7fru.F alk7op.F alk7tru.F alredb.F alrune.F alrunh.F
+ 	alrunr.F alseed.F alstho.F alstin.F alstri.F altabl.F alvsn.F
+ 	aopdbs.F aublis.F aubos.F aubprs.F bkcari.F bkinca.F bkrhab.F
+ 	bkrhal.F bkrhaw.F bktobk.F cafiht.F chahol.F dafrds.F gtdbas.F
+ 	gtstup.F igtfmt.F jhocha.F julrec.F junial.F junidb.F
+ 	kbytrec.F loctab.F nameru.F ubpack.F uclean.F uindxs.F usbos.F
+ 	usgtdb.F utcblk.F utccop.F utcofo.F utwocl.F utwoex.F
+Removed Files:
+	noibm.F
+@
+text
+@      SUBROUTINE ADBSWP(IOLD,INEW)
+C --------------------------------------------------------------------
+CKEY ALEF DBASE DCARD SWAP / USER
+C! swap data base bank given on data cards with NR=iold to NR=inew
+C - F.Ranjard - 900626
+C
+C - Input argument    : IOLD   / INTE = data card bank number
+C                       INEW   / INTE = swap to new bank number
+C -------------------------------------------------------------------
+#ifndef DOC
+      INTEGER ALGTD1,USGTD1
+      CHARACTER*4 NAME,CHAINT
+#include "bcs.h"
+C ------------------------------------------------------------------
+C
+      LUN = JUNIDB(0)
+C
+C - loop over existing named banks
+C
+      IND  = IW(14)+3
+ 10   IF (IND .GE. IW(15)) GOTO 20
+      LE   = IW(IND)
+      IF (LE.LT.0) THEN
+C        bank has been dropped
+         IND = IND - LE
+      ELSE
+C        bank is there, is it a data base bank?
+         NAME = CHAINT (IW(IND-3))
+         CALL BDADIR (LUN,NAME,IPOS)
+         IF (IPOS.GT.0) THEN
+            NR = IW(IND-2)
+            IF (NR.EQ.IOLD) THEN
+               NEW = NSWAP (NAME,IOLD,NAME,INEW)
+            ENDIF
+         ENDIF
+         IND = IND + LE + 4
+      ENDIF
+      GOTO 10
+ 20   CONTINUE
+C
+C - set data card bank number of ALGTDB to INEW
+C
+      IER = ALGTD1 (INEW)
+      IER = USGTD1 (INEW)
+C
+      END
+#endif
+@

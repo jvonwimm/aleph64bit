@@ -1,0 +1,1387 @@
+head	1.19;
+access;
+symbols
+	V0060:1.18
+	V0059:1.15
+	V0058:1.7
+	V0057:1.3
+	V0056:1.3
+	V0055:1.3
+	V0054:1.3;
+locks; strict;
+comment	@# @;
+
+
+1.19
+date	2004.01.15.13.10.29;	author jacotf;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	2003.03.13.09.34.14;	author jacotf;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	2003.01.10.10.40.35;	author jacotf;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	2002.12.04.13.48.14;	author jacotf;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	2002.03.20.11.02.13;	author jacotf;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	2002.02.06.15.44.54;	author jacotf;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	2002.01.10.14.11.11;	author jacotf;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	2002.01.10.14.02.37;	author jacotf;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	2001.11.28.14.27.36;	author jacotf;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	2001.11.28.14.18.14;	author jacotf;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	2001.11.09.10.35.29;	author jacotf;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	2001.10.24.08.04.00;	author jacotf;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	2001.09.21.13.36.46;	author jacotf;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	2001.09.21.07.41.25;	author jacotf;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	2001.08.27.09.30.38;	author jacotf;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	2001.08.20.11.28.42;	author jacotf;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	2001.05.18.09.39.47;	author jacotf;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	2001.05.10.09.37.53;	author jacotf;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2001.04.27.14.22.14;	author jacotf;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.19
+log
+@Change jacotf into aleph
+@
+text
+@SET ARRAYSIZE 1;
+set scan off
+CREATE or REPLACE PACKAGE mcarlo_prodstat_procedures 
+IS
+   TYPE Char_Tab IS
+      TABLE of VARCHAR2(1000) NOT NULL
+      INDEX BY BINARY_INTEGER;
+
+   TYPE plot_values IS
+      RECORD (
+          x_coord VARCHAR2(1000),
+          y_coord VARCHAR2(1000)  
+      );
+
+   TYPE plot_table IS
+      TABLE of plot_values
+      INDEX BY BINARY_INTEGER;
+
+   TYPE prod_values IS
+      RECORD (
+          KinKeyWord     VARCHAR2(100)  ,
+          Description    VARCHAR2(255)  ,
+          Expect_evts    VARCHAR2(20)   ,
+          Evts_processed VARCHAR2(20)
+      );
+
+   TYPE mcprod_table IS
+      TABLE of prod_values
+      INDEX BY BINARY_INTEGER;
+
+
+   PROCEDURE welcome;
+
+/*
+|| To consider a production as ended :
+|| Define a Global variable which will be used later to decide if
+|| a production is ended. 
+|| Nb of processed events / Nb of expected events must be > 0.9999
+*/
+   Global_Endprod_flag INTEGER := 10000;
+
+
+END mcarlo_prodstat_procedures;
+/
+show errors
+
+
+CREATE or REPLACE PACKAGE BODY mcarlo_prodstat_procedures
+/*
+|| !!!! If one wants to debug a procedure !!!!
+|| Before you can use dbms_output do:
+||    set serveroutput on; 
+|| The default buffer size can be too small - Increase the size of the STUPID buffer doing:
+||    DBMS_OUTPUT.ENABLE (1000000);
+||
+|| To increase the linesize for the output (default=80 characters) do:
+||    set linesize 132;
+*/
+IS
+
+PROCEDURE print_datime
+/*
+|| Print Date and Time
+*/
+IS
+   date_time VARCHAR2(60);
+   date      VARCHAR2(50);
+   time      VARCHAR2(50);
+
+BEGIN
+   date_time := SYSDATE;
+   htp.p(date_time);
+
+END print_datime;
+
+
+PROCEDURE header 
+   (title in VARCHAR2)
+/*
+|| To display a generic header
+*/
+IS
+BEGIN
+   htp.htmlopen;
+   htp.headopen;
+   htp.title(title);
+   htp.headclose;
+/* 
+|| The bodyopen is done in the procedure mcprod_plot
+*/
+--   htp.bodyopen;
+
+END header;
+
+
+PROCEDURE footer 
+/*
+|| To display a generic footer
+*/
+IS
+BEGIN
+   htp.bodyclose;
+   htp.line;
+
+   htp.print('Creation date : ');
+   print_datime;
+   htp.address('Francoise Loverre');
+   htp.htmlclose;
+END footer;
+
+
+PROCEDURE mcprod_plot
+/*
+|| From the MCPRODPLOT table prepare the x and y coordinates
+|| to do the mcprod graphic
+|| x = MCPRODPLOT table column Day_from_May1
+|| y = MCPRODPLOT table column ProdDone
+*/
+IS
+   tot_expect    INTEGER;
+   tot_done      INTEGER;
+   percent_done  INTEGER;
+
+   date_origin   VARCHAR2(30) := '30-APR-2001';
+   today_from_origin VARCHAR2(30);
+   
+   npoint        INTEGER;
+   all_points    plot_table;
+   
+   ncoord        INTEGER;
+   ncoord_out    INTEGER;
+   line_by       INTEGER := 10;
+   nline         INTEGER;
+
+   current_point INTEGER;
+   first_x       VARCHAR2(30);
+   first_y       VARCHAR2(30);
+   last_x        VARCHAR2(30);
+   last_y        VARCHAR2(30);
+
+   xcoord_str    VARCHAR2(2000);
+   ycoord_str    VARCHAR2(2000);
+   repeat_x      VARCHAR2(30);
+   repeat_y      VARCHAR2(30);
+   xy_quotes     VARCHAR2(10) := '"';
+   
+   nevts_today   VARCHAR2(30);
+   my_string     VARCHAR2(5000);
+
+   Max_x         VARCHAR2(30);
+   Max_y         VARCHAR2(30);
+   max_y_expect  INTEGER;
+   x_expect      VARCHAR2(30);
+   y_expect      VARCHAR2(30);
+   label_y       VARCHAR2(30);
+   label_x       VARCHAR2(30);
+
+   alpha         NUMBER(10,3); 
+   first_xp      NUMBER(10,3);
+   first_yp      NUMBER(10,3);
+   last_xp       NUMBER(10,0);
+   last_yp       NUMBER(10,0);
+   yp_at_Max_x   NUMBER(10,3);
+   expect_end    VARCHAR2(30);
+
+   coord_output  Char_Tab;
+   EmptyList     Char_Tab;
+
+BEGIN
+   coord_output := EmptyList;
+
+DECLARE
+
+   CURSOR mcp_cur
+   IS
+      SELECT Day_from_May1, ProdDone
+      FROM MCPRODPLOT
+      ORDER BY Day_from_May1
+      ;
+      mcp_rec mcp_cur%ROWTYPE;
+
+BEGIN
+/* 
+|| From table MCPRODS find the total number of events expected
+|| The table MCPRODS is filled by Brigitte Bloch via a
+|| perl program.
+|| The SYNONYM MCprod has been defined as: 
+||   bbloch.MCPRODS      on DEVDB
+||   prod_bbloch.MCPRODS on CERNDB1
+*/
+   SELECT SUM(NbEvents)
+   INTO tot_expect
+   FROM MCprod
+   ;
+
+/*
+|| To day - Number of days since date_origin
+*/
+   SELECT TRUNC(SYSDATE - TO_DATE(date_origin,'DD/MM/YYYY'))
+   INTO today_from_origin
+   FROM DUAL;
+
+   today_from_origin := today_from_origin || '.';
+
+/*
+|| Store the xs and ys coordinates into a table
+*/
+   npoint := 0;
+
+   OPEN mcp_cur;
+   LOOP
+      FETCH mcp_cur INTO mcp_rec;
+      EXIT WHEN mcp_cur%NOTFOUND;
+      npoint := npoint + 1;
+      all_points(npoint).x_coord  := to_char(mcp_rec.Day_from_May1) || '.';
+      IF mcp_rec.ProdDone != 0
+      THEN
+         all_points(npoint).y_coord  := to_char(mcp_rec.ProdDone);
+      ELSE
+         all_points(npoint).y_coord  := to_char(mcp_rec.ProdDone) || '.';
+      END IF;
+/* 
+|| Store the first x and the first y 
+*/
+      IF npoint = 1
+      THEN
+         first_x := all_points(npoint).x_coord;
+         first_y := all_points(npoint).y_coord;
+      END IF;
+
+   END LOOP;
+
+/* 
+|| Store the last y 
+|| The last x will be "today_from_origin"
+*/
+
+/*   last_x := today_from_origin;  */
+   last_x := all_points(npoint).x_coord;
+   last_y := all_points(npoint).y_coord;
+   
+   CLOSE mcp_cur;
+
+   nevts_today := last_y;
+
+/* 
+|| Retrieve the x and y coordinates from the all_points table
+|| and prepare a string of xs and ys for the Java applet
+*/
+   IF npoint != 0
+   THEN
+      ncoord := 0;
+      ncoord_out := 0;
+      nline := 0;
+      xcoord_str := xy_quotes;
+      ycoord_str := xy_quotes;
+
+      current_point := all_points.FIRST;
+      LOOP
+         EXIT when current_point is NULL;
+         ncoord := ncoord + 1;
+         ncoord_out := ncoord_out + 1;
+     
+         IF ncoord = line_by OR ncoord_out = npoint
+         THEN
+/* 
+||End of polyline for x and y
+*/
+            IF ncoord_out = npoint
+            THEN
+               xcoord_str := xcoord_str || all_points(current_point).x_coord || ', ';
+               ycoord_str := ycoord_str || all_points(current_point).y_coord || ', ';
+/* 
+|| The last x is the date of today 
+|| The last y is the value of the column ProdDone of the last row 
+*/
+/*               xcoord_str := xcoord_str || today_from_origin || xy_quotes ;*/
+               xcoord_str := xcoord_str ||  last_x || xy_quotes ;
+               ycoord_str := ycoord_str ||  last_y || xy_quotes;
+            ELSE
+               xcoord_str := xcoord_str || all_points(current_point).x_coord || xy_quotes;
+               ycoord_str := ycoord_str || all_points(current_point).y_coord || xy_quotes;
+            END IF;
+/*
+|| Store the xs and ys on a table indexed by line
+|| Each line will be used in the javascript code as argument to "plot_polyline"
+*/ 
+            nline := nline + 1;
+            coord_output(nline) := xcoord_str || ' , ' || ycoord_str;  
+/* 
+||Beginning of new polyline for x and y
+*/
+            IF ncoord_out != npoint
+            THEN
+               repeat_x := all_points(current_point).x_coord;
+               repeat_y := all_points(current_point).y_coord;
+
+               xcoord_str := xy_quotes || repeat_x || ', ';
+               ycoord_str := xy_quotes || repeat_y || ', ';
+
+               ncoord := 1;
+            END IF;
+         ELSE
+            xcoord_str := xcoord_str || all_points(current_point).x_coord || ', ';
+            ycoord_str := ycoord_str || all_points(current_point).y_coord || ', ';
+
+         END IF;
+
+         current_point := all_points.NEXT(current_point);
+      END LOOP;
+
+/*
+|| Plot Java script stuff 
+*/
+      htp.p('<SCRIPT language="javascript">');
+
+      htp.p('function xlabel(xval, text) {');
+      htp.p('   document.plot.polyline(""+xval+", "+xval+"", "-3., 0.");');
+      htp.p('   document.plot.labelAt(xval, -10., text);');
+      htp.p('}');
+
+      htp.p('function ylabel(yval, text) {');
+      htp.p('   document.plot.polyline("-1.8, 0.", ""+yval+", "+yval+"");');
+      htp.p('   document.plot.labelAt(-10., yval, text);');  
+      htp.p('}');
+  
+      htp.p('function startApplet(){');
+
+--      Max_x := '300.';
+      Max_x := '350.';
+      max_y_expect := tot_expect/1000000 + 20;
+      Max_y := to_char(max_y_expect) || '.';
+
+      x_expect := Max_x;
+      y_expect := tot_expect / 1000000;
+
+/*
+|| Draw the box and the axis
+*/
+      htp.p('// go to black');
+      htp.p('   document.plot.resetColor();');
+
+      my_string := '   document.plot.setx(50, 40, 500, 0.000000, ' || Max_x || ', "text:");';
+      htp.p(my_string);
+
+      my_string := '   document.plot.sety(50, 40, 250, 0.000000, ' || Max_y || ', "text: ");';
+      htp.p(my_string);
+  
+      htp.p('   document.plot.noDecoration("X");');
+      htp.p('   document.plot.noDecoration("Y");');
+
+      htp.p('   document.plot.drawBox();');
+      
+/*
+|| Tick marks and x axis labels 
+*/
+      htp.p('   xlabel(0., "May");');    
+      htp.p('   xlabel(60., "July");');    
+      htp.p('   xlabel(120., "September");');    
+      htp.p('   xlabel(180., "November");');    
+      htp.p('   xlabel(240., "January");');    
+      htp.p('   xlabel(300., "March");');    
+
+/*
+|| Tick marks and y axis labels 
+*/
+      htp.p('   ylabel(0.  , "  0.");');    
+      htp.p('   ylabel(25. , " 25.");');    
+      htp.p('   ylabel(50. , " 50.");');    
+      htp.p('   ylabel(75. , " 75.");');    
+      htp.p('   ylabel(100., "100.");');   
+      htp.p('   ylabel(125., "125.");');   
+      htp.p('   ylabel(150., "150.");');   
+      label_y := Max_y + 5.;
+      my_string := '   document.plot.labelAt(-1., ' || label_y || ', "Million events");';
+      htp.p(my_string);  
+
+/*
+|| Write a title
+*/
+      tot_done := to_number(nevts_today);
+      percent_done := (tot_done * 1000) / (tot_expect / 1000) * 100; 
+--      my_string := '   document.plot.labelAt(70., 90., "Total on ' || SYSDATE  || ': ' ||  nevts_today ||  ' Mevt");';
+      my_string := '   document.plot.labelAt(77., 94., "Total on ' || SYSDATE  || ': ' ||  nevts_today ||  ' Mevt");';
+      htp.p(my_string);  
+--      my_string := '   document.plot.labelAt(70., 83.,' || '"  (' || to_char(percent_done) || '% of total expected)");';
+      my_string := '   document.plot.labelAt(77., 87.,' || '"  (' || to_char(percent_done) || '% of total expected)");';
+      htp.p(my_string);  
+      
+/* 
+|| Draw the total expected number of events line   
+*/
+      htp.p('// go to red');
+      htp.p('   document.plot.setColor(255,0,0);');
+      my_string := '   document.plot.polyline("0., ' || Max_x || '" , "' || y_expect || ', ' || y_expect || '");';  
+      htp.p(my_string);
+
+/* 
+|| Loop on all coordinates and draw the curve  
+*/
+      htp.p('// go to blue');
+      htp.p('   document.plot.setColor(0,0,255);');
+
+      FOR jj IN 1 .. coord_output.COUNT
+      LOOP
+         my_string := 'document.plot.polyline(' || coord_output(jj) || ')';
+         htp.p(my_string);
+      END LOOP;
+
+/* 
+|| Define the first and last x and y of the extrapolation line
+*/
+      first_xp := first_x;
+      first_yp := first_y;
+
+      alpha := (last_y - first_yp) / (last_x - first_xp);
+      last_yp := y_expect;
+      last_xp := (y_expect - first_yp) / alpha + first_xp;
+
+/* 
+|| Check the y value of the cross point between the extrapolation  
+|| line and the total number of expected events line  
+*/
+      yp_at_Max_x := alpha * (Max_x - first_xp) + first_yp;
+      IF yp_at_Max_x < y_expect
+      THEN
+         last_xp := Max_x;
+         last_yp := yp_at_Max_x;
+      END IF;
+/*
+|| Draw the extrapolation line
+*/
+      htp.p('// go to green');
+      htp.p('   document.plot.setColor(0,255,0);');
+      my_string := 'document.plot.polyline("' || first_xp || ', ' || last_xp || '" , "' || first_yp || ', ' || last_yp || '")'; 
+      htp.p(my_string);
+
+/*
+|| Draw some comments 
+*/
+      htp.p('// go back to black');
+      htp.p('   document.plot.resetColor();');
+
+      label_y := y_expect + 5.;
+      SELECT to_char(TO_DATE(date_origin,'DD/MM/YYYY') + last_xp,'DD/MM/YYYY')
+      INTO expect_end
+      FROM DUAL;
+--      my_string := '   document.plot.labelAt(225.,' || label_y || ', "Expected completion: ' || expect_end || '");';
+      my_string := '   document.plot.labelAt(180.,' || label_y || ', "Expected completion: ' || expect_end || '");';
+      htp.p(my_string);  
+
+      htp.p('   document.plot.repaint();');
+
+      htp.p('}');
+      htp.p('</SCRIPT>');
+   
+      htp.bodyopen(' ', 'onload="startApplet()"');
+
+--      htp.p('<applet name=plot codebase="http://alephwww.cern.ch/~jacotf/mcplot/bis/" archive="picture.jar" code="picture.class" width=600 height=325>');
+      htp.p('<applet name=plot codebase="http://cern.ch/aleph/scanbook/mcplot" archive="picture.jar" code="picture.class" width=600 height=325>');
+  
+      htp.p('</applet>');
+      htp.br;
+   
+   ELSE
+      htp.p('*** Cannot display the productions graphic !');
+      htp.p(' No entries have been found !! ***');
+      htp.br;
+   END IF;
+
+END;
+
+END mcprod_plot;
+
+
+PROCEDURE give_Mcarlo_status
+/*
+|| Give the list of all Kingal Keyword known by the new
+|| MonteCarlo production system (Virtual Marcello)
+|| and the status of the production 
+|| The table MCPRODS is filled by Brigitte Bloch via a
+|| perl program.
+|| The SYNONYM MCprod has been defined as: 
+||   bbloch.MCPRODS      on DEVDB
+||   prod_bbloch.MCPRODS on CERNDB1
+*/
+IS
+   nprod INTEGER;
+   mprod INTEGER;
+   nrec  INTEGER;
+   current_prod INTEGER;
+
+   nevts_ready  INTEGER := 0;
+   nevts_expect INTEGER;
+   percent_done NUMBER(8,2);
+   nevts_diff   INTEGER;
+
+   tot_expect   INTEGER := 0;
+   tot_ready    INTEGER := 0;
+   tot_percent  NUMBER(8,2);
+
+   expect_evts_pr VARCHAR2(30);
+   ready_evts_pr  VARCHAR2(30);
+   tot_expect_pr  VARCHAR2(30);
+   tot_ready_pr   VARCHAR2(30);
+   loc_point      INTEGER;
+   max_nbsp       INTEGER := 13;
+   lg_str         INTEGER;
+   nb_nbsp        INTEGER;
+   nbsp_str       VARCHAR2(200);
+   my_string_pr   VARCHAR2(500);
+
+   all_prods mcprod_table;
+
+BEGIN
+DECLARE
+
+   CURSOR kinkey_cur 
+   IS
+      SELECT NVL(p.mtot,0) done, n.KingalKey kinkey, n.Description descrip, n.NbEvents nexpt, n.Energy energ
+      FROM MCprod n, 
+           (SELECT SUM(m.Nevents) mtot, m.KingalKeyWord
+            FROM MCSETS m
+            WHERE m.Datatype = 'MINI'
+               AND m.MiniVersion = 205
+            GROUP BY m.KingalKeyWord) p
+      WHERE n.Kingalkey = p.KingalKeyWord(+)
+      ORDER BY energ, kinkey
+      ;      
+      kinkey_rec kinkey_cur%ROWTYPE;
+         
+BEGIN
+   nrec := 0;
+
+   OPEN kinkey_cur;
+   LOOP
+      FETCH kinkey_cur INTO kinkey_rec;
+      EXIT WHEN kinkey_cur%NOTFOUND;
+      nrec := nrec + 1;
+      nprod := nrec;
+      all_prods(nprod).KinKeyWord  := kinkey_rec.kinkey;
+      all_prods(nprod).Description := kinkey_rec.descrip;
+
+      nevts_expect := kinkey_rec.nexpt;
+      all_prods(nprod).Expect_evts := to_char(nevts_expect);
+
+      nevts_ready := to_char(kinkey_rec.done);
+      all_prods(nprod).Evts_processed := to_char(nevts_ready);
+
+      tot_expect := tot_expect + nevts_expect;  
+      tot_ready  := tot_ready  + nevts_ready;
+
+   END LOOP;
+   CLOSE kinkey_cur;
+
+/*
+|| Progressbar Java script stuff 
+|| This function progressbar is used to draw images
+|| The function infobulle is also used
+|| In case of "infobulles" the function progressbar used is:
+|| ~jacotf/alephwww/infobulle 
+|| The Java script stuff are on .js files
+*/ 
+--   htp.p('<SCRIPT SRC="http://alephwww.cern.ch/~jacotf/infobulle/mcprod_infobulle.js">');
+   htp.p('<SCRIPT SRC="http://cern.ch/aleph/scanbook/infobulle/mcprod_infobulle.js">');
+   htp.p('</SCRIPT>');
+
+--   htp.p('<SCRIPT SRC="http://alephwww.cern.ch/~jacotf/infobulle/mcprod_progressbar.js">');
+   htp.p('<SCRIPT SRC="http://cern.ch/aleph/scanbook/infobulle/mcprod_progressbar.js">');
+   htp.p('</SCRIPT>');
+
+/*
+|| Print now
+*/
+
+   htp.tableOpen(' ','CENTER',' ',' ','BORDER=2');
+
+   htp.tableRowOpen;
+   htp.tableHeader('KinGalKeyWord','CENTER');
+   htp.tableHeader('Description','CENTER');
+   htp.tableHeader('&nbsp;&nbsp;Requested&nbsp;&nbsp;'); 
+   htp.tableHeader('&nbsp;&nbsp;&nbsp;Done&nbsp;&nbsp;&nbsp;'); 
+   htp.tableRowClose;
+
+   current_prod := all_prods.FIRST;
+   LOOP
+      EXIT when current_prod is NULL;
+
+      htp.tableRowOpen;
+      htp.tableData(all_prods(current_prod).KinKeyWord,'LEFT');
+      htp.tableData(all_prods(current_prod).Description,'LEFT');
+      
+      nevts_expect := to_number(all_prods(current_prod).Expect_evts);
+      expect_evts_pr := to_char(nevts_expect / 1000) || 'K';
+
+      nevts_ready := to_number(all_prods(current_prod).Evts_processed);
+      ready_evts_pr := to_char(nevts_ready / 1000);
+      loc_point := INSTR(ready_evts_pr,'.');
+      IF loc_point != 0
+      THEN
+         ready_evts_pr := SUBSTR(ready_evts_pr,1,loc_point-1);
+      END IF;    
+      ready_evts_pr := ready_evts_pr || 'K';   
+      
+/*
+|| To increase the sensible zone of the infobulle we will add
+|| some '&nbsp;' at the beginning and at the end of the string
+*/
+         lg_str := LENGTH(ready_evts_pr);
+         IF nevts_ready = 0
+         THEN
+            lg_str := LENGTH(nevts_ready);
+         END IF;
+         nb_nbsp := max_nbsp - lg_str;
+
+         nbsp_str := '';
+         FOR kk IN 1 .. nb_nbsp
+         LOOP
+            nbsp_str := nbsp_str || '&nbsp;';
+         END LOOP;
+  
+      nevts_diff := nevts_expect - nevts_ready ;
+      percent_done := nevts_ready / nevts_expect;
+
+/* 
+|| The production is ended
+*/
+      IF (nevts_diff * Global_Endprod_flag) < nevts_expect
+      THEN
+         htp.tableData(expect_evts_pr,'CENTER');
+
+         my_string_pr := nbsp_str || ready_evts_pr || nbsp_str;
+--         htp.p('<script>progressbar(' || percent_done || ',' || '"' || ready_evts_pr || '"' || ');</script>');
+         htp.p('<script>progressbar(' || percent_done || ',' || '"' || my_string_pr || '"' || ');</script>');
+
+/* 
+|| The production is NOT initiated or NOT ended
+*/
+      ELSE
+         htp.tableData(expect_evts_pr,'CENTER');
+
+         IF nevts_ready = 0
+         THEN 
+            my_string_pr := nbsp_str || nevts_ready || nbsp_str;
+--            htp.p('<script>progressbar(' || percent_done || ',' || '"' || nevts_ready || '"' || ');</script>');
+            htp.p('<script>progressbar(' || percent_done || ',' || '"' || my_string_pr || '"' || ');</script>');
+         ELSE
+            my_string_pr := nbsp_str || ready_evts_pr || nbsp_str;
+--            htp.p('<script>progressbar(' || percent_done || ',' || '"' || ready_evts_pr || '"' || ');</script>');
+            htp.p('<script>progressbar(' || percent_done || ',' || '"' || my_string_pr || '"' || ');</script>');
+
+         END IF;
+      END IF;
+
+      htp.tableRowClose;
+
+      current_prod := all_prods.NEXT(current_prod);
+
+   END LOOP;    
+
+/*
+|| Print now the total number of events expected and ready
+*/
+   tot_percent := tot_ready / tot_expect;
+
+   tot_expect_pr := to_char(tot_expect / 1000) || 'K';
+
+   tot_ready_pr := to_char(tot_ready / 1000);
+   loc_point := INSTR(tot_ready_pr,'.');
+   IF loc_point != 0
+   THEN
+      tot_ready_pr := SUBSTR(tot_ready_pr,1,loc_point-1);
+   END IF;    
+   tot_ready_pr := tot_ready_pr || 'K';   
+
+/*
+|| To increase the sensible zone of the infobulle we will add
+|| some '&nbsp;' at the beginning and at the end of the string
+*/
+   lg_str := LENGTH(tot_ready_pr);
+   nb_nbsp := max_nbsp - lg_str;
+
+   nbsp_str := '';
+   FOR kk IN 1 .. nb_nbsp
+   LOOP
+      nbsp_str := nbsp_str || '&nbsp;';
+   END LOOP;
+  
+   htp.tableRowOpen;
+   my_string_pr := '&nbsp;Grand Total:';
+   htp.tableHeader(my_string_pr,' ',' ',' ',' ','2');
+
+   my_string_pr := '<B>' || tot_expect_pr || '</B>';
+   htp.tableData(my_string_pr,'CENTER');
+
+   my_string_pr := nbsp_str || tot_ready_pr || nbsp_str;
+   my_string_pr := '<B>' || my_string_pr || '</B>';
+--   my_string_pr := '<B>' || tot_ready_pr || '</B>';
+   htp.p('<script>progressbar(' || tot_percent || ',' || '"' || my_string_pr || '"' || ');</script>');
+   htp.tableRowClose;
+
+   htp.tableClose;
+
+END;
+
+END give_Mcarlo_status;
+
+
+PROCEDURE welcome
+/*
+|| Main procedure of the Mcarlo Production Status package
+*/
+IS
+   my_string VARCHAR2(255);
+
+BEGIN
+   header('Aleph MonteCarlo productions ');  
+
+   htp.p('<style type="text/css">');
+
+   htp.p('a.infobulle:link {color: black; text-decoration:none;}');
+   htp.p('a.infobulle:visited {color: black; text-decoration:none;}');
+   htp.p('a.infobulle:hover {color: black; text-decoration:none;}');
+
+   htp.p('</style>');
+
+   htp.br;
+
+   htp.centerOpen;
+   htp.tableOpen(' ','CENTER',' ',' ','BORDER=0 CELLPADDING=5 CELLSPACING=0');
+   my_string := '<IMG src=http://alephwww.cern.ch/ICONS/aleph3.xbm>';
+   htp.tableData(my_string,'CENTER',' ',' ',' ',' ','BGCOLOR="yellow"');
+   my_string := '<FONT SIZE=+3>Status of ALEPH Montecarlo productions</FONT>';
+   htp.tableData(my_string,'CENTER',' ',' ',' ',' ','BGCOLOR="yellow"');
+   my_string := '<IMG src=http://alephwww.cern.ch/ICONS/aleph3.xbm>';
+   htp.tableData(my_string,'CENTER',' ',' ',' ',' ','BGCOLOR="yellow"');
+   htp.tableClose;
+
+/* 
+|| Display the productions plot
+*/  
+   htp.br;
+   htp.line;
+
+   mcprod_plot;
+
+/* 
+|| Display the productions status
+*/  
+   htp.line;
+   htp.br;
+
+   give_Mcarlo_status;
+
+   htp.centerClose;
+
+   footer;
+
+END welcome;
+
+
+END mcarlo_prodstat_procedures;
+/
+show errors
+
+
+
+
+
+
+
+
+
+
+
+
+
+@
+
+
+1.18
+log
+@Add selection on miniversion 205
+@
+text
+@d459 2
+a460 2
+--      htp.p('<applet name=plot codebase="http://137.138.214.244/~jacotf/mcplot/bis/" archive="picture.jar" code="picture.class" width=600 height=325>');
+      htp.p('<applet name=plot codebase="http://alephwww.cern.ch/~jacotf/mcplot/bis/" archive="picture.jar" code="picture.class" width=600 height=325>');
+d564 2
+a565 1
+   htp.p('<SCRIPT SRC="http://alephwww.cern.ch/~jacotf/infobulle/mcprod_infobulle.js">');
+d568 2
+a569 1
+   htp.p('<SCRIPT SRC="http://alephwww.cern.ch/~jacotf/infobulle/mcprod_progressbar.js">');
+@
+
+
+1.17
+log
+@IP address replaced by alephwww.cern.ch
+@
+text
+@d525 1
+@
+
+
+1.16
+log
+@NUMBER(6,2) -> NUMBER(8,2)
+@
+text
+@d459 2
+a460 1
+      htp.p('<applet name=plot codebase="http://137.138.214.244/~jacotf/mcplot/bis/" archive="picture.jar" code="picture.class" width=600 height=325>');
+@
+
+
+1.15
+log
+@last x of curves modified
+@
+text
+@d494 1
+a494 1
+   percent_done NUMBER(6,2);
+d499 1
+a499 1
+   tot_percent  NUMBER(6,2);
+@
+
+
+1.14
+log
+@increase x axis
+@
+text
+@d237 3
+a239 1
+   last_x := today_from_origin;
+d277 2
+a278 1
+               xcoord_str := xcoord_str || today_from_origin || xy_quotes ;
+d373 1
+a373 1
+
+@
+
+
+1.13
+log
+@modif again title
+@
+text
+@d326 2
+a327 1
+      Max_x := '300.';
+d359 1
+a374 4
+--      label_y := label_y - 5.;
+--      my_string := '   document.plot.labelAt(-13., ' || label_y || ', "events");';
+--      htp.p(my_string);  
+
+d380 2
+a381 1
+      my_string := '   document.plot.labelAt(70., 90., "Total on ' || SYSDATE  || ': ' ||  nevts_today ||  ' Mevt");';
+d383 2
+a384 1
+      my_string := '   document.plot.labelAt(70., 83.,' || '"  (' || to_char(percent_done) || '% of total expected)");';
+@
+
+
+1.12
+log
+@modif title
+@
+text
+@d446 1
+a446 1
+      my_string := '   document.plot.labelAt(140.,' || label_y || ', "Expected completion: ' || expect_end || '");';
+@
+
+
+1.11
+log
+@back to the previous version
+@
+text
+@d445 2
+a446 1
+      my_string := '   document.plot.labelAt(225.,' || label_y || ', "Expected completion: ' || expect_end || '");';
+@
+
+
+1.10
+log
+@Add steps on x and y axis
+@
+text
+@a357 1
+      htp.p('   xlabel(300., "February");');    
+a367 1
+      htp.p('   ylabel(150., "150.");');   
+@
+
+
+1.9
+log
+@Max_y calculation modified
+@
+text
+@d358 1
+d369 1
+@
+
+
+1.8
+log
+@Max_y increased
+@
+text
+@d152 1
+d327 3
+a329 1
+      Max_y := '140.';
+@
+
+
+1.7
+log
+@little modifs for plot
+@
+text
+@d326 1
+a326 1
+      Max_y := '130.';
+@
+
+
+1.6
+log
+@maillogdb -> cerndb1
+@
+text
+@d328 2
+a329 2
+      y_expect := '108.';
+      
+d364 1
+d367 1
+a367 4
+      my_string := '   document.plot.labelAt(-13., ' || label_y || ', "Million");';
+      htp.p(my_string);  
+      label_y := label_y - 5.;
+      my_string := '   document.plot.labelAt(-13., ' || label_y || ', "events");';
+d369 4
+@
+
+
+1.5
+log
+@applet java modified
+@
+text
+@d188 1
+a188 1
+||   prod_bbloch.MCPRODS on MAILLOGDB
+d475 1
+a475 1
+||   prod_bbloch.MCPRODS on MAILLOGDB
+@
+
+
+1.4
+log
+@Plot + infobulle added
+@
+text
+@d155 1
+a202 1
+   dbms_output.put_line('today_from_origin = ' || today_from_origin); 
+d313 10
+d326 1
+a326 1
+      Max_y := '120.';
+d329 1
+a329 1
+
+d331 1
+a331 1
+|| Draw the axis
+d333 4
+a336 1
+      my_string := '   document.plot.setx(35, 35, 460, 0.000000, ' || Max_x || ', "text:days from May 1st");';
+d339 1
+a339 1
+      my_string := '   document.plot.sety(35, 35, 230, 0.000000, ' || Max_y || ', "text: ");';
+d341 3
+d345 2
+d348 1
+a348 1
+|| The y coordinate 100.0 is missing on the y axis - draw it
+d350 5
+a354 2
+      my_string := '   document.plot.labelAt(-13., 95., "100.0");';
+      htp.p(my_string);  
+d357 1
+a357 1
+|| Draw some comments 
+d359 11
+a369 2
+      label_y := Max_y + 20.;
+      my_string := '   document.plot.labelAt(-10., ' || label_y || ', "Mevt");';
+d372 3
+d377 1
+a377 2
+
+      my_string := '   document.plot.labelAt(70., 80., "Total of the day: ' ||  nevts_today ||  ' Mevt");';
+d379 1
+a379 1
+      my_string := '   document.plot.labelAt(70., 72.,' || '"  (' || to_char(percent_done) || '% of total expected)");';
+d435 2
+a436 1
+      label_y := y_expect + 8.;
+d440 1
+a440 1
+      my_string := '   document.plot.labelAt(250.,' || label_y || ', "Expected completion: ' || expect_end || '");';
+d443 1
+d450 1
+a450 1
+      htp.p('<applet name=plot codebase="http://alephwww.cern.ch/~jacotf/mcplot/" archive="picture.jar" code="picture.class" width=600 height=300>');
+d497 6
+a502 2
+   my_string_pr   VARCHAR2(100);
+   
+a558 31
+--   htp.p('<SCRIPT language="javascript">');
+
+--   htp.p('function progressbar(x,nready_pr){');
+--   htp.p('   nbleu = x*100');
+--   htp.p('   nbleu = Math.round(nbleu)');
+--   htp.p('   nbleu = Math.min(100,nbleu)');
+--   htp.p('   nbleu = Math.max(0,nbleu)');
+--   htp.p('   nblack = 100-nbleu');
+--   htp.p('   document.write("<td align=\"center\">")');
+--   htp.p('   if(nbleu <100)document.write("&nbsp;&nbsp;")');
+--   htp.p('   if(nbleu <10)document.write("&nbsp;&nbsp;")');
+--   htp.p('   document.write("<small>"+nready_pr+"</small><br>")');
+
+--   htp.p('   if(nbleu>0)document.write("<img height=5 alt="+nbleu+"% width="+nbleu+" src=http://alephwww.cern.ch/~jacotf/infobulle/pixbleu.gif>")');
+
+--   htp.p('   if(nblack>0) { ');
+--   htp.p('      if(nblack == 100) { ');
+--   htp.p('         document.write("<img height=5 alt=0% width="+nblack+ 
+--                                  " src=http://alephwww.cern.ch/~jacotf/infobulle/pixgrey.gif>")');
+--   htp.p('      } ');
+--   htp.p('      else { ');
+--   htp.p('         document.write("<img height=5 alt="+nbleu+"% width="+nblack+
+--                                  " src=http://alephwww.cern.ch/~jacotf/infobulle/pixgrey.gif>")');
+--   htp.p('      } ');
+--   htp.p('   } ');
+
+--   htp.p('   document.write("</td>")');
+--   htp.p('}');
+
+--   htp.p('</SCRIPT>');
+
+d591 11
+d603 6
+a608 1
+
+a609 1
+
+d618 5
+a622 1
+         htp.p('<script>progressbar(' || percent_done || ',' || '"' || ready_evts_pr || '"' || ');</script>');
+d631 3
+a633 1
+            htp.p('<script>progressbar(' || percent_done || ',' || '"' || nevts_ready || '"' || ');</script>');
+d635 3
+a637 1
+            htp.p('<script>progressbar(' || percent_done || ',' || '"' || ready_evts_pr || '"' || ');</script>');
+d663 13
+a675 1
+   
+d683 3
+a685 1
+   my_string_pr := '<B>' || tot_ready_pr || '</B>';
+@
+
+
+1.3
+log
+@New procedure + modifs display Mcarlo status
+@
+text
+@d5 13
+d88 4
+a91 1
+   htp.bodyopen;
+d112 320
+d507 10
+a516 1
+   htp.p('<SCRIPT language="javascript">');
+d518 4
+a521 23
+   htp.p('function progressbar(x,nready_pr){');
+   htp.p('   nbleu = x*100');
+   htp.p('   nbleu = Math.round(nbleu)');
+   htp.p('   nbleu = Math.min(100,nbleu)');
+   htp.p('   nbleu = Math.max(0,nbleu)');
+   htp.p('   nblack = 100-nbleu');
+   htp.p('   document.write("<td align=\"center\">")');
+   htp.p('   if(nbleu <100)document.write("&nbsp;&nbsp;")');
+   htp.p('   if(nbleu <10)document.write("&nbsp;&nbsp;")');
+   htp.p('   document.write("<small>"+nready_pr+"</small><br>")');
+
+   htp.p('   if(nbleu>0)document.write("<img height=5 alt="+nbleu+"% width="+nbleu+" src=http://alephwww.cern.ch/~jacotf/pixbleu.gif>")');
+
+   htp.p('   if(nblack>0) { ');
+   htp.p('      if(nblack == 100) { ');
+   htp.p('         document.write("<img height=5 alt=0% width="+nblack+ 
+                                  " src=http://alephwww.cern.ch/~jacotf/pixgrey.gif>")');
+   htp.p('      } ');
+   htp.p('      else { ');
+   htp.p('         document.write("<img height=5 alt="+nbleu+"% width="+nblack+
+                                  " src=http://alephwww.cern.ch/~jacotf/pixgrey.gif>")');
+   htp.p('      } ');
+   htp.p('   } ');
+d523 23
+a545 2
+   htp.p('   document.write("</td>")');
+   htp.p('}');
+d547 4
+a550 1
+   htp.p('</SCRIPT>');
+d660 1
+d662 9
+a670 1
+   header('Aleph MonteCarlo productions ');
+a672 1
+
+a673 1
+
+d680 1
+d682 5
+a686 1
+   htp.tableClose;
+d688 1
+a688 1
+   htp.centerClose;
+d690 4
+a694 1
+   htp.line;
+d697 2
+@
+
+
+1.2
+log
+@Add a progress bar
+@
+text
+@d110 1
+d135 10
+a144 4
+   IS 
+      SELECT Kingalkey, Description, NbEvents, dbms_rowid.rowid_row_number(rowid) kin_rownb   
+      FROM MCprod
+      ;
+d146 1
+a146 12
+
+   CURSOR mc_cur
+   IS
+      SELECT m.KingalKeyWord, SUM(m.Nevents) mtot,  
+             MAX(dbms_rowid.rowid_row_number(n.rowid)) mc_rownb 
+      FROM MCSETS m, MCprod n
+      WHERE m.Datatype = 'MINI'
+        AND m.KingalKeyWord = n.Kingalkey 
+        GROUP by m.Kingalkeyword
+      ;
+      mc_rec mc_cur%ROWTYPE;
+
+d148 1
+d154 4
+d159 1
+a159 6
+      nprod := kinkey_rec.kin_rownb;
+
+      all_prods(nprod).KinKeyWord  := kinkey_rec.KingalKey;
+      all_prods(nprod).Description := kinkey_rec.Description;
+
+      nevts_expect := kinkey_rec.NbEvents;
+d162 1
+d166 1
+a170 17
+
+   OPEN mc_cur;
+   LOOP
+      FETCH mc_cur INTO mc_rec;
+      EXIT WHEN mc_cur%NOTFOUND;
+
+      mprod := mc_rec.mc_rownb;
+
+      nevts_ready := mc_rec.mtot;
+      all_prods(mprod).Evts_processed := to_char(nevts_ready);
+
+      tot_ready  := tot_ready  + nevts_ready;
+
+   END LOOP;
+   CLOSE mc_cur;
+  
+
+d206 1
+a206 1
+   htp.tableOpen(' ',' ',' ',' ','BORDER=2');
+a238 1
+      dbms_output.put_line('percent_done = ' || to_char(percent_done));
+d246 1
+a246 1
+         htp.p('<script>progressbar(' || percent_done || ',' || '"' || ready_evts_pr || '"' || ');</script');
+d255 1
+a255 1
+            htp.p('<script>progressbar(' || percent_done || ',' || '"' || nevts_ready || '"' || ');</script');
+d257 1
+a257 1
+            htp.p('<script>progressbar(' || percent_done || ',' || '"' || ready_evts_pr || '"' || ');</script');
+d292 1
+a292 1
+   htp.p('<script>progressbar(' || tot_percent || ',' || '"' || my_string_pr || '"' || ');</script');
+d313 3
+a315 1
+   htp.tableOpen(' ',' ',' ',' ','BORDER=0 CELLPADDING=5 CELLSPACING=0');
+a316 1
+   htp.centerOpen;
+@
+
+
+1.1
+log
+@Give the Mcarlo production status
+@
+text
+@d114 1
+d116 1
+d119 1
+d189 32
+d224 1
+d257 3
+d265 2
+a266 2
+         htp.tableData(expect_evts_pr,'CENTER',' ',' ',' ',' ','BGCOLOR="#acffff"');
+         htp.tableData(ready_evts_pr,'CENTER',' ',' ',' ',' ','BGCOLOR="#acffff"');
+d272 1
+d275 1
+a275 1
+            htp.tableData(to_char(nevts_ready),'CENTER');
+d277 1
+a277 1
+            htp.tableData(ready_evts_pr,'CENTER',' ',' ',' ',' ','BGCOLOR="yellow"');
+d288 5
+d312 1
+a312 1
+   htp.tableData(my_string_pr,'CENTER');
+d360 1
+@
+

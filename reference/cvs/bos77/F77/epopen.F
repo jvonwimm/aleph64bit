@@ -1,0 +1,89 @@
+#if defined(ALEPH_DEC) &&  ! defined(UNIX)
+      SUBROUTINE EPOPEN(MODE,IERR)
+C ----------------------------------------------------------------
+C standard fortran version on DEC
+C -----------------------------------------------------------------
+*
+*         STANDARD FORTRAN FILE OPEN
+*
+*  INPUT:
+*
+*  MODE     =1 FOR WRITE, =2 FOR READ
+*
+      COMMON/EPCOMM/NMUNIT,NWUNIT,NCONT,ISTART,LASTUT,LREF,LIST(350)
+      EQUIVALENCE (NOUTUT,LIST(8))
+      COMMON/EPVAXN/EPVXUN(10)
+      CHARACTER*255 EPVXUN
+      CHARACTER*255 FLNAM
+      PARAMETER (LFLNAM=255)
+      LOGICAL OPEND
+*
+      LUN        = LIST(ISTART+10)
+      LREC       = LIST(ISTART+1)*2
+*
+*           FIRST OF ALL WE CHECK IF THE UNIT HAS BEEN OPEN BY
+*                     A FORTRAN OPEN STATEMENT
+*
+      INQUIRE(UNIT=LUN,NAME=FLNAM,OPENED=OPEND,IOSTAT=IOS)
+        IF(IOS.NE.0)GOTO 9901
+      IF(OPEND) THEN
+*
+*           THE UNIT IS ALREADY OPEN. WE JUST REGISTER THE NAME
+*
+        EPVXUN(LREF)    = FLNAM
+        GOTO 77777
+      END IF
+*
+*            USE USER SPECIFIED NAME, OR DEFAULT NAME 'for0nn',
+*
+        IF (EPVXUN(LREF)(1:1).EQ.' ')  THEN
+          WRITE(FLNAM,'(''for0'',2I1)')LUN/10,MOD(LUN,10)
+          EPVXUN(LREF)=FLNAM
+        ELSE
+          FLNAM = EPVXUN(LREF)
+        END IF
+        NSLNG = LNBLNK (EPVXUN(LREF))
+*
+      IF(MODE.EQ.2)  THEN
+*
+*                HERE WE OPEN FOR READING
+*
+        IF(LIST(ISTART+33).EQ.1)THEN
+         OPEN(LUN,FILE=EPVXUN(LREF)(1:NSLNG),STATUS='OLD',
+     1       ACCESS='DIRECT',RECL=LIST(ISTART+1)/2,
+     1       READONLY,
+     1       FORM='UNFORMATTED',IOSTAT=IOS)
+        ELSE
+         OPEN(LUN,FILE=EPVXUN(LREF)(1:NSLNG),STATUS='OLD',
+     1       READONLY,
+     1       FORM='UNFORMATTED',IOSTAT=IOS)
+        ENDIF
+        IF(IOS.NE.0)GOTO 9901
+      ELSE
+*
+*                HERE WE OPEN FOR WRITING
+        IF(LIST(ISTART+33).EQ.1)THEN
+         OPEN(LUN,FILE=EPVXUN(LREF)(1:NSLNG),STATUS='UNKNOWN',
+     1       ACCESS='DIRECT',RECL=LIST(ISTART+1)/2,
+     1       FORM='UNFORMATTED',IOSTAT=IOS)
+        ELSE
+*
+         OPEN(LUN,FILE=EPVXUN(LREF)(1:NSLNG),STATUS='NEW',
+     1       FORM='UNFORMATTED',IOSTAT=IOS)
+        ENDIF
+        IF(IOS.NE.0)GOTO 9901
+      ENDIF
+C
+C      NOW STORE THE STREAM-ID
+C
+C?    LIST(ISTART+25) = 1
+      GOTO 77777
+C       ERROR TRYING TO OPEN
+ 9901 CONTINUE
+        WRITE(NOUTUT,*) ' EPIO/EPOPEN cannot open ',EPVXUN(LREF)
+        WRITE(NOUTUT,*) ' LUN= ',LUN, ' MODE= ',MODE, ' IOSTAT= ',IOS
+        IERR=1
+        CALL EPERRH(LUN,IERR)
+77777 RETURN
+      END
+#endif

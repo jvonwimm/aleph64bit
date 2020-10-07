@@ -1,0 +1,42 @@
+#!/bin/csh -f
+# Cleanup procedure for aldataout pool on shift9
+# Uli Schafer 25-Apr-1994
+# We kill all subdirectories and all files of age > 3 days
+# Write logfile /aleph/log/clean_stageout.log
+ umask 0
+ if ( $#argv == 0 ) then
+   ($0 exec ;echo Done: `date` ) >>&! /aleph/tmp/clean_stageout.log
+   exit
+ endif
+ set clean=aldataout
+ set log_file=/aleph/log/clean_stageout.log
+ set clean_tmp=/aleph/tmp/clean_stage
+#
+#
+ if !(-e $clean_tmp ) then
+   mkdir -pm777 $clean_tmp
+ endif
+ (rm -f $cleandir/*)>&/dev/null
+#
+# kill sub directories first!
+ set rm_files=`sfsh -p $clean 'find . -type d  -print' | tail +2  | cut -c 3- | awk '($1 !~ /\//){print $1}'`
+# echo $rm_files
+ foreach  file ($rm_files)  
+   set file1=`sfget -p $clean -k -link $clean_tmp  $file` ||continue
+   set log_txt="`date +'%Y-%m-%d %H:%M'` $file1 >>>>>> directory"
+   (rm -rf $file1 >&/dev/null && echo $log_txt||echo $log_txt -- error)>>! $log_file
+ end
+ set rm_files=`sfsh -p $clean 'find . ! -type d -mtime +3 -print' | tail +2  | cut -c 3-`
+ foreach  file ($rm_files)
+   set file1=`sfget -p $clean -k -link $clean_tmp  $file` ||continue
+   set log_txt=`ls -l $file1 | awk '{print $9,$6,$7,$8 }'`
+   set log_txt="`date +'%Y-%m-%d %H:%M'` $log_txt"
+   (rm -f $file1 >&/dev/null && echo $log_txt||echo $log_txt -- error)>>! $log_file
+   endif   
+ end
+ exit
+
+
+
+
+

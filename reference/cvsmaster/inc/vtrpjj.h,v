@@ -1,0 +1,79 @@
+head	1.3;
+access;
+symbols
+	v1:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	96.01.18.15.46.06;	author aloff;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.06.15.11.41.34;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.44.36;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.44.37;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@ Modified Files:
+ 	tpgeom.h tpgeop.h tpgeot.h tpgeow.h tpgpar.h vtrpjj.h
+@
+text
+@*CD vtrpjj
+      INTEGER JVTRMC,JVTRML,JVTRFN,JVTRSC,JVTRCC,JVTRCI,JVTRMP,JVTRBE,
+     +          JVTRUS,JVTRWS,JVTRUP,JVTRWP,LVTRPA
+      PARAMETER(JVTRMC=1,JVTRML=2,JVTRFN=3,JVTRSC=4,JVTRCC=5,JVTRCI=6,
+     +          JVTRMP=7,JVTRBE=8,JVTRUS=9,JVTRWS=10,JVTRUP=11,
+     +          JVTRWP=12,LVTRPA=12)
+@
+
+
+1.2
+log
+@remove old hac parameters, enter new set from bankal.hac
+@
+text
+@d3 1
+a3 1
+     +          JVTRUS,JVTRWS,LVTRPA
+d5 2
+a6 1
+     +          JVTRMP=7,JVTRBE=8,JVTRUS=9,JVTRWS=10,LVTRPA=10)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 2
+@
+
+
+1.1.1.1
+log
+@import hac+general include files
+@
+text
+@@

@@ -1,0 +1,42 @@
+      SUBROUTINE BDADR(LUN,NAME,NR)
+*     DELETE BANK ON UNIT LUN
+*     IGNORED IF BANK NOT FOUND ON DATA SET
+*     OR WRONG PASSWORD GIVEN
+*     OR DATASET NO OPENED (BDABF)
+*
+#include "dacom.h"
+#include "param.h"
+      COMMON/BCS/IW(1000)
+      CHARACTER*4 NAME
+*     ...
+      IUB=NLINK('+BUF',LUN)
+      IF(IUB.EQ.0) GOTO 100
+      IF(IW(IUB+18).EQ.0) GOTO 100
+      LUNDA=LUN
+      NWRDA=IW(IUB+11)
+      NADA=INTCHA(NAME)
+      NRDA=NR
+
+*     TEST DIRECTORY ENTRY
+
+      CALL DADIR(1)
+
+*     IGNORE, IF NOT FOUND
+
+      IF(NRD.EQ.0) GOTO 100
+
+*     RESERVE UNIT
+
+      CALL DARES
+      CALL DADAT(2,JW,*10)
+   10 CALL DADIR(2)
+      CALL DAFWR(0,1)
+      CALL DAFWR(0,0)
+      IF(IW(LUP).GT.0.AND.IW(LUW).GT.0) THEN
+         WRITE(IW(LUP),101) LUNDA,NADA,NRDA
+         IW(LUW)=IW(LUW)-1
+      END IF
+      CALL DADES
+  100 RETURN
+  101 FORMAT(' ----------  DA-UNIT',I3,'   BANK ',A4,I12,' DROPPED')
+      END

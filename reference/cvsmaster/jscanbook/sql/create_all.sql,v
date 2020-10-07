@@ -1,0 +1,485 @@
+head	1.6;
+access;
+symbols
+	V0060:1.6
+	V0059:1.6
+	V0058:1.5
+	V0057:1.5
+	V0056:1.5
+	V0055:1.5
+	V0054:1.5
+	V0053:1.4
+	V0052:1.4
+	V0051:1.4
+	V0050:1.4
+	V0049:1.4
+	V0048:1.4
+	V0047:1.4
+	V0046:1.4
+	V0045:1.4
+	V0044:1.4
+	V0043:1.4
+	V0042:1.4
+	V0041:1.4
+	V0040:1.4
+	V0039:1.4
+	V0038:1.4
+	V0037:1.4
+	V0036:1.4
+	V0035:1.4
+	V0034:1.4
+	V0033:1.4
+	V0032:1.4
+	V0031:1.4
+	V0030:1.3
+	V0029:1.3
+	V0028:1.3
+	V0027:1.3
+	V0026:1.3
+	V0025:1.3
+	V0024:1.3
+	V0023:1.3
+	V0022:1.2
+	V0021:1.2
+	V0020:1.2
+	V0019:1.2
+	V0018:1.2
+	V0017:1.2
+	V0016:1.2
+	V0015:1.2
+	V0014:1.2
+	V0013:1.2
+	V0000:1.1.1.1
+	V0001:1.1.1.1
+	v1:1.1.1.1
+	jacotf:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.6
+date	2001.11.05.14.50.09;	author jacotf;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	2001.05.18.09.53.21;	author boucrot;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	2000.05.24.06.41.25;	author boucrot;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	2000.03.28.10.06.50;	author boucrot;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	2000.03.16.14.48.37;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2000.03.01.10.27.42;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	2000.03.01.10.27.42;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.6
+log
+@table MCSETS recreated on devdb
+@
+text
+@DROP TABLE DATASETS;
+CREATE TABLE DATASETS  (
+                    ID             NUMBER(10) NOT NULL PRIMARY KEY ,
+                    NPer           NUMBER(4)  NOT NULL ,
+                    TapeId         VARCHAR2(2)  ,
+                    TapeNumb       NUMBER(4)    , 
+                    FileNumb       NUMBER(3)    ,
+                    TMSLocation    VARCHAR2(4)  ,
+                    Details        VARCHAR2(80) ,
+                    Datatype       VARCHAR2(4)  ,
+                    ProcessLevel   VARCHAR2(4)  ,
+                    ExistEdir      VARCHAR(1)   ,
+                    Complete_Proc  VARCHAR(1)   ,
+                    RawYear        NUMBER(4)    ,
+                    FirstRun       NUMBER(10)   ,
+                    LastRun        NUMBER(10)   ,
+                    Date_Proc      NUMBER(8)    ,
+                    JuliaVersion   NUMBER(3)    ,
+                    MiniVersion    NUMBER(3)    ,
+                    CopyFlag       NUMBER(1)    ,
+                    SizeMbytes     NUMBER(4)    , 
+                    IHomelab       NUMBER(2)    , 
+                    Nevents        NUMBER(8)    )
+                    storage (initial 7M next 2M  maxextents 5);
+
+CREATE INDEX I_DATASETS_Processlevel on DATASETS (RawYear,Datatype,Ihomelab,
+                        ProcessLevel,Date_Proc,JuliaVersion,MiniVersion,Complete_Proc)
+       storage (initial 3M next 1M maxextents 5)
+       tablespace indx01;
+
+CREATE INDEX I_DATASETS_Fili on DATASETS (TapeId,TapeNumb,FileNumb,Details,FirstRun,ExistEdir,SizeMbytes,ID)
+       storage (initial 3M next 1M maxextents 5)
+       tablespace indx01;
+
+
+
+DROP TABLE RUNSETS;
+CREATE TABLE RUNSETS  (
+                    ID             NUMBER(10) NOT NULL PRIMARY KEY ,
+                    DatasetsID     NUMBER(10) NOT NULL ,
+                    Run            NUMBER(6) NOT NULL ,           
+                    LepFill       NUMBER(6)    )
+                    storage (initial 6M next 2M maxextents 5);
+
+CREATE UNIQUE INDEX I_RUNSETS_DATASETS on RUNSETS (DatasetsID,Run)
+       storage (initial 10M next 3M maxextents 5)  
+       tablespace indx01;
+
+
+
+DROP TABLE RUNCOND;
+CREATE TABLE RUNCOND  (
+                    ID            NUMBER(10) NOT NULL PRIMARY KEY ,
+                    RunNumb       NUMBER(6)  NOT NULL ,
+                    NPer          NUMBER(4)  NOT NULL ,
+                    RunSelection  VARCHAR2(32) ,
+                    RawTape       VARCHAR2(6)  ,
+                    LepFill       NUMBER(6)    ,
+                    WritDate      NUMBER(8)    ,
+                    WritHour      NUMBER(6)    ,
+                    EVnumb        NUMBER(6)    ,
+                    ExactEnergy   NUMBER(6)    ,
+                    RoundedEnergy NUMBER(6)    ,
+                    NumZ0         NUMBER(5)    ,
+                    NumBh         NUMBER(5)    ,
+                    CrosSec       NUMBER(6)    ,
+                    LUmin         FLOAT        ,
+                    VdetLumi      FLOAT        ) 
+                    storage (initial 5M next 1M maxextents 5);
+
+CREATE UNIQUE INDEX I_RUNCOND_RunNumb on RUNCOND (RunNumb)
+       storage (initial 2M next 500k maxextents 5)
+       tablespace indx01;
+
+
+
+DROP TABLE RUNBYYEAR;
+CREATE TABLE RUNBYYEAR  (
+                    ID             NUMBER(10) NOT NULL PRIMARY KEY ,
+                    LepCategory    VARCHAR2(8)  ,
+                    Year           NUMBER(4)    ,
+                    FirstRun       NUMBER(10)   ,
+                    LastRun        NUMBER(10)   ,
+                    FirstFill      NUMBER(6)    ,
+                    LastFill       NUMBER(6)    ,
+                    FirstNper      NUMBER(4)    ,
+                    LastNper       NUMBER(4)    ,
+                    WrunselPatt    VARCHAR2(30) )
+                    storage (initial 12K next 3k maxextents 5);
+
+ 
+
+DROP TABLE ENERGYLEP;
+CREATE TABLE ENERGYLEP  (
+                    ID             NUMBER(10) NOT NULL PRIMARY KEY ,
+                    LepCategory    VARCHAR2(8)  ,  
+                    Year           NUMBER(4)    ,
+                    RoundedEnergy  NUMBER(6)    )
+                    storage (initial 8k next 2k maxextents 5) ;
+ 
+
+
+DROP TABLE RUNQUALS;
+CREATE TABLE RUNQUALS  (
+                    ID             NUMBER(10) NOT NULL PRIMARY KEY ,
+                    Year           NUMBER(4)  NOT NULL ,
+                    NumBitpattern  NUMBER(2)    ,
+                    RunqualKeyword VARCHAR2(2)  ,
+                    ExplainRunqual VARCHAR2(20) ) 
+                    storage (initial 30k next 10k maxextents 5);
+
+ 
+
+DROP TABLE DATASTAT;
+CREATE TABLE DATASTAT  (
+                    ID             NUMBER(10) NOT NULL PRIMARY KEY ,
+                    Year           NUMBER(4)  NOT NULL ,
+                    ProcessLevel   VARCHAR2(4)  ,
+                    NumbRaw        NUMBER(6)    ,
+                    NumbPot        NUMBER(6)    ,
+                    NumbDst        NUMBER(6)    ,
+                    NumbMini       NUMBER(6)    ,
+                    MbytesRaw      NUMBER(8)    ,
+                    MbytesPot      NUMBER(8)    ,
+                    MbytesDst      NUMBER(8)    ,
+                    MbytesMini     NUMBER(8)    ,
+                    IHomelab       NUMBER(2)    ) 
+                    storage (initial 30k next 10k maxextents 5) ; 
+ 
+
+
+DROP TABLE HOMEDESC;
+CREATE TABLE HOMEDESC  (
+                    ID             NUMBER(10) NOT NULL PRIMARY KEY ,
+                    IHomelab       NUMBER(10) NOT NULL ,
+                    HomeName       VARCHAR2(12) )
+                    storage (initial 8k next 2k maxextents 5); 
+ 
+
+
+DROP TABLE CARTDES;
+CREATE TABLE CARTDES  (
+                    ID            NUMBER(10) NOT NULL PRIMARY KEY ,
+                    TapeId        VARCHAR2(2)  ,
+                    FirstNum      NUMBER(4)    ,
+                    LastNum       NUMBER(4)    ,
+                    TapeLabel     VARCHAR2(2)  )
+                    storage (initial 8k next 2k maxextents 5);
+
+
+
+DROP TABLE LUMI4BUNCH;
+CREATE TABLE LUMI4BUNCH  (
+                    ID            NUMBER(10) NOT NULL PRIMARY KEY ,
+                    RunNumb       NUMBER(6)  NOT NULL ,
+                    LumQual       NUMBER(4)    ,
+                    Numbh1        NUMBER(5)    ,
+                    Lumin1        FLOAT        ,
+                    Numbh2        NUMBER(5)    ,
+                    Lumin2        FLOAT        ,
+                    Numbh3        NUMBER(5)    ,
+                    Lumin3        FLOAT        ,
+                    Numbh4        NUMBER(5)    ,
+                    Lumin4        FLOAT        ) 
+                    storage (initial 120k next 30k maxextents 5);
+
+
+
+DROP TABLE MCSETS;
+CREATE TABLE MCSETS  (
+                    ID               NUMBER(10) NOT NULL PRIMARY KEY ,
+                    KinCode          NUMBER(4)  NOT NULL ,
+                    TapeId           VARCHAR2(2)  ,
+                    TapeNumb         NUMBER(4)    , 
+                    FileNumb         NUMBER(3)    ,
+                    TMSLocation      VARCHAR2(4)  ,
+                    Datatype         VARCHAR2(8)  ,
+                    Details          VARCHAR2(80) ,
+                    KingalKeyWord    VARCHAR2(60) ,
+                    ExistEdir        VARCHAR2(1)  ,
+                    GeometryYear     NUMBER(4)    ,
+                    Date_Proc        NUMBER(8)    ,
+                    ExactEnergy      NUMBER(6)    ,
+                    RoundedEnergy    NUMBER(6)    ,
+                    ParticleCode     NUMBER(3)    ,
+                    GalephVersion    NUMBER(3)    ,
+                    JuliaVersion     Number(3)    ,
+                    MiniVersion      Number(3)    ,
+                    ParticleMass     Number(6)    ,
+                    SizeMbytes       Number(4)    ,
+                    CopyFlag         Number(1)    ,
+                    IHomelab         Number(2)    , 
+                    Nevents          Number(8)    , 
+                    ProdNumb         Number(2)    , 
+                    RunNumb          Number(4)    , 
+                    Ranmar1          Number(6)    , 
+                    Ranmar2          Number(6)    , 
+                    OpsysKin         VARCHAR2(4)  ,
+                    OpsysGal         VARCHAR2(4)  ,
+                    OpsysJul         VARCHAR2(4)  ,
+                    OpsysMini        VARCHAR2(4)  )                
+                    storage (initial 14M next 7M maxextents 20 pctincrease 0);
+
+CREATE INDEX I_MCSETS_GeometryYear on MCSETS (GeometryYear)
+       storage (initial 2M next 1M maxextents 10 pctincrease 0)
+       tablespace indx01; 
+
+CREATE INDEX I_MCSETS_Specialpart on MCSETS (GeometryYear,KinCode,Datatype,RoundedEnergy,IHomelab,ParticleCode)
+       storage (initial 4M next 2M maxextents 20 pctincrease 0)
+       tablespace indx01;
+
+CREATE INDEX I_MCSETS_Mcdatasets on MCSETS (GeometryYear,Datatype,RoundedEnergy,IHomelab,KingalKeyWord)
+       storage (initial 4M next 2M maxextents 20 pctincrease 0)
+       tablespace indx01;
+
+
+
+
+DROP TABLE MCSTAT;
+CREATE TABLE MCSTAT  (
+                    ID             NUMBER(10) NOT NULL PRIMARY KEY ,
+                    GeometryYear   NUMBER(4)  NOT NULL ,
+                    LepCategory    VARCHAR2(8) ,
+                    KinCode        NUMBER(4)  NOT NULL ,
+                    KinName        VARCHAR2(8)  ,
+                    NumbPot        NUMBER(6)    ,
+                    NumbMini       NUMBER(6)    ,
+                    MbytesPot      NUMBER(8)    ,
+                    MbytesMini     NUMBER(8)    ,  
+                    IHomelab       NUMBER(2)    )  
+                    storage (initial 15k next 3k maxextents 5);
+
+
+
+DROP TABLE MCLEPENERGY;
+CREATE TABLE MCLEPENERGY  (
+                    ID             NUMBER(10) NOT NULL PRIMARY KEY ,
+                    LepCategory    VARCHAR2(8) ,
+                    GeometryYear   NUMBER(4)  NOT NULL ,
+                    KinCode        NUMBER(4)  NOT NULL ,
+                    KinName        VARCHAR2(8)  ,
+                    RoundedEnergy  NUMBER(6)    )
+                    storage (initial 10k next 3k maxextents 5);
+
+
+
+DROP TABLE MCKEYSTAT;
+CREATE TABLE MCKEYSTAT  (
+                    ID             NUMBER(10) NOT NULL PRIMARY KEY ,
+                    GeometryYear   NUMBER(4)  NOT NULL , 
+                    KinCode        NUMBER(4)  NOT NULL ,
+                    KinName        VARCHAR2(8)  ,
+                    KingalKeyWord  VARCHAR2(60) ,
+                    ExplainKeyword VARCHAR2(60) ,
+                    ParticleMass   NUMBER(6)    ,
+                    NumbKingal     NUMBER(6)    ,
+                    NumbPot        NUMBER(6)    ,
+                    NumbMini       NUMBER(6)    ,
+                    IHomelab       NUMBER(2)    )
+                    storage (initial 300k next 100k maxextents 5);
+
+CREATE UNIQUE INDEX I_MCKEYSTAT_KinKey on MCKEYSTAT (KingalKeyWord,KinCode,
+       GeometryYear,IHomelab)
+       storage (initial 2M next 500k maxextents 5)
+       tablespace indx01;
+
+
+
+DROP TABLE MCPARTICLES;
+CREATE TABLE MCPARTICLES  (
+                    ID             NUMBER(10) NOT NULL PRIMARY KEY ,
+                    ParticleName   VARCHAR2(12)  ,
+                    ParticleCode   NUMBER(3)     ,
+                    AntipartCode   NUMBER(3)     ) 
+                    storage (initial 15k next 4k maxextents 5);
+
+CREATE UNIQUE INDEX I_MCPARTICLES_ParticleCode on MCPARTICLES (ParticleCode)
+       storage (initial 2M next 500k maxextents 5)
+       tablespace indx01;
+
+
+
+
+
+
+
+
+@
+
+
+1.5
+log
+@*** empty log message ***
+@
+text
+@a168 1
+
+d202 1
+a202 1
+                    storage (initial 12M next 3M maxextents 5);
+d205 1
+a205 1
+       storage (initial 2M next 500k maxextents 5)
+d209 1
+a209 1
+       storage (initial 2M next 500k maxextents 5)
+d213 1
+a213 1
+       storage (initial 2M next 500k maxextents 5)
+d216 2
+a217 1
+                                        
+@
+
+
+1.4
+log
+@*** empty log message ***
+@
+text
+@d169 1
+d178 1
+a178 1
+                    Datatype         VARCHAR2(4)  ,
+d180 1
+a180 1
+                    KingalKeyWord    VARCHAR2(12) ,
+d195 4
+d203 1
+a203 1
+                    storage (initial 8M next 2M maxextents 5);
+d253 1
+a253 1
+                    KingalKeyWord  VARCHAR2(12) ,
+d256 1
+@
+
+
+1.3
+log
+@*** empty log message ***
+@
+text
+@d22 2
+a23 1
+                    IHomelab       NUMBER(2)    ) 
+d192 6
+a197 1
+                    IHomelab         Number(2)    ) 
+@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@d87 1
+a87 1
+                    WrunselPatt    VARCHAR(30)  )
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d86 2
+a87 1
+                    LastNper       NUMBER(4)    )
+@
+
+
+1.1.1.1
+log
+@ import jscanbook
+@
+text
+@@

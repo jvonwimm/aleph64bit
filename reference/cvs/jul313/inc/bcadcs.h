@@ -1,0 +1,3 @@
+      COMMON /BCADCS/ TRMASK, CENTRO(4), ADCSUM(4), ADCDAT(180),
+     +                ADCSCI(4,5), ADCSIL(4,40)
+C

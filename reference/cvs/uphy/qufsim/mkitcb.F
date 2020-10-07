@@ -1,0 +1,98 @@
+      subroutine MkITCbits(itbit)
+C----------------------------------------------------------------------
+C
+C fill trigger segment for ITC
+C
+C----------------------------------------------------------------------
+#include "qcde.h"
+#include "parcut.h"
+#include "ftrig.h"
+      integer segm(0:71),tsegm(2,9),itbit(3)
+      save tsegm
+
+      data tsegm / 06 , 00 , 26 , 06 , 39 , 12 , 60 , 24 , 90 , 36 ,
+     &             120 , 48 , 141 , 60 , 154 , 66 , 180 , 72 /
+#include "qmacro.h"
+
+      call vzero(segm(0),72)
+      call vzero(itbit,3)
+
+C... now map the ITC segments on calorimeter trigger segments.
+C To account for track bending, the neighbouring phi segments are fired.
+C    As there is no theta information, all theta bin are fired for a
+C    given phi bin.
+      do i = 1 , 47
+        if ( ITCseg(i) .gt. 0 ) then
+          do j = int(LimITCseg(1,i)/30.) , int(LimITCseg(2,i)/30.)
+            if ( j .gt. 0 .and. j .lt. 11 ) then
+              do k = 3 , 6
+                segm(tsegm(2,k)+j) = 1
+                segm(tsegm(2,k)+j+1) = 1
+                segm(tsegm(2,k)+j-1) = 1
+              enddo
+            elseif ( j .eq. 0 ) then
+              do k = 3 , 6
+                segm(tsegm(2,k)) = 1
+                segm(tsegm(2,k)+1) = 1
+                segm(tsegm(2,k+1)-1) = 1
+              enddo
+            elseif ( j .eq. 11 ) then
+              do k = 3 , 6
+                segm(tsegm(2,k)+11) = 1
+                segm(tsegm(2,k)+10) = 1
+                segm(tsegm(2,k)) = 1
+              enddo
+            endif
+C... now fill also the end-caps theta bin
+            k = j/2
+            segm(tsegm(2,1)+k) = 1
+            segm(tsegm(2,2)+k) = 1
+            segm(tsegm(2,7)+k) = 1
+            segm(tsegm(2,8)+k) = 1
+            if ( k .gt. 0 ) then
+              segm(tsegm(2,1)+k-1) = 1
+              segm(tsegm(2,2)+k-1) = 1
+              segm(tsegm(2,7)+k-1) = 1
+              segm(tsegm(2,8)+k-1) = 1
+            else
+              segm(tsegm(2,2)-1) = 1
+              segm(tsegm(2,3)-1) = 1
+              segm(tsegm(2,8)-1) = 1
+              segm(tsegm(2,9)-1) = 1
+            endif
+            if ( k .lt. 5 ) then
+              segm(tsegm(2,1)+k+1) = 1
+              segm(tsegm(2,2)+k+1) = 1
+              segm(tsegm(2,7)+k+1) = 1
+              segm(tsegm(2,8)+k+1) = 1
+            else
+              segm(tsegm(2,1)) = 1
+              segm(tsegm(2,2)) = 1
+              segm(tsegm(2,7)) = 1
+              segm(tsegm(2,8)) = 1
+            endif
+          enddo
+        endif
+      enddo
+      if ( ITCseg(48) .gt. 0 ) then
+        do k = 3 , 6
+          segm(tsegm(2,k)) = 1
+          segm(tsegm(2,k+1)-1) = 1
+        enddo
+      endif
+
+      do i = 0 , 71
+        if ( i .le. 31 ) then
+          index = 1
+        elseif ( i .le. 63 ) then
+          index = 2
+        else
+          index = 3
+        endif
+        if ( segm(i) .gt. 0 ) then
+          itbit(index) = ibset(itbit(index),i-(index-1)*32)
+        endif
+      enddo
+
+      return
+      end

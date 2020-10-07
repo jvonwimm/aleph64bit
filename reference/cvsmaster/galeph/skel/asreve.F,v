@@ -1,0 +1,232 @@
+head	1.3;
+access;
+symbols
+	gal309_3:1.3
+	gal309_2:1.3
+	gal309_1:1.3
+	gal309:1.3
+	gal308_2:1.3
+	gal308_1:1.3
+	gal308:1.3
+	gal307_2:1.3
+	gal307_1:1.3
+	gal307:1.3
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	98.07.03.14.47.39;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.06.30.07.13.42;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.01.46;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.47;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@gal307 look at galeph/news/news.h
+@
+text
+@*DK asreve
+      SUBROUTINE ASREVE
+C ----------------------------------------------------------------
+C - F.Ranjard - 861015
+C! Decode EVEH KEVH and ASEV banks
+C - Called by : ASIEVE                                 from this .HLB
+C ---------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "iocom.h"
+#include "jobcom.h"
+#include "jqcom.h"
+#include "kincom.h"
+#include "evehjj.h"
+#include "kgjjpar.h"
+#include "ajjpar.h"
+      DIMENSION JRND(LRND,LPRO)
+#include "bmacro.h"
+C ----------------------------------------------------------------
+C - save random #s set by data cards
+      IF (NEVTJO .EQ. 1) CALL UCOPY (IRNDJO,JRND,LPRO*LRND)
+C
+C - Decode EVEH bank
+      KEVEH = IW(NAEVEH)
+      IF (KEVEH .NE. 0) THEN
+        ECMSKI = IW(KEVEH+JEVETE) * 1.E-6
+        IF (IW(KEVEH+JEVEES).NE.1) THEN
+          KERRJO = IW(KEVEH+JEVEES) - LOFFMC
+          CALL ALTELL ('ASREVE: incomplete input ',KERRJO,'NEXT')
+        ELSE
+C         for complete events
+C           Decode kine event header KEVH bank
+          JKEVH = IW(NAKEVH)
+          IF (JKEVH .NE. 0) THEN
+            KKEVH = JKEVH + LMHLEN
+            NITRKI    = IW(KKEVH+JKEVNT)
+            NIVXKI    = IW(KKEVH+JKEVNV)
+            IDEVKI    = IW(KKEVH+JKEVPI)
+            WEITKI    = RW(KKEVH+JKEVWT)
+            IF (IPROJO(1) .NE. 0) THEN
+C                 KINE process is required, take data card RNDM/RINI
+              IRNDJO(1,1) = JRND(1,1)
+              IRNDJO(2,1) = JRND(2,1)
+              IRNDJO(3,1) = JRND(3,1)
+            ELSE
+              IRNDJO(1,1) = IW(KKEVH+JKEVRN)
+              IRNDJO(2,1) = IW(KKEVH+JKEVSR)
+              IRNDJO(3,1) = IW(KKEVH+JKEVTR)
+            ENDIF
+          ENDIF
+C        Decode ASEV bank
+          JASEV = IW(NAASEV)
+          IF (JASEV .NE. 0) THEN
+            KASEV = JASEV + LMHLEN
+            DO 6 I=2,LROWS(JASEV)
+              IF (IPROJO(I) .NE. 0) THEN
+C                    the process is requested, take data card rndm
+                IRNDJO(1,I) = JRND(1,I)
+                IRNDJO(2,I) = JRND(2,I)
+                IRNDJO(3,I) = JRND(3,I)
+              ELSE
+                IRNDJO(1,I) = ITABL(JASEV,I,JASERG)
+                IRNDJO(2,I) = ITABL(JASEV,I,JASERG+1)
+                IRNDJO(3,I) = ITABL(JASEV,I,JASERG+2)
+              ENDIF
+    6       CONTINUE
+          ENDIF
+        ENDIF
+      ENDIF
+      CALL VZERO (JRND,LPRO*LRND)
+C
+C - debug
+      IF (FDEBJO) THEN
+        WRITE (LOUTIO,820) NEVTJO,IW(KEVEH+6),(IW(KEVEH+I),I=1,5)
+     &                     ,(IW(KEVEH+I),I=11,12)
+     &                     ,FLOAT(IW(KEVEH+13))*1.E-6
+  820   FORMAT (/1X,'+++ASREVE+++ event# ',I5,', trigger# ',I5,
+     &           ', EVEH ',7I10,F12.4)
+        WRITE (LOUTIO,822) IPROKI,NIVXKI,NITRKI,WEITKI
+  822   FORMAT (14X,'Process id. = ',I8,'  # of input vertices = ',I3,
+     &               '  # of input tracks = ',I4,'  weight = ',E12.4)
+        WRITE (LOUTIO,821) IRNDJO
+  821   FORMAT (14X,'random generator roots used during this job '
+     &              /(14X,3I15,10X,3I15))
+        IF (JASEV .GT. 0) WRITE (LOUTIO,823) (IW(KASEV+M),M=1,IW(JASEV)
+     &                                                         -LMHLEN)
+  823   FORMAT (14X,'random generator roots used during previous job '
+     &              /(14X,3I15,10X,3I15))
+      ENDIF
+      RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ cahtra.h gmacro.h lccomc.h lcnamc.h ljjpar.h siconst.h
+ sigeco.h version.h
+ itmsk1.F itmsk2.F itnois.F itres.F itxtlk.F
+ lcadc.F lcamp.F lcasig.F lcbhab.F lcbkpr.F lcdigi.F lcfral.F
+ lchit.F lcirun.F lcnami.F lcnois.F lcpad.F lcroc.F lcsamp.F
+ lcsatu.F lcshow.F lcstrt.F lctrak.F lctrdi.F lctrht.F lcwire.F
+ lcwsum.F lcwtri.F
+ muasig.F mubook.F muirun.F muunoi.F muwsum.F
+ trignews.h
+ siasig.F sitrak.F siwsum.F
+ asasig.F asbook.F ascjob.F ascrun.F asctra.F asevst.F asfxxx.F
+ asieve.F asigea.F asijob.F asimod.F asinit.F asipac.F asirun.F
+ askine.F asksin.F asktrk.F aspeve.F asprun.F asread.F asredc.F
+ asreve.F asrkin.F asrtyp.F asrust.F astdeb.F astgea.F astrac.F
+ astrig.F aswkin.F aswrtp.F aswsum.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+ xtrcom.h
+ ecalnews.h geomnews.h lcalnews.h news.h skelnews.h vdetnews.h
+@
+text
+@d80 1
+a80 1
+  822   FORMAT (14X,'Process id. = ',I6,'  # of input vertices = ',I3,
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d7 1
+a7 1
+C ---------------------------------------------------------------
+d9 1
+a9 1
+      SAVE  JRND
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

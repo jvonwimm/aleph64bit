@@ -1,0 +1,194 @@
+head	1.3;
+access;
+symbols
+	gal309_3:1.3
+	gal309_2:1.3
+	gal309_1:1.3
+	gal309:1.3
+	gal308_2:1.3
+	gal308_1:1.3
+	gal308:1.3
+	gal307_2:1.3
+	gal307_1:1.3
+	gal307:1.3
+	gal306_3:1.3
+	gal306_2:1.3
+	gal306_1:1.3
+	gal306:1.3
+	gal305_3:1.3
+	gal305_2:1.3
+	gal305_1:1.3
+	gal305:1.3
+	gal304_11:1.3
+	gal304_10:1.3
+	gal304_9:1.3
+	gal304_8:1.3
+	gal304_7:1.3
+	gal304_6:1.3
+	gal304_5:1.3
+	gal304_4:1.3
+	gal304_3:1.3
+	gal304_2:1.3
+	gal304_1:1.3
+	gal304:1.3
+	gal303_3:1.3
+	gal303_2:1.3
+	gal303_1:1.3
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	96.01.25.13.44.35;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.06.30.07.11.55;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.48;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.49;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@put a ifndef DOC in gdray
+modify WRITE statment to please fpp on alpha/vms
+ Modified Files:
+ 	catino.F
+	agchck.F
+ 	gdray.F
+ 	hchist.F hcshow.F hcstat.F hnewtk.F
+ 	lcasig.F
+	sabook.F sahist.F sahit.F sawsum.F
+ 	siasig.F sidfrt.F sishow.F sitrak.F
+@
+text
+@*DK sitrak
+      SUBROUTINE SITRAK
+C--------------------------------------------------------------
+C! - controls tracking in SCAL
+C. - B.Bloch-Devaux     910115
+C. - Called by  SIHIT                            from this .HLB
+C. - Calls  SIXTOA,CAHIST                        from this .HLB
+C -----------------------------------------------
+#ifndef DOC
+      SAVE
+#include "iocom.h"
+#include "jobcom.h"
+#include "trkcom.h"
+#include "sistat.h"
+#include "siconst.h"
+#include "sinamc.h"
+      DIMENSION POS(3)
+C   This is the value to be deposited per Gev for 20Kev tracking cut
+C--------------------------------------------------------------
+C-    not 1st step in sensitive medium
+      IF(ITRKEL(8).NE.1) THEN
+C-    Get subcomponents from track elemnt position
+         POS(1) = TRKELE(1)
+         POS(2) = TRKELE(2)
+         POS(3) = TRKELE(3)
+         ZPOS = POS(3) +SIGN ( 0.1,TRKELE(3))
+         CALL SIXTOA(IAD,IOR,POS(1),POS(2),ZPOS  ,IOK)
+         IF (IOK.NE.0 ) THEN
+            IF (NSIPRT.GT.1) THEN
+                WRITE(LOUTIO,*) ' +++ SITRAK : the following space ',
+     &          'point is outside the sensitive area of crystals: ',
+     &          'X,Y,Z,R ',
+     &          POS ,SQRT(POS(1)*POS(1)+POS(2)*POS(2)),IOK
+            ENDIF
+         ELSE
+C-    Deposit energy on the relevant address (MEV)
+            IDE = IFIX(TRKELE(12)*1000./SIPGEV)
+            IF (IDE.GT.0 ) THEN
+               CALL CAHIST(NASIHI,IAD,IOR+1,IDE)
+C-    Count energy elements entering SICAL
+               ESICOU(1) = ESICOU(1) +TRKELE(12)*1000./SIPGEV
+               IF ( TRKELE(3).GT.0.) THEN
+                  ESICOU(2) = ESICOU(2) +TRKELE(12)*1000./SIPGEV
+               ELSE
+                  ESICOU(3) = ESICOU(3) +TRKELE(12)*1000./SIPGEV
+               ENDIF
+               IF (NSIPRT.GT.2) WRITE(LOUTIO,1100)IAD,IOR+1,IDE
+            ENDIF
+         ENDIF
+      ENDIF
+      RETURN
+ 1100 FORMAT (' ++++ SITRAK : Triplet address ',I8,' position ',I5,
+     &        ' Energy deposit ',I10,' Mev ')
+      END
+#endif
+@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ cahtra.h gmacro.h lccomc.h lcnamc.h ljjpar.h siconst.h
+ sigeco.h version.h
+ itmsk1.F itmsk2.F itnois.F itres.F itxtlk.F
+ lcadc.F lcamp.F lcasig.F lcbhab.F lcbkpr.F lcdigi.F lcfral.F
+ lchit.F lcirun.F lcnami.F lcnois.F lcpad.F lcroc.F lcsamp.F
+ lcsatu.F lcshow.F lcstrt.F lctrak.F lctrdi.F lctrht.F lcwire.F
+ lcwsum.F lcwtri.F
+ muasig.F mubook.F muirun.F muunoi.F muwsum.F
+ trignews.h
+ siasig.F sitrak.F siwsum.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+ xtrcom.h
+ ecalnews.h geomnews.h lcalnews.h news.h skelnews.h vdetnews.h
+@
+text
+@d53 1
+a53 1
+     #        ' Energy deposit ',I10,' Mev ')
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d8 1
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

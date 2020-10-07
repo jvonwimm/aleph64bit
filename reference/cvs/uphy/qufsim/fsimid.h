@@ -1,0 +1,11 @@
+      COMMON / infido / nchtot,nv0tot,nphtot,nhatot,nlutot,nektot,
+     .					nhktot,
+     .					imotch(200),
+     .					imotv0(200),
+     .					nmotph(200),imotph(200,200),emotph(200,200),
+     .					nmotha(200),imotha(200,200),emotha(200,200), 
+     .					nmotlu(200),imotlu(200,200),emotlu(200,200),
+     .					nmotek(200),imotek(200,200),emotek(200,200),
+     .					nmothk(200),imothk(200,200),emothk(200,200),
+     .					iefoch(200),iefov0(200),iefoph(200),iefoha(200),
+     .					iefolu(200),iefoek(200),iefohk(200)

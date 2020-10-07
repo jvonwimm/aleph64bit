@@ -1,0 +1,90 @@
+head	1.2;
+access;
+symbols
+	look25:1.2
+	look24:1.2
+	look23:1.2
+	look22:1.2
+	look21:1.2
+	look20:1.2
+	v15:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.04.18.09.07.32;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.09.15.50.31;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.09.15.50.32;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@change VAX to DEC.AND..NOT.UNIX ==> version 20
+
+ Modified Files:
+ 	lkevt.h lkfil.h lklast.h lkunpk.h version.h
+ Removed Files:
+	lookend.h
+@
+text
+@      SUBROUTINE LKWRLIS(COMAND)
+C ----------------------------------------------------------
+C! write a list on unit 13
+C ----------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "lkfil.h"
+      LOGICAL LKOPTI
+      CHARACTER*(*) COMAND
+      CHARACTER*200 TEMP,LISTS*80
+C ----------------------------------------------------------
+      LISTS=' '
+      TEMP=' '
+      CALL LKGTPAR(COMAND,1,'_List) to be written out: ',LISTS,LL)
+      IF (.NOT. FLGFIL(3)) THEN
+          CALL LKOPWR(COMAND,'   ',32040)
+          IF (.NOT.FLGFIL(3)) RETURN
+      ENDIF
+      IF (INDEX(LISTS,'C').GT.0) CALL BWRITE(IW,LFILE(3),'C')
+      IF (INDEX(LISTS,'E').GT.0) CALL BWRITE(IW,LFILE(3),'E')
+      IF (INDEX(LISTS,'S').GT.0) CALL BWRITE(IW,LFILE(3),'S')
+      IF (INDEX(LISTS,'T').GT.0) CALL BWRITE(IW,LFILE(3),'T')
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK lkwrlis
+@
+
+
+1.1.1.1
+log
+@import look 15
+@
+text
+@@

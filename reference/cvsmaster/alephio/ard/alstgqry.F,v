@@ -1,0 +1,148 @@
+head	1.2;
+access;
+symbols
+	alio83:1.2
+	alio82:1.2
+	alio81:1.2
+	alio80:1.2
+	alio74:1.2
+	alio73:1.2
+	alio72:1.2
+	alio71:1.2
+	alio70:1.2
+	alio68:1.2
+	alio69:1.2
+	alio67:1.1
+	alio66:1.1
+	alio65:1.1
+	alio64:1.1
+	alio63:1.1
+	alio62:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.01.16.13.55.15;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.06.11.09.05.55;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@alephio68 introduce ALEPH_LINUX flag
+@
+text
+@      INTEGER FUNCTION ALSTGQRY( FILENM )
+C-------------------------------------------------------------
+CKEY ALREAD STAGE QUERY / USER
+C! Queries whether a file on an Aleph tape has been staged
+C   Author   :- M. Cattaneo    VAX       20-MAR-1995
+C               R. Hagelberg   UNIX
+C               F. Ranjard
+C==============================================================
+C
+C   Returned value  : 1 if staged file exists, 0 if it does not
+C   Inputs    : C* FILENM      i.e.  ab1234.1.sl
+C   Outputs   : None.
+C
+C=============================================================
+#ifndef DOC
+C +
+C Declarations.
+C -
+C      IMPLICIT NONE
+#if defined(UNIX)
+      INTEGER SYSTEM
+      EXTERNAL SYSTEM
+#else
+#if defined(ALEPH_DEC)
+      INCLUDE '($RMSDEF)'
+      INTEGER       context
+      INTEGER       length
+      INTEGER       status
+      INTEGER       lib$find_file
+      CHARACTER*255 res_file_spec
+#endif
+#endif
+      CHARACTER*(*) FILENM
+      CHARACTER     CHTAPE*16, CHOPT*80, MSG*120, LABEL*3
+C - internal commom block to the package KERNLIB M432
+      COMMON /SLATE/ ND432,NE432,NF432,NG432,DUM432(36)
+C + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+C Entry Point.
+C - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      alstgqry = 0
+      LF  = LNBLNK(FILENM)
+      JTAPS  = ICNEXT (FILENM,1,LF)
+      CHTAPE = FILENM(JTAPS:NE432-1)
+      CALL CUTOL (CHTAPE)
+      LABEL = '.sl'
+      IF (CHTAPE(1:2).EQ.'as') LABEL='.al'
+      LT = LNBLNK(CHTAPE)
+      I1P = INDEX(CHTAPE,'.')
+      IF (I1P.EQ.0) THEN
+         CHTAPE = CHTAPE(1:LT)//'.1'//LABEL
+         I1P = LT+1
+         LT = LNBLNK(CHTAPE)
+      ENDIF
+      I2P = INDEX(CHTAPE(I1P+1:LT),'.') +I1P
+      IF (I2P.EQ.I1P) THEN
+         CHTAPE = CHTAPE(1:LT)//LABEL
+         I2P = LT+1
+         LT = LT+3
+      ENDIF
+C
+#if defined(UNIX)
+      CHOPT = 'stageqry -V '// CHTAPE(1:I1P-1) //' -q '//
+     &        CHTAPE(I1P+1:I2P-1) //' | wc -l'
+      LOPT = LNBLNK(CHOPT)
+      MSG = 'x=`'//CHOPT(1:LOPT)//'` ; exit $x'
+      IER = SYSTEM (MSG) / 256
+      IF (IER.EQ.0) THEN
+         CHTAPE(I1P:I1P)='_'
+         MSG = 'alws:al$data:'//CHTAPE(1:LT)
+         LMSG = LNBLNK(MSG)
+         CHOPT = 'rfstat '''//MSG(1:LMSG)//''' | wc -l'
+         LOPT = LNBLNK(CHOPT)
+         MSG = 'x=`'//CHOPT(1:LOPT)//'` ; exit $x'
+         IER = SYSTEM (MSG) / 256
+      ENDIF
+      IF (IER.NE.0) ALSTGQRY = 1
+#else
+#if defined(ALEPH_DEC)
+      context = 0
+      res_file_spec = ' '
+
+      MSG = 'AL$DATA:'//CHTAPE(1:I1P-1)//'_'//CHTAPE(I1P+1:LT)
+      LMSG = LNBLNK(MSG)
+
+      status = lib$find_file( MSG(1:LMSG), res_file_spec, context)
+      CALL lib$find_file_end( context )
+
+      IF( status .EQ. RMS$_NORMAL ) alstgqry = 1
+#endif
+#endif
+
+  999 RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@alephio62 add alstgqry which had disappeared
+@
+text
+@d22 1
+@

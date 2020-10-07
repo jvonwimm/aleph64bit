@@ -1,0 +1,34 @@
+From BLOCH@alws.cern.ch Fri Feb 13 16:02:38 2004
+Date: Fri, 13 Feb 2004 16:01:29 +0100
+From: BLOCH@alws.cern.ch
+To: BLOCH@alws.cern.ch
+
+KCAR 0 / $TEXT                                                                  
+POFF                                                                            
+*   RUN #   RUN'S TITLE                                                         
+RUN  104        'COSMIC BACKGROUND GENERATOR'                                   
+*     FIRST EVENT   LAST EVENT TO BE GENERATED                                  
+TRIG       1           1500                                                     
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG                                 
+DEBU    6   /      1            10                                              
+*    UNIT # / FORMAT                                                            
+*SAVE   2  /                                                                    
+* EMIN : minimum muon energy at sea level (in GeV);                             
+* EMAX : maximum muon energy at sea level (in GeV);                             
+* ECUT : minimum muon energy at the top of the ALEPH cavern (in GeV);           
+*       EMIN EMAX  ECUT                                                         
+GLIM    70. 1000.    3.                                                         
+*  The following card defines the dimension of a cylinder inside                
+*  the ALEPH detector which you want to be crossed by the cosmic                
+*  track .As examples you may give GVRT  185.   220.  for TPC                   
+*                                  GVRT  31.    100.  for ITC                   
+*    etc...                                                                     
+* the cosmic track will be generated starting on the outer boundary             
+* of ALEPH , but within effects of Magnetic field , it will cross               
+* the requested cylinder.                                                       
+* RVRT : radius of the detector supposed to be a cylinder (in cm);              
+* ZVRT : half lenght in z of the detector supposed to be a cylinder             
+*        (in cm);                                                               
+*        RVRT    ZVRT                                                           
+GVRT      31.    100.                                                           
+ENDQ                                                                            

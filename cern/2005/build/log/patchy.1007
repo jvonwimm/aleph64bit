@@ -1,0 +1,4148 @@
+README
+make_patchy
+p4boot.sh0
+p4inceta
+rceta.sh
+-------------------------------------------------
+Patchy step 0: copying Patchy files into /home/wimmer/aleph64bit/cern/patchy_install/patchy/4.15/src  
+-------------------------------------------------
+---------------------------------------------------
+Patchy step 1: running rceta.sh...                 
+---------------------------------------------------
+rceta.f:16:58:
+
+       DATA         IBLANK/4H    /, LETTC/4HC   /, LETTO/4HO   /
+                                                          1
+Warning: Legacy Extension: Hollerith constant at (1)
+rceta.f:17:28:
+
+       DATA         IQUEST/4H?   /
+                            1
+Warning: Legacy Extension: Hollerith constant at (1)
+rceta.f:17:28:
+
+       DATA         IQUEST/4H?   /
+                            1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+rceta.f:16:58:
+
+       DATA         IBLANK/4H    /, LETTC/4HC   /, LETTO/4HO   /
+                                                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+rceta.f:16:43:
+
+       DATA         IBLANK/4H    /, LETTC/4HC   /, LETTO/4HO   /
+                                           1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+rceta.f:16:28:
+
+       DATA         IBLANK/4H    /, LETTC/4HC   /, LETTO/4HO   /
+                            1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+1READ-CETA  version  .RCETA PAM    5.09  910816 11.36     
+
+ Ready to read    4 sections at most.
+
+ Character set used ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+-*/()$= ,.#'!:"_]&@?[><\^;%
+                    ----.----+----.----+----.----+----.----+----.----+----.----+----.----+
+                                                                   NAECQUCAAQOGLRCSP
+                                            names of               UPXOUNLNTUPREEIEE
+                                            special characters     MOCLODOD EEESVRMR
+                                            in vertical            BSLOTES  SNASECIC
+
+ Start Section    1
+                      #!/bin/csh  -v
+
+ End of Section   1       424 cards in     5 records.
+
+ Start Section    2
+                      LNX       Cradle
+
+ End of Section   2        68 cards in     2 records.
+
+ Start Section    3
+                      CDECK  ID>, FCASPLIT.
+
+ End of Section   3       586 cards in     6 records.
+
+ Start Section    4
+                      CDECK  ID>, YPATCH.
+
+ End of Section   4     19878 cards in   183 records.
+
+ --------------------  STOP.
+the following files are now present:
+total 2360
+-rw-rw-r-- 1 wimmer wimmer   17353 Oct  7 15:48 fcasplit.f
+-rwxr-xr-x 1 wimmer wimmer    4942 Oct  7 15:48 make_patchy
+-rwxrw-r-- 1 wimmer wimmer   12324 Oct  7 15:48 p4boot.sh
+-rwxr-xr-x 1 wimmer wimmer   14095 Oct  7 15:48 p4boot.sh0gfort
+-rw-rw-r-- 1 wimmer wimmer  647571 Oct  7 15:48 p4comp.fca
+-rw-rw-r-- 1 wimmer wimmer    1908 Oct  7 15:48 p4crad.cra
+-rw-r--r-- 1 wimmer wimmer 1584000 Apr 28  1994 p4inceta
+-rwxrwxr-x 1 wimmer wimmer   13344 Oct  7 15:48 rceta
+-rw-rw-r-- 1 wimmer wimmer    5411 Oct  7 15:48 rceta.f
+-rwxr-xr-x 1 wimmer wimmer    7593 Dec 14  2005 rceta.sh
+---------------------------------------------------
+Patchy step 2: verifying extraction...             
+---------------------------------------------------
+---------------------------------------------------
+Patchy step 3: running p4boot.sh                   
+---------------------------------------------------
+
+unalias rm
+unalias mv
+unalias cp
+
+set ORIG = $HOME/patchy
+set TARG = /usr/local/bin
+set FOPT = "-O"
+set FOPTC = "-c $FOPT"
+set KERNLIB = '/home/wimmer/aleph64bit/cern/2005/lib/libpacklib.a'
+
+
+
+
+
+
+
+
+if ( $#argv == 0 ) then
+
+set clobber
+echo "      variable ORIG = $ORIG"
+      variable ORIG = /home/wimmer/patchy
+echo "      variable TARG = $TARG"
+      variable TARG = /usr/local/bin
+echo "      variable PATH = $PATH"
+      variable PATH = .:/home/wimmer/bin:.:..:.:/home/wimmer/bin:/home/wimmer/aleph64bit/cern/2005/bin:.:/home/wimmer/bin:.:/home/wimmer/bin:/home/wimmer/aleph64bit/Linux/bin:/home/wimmer/aleph64bit/Linux/script:/home/wimmer/aleph64bit/cern/2005/bin:.:/home/wimmer/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+
+set mode_xqt = $1
+if ( $mode_xqt == 0 ) goto jboot3
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+goto step11
+echo ' -----------   ---->  Compile new program fcasplit'
+ -----------   ---->  Compile new program fcasplit
+
+$FC $FOPT -o fcasplit fcasplit.f
+chmod a+x fcasplit
+
+step12:
+echo ' -----------   ---->  Compile P4COMP,  create P4LIB'
+ -----------   ---->  Compile P4COMP,  create P4LIB
+
+if ( -f libp4lib.a ) rm libp4lib.a
+if ( -d p4sub ) rm -r p4sub
+mkdir p4sub
+cd p4sub
+
+fcasplit ../p4comp.fca "$FOPTC"
+ FCASPLIT executing.
+             Input file : ../p4comp.fca
+           Shell script : p4comp.shfca
+              Make file : p4comp.mkfca
+        Fortran    name : gfortran -no-pie  
+        Fortran options : -c -O  
+             CC    name : gcc  
+             CC options : -c -O  
+      Assembler    name : as  
+      Assembler options :   
+  19722 lines written for   254 decks
+    156 trailing comment lines ignored.
+
+
+
+
+
+
+
+ed ysfind.f << !
+6073
+6073
+mv ysfind.ft ysfind.f
+
+ed yshtag.f << !
+3743
+3743
+mv yshtag.ft yshtag.f
+
+ed jartpx.f << !
+2024
+2024
+mv jartpx.ft jartpx.f
+
+ed cctoup.f << !
+686
+686
+mv cctoup.ft cctoup.f
+
+ed iofile.f << !
+3639
+3639
+mv iofile.ft iofile.f
+
+ed kdcopy.f << !
+761
+761
+mv kdcopy.ft kdcopy.f
+
+ed kdfill.f << !
+851
+851
+mv kdfill.ft kdfill.f
+
+ed kdstep.f << !
+591
+591
+mv kdstep.ft kdstep.f
+
+ed pend.f << !
+8139
+8153
+mv pend.ft pend.f
+
+
+
+
+rm *.c
+rm cb* cf* cl* ct* cu*
+rm iu*
+rm jb* jrs*
+rm ln*
+rm mb* mc* ms*
+rm sb*
+rm u* v* x*
+
+
+
+csh -v p4comp.shfca
+gfortran -no-pie -c -O ypatch.f
+gfortran -no-pie -c -O ytobcd.f
+gfortran -no-pie -c -O ytobin.f
+gfortran -no-pie -c -O ytocet.f
+gfortran -no-pie -c -O yfrcet.f
+gfortran -no-pie -c -O ycompa.f
+gfortran -no-pie -c -O yedit.f
+gfortran -no-pie -c -O yindex.f
+gfortran -no-pie -c -O ylist.f
+gfortran -no-pie -c -O ysearc.f
+gfortran -no-pie -c -O yshift.f
+gfortran -no-pie -c -O flpara.f
+gfortran -no-pie -c -O flkrak.f
+gfortran -no-pie -c -O flink.f
+gfortran -no-pie -c -O floper.f
+gfortran -no-pie -c -O helppr.f
+gfortran -no-pie -c -O pinit.f
+pinit.f:24:23:
+
+       DATA  IISET  / 4HSET  /
+                       1
+Warning: Legacy Extension: Hollerith constant at (1)
+pinit.f:24:23:
+
+       DATA  IISET  / 4HSET  /
+                       1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O pready.f
+pready.f:62:61:
+
+      + 4HPAT ,3,2,3,4HHDEC,3,3,1,4HDECK,3,3,2,4HORG ,1,0,2,4HACT ,3,2,0/-A8M
+                                                             1
+Warning: Legacy Extension: Hollerith constant at (1)
+pready.f:67:33:
+
+       DATA  MMSEQ  /4HSEQ1,3,1,2H**/
+                                 1
+Warning: Legacy Extension: Hollerith constant at (1)
+pready.f:68:33:
+
+       DATA  MMPAM  /4HPAM ,2,0,2H**/
+                                 1
+Warning: Legacy Extension: Hollerith constant at (1)
+pready.f:69:22:
+
+       DATA  MMASMH /4HASMH,10,0,1/
+                      1
+Warning: Legacy Extension: Hollerith constant at (1)
+pready.f:70:22:
+
+       DATA  MMASM  /4HASM ,2,0,12/
+                      1
+Warning: Legacy Extension: Hollerith constant at (1)
+pready.f:71:67:
+
+       DATA  NMASM  /2H  ,2HA ,2HD ,2HX ,2HY ,2H2 ,2HA2,2HD2,2HX2,2HY2/
+                                                                   1
+Warning: Legacy Extension: Hollerith constant at (1)
+pready.f:73:22:
+
+       DATA  NMCRA  /4HCRA*/
+                      1
+Warning: Legacy Extension: Hollerith constant at (1)
+pready.f:179:21:
+
+    30 CALL UBLOW  (7HITIMQQ=,MWKX(47),7)
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+pready.f:182:21:
+
+       CALL UBLOW  (8HTIMEQQ  ,IQUEST(1),8)
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+pready.f:186:21:
+
+    31 CALL UBLOW  (7HIDATQQ=,MWKX(47),7)
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+pready.f:189:21:
+
+       CALL UBLOW  (8HDATEQQ  ,IQUEST(1),8)
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+pready.f:192:20:
+
+    32 CALL UBLOW (8HQCARD1  ,IQUEST(1),8)
+                    1
+Warning: Legacy Extension: Hollerith constant at (1)
+pready.f:195:20:
+
+    33 CALL UBLOW (8HQEJECT  ,IQUEST(1),8)
+                    1
+Warning: Legacy Extension: Hollerith constant at (1)
+pready.f:198:20:
+
+    34 CALL UBLOW (8HQFTITLE ,IQUEST(1),8)
+                    1
+Warning: Legacy Extension: Hollerith constant at (1)
+pready.f:201:20:
+
+    35 CALL UBLOW (8HQFTITLCH,IQUEST(1),8)
+                    1
+Warning: Legacy Extension: Hollerith constant at (1)
+pready.f:73:22:
+
+       DATA  NMCRA  /4HCRA*/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pready.f:71:22:
+
+       DATA  NMASM  /2H  ,2HA ,2HD ,2HX ,2HY ,2H2 ,2HA2,2HD2,2HX2,2HY2/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pready.f:71:27:
+
+       DATA  NMASM  /2H  ,2HA ,2HD ,2HX ,2HY ,2H2 ,2HA2,2HD2,2HX2,2HY2/
+                           1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pready.f:71:32:
+
+       DATA  NMASM  /2H  ,2HA ,2HD ,2HX ,2HY ,2H2 ,2HA2,2HD2,2HX2,2HY2/
+                                1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pready.f:71:37:
+
+       DATA  NMASM  /2H  ,2HA ,2HD ,2HX ,2HY ,2H2 ,2HA2,2HD2,2HX2,2HY2/
+                                     1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pready.f:71:42:
+
+       DATA  NMASM  /2H  ,2HA ,2HD ,2HX ,2HY ,2H2 ,2HA2,2HD2,2HX2,2HY2/
+                                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pready.f:71:47:
+
+       DATA  NMASM  /2H  ,2HA ,2HD ,2HX ,2HY ,2H2 ,2HA2,2HD2,2HX2,2HY2/
+                                               1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pready.f:71:52:
+
+       DATA  NMASM  /2H  ,2HA ,2HD ,2HX ,2HY ,2H2 ,2HA2,2HD2,2HX2,2HY2/
+                                                    1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pready.f:71:57:
+
+       DATA  NMASM  /2H  ,2HA ,2HD ,2HX ,2HY ,2H2 ,2HA2,2HD2,2HX2,2HY2/
+                                                         1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pready.f:71:62:
+
+       DATA  NMASM  /2H  ,2HA ,2HD ,2HX ,2HY ,2H2 ,2HA2,2HD2,2HX2,2HY2/
+                                                              1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pready.f:71:67:
+
+       DATA  NMASM  /2H  ,2HA ,2HD ,2HX ,2HY ,2H2 ,2HA2,2HD2,2HX2,2HY2/
+                                                                   1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pready.f:70:22:
+
+       DATA  MMASM  /4HASM ,2,0,12/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pready.f:69:22:
+
+       DATA  MMASMH /4HASMH,10,0,1/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pready.f:68:22:
+
+       DATA  MMPAM  /4HPAM ,2,0,2H**/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pready.f:68:33:
+
+       DATA  MMPAM  /4HPAM ,2,0,2H**/
+                                 1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pready.f:67:22:
+
+       DATA  MMSEQ  /4HSEQ1,3,1,2H**/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pready.f:67:33:
+
+       DATA  MMSEQ  /4HSEQ1,3,1,2H**/
+                                 1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pready.f:62:9:
+
+      + 4HPAT ,3,2,3,4HHDEC,3,3,1,4HDECK,3,3,2,4HORG ,1,0,2,4HACT ,3,2,0/-A8M
+         1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pready.f:62:22:
+
+      + 4HPAT ,3,2,3,4HHDEC,3,3,1,4HDECK,3,3,2,4HORG ,1,0,2,4HACT ,3,2,0/-A8M
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pready.f:62:35:
+
+      + 4HPAT ,3,2,3,4HHDEC,3,3,1,4HDECK,3,3,2,4HORG ,1,0,2,4HACT ,3,2,0/-A8M
+                                   1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pready.f:62:48:
+
+      + 4HPAT ,3,2,3,4HHDEC,3,3,1,4HDECK,3,3,2,4HORG ,1,0,2,4HACT ,3,2,0/-A8M
+                                                1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pready.f:62:61:
+
+      + 4HPAT ,3,2,3,4HHDEC,3,3,1,4HDECK,3,3,2,4HORG ,1,0,2,4HACT ,3,2,0/-A8M
+                                                             1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O pend.f
+gfortran -no-pie -c -O dospec.f
+dospec.f:52:22:
+
+       DATA  MMRBIG /4HRBIG,2,1,2/
+                      1
+Warning: Legacy Extension: Hollerith constant at (1)
+dospec.f:53:45:
+
+       DATA  MMUNIT /4H RCR,4H CAR /,  ICRA/4HCRA*/
+                                             1
+Warning: Legacy Extension: Hollerith constant at (1)
+dospec.f:62:38:
+
+       CALL QTOUCH (IQDROP,LQUSER(5),3HSH.)
+                                      1
+Warning: Legacy Extension: Hollerith constant at (1)
+dospec.f:53:45:
+
+       DATA  MMUNIT /4H RCR,4H CAR /,  ICRA/4HCRA*/
+                                             1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+dospec.f:53:22:
+
+       DATA  MMUNIT /4H RCR,4H CAR /,  ICRA/4HCRA*/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+dospec.f:53:29:
+
+       DATA  MMUNIT /4H RCR,4H CAR /,  ICRA/4HCRA*/
+                             1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+dospec.f:52:22:
+
+       DATA  MMRBIG /4HRBIG,2,1,2/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O dospgo.f
+dospgo.f:41:22:
+
+       DATA  MMRPAM /4HRPAM,2,1,5/                                       -A8M
+                      1
+Warning: Legacy Extension: Hollerith constant at (1)
+dospgo.f:42:22:
+
+       DATA  MMQUE  /4H????/
+                      1
+Warning: Legacy Extension: Hollerith constant at (1)
+dospgo.f:132:20:
+
+       CALL UBLOW (6H.START, MVPR(12),6)
+                    1
+Warning: Legacy Extension: Hollerith constant at (1)
+dospgo.f:155:20:
+
+       CALL UBLOW (6H.SKIP ,MVPR(12),6)
+                    1
+Warning: Legacy Extension: Hollerith constant at (1)
+dospgo.f:42:22:
+
+       DATA  MMQUE  /4H????/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+dospgo.f:41:22:
+
+       DATA  MMRPAM /4HRPAM,2,1,5/                                       -A8M
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O dorun.f
+dorun.f:44:22:
+
+       DATA  ICRA   /4HCRA*/
+                      1
+Warning: Legacy Extension: Hollerith constant at (1)
+dorun.f:44:22:
+
+       DATA  ICRA   /4HCRA*/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O dodeck.f
+gfortran -no-pie -c -O domatf.f
+domatf.f:53:22:
+
+       DATA  NAMCSQ /4HCSQ ,3,1,3,8/                                     -A8M
+                      1
+Warning: Legacy Extension: Hollerith constant at (1)
+domatf.f:54:33:
+
+       DATA  NAMMAT /4HMAT ,1,1,2H**/
+                                 1
+Warning: Legacy Extension: Hollerith constant at (1)
+domatf.f:54:22:
+
+       DATA  NAMMAT /4HMAT ,1,1,2H**/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+domatf.f:54:33:
+
+       DATA  NAMMAT /4HMAT ,1,1,2H**/
+                                 1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+domatf.f:53:22:
+
+       DATA  NAMCSQ /4HCSQ ,3,1,3,8/                                     -A8M
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O douref.f
+gfortran -no-pie -c -O doasm.f
+gfortran -no-pie -c -O doopt.f
+doopt.f:30:33:
+
+       DATA  MMONLY /4HONLY,1,1,2H**/
+                                 1
+Warning: Legacy Extension: Hollerith constant at (1)
+doopt.f:30:22:
+
+       DATA  MMONLY /4HONLY,1,1,2H**/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+doopt.f:30:33:
+
+       DATA  MMONLY /4HONLY,1,1,2H**/
+                                 1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O douse.f
+gfortran -no-pie -c -O doupd.f
+gfortran -no-pie -c -O acsort.f
+acsort.f:39:49:
+
+       DATA  MMV    /4HACMD,0,0,2H**,4HACNL,0,0,2H**/
+                                                 1
+Warning: Legacy Extension: Hollerith constant at (1)
+acsort.f:39:22:
+
+       DATA  MMV    /4HACMD,0,0,2H**,4HACNL,0,0,2H**/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+acsort.f:39:33:
+
+       DATA  MMV    /4HACMD,0,0,2H**,4HACNL,0,0,2H**/
+                                 1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+acsort.f:39:38:
+
+       DATA  MMV    /4HACMD,0,0,2H**,4HACNL,0,0,2H**/
+                                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+acsort.f:39:49:
+
+       DATA  MMV    /4HACMD,0,0,2H**,4HACNL,0,0,2H**/
+                                                 1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O acexq.f
+gfortran -no-pie -c -O acpeel.f
+gfortran -no-pie -c -O acxref.f
+gfortran -no-pie -c -O acseq.f
+acseq.f:95:21:
+
+       CALL UBLOW  (8H    HOLD,MWKX(73),8)
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+gfortran -no-pie -c -O mxactd.f
+gfortran -no-pie -c -O mxactn.f
+gfortran -no-pie -c -O arrive.f
+gfortran -no-pie -c -O arbcd.f
+gfortran -no-pie -c -O arbin.f
+gfortran -no-pie -c -O depart.f
+depart.f:41:43:
+
+       DATA  LOSTV  /4HDIV ,4HMIX ,4HEXE ,4HLIST/
+                                           1
+Warning: Legacy Extension: Hollerith constant at (1)
+depart.f:41:22:
+
+       DATA  LOSTV  /4HDIV ,4HMIX ,4HEXE ,4HLIST/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depart.f:41:29:
+
+       DATA  LOSTV  /4HDIV ,4HMIX ,4HEXE ,4HLIST/
+                             1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depart.f:41:36:
+
+       DATA  LOSTV  /4HDIV ,4HMIX ,4HEXE ,4HLIST/
+                                    1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depart.f:41:43:
+
+       DATA  LOSTV  /4HDIV ,4HMIX ,4HEXE ,4HLIST/
+                                           1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O depid.f
+depid.f:35:51:
+
+       DATA  MKV    / 1H/,1HZ,1HD,1HR,1HB,1HA,1H-,1HZ /
+                                                   1
+Warning: Legacy Extension: Hollerith constant at (1)
+depid.f:35:23:
+
+       DATA  MKV    / 1H/,1HZ,1HD,1HR,1HB,1HA,1H-,1HZ /
+                       1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depid.f:35:27:
+
+       DATA  MKV    / 1H/,1HZ,1HD,1HR,1HB,1HA,1H-,1HZ /
+                           1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depid.f:35:31:
+
+       DATA  MKV    / 1H/,1HZ,1HD,1HR,1HB,1HA,1H-,1HZ /
+                               1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depid.f:35:35:
+
+       DATA  MKV    / 1H/,1HZ,1HD,1HR,1HB,1HA,1H-,1HZ /
+                                   1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depid.f:35:39:
+
+       DATA  MKV    / 1H/,1HZ,1HD,1HR,1HB,1HA,1H-,1HZ /
+                                       1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depid.f:35:43:
+
+       DATA  MKV    / 1H/,1HZ,1HD,1HR,1HB,1HA,1H-,1HZ /
+                                           1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depid.f:35:47:
+
+       DATA  MKV    / 1H/,1HZ,1HD,1HR,1HB,1HA,1H-,1HZ /
+                                               1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depid.f:35:51:
+
+       DATA  MKV    / 1H/,1HZ,1HD,1HR,1HB,1HA,1H-,1HZ /
+                                                   1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O depmsg.f
+depmsg.f:68:36:
+
+       DATA  MSGMIS /4HMISS,4HING ,4HZ=  /
+                                    1
+Warning: Legacy Extension: Hollerith constant at (1)
+depmsg.f:69:50:
+
+       DATA  MSGBPD /4H    ,4HBY P,4H=   ,4H    ,4H  D=/
+                                                  1
+Warning: Legacy Extension: Hollerith constant at (1)
+depmsg.f:70:43:
+
+       DATA  MSGURF /4H****,4H    ,4H* U/,4HREF /
+                                           1
+Warning: Legacy Extension: Hollerith constant at (1)
+depmsg.f:72:29:
+
+       DATA  MSGBIF /4HBY I,4HF   /
+                             1
+Warning: Legacy Extension: Hollerith constant at (1)
+depmsg.f:73:29:
+
+       DATA  MSGDEL /4HDELE,4HTED /
+                             1
+Warning: Legacy Extension: Hollerith constant at (1)
+depmsg.f:74:29:
+
+       DATA  MSGCLA /4HCLAS,4HH LV/
+                             1
+Warning: Legacy Extension: Hollerith constant at (1)
+depmsg.f:75:29:
+
+       DATA  MSGSTA /4H****,4H****/
+                             1
+Warning: Legacy Extension: Hollerith constant at (1)
+depmsg.f:77:50:
+
+       DATA   IONE  /    4H****, 4HDO  , 4HNIL , 4HSKIP/
+                                                  1
+Warning: Legacy Extension: Hollerith constant at (1)
+depmsg.f:79:58:
+
+       DATA   IACT  /    4H Z= , 4HDEL,, 4HREP,, 4HADB,, 4HADD, /        -A8M
+                                                          1
+Warning: Legacy Extension: Hollerith constant at (1)
+depmsg.f:79:26:
+
+       DATA   IACT  /    4H Z= , 4HDEL,, 4HREP,, 4HADB,, 4HADD, /        -A8M
+                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:79:34:
+
+       DATA   IACT  /    4H Z= , 4HDEL,, 4HREP,, 4HADB,, 4HADD, /        -A8M
+                                  1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:79:42:
+
+       DATA   IACT  /    4H Z= , 4HDEL,, 4HREP,, 4HADB,, 4HADD, /        -A8M
+                                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:79:50:
+
+       DATA   IACT  /    4H Z= , 4HDEL,, 4HREP,, 4HADB,, 4HADD, /        -A8M
+                                                  1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:79:58:
+
+       DATA   IACT  /    4H Z= , 4HDEL,, 4HREP,, 4HADB,, 4HADD, /        -A8M
+                                                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:77:26:
+
+       DATA   IONE  /    4H****, 4HDO  , 4HNIL , 4HSKIP/
+                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:77:34:
+
+       DATA   IONE  /    4H****, 4HDO  , 4HNIL , 4HSKIP/
+                                  1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:77:42:
+
+       DATA   IONE  /    4H****, 4HDO  , 4HNIL , 4HSKIP/
+                                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:77:50:
+
+       DATA   IONE  /    4H****, 4HDO  , 4HNIL , 4HSKIP/
+                                                  1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:75:22:
+
+       DATA  MSGSTA /4H****,4H****/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:75:29:
+
+       DATA  MSGSTA /4H****,4H****/
+                             1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:74:22:
+
+       DATA  MSGCLA /4HCLAS,4HH LV/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:74:29:
+
+       DATA  MSGCLA /4HCLAS,4HH LV/
+                             1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:73:22:
+
+       DATA  MSGDEL /4HDELE,4HTED /
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:73:29:
+
+       DATA  MSGDEL /4HDELE,4HTED /
+                             1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:72:22:
+
+       DATA  MSGBIF /4HBY I,4HF   /
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:72:29:
+
+       DATA  MSGBIF /4HBY I,4HF   /
+                             1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:70:22:
+
+       DATA  MSGURF /4H****,4H    ,4H* U/,4HREF /
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:70:29:
+
+       DATA  MSGURF /4H****,4H    ,4H* U/,4HREF /
+                             1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:70:36:
+
+       DATA  MSGURF /4H****,4H    ,4H* U/,4HREF /
+                                    1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:70:43:
+
+       DATA  MSGURF /4H****,4H    ,4H* U/,4HREF /
+                                           1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:69:22:
+
+       DATA  MSGBPD /4H    ,4HBY P,4H=   ,4H    ,4H  D=/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:69:29:
+
+       DATA  MSGBPD /4H    ,4HBY P,4H=   ,4H    ,4H  D=/
+                             1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:69:36:
+
+       DATA  MSGBPD /4H    ,4HBY P,4H=   ,4H    ,4H  D=/
+                                    1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:69:43:
+
+       DATA  MSGBPD /4H    ,4HBY P,4H=   ,4H    ,4H  D=/
+                                           1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:69:50:
+
+       DATA  MSGBPD /4H    ,4HBY P,4H=   ,4H    ,4H  D=/
+                                                  1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:68:22:
+
+       DATA  MSGMIS /4HMISS,4HING ,4HZ=  /
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:68:29:
+
+       DATA  MSGMIS /4HMISS,4HING ,4HZ=  /
+                             1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+depmsg.f:68:36:
+
+       DATA  MSGMIS /4HMISS,4HING ,4HZ=  /
+                                    1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O dpexe.f
+gfortran -no-pie -c -O dpexgo.f
+gfortran -no-pie -c -O dpmix.f
+gfortran -no-pie -c -O dplist.f
+gfortran -no-pie -c -O dppage.f
+gfortran -no-pie -c -O ccproc.f
+gfortran -no-pie -c -O creapd.f
+gfortran -no-pie -c -O crdeco.f
+gfortran -no-pie -c -O liftrh.f
+liftrh.f:26:33:
+
+       DATA  MMRHC  /4HRHC ,0,0,2H**/
+                                 1
+Warning: Legacy Extension: Hollerith constant at (1)
+liftrh.f:26:22:
+
+       DATA  MMRHC  /4HRHC ,0,0,2H**/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+liftrh.f:26:33:
+
+       DATA  MMRHC  /4HRHC ,0,0,2H**/
+                                 1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O locseq.f
+gfortran -no-pie -c -O locsq2.f
+gfortran -no-pie -c -O mxjoin.f
+gfortran -no-pie -c -O mxnew.f
+gfortran -no-pie -c -O mxset.f
+gfortran -no-pie -c -O ybcdex.f
+ybcdex.f:49:57:
+
+       IF (MOPTIO(24).NE.0)   CALL AUXFIL (324,IQ(LPDH),4HPDH )
+                                                         1
+Warning: Legacy Extension: Hollerith constant at (1)
+ybcdex.f:58:32:
+
+       CALL AUXFIL (0,NVOLD(1),4HPAM )
+                                1
+Warning: Legacy Extension: Hollerith constant at (1)
+ybcdex.f:65:33:
+
+       CALL AUXFIL (68,NVNEW(1),5HCARDS)
+                                 1
+Warning: Legacy Extension: Hollerith constant at (1)
+gfortran -no-pie -c -O ybinex.f
+ybinex.f:42:22:
+
+       DATA  MMPAM  /4HPAM /
+                      1
+Warning: Legacy Extension: Hollerith constant at (1)
+ybinex.f:48:34:
+
+       CALL AUXFIL (260,NVOLD(1),5HCARDS)
+                                  1
+Warning: Legacy Extension: Hollerith constant at (1)
+ybinex.f:42:22:
+
+       DATA  MMPAM  /4HPAM /
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O ytocex.f
+ytocex.f:158:32:
+
+       CALL AUXFIL (0,NVOLD(1),4HPAM )
+                                1
+Warning: Legacy Extension: Hollerith constant at (1)
+gfortran -no-pie -c -O toceta.f
+gfortran -no-pie -c -O tosetu.f
+tosetu.f:45:41:
+
+       CALL AUXFIL (64+128+256,NVNEW(1),4HCETA)
+                                         1
+Warning: Legacy Extension: Hollerith constant at (1)
+gfortran -no-pie -c -O yfrcex.f
+yfrcex.f:51:23:
+
+       DATA  MMPAM  / 4HPAM  /
+                       1
+Warning: Legacy Extension: Hollerith constant at (1)
+yfrcex.f:140:34:
+
+       CALL AUXFIL (128,NVOLD(1),4HCETA)
+                                  1
+Warning: Legacy Extension: Hollerith constant at (1)
+yfrcex.f:51:23:
+
+       DATA  MMPAM  / 4HPAM  /
+                       1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O frceta.f
+gfortran -no-pie -c -O frsetu.f
+frsetu.f:48:34:
+
+       CALL AUXFIL (128,NVOLD(1),4HCETA)
+                                  1
+Warning: Legacy Extension: Hollerith constant at (1)
+gfortran -no-pie -c -O cetup.f
+cetup.f:26:23:
+
+       DATA  MMORGH / 4HORGH, 0, 0, 260 /
+                       1
+Warning: Legacy Extension: Hollerith constant at (1)
+cetup.f:27:23:
+
+       DATA  MMORGI / 4HORGI, 0, 0, 260 /
+                       1
+Warning: Legacy Extension: Hollerith constant at (1)
+cetup.f:28:23:
+
+       DATA  MMXREF / 4HXREF, 0, 0, 772 /
+                       1
+Warning: Legacy Extension: Hollerith constant at (1)
+cetup.f:29:23:
+
+       DATA  MMTOCE / 4HTOCE, 0, 0, 516 /
+                       1
+Warning: Legacy Extension: Hollerith constant at (1)
+cetup.f:30:23:
+
+       DATA  MMCETA / 4HCETA, 0, 0,3800 /
+                       1
+Warning: Legacy Extension: Hollerith constant at (1)
+cetup.f:30:23:
+
+       DATA  MMCETA / 4HCETA, 0, 0,3800 /
+                       1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+cetup.f:29:23:
+
+       DATA  MMTOCE / 4HTOCE, 0, 0, 516 /
+                       1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+cetup.f:28:23:
+
+       DATA  MMXREF / 4HXREF, 0, 0, 772 /
+                       1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+cetup.f:27:23:
+
+       DATA  MMORGI / 4HORGI, 0, 0, 260 /
+                       1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+cetup.f:26:23:
+
+       DATA  MMORGH / 4HORGH, 0, 0, 260 /
+                       1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O hollcv.f
+hollcv.f:18:23:
+
+       DATA  MM     / 4H     /
+                       1
+Warning: Legacy Extension: Hollerith constant at (1)
+hollcv.f:18:23:
+
+       DATA  MM     / 4H     /
+                       1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O ycomex.f
+ycomex.f:27:36:
+
+       DATA  JTYPV  /4HDECK,4HPAT ,4HPAM /
+                                    1
+Warning: Legacy Extension: Hollerith constant at (1)
+ycomex.f:28:37:
+
+       DATA  MMNEW  /4HNEW /, MMOLD/4HOLD /
+                                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+ycomex.f:28:37:
+
+       DATA  MMNEW  /4HNEW /, MMOLD/4HOLD /
+                                     1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+ycomex.f:28:22:
+
+       DATA  MMNEW  /4HNEW /, MMOLD/4HOLD /
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+ycomex.f:27:22:
+
+       DATA  JTYPV  /4HDECK,4HPAT ,4HPAM /
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+ycomex.f:27:29:
+
+       DATA  JTYPV  /4HDECK,4HPAT ,4HPAM /
+                             1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+ycomex.f:27:36:
+
+       DATA  JTYPV  /4HDECK,4HPAT ,4HPAM /
+                                    1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O yedtex.f
+yedtex.f:45:54:
+
+      +,          4H+DEL,4H+COP,4H+XCO,4H+SKI,4H+GET,4H+XSK
+                                                      1
+Warning: Legacy Extension: Hollerith constant at (1)
+yedtex.f:50:29:
+
+      +,             4HOLD ,4HNEW  /
+                             1
+Warning: Legacy Extension: Hollerith constant at (1)
+yedtex.f:49:22:
+
+       DATA  NAMLUN /4HOLD1,4HOLD2,4HOLD3,4HNEW1,4HNEW2,4HNEW3
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:49:29:
+
+       DATA  NAMLUN /4HOLD1,4HOLD2,4HOLD3,4HNEW1,4HNEW2,4HNEW3
+                             1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:49:36:
+
+       DATA  NAMLUN /4HOLD1,4HOLD2,4HOLD3,4HNEW1,4HNEW2,4HNEW3
+                                    1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:49:43:
+
+       DATA  NAMLUN /4HOLD1,4HOLD2,4HOLD3,4HNEW1,4HNEW2,4HNEW3
+                                           1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:49:50:
+
+       DATA  NAMLUN /4HOLD1,4HOLD2,4HOLD3,4HNEW1,4HNEW2,4HNEW3
+                                                  1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:49:57:
+
+       DATA  NAMLUN /4HOLD1,4HOLD2,4HOLD3,4HNEW1,4HNEW2,4HNEW3
+                                                         1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:50:22:
+
+      +,             4HOLD ,4HNEW  /
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:50:29:
+
+      +,             4HOLD ,4HNEW  /
+                             1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:43:19:
+
+      +,          4H+EOD,4H+END,4H+QUI,4H+OPT,4H+HAL,4H+NEX,4H+MAT,4H+REW
+                   1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:43:26:
+
+      +,          4H+EOD,4H+END,4H+QUI,4H+OPT,4H+HAL,4H+NEX,4H+MAT,4H+REW
+                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:43:33:
+
+      +,          4H+EOD,4H+END,4H+QUI,4H+OPT,4H+HAL,4H+NEX,4H+MAT,4H+REW
+                                 1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:43:40:
+
+      +,          4H+EOD,4H+END,4H+QUI,4H+OPT,4H+HAL,4H+NEX,4H+MAT,4H+REW
+                                        1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:43:47:
+
+      +,          4H+EOD,4H+END,4H+QUI,4H+OPT,4H+HAL,4H+NEX,4H+MAT,4H+REW
+                                               1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:43:54:
+
+      +,          4H+EOD,4H+END,4H+QUI,4H+OPT,4H+HAL,4H+NEX,4H+MAT,4H+REW
+                                                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:43:61:
+
+      +,          4H+EOD,4H+END,4H+QUI,4H+OPT,4H+HAL,4H+NEX,4H+MAT,4H+REW
+                                                             1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:43:68:
+
+      +,          4H+EOD,4H+END,4H+QUI,4H+OPT,4H+HAL,4H+NEX,4H+MAT,4H+REW
+                                                                    1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:44:19:
+
+      +,          4H+STR,4H+DEF,4H+DEC,4H+PAT,4H+TIT,4H+ADB,4H+ADD,4H+REP
+                   1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:44:26:
+
+      +,          4H+STR,4H+DEF,4H+DEC,4H+PAT,4H+TIT,4H+ADB,4H+ADD,4H+REP
+                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:44:33:
+
+      +,          4H+STR,4H+DEF,4H+DEC,4H+PAT,4H+TIT,4H+ADB,4H+ADD,4H+REP
+                                 1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:44:40:
+
+      +,          4H+STR,4H+DEF,4H+DEC,4H+PAT,4H+TIT,4H+ADB,4H+ADD,4H+REP
+                                        1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:44:47:
+
+      +,          4H+STR,4H+DEF,4H+DEC,4H+PAT,4H+TIT,4H+ADB,4H+ADD,4H+REP
+                                               1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:44:54:
+
+      +,          4H+STR,4H+DEF,4H+DEC,4H+PAT,4H+TIT,4H+ADB,4H+ADD,4H+REP
+                                                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:44:61:
+
+      +,          4H+STR,4H+DEF,4H+DEC,4H+PAT,4H+TIT,4H+ADB,4H+ADD,4H+REP
+                                                             1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:44:68:
+
+      +,          4H+STR,4H+DEF,4H+DEC,4H+PAT,4H+TIT,4H+ADB,4H+ADD,4H+REP
+                                                                    1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:45:19:
+
+      +,          4H+DEL,4H+COP,4H+XCO,4H+SKI,4H+GET,4H+XSK
+                   1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:45:26:
+
+      +,          4H+DEL,4H+COP,4H+XCO,4H+SKI,4H+GET,4H+XSK
+                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:45:33:
+
+      +,          4H+DEL,4H+COP,4H+XCO,4H+SKI,4H+GET,4H+XSK
+                                 1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:45:40:
+
+      +,          4H+DEL,4H+COP,4H+XCO,4H+SKI,4H+GET,4H+XSK
+                                        1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:45:47:
+
+      +,          4H+DEL,4H+COP,4H+XCO,4H+SKI,4H+GET,4H+XSK
+                                               1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedtex.f:45:54:
+
+      +,          4H+DEL,4H+COP,4H+XCO,4H+SKI,4H+GET,4H+XSK
+                                                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O yedriv.f
+gfortran -no-pie -c -O yedarr.f
+gfortran -no-pie -c -O yedxch.f
+gfortran -no-pie -c -O jedchk.f
+gfortran -no-pie -c -O jedtyp.f
+gfortran -no-pie -c -O yedkrk.f
+yedkrk.f:30:46:
+
+       DATA  MSEPS  /1HP,1HD,1HZ,1HT,1HI,1HC,1HN/
+                                              1
+Warning: Legacy Extension: Hollerith constant at (1)
+yedkrk.f:31:46:
+
+       DATA  MSEPS2 /1HS,1HR,1HF,1HX,1HY,1HL,1HN/
+                                              1
+Warning: Legacy Extension: Hollerith constant at (1)
+yedkrk.f:31:22:
+
+       DATA  MSEPS2 /1HS,1HR,1HF,1HX,1HY,1HL,1HN/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedkrk.f:31:26:
+
+       DATA  MSEPS2 /1HS,1HR,1HF,1HX,1HY,1HL,1HN/
+                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedkrk.f:31:30:
+
+       DATA  MSEPS2 /1HS,1HR,1HF,1HX,1HY,1HL,1HN/
+                              1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedkrk.f:31:34:
+
+       DATA  MSEPS2 /1HS,1HR,1HF,1HX,1HY,1HL,1HN/
+                                  1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedkrk.f:31:38:
+
+       DATA  MSEPS2 /1HS,1HR,1HF,1HX,1HY,1HL,1HN/
+                                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedkrk.f:31:42:
+
+       DATA  MSEPS2 /1HS,1HR,1HF,1HX,1HY,1HL,1HN/
+                                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedkrk.f:31:46:
+
+       DATA  MSEPS2 /1HS,1HR,1HF,1HX,1HY,1HL,1HN/
+                                              1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedkrk.f:30:22:
+
+       DATA  MSEPS  /1HP,1HD,1HZ,1HT,1HI,1HC,1HN/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedkrk.f:30:26:
+
+       DATA  MSEPS  /1HP,1HD,1HZ,1HT,1HI,1HC,1HN/
+                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedkrk.f:30:30:
+
+       DATA  MSEPS  /1HP,1HD,1HZ,1HT,1HI,1HC,1HN/
+                              1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedkrk.f:30:34:
+
+       DATA  MSEPS  /1HP,1HD,1HZ,1HT,1HI,1HC,1HN/
+                                  1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedkrk.f:30:38:
+
+       DATA  MSEPS  /1HP,1HD,1HZ,1HT,1HI,1HC,1HN/
+                                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedkrk.f:30:42:
+
+       DATA  MSEPS  /1HP,1HD,1HZ,1HT,1HI,1HC,1HN/
+                                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yedkrk.f:30:46:
+
+       DATA  MSEPS  /1HP,1HD,1HZ,1HT,1HI,1HC,1HN/
+                                              1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O yedmat.f
+gfortran -no-pie -c -O yixex.f
+yixex.f:51:49:
+
+       DATA         MMPAT/4HPAT ,1,1,3/,  MMDEC/4HDECK,2,1,3/            -A8M
+                                                 1
+Warning: Legacy Extension: Hollerith constant at (1)
+yixex.f:53:27:
+
+       DATA         MMSEQ/4HSEQ ,2,1,2/                                  -A8M
+                           1
+Warning: Legacy Extension: Hollerith constant at (1)
+yixex.f:61:56:
+
+       DATA         MSEQSP/4HQCAR  ,         4HQNOL   ,4HQEJE  /          A4
+                                                        1
+Warning: Legacy Extension: Hollerith constant at (1)
+yixex.f:62:56:
+
+       DATA         MSEQS2/4HD1    ,4HDL    ,4HIST    ,4HCT    /          A4
+                                                        1
+Warning: Legacy Extension: Hollerith constant at (1)
+yixex.f:63:35:
+
+       DATA         IFLGV /4H    ,4H IF /
+                                   1
+Warning: Legacy Extension: Hollerith constant at (1)
+yixex.f:79:32:
+
+    31 CALL AUXFIL (0,NVOLD(1),4HPAM )
+                                1
+Warning: Legacy Extension: Hollerith constant at (1)
+yixex.f:63:28:
+
+       DATA         IFLGV /4H    ,4H IF /
+                            1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yixex.f:63:35:
+
+       DATA         IFLGV /4H    ,4H IF /
+                                   1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yixex.f:62:28:
+
+       DATA         MSEQS2/4HD1    ,4HDL    ,4HIST    ,4HCT    /          A4
+                            1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yixex.f:62:37:
+
+       DATA         MSEQS2/4HD1    ,4HDL    ,4HIST    ,4HCT    /          A4
+                                     1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yixex.f:62:46:
+
+       DATA         MSEQS2/4HD1    ,4HDL    ,4HIST    ,4HCT    /          A4
+                                              1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yixex.f:62:56:
+
+       DATA         MSEQS2/4HD1    ,4HDL    ,4HIST    ,4HCT    /          A4
+                                                        1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yixex.f:61:28:
+
+       DATA         MSEQSP/4HQCAR  ,         4HQNOL   ,4HQEJE  /          A4
+                            1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yixex.f:61:46:
+
+       DATA         MSEQSP/4HQCAR  ,         4HQNOL   ,4HQEJE  /          A4
+                                              1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yixex.f:61:56:
+
+       DATA         MSEQSP/4HQCAR  ,         4HQNOL   ,4HQEJE  /          A4
+                                                        1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yixex.f:53:27:
+
+       DATA         MMSEQ/4HSEQ ,2,1,2/                                  -A8M
+                           1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yixex.f:51:49:
+
+       DATA         MMPAT/4HPAT ,1,1,3/,  MMDEC/4HDECK,2,1,3/            -A8M
+                                                 1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yixex.f:51:27:
+
+       DATA         MMPAT/4HPAT ,1,1,3/,  MMDEC/4HDECK,2,1,3/            -A8M
+                           1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O ylisex.f
+ylisex.f:49:29:
+
+       DATA  NSEQEJ /4HQEJE,4HCT  /
+                             1
+Warning: Legacy Extension: Hollerith constant at (1)
+ylisex.f:75:32:
+
+    21 CALL AUXFIL (0,NVOLD(1),4HPAM )
+                                1
+Warning: Legacy Extension: Hollerith constant at (1)
+ylisex.f:49:22:
+
+       DATA  NSEQEJ /4HQEJE,4HCT  /
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+ylisex.f:49:29:
+
+       DATA  NSEQEJ /4HQEJE,4HCT  /
+                             1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O ylispg.f
+gfortran -no-pie -c -O yserex.f
+yserex.f:92:22:
+
+       DATA  MMINDX /4HINDX,60,0,60/
+                      1
+Warning: Legacy Extension: Hollerith constant at (1)
+yserex.f:93:34:
+
+       DATA  MMTEXT /4HTEXT, 2,1,2H**/
+                                  1
+Warning: Legacy Extension: Hollerith constant at (1)
+yserex.f:94:22:
+
+       DATA  MMSPLI /4HSPLI, 2,1,1/
+                      1
+Warning: Legacy Extension: Hollerith constant at (1)
+yserex.f:95:42:
+
+       DATA  NNREPL /1H+,1H-,1H*,1H&,1H!,1H? /
+                                          1
+Warning: Legacy Extension: Hollerith constant at (1)
+yserex.f:220:20:
+
+   204 CALL UBLOW (5HIF OK,MPR(9),5)
+                    1
+Warning: Legacy Extension: Hollerith constant at (1)
+yserex.f:222:21:
+
+       CALL UBLOW  (6HBYPASS,MPR(16),6)
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+yserex.f:231:21:
+
+       CALL UBLOW  (5HSPLIT,MPR(15),5)
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+yserex.f:235:21:
+
+       CALL UBLOW  (3HFIX,MPR(23),3)
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+yserex.f:329:34:
+
+       CALL AUXFIL (324,NVNEW(1),5HCARDS)
+                                  1
+Warning: Legacy Extension: Hollerith constant at (1)
+yserex.f:341:32:
+
+       CALL AUXFIL (0,NVOLD(1),4HPAM )
+                                1
+Warning: Legacy Extension: Hollerith constant at (1)
+yserex.f:95:22:
+
+       DATA  NNREPL /1H+,1H-,1H*,1H&,1H!,1H? /
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yserex.f:95:26:
+
+       DATA  NNREPL /1H+,1H-,1H*,1H&,1H!,1H? /
+                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yserex.f:95:30:
+
+       DATA  NNREPL /1H+,1H-,1H*,1H&,1H!,1H? /
+                              1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yserex.f:95:34:
+
+       DATA  NNREPL /1H+,1H-,1H*,1H&,1H!,1H? /
+                                  1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yserex.f:95:38:
+
+       DATA  NNREPL /1H+,1H-,1H*,1H&,1H!,1H? /
+                                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yserex.f:95:42:
+
+       DATA  NNREPL /1H+,1H-,1H*,1H&,1H!,1H? /
+                                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yserex.f:94:22:
+
+       DATA  MMSPLI /4HSPLI, 2,1,1/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yserex.f:93:22:
+
+       DATA  MMTEXT /4HTEXT, 2,1,2H**/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yserex.f:93:34:
+
+       DATA  MMTEXT /4HTEXT, 2,1,2H**/
+                                  1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yserex.f:92:22:
+
+       DATA  MMINDX /4HINDX,60,0,60/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O ysfind.f
+gfortran -no-pie -c -O yserbf.f
+yserbf.f:38:22:
+
+       DATA  MMSBUF /4HSBUF,0,0,510/,  NW/0/, NALL/0/
+                      1
+Warning: Legacy Extension: Hollerith constant at (1)
+yserbf.f:38:22:
+
+       DATA  MMSBUF /4HSBUF,0,0,510/,  NW/0/, NALL/0/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O yshfex.f
+yshfex.f:60:40:
+
+       DATA  MNAMES /4HIND ,60,0,60,   4HKDS ,5,0,420/
+                                        1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshfex.f:61:59:
+
+       DATA  MTRANS /4HC   , 4H    /,  MOLD/4HOLD /, MNEW/4HNEW /
+                                                           1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshfex.f:67:21:
+
+       CALL YSHMAC (4HA4  ,33,'TAG,A4,-A5,A6,A8,A10,A5M,A6M,A8M.')
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshfex.f:68:21:
+
+       CALL YSHMAC (4HA5  ,33,'TAG,A5,A5M,-A4,A6,A8,A10,A6M,A8M.')
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshfex.f:69:21:
+
+       CALL YSHMAC (4HA6  ,33,'TAG,A6,A5M,A6M,-A4,A5,A8,A10,A8M.')
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshfex.f:70:21:
+
+       CALL YSHMAC (4HA8  ,33,'TAG,A8,A5M,A6M,A8M,-A4,A5,A6,A10.')
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshfex.f:71:21:
+
+       CALL YSHMAC (4HA10 ,33,'TAG,A10,A5M,A6M,A8M,-A4,A5,A6,A8.')
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshfex.f:73:21:
+
+       CALL YSHMAC (4HB32 ,40,'TAG,B32,-B36,B48,B60,B64,B36M,B48M,B60M.')
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshfex.f:74:21:
+
+       CALL YSHMAC (4HB36 ,40,'TAG,B36,B36M,-B32,B48,B60,B64,B48M,B60M.')
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshfex.f:75:21:
+
+       CALL YSHMAC (4HB48 ,40,'TAG,B48,B36M,B48M,-B32,B36,B60,B64,B60M.')
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshfex.f:76:21:
+
+       CALL YSHMAC (4HB60 ,40,'TAG,B60,B36M,B48M,B60M,-B32,B36,B48,B64.')
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshfex.f:77:21:
+
+       CALL YSHMAC (4HB64 ,40,'TAG,B64,B36M,B48M,B60M,-B32,B36,B48,B60.')
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshfex.f:79:21:
+
+       CALL YSHMAC (4HOCT ,13,'TAG,OCT,-HEX.')
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshfex.f:80:21:
+
+       CALL YSHMAC (4HHEX ,13,'TAG,HEX,-OCT.')
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshfex.f:81:21:
+
+       CALL YSHMAC (4HL20 ,13,'TAG,L20,-L30.')
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshfex.f:82:21:
+
+       CALL YSHMAC (4HL30 ,13,'TAG,L30,-L20.')
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshfex.f:84:21:
+
+       CALL YSHMAC (4HIBM ,37,'MAC,A4,B32,HEX,L30,+IBM,-UNI,PDP,CDC.')
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshfex.f:85:21:
+
+       CALL YSHMAC (4HUNI ,37,'MAC,A6,B36,OCT,L30,+UNI,-IBM,PDP,CDC.')
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshfex.f:86:21:
+
+       CALL YSHMAC (4HPDP ,37,'MAC,A5,B36,OCT,L30,+PDP,-IBM,UNI,CDC.')
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshfex.f:87:21:
+
+       CALL YSHMAC (4HCDC ,38,'MAC,A10,B60,OCT,L30,+CDC,-IBM,UNI,PDP.')
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshfex.f:88:21:
+
+       CALL YSHMAC (4HVAX ,36,'MAC,A4,B32,HEX,L30,-IBM,UNI,PDP,CDC.')
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshfex.f:89:20:
+
+       CALL YSHMAC(5HNORD ,36,'MAC,A4,B32,OCT,L30,-IBM,UNI,PDP,CDC.')
+                    1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshfex.f:61:59:
+
+       DATA  MTRANS /4HC   , 4H    /,  MOLD/4HOLD /, MNEW/4HNEW /
+                                                           1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yshfex.f:61:45:
+
+       DATA  MTRANS /4HC   , 4H    /,  MOLD/4HOLD /, MNEW/4HNEW /
+                                             1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yshfex.f:61:22:
+
+       DATA  MTRANS /4HC   , 4H    /,  MOLD/4HOLD /, MNEW/4HNEW /
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yshfex.f:61:30:
+
+       DATA  MTRANS /4HC   , 4H    /,  MOLD/4HOLD /, MNEW/4HNEW /
+                              1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yshfex.f:60:22:
+
+       DATA  MNAMES /4HIND ,60,0,60,   4HKDS ,5,0,420/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yshfex.f:60:40:
+
+       DATA  MNAMES /4HIND ,60,0,60,   4HKDS ,5,0,420/
+                                        1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O yshmac.f
+yshmac.f:30:40:
+
+       DATA         MNAMES /4HMAC ,1,1,2H** /
+                                        1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshmac.f:30:29:
+
+       DATA         MNAMES /4HMAC ,1,1,2H** /
+                             1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yshmac.f:30:40:
+
+       DATA         MNAMES /4HMAC ,1,1,2H** /
+                                        1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O yshanl.f
+yshanl.f:33:37:
+
+       DATA      MNAMES /4HTAG ,1,1,2H**/
+                                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshanl.f:34:42:
+
+       DATA      MSEPS  /1H-,1H$,1H+,1H,,1H./
+                                          1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshanl.f:35:38:
+
+       DATA      MID    /3HNO ,3HMAC,3HYES/
+                                      1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshanl.f:36:33:
+
+       DATA      MACTAG /4HMAC ,4HTAG /  ,  KSMAC /1/
+                                 1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshanl.f:36:26:
+
+       DATA      MACTAG /4HMAC ,4HTAG /  ,  KSMAC /1/
+                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yshanl.f:36:33:
+
+       DATA      MACTAG /4HMAC ,4HTAG /  ,  KSMAC /1/
+                                 1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yshanl.f:35:26:
+
+       DATA      MID    /3HNO ,3HMAC,3HYES/
+                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yshanl.f:35:32:
+
+       DATA      MID    /3HNO ,3HMAC,3HYES/
+                                1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yshanl.f:35:38:
+
+       DATA      MID    /3HNO ,3HMAC,3HYES/
+                                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yshanl.f:34:26:
+
+       DATA      MSEPS  /1H-,1H$,1H+,1H,,1H./
+                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yshanl.f:34:30:
+
+       DATA      MSEPS  /1H-,1H$,1H+,1H,,1H./
+                              1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yshanl.f:34:34:
+
+       DATA      MSEPS  /1H-,1H$,1H+,1H,,1H./
+                                  1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yshanl.f:34:38:
+
+       DATA      MSEPS  /1H-,1H$,1H+,1H,,1H./
+                                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yshanl.f:34:42:
+
+       DATA      MSEPS  /1H-,1H$,1H+,1H,,1H./
+                                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yshanl.f:33:26:
+
+       DATA      MNAMES /4HTAG ,1,1,2H**/
+                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yshanl.f:33:37:
+
+       DATA      MNAMES /4HTAG ,1,1,2H**/
+                                     1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O yshtag.f
+gfortran -no-pie -c -O yshval.f
+yshval.f:27:36:
+
+       DATA  MTERM  /4H,   ,4H-   ,4H+   /
+                                    1
+Warning: Legacy Extension: Hollerith constant at (1)
+yshval.f:27:22:
+
+       DATA  MTERM  /4H,   ,4H-   ,4H+   /
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yshval.f:27:29:
+
+       DATA  MTERM  /4H,   ,4H-   ,4H+   /
+                             1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+yshval.f:27:36:
+
+       DATA  MTERM  /4H,   ,4H-   ,4H+   /
+                                    1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O auxini.f
+auxini.f:44:30:
+
+       DATA  MMTITL / 4H*TIT,4HLE* /
+                              1
+Warning: Legacy Extension: Hollerith constant at (1)
+auxini.f:46:34:
+
+       DATA  MMSAVE /4HSVAR, 6,0,2H**, 20/
+                                  1
+Warning: Legacy Extension: Hollerith constant at (1)
+auxini.f:50:23:
+
+       DATA  IISET  / 4HSET  /
+                       1
+Warning: Legacy Extension: Hollerith constant at (1)
+auxini.f:125:20:
+
+       CALL UBLOW (7HOLD NEW,IQUEST(1),7)
+                    1
+Warning: Legacy Extension: Hollerith constant at (1)
+auxini.f:50:23:
+
+       DATA  IISET  / 4HSET  /
+                       1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+auxini.f:46:22:
+
+       DATA  MMSAVE /4HSVAR, 6,0,2H**, 20/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+auxini.f:46:34:
+
+       DATA  MMSAVE /4HSVAR, 6,0,2H**, 20/
+                                  1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+auxini.f:44:23:
+
+       DATA  MMTITL / 4H*TIT,4HLE* /
+                       1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+auxini.f:44:30:
+
+       DATA  MMTITL / 4H*TIT,4HLE* /
+                              1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O pload.f
+pload.f:55:35:
+
+      +,     4H+FOR,4H+SUS,4H+PAR,4H+WAR
+                                   1
+Warning: Legacy Extension: Hollerith constant at (1)
+pload.f:67:22:
+
+       DATA  MMEOD  /4H+EOD/
+                      1
+Warning: Legacy Extension: Hollerith constant at (1)
+pload.f:67:22:
+
+       DATA  MMEOD  /4H+EOD/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:52:14:
+
+      +,     4H+CDE,4H+SEQ,4H+SEL,4H+PAT,4H+DEC,4H+KEE,4H+DEF,4H+EOD
+              1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:52:21:
+
+      +,     4H+CDE,4H+SEQ,4H+SEL,4H+PAT,4H+DEC,4H+KEE,4H+DEF,4H+EOD
+                     1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:52:28:
+
+      +,     4H+CDE,4H+SEQ,4H+SEL,4H+PAT,4H+DEC,4H+KEE,4H+DEF,4H+EOD
+                            1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:52:35:
+
+      +,     4H+CDE,4H+SEQ,4H+SEL,4H+PAT,4H+DEC,4H+KEE,4H+DEF,4H+EOD
+                                   1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:52:42:
+
+      +,     4H+CDE,4H+SEQ,4H+SEL,4H+PAT,4H+DEC,4H+KEE,4H+DEF,4H+EOD
+                                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:52:49:
+
+      +,     4H+CDE,4H+SEQ,4H+SEL,4H+PAT,4H+DEC,4H+KEE,4H+DEF,4H+EOD
+                                                 1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:52:56:
+
+      +,     4H+CDE,4H+SEQ,4H+SEL,4H+PAT,4H+DEC,4H+KEE,4H+DEF,4H+EOD
+                                                        1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:52:63:
+
+      +,     4H+CDE,4H+SEQ,4H+SEL,4H+PAT,4H+DEC,4H+KEE,4H+DEF,4H+EOD
+                                                               1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:53:14:
+
+      +,     4H+DEL,4H+REP,4H+ADD,4H+ADB,4H+USE,4H+EXE,4H+LIS,4H+MIX
+              1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:53:21:
+
+      +,     4H+DEL,4H+REP,4H+ADD,4H+ADB,4H+USE,4H+EXE,4H+LIS,4H+MIX
+                     1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:53:28:
+
+      +,     4H+DEL,4H+REP,4H+ADD,4H+ADB,4H+USE,4H+EXE,4H+LIS,4H+MIX
+                            1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:53:35:
+
+      +,     4H+DEL,4H+REP,4H+ADD,4H+ADB,4H+USE,4H+EXE,4H+LIS,4H+MIX
+                                   1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:53:42:
+
+      +,     4H+DEL,4H+REP,4H+ADD,4H+ADB,4H+USE,4H+EXE,4H+LIS,4H+MIX
+                                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:53:49:
+
+      +,     4H+DEL,4H+REP,4H+ADD,4H+ADB,4H+USE,4H+EXE,4H+LIS,4H+MIX
+                                                 1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:53:56:
+
+      +,     4H+DEL,4H+REP,4H+ADD,4H+ADB,4H+USE,4H+EXE,4H+LIS,4H+MIX
+                                                        1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:53:63:
+
+      +,     4H+DEL,4H+REP,4H+ADD,4H+ADB,4H+USE,4H+EXE,4H+LIS,4H+MIX
+                                                               1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:54:14:
+
+      +,     4H+DIV,4H+IMI,4H+PAM,4H+QUI,4H+OPT,4H+ASM,4H+ONL,4H+TIT
+              1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:54:21:
+
+      +,     4H+DIV,4H+IMI,4H+PAM,4H+QUI,4H+OPT,4H+ASM,4H+ONL,4H+TIT
+                     1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:54:28:
+
+      +,     4H+DIV,4H+IMI,4H+PAM,4H+QUI,4H+OPT,4H+ASM,4H+ONL,4H+TIT
+                            1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:54:35:
+
+      +,     4H+DIV,4H+IMI,4H+PAM,4H+QUI,4H+OPT,4H+ASM,4H+ONL,4H+TIT
+                                   1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:54:42:
+
+      +,     4H+DIV,4H+IMI,4H+PAM,4H+QUI,4H+OPT,4H+ASM,4H+ONL,4H+TIT
+                                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:54:49:
+
+      +,     4H+DIV,4H+IMI,4H+PAM,4H+QUI,4H+OPT,4H+ASM,4H+ONL,4H+TIT
+                                                 1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:54:56:
+
+      +,     4H+DIV,4H+IMI,4H+PAM,4H+QUI,4H+OPT,4H+ASM,4H+ONL,4H+TIT
+                                                        1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:54:63:
+
+      +,     4H+DIV,4H+IMI,4H+PAM,4H+QUI,4H+OPT,4H+ASM,4H+ONL,4H+TIT
+                                                               1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:55:14:
+
+      +,     4H+FOR,4H+SUS,4H+PAR,4H+WAR
+              1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:55:21:
+
+      +,     4H+FOR,4H+SUS,4H+PAR,4H+WAR
+                     1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:55:28:
+
+      +,     4H+FOR,4H+SUS,4H+PAR,4H+WAR
+                            1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+pload.f:55:35:
+
+      +,     4H+FOR,4H+SUS,4H+PAR,4H+WAR
+                                   1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O cckrak.f
+cckrak.f:44:46:
+
+       DATA  MSEPS  /1HP,1HD,1HZ,1HT,1HI,1HC,1HN/
+                                              1
+Warning: Legacy Extension: Hollerith constant at (1)
+cckrak.f:45:46:
+
+       DATA  MSEPS2 /1HS,1HR,1HF,1HX,1HY,1HL,1HN/
+                                              1
+Warning: Legacy Extension: Hollerith constant at (1)
+cckrak.f:45:22:
+
+       DATA  MSEPS2 /1HS,1HR,1HF,1HX,1HY,1HL,1HN/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+cckrak.f:45:26:
+
+       DATA  MSEPS2 /1HS,1HR,1HF,1HX,1HY,1HL,1HN/
+                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+cckrak.f:45:30:
+
+       DATA  MSEPS2 /1HS,1HR,1HF,1HX,1HY,1HL,1HN/
+                              1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+cckrak.f:45:34:
+
+       DATA  MSEPS2 /1HS,1HR,1HF,1HX,1HY,1HL,1HN/
+                                  1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+cckrak.f:45:38:
+
+       DATA  MSEPS2 /1HS,1HR,1HF,1HX,1HY,1HL,1HN/
+                                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+cckrak.f:45:42:
+
+       DATA  MSEPS2 /1HS,1HR,1HF,1HX,1HY,1HL,1HN/
+                                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+cckrak.f:45:46:
+
+       DATA  MSEPS2 /1HS,1HR,1HF,1HX,1HY,1HL,1HN/
+                                              1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+cckrak.f:44:22:
+
+       DATA  MSEPS  /1HP,1HD,1HZ,1HT,1HI,1HC,1HN/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+cckrak.f:44:26:
+
+       DATA  MSEPS  /1HP,1HD,1HZ,1HT,1HI,1HC,1HN/
+                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+cckrak.f:44:30:
+
+       DATA  MSEPS  /1HP,1HD,1HZ,1HT,1HI,1HC,1HN/
+                              1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+cckrak.f:44:34:
+
+       DATA  MSEPS  /1HP,1HD,1HZ,1HT,1HI,1HC,1HN/
+                                  1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+cckrak.f:44:38:
+
+       DATA  MSEPS  /1HP,1HD,1HZ,1HT,1HI,1HC,1HN/
+                                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+cckrak.f:44:42:
+
+       DATA  MSEPS  /1HP,1HD,1HZ,1HT,1HI,1HC,1HN/
+                                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+cckrak.f:44:46:
+
+       DATA  MSEPS  /1HP,1HD,1HZ,1HT,1HI,1HC,1HN/
+                                              1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O pilect.f
+gfortran -no-pie -c -O pileup.f
+gfortran -no-pie -c -O popin.f
+gfortran -no-pie -c -O poprew.f
+gfortran -no-pie -c -O popoff.f
+gfortran -no-pie -c -O prtitl.f
+gfortran -no-pie -c -O notitl.f
+gfortran -no-pie -c -O auxfil.f
+auxfil.f:25:30:
+
+       DATA  MUNIT  /4H RCR, 4H CAR/
+                              1
+Warning: Legacy Extension: Hollerith constant at (1)
+auxfil.f:25:22:
+
+       DATA  MUNIT  /4H RCR, 4H CAR/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+auxfil.f:25:30:
+
+       DATA  MUNIT  /4H RCR, 4H CAR/
+                              1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O crebuf.f
+crebuf.f:36:22:
+
+       DATA  MMCCIX /4HCCIX,0,0,100/
+                      1
+Warning: Legacy Extension: Hollerith constant at (1)
+crebuf.f:37:33:
+
+       DATA  MMBUF  /4HBUF ,4,0,2H**,16,512/
+                                 1
+Warning: Legacy Extension: Hollerith constant at (1)
+crebuf.f:37:22:
+
+       DATA  MMBUF  /4HBUF ,4,0,2H**,16,512/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+crebuf.f:37:33:
+
+       DATA  MMBUF  /4HBUF ,4,0,2H**,16,512/
+                                 1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+crebuf.f:36:22:
+
+       DATA  MMCCIX /4HCCIX,0,0,100/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O inchch.f
+inchch.f:29:46:
+
+       DATA  MCHCH  /1H+,1H-,1H*,1H&,1H!,1H?,1HC/
+                                              1
+Warning: Legacy Extension: Hollerith constant at (1)
+inchch.f:29:22:
+
+       DATA  MCHCH  /1H+,1H-,1H*,1H&,1H!,1H?,1HC/
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+inchch.f:29:26:
+
+       DATA  MCHCH  /1H+,1H-,1H*,1H&,1H!,1H?,1HC/
+                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+inchch.f:29:30:
+
+       DATA  MCHCH  /1H+,1H-,1H*,1H&,1H!,1H?,1HC/
+                              1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+inchch.f:29:34:
+
+       DATA  MCHCH  /1H+,1H-,1H*,1H&,1H!,1H?,1HC/
+                                  1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+inchch.f:29:38:
+
+       DATA  MCHCH  /1H+,1H-,1H*,1H&,1H!,1H?,1HC/
+                                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+inchch.f:29:42:
+
+       DATA  MCHCH  /1H+,1H-,1H*,1H&,1H!,1H?,1HC/
+                                          1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+inchch.f:29:46:
+
+       DATA  MCHCH  /1H+,1H-,1H*,1H&,1H!,1H?,1HC/
+                                              1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O jartpx.f
+gfortran -no-pie -c -O loglv.f
+gfortran -no-pie -c -O setid.f
+gfortran -no-pie -c -O cctoup.f
+gfortran -no-pie -c -O iofile.f
+gfortran -no-pie -c -O iofilx.f
+iofilx.f:10:23:
+
+       DATA  JEXPAM / 4HPAM  /
+                       1
+Warning: Legacy Extension: Hollerith constant at (1)
+iofilx.f:11:23:
+
+       DATA  JEXCAR / 4HCAR  /
+                       1
+Warning: Legacy Extension: Hollerith constant at (1)
+iofilx.f:11:23:
+
+       DATA  JEXCAR / 4HCAR  /
+                       1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+iofilx.f:10:23:
+
+       DATA  JEXPAM / 4HPAM  /
+                       1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O iotype.f
+gfortran -no-pie -c -O jartyp.f
+gfortran -no-pie -c -O kdngo.f
+gfortran -no-pie -c -O kdnrew.f
+gfortran -no-pie -c -O kdnextvx.f
+gfortran -no-pie -c -O kdstep.f
+gfortran -no-pie -c -O kdcopy.f
+gfortran -no-pie -c -O kdfill.f
+gfortran -no-pie -c -O liftbk.f
+gfortran -no-pie -c -O namefl.f
+gfortran -no-pie -c -O nomem.f
+gfortran -no-pie -c -O qend.f
+gfortran -no-pie -c -O qabend.f
+gfortran -no-pie -c -O rqtell.f
+gfortran -no-pie -c -O pabend.f
+gfortran -no-pie -c -O paberr.f
+gfortran -no-pie -c -O setnum.f
+gfortran -no-pie -c -O setopt.f
+gfortran -no-pie -c -O qfatam.f
+qfatam.f:16:22:
+
+       DATA  INIT   /4HINIT /
+                      1
+Warning: Legacy Extension: Hollerith constant at (1)
+qfatam.f:16:22:
+
+       DATA  INIT   /4HINIT /
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O qfatal.f
+qfatal.f:11:22:
+
+       DATA  INIT   /4HINIT /
+                      1
+Warning: Legacy Extension: Hollerith constant at (1)
+qfatal.f:11:22:
+
+       DATA  INIT   /4HINIT /
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O qpostm.f
+qpostm.f:53:21:
+
+       CALL DQSNAP (6HQPOSTM,DUMPC)
+                     1
+Warning: Legacy Extension: Hollerith constant at (1)
+gfortran -no-pie -c -O mqinit.f
+mqinit.f:47:41:
+
+       DATA  IMACH  /32,4,108,110,0,132,1H ,3,10,7,4,8,15,6,5,63/
+                                         1
+Warning: Legacy Extension: Hollerith constant at (1)
+mqinit.f:59:38:
+
+       DATA  LETSET /4HXPRN, 4HXSET, 4HSET /
+                                      1
+Warning: Legacy Extension: Hollerith constant at (1)
+mqinit.f:60:22:
+
+       DATA  INIT   /4HINIT /
+                      1
+Warning: Legacy Extension: Hollerith constant at (1)
+mqinit.f:67:20:
+
+       CALL UBLOW (4H'+  , IQAPO, 2)
+                    1
+Warning: Legacy Extension: Hollerith constant at (1)
+mqinit.f:60:22:
+
+       DATA  INIT   /4HINIT /
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+mqinit.f:59:22:
+
+       DATA  LETSET /4HXPRN, 4HXSET, 4HSET /
+                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+mqinit.f:59:30:
+
+       DATA  LETSET /4HXPRN, 4HXSET, 4HSET /
+                              1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+mqinit.f:59:38:
+
+       DATA  LETSET /4HXPRN, 4HXSET, 4HSET /
+                                      1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+mqinit.f:47:41:
+
+       DATA  IMACH  /32,4,108,110,0,132,1H ,3,10,7,4,8,15,6,5,63/
+                                         1
+Warning: Extension: Conversion from HOLLERITH to INTEGER(4) at (1)
+gfortran -no-pie -c -O mqend.f
+gfortran -no-pie -c -O mqgarb.f
+gfortran -no-pie -c -O mqmove.f
+gfortran -no-pie -c -O mqrelc.f
+gfortran -no-pie -c -O mqtabl.f
+gfortran -no-pie -c -O qsorth.f
+gfortran -no-pie -c -O qsorvh.f
+gfortran -no-pie -c -O iqbcd.f
+gfortran -no-pie -c -O iqlocf.f
+gfortran -no-pie -c -O kqlast.f
+gfortran -no-pie -c -O lqfind.f
+gfortran -no-pie -c -O lqlong.f
+gfortran -no-pie -c -O lqlocf.f
+gfortran -no-pie -c -O qpage.f
+gfortran -no-pie -c -O qshunt.f
+gfortran -no-pie -c -O qsort.f
+gfortran -no-pie -c -O qsorti.f
+gfortran -no-pie -c -O qsorv.f
+gfortran -no-pie -c -O qsorvi.f
+gfortran -no-pie -c -O qtopsy.f
+gfortran -no-pie -c -O qtouch.f
+qtouch.f:38:26:
+
+       CALL UOPT (OPTION,3HZSH,IQTVAL,3)
+                          1
+Warning: Legacy Extension: Hollerith constant at (1)
+gfortran -no-pie -c -O qtchid.f
+qtchid.f:39:26:
+
+       CALL UOPT (OPTION,4HZSH-,IQTVAL,4)
+                          1
+Warning: Legacy Extension: Hollerith constant at (1)
+gfortran -no-pie -c -O qverif.f
+gfortran -no-pie -c -O qblow.f
+gfortran -no-pie -c -O qlump.f
+gfortran -no-pie -c -O qname.f
+gfortran -no-pie -c -O qlumpr.f
+gfortran -no-pie -c -O qblowx.f
+gfortran -no-pie -c -O qnamex.f
+gfortran -no-pie -c -O iucomh.f
+gfortran: error: iucomh.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O ublow.f
+gfortran: error: ublow.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O ubunch.f
+gfortran: error: ubunch.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O vxinvb.f
+gfortran: error: vxinvb.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O vxinvc.f
+gfortran: error: vxinvc.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O xinb.f
+gfortran: error: xinb.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O xinbs.f
+gfortran: error: xinbs.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gcc -c -O abend.c
+gcc: error: abend.c: No such file or directory
+gcc: fatal error: no input files
+compilation terminated.
+gcc -c -O datime.c
+gcc: error: datime.c: No such file or directory
+gcc: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O getenvf.f
+gcc -c -O geteni.c
+gcc: error: geteni.c: No such file or directory
+gcc: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O getwdf.f
+gcc -c -O getwdi.c
+gcc: error: getwdi.c: No such file or directory
+gcc: fatal error: no input files
+compilation terminated.
+gcc -c -O intrac.c
+gcc: error: intrac.c: No such file or directory
+gcc: fatal error: no input files
+compilation terminated.
+gcc -c -O locb.c
+gcc: error: locb.c: No such file or directory
+gcc: fatal error: no input files
+compilation terminated.
+gcc -c -O locf.c
+gcc: error: locf.c: No such file or directory
+gcc: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O renamef.f
+gcc -c -O renami.c
+gcc: error: renami.c: No such file or directory
+gcc: fatal error: no input files
+compilation terminated.
+gcc -c -O tminit.c
+gcc: error: tminit.c: No such file or directory
+gcc: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O tmpro.f
+gcc -c -O tmproi.c
+gcc: error: tmproi.c: No such file or directory
+gcc: fatal error: no input files
+compilation terminated.
+gcc -c -O tmread.c
+gcc: error: tmread.c: No such file or directory
+gcc: fatal error: no input files
+compilation terminated.
+gcc -c -O fchput.c
+gcc: error: fchput.c: No such file or directory
+gcc: fatal error: no input files
+compilation terminated.
+gcc -c -O fchtak.c
+gcc: error: fchtak.c: No such file or directory
+gcc: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O xinbf.f
+gfortran: error: xinbf.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O xincf.f
+gfortran: error: xincf.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O xoutb.f
+gfortran: error: xoutb.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O xoutbf.f
+gfortran: error: xoutbf.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O xoutbs.f
+gfortran: error: xoutbs.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O xoutcf.f
+gfortran: error: xoutcf.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O cbyt.f
+gfortran: error: cbyt.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O cfill.f
+gfortran: error: cfill.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O cleft.f
+gfortran: error: cleft.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O cright.f
+gfortran -no-pie -c -O cltou.f
+gfortran: error: cltou.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O cutol.f
+gfortran: error: cutol.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O csetdi.f
+gfortran -no-pie -c -O csethi.f
+gfortran -no-pie -c -O csqmbl.f
+gfortran -no-pie -c -O ctrans.f
+gfortran: error: ctrans.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O icdeci.f
+gfortran -no-pie -c -O icfind.f
+gfortran -no-pie -c -O icfmul.f
+gfortran -no-pie -c -O icfila.f
+gfortran -no-pie -c -O icfnbl.f
+gfortran -no-pie -c -O ichexi.f
+gfortran -no-pie -c -O icloc.f
+gfortran -no-pie -c -O icnext.f
+gfortran -no-pie -c -O ictype.f
+gfortran -no-pie -c -O iucola.f
+gfortran: error: iucola.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O iucomp.f
+gfortran: error: iucomp.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O iufila.f
+gfortran: error: iufila.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O iufind.f
+gfortran: error: iufind.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O iufnbl.f
+gfortran: error: iufnbl.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O iuforw.f
+gfortran: error: iuforw.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O iulast.f
+gfortran: error: iulast.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O iunext.f
+gfortran: error: iunext.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O iusame.f
+gfortran: error: iusame.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O jbit.f
+gfortran: error: jbit.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O jbyt.f
+gfortran: error: jbyt.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O jbytet.f
+gfortran: error: jbytet.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O jbytor.f
+gfortran: error: jbytor.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O jrsbyt.f
+gfortran: error: jrsbyt.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O lnblnk.f
+gfortran: error: lnblnk.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O mbytet.f
+gfortran: error: mbytet.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O mbytor.f
+gfortran: error: mbytor.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O mcbyt.f
+gfortran: error: mcbyt.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O msbit.f
+gfortran: error: msbit.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O msbit0.f
+gfortran: error: msbit0.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O msbit1.f
+gfortran: error: msbit1.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O msbyt.f
+gfortran: error: msbyt.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O pkbyt.f
+gfortran -no-pie -c -O pkchar.f
+gfortran -no-pie -c -O sbit.f
+gfortran: error: sbit.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O sbit0.f
+gfortran: error: sbit0.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O sbit1.f
+gfortran: error: sbit1.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O sbyt.f
+gfortran: error: sbyt.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O sbytor.f
+gfortran: error: sbytor.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O traceq.f
+gfortran -no-pie -c -O ublank.f
+gfortran: error: ublank.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O ucopiv.f
+gfortran: error: ucopiv.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O ucopy.f
+gfortran: error: ucopy.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O ucopy2.f
+gfortran: error: ucopy2.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O uctoh1.f
+gfortran: error: uctoh1.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O uctoh.f
+gfortran: error: uctoh.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O uh1toc.f
+gfortran: error: uh1toc.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O uhtoc.f
+gfortran: error: uhtoc.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O uleft.f
+gfortran: error: uleft.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O uopt.f
+gfortran: error: uopt.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O upkbyt.f
+gfortran: error: upkbyt.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O upkch.f
+gfortran: error: upkch.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O uset.f
+gfortran: error: uset.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O utrans.f
+gfortran: error: utrans.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O vblank.f
+gfortran: error: vblank.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O vfill.f
+gfortran: error: vfill.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O vzero.f
+gfortran: error: vzero.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gfortran -no-pie -c -O vizpri.f
+gfortran: error: vizpri.f: No such file or directory
+gfortran: fatal error: no input files
+compilation terminated.
+gcc -c -O ishft.c
+gcc: error: ishft.c: No such file or directory
+gcc: fatal error: no input files
+compilation terminated.
+
+mv ypatch.o ../ypatch.o
+mv ytobcd.o ../ytobcd.o
+mv ytobin.o ../ytobin.o
+mv ytocet.o ../ytocet.o
+mv yfrcet.o ../yfrcet.o
+mv ycompa.o ../ycompa.o
+mv yedit.o ../yedit.o
+mv yindex.o ../yindex.o
+mv ylist.o ../ylist.o
+mv ysearc.o ../ysearc.o
+mv yshift.o ../yshift.o
+
+ar rc ../libp4lib.a *.o
+rm *.o
+
+cd ../
+ranlib libp4lib.a
+
+step14:
+echo ' -----------   ---->  Make the new Patchy executable files'
+ -----------   ---->  Make the new Patchy executable files
+set CLD = 'gfortran -no-pie'
+
+$CLD -o ypatchy ypatch.o libp4lib.a $KERNLIB
+$CLD -o ytobcd ytobcd.o libp4lib.a $KERNLIB
+$CLD -o ytobin ytobin.o libp4lib.a $KERNLIB
+$CLD -o ytoceta ytocet.o libp4lib.a $KERNLIB
+$CLD -o yfrceta yfrcet.o libp4lib.a $KERNLIB
+$CLD -o ycompar ycompa.o libp4lib.a $KERNLIB
+$CLD -o yedit yedit.o libp4lib.a $KERNLIB
+$CLD -o yindex yindex.o libp4lib.a $KERNLIB
+$CLD -o ylist ylist.o libp4lib.a $KERNLIB
+$CLD -o ysearch ysearc.o libp4lib.a $KERNLIB
+$CLD -o yshift yshift.o libp4lib.a $KERNLIB
+
+chmod a+x ypatchy
+chmod a+x ytobcd
+chmod a+x ytobin
+chmod a+x ytoceta
+chmod a+x yfrceta
+chmod a+x ycompar
+chmod a+x yedit
+chmod a+x yindex
+chmod a+x ylist
+chmod a+x ysearch
+chmod a+x yshift
+
+if ( $mode_xqt > 0 ) goto step16
+step15:
+echo ' -----------   ---->  Read new Patchy PAM from the CETA file'
+ -----------   ---->  Read new Patchy PAM from the CETA file
+
+
+
+
+yfrceta << \\
+
+ YFRCETA  executing with Files / Options
+
+   1  CETA   11    p4inceta
+   2  PAM    21   =p4pam.pam
+      OPT         AP
+   4  READ    5   TTY
+   5  PRINT   6   TTY
+
+ VERSION  PATCHY  4.15 /1  911211 12.02           .RJP, TODAY:  201007  1549
+
+                    OPTIONS A..............P.R............
+
+                    OPTIONS A................R............
+
+
+          LEV=1 - +PAM, N=4,4.   
+
+ RESUME 'CETA'
+
+                    Ready CETA conversion, set Init-level to 2
+
+ START SECTION   1
+
+ SKIP  SECTION         --- #!/bin/csh  -v
+
+ START SECTION   2
+
+ SKIP  SECTION         --- LNX       Cradle 
+
+ START SECTION   3
+
+ SKIP  SECTION         --- CDECK  ID>, FCASPLIT.
+
+ START SECTION   4
+
+ SKIP  SECTION         --- CDECK  ID>, YPATCH.
+
+ START SECTION   5
+
+ RESUME 'PAM '
+
+     P=*TITLE*     0 + --- PATCHY  4.15 /1  911211 12.02           Composed for  LNX                       
+
+     P=ALLPX*      1 + D=
+     P=CORRECT     3 + D=
+     P=ALLX*       4 + D=
+     P=PATCHY*     6 + D=
+     P=YTOBCD*     8 + D=
+     P=YTOBIN*    10 + D=
+     P=YTOCETA*   12 + D=
+     P=YFRCETA*   14 + D=
+     P=YCOMPAR*   16 + D=
+     P=YEDIT*     18 + D=
+     P=YINDEX*    20 + D=
+     P=YLIST*     22 + D=
+     P=YSEARCH*   24 + D=
+     P=YSHIFT*    26 + D=
+     P=CERNFE*    28 + D=
+     P=MNOSBE*    30 + D=
+     P=MNOS*      32 + D=
+     P=MCYBX      34 + D=
+     P=MCDCV*     36 + D=
+     P=MCDC76*    38 + D=
+     P=MCDCX      40 + D=
+     P=MALT*      44 + D=
+     P=MAPO10*    46 + D=
+     P=MAPO*      48 + D=
+     P=MCRAY*     50 + D=
+     P=MCRU*      53 + D=
+     P=MCSE*      55 + D=
+     P=MCVX*      58 + D=
+     P=MCVY*      60 + D=
+     P=MDGE*      62 + D=
+     P=MHPX*      65 + D=
+     P=MIBM*      67 + D=
+     P=MIBX*      70 + D=
+     P=MIRT*      72 + D=
+     P=MLNX*      74 + D=
+     P=MND3*      76 + D=
+     P=MND2*      78 + D=
+     P=MPDP*      80 + D=
+     P=MSGI*      83 + D=
+     P=MSUN*      85 + D=
+     P=MUNO*      87 + D=
+     P=MVAX*      90 + D=
+     P=MVMI*      92 + D=
+     P=A4         94 + D=
+     P=A5         96 + D=
+     P=A6         98 + D=
+     P=A8        100 + D=
+     P=A10       102 + D=
+     P=NOTA8M    104 + D=
+     P=HOLLAPO   105 + D=
+     P=DOMQAUGM  106 + D=
+     P=ASCILOW   107 + D=
+     P=ASCIINT   109 + D=
+     P=EBCDINT   111 + D=
+     P=LUNPREM   113 + D=
+     P=FORCELOA  115 + D=
+     P=IOXPACK   116 + D=
+     P=IOFORTR   117 + D=
+     P=IOVPACK   118 + D=
+     P=PCDE      122 + D=
+     P=*ALT      128 + D=
+     P=*APO      130 + D=
+     P=*CDCV     132 + D=
+     P=*FTN      134 + D=
+     P=*CRU      136 + D=
+     P=*CRAY     138 + D=
+     P=*CVX      140 + D=
+     P=*DGE      142 + D=
+     P=*HPX      144 + D=
+     P=*IBMVS    146 + D=
+     P=*IBMSI    148 + D=
+     P=*IBM4     150 + D=
+     P=*IBM      152 + D=
+     P=*IBX      154 + D=
+     P=*IRT      156 + D=
+     P=*LNX      158 + D=
+     P=*NORD3    160 + D=
+     P=*PDP10    162 + D=
+     P=*SGI      164 + D=
+     P=*SUN      166 + D=
+     P=*UNIVAC   168 + D=
+     P=*UNO      170 + D=
+     P=*VAX      172 + D=
+     P=*VMI      174 + D=
+     P=QCDE      176 + D=
+     P=EXPLNX    184 + D=
+     P=EXPVMI    186 + D=
+     P=INSHELL   188 + D=
+     P=MAINUIX   192 + D=
+     P=FLDIALG   205 + D=
+     P=QABEND    212 + D=
+     P=PINIT     215 + D=
+     P=PEND      218 + D=
+     P=RUN       220 + D=
+     P=ACTION    231 + D=
+     P=ARRIVE    239 + D=
+     P=DEPART    243 + D=
+     P=PUTIL     252 + D=
+     P=YTOBCD    262 + D=
+     P=YTOBIN    264 + D=
+     P=YTOCETA   266 + D=
+     P=YFRCETA   271 + D=
+     P=YCOMPAR   277 + D=
+     P=YEDIT     279 + D=
+     P=YINDEX    288 + D=
+     P=YLIST     290 + D=
+     P=YSEARCH   293 + D=
+     P=YSHIFT    297 + D=
+     P=AUXINI    303 + D=
+     P=PLOAD     305 + D=
+     P=CCKRAK    307 + D=
+     P=PILECT    309 + D=
+     P=PILEUP    311 + D=
+     P=POPIN     313 + D=
+     P=POPOFF    315 + D=
+     P=SERVAUX   320 + D=
+     P=SERVICE   327 + D=
+     P=PAMEND    352 + D=
+                                     18726 CARDS READ.
+
+ -----------------------------------------------------
+
+ START SECTION   6
+
+ HOLD   'PAM '   AFTER FILE  1  WITH   532 RCRDS,   532 TOTAL.
+
+     P=*TITLE*   400 + --- HYDRA                                                                           
+
+     P=QMALT     401 + D=
+     P=QMAPO     403 + D=
+     P=QMCDCV    405 + D=
+     P=QMCDC     407 + D=
+     P=QMCRY     409 + D=
+     P=QMCVX     411 + D=
+     P=QMDGE     413 + D=
+     P=QMHPX     415 + D=
+     P=QMIBM     417 + D=
+     P=QMIBX     419 + D=
+     P=QMIRT     421 + D=
+     P=QMLNX     423 + D=
+     P=QMND3     425 + D=
+     P=QMPDP     427 + D=
+     P=QMSGI     430 + D=
+     P=QMSUN     432 + D=
+     P=QMUNI     434 + D=
+     P=QMUNO     436 + D=
+     P=QMVAX     438 + D=
+     P=QMVMI     440 + D=
+     P=QMALL     442 + D=
+     P=QIOV      444 + D=
+     P=QIOX      445 + D=
+     P=QDEBUG    446 + D=
+     P=QTELETY   448 + D=
+     P=QEND      449 + D=
+     P=MQ        453 + D=
+     P=QUTYALT   462 + D=
+     P=QUTYAPO   470 + D=
+     P=QUTYCDC   478 + D=
+     P=QUTYCRY   481 + D=
+     P=QUTYCVX   485 + D=
+     P=QUTYHPX   493 + D=
+     P=QUTYIBM   499 + D=
+     P=QUTYIRT   505 + D=
+     P=QUTYND3   511 + D=
+     P=QUTYPDP   512 + D=
+     P=QUTYSGI   518 + D=
+     P=QUTYSUN   524 + D=
+     P=QUTYUNI   532 + D=
+     P=QUTYUNO   534 + D=
+     P=QUTYVAX   536 + D=
+     P=QUTIL     539 + D=
+     P=QPAMEND   566 + D=
+                                      4620 CARDS READ.
+
+ -----------------------------------------------------
+
+ START SECTION   7
+
+ HOLD   'PAM '   AFTER FILE  2  WITH   190 RCRDS,   722 TOTAL.
+
+     P=*TITLE*   600 + --- KERNLNX                                                                         
+
+     P=KERNLNX   601 + D=
+     P=*KLNX     603 + D=
+     P=QMLNX     605 + D=
+     P=LNXPROGS  607 + D=
+     P=LNXGS     609 + D=
+     P=PAMEND    633 + D=
+                                      1069 CARDS READ.
+
+ -----------------------------------------------------
+
+ START SECTION   8
+
+ HOLD   'PAM '   AFTER FILE  3  WITH    44 RCRDS,   766 TOTAL.
+
+     P=*TITLE*   700 + --- KERNFOR                                                                         
+
+     P=KERNFOR   701 + D=
+     P=QMNNB32   703 + D=
+     P=QMALT     705 + D=
+     P=QMAMX     707 + D=
+     P=QMAPO     709 + D=
+     P=QMCDCV    711 + D=
+     P=QMCDC     713 + D=
+     P=QMCRY     715 + D=
+     P=QMCVX     717 + D=
+     P=QMCVY     719 + D=
+     P=QMDGE     721 + D=
+     P=QMHPX     723 + D=
+     P=QMIBM     725 + D=
+     P=QMIBX     727 + D=
+     P=QMIRT     729 + D=
+     P=QMLNX     731 + D=
+     P=QMMPW     733 + D=
+     P=QMND3     735 + D=
+     P=QMPDP     737 + D=
+     P=QMSGI     739 + D=
+     P=QMSUN     741 + D=
+     P=QMTMO     743 + D=
+     P=QMUNO     745 + D=
+     P=QMUNI     747 + D=
+     P=QMVAX     749 + D=
+     P=QMVMI     751 + D=
+     P=PROJSHIF  753 + D=
+     P=QDEFAULT  754 + D=
+     P=Q$BITSEQ  756 + D=
+     P=UTYGEN    757 + D=
+     P=CCGEN     759 + D=
+     P=CCGENU    776 + D=
+     P=XVECT     779 + D=
+     P=TCGEN     788 + D=
+     P=PAMEND    863 + D=
+                                      5104 CARDS READ.
+
+ -----------------------------------------------------
+
+          LEV=3 - +QUIT. 
+
+ HOLD   'CETA'   AFTER FILE  1  WITH   439 RCRDS,   439 TOTAL.
+ REWIND 'PAM '   AFTER FILE  4  WITH   201 RCRDS,   967 TOTAL.
+
+step16:
+echo ' -----------   ---->  First run of new YPATCHY, repeat generation'
+ -----------   ---->  First run of new YPATCHY, repeat generation
+
+
+
+
+
+
+
+cd p4sub
+
+../ypatchy << \\
+
+ For each Stream indicated, give File/Option as parameter in
+ 1-to-1 correspondance.
+
+ Parameters must be separated by 1 or more blanks,
+ except: multiple - do not need imbedded blanks.
+
+ Special parameter values :
+   - or & : do not open this stream / option string void,
+            except READ : TTY/TTP if &, file name.cra if -
+                   PRNT : TTY if &,     file +y.lis   if -
+ . or .go : use - for this and all remaining streams,
+ : or :go : use & for this and all remaining streams,
+      TTY : use Terminal for this stream (only for READ+PRNT),
+      TTP : use TTY with prompting (only for READ),
+      EOF : void input (only for READ),
+     HELP : as you guessed.
+
+ Normal parameters :
+  File:  DIR/FN.EXT  path name; DIR/, .EXT  may be omitted,
+                     a default extension is added to the
+                     file name, unless it contains a dot
+                     or terminates with !
+    [:] +DIR/FN.EXT  open output file for Append
+    [:] =DIR/FN.EXT  open output file for Over-write
+    [:] *DIR/FN.EXT   = /cern/pro/pam/DIR/FN.EXT  public files
+    [:] ~DIR/FN.EXT   = $HOME/DIR/FN.EXT  relative
+    [:] (X)/FN.EXT    = $X/FN.EXT   env. variable X
+    [:]  LNAME!      Link name, no default extension added
+     :   this prefix prevents conversion to lower case
+
+     FN = n or n+  (n is digit 1 to 9) : use file-name of
+                   stream n without/with directory part
+
+ OPT/CCH: string of max. 8 characters; if the string needs
+          to start with  - or &  it should be enclosed by $ signs
+
+ You may give 1 or several parameters on a line, the machine
+ will keep asking until its list is satisfied.
+ After that, you type GO to start the run and open the files.
+ If you type anything else  ABEND  occurs.
+
+
+ YPATCHY  executing with Files / Options
+
+   1  PAM    11    ../p4pam.pam
+   2  ASM    21   =asm.fca
+   3  READ    2    ../p4crad.cra
+   4  PRINT   6   TTY
+   5  ASMA   22   -
+   6  ASMD   23   -
+   7  ASM2   31   =asm2.f
+   8  ASMA2  32   -    ...
+
+ VERSION  PATCHY  4.15 /1  911211 12.02           .RJP, TODAY:  201007  1549
+
+                    OPTIONS ..C..F...........R............
+
+
+    0 *         ================================================== P=CRA*     D=          1 ============================
+
+        1 - LNX       Cradle    
+        2 - YPATCHY cradle for export ASM generation    
+        3 -     
+        4 -       C/C meaning :  ? and !  card active on the sending computer   
+        5 -                      ? and *  card active on the receiving computer 
+        6 -     
+        7 + +ASM, 23, 33, T=BY.                                                             
+        8 - !ASM, 33.   
+        9 - !ASM, 23.   
+       10 + +ASM, 31.                                                                       
+       11 + +ASM, 24, LUN=21, R=! ./*DECK ID>, !. */                                        
+       12 + +ASM, 22, LUN=21, R=! .;DECK  ID>, !.                                           
+       13 + +ASM, 21, R=!         .CDECK  ID>, !.                                           
+       14 - !USE, INSHELL.  
+       15 - !USE, EXPLNX, D=LNXD, T=DIVERT. 
+       16 + +USE, UTYGEN, D=FCASPLIT, T=DIV.                                                
+       17 -     
+       18 + +EXE.                                                                           
+       19 + +LIST, CRA*, T=ONLY.                                                            
+       20 + +PARAM, LINES, N=110.                                                           
+       21 -     
+       22 - ----  select control options    
+       23 -     
+       24 -     
+       25 - ----  set control sequences 
+       26 -     
+0      27 + +KEEP, SPACEPAT.            dynamic store for YPATCHY                           
+       28 .      +,            ISPACE(160000),LAST  
+0      29 + +KEEP, SPACEAUX.            dynamic store for Auxiliaries                       
+       30 .      +,            LOCALS(40),ISPACE(80000),LAST    
+0      31 + +KEEP, MQINIT5.    for D=MQINIT in P=MQ                                         
+       32 .       DATA  IMACH  /32,4,108,110,0,132,1H ,3,10,7,4,8,15,6,5,63/    
+       33 .       DATA  IUNIT  /2,3,4,5,6/  
+       34 . C   
+       35 . C     NQLNOR = 108 normal number of lines per page  
+       36 . C     NQLMAX = 110 maximum number of lines per page 
+       37 . C     NQLPTH = 0   number of lines taken by the page-throw  
+       38 . C   
+       39 . C     IQREAD = 2   LUN for 'CARD READER'    
+       40 . C     IQPRNT = 3   LUN for 'LINE PRINTER'   
+       41 . C     IQTTIN = 5   LUN for TERMINAL INPUT   
+       42 . C     IQTYPE = 6   LUN for TERMINAL OUTPUT  
+0      43 + +KEEP, YLISTPP,    P=YLIST.                                                     
+       44 .       DATA  LPPAGE / 56, 62, 84, 110 /  
+       45 + +SELF.                                                                          
+       46 -           Page-sizes in YLIST selected by options  0, 1, 2, or 3    
+       47 -           will set   NQLMAX = LPPAGE(J+1)   
+       48 -                      NQLNOR = NQLMAX    
+       49 -                      NQLPTH = 0 
+       50 -           if option given, else defaults operate    
+       51 -     
+0      52 + +KEEP, PAMPUBLIC.                                                               
+       53 . C-----------  Directory for Public PAM Files    
+       54 .       CHARACTER    MPUBLI*(*)   
+       55 .       PARAMETER   (MPUBLI = '/cern/pro/pam/')   
+       56 .     
+0      57 + +KEEP, QPOSTMTR.                                                                
+       58 . C     NO TRACE BACK NEEDED IN PRODUCTION    
+       59 + +OPT, ALL,MAPASM                                                                
+                    OPTIONS A.C..F......M....R............
+
+       60 -     
+       61 - ----  Standard USE selections   
+       62 -     
+       63 + +USE, ALLPX*, MLNX*.         select Patchy + Hydra                              
+       64 + +USE, MAINUIX.                                                                  
+       65 + +USE, *KLNX.                 select Kernlib                                     
+       66 -     
+       67 + +PAM,11.                                                                        
+
+ ---------- PATCHY    .START PAM-FILE 101,   --  RESUME   
+
+        1 T PATCHY  4.15 /1  911211 12.02           Composed for  LNX                       
+
+       194 D=YPATCH   P=MAINUIX     96 LINES TO  ASM  
+       195 D=YTOBCD   P=MAINUIX     25 LINES TO  ASM  
+       196 D=YTOBIN   P=MAINUIX     25 LINES TO  ASM  
+       197 D=YTOCET   P=MAINUIX     21 LINES TO  ASM  
+       198 D=YFRCET   P=MAINUIX     23 LINES TO  ASM  
+       199 D=YCOMPA   P=MAINUIX     22 LINES TO  ASM  
+       200 D=YEDIT    P=MAINUIX     29 LINES TO  ASM  
+1 201 PATCHY    ================================================== P=MAINUIX  D=YINDEX    1 =================== PAGE   1
+
+       201 D=YINDEX   P=MAINUIX     21 LINES TO  ASM  
+       202 D=YLIST    P=MAINUIX     21 LINES TO  ASM  
+       203 D=YSEARC   P=MAINUIX     22 LINES TO  ASM  
+       204 D=YSHIFT   P=MAINUIX     23 LINES TO  ASM  
+       206 D=FLPARA   P=FLDIALG    470 LINES TO  ASM  
+       207 D=FLKRAK   P=FLDIALG    297 LINES TO  ASM  
+       208 D=FLINK    P=FLDIALG    140 LINES TO  ASM  
+       209 D=FLOPER   P=FLDIALG     45 LINES TO  ASM  
+       210 D=HELPPR   P=FLDIALG     56 LINES TO  ASM  
+       216 D=PREADY   P=PINIT      255 LINES TO  ASM  
+       217 D=PINIT    P=PINIT       49 LINES TO  ASM  
+       219 D=PEND     P=PEND       238 LINES TO  ASM  
+       221 D=DOSPEC   P=RUN        209 LINES TO  ASM  
+       222 D=DOSPGO   P=RUN        186 LINES TO  ASM  
+       223 D=DORUN    P=RUN        325 LINES TO  ASM  
+       224 D=DODECK   P=RUN        306 LINES TO  ASM  
+       225 D=DOMATF   P=RUN        467 LINES TO  ASM  
+       226 D=DOUREF   P=RUN         72 LINES TO  ASM  
+       227 D=DOASM    P=RUN        150 LINES TO  ASM  
+       228 D=DOOPT    P=RUN        107 LINES TO  ASM  
+       229 D=DOUSE    P=RUN        149 LINES TO  ASM  
+       230 D=DOUPD    P=RUN         44 LINES TO  ASM  
+       232 D=ACSORT   P=ACTION     310 LINES TO  ASM  
+       233 D=ACEXQ    P=ACTION     103 LINES TO  ASM  
+       234 D=ACPEEL   P=ACTION     139 LINES TO  ASM  
+       235 D=ACXREF   P=ACTION     107 LINES TO  ASM  
+       236 D=ACSEQ    P=ACTION     107 LINES TO  ASM  
+       237 D=MXACTD   P=ACTION      57 LINES TO  ASM  
+       238 D=MXACTN   P=ACTION      51 LINES TO  ASM  
+       240 D=ARRIVE   P=ARRIVE     473 LINES TO  ASM  
+       241 D=ARBCD    P=ARRIVE     127 LINES TO  ASM  
+       242 D=ARBIN    P=ARRIVE     167 LINES TO  ASM  
+       244 D=DEPART   P=DEPART     220 LINES TO  ASM  
+       245 D=DEPID    P=DEPART      86 LINES TO  ASM  
+       246 D=DEPMSG   P=DEPART     240 LINES TO  ASM  
+       247 D=DPEXE    P=DEPART      52 LINES TO  ASM  
+       248 D=DPEXGO   P=DEPART      78 LINES TO  ASM  
+       249 D=DPMIX    P=DEPART     138 LINES TO  ASM  
+       250 D=DPLIST   P=DEPART     155 LINES TO  ASM  
+       251 D=DPPAGE   P=DEPART     102 LINES TO  ASM  
+       253 D=CCPROC   P=PUTIL       91 LINES TO  ASM  
+       254 D=CREAPD   P=PUTIL      111 LINES TO  ASM  
+       255 D=CRDECO   P=PUTIL       30 LINES TO  ASM  
+       256 D=LIFTRH   P=PUTIL       47 LINES TO  ASM  
+       257 D=LOCSEQ   P=PUTIL       65 LINES TO  ASM  
+       258 D=LOCSQ2   P=PUTIL       58 LINES TO  ASM  
+       259 D=MXJOIN   P=PUTIL       26 LINES TO  ASM  
+       260 D=MXNEW    P=PUTIL       14 LINES TO  ASM  
+       261 D=MXSET    P=PUTIL       65 LINES TO  ASM  
+       263 D=YBCDEX   P=YTOBCD     153 LINES TO  ASM  
+       265 D=BLANKDEK P=YTOBIN     120 LINES TO  ASM  
+       268 D=YTOCEX   P=YTOCETA    268 LINES TO  ASM  
+       269 D=TOCETA   P=YTOCETA    191 LINES TO  ASM  
+       270 D=TOSETU   P=YTOCETA    193 LINES TO  ASM  
+       272 D=YFRCEX   P=YFRCETA    257 LINES TO  ASM  
+       273 D=FRCETA   P=YFRCETA    218 LINES TO  ASM  
+       274 D=FRSETU   P=YFRCETA    202 LINES TO  ASM  
+       275 D=CETUP    P=YFRCETA    146 LINES TO  ASM  
+       276 D=HOLLCV   P=YFRCETA     37 LINES TO  ASM  
+       278 D=BLANKDEK P=YCOMPAR    242 LINES TO  ASM  
+       280 D=YEDTEX   P=YEDIT      336 LINES TO  ASM  
+       281 D=YEDRIV   P=YEDIT       87 LINES TO  ASM  
+       282 D=YEDARR   P=YEDIT      126 LINES TO  ASM  
+       283 D=YEDXCH   P=YEDIT       54 LINES TO  ASM  
+       284 D=JEDCHK   P=YEDIT       24 LINES TO  ASM  
+       285 D=JEDTYP   P=YEDIT       57 LINES TO  ASM  
+       286 D=YEDKRK   P=YEDIT      188 LINES TO  ASM  
+       287 D=YEDMAT   P=YEDIT      158 LINES TO  ASM  
+       289 D=BLANKDEK P=YINDEX     383 LINES TO  ASM  
+       291 D=YLISEX   P=YLIST      306 LINES TO  ASM  
+       292 D=YLISPG   P=YLIST       84 LINES TO  ASM  
+       294 D=YSEREX   P=YSEARCH    455 LINES TO  ASM  
+       295 D=YSFIND   P=YSEARCH    220 LINES TO  ASM  
+       296 D=YSERBF   P=YSEARCH    217 LINES TO  ASM  
+       298 D=YSHFEX   P=YSHIFT     330 LINES TO  ASM  
+       299 D=YSHMAC   P=YSHIFT      50 LINES TO  ASM  
+       300 D=YSHANL   P=YSHIFT     126 LINES TO  ASM  
+       301 D=YSHTAG   P=YSHIFT     125 LINES TO  ASM  
+       302 D=YSHVAL   P=YSHIFT      86 LINES TO  ASM  
+       304 D=AUXINI   P=AUXINI     142 LINES TO  ASM  
+       306 D=PLOAD    P=PLOAD      120 LINES TO  ASM  
+       308 D=CCKRAK   P=CCKRAK     231 LINES TO  ASM  
+       310 D=PILECT   P=PILECT     233 LINES TO  ASM  
+       312 D=PILEUP   P=PILEUP     235 LINES TO  ASM  
+       314 D=POPIN    P=POPIN      147 LINES TO  ASM  
+       316 D=POPREW   P=POPOFF      39 LINES TO  ASM  
+       317 D=POPOFF   P=POPOFF     138 LINES TO  ASM  
+       318 D=PRTITL   P=POPOFF     126 LINES TO  ASM  
+       319 D=NOTITL   P=POPOFF      51 LINES TO  ASM  
+       321 D=AUXFIL   P=SERVAUX     97 LINES TO  ASM  
+       322 D=CREBUF   P=SERVAUX     63 LINES TO  ASM  
+       323 D=INCHCH   P=SERVAUX     72 LINES TO  ASM  
+       324 D=JARTPX   P=SERVAUX     65 LINES TO  ASM  
+       325 D=LOGLV    P=SERVAUX     49 LINES TO  ASM  
+       326 D=SETID    P=SERVAUX     47 LINES TO  ASM  
+       328 D=CCTOUP   P=SERVICE     34 LINES TO  ASM  
+       329 D=IOFILE   P=SERVICE    107 LINES TO  ASM  
+       330 D=IOFILX   P=SERVICE     89 LINES TO  ASM  
+       331 D=IOTYPE   P=SERVICE     21 LINES TO  ASM  
+       332 D=JARTYP   P=SERVICE     32 LINES TO  ASM  
+       333 D=KDNGO    P=SERVICE     15 LINES TO  ASM  
+       334 D=KDNREW   P=SERVICE     12 LINES TO  ASM  
+       335 D=KDNEXTVX P=SERVICE     69 LINES TO  ASM  
+       339 D=KDSTEP   P=SERVICE     27 LINES TO  ASM  
+       340 D=KDCOPY   P=SERVICE     31 LINES TO  ASM  
+       341 D=KDFILL   P=SERVICE     33 LINES TO  ASM  
+       342 D=LIFTBK   P=SERVICE     51 LINES TO  ASM  
+       343 D=NAMEFL   P=SERVICE     35 LINES TO  ASM  
+1 344 PATCHY    ================================================== P=SERVICE  D=NOMEM     1 =================== PAGE   2
+
+       344 D=NOMEM    P=SERVICE     39 LINES TO  ASM  
+       345 D=QEND     P=SERVICE     10 LINES TO  ASM  
+       346 D=QABEND   P=SERVICE     14 LINES TO  ASM  
+       347 D=RQTELLD  P=SERVICE     13 LINES TO  ASM  
+       348 D=PABEND   P=SERVICE     24 LINES TO  ASM  
+       349 D=PABERR   P=SERVICE     15 LINES TO  ASM  
+       350 D=SETNUM   P=SERVICE     35 LINES TO  ASM  
+       351 D=SETOPT   P=SERVICE     57 LINES TO  ASM  
+
+ ---------- HYDRA     .START PAM-FILE 102,   --  CONTIN   
+
+        1 T HYDRA                                                                           
+
+       450 D=QFATAM   P=QEND        31 LINES TO  ASM  
+       451 D=QFATAL   P=QEND        28 LINES TO  ASM  
+       452 D=QPOSTM   P=QEND        69 LINES TO  ASM  
+       456 D=MQINIT   P=MQ         137 LINES TO  ASM  
+       457 D=MQEND    P=MQ          40 LINES TO  ASM  
+       458 D=MQGARB   P=MQ          75 LINES TO  ASM  
+       459 D=MQMOVE   P=MQ          78 LINES TO  ASM  
+       460 D=MQRELC   P=MQ         206 LINES TO  ASM  
+       461 D=MQTABL   P=MQ         119 LINES TO  ASM  
+       537 D=QSORTH   P=QUTYVAX     44 LINES TO  ASM  
+       538 D=QSORVH   P=QUTYVAX     46 LINES TO  ASM  
+       542 D=IQBCD    P=QUTIL       14 LINES TO  ASM  
+       543 D=IQLOCF   P=QUTIL       21 LINES TO  ASM  
+       544 D=KQLAST   P=QUTIL       23 LINES TO  ASM  
+       545 D=LQFIND   P=QUTIL       27 LINES TO  ASM  
+       546 D=LQLONG   P=QUTIL       37 LINES TO  ASM  
+       547 D=LQLOCF   P=QUTIL       21 LINES TO  ASM  
+       548 D=QPAGE    P=QUTIL       41 LINES TO  ASM  
+       549 D=QSHUNT   P=QUTIL       23 LINES TO  ASM  
+       550 D=QSORT    P=QUTIL       41 LINES TO  ASM  
+       551 D=QSORTI   P=QUTIL       41 LINES TO  ASM  
+       553 D=QSORV    P=QUTIL      122 LINES TO  ASM  
+       554 D=QSORVI   P=QUTIL      120 LINES TO  ASM  
+       556 D=QTOPSY   P=QUTIL       27 LINES TO  ASM  
+       557 D=QTOUCH   P=QUTIL       89 LINES TO  ASM  
+       558 D=QTCHID   P=QUTIL       93 LINES TO  ASM  
+       559 D=QVERIF   P=QUTIL       96 LINES TO  ASM  
+       560 D=QBLOW    P=QUTIL       26 LINES TO  ASM  
+       561 D=QLUMP    P=QUTIL       31 LINES TO  ASM  
+       562 D=QNAME    P=QUTIL       25 LINES TO  ASM  
+       563 D=QLUMPR   P=QUTIL       44 LINES TO  ASM  
+       564 D=QBLOWX   P=QUTIL       48 LINES TO  ASM  
+       565 D=QNAMEX   P=QUTIL       54 LINES TO  ASM  
+
+ ---------- KERNLNX   .START PAM-FILE 103,   --  CONTIN   
+
+        1 T KERNLNX                                                                         
+
+       610 D=BTEST    P=LNXGS        5 LINES TO  ASM  
+       611 D=CBYT     P=LNXGS       12 LINES TO  ASM  
+       612 D=IAND     P=LNXGS        7 LINES TO  ASM  
+       613 D=IBCLR    P=LNXGS        5 LINES TO  ASM  
+       614 D=IBITS    P=LNXGS        7 LINES TO  ASM  
+       615 D=IBSET    P=LNXGS        5 LINES TO  ASM  
+       616 D=IEOR     P=LNXGS        7 LINES TO  ASM  
+       617 D=IOR      P=LNXGS        7 LINES TO  ASM  
+       618 D=ISHFT    P=LNXGS       12 LINES TO  ASMX 
+       619 D=ISHFTR   P=LNXGS        9 LINES TO  ASMX 
+       620 D=IUCOMH   P=LNXGS       41 LINES TO  ASM  
+       621 D=LRSHFT   P=LNXGS       10 LINES TO  ASMX 
+       622 D=UBLOW    P=LNXGS       42 LINES TO  ASM  
+       623 D=UBUNCH   P=LNXGS       43 LINES TO  ASM  
+       624 D=UCOPY    P=LNXGS       14 LINES TO  ASM  
+       625 D=UCOPY2   P=LNXGS       31 LINES TO  ASM  
+       626 D=USWOP    P=LNXGS       15 LINES TO  ASM  
+       627 D=UTRANS   P=LNXGS       73 LINES TO  ASM  
+       628 D=VXINVB   P=LNXGS       31 LINES TO  ASM  
+       629 D=VXINVC   P=LNXGS       37 LINES TO  ASM  
+       630 D=QNEXT    P=LNXGS        4 LINES TO  ASM  
+       631 D=KERNGT   P=LNXGS       17 LINES TO  ASM  
+       632 D=JIAND    P=LNXGS        5 LINES TO  ASM  
+
+ ---------- KERNFOR   .START PAM-FILE 104,   --  CONTIN   
+
+        1 T KERNFOR                                                                         
+
+       758 D=FCASPLIT P=UTYGEN     496 LINES TO  ASM2 
+       761 D=ABEND    P=CCGEN       10 LINES TO  ASMX 
+       762 D=DATIME   P=CCGEN       30 LINES TO  ASMX 
+       763 D=GETENVF  P=CCGEN       16 LINES TO  ASM  
+       764 D=GETENI   P=CCGEN       31 LINES TO  ASMX 
+       765 D=GETWDF   P=CCGEN       15 LINES TO  ASM  
+       766 D=GETWDI   P=CCGEN       34 LINES TO  ASMX 
+       767 D=INTRAC   P=CCGEN        9 LINES TO  ASMX 
+       768 D=LOCB     P=CCGEN       10 LINES TO  ASMX 
+       769 D=LOCF     P=CCGEN       12 LINES TO  ASMX 
+       770 D=RENAMEF  P=CCGEN       15 LINES TO  ASM  
+       771 D=RENAMI   P=CCGEN       34 LINES TO  ASMX 
+       772 D=TMINIT   P=CCGEN       16 LINES TO  ASMX 
+       773 D=TMPRO    P=CCGEN       14 LINES TO  ASM  
+       774 D=TMPROI   P=CCGEN       16 LINES TO  ASMX 
+       775 D=TMREAD   P=CCGEN       41 LINES TO  ASMX 
+       777 D=FCHPUT   P=CCGENU      35 LINES TO  ASMX 
+       778 D=FCHTAK   P=CCGENU      33 LINES TO  ASMX 
+       780 D=XINB     P=XVECT       22 LINES TO  ASM  
+       781 D=XINBF    P=XVECT       17 LINES TO  ASM  
+       782 D=XINBS    P=XVECT       22 LINES TO  ASM  
+       783 D=XINCF    P=XVECT       19 LINES TO  ASM  
+       784 D=XOUTB    P=XVECT       11 LINES TO  ASM  
+       785 D=XOUTBF   P=XVECT       11 LINES TO  ASM  
+       786 D=XOUTBS   P=XVECT       11 LINES TO  ASM  
+       787 D=XOUTCF   P=XVECT       13 LINES TO  ASM  
+       791 D=CFILL    P=TCGEN       21 LINES TO  ASM  
+       792 D=CLEFT    P=TCGEN       43 LINES TO  ASM  
+       793 D=CRIGHT   P=TCGEN       43 LINES TO  ASM  
+1 794 KERNFOR   ================================================== P=TCGEN    D=CLTOU     1 =================== PAGE   3
+
+       794 D=CLTOU    P=TCGEN       20 LINES TO  ASM  
+       795 D=CUTOL    P=TCGEN       19 LINES TO  ASM  
+       796 D=CSETDI   P=TCGEN       42 LINES TO  ASM  
+       797 D=CSETHI   P=TCGEN       43 LINES TO  ASM  
+       798 D=CSQMBL   P=TCGEN       65 LINES TO  ASM  
+       799 D=CTRANS   P=TCGEN       14 LINES TO  ASM  
+       801 D=ICDECI   P=TCGEN       51 LINES TO  ASM  
+       802 D=ICFIND   P=TCGEN       29 LINES TO  ASM  
+       803 D=ICFMUL   P=TCGEN       32 LINES TO  ASM  
+       804 D=ICFILA   P=TCGEN       30 LINES TO  ASM  
+       805 D=ICFNBL   P=TCGEN       29 LINES TO  ASM  
+       806 D=ICHEXI   P=TCGEN       59 LINES TO  ASM  
+       807 D=ICLOC    P=TCGEN       34 LINES TO  ASM  
+       808 D=ICNEXT   P=TCGEN       42 LINES TO  ASM  
+       809 D=ICTYPE   P=TCGEN       32 LINES TO  ASM  
+       810 D=IUCOLA   P=TCGEN       17 LINES TO  ASM  
+       811 D=IUCOMP   P=TCGEN       17 LINES TO  ASM  
+       812 D=IUFILA   P=TCGEN       16 LINES TO  ASM  
+       813 D=IUFIND   P=TCGEN       16 LINES TO  ASM  
+       814 D=IUFNBL   P=TCGEN       19 LINES TO  ASM  
+       815 D=IUFORW   P=TCGEN       28 LINES TO  ASM  
+       816 D=IULAST   P=TCGEN       19 LINES TO  ASM  
+       817 D=IUNEXT   P=TCGEN       18 LINES TO  ASM  
+       818 D=IUSAME   P=TCGEN       28 LINES TO  ASM  
+       819 D=JBIT     P=TCGEN       15 LINES TO  ASM  
+       820 D=JBYT     P=TCGEN       15 LINES TO  ASM  
+       821 D=JBYTET   P=TCGEN       16 LINES TO  ASM  
+       822 D=JBYTOR   P=TCGEN       16 LINES TO  ASM  
+       823 D=JRSBYT   P=TCGEN       13 LINES TO  ASM  
+       824 D=LNBLNK   P=TCGEN       20 LINES TO  ASM  
+       826 D=MBYTET   P=TCGEN       16 LINES TO  ASM  
+       827 D=MBYTOR   P=TCGEN       16 LINES TO  ASM  
+       828 D=MCBYT    P=TCGEN       18 LINES TO  ASM  
+       829 D=MSBIT    P=TCGEN       16 LINES TO  ASM  
+       830 D=MSBIT0   P=TCGEN       15 LINES TO  ASM  
+       831 D=MSBIT1   P=TCGEN       15 LINES TO  ASM  
+       832 D=MSBYT    P=TCGEN       18 LINES TO  ASM  
+       833 D=PKBYT    P=TCGEN       62 LINES TO  ASM  
+       835 D=PKCHAR   P=TCGEN       81 LINES TO  ASM  
+       836 D=SBIT     P=TCGEN       16 LINES TO  ASM  
+       837 D=SBIT0    P=TCGEN       15 LINES TO  ASM  
+       838 D=SBIT1    P=TCGEN       15 LINES TO  ASM  
+       839 D=SBYT     P=TCGEN       19 LINES TO  ASM  
+       840 D=SBYTOR   P=TCGEN       18 LINES TO  ASM  
+       841 D=TRACEQ   P=TCGEN       14 LINES TO  ASM  
+       842 D=UBLANK   P=TCGEN       14 LINES TO  ASM  
+       845 D=UCOPIV   P=TCGEN       15 LINES TO  ASM  
+       848 D=UCTOH1   P=TCGEN       29 LINES TO  ASM  
+       849 D=UCTOH    P=TCGEN       71 LINES TO  ASM  
+       850 D=UH1TOC   P=TCGEN       25 LINES TO  ASM  
+       851 D=UHTOC    P=TCGEN       65 LINES TO  ASM  
+       852 D=ULEFT    P=TCGEN       24 LINES TO  ASM  
+       853 D=UOPT     P=TCGEN       24 LINES TO  ASM  
+       854 D=UPKBYT   P=TCGEN       57 LINES TO  ASM  
+       856 D=UPKCH    P=TCGEN       77 LINES TO  ASM  
+       857 D=USET     P=TCGEN       24 LINES TO  ASM  
+       859 D=VBLANK   P=TCGEN       14 LINES TO  ASM  
+       860 D=VFILL    P=TCGEN       14 LINES TO  ASM  
+       861 D=VZERO    P=TCGEN       14 LINES TO  ASM  
+       862 D=VIZPRI   P=TCGEN      264 LINES TO  ASM  
+
+ -------------------  .END   PAM  1  AFTER    967 RCRDS TOTAL,   --  REWIND
+
+  865 *         ================================================== P=CRA*     D=CRA*      1 ============================
+
+        1 + +QUIT.                                                                          
+1--------------------------------------
+ SUMMARY OF PATCHES IN PROCESSING ORDER
+
+ PROCESSING MODE SELECTIONS                        OTHER STATUS BITS FOR P=X
+
+ D - DIVERT                                        F  - - -  DESELECTED BY  +PATCH,P=X,IF=...
+ M - MIX                                            M - - -  DESELECTED BY  +IMITATE,P=X
+ E - EXE                                             X  - -  NOT +EXE BUT AT LEAST 1 DECK TO ASM
+ L - LIST                                             P - -  PARTIAL USE-SELECTION BY +USE,P=X,D=...
+ U - USE                    SELF +         SELF        R  -  P=X,T=REPEAT
+                    INHIBIT FOREIGN  TRANS   ONLY       Q -  QUOTED IN IF=X
+                    ------- ------- ------ ------
+                     DMELU   DMELU   DMEL   DMEL   FMXPRQ    USED FROM P=
+
+        0 CRA*     .       .   E U .      .   EL .     R   . CRA*    
+ PATCHY                                                      PAM  CALL/FILE  101
+        0 -   353
+        1 ALLPX*   .       .   E U .      .   E  .         . CRA*    
+        3 CORRECT  .       .   E U .      .   E  .     R   . ALLPX*  
+        4 ALLX*    .       .   E U .      .   E  .         . ALLPX*  
+        6 PATCHY*  .       .   E U .      .   E  .      Q  . ALLPX*  
+        8 YTOBCD*  .       .   E U .      .   E  .      Q  . ALLX*   
+       10 YTOBIN*  .       .   E U .      .   E  .      Q  . ALLX*   
+       12 YTOCETA* .       .   E U .      .   E  .      Q  . ALLX*   
+       14 YFRCETA* .       .   E U .      .   E  .      Q  . ALLX*   
+       16 YCOMPAR* .       .   E U .      .   E  .      Q  . ALLX*   
+       18 YEDIT*   .       .   E U .      .   E  .      Q  . ALLX*   
+       20 YINDEX*  .       .   E U .      .   E  .      Q  . ALLX*   
+       22 YLIST*   .       .   E U .      .   E  .      Q  . ALLX*   
+       24 YSEARCH* .       .   E U .      .   E  .      Q  . ALLX*   
+       26 YSHIFT*  .       .   E U .      .   E  .      Q  . ALLX*   
+       28 CERNFE*  .       .   E   .      .   E  .         .         
+       30 MNOSBE*  .       .   E   .      .   E  .         .         
+       32 MNOS*    .       .   E   .      .   E  .         .         
+       34 MCYBX    .       .   E   .      .   E  .         .         
+       36 MCDCV*   .       .   E   .      .   E  .         .         
+       38 MCDC76*  .       .   E   .      .   E  .         .         
+       40 MCDCX    .       .   E   .      .   E  .         .         
+       44 MALT*    .       .   E   .      .   E  .         .         
+       46 MAPO10*  .       .   E   .      .   E  .         .         
+       48 MAPO*    .       .   E   .      .   E  .         .         
+       50 MCRAY*   .       .   E   .      .   E  .         .         
+       53 MCRU*    .       .   E   .      .   E  .         .         
+       55 MCSE*    .       .   E   .      .   E  .         .         
+       58 MCVX*    .       .   E   .      .   E  .         .         
+       60 MCVY*    .       .   E   .      .   E  .         .         
+       62 MDGE*    .       .   E   .      .   E  .         .         
+       65 MHPX*    .       .   E   .      .   E  .         .         
+       67 MIBM*    .       .   E   .      .   E  .         .         
+       70 MIBX*    .       .   E   .      .   E  .         .         
+       72 MIRT*    .       .   E   .      .   E  .         .         
+       74 MLNX*    .       .   E U .      .   E  .      Q  . CRA*    
+       76 MND3*    .       .   E   .      .   E  .         .         
+       78 MND2*    .       .   E   .      .   E  .         .         
+       80 MPDP*    .       .   E   .      .   E  .      Q  .         
+       83 MSGI*    .       .   E   .      .   E  .         .         
+       85 MSUN*    .       .   E   .      .   E  .         .         
+       87 MUNO*    .       .   E   .      .   E  .         .         
+       90 MVAX*    .       .   E   .      .   E  .      Q  .         
+       92 MVMI*    .       .   E   .      .   E  .      Q  .         
+       94 A4       .       .   E U .      .   E  .      Q  . MLNX*   
+       96 A5       .       .   E   .      .   E  .      Q  .         
+       98 A6       .       .   E   .      .   E  .      Q  .         
+      100 A8       .       .   E   .      .   E  .      Q  .         
+      102 A10      .       .   E   .      .   E  .      Q  .         
+      104 NOTA8M   .       .   E U .      .   E  .         . A4      
+      105 HOLLAPO  .       .   E U .      .   E  .         . MLNX*   
+      106 DOMQAUGM .       .   E   .      .   E  .         .         
+      107 ASCILOW  .       .   E   .      .   E  .         .         
+      109 ASCIINT  .       .   E U .      .   E  .         . MLNX*   
+      111 EBCDINT  .       .   E   .      .   E  .         .         
+      113 LUNPREM  .       .   E U .      .   E  .         . MLNX*   
+      115 FORCELOA .       .   E U .      .   E  .         . MLNX*   
+      116 IOXPACK  .       .   E   .      .   E  .         .         
+      117 IOFORTR  .       .   E   .      .   E  .         .         
+      118 IOVPACK  .       .   E U .      .   E  .         . MLNX*   
+      122 PCDE     .       .   E U .      .   E  .         . YSHIFT* 
+      128 *ALT     .       .   E   .      .   E  .         .         
+      130 *APO     .       .   E   .      .   E  .         .         
+      132 *CDCV    .       .   E   .      .   E  .         .         
+      134 *FTN     .       .   E   .      .   E  .         .         
+      136 *CRU     .       .   E   .      .   E  .         .         
+      138 *CRAY    .       .   E   .      .   E  .         .         
+      140 *CVX     .       .   E   .      .   E  .         .         
+      142 *DGE     .       .   E   .      .   E  .         .         
+      144 *HPX     .       .   E   .      .   E  .         .         
+      146 *IBMVS   .       .   E   .      .   E  .         .         
+      148 *IBMSI   .       .   E   .      .   E  .         .         
+      150 *IBM4    .       .   E   .      .   E  .         .         
+      152 *IBM     .       .   E   .      .   E  .         .         
+      154 *IBX     .       .   E   .      .   E  .         .         
+      156 *IRT     .       .   E   .      .   E  .         .         
+      158 *LNX     .       .   E U .      .   E  .         . MLNX*   
+      160 *NORD3   .       .   E   .      .   E  .         .         
+      162 *PDP10   .       .   E   .      .   E  .         .         
+      164 *SGI     .       .   E   .      .   E  .         .         
+      166 *SUN     .       .   E   .      .   E  .         .         
+      168 *UNIVAC  .       .   E   .      .   E  .         .         
+      170 *UNO     .       .   E   .      .   E  .         .         
+      172 *VAX     .       .   E   .      .   E  .         .         
+      174 *VMI     .       .   E   .      .   E  .         .         
+      176 QCDE     .       .   E U .      .   E  .         . *LNX    
+      184 EXPLNX   .       .   E   .      .   E  .         .         
+      186 EXPVMI   .       .   E   .      .   E  .         .         
+      188 INSHELL  .       .   E   .      .   E  .         .         
+      192 MAINUIX  .       .   E U .      .   E  .    P    . CRA*    
+      205 FLDIALG  .       .   E U .      .   E  .         . MAINUIX 
+      212 QABEND   .       .   E   .      .   E  .         .         
+      215 PINIT    .       .   E U .      .   E  .         . PATCHY* 
+      218 PEND     .       .   E U .      .   E  .         . PATCHY* 
+      220 RUN      .       .   E U .      .   E  .         . PATCHY* 
+      231 ACTION   .       .   E U .      .   E  .         . PATCHY* 
+      239 ARRIVE   .       .   E U .      .   E  .         . PATCHY* 
+      243 DEPART   .       .   E U .      .   E  .         . PATCHY* 
+      252 PUTIL    .       .   E U .      .   E  .         . PATCHY* 
+      262 YTOBCD   .       .   E U .      .   E  .         . YTOBCD* 
+      264 YTOBIN   .       .   E U .      .   E  .         . YTOBIN* 
+      266 YTOCETA  .       .   E U .      .   E  .         . YTOCETA*
+      271 YFRCETA  .       .   E U .      .   E  .    P    . YFRCETA*
+      277 YCOMPAR  .       .   E U .      .   E  .         . YCOMPAR*
+      279 YEDIT    .       .   E U .      .   E  .         . YEDIT*  
+      288 YINDEX   .       .   E U .      .   E  .         . YINDEX* 
+      290 YLIST    .       .   E U .      .   E  .         . YLIST*  
+      293 YSEARCH  .       .   E U .      .   E  .         . YSEARCH*
+      297 YSHIFT   .       .   E U .      .   E  .         . YSHIFT* 
+      303 AUXINI   .       .   E U .      .   E  .         . YSHIFT* 
+      305 PLOAD    .       .   E U .      .   E  .         . YSHIFT* 
+      307 CCKRAK   .       .   E U .      .   E  .         . YSHIFT* 
+      309 PILECT   .       .   E U .      .   E  .         . YFRCETA*
+      311 PILEUP   .       .   E U .      .   E  .         . YEDIT*  
+      313 POPIN    .       .   E U .      .   E  .         . YSHIFT* 
+      315 POPOFF   .       .   E U .      .   E  .         . YSHIFT* 
+      320 SERVAUX  .       .   E U .      .   E  .         . YSHIFT* 
+      327 SERVICE  .       .   E U .      .   E  .         . YSHIFT* 
+      352 PAMEND   .       .   E   .      .   E  .         .         
+ HYDRA                                                       PAM  CALL/FILE  102
+      400 -   567
+      401 QMALT    .       .   E   .      .   E  .      Q  .         
+      403 QMAPO    .       .   E   .      .   E  .      Q  .         
+      405 QMCDCV   .       .   E   .      .   E  .         .         
+      407 QMCDC    .       .   E   .      .   E  .      Q  .         
+      409 QMCRY    .       .   E   .      .   E  .         .         
+      411 QMCVX    .       .   E   .      .   E  .      Q  .         
+      413 QMDGE    .       .   E   .      .   E  .         .         
+      415 QMHPX    .       .   E   .      .   E  .      Q  .         
+      417 QMIBM    .       .   E   .      .   E  .      Q  .         
+      419 QMIBX    .       .   E   .      .   E  .      Q  .         
+      421 QMIRT    .       .   E   .      .   E  .      Q  .         
+      423 QMLNX    .       .   E U .      .   E  .      Q  . *LNX    
+      425 QMND3    .       .   E   .      .   E  .      Q  .         
+      427 QMPDP    .       .   E   .      .   E  .      Q  .         
+      430 QMSGI    .       .   E   .      .   E  .      Q  .         
+      432 QMSUN    .       .   E   .      .   E  .      Q  .         
+      434 QMUNI    .       .   E   .      .   E  .      Q  .         
+      436 QMUNO    .       .   E   .      .   E  .      Q  .         
+      438 QMVAX    .       .   E   .      .   E  .      Q  .         
+      440 QMVMI    .       .   E   .      .   E  .      Q  .         
+      442 QMALL    .       .   E U .      .   E  .         . QMLNX   
+      444 QIOV     .       .   E U .      .   E  .         . QMLNX   
+      445 QIOX     .       .   E   .      .   E  .         .         
+      446 QDEBUG   .       .   E   .      .   E  .      Q  .         
+      448 QTELETY  .       .   E U .      .   E  .         . QMLNX   
+      449 QEND     .       .   E U .      .   E  .         . QMLNX   
+      453 MQ       .       .   E U .      .   E  .         . QMLNX   
+      462 QUTYALT  .       .   E   .      .   E  .         .         
+      470 QUTYAPO  .       .   E   .      .   E  .         .         
+      478 QUTYCDC  .       .   E   .      .   E  .         .         
+      481 QUTYCRY  .       .   E   .      .   E  .         .         
+      485 QUTYCVX  .       .   E   .      .   E  .         .         
+      493 QUTYHPX  .       .   E   .      .   E  .         .         
+      499 QUTYIBM  .       .   E   .      .   E  .         .         
+      505 QUTYIRT  .       .   E   .      .   E  .         .         
+      511 QUTYND3  .       .   E   .      .   E  .         .         
+      512 QUTYPDP  .       .   E   .      .   E  .         .         
+      518 QUTYSGI  .       .   E   .      .   E  .         .         
+      524 QUTYSUN  .       .   E   .      .   E  .         .         
+      532 QUTYUNI  .       .   E   .      .   E  .         .         
+      534 QUTYUNO  .       .   E   .      .   E  .         .         
+      536 QUTYVAX  .       .   E U .      .   E  .         . QMLNX   
+      539 QUTIL    .       .   E U .      .   E  .         . QMLNX   
+      566 QPAMEND  .       .   E   .      .   E  .         .         
+ KERNLNX                                                     PAM  CALL/FILE  103
+      600 -   634
+      601 KERNLNX  .       .   E   .      .   E  .         .         
+      603 *KLNX    .       .   E U .      .   E  .         . CRA*    
+      605 QMLNX    .       .   E U .      .   E  .      Q  . *KLNX   
+      607 LNXPROGS .       .   E   .      .   E  .         .         
+      609 LNXGS    .       .   E U .      .   E  .         . *KLNX   
+      633 PAMEND   .       .   E   .      .   E  .         .         
+ KERNFOR                                                     PAM  CALL/FILE  104
+      700 -   864
+      701 KERNFOR  .       .   E   .      .   E  .         .         
+      703 QMNNB32  .       .   E   .      .   E  .         .         
+      705 QMALT    .       .   E   .      .   E  .      Q  .         
+      707 QMAMX    .       .   E   .      .   E  .      Q  .         
+      709 QMAPO    .       .   E   .      .   E  .      Q  .         
+      711 QMCDCV   .       .   E   .      .   E  .         .         
+      713 QMCDC    .       .   E   .      .   E  .      Q  .         
+      715 QMCRY    .       .   E   .      .   E  .      Q  .         
+      717 QMCVX    .       .   E   .      .   E  .      Q  .         
+      719 QMCVY    .       .   E   .      .   E  .      Q  .         
+      721 QMDGE    .       .   E   .      .   E  .         .         
+      723 QMHPX    .       .   E   .      .   E  .      Q  .         
+      725 QMIBM    .       .   E   .      .   E  .      Q  .         
+      727 QMIBX    .       .   E   .      .   E  .      Q  .         
+      729 QMIRT    .       .   E   .      .   E  .      Q  .         
+      731 QMLNX    .       .   E U .      .   E  .      Q  . *KLNX   
+      733 QMMPW    .       .   E   .      .   E  .         .         
+      735 QMND3    .       .   E   .      .   E  .      Q  .         
+      737 QMPDP    .       .   E   .      .   E  .      Q  .         
+      739 QMSGI    .       .   E   .      .   E  .      Q  .         
+      741 QMSUN    .       .   E   .      .   E  .      Q  .         
+      743 QMTMO    .       .   E   .      .   E  .      Q  .         
+      745 QMUNO    .       .   E   .      .   E  .      Q  .         
+      747 QMUNI    .       .   E   .      .   E  .      Q  .         
+      749 QMVAX    .       .   E   .      .   E  .      Q  .         
+      751 QMVMI    .       .   E   .      .   E  .      Q  .         
+      753 PROJSHIF .       .   E   .      .   E  .         .         
+      754 QDEFAULT .       .   E U .      .   E  .         . QMLNX   
+      756 Q$BITSEQ .       .   E   .      .   E  .         .         
+      757 UTYGEN   .       .   E   .      .   E  .    P    . CRA*    
+      759 CCGEN    .       .   E U .      .   E  .         . *KLNX   
+      776 CCGENU   .       .   E U .      .   E  .         . CCGEN   
+      779 XVECT    .       .   E U .      .   E  .         . *KLNX   
+      788 TCGEN    .       .   E U .      .   E  .     R   . *KLNX   
+      863 PAMEND   .       .   E   .      .   E  .         .         
+      865 CRA*     .       .   E U .      .   EL .     R   . CRA*    
+
+ ----------------------------
+ QUOTED PATCHES NOT TURNED UP
+
+        0 *KAPOL   .       .   E   .      .   E  .      Q  .         
+        0 6BIT     .       .   E   .      .   E  .      Q  .         
+       94 A4       .       .   E U .      .   E  .      Q  . QMLNX   
+        0 A5M      .       .   E   .      .   E  .      Q  .         
+        0 ATTACHOP .       .   E U .      .   E  .      Q  . MLNX*   
+        0 B32      .       .   E U .      .   E  .      Q  . QMLNX   
+        0 B36      .       .   E   .      .   E  .      Q  .         
+        0 B48      .       .   E   .      .   E  .      Q  .         
+        0 B60      .       .   E   .      .   E  .      Q  .         
+        0 B64      .       .   E   .      .   E  .      Q  .         
+        0 CDCH     .       .   E   .      .   E  .      Q  .         
+        0 CETA2FR  .       .   E U .      .   E  .      Q  . MLNX*   
+        0 CETA2TO  .       .   E U .      .   E  .      Q  . MLNX*   
+        0 CETAFJCL .       .   E U .      .   E  .      Q  . MLNX*   
+        0 CETAFMTU .       .   E   .      .   E  .      Q  .         
+        0 CETASIXF .       .   E   .      .   E  .      Q  .         
+        0 CETASIXT .       .   E   .      .   E  .      Q  .         
+        0 CHWRITE  .       .   E U .      .   E  .      Q  . MLNX*   
+        0 CVFORLOW .       .   E U .      .   E  .      Q  . MLNX*   
+        0 DEBUG    .       .   E   .      .   E  .      Q  .         
+        0 DLLUN    .       .   E   .      .   E  .      Q  .         
+        0 F77      .       .   E U .      .   E  .      Q  . QMLNX   
+        0 FILL     .       .   E   .      .   E  .      Q  .         
+        0 FILN     .       .   E   .      .   E  .      Q  .         
+        0 INCHCHIN .       .   E   .      .   E  .      Q  .         
+        0 INITRH   .       .   E U .      .   E  .      Q  . MLNX*   
+        0 IOERREX  .       .   E U .      .   E  .      Q  . IOVPACK 
+        0 JARTYPQU .       .   E U .      .   E  .      Q  . MLNX*   
+        0 JQ81     .       .   E   .      .   E  .      Q  .         
+        0 JQB      .       .   E   .      .   E  .      Q  .         
+        0 JQE      .       .   E   .      .   E  .      Q  .         
+        0 LG       .       .   E U .      .   E  .      Q  . MLNX*   
+        0 MQAUGM   .       .   E   .      .   E  .      Q  .         
+        0 MULTI    .       .   E   .      .   E  .      Q  .         
+        0 NOGETWD  .       .   E   .      .   E  .      Q  .         
+        0 NOSHIFT  .       .   E   .      .   E  .      Q  .         
+        0 PROMPTIN .       .   E U .      .   E  .      Q  . MLNX*   
+        0 QASCII   .       .   E U .      .   E  .      Q  . QDEFAULT
+        0 QEBCDIC  .       .   E   .      .   E  .      Q  .         
+        0 QISASTD  .     U .   E   .      .   E  .      Q  . QMLNX   
+        0 QMCRU    .       .   E   .      .   E  .      Q  .         
+        0 QMILSTD  .       .   E   .      .   E  .      Q  .         
+        0 QORTHOLL .     U .   E   .      .   E  .      Q  . QMLNX   
+        0 QXCAPT   .       .   E   .      .   E  .      Q  .         
+        0 QXNO_SC  .       .   E   .      .   E  .      Q  .         
+        0 QX_SC    .       .   E U .      .   E  .      Q  . QDEFAULT
+        0 SKIPFULL .       .   E   .      .   E  .      Q  .         
+        0 T6UNI    .       .   E   .      .   E  .      Q  .         
+        0 T8VAX    .       .   E U .      .   E  .      Q  . MLNX*   
+        0 T8ZERO   .       .   E   .      .   E  .      Q  .         
+        0 T9ZERO   .       .   E   .      .   E  .      Q  .         
+        0 TNORM    .       .   E   .      .   E  .      Q  .         
+        0 TSIXZ    .       .   E   .      .   E  .      Q  .         
+        0 TYPINCET .       .   E U .      .   E  .      Q  . MLNX*   
+        0 TZERO    .       .   E   .      .   E  .      Q  .         
+        0 VS413    .       .   E   .      .   E  .      Q  .         
+        0 VSFORT   .       .   E   .      .   E  .      Q  .         
+        0 ZQMPOSS  .     U .   E   .      .   E  .      Q  . PCDE    
+        0 ZQPOSS   .     U .   E   .      .   E  .      Q  . PCDE    
+
+ ----------------------------
+ OTHER  PATCHES NOT TURNED UP
+
+        0 APOSYS   .       .   E   .      .   E  .         .         
+        0 CCGENCF  .       .   E U .      .   E  .         . *KLNX   
+        0 CHREAD   .       .   E U .      .   E  .         . MLNX*   
+        0 CRAZY    .       .   E U .      .   E  .         . QMLNX   
+        0 CRAZYERR .       .   E U .      .   E  .         . QMLNX   
+        0 EQUHOLCH .       .   E U .      .   E  .         . QDEFAULT
+        0 HEX      .       .   E U .      .   E  .         . QMLNX   
+        0 HOK      .     U .   E   .      .   E  .         . MLNX*   
+        0 INTDOUBL .       .   E U .      .   E  .         . QDEFAULT
+        0 JQPOSS   .     U .   E   .      .   E  .         . PCDE    
+        0 QHOLL    .       .   E U .      .   E  .         . QDEFAULT
+        0 QIEEE    .       .   E U .      .   E  .         . QMLNX   
+        0 QMUIX    .       .   E U .      .   E  .         . QMLNX   
+        0 QPOSIX   .       .   E U .      .   E  .         . QMLNX   
+        0 QTYPOK   .     U .   E   .      .   E  .         . QMLNX   
+        0 RQPOSS   .     U .   E   .      .   E  .         . PCDE    
+
+ --------------
+ READ        68 CARDS   ON CRADLE
+              0 CARDS   ON CARD-PAMS
+            967 RECORDS ON COMPACT BINARY PAMS, INCL.   382 SKIPPED.
+              1 PAM-CALLS.
+
+ --------------
+ WRITTEN
+        ASM    19706 CARDS   251 DECKS TO  LUN= 21   -- REWIND
+        ASMX     342 CARDS    16 DECKS TO  LUN= 21   --       
+        ASM2     496 CARDS     1 DECKS TO  LUN= 31   -- REWIND
+
+ ------------
+ MEMORY USAGE
+ FINAL SIZE OF STORE = 160418
+ LARGEST GAP REQUIRED BY ANY DECK WAS = 1171
+ GAP SECURITY FOR THIS RUN WAS        = 4000
+ NUMBER OF GARBAGE COLLECTIONS =   0
+ NUMBER OF WORDS UNUSED =144037
+
+ -----------------
+ LINES IN  /QMACH/
+ NQL-NOR  MAX  PTH
+     110  110    0
+
+ ----------------------
+ NO.OF WARNINGS PRINTED
+
+ BAD CONTROL CARDS    0
+ MISSING SEQUENCES    0
+ LOST ACTIVATIONS     0
+ UNSATISF/ REF'S      0
+ LEVEL 1 CLASHES      0
+ LEVEL 2 CLASHES      0
+ ----------------------
+
+step17:
+echo ' Check new ASM files against originals'
+ Check new ASM files against originals
+../ytobin << \\
+
+ YTOBIN   executing with Files / Options
+
+   1  CARD   11    asm.fca
+   2  PAM    21   =binfn.pam
+      OPT         P
+      CCH         C+
+   5  PRINT   6   TTY
+
+ VERSION  PATCHY  4.15 /1  911211 12.02           .RJP, TODAY:  201007  1549
+
+                    OPTIONS ...............P.R............
+
+
+ CONTROL-CHARACTER SUBSTITUTION,  CHANGE  C TO +
+ RESUME 'CARD'
+ RESUME 'PAM '
+
+     P=*TITLE*     0 + --- ARTEFACT      /0  201007 15.49                                                  
+
+ REWIND 'CARD'   AFTER FILE  1  WITH 20048 CARDS, 20048 TOTAL.
+ REWIND 'PAM '   AFTER FILE  1  WITH   486 RCRDS,   486 TOTAL.
+rm asm.fca
+../ytobin << \\
+
+ YTOBIN   executing with Files / Options
+
+   1  CARD   11    ../p4comp.fca
+   2  PAM    21   =binf.pam
+      OPT         +P
+      CCH         C+
+   5  PRINT   6   TTY
+
+ VERSION  PATCHY  4.15 /1  911211 12.02           .RJP, TODAY:  201007  1549
+
+                    OPTIONS ...............P.R............
+
+
+ CONTROL-CHARACTER SUBSTITUTION,  CHANGE  C TO +
+ RESUME 'CARD'
+ RESUME 'PAM '
+
+     P=*TITLE*     0 + --- ARTEFACT      /0  201007 15.49                                                  
+
+ REWIND 'CARD'   AFTER FILE  1  WITH 19878 CARDS, 19878 TOTAL.
+ REWIND 'PAM '   AFTER FILE  1  WITH   476 RCRDS,   476 TOTAL.
+../ycompar << \\
+
+ YCOMPAR  executing with Files / Options
+
+   1  NEW    12    binfn.pam
+   2  OLD    11    binf.pam
+      OPT         +
+   4  PRINT   6   TTY
+
+ VERSION  PATCHY  4.15 /1  911211 12.02           .RJP, TODAY:  201007  1549
+
+                    OPTIONS .................R............
+
+ RESUME 'NEW '
+ RESUME 'OLD '
+
+                       PAM-FILE   1
+                                        ARTEFACT      /0  201007 15.49                                                  
+                    D=YPATCH  
+                    D=YTOBCD  
+                    D=YTOBIN  
+                    D=YTOCET  
+                    D=YFRCET  
+                    D=YCOMPA  
+                    D=YEDIT   
+                    D=YINDEX  
+                    D=YLIST   
+                    D=YSEARC  
+                    D=YSHIFT  
+                    D=FLPARA  
+                    D=FLKRAK  
+                    D=FLINK   
+
+     1 ***                 C=    23
+                                    NEW       PARAMETER   (CSOLD='OLD') 
+                                    OLD       CHARACTER    UCC*8, CCPRI*(*), CCCAR*(*)  
+
+ ---------                    SKIP TO NEXT DECK  -----
+
+                    D=FLOPER  
+                    D=HELPPR  
+
+     2 ***                    PATCH/DECK MIS-MATCH  NEW= 1 PREADY    OLD= 1 PINIT   
+
+ ---------                    SKIP TO NEXT PAT   -----
+
+ HOLD   'NEW '   AFTER FILE  1  WITH   486 RCRDS,   486 TOTAL.
+ EOI ON  NEW 
+ REWIND 'NEW '
+ REWIND 'OLD '   AFTER FILE  1  WITH   476 RCRDS,   476 TOTAL.
+
+                        --------------------     2 FAILURES.
+echo ' 1 failure expected in step17 for difference in time'
+ 1 failure expected in step17 for difference in time
+rm binf.pam
+rm binfn.pam
+cd ../
+
+
+
+
+
+
+
+
+stept1:
+
+cd p4sub
+
+echo ' Make PXUSE as PAM file used in the tests'
+ Make PXUSE as PAM file used in the tests
+../yedit << \\
+
+ YEDIT    executing with Files / Options
+
+   1  OLD1   11    ../p4pam.pam
+   2  NEW1   21   =pxuse.pam
+      OPT         K
+      CCH         ?+
+   5  READ    5   TTY
+   6  PRINT   3   =y.lis
+   7  OLD2   12   -    ...
+
+
+
+stept2:
+echo ' Check  YTOBCD, YTOBIN, YCOMPAR'
+ Check  YTOBCD, YTOBIN, YCOMPAR
+../ytobcd << \\
+
+ YTOBCD   executing with Files / Options
+
+   1  PAM    11    pxuse.pam
+   2  CARD   21   =pxcar.car
+      OPT         -
+      CCH         -
+   5  PRINT   3   +y.lis
+   6  PDH    22   -       
+
+../ytobin << \\
+
+ YTOBIN   executing with Files / Options
+
+   1  CARD   11    pxcar.car
+   2  PAM    21   =pxcopy.pam
+      OPT         Q+
+      CCH         -
+   5  PRINT   3   +y.lis
+
+rm pxcar.car
+../ycompar << \\
+
+ YCOMPAR  executing with Files / Options
+
+   1  NEW    12    pxcopy.pam
+   2  OLD    11    pxuse.pam
+      OPT         Q+
+   4  PRINT   3   +y.lis
+
+ ----     0 FAILURES.
+
+
+stept3:
+echo ' Exercise YEDIT'
+ Exercise YEDIT
+
+
+
+../yedit pxuse =pxcopy ak - eof .go
+
+ YEDIT    executing with Files / Options
+
+   1  OLD1   11    pxuse.pam
+   2  NEW1   21   =pxcopy.pam
+      OPT         AK
+      CCH         -
+      READ        EOF
+   6  PRINT   3   +y.lis
+   7  OLD2   12   -    ...
+
+../ycompar pxcopy pxuse q+ .go
+
+ YCOMPAR  executing with Files / Options
+
+   1  NEW    12    pxcopy.pam
+   2  OLD    11    pxuse.pam
+      OPT         Q+
+   4  PRINT   3   +y.lis
+
+ ----     1 FAILURES.
+echo ' Comparison failures in stept3 as expected'
+ Comparison failures in stept3 as expected
+
+
+stept4:
+echo ' Make P4TLIS to be listed'
+ Make P4TLIS to be listed
+
+../yedit ../p4pam - dk \?+ tty :=P4TLIS .go << \\
+
+ YEDIT    executing with Files / Options
+
+   1  OLD1   11    ../p4pam.pam
+   2  NEW1   21   -
+      OPT         DK
+      CCH         ?+
+   5  READ    5   TTY
+   6  PRINT   3   =P4TLIS.lis
+   7  OLD2   12   -    ...
+
+
+stept5:
+echo ' Try YINDEX + YLIST'
+ Try YINDEX + YLIST
+
+../yindex :P4TLIS - :+1 .go
+
+ YINDEX   executing with Files / Options
+
+   1  PAM    11    P4TLIS.pam
+      OPT         -
+   3  PRINT   3   +P4TLIS.lis
+
+../ylist :P4TLIS w3 :+1 .go
+
+ YLIST    executing with Files / Options
+
+   1  PAM    11    P4TLIS.pam
+      OPT         W3
+   3  PRINT   3   +P4TLIS.lis
+
+
+
+stept6:
+echo ' Try YSHIFT'
+ Try YSHIFT
+
+../yshift pxuse =pxcopy p tty .go << \\
+
+ YSHIFT   executing with Files / Options
+
+   1  OLD    11    pxuse.pam
+   2  NEW    21   =pxcopy.pam
+      OPT         P
+   4  READ    5   TTY
+   5  PRINT   3   +y.lis
+
+../ycompar pxcopy pxuse q+ .go
+
+ YCOMPAR  executing with Files / Options
+
+   1  NEW    12    pxcopy.pam
+   2  OLD    11    pxuse.pam
+      OPT         Q+
+   4  PRINT   3   +y.lis
+
+ ----     0 FAILURES.
+echo ' Possible comparison failures expected in stept6'
+ Possible comparison failures expected in stept6
+
+
+stept7:
+echo ' Try YSEARCH'
+ Try YSEARCH
+
+../ysearch pxuse =temp - tty .go << \\
+
+ YSEARCH  executing with Files / Options
+
+   1  PAM    11    pxuse.pam
+   2  CARD   21   =temp.car
+      OPT         -
+   4  READ    5   TTY
+   5  PRINT   3   +y.lis
+   6  TEMP   24   -temp.scr
+
+
+../ysearch pxuse =temp - tty - =temp .go << \\
+
+ YSEARCH  executing with Files / Options
+
+   1  PAM    11    pxuse.pam
+   2  CARD   21   =temp.car
+      OPT         -
+   4  READ    5   TTY
+   5  PRINT   3   +y.lis
+   6  TEMP   24   -temp.scr
+
+rm temp.*
+
+
+stept8:
+echo ' Try YTOCETA/YFRCETA with disk-file'
+ Try YTOCETA/YFRCETA with disk-file
+
+../ytoceta pxuse =ce.dat - tty .go << \\
+
+ YTOCETA  executing with Files / Options
+
+   1  PAM    11    pxuse.pam
+   2  CETA   21   =ce.dat
+      OPT         -
+   4  READ    5   TTY
+   5  PRINT   3   +y.lis
+
+../yfrceta ce.dat 1 q+ eof .go
+
+ YFRCETA  executing with Files / Options
+
+   1  CETA   11    ce.dat
+   2  PAM    21    ce.pam
+      OPT         Q+
+      READ        EOF
+   5  PRINT   3   +y.lis
+
+../ycompar ce pxuse q+ .go
+
+ YCOMPAR  executing with Files / Options
+
+   1  NEW    12    ce.pam
+   2  OLD    11    pxuse.pam
+      OPT         Q+
+   4  PRINT   3   +y.lis
+
+ ----     0 FAILURES.
+rm ce.*
+rm pxcopy.pam
+rm pxuse.pam
+rm P4TLIS.pam
+cd ../
+mv p4sub/P4TLIS.lis p4tlis.lis
+mv p4sub/y.lis .
+echo ' look at file  y.lis'
+ look at file  y.lis
+echo ' look at file  p4tlis.lis'
+ look at file  p4tlis.lis
+exit
+---------------------------------------------------
+Patchy step 4: placing executables in /home/wimmer/aleph64bit/cern/patchy_install/patchy/4.15/bin
+---------------------------------------------------

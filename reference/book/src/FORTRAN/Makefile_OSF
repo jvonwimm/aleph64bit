@@ -1,0 +1,35 @@
+include ../UTILITIES/version.h
+
+NAME     = scanbookdev
+FFILES   = jscanbook/fortran/scanbookdev.f
+FFLAGS   = -w -O1 -G 3 
+LDFLAGS  = -G 3
+LIBS     =     /afs/cern.ch/aleph/OSF1/lib/libalephlib.a         \
+		/afs/cern.ch//aleph/OSF1/lib/libbos77.a            \
+		/cern/pro/lib/libmathlib.a       \
+		/cern/pro/lib/libpacklib-shift.a  \
+		/usr/local/lib/libshift.a
+
+SRCFILES =  $(FFILES)
+OBJFILES =  $(FFILES:.f=.o)
+
+$(OBJFILES): $(FFILES)
+	f77 $(FFLAGS) -o $(OBJFILES) -c $(FFILES)
+
+$(NAME): $(OBJFILES)
+	f77 -o $@ $(LDFLAGS) $(OBJFILES) $(LIBS)
+
+$(SRCFILES):
+# get the Fortran file :
+	cvs checkout $(VERSION) jscanbook/fortran
+
+install: $(NAME)
+	cp $(NAME)  /afs/cern.ch/user/a/alsoft/prod/prog/updabook
+	cp $(FFILES) .
+
+clean:
+	rm -rf jscanbook
+	rm -f $(NAME)
+
+
+ 

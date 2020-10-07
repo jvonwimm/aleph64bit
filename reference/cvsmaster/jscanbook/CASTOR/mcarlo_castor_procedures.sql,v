@@ -1,0 +1,861 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2004.01.12.10.29.08;	author jacotf;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@files written in new directory CASTOR
+@
+text
+@SET ARRAYSIZE 1;
+SET SERVEROUTPUT ON;
+CREATE or REPLACE PACKAGE mcarlo_castor_procedures 
+IS
+
+   TYPE Char_Tab IS
+      TABLE of VARCHAR2(100) NOT NULL
+      INDEX BY BINARY_INTEGER;
+
+   PROCEDURE general
+      (NbKingal   IN VARCHAR2 := '0' ,
+       NbRaw      IN VARCHAR2 := '0' ,
+       NbPot      IN VARCHAR2 := '0' ,
+       NbDst      IN VARCHAR2 := '0' ,
+       NbMini     IN VARCHAR2 := '0' ,
+       KinKeyWord IN VARCHAR2 := NULL,
+       NbRuns     IN VARCHAR2 := '0' ,
+       NbNtuples  IN VARCHAR2 := '0' ,
+       Test       IN VARCHAR2 := 'No',
+       Permission IN VARCHAR2
+      );
+      
+   PROCEDURE my_test;
+
+/*
+|| Global variables
+*/
+   Global_TypeOfData CASTORDESC.TypeOfData%TYPE := 'MCARLO';
+   Global_ProdName VARCHAR2(100) := 'MCPROD';
+   Global_permission VARCHAR2(100) := 'monkey';
+
+
+END mcarlo_castor_procedures;
+/
+show errors
+
+
+CREATE or REPLACE PACKAGE BODY mcarlo_castor_procedures
+/*
+|| !!!! If one wants to debug a procedure !!!!
+|| Before you can use dbms_output do:
+||    set serveroutput on; 
+|| The default buffer size can be too small - Increase the size of the STUPID buffer doing:
+||    DBMS_OUTPUT.ENABLE (1000000);
+||
+|| To increase the linesize for the output (default=80 characters) do:
+||    set linesize 132;
+*/
+IS
+
+FUNCTION check_kinkeyword_sequence
+   (KinKeyword IN VARCHAR2)
+
+   RETURN BOOLEAN
+IS 
+   seq_name VARCHAR2(100);
+   nb_rows INTEGER;
+
+BEGIN
+/*
+|| Check if a sequence exists for the production name entered.
+|| If not, create it
+*/
+    seq_name := KinKeyword || '_SEQ' ;
+
+    SELECT count(*) 
+    INTO nb_rows
+    FROM  USER_SEQUENCES
+      WHERE sequence_name like seq_name 
+    ;
+
+    IF nb_rows = 0 
+    THEN
+       EXECUTE IMMEDIATE 'CREATE sequence ' || seq_name || ' NOCACHE';
+    END IF;
+    RETURN TRUE;
+
+--EXCEPTION
+--   WHEN others THEN 
+--      RETURN FALSE;
+
+END check_kinkeyword_sequence;
+
+
+PROCEDURE give_kinkeyword_Key 
+   (KinKeyword  IN VARCHAR2, 
+    NextKey     OUT INTEGER)
+/*
+|| Give the list of the next free value for a given KinKeyword
+|| using the NEXTVAL facility.
+|| NB: This procedure is written in Dynamic SQL.
+*/
+IS
+   cursor1 INTEGER;
+   free_key NUMBER;
+   rows_processed INTEGER;
+   nfound INTEGER;
+   
+BEGIN
+   nfound := 0;
+   cursor1 := DBMS_SQL.OPEN_CURSOR;
+   DBMS_SQL.PARSE(cursor1,'SELECT ' || KinKeyword ||'_SEQ.NEXTVAL FROM DUAL',DBMS_SQL.NATIVE); 
+   DBMS_SQL.DEFINE_COLUMN(cursor1, 1, free_key);
+   rows_processed := DBMS_SQL.EXECUTE (cursor1);
+   LOOP
+      IF DBMS_SQL.FETCH_ROWS (cursor1) > 0 
+      THEN
+         nfound := nfound + 1;
+         DBMS_SQL.COLUMN_VALUE (cursor1, 1, free_key);  
+      ELSE
+         EXIT;
+      END IF;
+   END LOOP;
+
+   DBMS_SQL.CLOSE_CURSOR(cursor1);
+
+   NextKey := free_key;
+
+   IF nfound != 1
+   THEN
+      NextKey := -888;
+   END IF;
+   
+END;
+
+PROCEDURE give_RunNumbers
+   (KinKeyword    IN VARCHAR2    ,
+    DatType_index IN INTEGER     ,
+    DatType       IN VARCHAR2    ,
+    NrunsBooked   IN VARCHAR2    ,
+    RunNumbers    OUT Char_Tab   ,
+    ErrorFlag     IN OUT INTEGER ,
+    Error_message OUT VARCHAR2)
+/*
+|| From the parameters given, give the runs number 
+*/
+IS
+   kinkeyword_run VARCHAR2(100);
+   seq_exist BOOLEAN;
+
+   run_key INTEGER;
+   nruns INTEGER;
+   Runs_init VARCHAR2(10);
+
+BEGIN
+   
+   kinkeyword_run := KinKeyword || '_RUN';
+
+/*
+|| Check if the sequence exists for the kinkeyword_run 
+|| If not, it will be created
+*/
+   seq_exist := check_kinkeyword_sequence(kinkeyword_run);
+
+   IF seq_exist = TRUE
+   THEN
+/* 
+|| Do a loop on the number of nruns to book
+|| For each run find the next free key for the corresponding kinkeyword_run sequence
+|| and append a List
+|| The first element will be 0000 (ok) or -error code (not ok)
+*/ 
+      Runs_init := SUBSTR(DatType,1,1);          
+      nruns := to_number(NrunsBooked);
+         
+      FOR jj IN 1 .. nruns
+      LOOP
+         give_kinkeyword_Key(kinkeyword_run,run_key);
+ 
+         IF run_key != -888
+         THEN
+            RunNumbers(jj) := ' ' || Runs_init || to_char(run_key);
+         ELSE
+            ErrorFlag := ErrorFlag + POWER(10,DatType_index);
+            Error_message := '^' || 'More than 1 row find for ' || kinkeyword_run || '_SEQ sequence key value';
+            RETURN;
+         END IF;
+      END LOOP;
+    ELSE    
+       ErrorFlag := ErrorFlag + POWER(10,DatType_index);
+       Error_message := '^' || 'Error creating sequence ' || kinkeyword_run || '_SEQ ';
+    END IF;
+    
+END give_RunNumbers;
+
+
+PROCEDURE give_Ntuples
+   (KinKeyword     IN VARCHAR2    ,
+    DatType_index  IN INTEGER     ,
+    DatType        IN VARCHAR2    ,
+    Ntuplesbooked  IN VARCHAR2    ,
+    NtuplesNumbers OUT Char_Tab   ,
+    ErrorFlag      IN OUT INTEGER ,
+    Error_message  OUT VARCHAR2)
+/*
+|| From the parameters given, give the ntuples number 
+*/
+IS
+   kinkeyword_ntuples VARCHAR2(100);
+   seq_exist BOOLEAN;
+
+   ntuple_key INTEGER;
+   ntuples INTEGER;
+   Ntuples_init VARCHAR2(10);
+
+BEGIN
+
+   kinkeyword_ntuples := KinKeyword || '_NTUPLES';
+
+/*
+|| Check if the sequence exists for the kinkeyword_ntuples
+|| If not, it will be created
+*/
+   seq_exist := check_kinkeyword_sequence(kinkeyword_ntuples);
+
+   IF seq_exist = TRUE
+   THEN
+/* 
+|| Do a loop on the number of ntuples to book
+|| For each ntuple find the next free key for the corresponding kinkeyword_ntuples sequence
+|| and append a List
+|| The first element will be 0000 (ok) or -error code (not ok)
+*/ 
+      Ntuples_init := SUBSTR(DatType,1,1);          
+      ntuples := to_number(NtuplesBooked);
+         
+      FOR jj IN 1 .. ntuples
+      LOOP
+         give_kinkeyword_Key(kinkeyword_ntuples,ntuple_key);
+ 
+         IF ntuple_key != -888
+         THEN
+            NtuplesNumbers(jj) := ' ' || Ntuples_init || to_char(ntuple_key);
+         ELSE
+            ErrorFlag := ErrorFlag + POWER(10,DatType_index);
+            Error_message := '^' || 'More than 1 row find for ' || kinkeyword_ntuples || '_SEQ sequence key value';
+            RETURN;
+         END IF;
+      END LOOP;
+    ELSE    
+       ErrorFlag := ErrorFlag + POWER(10,DatType_index);
+       Error_message := '^' || 'Error creating sequence ' || kinkeyword_ntuples || '_SEQ ';
+    END IF;
+    
+END give_Ntuples;
+
+
+PROCEDURE give_ProdNumber
+   (KinKeyword    IN  VARCHAR2   ,
+    DatType_index IN  INTEGER    ,
+    DatType       IN  VARCHAR2   ,
+    prodNumber    OUT Char_Tab   ,
+    ErrorFlag     IN OUT INTEGER ,
+    Error_message OUT VARCHAR2)
+/*
+|| From the parameters given, give the Production number 
+*/
+
+IS
+   kinkeyword_prod VARCHAR2(100);
+   seq_exist BOOLEAN;
+
+   prod_key  INTEGER;
+   ProdNumb_init VARCHAR2(10);
+
+BEGIN
+
+   kinkeyword_prod := KinKeyword || '_PROD';
+
+/*
+|| Check if the sequence exists for the kinkeyword_prod
+*/
+   seq_exist := check_kinkeyword_sequence(kinkeyword_prod);
+  
+   IF seq_exist = TRUE
+   THEN
+      give_kinkeyword_Key(kinkeyword_prod,prod_key);
+
+      IF prod_key != -888
+      THEN
+         ProdNumb_init := SUBSTR(DatType,1,1);
+         prodNumber(1) := ' ' || ProdNumb_init || to_char(prod_key); 
+      ELSE
+         ErrorFlag := ErrorFlag + POWER(10,DatType_index);
+         Error_message := '^' || 'More than 1 row find for ' || kinkeyword_prod || '_SEQ sequence key value';
+      END IF;
+
+    ELSE
+
+       ErrorFlag := ErrorFlag + POWER(10,DatType_index);
+       Error_message := '^' || 'Error creating sequence ' || kinkeyword_prod || '_SEQ ';
+
+    END IF;
+
+END give_ProdNumber;
+
+
+FUNCTION check_sequence
+   (prodName IN VARCHAR2)
+/*
+|| Check if a sequence exists for the production name entered.
+*/
+
+   RETURN BOOLEAN
+IS 
+   seq_name VARCHAR2(100);
+   nb_rows INTEGER;
+   
+BEGIN
+    seq_name := prodName || '_SEQ' ;
+
+    SELECT count(*) 
+    INTO nb_rows
+    FROM  USER_SEQUENCES
+      WHERE sequence_name like seq_name 
+    ;
+
+    IF nb_rows = 0 
+    THEN
+       RETURN FALSE;
+    ELSE   
+       RETURN TRUE;
+    END IF;
+END check_sequence;
+
+
+PROCEDURE give_params_keys
+    (TypeDat     IN VARCHAR2,
+     DatType     IN VARCHAR2,
+     TypeDat_key OUT VARCHAR2,
+     DatType_key OUT VARCHAR2)
+/*
+|| From the given parameters (except production name)
+|| retrieve the 2 corresponding keys (a letter + a number)
+|| These keys will be the first 2 characters of the castorname
+|| (TapeId)   
+*/
+
+IS 
+   nfound INTEGER;
+
+BEGIN
+DECLARE
+   CURSOR castor_cur IS
+      SELECT *
+      FROM CASTORDESC
+      WHERE
+             UPPER(TypeOfData) like TypeDat
+         AND UPPER(DataType) like DatType
+      ;
+      castor_rec castor_cur%ROWTYPE;
+
+BEGIN
+   nfound := 0;
+   OPEN castor_cur;
+   LOOP
+      FETCH castor_cur INTO castor_rec;
+      EXIT WHEN castor_cur%NOTFOUND;
+      nfound := nfound + 1;
+      TypeDat_key := UPPER(castor_rec.TypeOfData_key);
+      DatType_key := UPPER(castor_rec.DataType_key);
+   END LOOP;
+   CLOSE castor_cur;
+
+/* 
+|| There must be only 1 record found      
+*/
+   IF nfound != 1
+   THEN
+      TypeDat_key := 'unknown';
+      DatType_key := 'unknown';
+   END IF;      
+END;        
+
+END give_params_keys;
+
+
+PROCEDURE give_CastorKey 
+   (prodName  IN VARCHAR2,
+    Key_for   IN VARCHAR2, 
+    NextKey   OUT INTEGER)
+/*
+|| Give the next free value for a given sequence 
+|| (ex: MCPRODPOT or MCPRODMINI ..
+||      ... MCPRODNUMB
+|| using the NEXTVAL facility.
+|| NB:  = If the nextkey is requested for the production number,
+||        Key_for = 'prod_numb' 
+|| This procedure is written in Dynamic SQL.
+*/
+IS
+   cursor1 INTEGER;
+   free_key NUMBER;
+   rows_processed INTEGER;
+   nfound INTEGER;
+   
+BEGIN
+   nfound := 0;
+
+   cursor1 := DBMS_SQL.OPEN_CURSOR;
+   DBMS_SQL.PARSE(cursor1,'SELECT ' || prodName ||'_SEQ.NEXTVAL FROM DUAL',DBMS_SQL.NATIVE); 
+   DBMS_SQL.DEFINE_COLUMN(cursor1, 1, free_key);
+   rows_processed := DBMS_SQL.EXECUTE (cursor1);
+   LOOP
+      IF DBMS_SQL.FETCH_ROWS (cursor1) > 0 
+      THEN
+         nfound := nfound + 1;
+         DBMS_SQL.COLUMN_VALUE (cursor1, 1, free_key);  
+      ELSE
+         EXIT;
+      END IF;
+   END LOOP;
+
+   DBMS_SQL.CLOSE_CURSOR(cursor1);
+
+   NextKey := free_key;
+
+   IF nfound != 1
+   THEN
+      NextKey := -777;
+   END IF;
+   
+/* 
+|| If the key is > 999999 for a production type sequence
+|| give an error
+*/
+   IF Key_for = 'cast_names'
+   THEN
+      IF NextKey > 999999
+      THEN
+         NextKey := '-999';
+      END IF;
+   END IF;
+
+END;
+
+
+PROCEDURE give_CastorNames
+   (prodName      IN VARCHAR2    ,
+    TypeDat       IN VARCHAR2    ,
+    DatType_index IN INTEGER     ,
+    DatType       IN VARCHAR2    ,
+    Nfiles_booked IN VARCHAR2    ,
+    CastorName    OUT Char_Tab   ,
+    ErrorFlag     IN OUT INTEGER ,
+    Error_message OUT VARCHAR2)
+/*
+|| From the parameters given, give the name of a dataset 
+*/
+IS
+   seq_exist BOOLEAN;
+
+   key_for VARCHAR2(20) := 'cast_names';
+   TypeDat_key CASTORDESC.TypeOfData_key%TYPE;
+   DatType_key CASTORDESC.DataType_key%TYPE;
+   castor_key INTEGER;
+   file_number VARCHAR2(10);
+   nfiles INTEGER;
+   DatType_init VARCHAR2(10);
+
+   LabelKey VARCHAR2(60);
+   ll INTEGER;
+
+BEGIN
+
+/*
+|| Check if the sequence exists for the prodName entered
+*/
+   seq_exist := check_sequence(prodName);
+  
+   IF seq_exist = TRUE
+   THEN
+
+/*
+|| Check the parameters (except the production name)
+|| and retrieve the corresponding keys
+*/
+      give_params_keys(TypeDat,DatType,TypeDat_key,DatType_key);
+      
+      IF TypeDat_key = 'unknown' 
+      THEN
+         ErrorFlag := ErrorFlag + POWER(10,DatType_index);
+         Error_message := '^' || 'Cannot find a key for the DataType ' || TypeDat || 
+                          ' and the type of data ' || DatType ;
+      ELSE
+         DatType_init := SUBSTR(DatType,1,1);
+         nfiles := to_number(Nfiles_booked);
+
+/* 
+|| Do a loop on the number of files to book
+|| For each file find the next free key for the corresponding production 
+|| name sequence and append a list 
+*/       
+         FOR jj IN 1 .. nfiles  
+         LOOP
+            give_CastorKey(prodName,key_for,castor_key);
+
+            IF MOD(castor_key,1000) = 0
+            THEN
+               give_CastorKey(prodName,key_for,castor_key);
+            END IF;
+
+            IF castor_key > 0
+            THEN
+               LabelKey := to_char(castor_key);
+   
+               ll := LENGTH(LabelKey);
+               IF ll < 6
+               THEN
+                  FOR jj in 1 .. 6-ll 
+                  LOOP   
+                     LabelKey := '0' || LabelKey; 
+                  END LOOP;
+               END IF;
+   
+/*
+|| The file number can have a maximum size of 3 characters. 
+|| In the Castor Name the file number 0 is not permitted
+|| So:
+||  - If the string containing the 4th and 5th characters 
+||      of LabelKey = '00', keep only the 6th character 
+||  - If the 4th character = '0', keep only the string containing    
+||      the 5th and 6th characters
+*/
+               IF SUBSTR(LabelKey,4,2) = '00'
+               THEN
+                  file_number := SUBSTR(LabelKey,6,1);
+               ELSIF SUBSTR(LabelKey,4,1) = '0'
+               THEN
+                  file_number := SUBSTR(LabelKey,5,2);
+               ELSE
+                  file_number := SUBSTR(LabelKey,4,3);
+               END IF;   
+
+              CastorName(jj) := ' ' || DatType_init || 'Z' || TypeDat_key || DatType_key || SUBSTR(LabelKey,1,3) || '.' || file_number;
+            ELSE
+               ErrorFlag := ErrorFlag + POWER(10,DatType_index);
+               IF castor_key = -777
+               THEN
+                  Error_message := '^' || 'More than 1 row find for ' || prodName || '_SEQ sequence key value';
+               ELSE
+                  Error_message := '^' || 'Sorry ! Aleph has already used more than 999999 ' || DatType || ' tapes';
+               END IF;
+               RETURN;
+            END IF;
+         END LOOP;
+       END IF;
+    ELSE
+       ErrorFlag := ErrorFlag + POWER(10,DatType_index);
+       Error_message := '^' || 'Sequence ' || prodName || '_SEQ does not exist ';       
+    END IF;
+
+END give_CastorNames;
+  
+
+PROCEDURE general
+   (NbKingal   IN VARCHAR2 := '0' ,
+    NbRaw      IN VARCHAR2 := '0' ,
+    NbPot      IN VARCHAR2 := '0' ,
+    NbDst      IN VARCHAR2 := '0' ,
+    NbMini     IN VARCHAR2 := '0' ,
+    KinKeyWord IN VARCHAR2 := NULL,
+    NbRuns     IN VARCHAR2 := '0' ,
+    NbNtuples  IN VARCHAR2 := '0' , 
+    Test       IN VARCHAR2 := 'No',
+    Permission IN VARCHAR2)
+
+IS
+    Type_Dat CASTORDESC.TypeOfData%TYPE;
+    Data_Type CASTORDESC.Datatype%TYPE;
+   
+    prod_or_test VARCHAR2(100);
+    prod_name    VARCHAR2(100);  
+    my_light     VARCHAR2(30);
+    
+    castor_name   Char_Tab;
+    run_number    Char_Tab;
+    ntuple_number Char_Tab;
+    prod_number   Char_Tab;
+    castor_output Char_Tab;
+
+    loc_output    INTEGER := 1;
+    nfilout       INTEGER;
+ 
+    next_datype  INTEGER;
+
+    datype_list  Char_Tab;
+    nb_datype    Char_Tab;
+    EmptyList    Char_Tab;
+
+    ErrorFlag     INTEGER := 0;
+    Error_message VARCHAR2(100);
+
+    my_dbase VARCHAR2(100);
+    loc_dbase INTEGER;
+
+BEGIN
+
+   castor_output := EmptyList;
+
+/*
+|| Check if the user is authorized to execute these procedures 
+*/
+   IF Permission != Global_permission
+   THEN
+      ErrorFlag := 1;
+      Error_message := '^' || '**** You are not an authorized user';
+   END IF;
+   
+/* 
+|| Execute the package test_or_prod to know if we are running
+|| on a test oracle database or on a production oracle database.
+||
+|| If we are on a production database, the tests are not authorized.
+|| If we are on a development database we must be in tests, 
+|| If we are in tests, change the Global variable Global_TypeOfData
+*/
+   IF ErrorFlag = 0
+   THEN
+      prod_or_test := test_or_prod.give_prodType;
+
+/*
+|| We are on a development oracle database
+*/
+      IF prod_or_test = 'Test'
+      THEN
+         IF Test != 'Yes' 
+         THEN  
+            ErrorFlag := 2; 
+            Error_message := '^' || ' Parameter Test=Yes must be given on this oracle database';
+         ELSE 
+            Global_TypeOfData := 'TEST';
+         END IF;
+
+      ELSE
+/*
+|| We are on a production oracle database
+*/
+         IF Test = 'Yes' 
+         THEN
+            ErrorFlag := 2; 
+            Error_message := '^' || ' Parameter Test=Yes not permitted on this oracle database';
+         END IF;
+      END IF;
+   END IF;
+/* 
+|| Check on KinKeyWord and NbRuns
+|| THe KinKeyWord must be given  
+*/
+   IF ErrorFlag = 0
+   THEN
+      IF KinKeyWord IS NULL
+      THEN
+         ErrorFlag := 3;
+         Error_message := '^' || 'You must give the parameter KinKeyWord ';
+      ELSE
+         IF NbRuns = '0'
+         THEN
+            ErrorFlag := 3;
+            Error_message := '^' || 'For KinKeyWord = ' || KinKeyWord || ' NbRuns = ' || NbRuns;
+         END IF;
+      END IF;
+   END IF;
+
+   IF ErrorFlag = 0
+   THEN
+/*
+|| To avoid multiple accesses to the sequences lock a table
+*/
+      SELECT light
+      INTO my_light 
+      FROM CASTORLOCK
+      FOR UPDATE;
+
+      datype_list(1) := 'KINGAL'; 
+      datype_list(2) := 'RAW'; 
+      datype_list(3) := 'POT'; 
+      datype_list(4) := 'DST'; 
+      datype_list(5) := 'MINI'; 
+
+      datype_list(6) := 'runs'; 
+      datype_list(7) := 'NTUPLES'; 
+      datype_list(8) := 'production';
+      
+      nb_datype(1) := NbKinGal; 
+      nb_datype(2) := NbRaw; 
+      nb_datype(3) := NbPot; 
+      nb_datype(4) := NbDst; 
+      nb_datype(5) := NbMini; 
+
+/* 
+|| Depending on the parameters values, execute the appropriate procedures
+|| Execute give_CastorNames
+|| If an error occurred do not continue
+*/
+      Type_Dat := Global_TypeOfData;
+
+      FOR kk IN 1 .. nb_datype.COUNT
+      LOOP
+         IF ErrorFlag = 0
+         THEN
+            IF nb_datype(kk) != '0'
+            THEN
+               prod_name := Global_ProdName || datype_list(kk);
+
+               give_CastorNames(prod_Name,Type_Dat,kk,datype_list(kk),nb_datype(kk),castor_name,ErrorFlag,Error_message);
+           
+               IF ErrorFlag = 0
+               THEN
+                  nfilout := castor_name.COUNT;
+                  FOR ij IN 1 .. nfilout
+                  LOOP
+                     castor_output(loc_output) := castor_name(ij);
+                     loc_output := loc_output + 1;
+                  END LOOP;  
+               END IF;
+            END IF;
+         END IF;
+      END LOOP;
+
+      next_datype := nb_datype.COUNT + 1;
+
+/*
+|| Execute give_RunNumbers   
+*/
+      IF ErrorFlag = 0
+      THEN
+         IF NbRuns != '0'
+         THEN
+            give_RunNumbers(UPPER(KinKeyword),next_datype,datype_list(next_datype),NbRuns,run_number,ErrorFlag,Error_message);
+
+            IF ErrorFlag = 0
+            THEN
+               nfilout := run_number.COUNT;
+               FOR ij IN 1 .. nfilout
+               LOOP
+                  castor_output(loc_output) := run_number(ij);
+                  loc_output := loc_output + 1;
+               END LOOP;  
+            END IF; 
+         END IF;
+      END IF;
+
+      next_datype := next_datype + 1;
+
+/*
+|| Execute give_Ntuples   
+*/
+      IF ErrorFlag = 0
+      THEN
+         IF NbNtuples != '0'
+         THEN
+            give_Ntuples(UPPER(KinKeyword),next_datype,datype_list(next_datype),NbNtuples,ntuple_number,ErrorFlag,Error_message);
+
+            IF ErrorFlag = 0
+            THEN
+               nfilout := ntuple_number.COUNT;
+               FOR ij IN 1 .. nfilout
+               LOOP
+                  castor_output(loc_output) := ntuple_number(ij);
+                  loc_output := loc_output + 1;
+               END LOOP;  
+            END IF; 
+         END IF;
+      END IF;
+
+      next_datype := next_datype + 1;
+
+/*
+|| Execute give_ProdNumber   
+*/
+      IF ErrorFlag = 0
+      THEN
+         give_ProdNumber(UPPER(KinKeyword),next_datype,datype_list(next_datype),prod_number,ErrorFlag,Error_message);
+
+         IF ErrorFlag = 0
+         THEN
+            castor_output(loc_output) := prod_number(1);
+         END IF;
+ 
+      END IF;
+         
+/*
+|| Unlock now
+*/
+      COMMIT;
+
+   END IF;
+
+   dbms_output.put_line(to_char(ErrorFlag));
+   htp.prn(ErrorFlag);
+
+   IF ErrorFlag != 0
+   THEN
+      dbms_output.put_line(Error_message);
+      htp.prn(Error_message);
+   ELSE
+      FOR jj IN 1 .. castor_output.COUNT
+      LOOP
+         dbms_output.put_line(castor_output(jj));
+         htp.prn(castor_output(jj));
+      END LOOP;
+   END IF;
+
+   htp.print;
+
+END general; 
+
+
+PROCEDURE my_test
+/*
+|| Can be useful to debug
+*/
+IS
+BEGIN
+--   mcarlo_castor_procedures.general(NbKingal=>'2',NbMini=>'1',Permission=>'monkey');   
+--   mcarlo_castor_procedures.general(NbKingal=>'2',KinKeyWord=>'mykin23',NbRuns=>'4',Test=>'No',Permission=>'monkey');   
+   mcarlo_castor_procedures.general(NbPot=>'2',NbRaw=>'1',Permission=>'monkey');   
+--   mcarlo_castor_procedures.general(NbKingal=>'2',NbDst=>'3',NbNtuples=>'1',Permission=>'monkey');   
+--   mcarlo_castor_procedures.general(NbKingal=>'3',NbMini=>'1',Permission=>'monkey');   
+END my_test;
+
+
+END mcarlo_castor_procedures;
+/
+show errors
+
+
+
+
+
+
+
+
+
+
+
+
+@

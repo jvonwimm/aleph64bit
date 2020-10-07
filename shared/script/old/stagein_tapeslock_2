@@ -1,0 +1,208 @@
+#!/bin/csh
+##############################################################################
+#                           stagein_tapeslock
+#                               F.Blin
+##############################################################################
+# call by sycheck_perl
+##############################################################################
+if ($HOST != $STAGE_HOST) exit
+set n = 0
+while ($n < $#argv)
+      @ n++
+      if ("$argv[$n]" == "-v") set echo on
+end
+set sycheck_out = "$ALEPH/log/sycheck.out"
+set begin_date = `date "+%Y %m %d %H:%M:%S"`
+set last_date = ""
+set last_date = `grep "++++" ${sycheck_out} | tail -1`
+set last_day = `echo ${last_date} | awk '{print $3}'`
+
+unset noclobber
+
+set year_months = ('01' '02' '03' '04' '05' '06' '07' '08' '09' '10' '11' '12')
+set day_months = ('31' '28' '31' '30' '31' '30' '31' '31' '30' '31' '30' '31')
+ 
+set year = `date "+%Y %m %d %H:%M:%S" | awk '{print $1}'`
+set day = `date "+%Y %m %d %H:%M:%S" | awk '{print $3}'`
+set day_previous = ${day}
+set month = `date "+%Y %m %d %H:%M:%S" | awk '{print $2}'`
+set month_previous = ${month}
+@ day_previous = ${day} - 1
+#echo "$month $month_previous $day $day_previous"
+ 
+if (${day_previous} > 0) goto BEGIN
+set n = 1
+set n_previous = 12
+while (${n} <= 12)
+   if (${year_months[$n]} == ${month}) then
+      if (${n} > 1) @ n_previous = ${n} - 1
+      set month_previous = ${year_months[${n_previous}]}
+      set day_previous = ${day_months[${n_previous}]}
+      goto BEGIN
+   endif
+   @ n++
+end
+ 
+BEGIN:
+set FSTAGEIN = "/u/xu/aleph/log/stagein.log"
+set TAPELOCK = "/al/reference/log/tapes.lock"
+ 
+set last_month = `echo ${last_date} | awk '{print $2}'`
+set first_day = ${last_day}
+set first_month = ${last_month}
+#echo "last_month=$last_month first_month=$first_month"
+ 
+set DT = ${HOME}
+set date4 = `date | awk '{print $2substr($4,1,2)substr($4,4,2)}'`
+set TT = "tmp_stagein_${day}${date4}"
+set TNEW = "tmp_stagein_new_${day}${date4}"
+set TOUT = "tmp_stagein_tapeslock"
+if (-e ${DT}/${TOUT}) rm -f ${DT}/${TOUT}
+
+#>>>> to check $ALEPH/log/tapes.lock time > 1h
+if !(-e $TAPELOCK) goto END_TAPELOCK 
+set str_lock = `ls -l $TAPELOCK` 
+set lock_host = `awk '{print $1}' $TAPELOCK | tr "[A-Z]" "[a-z]"` 
+set lock_user = `awk '{print $2}' $TAPELOCK | tr "[A-Z]" "[a-z]"`
+
+set lock_D = `echo $str_lock | awk '{print $7}'`
+if ($day != $lock_D) goto LOCK_WARN
+
+set lock_H = `echo $str_lock | awk '{print substr($8,1,2)}'` 
+set lock_M = `echo $str_lock | awk '{print substr($8,4,2)}'` 
+@ lock_mm = (((${lock_H}) * 60) + ${lock_M})
+
+set now = `date '+%y %m %d %H %M'`
+set now_H = `echo $now | awk '{print $4}'`
+set now_M = `echo $now | awk '{print $5}'`
+@ check_mm = (((${now_H}) * 60) + ${now_M}) - 60
+#   echo $day $now_H $now_M $check_mm
+#   echo $lock_D $lock_H $lock_M $lock_mm  
+if ($lock_mm >= $check_mm) goto END_TAPELOCK
+
+LOCK_WARN: 
+set ps_lock = `rsh $lock_host "ps -ef | grep /al/shared/script/tapes | grep $lock_user | grep -v grep"`
+echo "rsh $lock_host ps -ef | grep /al/shared/script/tapes | grep $lock_user | grep -v 'ps -ef'" >> ${DT}/${TOUT}
+set lock_warn = `echo $str_lock | awk '{print $3" "$6" "$7" "$8" "$9}'`
+echo "WARNING $lock_warn" >> ${DT}/${TOUT}
+cat $TAPELOCK >> ${DT}/${TOUT}
+if ("$ps_lock" != "") echo "${ps_lock}" >> ${DT}/${TOUT}
+if ("$ps_lock" == "") then 
+   rm -f $TAPELOCK
+   echo "erase $TAPELOCK" >> ${DT}/${TOUT}
+   cat ${DT}/${TOUT} | Mail -s "***rm -> TAPES.LOCK" fblxu@aloha.cern.ch,closier@aloha.cern.ch
+   goto END_TAPELOCK
+endif
+#cat ${DT}/${TOUT} | Mail -s "***TAPES.LOCK" $lock_user@$lock_host.cern.ch
+cat ${DT}/${TOUT} | Mail -s "***TAPES.LOCK" fblxu@aloha.cern.ch,closier@aloha.cern.ch
+
+END_TAPELOCK:
+#<<<<
+set str_echo = '---- errors staging in ----'
+
+LOOP:
+set str_search = "${year} ${last_month} ${last_day} "
+egrep "${str_search}" ${FSTAGEIN} | grep -v " 0)" >> ${DT}/${TT}
+#echo ${last_day} ${day}
+
+if (${last_day} > 31) goto OUT
+if (${last_day} != ${day}) then
+   @ last_day++
+   if ($last_day < 10) set last_day = "0${last_day}"
+   if (${last_month} == ${month}) goto LOOP
+   set last_day = "01"
+   set last_month = ${month}
+   goto LOOP
+endif
+ 
+ALREADY_SYCHECK:
+set last_day = ${first_day}
+set last_month = ${first_month}
+
+if (-z ${DT}/${TT}) goto OUT
+
+set n_lines = `wc -l ${DT}/${TT} | awk '{print $1}'`
+if (${n_lines} > 50) then
+   cp ${DT}/${TT} ${DT}/${TT}ERROR${n_lines}
+   echo "TOO MANY ... ${str_echo} see ${DT}/${TT}ERROR${n_lines}" >> ${DT}/${TOUT}
+   goto OUT 
+endif
+
+set n_fields = `awk '{print NF}' ${DT}/${TT}`
+set lines = `awk '{print $0}' ${DT}/${TT}`
+#echo "n_lines -> $n_lines"
+#echo $n_fields
+#echo $lines
+@ i = 1
+@ nf = 0
+set str_check_old = ""
+while ($i <= $n_lines)
+   @ n = $nf + 1
+   @ nf = $nf + ${n_fields[$i]}
+   set idem = `grep "${lines[$n-$nf]}" ${sycheck_out}`
+   if ("$idem" != "${lines[$n-$nf]}") then
+      echo "${lines[$n-$nf]}" >> ${DT}/${TNEW}
+      set t_index = `echo ${lines[$n-$nf]} | awk '{print index($7,"_")}'`
+      if (${t_index} < 1) set str_check = `echo ${lines[$n-$nf]} | awk '{print $6 " " substr($7,1,5)}'`
+      if (${t_index} > 1) set str_check = `echo ${lines[$n-$nf]} | awk '{print $6 " " substr($7,1,6)}'`
+
+#=====> check rc_error
+      if ("$str_check" != "$str_check_old") then
+         set str_error = ""
+         set rc_error = `echo ${lines[$n-$nf]} | awk '{print substr($9,1,length($9)-1)}'`
+         if ($rc_error == 192) set str_error = "Request cancelled by stageclr"
+         if ($rc_error == 193) set str_error = "Blocks were skipped only with  Option -E"
+         if ($rc_error == 194) set str_error = "Blocks were skipped and stageing limited by size"
+         if ($rc_error == 195) set str_error = "Stagein stopped: too many tape errors, but -E keep"
+         if ($rc_error == 197) set str_error = "Stageing limited by size  given by option -s"
+#         echo "rc_error=$rc_error str_error=$str_error"
+         if ("$str_error" != "") then
+            echo "${str_error}" >> ${DT}/${TNEW}
+            goto END_GREP        
+         endif
+
+#======> call stagerror 
+         set t_hm = `echo ${lines[$n-$nf]} | awk '{print substr($4,1,5)}'` 
+         set t_f = `echo ${lines[$n-$nf]} | awk '{print $7}'`
+         echo "${begin_date} : stagerror ${t_f} ${t_hm}" >> /u/xu/fblxu/dir_sycheck/check_stagerror
+         $ALEPH/script/stagerror ${t_f} ${t_hm} >& ${DT}/${TNEW}_stagerror
+         set n_stagerror = `wc -l ${DT}/${TNEW}_stagerror | awk '{print $1}'`
+         if (${n_stagerror} < 2) goto END_GREP
+
+         grep -i "tms" ${DT}/${TNEW}_stagerror >> ${DT}/${TNEW}
+         grep "CPTPDSK ! INCORRECT OR MISSING TRAILER LABEL ON TAPE" ${DT}/${TNEW}_stagerror >> ${DT}/${TNEW}
+         grep "cannot fork: no swap space" ${DT}/${TNEW}_stagerror >> ${DT}/${TNEW}
+         grep "bad label structure" ${DT}/${TNEW}_stagerror >> ${DT}/${TNEW}
+         grep "label type mismatch" ${DT}/${TNEW}_stagerror >> ${DT}/${TNEW}
+         grep "vsn mismatch" ${DT}/${TNEW}_stagerror >> ${DT}/${TNEW}
+         grep "does not exist" ${DT}/${TNEW}_stagerror >> ${DT}/${TNEW}
+         grep "kill received" ${DT}/${TNEW}_stagerror >> ${DT}/${TNEW}
+         grep "fid mismatch" ${DT}/${TNEW}_stagerror >> ${DT}/${TNEW}
+         grep "mount cancelled" ${DT}/${TNEW}_stagerror >> ${DT}/${TNEW}
+         grep "request cleared" ${DT}/${TNEW}_stagerror >> ${DT}/${TNEW}
+         grep "stage returns 28" ${DT}/${TNEW}_stagerror >> ${DT}/${TNEW}
+         grep -i "error " ${DT}/${TNEW}_stagerror | grep -v "+++++" >> ${DT}/${TNEW}
+
+END_GREP:
+         if (-e "${DT}/${TNEW}_stagerror") then
+#            cat ${DT}/${TNEW}_stagerror >> $ALEPH/log/stagerror.out
+            rm -f ${DT}/${TNEW}_stagerror
+         endif
+      endif
+      set str_check_old = "$str_check"
+   endif
+#======< call stagerror 
+   @ i++
+end
+
+OUT:
+if (-e ${DT}/${TT}) rm -f ${DT}/${TT}
+if (-z ${DT}/${TNEW}) rm -f ${DT}/${TNEW}
+if (-e ${DT}/${TNEW}) then
+   echo "${str_echo}" >> ${DT}/${TOUT}
+   cat ${DT}/${TNEW} >> ${DT}/${TOUT}
+   rm -f ${DT}/${TNEW}
+endif
+
+unsetenv NORETRY
+exit

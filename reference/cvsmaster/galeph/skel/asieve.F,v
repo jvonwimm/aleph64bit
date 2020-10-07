@@ -1,0 +1,335 @@
+head	1.4;
+access;
+symbols
+	gal309_3:1.4
+	gal309_2:1.3
+	gal309_1:1.3
+	gal309:1.3
+	gal308_2:1.3
+	gal308_1:1.3
+	gal308:1.3
+	gal307_2:1.3
+	gal307_1:1.3
+	gal307:1.3
+	gal306_3:1.3
+	gal306_2:1.3
+	gal306_1:1.3
+	gal306:1.3
+	gal305_3:1.3
+	gal305_2:1.3
+	gal305_1:1.3
+	gal305:1.3
+	gal304_11:1.3
+	gal304_10:1.3
+	gal304_9:1.3
+	gal304_8:1.3
+	gal304_7:1.3
+	gal304_6:1.3
+	gal304_5:1.3
+	gal304_4:1.3
+	gal304_3:1.3
+	gal304_2:1.3
+	gal304_1:1.3
+	gal304:1.3
+	gal303_3:1.3
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.4
+date	2001.06.20.06.17.18;	author flr;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.05.08.10.22.30;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.06.30.07.13.11;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.01.43;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.44;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@galeph309_3 - check ADBS version no and last event during production
+@
+text
+@*DK asieve
+      SUBROUTINE ASIEVE
+C ----------------------------------------------------------------------
+C. - F.RANJARD - 850328
+C! event initialization
+C. - Increment event # .
+C. - Reset all flags, variables and banks for this event
+C. - Reset random generator if required.
+C. - Set DEBUG flag.
+C. - Initialize ZBOOK event partition .
+C
+C. - modified by : F.Ranjard - 911002
+C                  supress reference to LMOD which is replaced by LDET
+C                  in the definition of FBEGJO
+C.   modified by : B.Bloch              may 2001
+C                  add call ALEVNUM for official production monitoring
+C
+C. - called from    ASPRUN                             from this .HLB
+C. - calls          RDMIN, RDMOUT, TIMED, TIMEL        from KERNLIB
+C.                  MZBOOK                             from ZEBRA lib
+C.                  ASREVE                             from this .HLB
+C.                  ABRUEV                             from ALEPHLIB
+C.                  ALEVNUM                            from ALEPHLIB
+C -----------------------------------------------------------------------
+#ifndef DOC
+#include "gcbank.h"
+#include "gcflag.h"
+#include "gcnum.h"
+#include "jqcom.h"
+#include "jobcom.h"
+#include "iocom.h"
+      DATA IFI/0/ , NANEVT, NASEVT/2*0/
+C ----------------------------------------------------------------------
+      IF (NANEVT.EQ.0) NANEVT = NAMIND('NEVT')
+C
+C - get one record or initialize BOS
+C
+    1 IF (MGETJO .GT.0) THEN
+   10   CALL ABRSEL ('E','    ',IRET)
+        IF (IRET.EQ.1) GOTO 100
+        IF (IRET.GT.3) THEN
+          IF (IRET.EQ.9) THEN
+            CALL ALTELL ('ASIEVE: Time limit reached',0,'END')
+          ELSEIF (IRET.EQ.8) THEN
+            CALL ALTELL ('ASIEVE:  End of selected events',0,'END')
+          ELSEIF (IRET.EQ.7) THEN
+            CALL ALTELL ('ASIEVE:  Last event reached',0,'END')
+          ELSEIF (IRET.EQ.6) THEN
+            CALL ALTELL ('ASIEVE:  No more input file',0,'END')
+          ELSEIF (IRET.LE.16) THEN
+            CALL ALTELL ('ASIEVE:  Cannot open input or output file'
+     &                              ,0,'END')
+          ELSEIF (IRET.EQ.19) THEN
+            CALL ALTELL ('ASIEVE:  Not enough space for unpacking',0
+     &                              ,'RETURN')
+          ELSEIF (IRET.EQ.17) THEN
+            CALL ALTELL ('ASIEVE:  Read error-try again',0,'RETURN')
+          ELSEIF (IRET.EQ.18) THEN
+            CALL ALTELL ('ASIEVE: Error in decompressing-next',0
+     &                              ,'RETURN')
+          ENDIF
+          GOTO 10
+        ENDIF
+C
+        IF (IRET.EQ.3) THEN
+C        unknown record
+          IF (IPRIJO(15).EQ.1) CALL AUBLIS ('E')
+          IF (MSAVJO.GT.0) CALL ASWRTP('E')
+C
+        ELSEIF (IRET.EQ.2) THEN
+          IF (IPRIJO(15).EQ.1) CALL AUBLIS ('C')
+C        run record : header or end
+          IF (IW(NARUNE).NE.0) THEN
+            CALL ASCRUN
+          ELSEIF (IW(NARUNH).NE.0) THEN
+            CALL ASIRUN
+          ENDIF
+        ENDIF
+        GOTO 10
+      ELSE
+C      no input file
+        CALL BDROP (IW,'T')
+        CALL BDROP (IW,'E')
+        CALL BLIST (IW,'T=','0')
+        CALL BLIST (IW,'E=','EVEH')
+        CALL BGARB (IW)
+        IF (NEVTJO.GE.IW(IW(NANEVT)+1)) THEN
+           CALL ALTELL ('ASIEVE: last event reached ',0,'END')
+        ENDIF
+        CALL TIMEL(TIMEJO(2))
+        IF (TIMEJO(2).LT.TIMLJO) THEN
+           CALL ALTELL ('ASIEVE: time limit ',0,'END')
+        ENDIF
+      ENDIF
+C
+C - Initialize event : reset flags and variables for this event
+C   get input event if any.
+C   set random generator if required, reset banks.
+C
+ 100  CONTINUE
+      IF (NASEVT.EQ.0) NASEVT = NAMIND('SEVT')
+      NEVTJO = NEVTJO + 1
+C
+C - get trigger # from input file if any or from serial number
+      IF (MGETJO.GT.0) THEN
+         CALL ABRUEV (IRUNJO,ITRIG)
+      ELSE
+         ITRIG = NEVTJO
+      ENDIF
+C
+C - if not 1st entry reset ZEBRA partition
+      IF (IFI .NE. 0 ) CALL GTRIGC
+C
+C - reset GEANT3 banks and counters
+      CALL MZBOOK (IGXDIV,JGHEAD,JGHEAD,1,'HEAD',1,1,NGHEAD,2,0)
+      NGTRAC=0
+      NGVERT=0
+      IGEOTR=0
+      IGDEBU=0
+      IGDEVT = NEVTJO
+C
+C - reset counters and flags
+      KERRJO = 0
+      FDEBJO=.FALSE.
+      DO 3 I =1,LDET
+ 3    FBEGJO(I) = .TRUE.
+C
+C - this event has to be processed:  set debug flag
+      IF(ITRIG.GE.IDB1JO.AND.ITRIG.LE.IDB2JO) FDEBJO=.TRUE.
+
+C                                    set display flag
+#if defined(INTER)
+      FDISJO = .TRUE.
+#else
+      FDISJO=.FALSE.
+      IF(ITRIG.GE.IDS1JO.AND.ITRIG.LE.IDS2JO) FDISJO=.TRUE.
+#endif
+C                                    set random generator and time
+      IF(IFI.EQ.0) THEN
+         IFI=1
+         DO 4 I=1,LPRO
+            IF (IRNDJO(1,I) .EQ. 0) GOTO 4
+               CALL RDMIN (IRNDJO(1,I))
+               GOTO 5
+ 4       CONTINUE
+ 5       CONTINUE
+         CALL RDMOUT (NRNDJO(1))
+         CALL TIMED (TIMEJO(5))
+      ENDIF
+C                                    output random generator root
+      IF (FDEBJO .AND. MGETJO.EQ.0) THEN
+        WRITE (LOUTIO,802) NEVTJO,IRUNJO,ITRIG,NRNDJO
+      ELSEIF (IDB3JO.GT.0) THEN
+        IF (MOD(NEVTJO,IDB3JO).EQ.0) THEN
+          WRITE (LOUTIO,802) NEVTJO,IRUNJO,ITRIG,NRNDJO
+  802     FORMAT (/3X,'+++ASIEVE+++ EVENT# ',I5,'  (run ',I5,
+     &                  ' trigger ',I5,')  random number =',3I12,
+     &                  ' ++++++++')
+        ENDIF
+      ENDIF
+C
+C - print E-list and decode EVEH bank if any
+      IF (MGETJO.GT.0) THEN
+         IF (FDEBJO .AND. IPRIJO(15).EQ.1) CALL AUBLIS ('E')
+         CALL ASREVE
+      ENDIF
+C
+C - Call USER routine
+      CALL USIEVE
+      js = 2
+      call alevnum(js,irunjo,itrig)
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.3
+log
+@replace TIMAx by TIMEx
+@
+text
+@d15 2
+d23 1
+d170 2
+@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ cahtra.h gmacro.h lccomc.h lcnamc.h ljjpar.h siconst.h
+ sigeco.h version.h
+ itmsk1.F itmsk2.F itnois.F itres.F itxtlk.F
+ lcadc.F lcamp.F lcasig.F lcbhab.F lcbkpr.F lcdigi.F lcfral.F
+ lchit.F lcirun.F lcnami.F lcnois.F lcpad.F lcroc.F lcsamp.F
+ lcsatu.F lcshow.F lcstrt.F lctrak.F lctrdi.F lctrht.F lcwire.F
+ lcwsum.F lcwtri.F
+ muasig.F mubook.F muirun.F muunoi.F muwsum.F
+ trignews.h
+ siasig.F sitrak.F siwsum.F
+ asasig.F asbook.F ascjob.F ascrun.F asctra.F asevst.F asfxxx.F
+ asieve.F asigea.F asijob.F asimod.F asinit.F asipac.F asirun.F
+ askine.F asksin.F asktrk.F aspeve.F asprun.F asread.F asredc.F
+ asreve.F asrkin.F asrtyp.F asrust.F astdeb.F astgea.F astrac.F
+ astrig.F aswkin.F aswrtp.F aswsum.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+ xtrcom.h
+ ecalnews.h geomnews.h lcalnews.h news.h skelnews.h vdetnews.h
+@
+text
+@d17 1
+a17 1
+C. - calls          RDMIN, RDMOUT, TIMAD, TIMAL        from KERNLIB
+d87 1
+a87 1
+        CALL TIMAL(TIMEJO(2))
+d145 1
+a145 1
+         CALL TIMAD (TIMEJO(5))
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d29 1
+a29 1
+      DATA IFI/0/ , NASEVT/0/
+d31 67
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

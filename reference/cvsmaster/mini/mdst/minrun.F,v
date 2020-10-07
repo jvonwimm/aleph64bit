@@ -1,0 +1,213 @@
+head	1.6;
+access;
+symbols
+	mini202_9:1.6
+	mini202_8:1.6
+	mini202_7:1.6
+	mini202_6:1.6
+	mini202_5:1.6
+	mini202_4:1.6
+	mini202_2:1.5
+	mini202_1:1.5
+	mini202:1.5
+	mini201_1:1.4
+	mini104_1:1.3
+	mini103_1:1.3
+	mini102_7:1.2
+	mini102_5:1.1.1.1
+	mini102_4:1.1.1.1
+	mini102_3:1.1.1.1
+	mini102_2:1.1.1.1
+	mini102_1:1.1.1.1
+	mini102:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.6
+date	98.11.03.11.09.45;	author jachol;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	98.09.16.15.02.14;	author jachol;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	98.05.07.06.38.29;	author jachol;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.05.20.14.37.00;	author jachol;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.10.29.07.33.45;	author jachol;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.08.15.11.09.37;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.08.15.11.09.38;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.6
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE MINRUN
+C
+CKEY MDST /INTERNAL
+C-----------------------------------------------------------------------
+C! Define run banks to be written for Mini-DST.
+C
+C     Author: Stephen Haywood      15-May-90
+C     Modify: Stephen Haywood      08-Jun-90   v 3.0
+C     Modify: Agnieszka Jacholkowska  1-Nov-1994
+C
+C     Called by MINDST
+C     More banks may be added from MINA card, interpreted by MINADD.
+C     Also the nature of the data (MC or real) is determined.
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+#include "mincom.h"
+C
+      DIMENSION IPV(10),IAV(10)
+      CHARACTER*4 BANK,NLIST
+      INTEGER IDTYP
+C
+C++   Determine whether this is a LEP1 or LEP2 data
+C 
+      IDTYP = 0      
+      CALL MINDTYP(IDTYP)
+      IF (IDTYP.GT.0) THEN
+         WRITE(6,'(//40X,''**** Mini-DST LEP'',I2,'' ****'')')
+     &   IDTYP
+      ELSE
+         WRITE(6,'(//40X,''**** Mini-DST Unkown Type'',I2,'' ****'')')
+     &   IDTYP
+      ENDIF
+C
+C++   Determine whether this is a Monte-Carlo file.
+C++   Whether MC banks are written can be overridden by the NOMC card.
+C
+      CALL ALVSN(ITYP,IPV,IAV,IYR)
+      IF (IPV(1).GT.0) THEN
+         MINIMC = .TRUE.
+      ELSE
+         MINIMC = .FALSE.
+      ENDIF
+C
+      IF(NLINK('NOMC',0).GT.0) MINIMC = .FALSE.
+      IF(NLINK('NNMC',0).GT.0) MINIMC = .FALSE.
+C
+C++   Define banks on run record.
+C++   For MC, copy C list.
+C
+      IF(MINIMC) THEN
+         MLISTR = ' '
+         DO 10 I=1,50
+            BANK = NLIST(IW,I,'C')
+            IF(BANK.EQ.' ') GOTO 15
+   10    MLISTR(4*I-3:4*I) = BANK
+   15    CONTINUE
+      ELSEIF (IDTYP.EQ.2) THEN
+         MLISTR = 'RUNR'//'RUNH'//'RALE'//'RLEP'//'RHAH'//'JSUM'//'SLUM'
+     &          //'LEHI'//'LUMI'//'LBAK'//'LVHI'//'XTOP'//'XTYP'//'XTBN'
+     &          //'ALPB'//'PLSC'//'TSSR'//'BLQP'//'X1TT'//'X3PS'//'KXME'
+     &          //'PHHY'//'PCHY'//'PCPA'//'HT0C'//'HCLB'//'BCGN'
+      ELSEIF (IDTYP.LE.1) THEN
+         MLISTR = 'RUNR'//'RUNH'//'RALE'//'RLEP'//'RHAH'//'JSUM'//'SLUM'
+     &          //'LEHI'//'LUMI'//'LBAK'//'LVHI'//'XTOP'//'XTYP'//'XTBN'
+     &          //'ALPB'//'PLSC'//'TSSR'//'BLQP'//'X1TT'//'X3PS'//'KXME'
+      ENDIF
+      IF (INDEX(MLISTR,'DQIV').EQ.0)
+     +    MLISTR=MLISTR(1:LNBLNK(MLISTR))//'DQIV'
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.5
+log
+@mini202 - 1st version for LEP1 and LEP2
+@
+text
+@d64 1
+a64 1
+      ELSEIF (IDTYP.EQ.1) THEN
+@
+
+
+1.4
+log
+@*** empty log message ***
+@
+text
+@d22 13
+d59 6
+a64 1
+      ELSE
+a67 2
+     &          //'PHHY'//'PCHY'//'PCPA'//'HT0C'//'HCLB'
+
+@
+
+
+1.3
+log
+@new mini103
+@
+text
+@d50 1
+@
+
+
+1.2
+log
+@update minrun minbld
+@
+text
+@d49 2
+a50 1
+     &          //'ALPB'//'PLSC'//'TSSR'//'BLQP'//'X1TT'//'X3PS'
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d49 1
+a49 1
+     &           //'ALPB'//'PLSC'//'TSSR'//'BLQP'
+@
+
+
+1.1.1.1
+log
+@1st release of mini under cvs
+@
+text
+@@

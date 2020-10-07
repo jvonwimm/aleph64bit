@@ -1,0 +1,141 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.08.22.14.10.55;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.41;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.42;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@add #ifndef where it was missing and remove dummy routines
+@
+text
+@*DK muhit
+      SUBROUTINE MUHIT
+C
+C*****************************************************************
+C
+C T.Wang - 851211
+C
+C! deal with a track element that enters
+C       a sensitive volume of MU, it corresponds to
+C       the process 'Create MU Signals' in DFD 4.4.3.
+C
+C       Called by GUSTEP
+C       Calls     MUGETC, MUSTRM, MUSGNL    in this .HLB
+C
+C****************************************************************
+C
+#ifndef DOC
+      SAVE
+#include "trkcom.h"
+#include "bcs.h"
+#include "jobcom.h"
+#include "munamc.h"
+C
+C       Initializion at the biginning of an event
+C
+      IF( FBEGJO(8) )THEN
+         FBEGJO(8) = .FALSE.
+         IDRP = IW(NAMUHT)
+         IF( IDRP .NE.  0)CALL BDROP(IW,'MUHT')
+      ENDIF
+C
+C       Only deal with the track element entering a new volume
+C
+      IF(ITRKEL(8) .NE. 1)RETURN
+      CALL MUGETC
+C
+C       Create normal stremers
+C
+      CALL MUSTRM
+C
+C       Convert streamers into strip signals
+C
+      CALL MUSGNL
+C
+      CALL WDROP (IW,JDMUST)
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a40 5
+C       Look up the list of dead tubes, change fire flag for the
+C       streamers in the dead tube.
+C
+      IF( ICMUJO(2) .NE. 0 )CALL MUDTUB
+C
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

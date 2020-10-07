@@ -1,0 +1,70 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	tpc300_1:1.1.1.1
+	tpc300:1.1.1.1
+	tpc218:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	94.12.09.14.29.50;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.09.14.29.51;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*CD channl
+C
+C  CHANNL carries the analog signals on all channels due to one
+C  wire avalanche
+C
+C  Wire avalanche information
+C  NAVELE     -- The charge from an avalanche
+C  IBIN1  -- The first bin to get charge
+C
+      COMMON / AVALAN / NAVELE,IBIN1
+C
+C  Long pad coupling information
+C  MPPUL   -- The array containing the coupled avalanches
+C  NAMP   -- Pad 'name' generating this pulse
+C            = (pad row-1)*150 + pad number
+C
+      PARAMETER (MXPHIT=15)
+      COMMON / PADPUL / MPPUL(MXPHIT),NAMP(MXPHIT)
+C
+C  Trigger pad coupling information
+C  MTPUL   -- The array containing the coupled avalanches
+C  NAMT   -- Pad 'name' generating this pulse
+C            = (tpad row# - 1)*(max # tpads/row) + tpad number
+C
+      PARAMETER (MXTHIT=2)
+      COMMON / TRGPUL / MTPUL(MXTHIT),NAMT(MXTHIT)
+@
+
+
+1.1.1.1
+log
+@import tpcsim 300
+@
+text
+@@

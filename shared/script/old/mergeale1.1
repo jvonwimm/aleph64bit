@@ -1,0 +1,119 @@
+#! /bin/csh
+#============================================================================
+#                             mergeale
+#                                                       F.Ranjard
+#============================================================================
+# procedure to create a new ALEPHLIB from ALEPHiii and ALEPHIO
+#
+#============================================================================
+# P1 = "update" P2 part into P3 library 
+# P2 = "aleph" or "alio"
+# P3 = filename to be updated (i.e. libaleph205 , or libalio5)
+# examples : mergeale update aleph libalephio205 will update the aleph part of
+#            existing libaleph205.a and _dbx.a with the content of libalephnnn.a
+#            nnn being the latest cycle # of aleph found in alib.log 
+#============================================================================
+# 950323 - mergeale1.1     
+# keep only the update procedure
+# ========================================================================== 
+#include "~/flr/bin/verbflr.h"
+#
+set verbflr = ""
+set nar = $#argv
+if (${nar} != 0) then
+  if ($argv[${nar}] == "-v") then
+     echo "mergeale1.1"
+     set verbflr = "-v" 
+     set echo on
+     set argv[${nar}] = ""
+  endif
+endif
+#
+#*******>
+set UNAME = `uname`
+#*******<
+unset noclobber
+set exec_name = "mergeale"
+set alib_dir = "/aleph/alib"
+ 
+#
+# =============================================================================
+#                  set idir, prog_dir and lib_dir and cycle number
+#
+set idir = `egrep ^" alephlib " ${alib_dir}/pub/progl | awk '{print $2}'`
+set al_mnemonic = `egrep ^" alephlib " ${alib_dir}/pub/progl | awk '{print $4}'`
+set io_mnemonic = `egrep ^" alephio " ${alib_dir}/pub/progl | awk '{print $4}'`
+#
+set prog_dir = "/al/${OS}/${idir}"
+rm -r aletemp
+#
+if (-e ${prog_dir}/alib.log) then
+  set al_cycle = `egrep ^" alephlib " ${prog_dir}/alib.log | awk '{print $3}'`
+  set io_cycle = `egrep ^" alephio " ${prog_dir}/alib.log | awk '{print $3}'`
+endif
+#
+#
+# =============== update P2 part into P3 library ====================
+ if ( $1 == "update") then
+   if ( $2 == "") then
+     echo -n "give the part to be updated:[e.g alio or aleph <CR>=exit]-> "
+     set part_name = $<
+   else
+     set part_name = $2
+   endif
+   if ( ${part_name} == "aleph") then
+      set new_cycle = ${al_cycle}
+   else
+      set new_cycle = ${io_cycle}
+   endif
+   set part_name = ${part_name}${new_cycle}
+   if ( $3 == "") then
+     set lib_name = "libalephlib"
+   else
+     set lib_name = $3
+   endif
+   mkdir aletemp
+   cd aletemp
+   ar x ${prog_dir}/lib${part_name}.a
+   if ( $status == 1) then
+     set flag = "ERROR in ar x : check ${prog_dir}/lib${part_name}.a"
+     goto spy
+   endif
+   ar rls ${prog_dir}/${lib_name}.a *.o
+   if ( $status == 1) then
+     set flag = "ERROR in ar rls: cannot update ${prog_dir}/${lib_name}.a"
+     goto spy
+   endif
+   ar x ${prog_dir}/lib${part_name}_dbx.a
+   if ( $status == 1) then
+     set flag = "ERROR in ar x : check ${prog_dir}/lib${part_name}_dbx.a"
+     goto spy
+   endif
+   ar rls ${prog_dir}/${lib_name}_dbx.a *.o
+   if ( $status == 1) then
+     set flag = "ERROR in ar rls: cannot update ${prog_dir}/${lib_name}_dbx.a"
+     goto spy
+   endif
+ endif 
+# ===================================================================
+#
+set flag = " OK "
+cd ${prog_dir}
+rm -r aletemp
+# 
+# =====================================================================
+# 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> spy
+spy:
+#*******> spy
+echo `date` " END of ${exec_name} ${OS} ${user} ${lib_name} ${flag}" >> ${prog_dir}/spy
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> exec_end
+exec_end:
+ exit
+ 
+
+
+

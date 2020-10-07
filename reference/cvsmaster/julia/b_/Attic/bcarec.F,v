@@ -1,0 +1,111 @@
+head	1.2;
+access;
+symbols
+	jul308_2:1.1
+	jul308_1:1.1
+	jul308:1.1
+	jul307_4:1.1
+	jul307_3:1.1
+	jul307_2:1.1
+	jul307_1:1.1
+	jul307:1.1
+	jul306_3:1.1
+	jul306_2:1.1
+	jul306_1:1.1
+	jul306:1.1
+	jul305_4:1.1
+	jul305_3:1.1
+	jul305_2:1.1
+	jul305_1:1.1
+	jul305:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	98.11.09.14.44.31;	author cattanem;	state dead;
+branches;
+next	1.1;
+
+1.1
+date	97.11.07.11.18.41;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@julia 308.3 changes for BCAL
+@
+text
+@      SUBROUTINE BCAREC
+C--------------------------------------------------
+C!    Event processing for BCAL
+C!
+C!    Author:    G.Boix, I.C.Park, M.Cattaneo  November 1997
+C?
+C!======================================================================
+#ifndef DOC
+      IMPLICIT NONE
+#include "bcs.h"
+#include "bosext.h"
+#include "blumjj.h"
+#include "blctjj.h"
+C
+      INTEGER NBLUM
+C
+      INTEGER IRUN,IEVT
+      INTEGER KBLUM, KBLCT
+      INTEGER IGARB,I
+
+      DATA NBLUM /0/
+C-----------------------------------------------------------------------
+C Get name index of BLUM once only (never changes)
+      IF( NBLUM .EQ. 0 ) NBLUM = NAMIND('BLUM')
+
+C Data not useful before run 44544
+      CALL ABRUEV( IRUN, IEVT )
+      IF( IRUN .LT. 44544 ) GOTO 999
+
+C Access input bank
+      KBLUM = IW(NBLUM)
+      IF( KBLUM .EQ. 0 ) GOTO 999
+
+C  Drop output bank, if it exists
+      CALL BDROP(IW,'BLCT')
+C Create output bank
+      CALL AUBOS ('BLCT',0,LMHLEN+JBLCC2,KBLCT,IGARB)
+      IF (IGARB.EQ.2) THEN
+C No space to create bank
+        GOTO 999
+      ELSEIF( IGARB .EQ. 1 ) THEN
+C Garbage collection, reaccess BLUM
+        KBLUM = IW(NBLUM)
+      ENDIF
+
+C Fill output bank
+      IW(KBLCT+LMHCOL) = JBLCC2
+      IW(KBLCT+LMHROW) = 1
+      DO I=JBLCNS,JBLCC2
+        IW(KBLCT+LMHLEN+I) = IW(KBLUM+JBLUNS+I-1)
+      ENDDO
+
+C Put output bank on E list
+      CALL BLIST(IW,'E+','BLCT')
+
+  999 RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Prepare Julia 305
+@
+text
+@@

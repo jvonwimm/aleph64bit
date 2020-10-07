@@ -1,0 +1,128 @@
+      SUBROUTINE MODUL
+
+*     ******************************************************************
+*     *                                                                *
+*     *   EXAMPLE,                                                     *
+*     *      SHOWING THE APPLICATION OF ALL B0S77 FUNCTIONS, WHICH     *
+*     *      ARE NORMALLY USED                                         *
+*     *                                                                *
+*     *   CREATE BANK (REDD,0) FROM DATA IN BANK (RAWD,0)              *
+*     *   SKIP CALCULATION, IF RESULT BANK EXISTS. DROP BANK (RAWD,0)  *
+*     *   AFTERWARDS.                                                  *
+*     *                                                                *
+*     *   CREATE BANKS (CLUS,J) FROM DATA IN BANKS (CHEN,J)            *
+*     *   DESTROY EXISTING BANKS (CLUS,J) BEFORE.                      *
+*     *                                                                *
+*     ******************************************************************
+
+      COMMON/BCS/IW(1000)
+      REAL RW(1000)
+      EQUIVALENCE (IW(1),RW(1))
+
+      DATA    NEV/0/,NCHEN/0/
+
+*     BANK (HEAD,0) HAS TO BE PRESENT (IF NOT, RETURN)
+
+      IHEAD=NLINK('HEAD',0)
+      IF(IHEAD.EQ.0) GOTO 100
+
+*     PRINT LINE WITH EVENT NR ETC
+
+C     WRITE(6,101) (IW(IHEAD+I),I=1,10)
+
+*     FOR TWO EVENTS FULL PRINTOUT OF ALL BANKS
+
+      NEV=NEV+1
+      IF(NEV.LE.2) CALL BPRNT(IW,'E')
+
+*     FIRST PART: BANK (REDD,0) FROM BANK (RAWD,0)
+*     ***********
+
+*     I   FMT   BANK(REDD,0)
+*     ----------------------
+*     1    I    NUMBER OF DATA
+*     2    F    TOTAL SUM
+
+*     SKIP CALCULATION, IF RESULT BANK IS ALREADY THERE
+*        OR IF DATA BANK DOES NOT EXIST
+
+      IREDD=NLINK('REDD',0)
+      IF(IREDD.NE.0) GOTO 30
+   10 IRAWD=NLINK('RAWD',0)
+      IF(IRAWD.EQ.0) GOTO 30
+
+*     CREATE RESULT BANK, DEFINE FORMAT AND ADD TO EVENT-LIST
+
+      IREDD=NBANK('REDD',0,2)
+      IF(IREDD.EQ.0) GOTO 30
+      CALL BKFMT('REDD','I,F')
+      CALL BLIST(IW,'E+','REDD')
+
+*     NOW MAKE SOME CALCULATION ...
+
+      SUM=0
+      M  =0
+      N  =IW(IRAWD)
+      DO 20 I=1,N
+      IF(RW(IRAWD+I).NE.0.0) THEN
+         M=M+1
+         SUM=SUM+RW(IRAWD+I)
+      END IF
+   20 CONTINUE
+
+*     ... AND STORE RESULT
+
+      IW(IREDD+1)=M
+      RW(IREDD+2)=SUM
+
+*     DROP DATA BANK (SHOULD PROBABLY NOT BE DONE IN AN EXPERIMENT)
+
+      IRAWD=NDROP('RAWD',0)
+
+*     SECOND PART: BANKS (CLUS,J) FROM BANKS (CHEN,J)
+*     ***********
+
+*     I   FMT   BANK(CLUS,J)
+*     ----------------------
+*     1    F    MEAN CHANNEL NUMBER
+*     2    F    ENERGY SUM
+
+*     DROP ALL EXISTING BANKS (CLUS,J),DEFINE FORMAT AND ADD TO EVENT-L
+
+   30 CALL BDROP(IW,'CLUS')
+      CALL BKFMT('CLUS','F')
+      CALL BLIST(IW,'E+','CLUS')
+
+*     PREPARE LOOP ON ALL BANKS (CHEN,J), RETURN IF NO BANKS THERE
+
+      IF(NCHEN.EQ.0) NCHEN=NAMIND('CHEN')
+      IF(IW(NCHEN).EQ.0) GOTO 100
+
+*     LOOP TO CALCULATE MEAN CHANNEL NUMBER BY ENERGY WEIGHTED MEAN
+
+      ICHEN=NCHEN+1
+   40 ICHEN=IW(ICHEN-1)
+      IF(ICHEN.NE.0) THEN
+         J=IW(ICHEN-2)
+         ICLUS=NBANK('CLUS',J,2)
+         IF(ICLUS.EQ.0) GOTO 100
+         CHAN=0.0
+         ENER=0.0
+         N=IW(ICHEN)
+         DO 50 I=1,N,2
+         CHAN=CHAN+FLOAT(IW(ICHEN+I))*RW(ICHEN+I+1)
+   50    ENER=ENER+RW(ICHEN+I+1)
+         IF(ENER.NE.0.0) CHAN=CHAN/ENER
+         RW(ICLUS+1)=CHAN
+         RW(ICLUS+2)=ENER
+         GOTO 40
+      END IF
+
+*     PRINT RESULT BANKS FOR THE FIRST TWO EVENTS
+
+      IF(NEV.LE.2) CALL BPRNT(IW,'REDDCLUS')
+
+  100 RETURN
+  101 FORMAT('0EXP: ',I5,5X,' RUN: ',I5,5X,' EVT: ',I6,5X,5I5,
+     +   5X,' YYMMDD:',I7,'   HHMM:',I5)
+      END

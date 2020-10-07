@@ -1,0 +1,616 @@
+head	1.5;
+access;
+symbols
+	jul313_3:1.5
+	jul313_2:1.5
+	jul313_1:1.5
+	jul313:1.5
+	jul312_1:1.5
+	jul312:1.5
+	jul311:1.5
+	jul310_1:1.4
+	jul310:1.4
+	jul309_1:1.4
+	jul309:1.4
+	jul308_6:1.4
+	jul308_5:1.4
+	jul308_4:1.4
+	jul308_3:1.4
+	jul308_2:1.4
+	jul308_1:1.4
+	jul308:1.4
+	jul307_4:1.4
+	jul307_3:1.4
+	jul307_2:1.4
+	jul307_1:1.4
+	jul307:1.4
+	jul306_3:1.4
+	jul306_2:1.4
+	jul306_1:1.4
+	jul306:1.4
+	jul305_4:1.4
+	jul305_3:1.4
+	jul305_2:1.4
+	jul305_1:1.4
+	jul305:1.4
+	jul304_3:1.4
+	jul304_2:1.4
+	jul304_1:1.4
+	jul304:1.4
+	jul303_7:1.4
+	jul303_6:1.4
+	jul303_5:1.4
+	jul303_4:1.4
+	jul303_3:1.4
+	jul303_2_mc1:1.4
+	jul303_2:1.4
+	jul303_1_mc1:1.4
+	jul303_1:1.4
+	jul303_v:1.4
+	jul303:1.4
+	jul302_6:1.4
+	jul302_5:1.4
+	jul302_4:1.4
+	jul302_3:1.4
+	jul302_2:1.4
+	jul302_1:1.4
+	jul302:1.4
+	jul285_1:1.4
+	jul285:1.4
+	jul284_1:1.4
+	jul284:1.4
+	jul283_1:1.4
+	jul283:1.4
+	jul282_1:1.4
+	jul282:1.3
+	jul281_3:1.3
+	jul281_2:1.3
+	jul281_1:1.3
+	jul281:1.3
+	jul280_1:1.3
+	jul280:1.3
+	jul279:1.2
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.5
+date	99.12.09.11.41.27;	author cattanem;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.09.03.15.36.04;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.03.12.15.30.59;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.11.29.17.18.36;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.19.12;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.19.13;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.5
+log
+@Julia 311, including y2k fixes
+@
+text
+@      SUBROUTINE RCJSUM
+C--------------------------------------------------------------------
+C! Create and fill JSUM bank
+C!
+C!  Author       J. Knobloch 14-NOV-1989
+C!
+C!   Modified :- E. Lancon             18-SEP-1991
+C!        DO not call BMSUM anymore, use result stored in BSUMCO
+C!   Modified :- B. Bloch-Devaux       25-MAY-1993
+C!        Define Lumi coincidence as LCAL before 93 , Sical from 93 on
+C!   Modified :- I. Tomalin             9-MAY-1995
+C!        Improve PASS0 drift velocity calculation: Only sum t0 for
+C!        events where bunch number is certain, and call TPCT0N
+C!        instead of TPCT0.
+C!   Modified :- P. Comas              13-JUN-1995
+C!        Add as many rows as wagons in a train and fill them.
+C!        The information per bunch will be used to get the beam
+C!        spot parameters per wagon.
+C!   Modified :- M.Cattaneo             8-DEC-1999
+C!        y2k fix to JSUM date
+C?
+C!======================================================================
+#ifndef DOC
+#include "rparac.h"
+#include "bcs.h"
+#include "bosext.h"
+#include "rflags.h"
+#include "rstate.h"
+#include "rlunit.h"
+#include "jsumjj.h"
+#include "dheajj.h"
+#include "evehjj.h"
+#include "revhjj.h"
+#include "pyerjj.h"
+#include "pecojj.h"
+#include "bsumco.h"
+#include "rmonco.h"
+#include "revent.h"
+#include "rcurnt.h"
+#include "rtimes.h"
+C +y2k
+      COMMON /SLATE/ ISL(40)
+C -y2k
+      LOGICAL LVERT,LCOIN,LHVON,LBHAB,LZZER,BUNCH_OK
+C     PARAMETER( MASK = 5828 )
+C     PARAMETER( LMASK =  2**14+2**15 )
+      DATA TWIND, TWINE / 0.5, 0.05 /
+      DIMENSION NTR(2)
+      DATA RLIM, ZLIM /1., 10./
+#include "bmacro.h"
+C
+C     Need to know number of wagons per train
+      CALL RQBUNC(IBUN,INBU,NWAG,IQUA)
+      IF ( (NWAG.LT.1).OR.(NWAG.GT.4) ) NWAG=1
+      BUNCH_OK=NWAG.GT.1.AND.IBUN.GT.0.AND.IBUN.LE.NWAG.AND.IQUA.EQ.3
+C
+C     JSUM bank already there?
+C
+      IF(IW(NAMIND('JSUM')).EQ.0)THEN
+C
+C     Create JSUM bank
+        IF (NWAG.EQ.1) THEN
+           LEN=LMHLEN+LJSUMA
+        ELSE
+           LEN=LMHLEN+LJSUMA*(NWAG+1)
+        ENDIF
+        CALL AUBOS('JSUM',IRUNRC,LEN,KJSUM,IGARB)
+        IF(IGARB.EQ.2) THEN
+          CALL RERROR ('RCJSUM', -1, ' Unable to fill JSUM ')
+          GOTO 999
+        ENDIF
+        IW(KJSUM+LMHCOL)=LJSUMA
+        IF (NWAG.EQ.1) THEN
+          IW(KJSUM+LMHROW)=1
+        ELSE
+          IW(KJSUM+LMHROW)=NWAG+1
+        ENDIF
+C +y2k
+        CALL DATIME(JD,ITIM)
+        IDAY = ISL(1)*10000 + MOD(JD,10000)
+C -y2k
+        IW(KJSUM+LMHLEN+JJSUDA) = IDAY
+        IW(KJSUM+LMHLEN+JJSUTI) = ITIM
+
+        KS=KJSUM+LMHLEN
+        KS1=KJSUM+1
+
+        IF (NWAG.GT.1) THEN
+          DO 10 I=2,NWAG+1
+             IW(KS+(I-1)*IW(KS1)+JJSUDA) = IDAY
+             IW(KS+(I-1)*IW(KS1)+JJSUTI) = ITIM
+   10     CONTINUE
+        ENDIF
+      ENDIF
+C
+C     Fill JSUM bank
+      KJSUM=IW(NAMIND('JSUM'))
+      KDHEA=IW(NAMIND('DHEA'))
+      KPYER=IW(NAMIND('PYER'))
+      KEVEH=IW(NAMIND('EVEH'))
+      KREVH=IW(NAMIND('REVH'))
+      KPECO=IW(NAMIND('PECO'))
+      KS=KJSUM+LMHLEN
+      KS1=KJSUM+1
+C
+      IW(KS+JJSUNT)=IW(KS+JJSUNT)+1
+      IF (BUNCH_OK) THEN
+        IW(KS+IBUN*IW(KS1)+JJSUNT) = ITABL(KJSUM,IBUN+1,JJSUNT)+1
+      ENDIF
+C
+C?   Vertex ?
+C
+      LVERT = .FALSE.
+      X0 = 0.
+      Y0 = 0.
+      Z0 = 0.
+      NVTX = 0
+      IF(KDHEA.NE.0) NVTX = IW(KDHEA+LMHLEN + JDHENX)
+      IF( NVTX.GT.0)THEN
+        IF(KPYER.NE.0)THEN
+          IF(IW(KPYER).GT.2)THEN
+            IPYER=KPYER+LMHLEN
+            X0 = RW(IPYER+JPYEVX)
+            Y0 = RW(IPYER+JPYEVY)
+            Z0 = RW(IPYER+JPYEVZ)
+          ENDIF
+        ENDIF
+        R2 = X0**2 + Y0**2
+        LVERT=R2.LT.RLIM.AND.ABS(Z0).LT.ZLIM
+      ENDIF
+      IF(LVERT)THEN
+        IW(KS+JJSUNV)=IW(KS+JJSUNV)+1
+        RW(KS+JJSUXV)=RW(KS+JJSUXV)+X0
+        RW(KS+JJSUYV)=RW(KS+JJSUYV)+Y0
+        RW(KS+JJSUZV)=RW(KS+JJSUZV)+Z0
+        RW(KS+JJSUXS)=RW(KS+JJSUXS)+X0**2
+        RW(KS+JJSUYS)=RW(KS+JJSUYS)+Y0**2
+        RW(KS+JJSUZS)=RW(KS+JJSUZS)+Z0**2
+        IF (BUNCH_OK) THEN
+          IW(KS+IBUN*IW(KS1)+JJSUNV) = ITABL(KJSUM,IBUN+1,JJSUNV)+1
+          RW(KS+IBUN*IW(KS1)+JJSUXV) = RTABL(KJSUM,IBUN+1,JJSUXV)+X0
+          RW(KS+IBUN*IW(KS1)+JJSUYV) = RTABL(KJSUM,IBUN+1,JJSUYV)+Y0
+          RW(KS+IBUN*IW(KS1)+JJSUZV) = RTABL(KJSUM,IBUN+1,JJSUZV)+Z0
+          RW(KS+IBUN*IW(KS1)+JJSUXS) = RTABL(KJSUM,IBUN+1,JJSUXS)+X0**2
+          RW(KS+IBUN*IW(KS1)+JJSUYS) = RTABL(KJSUM,IBUN+1,JJSUYS)+Y0**2
+          RW(KS+IBUN*IW(KS1)+JJSUZS) = RTABL(KJSUM,IBUN+1,JJSUZS)+Z0**2
+        ENDIF
+      ENDIF
+C
+C?   Z0 ?
+C
+      ECHFL = 0.
+      IF(KDHEA.NE.0) ECHFL = RW(KDHEA+LMHLEN+JDHEEF)
+      LZZER=LVERT.AND.ECHFL.GT.40
+      IF(LZZER)THEN
+        IW(KS+JJSUNZ)=IW(KS+JJSUNZ)+1
+        IF (BUNCH_OK) THEN
+          IW(KS+IBUN*IW(KS1)+JJSUNZ) = ITABL(KJSUM,IBUN+1,JJSUNZ)+1
+        ENDIF
+      ENDIF
+C
+C?   Bhabha ?, Z event ? with HV on
+C
+      LCOIN = .FALSE.
+      LHVON = .FALSE.
+      CALL RLUTRF(IRUNRC,LMASK,MASK,MSKPC)
+      IF (KEVEH.GT.0) LCOIN=IAND( IW(KEVEH+JEVEM1) , LMASK ).NE.0
+      IF(LCOIN) THEN
+        IW(KS+JJSUNL)=IW(KS+JJSUNL)+1
+        IF (BUNCH_OK) THEN
+          IW(KS+IBUN*IW(KS1)+JJSUNL) = ITABL(KJSUM,IBUN+1,JJSUNL)+1
+        ENDIF
+      ENDIF
+      IF(IRUNRC.GT.4539) THEN
+        IF (KREVH.GT.0)
+     &     LHVON=IAND( IW(KREVH+LMHLEN+JREVDS) , MASK).EQ.MASK
+      ENDIF
+      IF(LHVON)THEN
+        IW(KS+JJSUVT)=IW(KS+JJSUVT)+1
+        IF (BUNCH_OK) THEN
+          IW(KS+IBUN*IW(KS1)+JJSUVT) = ITABL(KJSUM,IBUN+1,JJSUVT)+1
+        ENDIF
+        IF(LVERT) THEN
+          IW(KS+JJSUVV)=IW(KS+JJSUVV)+1
+          IF (BUNCH_OK) THEN
+            IW(KS+IBUN*IW(KS1)+JJSUVV) = ITABL(KJSUM,IBUN+1,JJSUVV)+1
+          ENDIF
+        ENDIF
+        IF(LZZER) THEN
+          IW(KS+JJSUVZ)=IW(KS+JJSUVZ)+1
+          IF (BUNCH_OK) THEN
+            IW(KS+IBUN*IW(KS1)+JJSUVZ) = ITABL(KJSUM,IBUN+1,JJSUVZ)+1
+          ENDIF
+        ENDIF
+        IF(LCOIN) THEN
+          IW(KS+JJSUVL)=IW(KS+JJSUVL)+1
+          IF (BUNCH_OK) THEN
+            IW(KS+IBUN*IW(KS1)+JJSUVL) = ITABL(KJSUM,IBUN+1,JJSUVL)+1
+          ENDIF
+        ENDIF
+      ENDIF
+C
+C?   Bhabha in LCAL ?
+C
+      ELCAL = 0.
+      IF(KPECO.NE.0)THEN
+        DO 50 I=1,LROWS(KPECO)
+          IF(ITABL(KPECO,I,JPECKD).EQ.MSKPC) ELCAL=ELCAL+RTABL(KPECO,
+     &      I,JPECEC)
+   50   CONTINUE
+      ENDIF
+      LBHAB=LCOIN.AND.ELCAL.GT.65.
+      IF(LBHAB) THEN
+        IW(KS+JJSUNB)=IW(KS+JJSUNB)+1
+        IF (BUNCH_OK) THEN
+          IW(KS+IBUN*IW(KS1)+JJSUNB) = ITABL(KJSUM,IBUN+1,JJSUNB)+1
+        ENDIF
+      ENDIF
+
+      IF(LBHAB.AND.LHVON) THEN
+        IW(KS+JJSUVB)=IW(KS+JJSUVB)+1
+        IF (BUNCH_OK) THEN
+          IW(KS+IBUN*IW(KS1)+JJSUVB) = ITABL(KJSUM,IBUN+1,JJSUVB)+1
+        ENDIF
+      ENDIF
+C
+C?   Size Input, Output, Time per event
+C
+      RW(KS+JJSULI)=RW(KS+JJSULI) + SIZERE/4.
+      IF (BUNCH_OK) THEN
+        RW(KS+IBUN*IW(KS1)+JJSULI) = RTABL(KJSUM,IBUN+1,JJSULI)+
+     >        SIZERE/4.
+      ENDIF
+      IF(LZZER)THEN
+        RW(KS+JJSUIZ)=RW(KS+JJSUIZ) + SIZERE/4.
+        IF (BUNCH_OK) THEN
+          RW(KS+IBUN*IW(KS1)+JJSUIZ) = RTABL(KJSUM,IBUN+1,JJSUIZ)+
+     >        SIZERE/4.
+        ENDIF
+      ENDIF
+      RLPOT = LENLIS ('E')/250.
+      CALL ALTIME(TIM)
+      TIME = TIM-AEVSRT
+      RW(KS+JJSULO)=RW(KS+JJSULO)+RLPOT
+      IF (BUNCH_OK) THEN
+        RW(KS+IBUN*IW(KS1)+JJSULO) = RTABL(KJSUM,IBUN+1,JJSULO)+RLPOT
+      ENDIF
+      IF(LZZER)THEN
+        RW(KS+JJSULZ)=RW(KS+JJSULZ)+RLPOT
+        IF (BUNCH_OK) THEN
+          RW(KS+IBUN*IW(KS1)+JJSULZ) = RTABL(KJSUM,IBUN+1,JJSULZ)+RLPOT
+        ENDIF
+      ENDIF
+      RW(KS+JJSUTT)=RW(KS+JJSUTT)+TIME
+      IF (BUNCH_OK) THEN
+        RW(KS+IBUN*IW(KS1)+JJSUTT) = RTABL(KJSUM,IBUN+1,JJSUTT)+TIME
+      ENDIF
+      IF(LZZER)THEN
+        RW(KS+JJSUTZ)=RW(KS+JJSUTZ)+TIME
+        IF (BUNCH_OK) THEN
+          RW(KS+IBUN*IW(KS1)+JJSUTZ) = RTABL(KJSUM,IBUN+1,JJSUTZ)+TIME
+        ENDIF
+      ENDIF
+      IF(LBHAB)THEN
+        RW(KS+JJSUTB)=RW(KS+JJSUTB)+TIME
+        IF (BUNCH_OK) THEN
+          RW(KS+IBUN*IW(KS1)+JJSUTB) = RTABL(KJSUM,IBUN+1,JJSUTB)+TIME
+        ENDIF
+      ENDIF
+C
+C     killed storeys in ECAL
+C
+      IW(KS+JJSUKB) = NSUPEB
+      IW(KS+JJSUKW) = NSUPEC
+      IF (BUNCH_OK) THEN
+        IW(KS+IBUN*IW(KS1)+JJSUKB) = NSUPEB
+        IW(KS+IBUN*IW(KS1)+JJSUKW) = NSUPEC
+      ENDIF
+C
+C++   Fill t0 information in JSUM.
+C++   DT is (negative) change to t0
+C
+      DT = 9999999.
+C     CALL TPCT0(IER,DT)
+      CALL TPCT0N(IER,DT,EDTN,NTR)
+      IF(IER.EQ.0) THEN
+        DT = 0.5*DT
+        EDTN = 0.5*EDTN
+C Require DT to fall inside window, error to be not too large and
+C at least three tracks used in each TPC half.
+        IF(ABS(DT).LE.TWIND.AND.EDTN.LT.TWINE.AND.
+     +  MIN(NTR(1),NTR(2)).GE.3) THEN
+C
+C If in bunch train mode, require bunch number to be certain.
+          IF (NWAG.EQ.1.OR.IQUA.EQ.3) THEN
+            IW(KS+JJSUTN) = IW(KS+JJSUTN) + 1
+            RW(KS+JJSUTS) = RW(KS+JJSUTS) + DT
+            RW(KS+JJSUTV) = RW(KS+JJSUTV) + DT*DT
+            IF (BUNCH_OK) THEN
+              IW(KS+IBUN*IW(KS1)+JJSUTN)=ITABL(KJSUM,IBUN+1,JJSUTN)+1
+              RW(KS+IBUN*IW(KS1)+JJSUTS)=RTABL(KJSUM,IBUN+1,JJSUTS)+DT
+              RW(KS+IBUN*IW(KS1)+JJSUTV)=RTABL(KJSUM,IBUN+1,JJSUTV)
+     +        + DT*DT
+            ENDIF
+          END IF
+C
+        END IF
+      ENDIF
+C
+C     get beam position from all tracks (d0,z0)
+      DO 60 I =  JJSUA0,  JJSUB9
+        RW (KS+I) = BSUM (I-JJSUA0+1)
+   60 CONTINUE
+      IF (BUNCH_OK) THEN
+        DO 70 I =  JJSUA0,  JJSUB9
+          RW(KS+IBUN*IW(KS1)+I)=BSUMBU (I-JJSUA0+1,IBUN)
+   70   CONTINUE
+      ENDIF
+
+C
+  999 RETURN
+      END
+#endif
+@
+
+
+1.4
+log
+@fixes for documentation
+@
+text
+@d19 2
+d41 3
+d78 4
+a81 1
+        CALL DATIME(IDAY,ITIM)
+@
+
+
+1.3
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+ 	gambnk.F gapeco.F gasteer.F
+ 	hcalib.F hcalrd.F hcatow.F hcbhis.F hcfclu.F hchist.F hclcra.F
+ 	hcltst.F hclufi.F hcos.F hcsimm.F hdgdeb.F hdgfil.F hdgpot.F
+ 	hdgsum.F hdprec.F hdspre.F hflnoi.F hinijo.F hiniru.F hmener.F
+ 	hmfind.F hmroad.F hnoise.F hnoisy.F hpatco.F hphnoi.F hplink.F
+ 	hprana.F hpranp.F hprdig.F hpreda.F hprpot.F hprsum.F hprunc.F
+ 	hrcomp.F hrcpat.F hrdcal.F hroad.F hslink.F hslowc.F hspare.F
+ 	hsptre.F hstofi.F htrack.F htubfi.F htwcr.F
+ 	iasign.F iattma.F ibnkin.F icaswt.F icftoi.F iclimb.F icrcco.F
+ 	ideadw.F idigpr.F ienang.F ifind1.F ifind2.F ifitp.F iftrak.F
+ 	igetti.F igettp.F igicha.F iheler.F iinijo.F iiniru.F iintrk.F
+ 	imatch.F inigap.F insect.F intrak.F ipakdi.F ipdsti.F iphcor.F
+ 	ipreda.F iprsum.F ipstat.F irefin.F ireopd.F isave.F ishuff.F
+ 	ishufl.F islowc.F isrch.F itbook.F itccut.F itcopr.F itcrec.F
+ 	itcrep.F itctpc.F itctrk.F itcxng.F iterr.F itextn.F ithist.F
+ 	itidy1.F itidy2.F itlnk1.F itlnk2.F itpcan.F itrak.F itrecf.F
+ 	itreci.F itree.F itrkci.F itrkeq.F itrkzr.F itrmca.F
+@
+text
+@d21 1
+d315 1
+@
+
+
+1.2
+log
+@julia version 279
+@
+text
+@a0 1
+*DK rcjsum
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d12 8
+a19 1
+C!
+a21 1
+#ifndef DOC
+d39 1
+a39 1
+      LOGICAL LVERT,LCOIN,LHVON,LBHAB,LZZER
+d42 2
+a43 1
+      DATA TWIND / 0.5 /
+d47 5
+d57 6
+a62 1
+        CALL AUBOS('JSUM',IRUNRC,LMHLEN+LJSUMA,KJSUM,IGARB)
+d68 5
+a72 1
+        IW(KJSUM+LMHROW)=1
+d76 10
+d96 1
+d99 3
+d131 9
+d147 6
+a152 1
+      IF(LZZER)IW(KS+JJSUNZ)=IW(KS+JJSUNZ)+1
+d160 6
+a165 1
+      IF(LCOIN) IW(KS+JJSUNL)=IW(KS+JJSUNL)+1
+d172 21
+a192 3
+        IF(LVERT)IW(KS+JJSUVV)=IW(KS+JJSUVV)+1
+        IF(LZZER)IW(KS+JJSUVZ)=IW(KS+JJSUVZ)+1
+        IF(LCOIN)IW(KS+JJSUVL)=IW(KS+JJSUVL)+1
+d205 13
+a217 2
+      IF(LBHAB) IW(KS+JJSUNB)=IW(KS+JJSUNB)+1
+      IF(LBHAB.AND.LHVON) IW(KS+JJSUVB)=IW(KS+JJSUVB)+1
+d222 11
+a232 1
+      IF(LZZER)RW(KS+JJSUIZ)=RW(KS+JJSUIZ) + SIZERE/4.
+d237 9
+a245 1
+      IF(LZZER)RW(KS+JJSULZ)=RW(KS+JJSULZ)+RLPOT
+d247 15
+a261 2
+      IF(LZZER)RW(KS+JJSUTZ)=RW(KS+JJSUTZ)+TIME
+      IF(LBHAB)RW(KS+JJSUTB)=RW(KS+JJSUTB)+TIME
+d267 4
+a273 1
+C++   The sums are made if DT falls inside the window.
+d276 24
+a299 6
+      CALL TPCT0(IER,DT)
+      IF(IER.EQ.0) DT = 0.5*DT
+      IF(ABS(DT).LE.TWIND) THEN
+        IW(KS+JJSUTN) = IW(KS+JJSUTN) + 1
+        RW(KS+JJSUTS) = RW(KS+JJSUTS) + DT
+        RW(KS+JJSUTV) = RW(KS+JJSUTV) + DT*DT
+d303 1
+a303 1
+      DO 10 I =  JJSUA0,  JJSUB9
+d305 7
+a311 1
+   10 CONTINUE
+a314 1
+#endif
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

@@ -1,0 +1,418 @@
+head	1.13;
+access;
+symbols
+	aleph316_2:1.13
+	aleph316_1:1.13
+	aleph316:1.13
+	aleph315_7:1.13
+	aleph315_6:1.13
+	aleph315_5:1.13
+	aleph315_4:1.13
+	aleph315_3:1.13
+	aleph315_2:1.13
+	aleph315_1:1.13
+	aleph315:1.13
+	aleph314_2:1.13
+	aleph314_1:1.13
+	aleph314:1.13
+	aleph313_1:1.13
+	aleph313:1.13
+	aleph312_1:1.12
+	aleph312:1.12
+	aleph311_1:1.12
+	aleph311:1.12
+	aleph310_3:1.12
+	aleph310_2:1.12
+	aleph310_1:1.12
+	aleph310:1.12
+	aleph309_1:1.12
+	aleph309:1.12
+	aleph308_3:1.12
+	aleph308_2:1.12
+	aleph308_1:1.12
+	aleph308:1.12
+	aleph307_6:1.12
+	aleph307_5:1.12
+	aleph307_4:1.12
+	aleph307_2:1.12
+	aleph307_1:1.12
+	aleph307:1.12
+	aleph306:1.12
+	aleph305_4:1.12
+	aleph305_3:1.12
+	aleph305_2:1.11
+	aleph305_1:1.10
+	aleph305:1.10
+	aleph304_5:1.10
+	aleph304_4:1.10
+	aleph304_3:1.9
+	aleph304_2:1.9
+	aleph304_1:1.9
+	aleph304:1.9
+	aleph303_3:1.9
+	aleph303_2:1.9
+	aleph303_1_mc1:1.9
+	aleph303_1:1.9
+	aleph303:1.8
+	aleph302_9:1.8
+	aleph302_8:1.7
+	aleph302_7:1.7
+	aleph302_6:1.7
+	aleph302_5:1.7
+	aleph302_4:1.7
+	aleph302_3:1.7
+	aleph302_2:1.7
+	aleph302_1:1.7
+	aleph302:1.8
+	aleph216:1.6
+	aleph215_3:1.5
+	aleph215_2:1.5
+	aleph215:1.5
+	aleph214:1.4
+	aleph213:1.2
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.13
+date	99.10.26.09.32.40;	author cattanem;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	97.10.17.10.38.20;	author cattanem;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	97.10.01.06.31.47;	author cattanem;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	97.07.17.13.34.25;	author cattanem;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	97.05.28.07.36.43;	author flr;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	97.04.25.06.23.25;	author cattanem;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	97.03.12.13.50.50;	author flr;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	97.02.27.09.03.40;	author cattanem;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.07.01.13.03.42;	author cattanem;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.06.20.11.59.05;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.06.18.11.06.49;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.06.03.16.25.34;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.40.29;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.40.30;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.13
+log
+@for Alephlib 313
+@
+text
+@CKEY VDET
+C! various VDET routines not included into VDETDES
+ ! ALEPHLIB 31.3
+    VTDERV,VTXNWT,VTXRAW : Double precision fixes for Linux     (D.Smith)
+
+ ! ALEPHLIB 30.5 correction file no. 3
+    VTDERV : Improve the protection against rounding errors (A.Bonissent)
+
+ ! ALEPHLIB 30.5 correction file no. 2
+    VDTTRA,VTRFIT: Remove CALL from function references, for Linux.(A.Waananen)
+
+ ! ALEPHLIB 30.4 correction file no. 4
+    VDHTER : Fix the bug on WERRA ((3,3) instead of (2,2))        (Manoj T.)
+    VHERR1 : Modify the error param. (due to change in S/N in MC) (Manoj T.)
+
+ ! ALEPHLIB 30.3 correction file no. 1
+   VDTTRA - add UFTR card to flag a track for Kalman filter printout during
+            fit.  NR=event number, with entries on the card indicating which
+            track(s) of that event should be dumped.  
+            Example:  UFTR 10 / 1 2 5 dumps tracks 1, 2, and 5 of event 10. 
+            Note there is no selection by run number since the user is presumed
+            to be dealing with a small set of events when this feature is 
+            enabled.                                                 (D.Casper)
+
+ ! ALEPHLIB 30.2 correction file no. 9
+    VDHTER - fix incorrect order of track momentum components in call to VHERR1
+                                                                     (D.Casper)
+
+ ! ALEPHLIB 30.2 correction file no. 1
+    VDTTRA - new routine which contains the VDET pattern recognition part
+             of UFTTRA/alephlib_216 (flr).
+             this part has been removed from UFTTRA/alephlib_302.
+    VTRFIT   calls VDTTRA instead of UFTTRA (flr).
+
+ ! ALEPHLIB 21.6
+    VTRKEX - Place VDMS on E-list for cleanup (D.Casper)
+
+ ! ALEPHLIB 21.5
+    VTRUH  :  New routine, count the number of properly associated VDET
+              hits by layer and view (A.Bonissent).
+
+ ! ALEPHLIB 21.4
+    VDHTER :  Modified to take the space resolution from MC (Manoj T.)
+    VHERR1 :  New routine, compute VDET hit error based on MC (Manoj T.)
+
+ ! ALEPHLIB 21.3
+    VDMSUP,VTRKEX: fix multiple variable definitions (M.Cattaneo)
+
+ ! ALEPHLIB 21.0
+  - VTCLLD :  Correct definition of neighbouring wafer for new VDET
+  - VTCLAS :  move local work bank indices setting just before they
+              are used
+  - VTRFIT :  Access VDET Setup code using ABRUEV and GTSTUP
+
+ ! ALEPHLIB 20.9
+ - Unmultiplex strips before clustering rather than after;
+   handle the relation between "wafer clusters" and
+   "global clusters" (at module level); new adress encoding
+   scheme.  Affected :
+   VTLINK, VRMWF, VTFILL, VTCLLD, VTRFIT
+ - Modify VGRDAL so that alignment banks for monte carlo are accessed
+   by setup code; for data we keep going with run number
+ - VDMSEC
+     get multiple scattering constants from setup dependent bank
+     VRLD instead of from FKAL bank
+ - VRLDGT
+     new routine to give access to VRLD bank
+ - VRLDCOM
+     new common filled by VRLDGT
+ - VDMSUP
+     bug fix to a bank index and garbage collection protection
+ - VDMSRL
+     add more flexibility to allow for layer dependent effects
+ ! ALEPHLIB 20.6
+   VFACSN - returns the serial slot number of a face.
+
+ ! ALEPHLIB 20.5
+   Introduction of the new versions of the VDET alignment routines,
+   of the new packing routines.
+   Add some routines in the geometry package.
+   VSCMSC - remove a bug.
+   VRDDAF - remove reference to old VDET geometry package.
+   VTRFIT - remove test on 1993 ==> remove bug for all years.
+   VDHTER, VTXNWT - new versions to cope with new VDET geometry package.
+   VTXTRK -  These are routines which perform the extrapolation
+   VDMSUP -  of a track to Vdet wafers and estimate the amount
+   VTCLLD -  of scattering material which was encountered. Use
+             of old VDGEOS common block was replaced by calls
+             to Geom. package routines
+   VDMSRL -  get VDRL bank from D.B.
+   UFVDMS -  get beampipe setup code.
+
+ ! ALEPHLIB 20.2
+   VTRFIT - gets DB banks through ALGTDB instead of MDARD.
+            (because MDARD was used and the required bank number did
+             not exist, default values were used).
+            keep the old code (default values) for '93 MC (setup code=5)
+
+ ! ALEPHLIB 15.8
+   VTXNWT - add a protection against asin > 1. (W.Manner)
+
+ ! ALEPHLIB 15.5
+   VDMSUP, VTRFIT - decrease the likelihood of garbage collections
+                    to protect against " CALL xxx(IW(...)) "
+                    (G.Taylor)
+   VTXRAW - rewrite the routine to avoid recurrant problem.
+ ! ALEPHLIB 15.2
+   VTXTRK : check Z cylinder extrapolation
+
+ ! ALEPHLIB 15.1
+   VRDDAF : get VDET geometry banks through ALGTDB instead
+            of MDARD to avoid to repeat banks with different NR
+            but identical contents.
+
+ ! ALEPHLIB 14.1
+  Changes submitted on 5/10/92 by G.Taylor, D.Brown, C.Gay
+
+  UFVDMS - add option of using more detailed treatment of VDET
+           material if VDMS 0 bank present, no VDMS bank treat as now.
+  VTRKEX - modified to provide VDMS banks ( nr = FRFT track number)
+  VTXTRK - based on track extrapolation including alignement effects
+  VRDDAF - increase z lenght of face, read in VDRL bank
+  VTRFIT - call UFTTRA to get new treatment
+           call UFTMSO(cf UMSERR) to treat track without vdet hits
+
+  VDMSUP - create VDMS 0 bank and update using measured VDET coords
+  VDMSEC - add into VDMS the effect of the VDET supprot rings
+  VDMSRL - get the radiation lenght within a face
+  UFTTRA - UFTTRK with one modified arguement to call the new code
+  UFMS   - get contribution to covariance matrix coming from MS
+           between two given radii
+  UFTMSO - get contribution to covariance matrix coming from MS
+           between innermost coordinaate and origin
+  UFTKAL - Change one of the machine precision protections
+
+    ------------------------------------------
+@
+
+
+1.12
+log
+@corrections for alephlib 305.3
+@
+text
+@d3 3
+@
+
+
+1.11
+log
+@modifs for Linux
+@
+text
+@d3 3
+@
+
+
+1.10
+log
+@Mods to VDET error parametrisation
+@
+text
+@d3 3
+@
+
+
+1.9
+log
+@aleph303_1 corr in UFTKAL and VDTTRA
+@
+text
+@d3 3
+d13 2
+a14 2
+            to be dealing with a small set of events when this feature is enabled.
+                                                                     (D.Casper)
+@
+
+
+1.8
+log
+@Bug fixes for Alephlib 302.9
+@
+text
+@d4 9
+@
+
+
+1.7
+log
+@release aleph302_1
+@
+text
+@d4 4
+@
+
+
+1.6
+log
+@add VDMS to E list
+@
+text
+@d3 7
+@
+
+
+1.5
+log
+@Protect against possible missing banks
+@
+text
+@d3 3
+@
+
+
+1.4
+log
+@Renamve VHERR to VHERR1
+@
+text
+@d3 4
+@
+
+
+1.3
+log
+@Mods for VdET
+@
+text
+@d5 1
+a5 1
+    VHERR  :  New routine, compute VDET hit error based on MC (Manoj T.)
+@
+
+
+1.2
+log
+@Remove call to TIMAL, multiple variable defs.
+@
+text
+@d3 4
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 3
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

@@ -1,0 +1,526 @@
+#! /bin/csh
+#============================================================================
+#                             newver
+#                                                       F.Blin
+#============================================================================
+# procedure to create a new ALEPH library on various UNIX machines
+#
+#============================================================================
+# All ALEPH CERNVM disks on file -> ${alib_dir}/alibdisk
+#
+# the /aleph/ directory of an ALEPH library is found in ${alib_dir}/pub/progl
+# the last version number installed is taken from ${prog_dir}/alib.log
+# if it exists.
+# at the end ${prog_dir}/alib.log is updated with the new version number.
+#
+# All parameters for f77 on file without debug -> ${prog_dir}/f77_options
+# All parameters for f77 on file with debug -> ${prog_dir}/f77_dbx_options
+# Call "f77_compile -> to run f77 foreach routine
+#
+# source files are stored on ${prog_dir/src${prog_name}${cycle}
+# special fortran files are stored on ${prog_dir}
+# object files and library files are stored on ${lib_dir}
+# usually ${prog_dir} and {lib_dir} are identical
+# ----------------------------------------------
+#
+# If prog_name = ALPHA or JULIA or GALEPH then
+#    Call updcorr -> to compile
+# -> run FTP on CERNVM.CERN.CH
+#            get ${file_name}.${file_type}
+#            if ${prog_name}= alpha julia or galeph -> get ${file_type_corr}
+#            if ${prog_name}= alpha -> get qxxxx .inc${cycle}
+#            if ${prog_name}= alephlib -> get ${file_type_c}
+# If prog_name = GALEPH -> ${prog_dir}/guser${cycle}.f
+#                          ${lib_dir}/guser${cycle}.o
+# If prog_name = JULIA  -> ${prog_dir}/jmuid${cycle}.f
+#                          ${lib_dir}/jmuid${cycle}.o
+#============================================================================
+# P1 -> prog_name eg: alephlib
+# P2 -> cycle     eg: 154
+# P3 -> file_name eg: aleph154
+#============================================================================
+# 22/02/93 .add parameter -w for cc compilation
+#          .suppress less fc.log
+# 27/04/93 .add FTP for file type NEWS
+# 11/05/93 .check status for rm * in src_dir, if status=1 then exit
+# newver2.0
+# 08/07/93 .add lib_dir to be able to test a new compiler (FLR)
+#           lib_dir is set to `pwd` which can be different from prog_dir
+# 12/07/93 .on SERVICE DXAL takes source from ULTRIX if not on /gen/  (FLR)
+#          .on SERVICE CSF  takes source from IRIX4  if not on /gen/
+# 12/07/93 .history is maintained on ${prog_dir}/alib.log  (FLR)
+# newver2.1
+# 19/07/93 .put the ibm_name on top of ftp_tmp file
+#           let ftp ask for the ibm password
+#           remove reference to ${HOME}/.netrc
+# newver2.2
+# 03/08/93 .add SHIFT9
+# newver2.3
+# 30/08/93 .use environment variable MASTER
+#           source files are maintained on /al/${MASTER}/
+#           when the machine is not the MASTER one links are created to
+#           /al/${MASTER}/phy/ to reference include files
+#============================================================================
+# flag = OK .. always GOOD
+#      = 10 for compile problem
+#      = 10_c                  alephlib C
+#      = 10_gp                 guser or jmuid
+#      = 10_dbx                with debug
+#      = 11 for archive problem
+#      = 11_dbx                with debug
+#      = 2 if file not here!
+#      = 2_${file_type}
+#      = 3 fnice problem
+#      = 4 split problem
+#============================================================================
+#set echo on
+#*******>
+set UNAME = `uname`
+#if (${UNAME} == "ULTRIX") then
+   df /aleph
+   echo "Please check free kbytes! "
+   echo -n " OK? [<CR>=y]-> "
+   set answer = $<
+   set answer = `echo ${answer} | awk '{print substr($0,1,1)}'`
+   if ($answer == "") set answer = "y"
+   if ($answer != "y") goto exec_end
+#endif
+#*******<
+unset noclobber
+set exec_name = "newver"
+set alib_dir = "/aleph/alib"
+set lib_dir = `pwd`
+set cycle_new = ""
+set cycle_old = ""
+set mnemonic = ""
+set file_type = ""
+set prog_aleph = "OK"
+set file_name_c = "alc"
+set file_type_c = "c"
+set flag = "OK"
+#===> first parameter
+if ($1 == "") then
+  echo -n "Enter Aleph program name [eg:alephlib <CR>=exit]-> "
+   set prog_name = $<
+   if (${prog_name} == "") goto exec_end
+else
+   set prog_name = $1
+endif
+#
+# =============================================================================
+#                  set idir, prog_dir and lib_dir and cycle number
+#
+set idir = `egrep ^" ${prog_name} " ${alib_dir}/pub/progl | awk '{print $2}'`
+set mnemonic = `egrep ^" ${prog_name} " ${alib_dir}/pub/progl | awk '{print $4}'`
+#
+set prog_dir = "/al/${OS}/${idir}"
+#
+if (${idir} == "") then
+   echo "*** WARNING not official ALEPH program"
+   set prog_aleph = "NO"
+   set mnemonic = "${prog_name}"
+else
+   if (${lib_dir} != "/al/${OS}/${idir}") then
+      echo  "WARNING you are not in the official directory pwd= ${lib_dir}"
+      echo -n "do you want to go to the official directory [yes or no <CR>=no]-> "
+      if ($< == "yes")  set lib_dir = "/al/${OS}/${idir}"
+   endif
+   echo " lib_dir = ${lib_dir} "
+   if (-e ${prog_dir}/alib.log) then
+      set cycle_old = `egrep ^" ${prog_name} " ${prog_dir}/alib.log | awk '{print $3}'`
+      set dmy_old = `egrep ^" ${prog_name} " ${prog_dir}/alib.log | awk '{print $4}'`
+   endif
+   if (${cycle_old} != "") then
+      @ cycle_new =  ${cycle_old} + 1
+      if (${mnemonic} == "bos") then
+         @ cycle_new = ((${cycle_old} / 100) + 1) * 100) + 89
+      endif
+   endif
+endif
+# ===============================================================================
+#
+ 
+#===> second parameter
+if ($2 == "") then
+   if (${cycle_new} == "") then
+      set string_cr = "<CR>=exit"
+   else
+      set string_cr = "<CR>=${cycle_new}"
+   endif
+   echo -n "Enter version number[${string_cr}]-> "
+   set cycle = $<
+   if (${cycle} == "") then
+      if (${cycle_new} == "") then
+         goto exec_end
+      else
+         set cycle = ${cycle_new}
+      endif
+   endif
+else
+   set cycle = $2
+endif
+ 
+set file_new = ${mnemonic}${cycle}
+ 
+#===> third parameter
+if ($3 == "") then
+   echo -n "Enter new file name [<CR>=${file_new}]-> "
+   set file_name = $<
+   if (${file_name} == "") set file_name = ${file_new}
+else
+   set file_name = $3
+endif
+ 
+# =====================================================================
+#                set src_dir
+# source reside on the MASTER machine
+# if it is on SERVICE=CSF and it is a machine dependant program ( in /gen/ ) then
+#     source files reside on ${prog_dir}
+# endif
+
+set src_dir = "/al/${MASTER}/${idir}/src${file_name}"
+if (${SERVICE} == "CSF" && ${idir} == "gen") set src_dir = "${prog_dir}/src${file_name}"
+# =====================================================================
+#
+set file_type = `egrep ^" ${prog_name} " ${prog_dir}/f77_options | awk '{print $2}'`
+if (${file_type} == "") goto exec_end
+#
+# ======================= check existence of src_dir =======================
+# if src_dir exists then
+#    ask if you want to restart from srcatch: remove src_dir and get
+#    new one from CERNVM
+#    or
+#    recompile the existing one
+# endif
+ 
+if (-d ${src_dir}) then
+   echo "*** WARNING directory -> ${src_dir} already there. "
+   echo "    y -> to get a new version from CERNVM"
+   echo "    n -> to re-compile the existing version"
+   echo -n " [y/n <CR>=exit] -> "
+   set answer = $<
+   set answer = `echo ${answer} | awk '{print substr($0,1,1)}'`
+   if (${answer} == "") goto exec_end
+   if (${answer} == "n") goto begin_compile
+   cd ${src_dir}
+   rm *
+   if ($status == "1") then
+      echo "***> WARNING status 1 for remove in directory ${src_dir}"
+      echo "***> Too many files"
+      goto exec_end
+   endif
+endif
+# ===================================================================
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> begin
+begin:
+ 
+cd ${prog_dir}
+ 
+# ================================================================
+#                    ftp on CERNVM
+set disk_ibm_name = "pub"
+set transfert_type = "ascii"
+set disk_ibm = `egrep "${disk_ibm_name} " ${alib_dir}/alibdisk | awk '{print $2 "." $3}'`
+ 
+set mv_tmp = "NO"
+set transfert_type = "ascii"
+ 
+if (-e ftp_tmp) rm ftp_tmp
+echo -n "Enter ibm user [<CR>=${USER}]-> "
+set ibm_user = $<
+if (${ibm_user} == "") then
+   set ibm_user = ${USER}
+endif
+echo "${ibm_user}" > ftp_tmp
+echo "cd ${disk_ibm}" >> ftp_tmp
+echo "${transfert_type}" >> ftp_tmp
+#====> ftp ${file_type}
+echo "get ${file_name}.${file_type}" >> ftp_tmp
+#====> ftp ${file_type_c}
+if (${prog_name} == "alephlib") then
+   echo "get ${file_name_c}.${file_type_c}" >> ftp_tmp
+endif
+#====> ftp file type = NEWS
+   set file_news = ${file_name}
+   if (${prog_name} == "alephlib") set file_news = ${prog_name}
+   if (${prog_name} == "bos77") set file_news = ${prog_name}
+   if (${prog_name} == "look") set file_news = ${prog_name}
+   echo "get ${file_news}.news ${file_new}.news" >> ftp_tmp
+#====> ftp ${file_type_corr}
+if (${prog_name} == "julia" || ${prog_name} == "galeph" || ${prog_name} == "alpha" ) then
+   set file_type_corr = ${file_type}
+   set mnemonic_corr = `echo ${prog_name} | awk '{print substr($0,1,1) "cor"}'`
+   if (${prog_name} == "alpha") then
+      set mnemonic_corr = `echo ${prog_name} | awk '{print substr($0,1,2) "cor"}'`
+      set disk_ibm_phy = `egrep "phy " ${alib_dir}/alibdisk | awk '{print $2 "." $3}'`
+   endif
+   set file_corr = ${mnemonic_corr}${cycle}
+   echo "get ${file_corr}.${file_type_corr} ${file_corr}.f"  >> ftp_tmp
+endif
+#====> ftp .inc${cycle}
+if (${prog_name} == "alpha") then
+   echo "cd ${disk_ibm_phy}" >> ftp_tmp
+   echo "get qmacro.inc${cycle}" >> ftp_tmp
+   echo "get qcde.inc${cycle}" >> ftp_tmp
+   echo "get qdecl.inc${cycle}" >> ftp_tmp
+   echo "get qhac.inc${cycle}" >> ftp_tmp
+endif
+ 
+echo "quit" >> ftp_tmp
+#********
+ 
+ftp cernvm < ftp_tmp
+ 
+if !(-e ${prog_dir}/${file_name}.${file_type}) then
+   echo "*** WARNING file -> ${prog_dir}/${file_name}.${file_type} is unknown"
+   set flag = "2_${file_type}"
+   goto spy
+endif
+# ================= end of ftp on CERNVM ===================================
+ 
+# ================= move to src_dir ==========================================
+echo "Now -> ${src_dir}"
+if !(-d ${src_dir}) mkdir ${src_dir}
+ 
+cd ${src_dir}
+ 
+echo `date`" -> Begin on cd ${src_dir}" > newver_check.log
+mv -f ${prog_dir}/${file_name}.${file_type} ${file_name}.f
+if (${prog_name} == "alephlib") mv -f ${prog_dir}/${file_name_c}.${file_type_c} .
+# ==============================================================================
+ 
+ 
+# ================ begin of fnice, fsplit, put in lower case ======================
+#*******> fnice : reformat .f files
+# mv ugly input to ${file_name}.fugly and create a nice ${file_name}.f
+#     a) removes training blancs
+#     b) removes all col 72/80
+#     c) change \ to \\
+if (-e ${file_name}.f) then
+   echo "Now -> fnice for ${file_name}.f"
+   echo `date`" -> fnice for ${file_name}.f" >> newver_check.log
+   fnice ${file_name}.f && rm ${file_name}.fugly
+else
+   echo "*** WARNING -> fnice"
+   set flag = "3"
+   goto spy
+endif
+ 
+#*******> fplit : splits the fortran into subroutines and functions
+echo "Now -> fsplit"
+echo `date`" -> fsplit" >> newver_check.log
+fsplit ${file_name}.f > split.log && rm ${file_name}.f
+rm split.log
+if (-e ${file_name}.f) then
+   echo "*** WARNING -> fsplit"
+   set flag = "4"
+   goto spy
+endif
+#********** put in lower case
+set files = `ls *.f`
+foreach file ( $files[*] )
+  set tmp = `echo ${file} | tr '[A-Z]' '[a-z]'`
+  mv -f ${file} ${tmp}
+end
+# =================== end of fnice fsplit ==================================
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> begin_compile
+begin_compile:
+ 
+set file_para = "${prog_dir}/f77_options"
+set all_para = `egrep ^" ${prog_name} " ${file_para} | awk '{print substr($0,15)}'`
+ 
+cd ${src_dir}
+ 
+if (${prog_aleph} == "OK") goto ${prog_name}
+ 
+#************** if not a standard program goto compile
+echo `date`" -> begin_compile" >> newver_check.log
+goto compile
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> alephlib
+alephlib:
+ 
+#************> library C
+if !(-e ${src_dir}/${file_name_c}.${file_type_c}) then
+   echo "*** WARNING file -> ${src_dir}/${file_name_c}.${file_type_c} is unknown"
+   set flag = "2_${file_type_c}"
+   goto spy
+endif
+echo "Now -> cc -g -c -w "
+echo `date`" -> cc -g -c -w " >> newver_check.log
+cc -g -c -w *.c | & tee fc.log
+echo "Now -> grep -n 'Error' fc.log > fc_Error.log"
+grep -n 'Error' fc.log > fc_Error.log
+if !(-z fc_Error.log) then
+   echo "See file -> fc.log"
+   set flag = "10_c"
+   goto spy
+endif
+#************< library C
+goto compile
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> galeph/julia
+ 
+galeph:
+# get guser
+set file_name_gj = "guser"
+set string_gj = "qnext.f grndm.f gstmed.f gufld.f guhadr.f guinti.f guphad.f gusear.f gustep.f gutrak.f"
+goto comp_gj
+ 
+julia:
+# get jmuid
+set file_name_gj = "jmuid"${cycle}
+set string_gj = "ftrack.f hmfind.f mpredg.f mpredm.f muass.f"
+ 
+#*******> compile without debug file_name_gj
+comp_gj:
+cat ${string_gj} > ${prog_dir}/${file_name_gj}.f
+ 
+cd ${lib_dir}
+ 
+echo "Now -> f77 ${all_para} ${file_name_gj}.f >> ${file_name_gj}.log"
+echo `date`" -> f77 ${all_para} ${file_name_gj}.f" >> ${src_dir}/newver_check.log
+ 
+f77 ${all_para} ${prog_dir}/${file_name_gj}.f | & tee ${file_name_gj}.log
+ 
+if (${SERVICE} == "CSF" || (${SERVICE} == "DXAL" && ${OS} == "OSF1")) rm ${prog_dir}/${file_name_gj}.f
+cd ${src_dir}
+ 
+goto compile
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> look
+look:
+#*************> compile main program LKMAIN and move it to lib_dir
+cd lib_dir
+f77 ${all_para} ${src_dir}/lkmain.f | & tee lkmain.log
+cd src_dir
+goto compile
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> alpha
+alpha:
+#********> on no MASTER machine create a link to MASTER include files
+if (${OS} != ${MASTER}) then
+   set inc_dir = "/al/${MASTER}/${idir}"
+   ln -fs ${inc_dir/qcde.inc${cycle} ${prog_dir}/qcde.inc${cycle}
+   ln -fs ${inc_dir}/qhac.inc${cycle} ${prog_dir}/qhac.inc${cycle}
+   ln -fs ${inc_dir}/qmacro.inc${cycle} ${prog_dir}/qmacro.inc${cycle}
+   ln -fs ${inc_dir}/qdecl.inc${cycle} ${prog_dir}/qdecl.inc${cycle}
+endif
+goto compile
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> bos mini tpcsim
+bos77:
+mini:
+tpcsim:
+#
+goto compile
+ 
+# ====================== compile and make a library========================
+compile:
+
+#******> remove existing library if any 
+if (-e ${lib_dir}/lib${file_name}.a) rm ${lib_dir}/lib${file_name}.a
+if (-e ${lib_dir}/lib${file_name}_dbx.a) rm ${lib_dir}/lib${file_name}_dbx.a
+
+#*******> f77_compile with debug
+echo `date`" -> Call f77_compile with dbx" >> newver_check.log
+f77_compile ${prog_name} f77_dbx dbx
+if !(-z f77_dbx_Error.log) then
+   set flag = "10_dbx"
+   goto spy
+endif
+ 
+#*******> ar with debug
+#                        ar = archive
+#  parameters used :      r = replace
+#                         s = sort
+#                         l = place temporary files in the local directory
+set debug = "_dbx"
+echo "Now -> ar rsl ${lib_dir}/lib${file_name}${debug}.a *.o"
+echo `date`" -> ar rsl ${lib_dir}/lib${file_name}${debug}.a *.o" >> newver_check.log
+ar rsl ${lib_dir}/lib${file_name}${debug}.a *.o | & tee ar_dbx.log
+echo "Now -> grep -n 'Error' ar_dbx.log > ar_dbx_Error.log"
+grep -n 'Error' ar_dbx.log > ar_dbx_Error.log
+ if !(-z ar_dbx_Error.log) then
+    set flag = "11_dbx"
+    echo "WARNING ***> archive problems"
+    goto spy
+ endif
+ 
+#*******> f77_compile without debug
+echo `date`" -> Call f77_compile without dbx" >> newver_check.log
+f77_compile ${prog_name} f77
+if !(-z f77_Error.log) then
+   set flag = "10"
+   goto spy
+endif
+ 
+#*******> ar without dbx
+echo "Now  -> ar rsl ${lib_dir}/lib${file_name}.a *.o"
+echo `date`" -> ar rsl ${lib_dir}/lib${file_name}.a *.o" >> newver_check.log
+ar rsl ${lib_dir}/lib${file_name}.a *.o | & tee ar.log
+echo "Now -> grep -n 'Error' ar.log > ar_Error.log"
+grep -n 'Error' ar.log > ar_Error.log
+ if !(-z ar_Error.log) then
+    set flag = "11"
+    echo "WARNING ***> archive problems"
+    goto spy
+ endif
+ 
+echo "Now -> rm *.o"
+echo `date`" -> rm *.o" >> newver_check.log
+rm *.o
+ 
+# ========================= end of compilation and library ======================
+ 
+ 
+cd ${prog_dir}
+ 
+set dmyh = `date '+%d-%h-19%y %T'`
+ 
+if (${prog_aleph} == "NO") goto spy
+ 
+#*******> update ${prog_dir}/alib.log
+echo "Now -> update ${prog_dir}/alib.log "
+echo `date`" -> update ${prog_dir}/alib.log" >> newver_check.log
+if !(-e alib.log) then
+   echo " ${prog_name} ${exec_name} ${cycle} ${dmyh}">>alib.log
+else
+   set pname = ""
+   set pname = `egrep ^" ${prog_name} " alib.log | awk '{print $1}'`
+   if (${pname} == "") then
+      echo " ${prog_name} ${exec_name} ${cycle} ${dmyh}">>alib.log
+   else
+      set sold = " ${prog_name} ${exec_name} ${cycle_old} ${dmy_old}"
+      set snew = " ${prog_name} ${exec_name} ${cycle_new} ${dmyh}"
+      sed s/"${sold}"/"${snew}"/ alib.log > alib.tmp
+      mv -f alib.tmp alib.log
+   endif
+endif
+ 
+# =================== build correction file for galeph, julia, alpha ============
+ 
+cd lib_dir
+ 
+if (${prog_name} == "julia" || ${prog_name} == "galeph" || ${prog_name} == "alpha" ) then
+   echo "Now -> updcorr ${prog_name} newver"
+   echo `date`" -> updcorr ${prog_name} newver" >> newver_check.log
+   updcorr ${prog_name} newver
+endif
+ 
+# ================================================================================
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> spy
+spy:
+#*******> spy
+echo "${exec_name} ${user} ${dmyh} ${prog_name} ${cycle} ${src_dir} ${flag}" >> ${prog_dir}/spy
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> exec_end
+exec_end:
+ exit
+ 

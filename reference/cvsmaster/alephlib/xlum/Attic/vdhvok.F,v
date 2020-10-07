@@ -1,0 +1,165 @@
+head	1.3;
+access;
+symbols
+	aleph307:1.2;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	97.12.05.10.10.47;	author cattanem;	state dead;
+branches;
+next	1.2;
+
+1.2
+date	97.12.02.16.57.22;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.12.02.16.51.50;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@Alephlib 307 second test
+@
+text
+@      LOGICAL FUNCTION VDHVOK()
+C----------------------------------------------------------------------
+C!   Determine HV state of VDET.
+C!   This is a routine to replace xvdeok and vdetok
+C!   as they are now used in alpha and julia respectively
+C!   and is intended for alephlib.
+C!   Check if VDET HV is on or not
+C!   Make additional checks on periods when HV bit had problems.
+CKEY VDET /USER
+C!
+C!   Author   : HCJ Seywerd            13-NOV-1997
+C!   Modified : M.Cattaneo              2-Dec-1997
+C!              Optimise access to banks, remove local arrays
+C!
+C!   Inputs:
+C!           LUDBAS -- unit for dbase 
+C!   Outputs: .TRUE. if the HV state of the VDET is ON.
+C!            For MC always .TRUE.
+C!======================================================================
+#ifndef DOC
+      IMPLICIT NONE
+#include "bcs.h"
+
+      INTEGER  vbitgd, NAMIND, mdard, junidb
+      EXTERNAL vbitgd, NAMIND, mdard, junidb
+
+      INTEGER kvhbv,ludbas
+      INTEGER navhbv/0/, lrun /0/
+      SAVE navhbv, ibvd, ludbas
+
+      INTEGER kgood
+      INTEGER irun,ievt
+
+      INTEGER jhvst, ibvd
+      INTEGER irow
+
+* HV bits
+#include "vhbvjj.h"
+#include "bmacrod.h"
+#include "bmacro.h"
+C----------------------------------------------------------------------
+      VDHVOK = .FALSE.
+C
+C++   For MC, always .TRUE.
+C
+      CALL ABRUEV(IRUN,IEVT)
+      IF (IRUN.LT.2000) THEN
+        VDHVOK = .TRUE.
+        GOTO 999
+      ENDIF
+
+C
+C++   Is this in a bad period when readout was blocked ?
+C++   If so, check noise to determine HV state.
+C
+      KGOOD = VBITGD()
+
+      IF (KGOOD.NE.0) THEN
+         IF (KGOOD.EQ.+1) VDHVOK = .TRUE.
+         GOTO 999
+      ENDIF
+C
+C++ Get the VHBV bank from the dbase
+      IF( navhbv .LE. 0 ) THEN
+        ludbas = junidb(0)
+        kvhbv  = mdard(iw,ludbas,'VHBV',0)
+        navhbv = NAMIND('VHBV')
+      ELSE
+        kvhbv = IW(navhbv)
+      ENDIF
+      IF (kvhbv.LE.0) THEN
+C         Something went wrong...
+        WRITE (IW(6),'(1X,2(A,I5))')
+     >       '+++VDHVOK+++  Error reading DAF on unit', ludbas,
+     >       ': iret =', kvhbv
+        GOTO 999
+      ENDIF
+
+C++ Determine once per run which bit is to be used for this run period
+      IF( irun .NE. lrun ) THEN
+        DO irow = 1, lrows(kvhbv)
+          IF ( irun .GE. ITABL(kvhbv,irow,jvhbfr) .AND.
+     &         irun .LT. ITABL(kvhbv,irow,jvhblr)) THEN
+            ibvd = ITABL(kvhbv,irow,jvhbbn)
+          ENDIF
+        ENDDO
+        lrun = irun
+      ENDIF
+
+C++ Check the bit!!
+      CALL XHVBIT(JHVST)
+      IF( JHVST .NE. 0 ) VDHVOK = BTEST(JHVST,IBVD)
+C
+  999 CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@Add xlum package
+@
+text
+@@
+
+
+1.1
+log
+@Add xlum package
+@
+text
+@a22 1
+#include "revhjj.h"
+d27 3
+a29 3
+      INTEGER kvhbv,krevh,ludbas
+      INTEGER narevh /0/, navhbv/0/, lrun /0/
+      SAVE narevh, navhbv, ibvd, ludbas
+a62 6
+C++   Check HV bit in REVH directly.
+      IF( narevh .EQ. 0 ) narevh = NAMIND('REVH')
+      KREVH = IW(NAREVH)
+      IF (KREVH.LE.0) GOTO 999
+C
+
+d91 2
+a92 2
+      JHVST = ITABL(KREVH,1,JREVDS)
+      VDHVOK = BTEST(JHVST,IBVD)
+@

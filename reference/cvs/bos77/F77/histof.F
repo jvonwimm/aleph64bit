@@ -1,0 +1,17 @@
+      SUBROUTINE HISTOF(SUBNAM)
+*     SWITCH OFF HISTOGRAMS FOR MODUL SUBNAM
+      CHARACTER*(*) SUBNAM
+#include "concom.h"
+#include "bosmdl.h"
+      IF(SUBNAM.EQ.' ') GOTO 100
+      CALL TMODUL(SUBNAM)
+      L=JSN
+      IF(L.EQ.0) GOTO 100
+      IF(IHB(2,L).EQ.0) THEN
+         IHB(1,L)=-1
+         IHB(6,L)=-1
+         WRITE(ICPR,101) SUBNAM
+      END IF
+  100 RETURN
+  101 FORMAT('0HISTOF-----  SUBPROGRAM ',A8,' -  HISTOGRAMS SUPPRESSED')
+      END

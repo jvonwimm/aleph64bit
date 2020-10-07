@@ -1,0 +1,199 @@
+head	1.2;
+access;
+symbols
+	look25:1.2
+	look24:1.2
+	look23:1.2
+	look22:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.08.29.08.17.49;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.08.18.10.55.12;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@look23 xedit works on alpha/osf1 and vms, corr in lknice
+@
+text
+@      SUBROUTINE LKXEDIT
+C ---------------------------------------------------------------
+C -author : A.Bonissent
+C! LKXEDIT :
+C
+C     Write into a file in disk SCWEEK: unit LU1
+C       - table name and number of attributes;
+C       - 2 lines of headers : attribute names and dimensions (if any)
+C       - list of formats (NLIST) and list of columns (ICOLIS)
+C       - Max NR (familiy nb) max Row nb, and total nb of rows
+C         ( it can be a family of banks)
+C     For each bank in the family
+C       Write number of cols, nb of rows and NR
+C       For each row in the bank
+C        write all elements of the row
+C       -
+C     -
+C
+C     Mark termination in file
+C     Close file (LU1)
+C     Write a command file in SCWEEK, unit LU2
+C     Spawn a subprocess to run the command file
+C     LU1=67, LU2=68 by default
+C     these unit numbers can be changed with a call to
+C     LKXUNIT (new1,new2)
+C --------------------------------------------------------------------
+#ifndef DOC
+#include "phead.h"
+      CHARACTER*80 CSPAW
+C MAXATTR is defined inside phead.h
+      DIMENSION VALUES(MAXATTR)
+      CHARACTER*10 BUFCAR
+      CHARACTER*10 BUFF(MAXATTR)
+      CHARACTER*80 FNAM1,FNAM2,FNAM3
+      CHARACTER*120 MSG
+      CHARACTER*50 NAME
+      DATA LU1, LU2/67,68/
+      DATA FNAM1, FNAM2, FNAM3 /' ',' ',' '/
+      DATA MSG /' '/
+      
+#include "bcs.h"
+#include "bmacro.h"
+C --------------------------------------------------------------------
+#if defined(UNIX)
+      FNAM1=TMAIN//'.lookxedit'
+      MSG = 'rm '//FNAM1(1:14)
+      CALL SYSTEM (MSG(1:LNBLNK(MSG)))
+
+#else
+#if defined(ALEPH_DEC)
+      FNAM1(1:13)='SCWEEK:PIGAL_'
+      FNAM1(14:17)=TMAIN
+      FNAM1(18:21)='.XED'
+#endif
+#endif
+C
+      LF1 = LNBLNK(FNAM1)
+      OPEN(UNIT=LU1,STATUS='NEW',FORM='UNFORMATTED',FILE=FNAM1(1:LF1))
+C
+      IF(NATTR.EQ.0)GO TO 999
+C
+      WRITE(LU1)TMAIN,NATTR
+      WRITE(LU1)(HEADR(IPR),IPR=1,NATTR)
+      WRITE(LU1)(HEADRD(IPR),IPR=1,NATTR)
+      WRITE(LU1)(NLIS(IPR),IPR=1,NATTR)
+      WRITE(LU1)(ICOLIS(IPR),IPR=1,NATTR)
+C Find max NR and Nlines
+      MAXNR=0
+      MAXNL=0
+      NLTOT=0
+      KTABLE=NAMIND(TMAIN)+1
+  120 KTABLE=IW(KTABLE-1)
+      IF(KTABLE.EQ.0)GO TO 122
+      NR=IW(KTABLE-2)
+      NR=ABS(NR)
+      NL=LROWS(KTABLE)
+      NLTOT=NLTOT+NL
+      IF(NL.GT.MAXNL)MAXNL=NL
+      IF(NR.GT.MAXNR)MAXNR=NR
+      GO TO 120
+  122 CONTINUE
+      WRITE(LU1)MAXNR,MAXNL,NLTOT
+C
+      KTABLE=NAMIND(TMAIN)+1
+  110 KTABLE=IW(KTABLE-1)
+      NR=IW(KTABLE-2)
+      IF(KTABLE.EQ.0)GO TO 999
+      NCL=LCOLS(KTABLE)
+      NLIN=LROWS(KTABLE)
+      write(LU1)ncl,nlin,nr
+      DO 10 IL=1,NLIN
+        DO 11 ICOL=1,NCL
+          VALUES(ICOL) = RTABL(KTABLE,IL,ICOL)
+   11   CONTINUE
+        WRITE(LU1)(VALUES(IPR),IPR=1,NCL)
+   10 CONTINUE
+      GO TO 110
+  999 CONTINUE
+      ncl=0
+      nlin=0
+      nr=0
+      write(LU1)ncl,nlin,nr
+      CLOSE(LU1)
+  920 FORMAT(A)
+#if defined(UNIX)
+      MSG = 'readevi.com '//FNAM1(1:LF1)//'&'
+      CALL SYSTEM (MSG(1:LNBLNK(MSG))) 
+#else
+#if defined(ALEPH_DEC)
+      FNAM2 = 'SCWEEK:LOOK$EDIT.COM'
+      LF2 = LNBLNK(FNAM2)
+      FNAM3 = 'ALIBROOT:[ALE.READEVI]READEVX11.EXE'
+      LF3 = LNBLNK(FNAM3)
+      OPEN(UNIT=LU2,STATUS='NEW',FILE=FNAM2(1:LF2),RECL=132)
+      MSG = ' '
+      MSG = '$ PURGE '//FNAM1(1:LF1)
+      WRITE(LU2,920) MSG(1:LNBLNK(MSG))
+      MSG = ' '
+      MSG = '$ PURGE '//FNAM2(1:LF2)
+      WRITE(LU2,920) MSG(1:LNBLNK(MSG))
+      MSG = ' '
+      MSG = '$ ASS '//FNAM1(1:LF1)//' FOR001'
+      WRITE(LU2,920) MSG(1:LNBLNK(MSG))
+      MSG = ' '
+      MSG = '$ R/NODEB '//FNAM3(1:LF3)
+      WRITE(LU2,920) MSG(1:LNBLNK(MSG))
+      CLOSE(LU2)
+      iflags=1
+      CALL LIB$SPAWN(, FNAM2(1:LF2),, iflags)
+#endif
+#endif
+      RETURN
+C
+C - Entry point
+      ENTRY LKXUNIT (KU1,KU2)
+      LU1 = KU1
+      LU2 = KU2
+      RETURN
+      END
+#endif
+
+@
+
+
+1.1
+log
+@new version look 22
+@
+text
+@d40 1
+d44 7
+a50 1
+#if defined(ALEPH_DEC) && !defined(UNIX)
+a53 2
+      FNAM2 = 'SCWEEK:LOOK$EDIT.COM'
+      FNAM3 = 'ALIBROOT:[ALE.READEVI]READEVX11.EXE'
+d55 2
+a57 3
+      LF2 = LNBLNK(FNAM2)
+      LF3 = LNBLNK(FNAM3)
+C
+d104 10
+a114 2
+  920 FORMAT(A)
+#if defined(ALEPH_DEC) && ! defined(UNIX)
+d131 1
+d141 1
+@

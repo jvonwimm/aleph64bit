@@ -1,0 +1,164 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  qfndip_1:1.1.1.1 OSF1:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.08.20.13.56.15;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.08.20.13.56.16;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@C*DK,IPTRK
+      SUBROUTINE IPTRK(JTRK,IP,IP_ERR,NUSED)
+C
+C  Entry point for calculating the effect of removing a single track from
+c  an existing vertex.  This relies on a valid vertex to have already
+C  been found.  Dave Brown, 29-1-93
+C
+C  INPUTS:
+C
+C     JTRK     =  FRFT track number of track to exclude from vertex
+C                 (=ALPHA track number - KFCHT + 1).
+C  Outputs:
+C
+C      IP      =  New primary vertex position.  If the given track wasn't
+C                 used in the vertex fit, this will be the same as the
+C                 original.
+C    IP_ERR    =  Error matrix of above vertex.
+C    NUSED     =  Number of tracks used in the 2 different directions.
+C                 Compared with the NUSED returned by QFNDIP, this allows
+C                 you to know in which degrees of freedom the given
+C                 track participated for the original vertex fit.
+C
+      IMPLICIT NONE
+#include "maxtrk.inc"
+      SAVE
+C
+C  Inputs and outputs
+C
+      INTEGER JTRK,NUSED(2)
+      REAL IP(3),IP_ERR(3,3)
+C
+C  Common variables; these transmit the necessary information from FINDIP
+C
+      REAL ALPHA_SAVE, BETA_SAVE(3), GAMMA_SAVE(3,3)
+      REAL ET0(MAXTRK),MT0(MAXTRK)
+      REAL SIGE2(MAXTRK),SIGM2(MAXTRK)
+      REAL EHAT(3,MAXTRK),MHAT(3,MAXTRK)
+      INTEGER NUSED_SAVE(2)
+      LOGICAL KILL(MAXTRK),TAGE(MAXTRK),TAGM(MAXTRK)
+      COMMON/IPVTX/ET0,MT0,EHAT,MHAT,SIGE2,SIGM2,KILL,TAGE,TAGM,
+     &  ALPHA_SAVE,BETA_SAVE,GAMMA_SAVE,NUSED_SAVE
+C
+C  Local variables
+C
+      REAL ALPHA, BETA(3), GAMMA(3,3)
+      INTEGER ICOR,JCOR,ITRACK,IERR
+C
+C  Inline functions
+C
+      LOGICAL GOODE,GOODM
+      GOODE(ITRACK) = .NOT.(KILL(ITRACK) .OR. TAGE(ITRACK))
+      GOODM(ITRACK) = .NOT.(KILL(ITRACK) .OR. TAGM(ITRACK)
+     &  .OR. TAGE(ITRACK))
+C
+C  Copy the saved tensors, counters
+C
+      ALPHA = ALPHA_SAVE
+      DO ICOR=1,3
+        BETA(ICOR) = BETA_SAVE(ICOR)
+        DO JCOR=1,3
+          GAMMA(ICOR,JCOR) = GAMMA_SAVE(ICOR,JCOR)
+        END DO
+      END DO
+      NUSED(1) = NUSED_SAVE(1)
+      NUSED(2) = NUSED_SAVE(2)
+C
+C  Subtract off the degrees of freedom for this track that were
+C  actually used
+C
+      IF(GOODE(JTRK))THEN
+C
+C  Subtract the track from the saved tensors.  Treat the 2 directions
+C  separately
+C
+        NUSED(1) =  NUSED(1) - 1
+        ALPHA = ALPHA - ET0(JTRK)**2/SIGE2(JTRK)
+        DO ICOR=1,3
+          BETA(ICOR) = BETA(ICOR) -
+     &      ET0(JTRK)*EHAT(ICOR,JTRK)/SIGE2(JTRK)
+          DO JCOR=1,3
+            GAMMA(ICOR,JCOR) = GAMMA(ICOR,JCOR) -
+     &        EHAT(ICOR,JTRK)*EHAT(JCOR,JTRK)/SIGE2(JTRK)
+          END DO
+        END DO
+      END IF
+      IF(GOODM(JTRK))THEN
+        NUSED(2) =  NUSED(2) - 1
+        ALPHA = ALPHA - MT0(JTRK)**2/SIGM2(JTRK)
+        DO ICOR=1,3
+          BETA(ICOR) = BETA(ICOR) -
+     &      MT0(JTRK)*MHAT(ICOR,JTRK)/SIGM2(JTRK)
+          DO JCOR=1,3
+            GAMMA(ICOR,JCOR) = GAMMA(ICOR,JCOR) -
+     &        MHAT(ICOR,JTRK)*MHAT(JCOR,JTRK)/SIGM2(JTRK)
+          END DO
+        END DO
+      END IF
+C
+C  Compute the new position and error
+C
+      CALL RSINV(3,GAMMA,3,IERR)
+      IF(IERR .NE. 0)THEN
+        NUSED(1) = -1
+        NUSED(2) = -1
+        GOTO 1100
+      END IF
+      DO ICOR=1,3
+        IP(ICOR) =  0.0
+        DO JCOR=1,3
+          IP(ICOR) = IP(ICOR) + BETA(JCOR)*GAMMA(ICOR,JCOR)
+          IP_ERR(ICOR,JCOR) = GAMMA(ICOR,JCOR)
+        END DO
+      END DO
+
+ 1100 CONTINUE
+      RETURN
+      END
+
+
+
+
+
+
+
+
+
+@
+
+
+1.1.1.1
+log
+@import 
+@
+text
+@@

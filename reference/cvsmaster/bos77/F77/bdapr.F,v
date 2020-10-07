@@ -1,0 +1,193 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.47.40;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.10;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.11;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE BDAPR(LUN,NAME)
+*
+*     PRINT SORTED LIST OF ALL NUMBERS OF BANKS FOR GIVEN NAME
+*     BUT FOR NAME = '    '   PRINT ALL DIFFERENT NAMES OF BANKS
+*                  = '+DIR'   PRINT DIRECTORY RECORDS WITH ALL
+*                             NAMES AND NUMBER OF BANKS (FAST)
+*
+
+      CHARACTER*4 NAME,CHAINT
+#include "dacom.h"
+#include "param.h"
+      COMMON/BCS/IW(1000)
+      INTEGER NJR(100)
+      IF(IW(LUP).LE.0) GOTO 100
+      IUB=NLINK('+BUF',LUN)
+      IF(IUB.EQ.0) GOTO 100
+      LUNDA=LUN
+      NWRDA=IW(IUB+11)
+      IF(NAME.NE.'    ') GOTO 50
+
+*     PRINT TABLE OF ALL NAMES
+
+      CALL WBANK(IW,INA,100,*100)
+      NA=0
+      NALA=INTCHA(NAME)
+      DO 40 J=1,IW(IUB+15)
+      IREC=IW(IUB+12)-J+1
+   10 CALL DAFRD(IREC,0)
+      NTOT=IW(IDR)
+      DO 30 L=8,NTOT,5
+      IF(IW(IDR+L-3).EQ.NALA) GOTO 30
+      NACU=IW(IDR+L-3)
+      NALA=NACU
+      I=INLIST(NACU,IW(INA+1),NA)
+      IF(I.LT.0) THEN
+         I=-I
+         DO 20 K=NA,I,-1
+   20    IW(INA+K+1)=IW(INA+K)
+         IW(INA+I)=NACU
+         NA=NA+1
+         IF(NA.EQ.IW(INA)) THEN
+            CALL WBANK(IW,INA,NA+100,*100)
+         END IF
+      END IF
+   30 CONTINUE
+      IREC=IW(IDR+3)
+      IF(IREC.NE.0) GOTO 10
+   40 CONTINUE
+      CALL WBANK(IW,INA,NA,*100)
+      WRITE(IW(LUP),101)
+      WRITE(IW(LUP),102) (CHAINT(IW(INA+I)),I=1,NA)
+  101 FORMAT('0SORTED LIST OF ALL NAMES'/)
+  102 FORMAT(1X,20A6)
+      GOTO 100
+
+*     PRINT CONTENT OF DIRECTORY RECORDS
+
+   50 IF(NAME.NE.'+DIR') GOTO 70
+
+      DO 60 J=1,IW(IUB+15)
+
+      IREC=IW(IUB+12)-J+1
+      WRITE(IW(LUP),103) J-1
+  103 FORMAT('0DIRECTORY RECORD',I3/)
+   55 CALL DAFRD(IREC,0)
+      WRITE(IW(LUP),104) (CHAINT(IW(IDR+M)),(IW(IDR+M+I),I=1,4),
+     +                   M=5,IW(IDR),5)
+C     IF(J.EQ.2) THEN
+C        IW(IDR)=4
+C        IW(IDR+4)=0
+C        CALL DAFWR(0,0)
+C     END IF
+      IREC=IW(IDR+3)
+      IF(IREC.NE.0) GOTO 55
+   60 CONTINUE
+      GOTO 100
+
+   70 WRITE(IW(LUP),105) NAME
+      NS=NAMIND(NAME)*100+LUN
+      NJ=0
+      LAST=0
+   72 INR=NDANR(LUN,NAME,'GE',LAST)
+      IF(IW(2).NE.0) GOTO 78
+      INS=NLINK('+DIS',NS)
+      IF(INS.EQ.0) GOTO 100
+      DO 73 J=5,IW(INS)
+      IF(IW(INS+J).EQ.INR) GOTO 74
+   73 CONTINUE
+      GOTO 78
+   74 DO 76 I=J,IW(INS)
+      NJ=NJ+1
+      NJR(NJ)=IW(INS+I)
+      IF(NJ.LT.100) GOTO 76
+      WRITE(IW(LUP),106) NJR
+      NJ=0
+      LAST=NJR(100)+1
+      GOTO 72
+   76 CONTINUE
+      LAST=NJR(NJ)+1
+      GOTO 72
+   78 WRITE(IW(LUP),106) (NJR(I),I=1,NJ)
+   80 NJ=0
+      LAST=-1
+   82 INR=NDANR(LUN,NAME,'LE',LAST)
+      IF(IW(2).NE.0) GOTO 88
+      INS=NLINK('+DIS',NS)
+      IF(INS.EQ.0) GOTO 100
+      DO 83 J=5,IW(INS)
+      IF(IW(INS+J).EQ.INR) GOTO 84
+   83 CONTINUE
+      GOTO 88
+   84 DO 86 I=J,5,-1
+      NJ=NJ+1
+      NJR(NJ)=IW(INS+I)
+      IF(NJ.LT.100) GOTO 86
+      WRITE(IW(LUP),106) NJR
+      NJ=0
+      LAST=NJR(100)-1
+      GOTO 82
+   86 CONTINUE
+      LAST=NJR(NJ)-1
+      GOTO 82
+   88 WRITE(IW(LUP),106) (NJR(I),I=1,NJ)
+  100 RETURN
+  104 FORMAT(3(5X,A4,I9,I7,I5,I5,5X))
+  105 FORMAT('0SORTED LIST OF NUMBERS FOR NAME ',A4)
+  106 FORMAT(10(1X,I11))
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK bdapr
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

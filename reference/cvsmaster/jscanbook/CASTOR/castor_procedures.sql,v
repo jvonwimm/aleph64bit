@@ -1,0 +1,310 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2004.01.12.10.29.08;	author jacotf;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@files written in new directory CASTOR
+@
+text
+@SET ARRAYSIZE 1;
+SET SERVEROUTPUT ON;
+CREATE or REPLACE PACKAGE castor_procedures 
+IS
+
+PROCEDURE give_CastorName 
+   (prodName  IN VARCHAR2,
+    TypeDat    IN VARCHAR2,
+    DatType    IN VARCHAR2,
+    CastorName OUT VARCHAR2);
+
+PROCEDURE general
+   (prodName  IN VARCHAR2,
+    TypeDat   IN VARCHAR2,
+    DatType   IN VARCHAR2);
+
+END castor_procedures;
+/
+show errors
+
+
+CREATE or REPLACE PACKAGE BODY castor_procedures
+/*
+|| !!!! If one wants to debug a procedure !!!!
+|| Before you can use dbms_output do:
+||    set serveroutput on; 
+|| The default buffer size can be too small - Increase the size of the STUPID buffer doing:
+||    DBMS_OUTPUT.ENABLE (1000000);
+||
+|| To increase the linesize for the output (default=80 characters) do:
+||    set linesize 132;
+*/
+IS
+
+FUNCTION check_sequence
+   (prodName IN VARCHAR2)
+
+   RETURN BOOLEAN
+IS 
+   seq_name VARCHAR2(100);
+   nb_rows INTEGER;
+   
+BEGIN
+/*
+|| Check if a sequence exists for the production name entered.
+*/
+    seq_name := prodName || '_SEQ' ;
+
+    SELECT count(*) 
+    INTO nb_rows
+    FROM  USER_SEQUENCES
+      WHERE sequence_name like seq_name 
+    ;
+
+    IF nb_rows = 0 
+    THEN
+       RETURN FALSE;
+    ELSE   
+       RETURN TRUE;
+    END IF;
+END check_sequence;
+
+
+PROCEDURE give_params_keys
+    (TypeDat     IN VARCHAR2,
+     DatType     IN VARCHAR2,
+     TypeDat_key OUT VARCHAR2,
+     DatType_key OUT VARCHAR2)
+/*
+|| From the given parameters (except production name)
+|| retrieve the corresponding keys
+*/
+
+IS 
+   nfound INTEGER;
+
+BEGIN
+DECLARE
+   CURSOR castor_cur IS
+      SELECT *
+      FROM CASTORDESC
+      WHERE
+             UPPER(TypeOfData) like TypeDat
+         AND UPPER(DataType) like DatType
+      ;
+      castor_rec castor_cur%ROWTYPE;
+
+BEGIN
+   nfound := 0;
+   OPEN castor_cur;
+   LOOP
+      FETCH castor_cur INTO castor_rec;
+      EXIT WHEN castor_cur%NOTFOUND;
+      nfound := nfound + 1;
+      TypeDat_key := UPPER(castor_rec.TypeOfData_key);
+      DatType_key := UPPER(castor_rec.DataType_key);
+   END LOOP;
+   CLOSE castor_cur;
+
+/* 
+|| There must be only 1 record found      
+*/
+   IF nfound != 1
+   THEN
+      TypeDat_key := 'unknown';
+      DatType_key := 'unknown';
+   END IF;      
+END;        
+
+END give_params_keys;
+
+
+PROCEDURE give_CastorKey 
+   (prodName  IN VARCHAR2, 
+    NextKey   OUT INTEGER)
+/*
+|| Give the next free value for a given Production Name
+|| using the NEXTVAL facility.
+|| NB: This procedure is written in Dynamic SQL.
+*/
+IS
+   cursor1 INTEGER;
+   free_key NUMBER;
+   rows_processed INTEGER;
+   nfound INTEGER;
+   
+BEGIN
+   nfound := 0;
+
+   cursor1 := DBMS_SQL.OPEN_CURSOR;
+   DBMS_SQL.PARSE(cursor1,'SELECT ' || prodName ||'_SEQ.NEXTVAL FROM DUAL',DBMS_SQL.NATIVE); 
+   DBMS_SQL.DEFINE_COLUMN(cursor1, 1, free_key);
+   rows_processed := DBMS_SQL.EXECUTE (cursor1);
+   LOOP
+      IF DBMS_SQL.FETCH_ROWS (cursor1) > 0 
+      THEN
+         nfound := nfound + 1;
+         DBMS_SQL.COLUMN_VALUE (cursor1, 1, free_key);  
+      ELSE
+         EXIT;
+      END IF;
+   END LOOP;
+
+   DBMS_SQL.CLOSE_CURSOR(cursor1);
+
+   NextKey := free_key;
+
+   IF nfound != 1
+   THEN
+      NextKey := -888;
+   END IF;
+   
+END;
+
+
+PROCEDURE give_CastorName
+   (prodName  IN VARCHAR2,
+    TypeDat   IN VARCHAR2,
+    DatType   IN VARCHAR2,
+    CastorName OUT VARCHAR2)
+/*
+|| From the parameters given, give the name of a dataset 
+*/
+IS
+   seq_exist BOOLEAN;
+
+   TypeDat_key CASTORDESC.TypeOfData_key%TYPE;
+   DatType_key CASTORDESC.DataType_key%TYPE;
+   castor_key INTEGER;
+   file_number VARCHAR2(10);
+
+   LabelKey VARCHAR2(60);
+   ll INTEGER;
+
+BEGIN
+
+/*
+|| Check if the sequence exists for the prodName entered
+*/ 
+   seq_exist := check_sequence(prodName);
+
+   IF seq_exist = TRUE
+   THEN
+
+/*
+|| Check the parameters (except the production name)
+|| and retrieve the corresponding keys
+*/
+      give_params_keys(TypeDat,DatType,TypeDat_key,DatType_key);
+
+      IF TypeDat_key = 'unknown' 
+      THEN
+         CastorName := '-777 Cannot find a key for the DataType ' || TypeDat || 
+                       ' and the type of data ' || DatType ;
+      ELSE         
+/* 
+|| Find the next free key for the corresponding production name sequence
+*/   
+         give_CastorKey(prodName,castor_key);
+ 
+         IF MOD(castor_key,100) = 0
+         THEN
+            give_CastorKey(prodName,castor_key);
+         END IF;
+
+         IF castor_key != -888
+         THEN
+            LabelKey := to_char(castor_key);
+   
+            ll := LENGTH(LabelKey);
+            IF ll < 5
+            THEN
+               FOR jj in 1 .. 5-ll 
+               LOOP   
+                  LabelKey := '0' || LabelKey; 
+               END LOOP;
+            END IF;
+/*
+|| In the Castor Name after the '.' no '0' are permitted
+|| So, if the 4th character of LabelKey is = '0' suppress it
+*/
+            IF SUBSTR(LabelKey,4,1) = '0'
+            THEN
+               file_number := SUBSTR(LabelKey,5,1);
+            ELSE
+               file_number := SUBSTR(LabelKey,4,2);
+            END IF;
+
+               CastorName := 'Z' || TypeDat_key || DatType_key || SUBSTR(LabelKey,1,3) || '.' || 
+                        file_number;
+         ELSE
+            CastorName := '-888 More than 1 row find for ' || prodName || '_SEQ sequence key value';
+         END IF;
+      END IF;
+   ELSE
+      CastorName := '-999 Sequence ' || prodName || '_SEQ does not exist ';
+   END IF;
+
+END;
+  
+
+PROCEDURE general
+   (prodName  IN VARCHAR2,
+    TypeDat   IN VARCHAR2,
+    DatType   IN VARCHAR2)
+IS
+    Type_Data CASTORDESC.TypeOfData%TYPE;
+    Data_Type CASTORDESC.Datatype%TYPE;
+
+    prod_Name   VARCHAR2(100);  
+    castor_name VARCHAR2(100);
+
+BEGIN
+   Type_Data := UPPER(TypeDat);
+   Type_Data := LTRIM(Type_Data);
+   Type_Data := RTRIM(Type_Data);
+
+   Data_Type := UPPER(DatType);
+   Data_Type := LTRIM(Data_Type);
+   Data_Type := RTRIM(Data_Type);   
+
+   prod_Name := UPPER(prodName);
+   prod_Name := LTRIM(prod_Name);
+   prod_Name := RTRIM(prod_Name);
+   prod_Name := prod_Name || Data_Type;
+
+   give_CastorName(prod_Name,Type_Data,Data_Type,castor_name);
+
+   dbms_output.put_line(castor_name);
+   htp.print(castor_name);
+END general; 
+
+
+END castor_procedures;
+/
+show errors
+
+
+
+
+
+
+
+
+
+
+
+@

@@ -1,0 +1,139 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  aleph212:1.1.1.1 ALEPH212:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.02.07.11.40.35;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.02.07.11.40.36;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE ALVSN(ITYP,IPV,IAV,IYR)
+C-----------------------------------------------------------------------
+C! Return data type and version numbers of ALEPH programs from RHAH.
+CKEY ALEF DATA TYPE / USER
+C Author: S.Haywood        22-DEC-1992
+C Input banks:      RHAH, ASIM
+C Output arguments: ITYP    = data type (as read in)
+C                             1=Kingal; 2=Raw; 3=Pot; 4=DST; 5=Mini;
+C                             6=Micro; 7=Nano
+C                   IPV(10) = version numbers of ALEPH programs.
+C                             1: Kingal
+C                             2: Galeph
+C                             3: Julia
+C                             4: Redpot
+C                             5: Mini
+C                             6: Nano
+C                             7: Alpha
+C                   IAV(10) = corresponding ALEPHLIB version.
+C                   IYR     = year when data taken (89,90,91,92,....)
+C                             or to which MC corresponds
+C
+C This is a more robust version of ALDTYP, however it only uses RHAH and
+C is intended for use in Alpha.
+C To be effective, it should be called before the RHAH bank is modified
+C in case of event output. For a given run, information is saved to
+C protect against this situation.
+C In case of repeated entries, the last entry is taken.
+C
+C Whether the data is DATA or MC can be determined from checking whether
+C IPV(1) (the Kingal code) is 0 or not.
+C-----------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "rhahjj.h"
+#include "asimjj.h"
+      SAVE LRUN,ITYPS,IPVS,IAVS,IYRS,IDATE
+      CHARACTER * 4 CHAINT,NAME,PNAME(10)
+      DIMENSION IPV(10),IPVS(10),IAV(10),IAVS(10)
+      DATA PNAME / 'KING','GALE','JULI','REDP','MINI','NANO','ALPH',
+     &          3 * '   ' /
+      DATA LRUN, ITYPS, IPVS, IAVS, IYRS / -999, 0, 10 * 0, 10 * 0, 0 /
+      DATA IDATE / 0 /
+#include "bmacro.h"
+C
+C++   Check if new run, if so, pick up version numbers.
+C
+      CALL ABRUEV(IRUN,IEVT)
+      IF (IRUN.NE.LRUN .AND. IRUN.GT.0) THEN
+         LRUN = IRUN
+C
+C++      Look at RHAH bank for program versions.
+C
+         KRHAH = IW(NAMIND('RHAH'))
+         IF (KRHAH.GT.0) THEN
+            NRHAH = LROWS(KRHAH)
+            ITYPS = ITABL(KRHAH,NRHAH,JRHANO)
+            DO 10 I=1,NRHAH
+               NAME = CHAINT(ITABL(KRHAH,I,JRHAPN))
+               JVSP = ITABL(KRHAH,I,JRHAPV)
+               JVSA = ITABL(KRHAH,I,JRHAAV)
+               DO 20 J=1,10
+               IF (NAME.EQ.PNAME(J)) THEN
+                  IPVS(J) = JVSP
+                  IAVS(J) = JVSA
+               ENDIF
+   20          CONTINUE
+               IF (NAME.EQ.'ON L') IDATE = ITABL(KRHAH,I,JRHAPD)
+   10       CONTINUE
+         ENDIF
+C
+C++      Determine corresponding year.
+C++      For MC: use ASIM.
+C++      For data: use run number upto 91, and RHAH after.
+C
+         IYRS = 0
+         IF (IRUN.LT.2000) THEN
+            KASIM = IW(NAMIND('ASIM'))
+            IF (KASIM.GT.0) IYRS = ITABL(KASIM,1,JASIYM) / 100
+         ELSE
+            IF (IRUN.LT.14000) THEN
+               IF (IRUN.GE. 4000) IYRS = 89
+               IF (IRUN.GE. 6000) IYRS = 90
+               IF (IRUN.GE.10000) IYRS = 91
+            ELSE
+               IYRS = IDATE / 10000
+            ENDIF
+         ENDIF
+      ENDIF
+C
+C++   Fill return arguments.
+C
+      ITYP = ITYPS
+      DO 100 J=1,10
+         IPV(J) = IPVS(J)
+         IAV(J) = IAVS(J)
+  100 CONTINUE
+      IYR = IYRS
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

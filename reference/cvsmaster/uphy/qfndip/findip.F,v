@@ -1,0 +1,582 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  qfndip_1:1.1.1.1 OSF1:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.08.20.13.56.14;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.08.20.13.56.15;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@C*DK FINDIP
+      SUBROUTINE FINDIP(BP,SIG2_BP,NJET,J1,NTRACK,TPAR,TERR,IGOOD,
+     & IP,IP_ERR,CHI2_DOF,NUSED)
+C
+C  A standalone routine to find the interaction point, given the beamspot,
+C  the jet axes, and the tracks.  See ALEPH note 92-47 for a description.
+C
+      IMPLICIT NONE
+      SAVE
+C
+C  Inputs;
+C  beam point and sigmas**2, number of jets, jet direction UNIT VECTORS
+C  Track parameters and d0-Z0 corner of the error marix
+C
+      INTEGER NJET,NTRACK,IGOOD(*)
+      REAL BP(3),SIG2_BP(3),J1(3,*)
+      REAL TPAR(5,*),TERR(3,*)
+C
+C  Outputs; Interaction point with full covariance matrix,  chisq/dof,
+C  number of tracks used; THIS NOW HAS 2 DIMENSIONS!!!
+C
+      REAL IP(3),IP_ERR(3,3),CHI2_DOF
+      REAL NEWIP(3),NEWIP_ERR(3,3)
+      INTEGER NUSED(2),NEWNUSED(2)
+C
+C  Local variables
+C
+#include "maxtrk.inc"
+
+      INTEGER IALTRK,ICOR,JCOR,IERR
+      INTEGER ITRACK,IMIN,JMIN,IMETA,JTRK
+      INTEGER IJET,JJET,MAX_META,NDOF,NUSED_SAVE(2)
+      REAL MAX_CHI2
+      REAL D0,PHI,Z0,TANL,COSL,SINL,IR,COSP,SINP,DPHI
+      REAL T0(3),T1(3)
+      REAL SIG2_D0,SIG2_D0ZPERP,SIG2_ZPERP
+      REAL ALPHA, BETA(3), GAMMA(3,3)
+      REAL ALPHA_SAVE, BETA_SAVE(3), GAMMA_SAVE(3,3)
+      REAL NORME,NORMM
+      REAL CHI2,MAX_EDIF,MAX_MDIF,CHI2_SAVE
+      REAL T_PHAT(3),T_THAT(3)
+      REAL DENOM, DOTP, DOTT, MAXDOT, DOT, DM,DIST,DIST_ERR
+      REAL DELTA(3,3)
+      REAL EHAT(3,MAXTRK),MHAT(3,MAXTRK)
+      REAL ET0(MAXTRK),MT0(MAXTRK),TANJET2(MAXTRK)
+      REAL SIGE2(MAXTRK),SIGM2(MAXTRK),SIGE2_RAW(MAXTRK),SIGM
+      REAL OLD_IP(3)
+      REAL DOT_CUT,JET_SIG2,NSIGM(2),DIST_CUT
+      LOGICAL KILL(MAXTRK),TAGE(MAXTRK),TAGM(MAXTRK)
+      LOGICAL GOOD,GOODE,GOODM
+      DATA DELTA/1.,0.,0.,0.,1.,0.,0.,0.,1./
+C
+C  Common for computing 1-track-removed vertex
+C
+      COMMON/IPVTX/ET0,MT0,EHAT,MHAT,SIGE2,SIGM2,KILL,TAGE,TAGM,
+     &  ALPHA_SAVE,BETA_SAVE,GAMMA_SAVE,NUSED_SAVE
+C
+C  Cut values
+C
+      DATA MAX_CHI2/6./
+      DATA DOT_CUT/0.9999999/,JET_SIG2/0.01/
+      DATA MAX_META/5/, NSIGM/-3.0,0.0/
+C
+C  Inlines for defining good tracks
+C
+      GOOD(ITRACK) = .NOT.KILL(ITRACK)
+      GOODE(ITRACK) = .NOT.(KILL(ITRACK) .OR. TAGE(ITRACK))
+      GOODM(ITRACK) = .NOT.(KILL(ITRACK) .OR. TAGM(ITRACK)
+     &  .OR. TAGE(ITRACK))
+C
+C  loop over the tracks
+C
+      NDOF = MIN(NTRACK,MAXTRK)
+      DO ITRACK=1,MIN(NTRACK,MAXTRK)
+C
+C  Start with all tracks declared 'good' for the information perpendicular
+C  to the jet, but 'bad' for the information along the jet.  The parallel
+C  information is recovered after the first meta-iteration for all
+C  useable tracks.  Remove tracks not passing cuts.
+C
+        TAGE(ITRACK) = .FALSE.
+        TAGM(ITRACK) = .TRUE.
+        KILL(ITRACK) = IGOOD(ITRACK).LE.0
+        IF(KILL(ITRACK))GOTO 1231
+C
+C  Convert the track parameters into vector notation.
+C  Correct (approximately) for the curvature in calculating the direction,
+C  due to beamspot displacement.  Curvature doesn't significantly
+C  affect the endpoint or Z direction.
+C
+        IR  = TPAR(1,ITRACK)
+        TANL= TPAR(2,ITRACK)
+        PHI = TPAR(3,ITRACK)
+        D0  = TPAR(4,ITRACK)
+        Z0  = TPAR(5,ITRACK)
+        COSL = 1./SQRT(1.+TANL**2)
+        SINL = SIGN(SQRT(1.-COSL**2),TANL)
+        COSP = COS(PHI)
+        SINP = SIN(PHI)
+        DPHI = IR*(BP(1)*COSP+BP(2)*SINP)
+        T1(1) =  COSL*(COSP-DPHI*SINP)
+        T1(2) =  COSL*(SINP+DPHI*COSP)
+        T1(3) =  SINL
+        T0(1) =  D0*SINP
+        T0(2) = -D0*COSP
+        T0(3) =  Z0
+C
+C  Associate the track with one of the jets by minimizing the dot
+C  product
+C
+        MAXDOT = -1000.
+        DO IJET=1,NJET
+          DOT = 0.0
+          DO ICOR=1,3
+            DOT = DOT + T1(ICOR)*J1(ICOR,IJET)
+          END DO
+          IF(DOT .GT. MAXDOT)THEN
+            JJET = IJET
+            MAXDOT = DOT
+          END IF
+        END DO
+C
+C  Reject tracks that are too close to the jet direction; they have
+C  'compromised' information.  This cut is extremely loose; only
+C  1-track jets should be rejected
+C
+        IF(MAXDOT .GT. DOT_CUT)THEN
+          NDOF = NDOF - 1
+          KILL(ITRACK) = .TRUE.
+          GOTO 1231
+        END IF
+C
+C  Save the tangent**2 of the angle between the track and the jet
+C
+        TANJET2(ITRACK) = (1.-MAXDOT**2)/MAXDOT**2
+C
+C  Find the Phi and theta directions (unit vectors) for this track
+C  These are usefull since the track error matrix is expressed in this
+C  basis.
+C
+        DENOM = SQRT(T1(1)**2 + T1(2)**2)
+        T_PHAT(1) =  T1(2)/DENOM
+        T_PHAT(2) = -T1(1)/DENOM
+        T_PHAT(3) =  0.0
+        T_THAT(1) = -T1(1)*T1(3)/DENOM
+        T_THAT(2) = -T1(2)*T1(3)/DENOM
+        T_THAT(3) =  DENOM
+C
+C  Find the direction perpendicular to both the track and
+C  the jet (EHAT).  Find also the direction perpendicular to
+C  the track and to this last vector (MHAT).  We thus create a new
+C  coordinate system T1, EHAT, and MHAT, which "diagonalizes" the
+C  chisquared calculation for finding the IP, and renders the equations
+C  solveable in closed form.
+C
+        EHAT(1,ITRACK) = T1(2)*J1(3,JJET) - T1(3)*J1(2,JJET)
+        EHAT(2,ITRACK) = T1(3)*J1(1,JJET) - T1(1)*J1(3,JJET)
+        EHAT(3,ITRACK) = T1(1)*J1(2,JJET) - T1(2)*J1(1,JJET)
+        DO ICOR=1,3
+          MHAT(ICOR,ITRACK) = J1(ICOR,JJET) - MAXDOT*T1(ICOR)
+        END DO
+C
+C  Normalize these into unit vectors
+C
+        NORME = 0.0
+        NORMM = 0.0
+        DO ICOR=1,3
+          NORME = NORME + EHAT(ICOR,ITRACK)**2
+          NORMM = NORMM + MHAT(ICOR,ITRACK)**2
+        END DO
+        NORME = SQRT(NORME)
+        NORMM = SQRT(NORMM)
+        DO ICOR=1,3
+          EHAT(ICOR,ITRACK) = EHAT(ICOR,ITRACK)/NORME
+          MHAT(ICOR,ITRACK) = MHAT(ICOR,ITRACK)/NORMM
+        END DO
+C
+C  Save projections of T0 onto PERP and MHAT; this plus the directions
+C  and the errors are all we need to calculate chisquared.
+C
+        ET0(ITRACK) = 0.
+        MT0(ITRACK) = 0.
+        DO ICOR=1,3
+          ET0(ITRACK) = ET0(ITRACK) + EHAT(ICOR,ITRACK)*T0(ICOR)
+          MT0(ITRACK) = MT0(ITRACK) + MHAT(ICOR,ITRACK)*T0(ICOR)
+        END DO
+C
+C  Compute the error on the distance between the track
+C  and the thrust axis. Take the errors from the track D0 and Z0 terms.
+C  Correct the Z error to be perpendicular to the track direction
+C
+        SIG2_D0 = TERR(1,ITRACK)
+        SIG2_ZPERP = TERR(2,ITRACK)*COSL**2
+        SIG2_D0ZPERP = TERR(3,ITRACK)*COSL
+        DOTP = 0.0
+        DOTT = 0.0
+        DO ICOR=1,3
+          DOTP = DOTP + EHAT(ICOR,ITRACK)*T_PHAT(ICOR)
+          DOTT = DOTT + EHAT(ICOR,ITRACK)*T_THAT(ICOR)
+        END DO
+C
+C  Compute the errors (squared!) in the ehat and mhat directions; the ehat
+C  error is 'raw' in the sense that it doesn't yet have the jet
+C  direction error correction.  To get the error in the M direction,
+C  we can just use the fact that it's perpendicular to both ehat
+C  and the track direction
+C
+        SIGE2_RAW(ITRACK) = SIG2_D0*DOTP**2 + SIG2_ZPERP*DOTT**2 +
+     &         2.*SIG2_D0ZPERP*DOTP*DOTT
+        SIGM2(ITRACK) = SIG2_D0*DOTT**2 + SIG2_ZPERP*DOTP**2 -
+     &         2.*SIG2_D0ZPERP*DOTP*DOTT
+C
+C  For the moment, set the corrected eta-direction error to be the
+C  simple eta-direction error
+C
+        SIGE2(ITRACK) = SIGE2_RAW(ITRACK)
+ 1231   CONTINUE
+      END DO
+C
+C  Setup tensors and iterations to find the IP
+C
+      DO ICOR=1,3
+        OLD_IP(ICOR) = -1000.
+      END DO
+      IMETA = 0
+C
+C  Meta-iteration loop on track errors
+C
+ 1444 CONTINUE
+C
+C  Put the beamspot information into the intial tensors
+C
+      ALPHA = 0.0
+      DO ICOR=1,3
+        ALPHA = ALPHA + BP(ICOR)**2/SIG2_BP(ICOR)
+        BETA(ICOR) = BP(ICOR)/SIG2_BP(ICOR)
+        DO JCOR=1,3
+          GAMMA(ICOR,JCOR) = DELTA(ICOR,JCOR)/SIG2_BP(ICOR)
+        END DO
+      END DO
+C
+C  Put track information into the initial tensors; first the E direction
+C
+      DO ITRACK=1,NTRACK
+        IF(GOODE(ITRACK))THEN
+          ALPHA = ALPHA + ET0(ITRACK)**2/SIGE2(ITRACK)
+          DO ICOR=1,3
+            BETA(ICOR) = BETA(ICOR) +
+     &      ET0(ITRACK)*EHAT(ICOR,ITRACK)/SIGE2(ITRACK)
+            DO JCOR=1,3
+              GAMMA(ICOR,JCOR) = GAMMA(ICOR,JCOR) +
+     &        EHAT(ICOR,ITRACK)*EHAT(JCOR,ITRACK)/SIGE2(ITRACK)
+            END DO
+          END DO
+        END IF
+C
+C  Same for the M direction
+C
+        IF(GOODM(ITRACK))THEN
+          ALPHA = ALPHA + MT0(ITRACK)**2/SIGM2(ITRACK)
+          DO ICOR=1,3
+            BETA(ICOR) = BETA(ICOR) +
+     &      MT0(ITRACK)*MHAT(ICOR,ITRACK)/SIGM2(ITRACK)
+            DO JCOR=1,3
+              GAMMA(ICOR,JCOR) = GAMMA(ICOR,JCOR) +
+     &        MHAT(ICOR,ITRACK)*MHAT(JCOR,ITRACK)/SIGM2(ITRACK)
+            END DO
+          END DO
+        END IF
+      END DO
+C
+C  Copy the saved tensors
+C
+      ALPHA_SAVE = ALPHA
+      DO ICOR=1,3
+        BETA_SAVE(ICOR) = BETA(ICOR)
+        DO JCOR=1,3
+          GAMMA_SAVE(ICOR,JCOR) = GAMMA(ICOR,JCOR)
+        END DO
+      END DO
+C
+C  Solve for chisquared
+C
+      CALL RSINV(3,GAMMA,3,IERR)
+      IF(IERR .NE. 0)THEN
+        NUSED(1) = -1
+        NUSED(2) = -1
+        GOTO 1000
+      END IF
+      CHI2_SAVE = ALPHA
+      DO ICOR=1,3
+        DO JCOR=1,3
+          CHI2_SAVE = CHI2_SAVE - BETA(ICOR)*BETA(JCOR)*GAMMA(ICOR,JCOR)
+        END DO
+      END DO
+C
+C  Iterate over outlyers; this is a DO WHILE for stupid compilers.  This
+C  checks to see how the chi2 changes if we remove any one track
+C  Do this separately for the 2 directions, starting with the E direction.
+C
+1111  CONTINUE
+        MAX_EDIF = 0.0
+        DO ITRACK=1,NTRACK
+          IF(GOODE(ITRACK))THEN
+C
+C  Subtract the track contribution to the tensors
+C
+            ALPHA = ALPHA_SAVE - ET0(ITRACK)**2/SIGE2(ITRACK)
+            DO ICOR=1,3
+              BETA(ICOR) = BETA_SAVE(ICOR) -
+     &        ET0(ITRACK)*EHAT(ICOR,ITRACK)/SIGE2(ITRACK)
+              DO JCOR=1,3
+                GAMMA(ICOR,JCOR) = GAMMA_SAVE(ICOR,JCOR) -
+     &        EHAT(ICOR,ITRACK)*EHAT(JCOR,ITRACK)/SIGE2(ITRACK)
+              END DO
+            END DO
+C
+C  Solve for 1-removed chisquared
+C
+            CALL RSINV(3,GAMMA,3,IERR)
+            IF(IERR .NE. 0)THEN
+              NUSED(1) = -1
+              NUSED(2) = -1
+              GOTO 1000
+            END IF
+            CHI2 = ALPHA
+            DO ICOR=1,3
+              DO JCOR=1,3
+                CHI2 = CHI2 - BETA(ICOR)*BETA(JCOR)*GAMMA(ICOR,JCOR)
+              END DO
+            END DO
+C
+C  Latch on the biggest difference
+C
+            IF(CHI2_SAVE - CHI2 .GT. MAX_EDIF)THEN
+              MAX_EDIF = CHI2_SAVE-CHI2
+              IMIN = ITRACK
+            END IF
+          END IF
+        END DO
+C
+C  If the biggest difference is above the limit, flag off the
+C  offending track and try again.
+C
+        IF(MAX_EDIF .GE. MAX_CHI2)THEN
+          TAGE(IMIN) = .TRUE.
+          NDOF = NDOF - 1
+          CHI2_SAVE = CHI2_SAVE - MAX_EDIF
+C
+C  Subtract the bad track from the saved tensors
+C
+          ALPHA_SAVE = ALPHA_SAVE - ET0(IMIN)**2/SIGE2(IMIN)
+          DO ICOR=1,3
+            BETA_SAVE(ICOR) = BETA_SAVE(ICOR) -
+     &      ET0(IMIN)*EHAT(ICOR,IMIN)/SIGE2(IMIN)
+            DO JCOR=1,3
+              GAMMA_SAVE(ICOR,JCOR) = GAMMA_SAVE(ICOR,JCOR) -
+     &          EHAT(ICOR,IMIN)*EHAT(JCOR,IMIN)/SIGE2(IMIN)
+            END DO
+          END DO
+          GOTO 1111
+        END IF
+C
+C  Repeat the outlyer search for the perpendicular direction
+C
+ 1112   CONTINUE
+        MAX_MDIF = 0.0
+        DO ITRACK=1,NTRACK
+          IF(GOODM(ITRACK))THEN
+            ALPHA = ALPHA_SAVE - MT0(ITRACK)**2/SIGM2(ITRACK)
+            DO ICOR=1,3
+              BETA(ICOR) = BETA_SAVE(ICOR) -
+     &        MT0(ITRACK)*MHAT(ICOR,ITRACK)/SIGM2(ITRACK)
+              DO JCOR=1,3
+                GAMMA(ICOR,JCOR) = GAMMA_SAVE(ICOR,JCOR) -
+     &        MHAT(ICOR,ITRACK)*MHAT(JCOR,ITRACK)/SIGM2(ITRACK)
+              END DO
+            END DO
+            CALL RSINV(3,GAMMA,3,IERR)
+            IF(IERR .NE. 0)THEN
+              NUSED(1) = -1
+              NUSED(2) = -1
+              GOTO 1000
+            END IF
+            CHI2 = ALPHA
+            DO ICOR=1,3
+              DO JCOR=1,3
+                CHI2 = CHI2 - BETA(ICOR)*BETA(JCOR)*GAMMA(ICOR,JCOR)
+              END DO
+            END DO
+            IF(CHI2_SAVE - CHI2 .GT. MAX_MDIF)THEN
+              MAX_MDIF = CHI2_SAVE-CHI2
+              JMIN = ITRACK
+            END IF
+          END IF
+        END DO
+        IF(MAX_MDIF .GE. MAX_CHI2)THEN
+          TAGM(JMIN) = .TRUE.
+          NDOF = NDOF - 1
+          CHI2_SAVE = CHI2_SAVE - MAX_MDIF
+          ALPHA_SAVE = ALPHA_SAVE - MT0(JMIN)**2/SIGM2(JMIN)
+          DO ICOR=1,3
+            BETA_SAVE(ICOR) = BETA_SAVE(ICOR) -
+     &      MT0(JMIN)*MHAT(ICOR,JMIN)/SIGM2(JMIN)
+            DO JCOR=1,3
+              GAMMA_SAVE(ICOR,JCOR) = GAMMA_SAVE(ICOR,JCOR) -
+     &          MHAT(ICOR,JMIN)*MHAT(JCOR,JMIN)/SIGM2(JMIN)
+            END DO
+          END DO
+          GOTO 1112
+        END IF
+C
+C  Copy the saved tensors
+C
+      ALPHA = ALPHA_SAVE
+      DO ICOR=1,3
+        BETA(ICOR) = BETA_SAVE(ICOR)
+        DO JCOR=1,3
+          GAMMA(ICOR,JCOR) = GAMMA_SAVE(ICOR,JCOR)
+        END DO
+      END DO
+C
+C  Solve for the IP
+C
+      CALL RSINV(3,GAMMA,3,IERR)
+      IF(IERR .NE. 0)THEN
+        NUSED(1) = -1
+        NUSED(2) = -1
+        GOTO 1000
+      END IF
+      DO ICOR=1,3
+        IP(ICOR) =  0.0
+        DO JCOR=1,3
+          IP(ICOR) = IP(ICOR) + BETA(JCOR)*GAMMA(ICOR,JCOR)
+        END DO
+      END DO
+C
+C  Check to see if the IP has moved significantly (>1 sigma) this
+C  meta-iteration.  If so, re-calculate the errors and start again
+C
+      DIST = 0.0
+      DO ICOR=1,3
+        DIST = DIST + (OLD_IP(ICOR)-IP(ICOR))**2
+      END DO
+      DIST_ERR = 0.0
+      IF(DIST .GT. 0.0)THEN
+        DO ICOR=1,3
+          DO JCOR=1,3
+            DIST_ERR = DIST_ERR + (OLD_IP(ICOR)-IP(ICOR))*
+     &      (OLD_IP(JCOR)-IP(JCOR))*GAMMA(ICOR,JCOR)/DIST
+          END DO
+        END DO
+      END IF
+      IF(DIST .GT. DIST_ERR .AND. IMETA .LT. MAX_META)THEN
+        IMETA = IMETA + 1
+C
+C  Loop over the tracks, giving them an additional ehat error coming
+C  from their displacement from the IP along the jet direction,
+C  coupled with the error on the jet axis direction.
+C
+        NDOF = 0
+        DO ITRACK=1,NTRACK
+          TAGE(ITRACK) = .FALSE.
+          TAGM(ITRACK) = .FALSE.
+          IF(GOOD(ITRACK))THEN
+            NDOF = NDOF + 2
+            DM = MT0(ITRACK)
+            DO ICOR=1,3
+              DM = DM - MHAT(ICOR,ITRACK)*IP(ICOR)
+            END DO
+C
+C  If the length is significant (>1 sigma), add the
+C  jet angle error term to this track.
+C
+            SIGM = SQRT(SIGM2(ITRACK))
+            IF(DM .GT. SIGM)THEN
+C
+C  Here, we need the true length between the IP and the track,
+C  not just it's projection along the M direction.  When adding
+C  the error, subtract off a generic 1 sigma from the
+C  length, so that the total statistical error remains balanced.
+C
+              SIGE2(ITRACK) = SIGE2_RAW(ITRACK) +
+     &           JET_SIG2*(DM**2-SIGM2(ITRACK))/TANJET2(ITRACK)
+            END IF
+C
+C  Trim out the positive impact parameter tracks; these
+C  cannot be used in the mhat (along jet) direction.
+C  Also through out wildly negative (>3 sigma) tracks.
+C
+            IF(DM .LT. NSIGM(1)*SIGM .OR.
+     &         DM .GT. NSIGM(2)*SIGM )THEN
+              TAGM(ITRACK) = .TRUE.
+              NDOF = NDOF - 1
+            END IF
+          END IF
+        END DO
+C
+C  Save the IP for the next comparison
+C
+        DO ICOR=1,3
+          OLD_IP(ICOR) = IP(ICOR)
+        END DO
+C
+C  Iterate again with corrected errors.
+C
+        GOTO 1444
+      END IF
+C
+C  Final convergence; solve for the chisquared and pack the error matrix
+C
+      CHI2 = ALPHA
+      DO ICOR=1,3
+        DO JCOR=1,3
+          IP_ERR(ICOR,JCOR) = GAMMA(ICOR,JCOR)
+          CHI2 = CHI2 - BETA(ICOR)*BETA(JCOR)*GAMMA(ICOR,JCOR)
+        END DO
+      END DO
+C
+C  1 Constraint/track, 2 constraints from the BP, 3 variables solved for
+C
+      CHI2_DOF = CHI2/MAX(1,NDOF-1)
+C
+C  Number of tracks used, separated by direction
+C
+      NUSED(1) = 0
+      NUSED(2) = 0
+      DO ITRACK=1,NTRACK
+        IF(GOODE(ITRACK))THEN
+          NUSED(1)=NUSED(1)+1
+        ELSE
+          SIGE2(ITRACK) = 0.0
+        END IF
+        IF(GOODM(ITRACK))THEN
+          NUSED(2)=NUSED(2)+1
+        ELSE
+          SIGM2(ITRACK)=0.0
+        END IF
+      END DO
+      NUSED_SAVE(1) = NUSED(1)
+      NUSED_SAVE(2) = NUSED(2)
+1000  CONTINUE
+      RETURN
+      END
+@
+
+
+1.1.1.1
+log
+@import 
+@
+text
+@@

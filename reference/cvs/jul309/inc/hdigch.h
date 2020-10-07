@@ -1,0 +1,1 @@
+      COMMON/HDIGCH/MASK(36,23)

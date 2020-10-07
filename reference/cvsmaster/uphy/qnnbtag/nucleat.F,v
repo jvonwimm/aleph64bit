@@ -1,0 +1,176 @@
+head	1.2;
+access;
+symbols
+	uphy1-0:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.10.16.08.57.21;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.08.16.13.38.23;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.08.16.13.38.24;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@suppress apostrophe in nucleat.F
+@
+text
+@C Algorithme de Nucleated Jet, construit un jet en partant de la
+C trace la + energetique de l'hemisphere
+C        IEFT --> numero ALPHA energie-flow du lepton
+C        XCUT --> masse limite pour la construction du jet
+C        KTRX --> nombre de traces maximal admis dans le jet
+C        YMINV--> energie du systeme nuclee
+C----------------------------------------------------------------------C
+      SUBROUTINE NUCLEAT(IEFT,XCUT,KTRX,IVEC1,IVEC2,YMINV)
+#include "qcde.h"
+#include "qmacro.h"
+C
+C On locke toutes les traces n'ayant pas les criteres de qualite
+      CALL TRLOCK
+C
+C On repere l'hemisphere de la trace la plus energetique
+      KHLEP = IVEC2
+      IF (QCOSA(IEFT,IVEC1).GE.0.)  KHLEP = IVEC1
+C
+      YMINV  = 0.
+      EMASS  = 0.
+      PXMASS = 0.
+      PYMASS = 0.
+      PZMASS = 0.
+      PMASS = 0.
+      YMASS = 0.
+C On forme une pseudo-trace avec le lepton
+      EMAST = QE(IEFT)
+      PXMAST = QX(IEFT)
+      PYMAST = QY(IEFT)
+      PZMAST = QZ(IEFT)
+      PMAST = SQRT ( PXMAST**2 + PYMAST**2 + PZMAST**2 )
+      YMAST2 = EMAST**2 - PMAST**2
+      IF (YMAST2.GE.0.)  THEN
+        YMAST = SQRT ( YMAST2 )
+      ELSE
+        YMAST = 0.
+      ENDIF
+C On fabrique un jet a partir de la pseudo-trace precedente
+C
+      DO 54 NTR = 1 , KTRX
+C
+      KTR = 0
+      DO 55 IFT = KFEFT , KLEFT
+C            trace dans l'hemisphere
+      IF (QCOSA(KHLEP,IFT).LT.0.)  GOTO 55
+C            que les traces selectionnees
+      IF (XLOCK(IFT))  GOTO 55
+C            pas de leptons
+      IF (IFT.EQ.IEFT)  GOTO 55
+      KTR = KTR + 1
+      COSN1 = ( PXMAST*QX(IFT) + PYMAST*QY(IFT) + PZMAST*QZ(IFT) ) /
+     >        PMAST / QP(IFT)
+      IF (COSN1.GT.1.)  COSN1 = 1.
+      IF (COSN1.LT.-1.)  COSN1 = -1.
+      YMIN2 = YMAST**2 + QM(IFT)**2 + 2. * EMAST * QE(IFT)
+     >                              - 2. * PMAST * QP(IFT) * COSN1
+      IF (YMIN2.GE.0.)  THEN
+        YMIN1 = SQRT ( YMIN2 )
+      ELSE
+        YMIN1 = 0.
+      ENDIF
+      IF (KTR.EQ.1)  THEN
+        IMIN = IFT
+        YMIN = YMIN1
+        EMIN = EMAST + QE(IFT)
+        PXMIN = PXMAST + QX(IFT)
+        PYMIN = PYMAST + QY(IFT)
+        PZMIN = PZMAST + QZ(IFT)
+      ELSE IF (YMIN1.LT.YMIN) THEN
+        IMIN = IFT
+        YMIN = YMIN1
+        EMIN = EMAST + QE(IFT)
+        PXMIN = PXMAST + QX(IFT)
+        PYMIN = PYMAST + QY(IFT)
+        PZMIN = PZMAST + QZ(IFT)
+      ENDIF
+ 55   CONTINUE
+      IF (KTR.EQ.0)     GOTO 99 ! systeme sature en traces
+      IF (YMIN.GT.XCUT) GOTO 99 ! systeme sature en masse
+ 54   CONTINUE
+ 99   CONTINUE
+      YMINV = EMIN
+C On delocke toutes les traces
+      CALL TRUNLOCK
+      END
+C-----------------------------------------------------------------------
+      INTEGER FUNCTION IFANNEE()
+C  Return  1 if year = 1990
+C          2 if year = 1991
+C          3 if year = 1992
+C          4 if year = 1993
+C          5 if year = 1994
+C          ...
+#include "qcde.h"
+#include "qmacro.h"
+C-----------------------------------------------------------------------
+C  Find the year for M.C. events or DATA
+      IFANNEE = 0
+      IF (XMCEV) THEN                  !  M. C.
+        IF = IW (NAMIND('ASIM'))
+        JF = IW (IF)
+        IF (JF.NE.0) THEN
+          IASIM = IW (IF + 2 + 1)
+          IANNEE = IASIM / 100
+c         IFANNEE = (IANNEE - 90 ) + 1
+          IFANNEE = IANNEE
+        ENDIF
+      ELSE                             !  DATA
+        IF(KRUN.GE.4005.AND.KRUN.LE.5909)   IFANNEE = 89
+        IF(KRUN.GE.5910.AND.KRUN.LE.9114)   IFANNEE = 90
+        IF(KRUN.GE.9115.AND.KRUN.LE.13493)  IFANNEE = 91
+        IF(KRUN.GE.13494.AND.KRUN.LE.17890) IFANNEE = 92
+        IF(KRUN.GE.20165.AND.KRUN.LE.23546) IFANNEE = 93
+        IF(KRUN.GE.25543.AND.KRUN.LE.30353) IFANNEE = 94
+      ENDIF
+      RETURN
+      END
+C-----------------------------------------------------------------------
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d44 6
+a49 4
+C     IF (XEFO(IFT).AND.KEFOTY(IFT).EQ.5)  GOTO 55    !  hadron neutre
+      IF (QCOSA(KHLEP,IFT).LT.0.)  GOTO 55   !  trace dans l'hemisphere
+      IF (XLOCK(IFT))  GOTO 55       !  que les traces selectionnees
+      IF (IFT.EQ.IEFT)  GOTO 55      !  pas le lepton
+@
+
+
+1.1.1.1
+log
+@2nd try to import uphy
+@
+text
+@@

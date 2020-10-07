@@ -1,0 +1,483 @@
+PU  -1         0.              0.              0.          0. __ station parameters (PARADU)
+PU   1         0.00000         1.00000        20.00000     0. WT WAITDU loop waiting time [sec]       
+PU   2         0.00000        10.00000       999.00000     0. EC ECCHDU chimneys ECAL                 
+PU   3         0.00100         0.10000         9.00000     0. TC BOXSDU constant symbol size          
+PU   4         0.00100        10.00000       999.00000     0. ES ECSQDU ECAL squares                  
+PU   5         0.00100         3.00000       999.00000     0. HS HCSQDU HCAL squares                  
+PU   6         0.00000         0.00000         1.00000     0. MX HIMXDU histogram max of/on           
+PU   7         0.00000         0.00000         1.00000     0. RS RESCDU reference scale of/on         
+PU   8         0.00000         0.00000         2.00000     0. SL SLOWDU slow flag for TPC-array of/on 
+PU   9         0.00000         0.00000         1.00000     0. su WISUDU window setup = 0,1 (GT:SU)    
+PU  10         0.00000         0.00000         1.00000     0. ST SETTDU set timing 0=of               
+PU  11         0.00000         4.00000         0.00000     0. UL USLVDU user level                    
+PU  12         0.00000         0.00000       999.00000     0. SY SYLRDU minimum system LRPCOUNT       
+PU  13        -9.00000         0.00000         9.00000     0. SE SDATDU select data in DEV            
+PU  14       -99.00000        30.00000       999.00000     0. QQ RZDHDU RZ:draw hits if dh>RZDHDU     
+PU  15        -9.00000         0.00000        99.00000     0. RA ROTADU AREA FOR YX ROTATION          
+PU  16         0.00001         0.10000        99.00000     0. MS SCMMDU Scale speed for mov. mark.    
+PU  17         1.00000         1.00000       999.00000     0. ML CLMMDU lower speed cut in MM         
+PU  18         1.00000        50.00000       999.00000     0. MU CUMMDU upper speed cut in MM         
+PU  19         0.00000         0.00000       999.00000     0. WM WIMIDU emin of ECAL wire sum/sector  
+PU  20         0.00000         0.00000       999.00000     0. LM CCMIDU emin LCAL                     
+PU  21         0.00000         0.01000       999.00000     0. EM ECMIDU emin ECAL                     
+PU  22         0.00000         0.00000       999.00000     0. HM HCMIDU emax HCAL                     
+PU  23         0.00000         1.00000         2.00000     0. QS SHTFDU(1) shrink factor              
+PU  24         0.00000         1.00000        99.00000     0. SH SHTFDU(2) shrink difference          
+PU  25        -0.00500         0.00400         0.00500     0. FZ FTDZDU dz correction for V-plot      
+PU  26         0.00000         1.00000         9.00000     0. NL FRNLDU # of window lines             
+PU  27         0.00000        33.00000      9999.00000     0. DC DACUDU cursor type                   
+PU  28         0.00000         1.00000        99.00000     0. EF SHECDU SCALE FOR ECAL HISTOGRAMS     
+PU  29         0.00001         1.00000        99.00000     0. HF SHHCDU SCALE FOR HCAL HISTOGRAMS     
+PU  30         0.12500         0.25000         9.00000     0. LW DRLIDU =.25 line width for UIS       
+PU  31         0.00100         1.00000       999.00000     0. LS SQLCDU LCAL squares                  
+PU  32         0.00100        10.00000       999.00000     0. LC CHLCDU LCAL chimneys                 
+PU  33  -9999999.00000         1.00000   9999999.00000     0. HD HEADDU header setup                  
+PU  34         0.00000        10.00000         9.00000     0. VZ VRDZDU max vertex z-offset to be used
+PU  35         0.00100        10.00000       999.00000     0. HC CHHDDU Chimneys HCAL                 
+PU  36         0.00000         6.00000         6.00000     0. AR AREADU color 0-AREADU =white if BW.  
+PU  37         0.00000      1111.00000      9999.00000     0. WN DFWIDU(0) no zoom window setup       
+PU  38         0.00000      1111.00000      9999.00000     0. WZ DFWIDU(1)    zoom window setup       
+PU  39         0.00000         1.00000         1.00000     0. DF DFLGDU if 1:detectors always drawn   
+PU  40         0.00000         0.00000       999.00000     0. BG BUG(13) flag = # OF POINTS FOR PERS  
+PU  41      -999.00000         1.00000       999.00000     0. UA CHTFDU =1 if TE+FI are autom. updated
+PU  42         0.00000         0.00000         1.00000     0. CL RNCLDU GG:RN,DN clear all            
+PU  43      -999.00000         0.00000      9999.00000     0. P3                                      
+PU  44      -999.00000         0.00000      9999.00000     0. P4                                      
+PU  45      -999.00000         0.00000      9999.00000     0. P5
+PU  46         0.00000        27.00000      9999.00000     0. ND DSOFDU In XY: ds=of if to < dsofdu  
+PU  47         0.00000        30.00000      9999.00000     0. NT TPOFDU In RO: DT->O3 if to<tpo3du
+PU  48         0.00000         0.00000         3.00000     0. RV ROVDDU RO: draw VDET + TPC inside
+PU  49         0.00000         0.00000         3.00000     0. RE ROECDU RO: draw ECAL
+PU  50         0.00000         0.00000         3.00000     0. RH ROHCDU RO: draw HCAL
+PU  51         0.00000         0.00000         5.00000     0. SR HSTRDU XY: hcal structure modes
+PU  52         0.00000         0.00000         1.00000     0. RZ REALDU RZ: 0=SCHEM. 1=REAL ECAL HITS 
+TF  -1         0.              0.              0.          0. __ TF parameters (COLIDF)
+TF   1         0.00000         8.00000        15.00000    -1. --                                      
+TF   2         0.00000         7.00000        15.00000    -1. --                                      
+TF   3         0.00000         4.00000        15.00000    -1. --                                      
+TF   4       -15.00000         7.00000        15.00000    -1. --                                      
+TF   5         0.00000         7.00000        15.00000    -1. --                                      
+TF   6         0.00000         2.00000        99.00000     1. --                                      
+TF   7         0.00000        -1.00000         0.00000    -1. --                                      
+TF   8         0.00000        -1.00000         0.00000    -1. --                                      
+TF   9         0.00000        -1.00000         0.00000    -1. --                                      
+TF  10         0.00000        -1.00000         0.00000    -1. --                                      
+SM  -1         0.00000         0.00000         0.00000     0. __ Symbol modes                         
+SM   1         0.00000         0.00000         0.00000     0. -- LUT                                  
+SM   2         0.00000         1.00000         0.00000     0. -- LUT                                  
+SM   3         0.00000         2.00000         0.00000     0. -- LUT                                  
+SM   4         0.00000         3.00000         0.00000     0. -- LUT                                  
+SM   5         0.00000         4.00000         0.00000     0. -- LUT                                  
+SM   6         0.00000         5.00000         0.00000     0. -- LUT                                  
+SM   7         0.00000         6.00000         0.00000     0. -- LUT                                  
+SM   8         0.00000         2.00000         0.00000     0. -- LUT                                  
+SM   9         0.00000         2.00000         0.00000     0. -- LUT                                  
+SM  10         0.00000         2.00000         0.00000     0. -- LUT                                  
+SM  11         0.00000         2.00000         0.00000     0. -- LUT                                  
+SM  12         0.00000         2.00000         0.00000     0. -- LUT                                  
+SM  13         0.00000         2.00000         0.00000     0. -- LUT                                  
+SM  14         0.00000         6.00000         0.00000     0. -- LUT                                  
+SM  15         0.00000        18.00000         0.00000     0. -- LUT                                  
+SM  16         0.00000        18.00000         0.00000     0. -- LUT                                  
+SM  17         0.00000        12.00000         0.00000     0. -- LUT                                  
+SM  18         0.00000        12.00000         0.00000     0. -- LUT                                  
+SM  19         0.00000         6.00000         0.00000     0. -- LUT                                  
+SM  20         0.00000         1.00000         0.00000     0. -- LUT                                  
+SM  21         0.00000        18.00000         0.00000     0. -- LUT                                  
+SM  22         0.00000        18.00000         0.00000     0. -- LUT                                  
+SM  23         0.00000        12.00000         0.00000     0. -- LUT                                  
+SM  24         0.00000        12.00000         0.00000     0. -- LUT                                  
+SM  25         0.00000         0.00000         0.00000     0. -- LUT                                  
+SM  26         0.00000         3.00000         0.00000     0. -- LUT                                  
+SM  27         0.00000         3.00000         0.00000     0. -- LUT                                  
+SM  28         0.00000         3.00000         0.00000     0. -- LUT                                  
+SM  29         0.00000         2.00000         0.00000     0. -- LUT                                  
+SM  30         0.00000         1.00000         0.00000     0. -- LUT                                  
+SM  31         0.00000         1.00000         0.00000     0. -- LUT                                  
+SM  32         0.00000         1.00000         0.00000     0. -- LUT                                  
+SM  33         0.00000         1.00000         0.00000     0. -- LUT                                  
+SM  34         0.00000         1.00000         0.00000     0. -- LUT                                  
+SM  35         0.00000         5.00000         0.00000     0. -- LUT                                  
+SM  36         0.00000         5.00000         0.00000     0. -- LUT                                  
+SM  37         0.00000         1.00000         0.00000     0. -- LUT                                  
+SM  38         0.00000         8.00000         0.00000     0. -- LUT                                  
+SM  39         0.00000         8.00000         0.00000     0. -- LUT                                  
+SM  40         0.00000         8.00000         0.00000     0. -- LUT                                  
+SM  41         0.00000        12.00000         0.00000     0. -- LUT                                  
+SM  42         0.00000         8.00000         0.00000     0. -- LUT                                  
+SM  43         0.00000        12.00000         0.00000     0. -- LUT                                  
+SM  44         0.00000         8.00000         0.00000     0. -- LUT                                  
+SM  45         0.00000         1.00000         0.00000     0. -- LUT                                  
+SM  46         0.00000         8.00000         0.00000     0. -- LUT                                  
+SM  47         0.00000         8.00000         0.00000     0. -- LUT                                  
+SM  48         0.00000         6.00000         0.00000     0. -- LUT                                  
+SM  49         0.00000         8.00000         0.00000     0. -- LUT                                  
+SM  50         0.00000         8.00000         0.00000     0. -- LUT                                  
+SM  51         0.00000         1.00000         0.00000     0. -- LUT                                  
+SM  52         0.00000         8.00000         0.00000     0. -- LUT                                  
+SM  53         0.00000         8.00000         0.00000     0. -- LUT                                  
+SM  54         0.00000         6.00000         0.00000     0. -- LUT                                  
+SM  55         0.00000         8.00000         0.00000     0. -- LUT                                  
+SM  56         0.00000         1.00000         0.00000     0. -- LUT                                  
+SM  57         0.00000         1.00000         0.00000     0. -- LUT                                  
+SM  58         0.00000         1.00000         0.00000     0. -- LUT                                  
+SM  59         0.00000         1.00000         0.00000     0. -- LUT                                  
+SM  60         0.00000         1.00000         0.00000     0. -- LUT                                  
+SM  61         0.00000         1.00000         0.00000     0. -- LUT                                  
+SM  62         0.00000         0.00000         0.00000     0. -- LUT                                  
+SV  -1         0.00000         0.00000         0.00000     0. __ symbol values                        
+SV  11         0.00000        22.50000       999.00000     0. -- WDSNDL                               
+SV  21      -999.00000         0.00000      9999.00000     0. -- WDSNDL                               
+SV  31         1.00000         8.00000        15.00000     0. -- WDSNDL                               
+SV  41         1.00000         3.00000       999.00000     0. SZ WDSNDL VD                                
+SV  51         0.00100         0.00000       999.00000     0. -- WDSNDL                               
+SV  61     -9999.00000         0.00000      9999.00000    -1. -- WDSNDL                               
+SV  71     -9999.00000         0.00000      9999.00000    -1. -- WDSNDL                               
+SV  81         0.01000         1.00000       999.00000     0. -- WDSNDL                               
+SV  12         0.00000         1.00000       999.00000     0. -- WDSNDL                               
+SV  22      -999.00000         0.00000      9999.00000     0. -- WDSNDL                               
+SV  32         1.00000         6.00000        15.00000     0. -- WDSNDL                               
+SV  42         1.00000         2.00000       999.00000     0. SZ WDSNDL ITC                               
+SV  52         0.00100         3.00000       999.00000     0. -- WDSNDL                               
+SV  62     -9999.00000         0.00000      9999.00000    -1. -- WDSNDL                               
+SV  72     -9999.00000         0.00000      9999.00000    -1. -- WDSNDL                               
+SV  82         0.01000         1.00000       999.00000     0. -- WDSNDL                               
+SV  13         0.00000         1.00000       999.00000     0. -- WDSNDL                               
+SV  23      -999.00000         0.00000      9999.00000     0. -- WDSNDL                               
+SV  33         1.00000         6.00000        15.00000     0. -- WDSNDL                               
+SV  43         1.00000         2.00000       999.00000     0. SZ WDSNDL TPC                              
+SV  53         0.00100         3.00000       999.00000     0. -- WDSNDL                               
+SV  63     -9999.00000         0.00000      9999.00000    -1. -- WDSNDL                               
+SV  73     -9999.00000         0.00000      9999.00000    -1. -- WDSNDL                               
+SV  83         0.01000         1.00000       999.00000     0. -- WDSNDL                               
+SV  14         0.00000         1.00000       999.00000     0. -- WDSNDL                               
+SV  24      -999.00000         0.00000      9999.00000     0. -- WDSNDL                               
+SV  34         1.00000         8.00000        15.00000     0. -- WDSNDL                               
+SV  44         1.00000         3.00000       999.00000     0. SZ WDSNDL ECAL                              
+SV  54         0.00100         2.00000       999.00000     0. ss WDSNDL ECAL SQUARE SIZE              
+SV  64     -9999.00000         2.00000      9999.00000     1. -- WDSNDL                               
+SV  74     -9999.00000         2.00000      9999.00000     1. -- WDSNDL                               
+SV  84         0.01000         1.00000       999.00000     0. -- WDSNDL                               
+SV  15         0.00000         1.00000       999.00000     0. -- WDSNDL                               
+SV  25      -999.00000         0.00000      9999.00000     0. -- WDSNDL                               
+SV  35         1.00000         8.00000        15.00000     0. -- WDSNDL                               
+SV  45         1.00000         2.00000       999.00000     0. SZ WDSNDL HCAL                              
+SV  55         0.00100         3.00000       999.00000     0. -- WDSNDL                               
+SV  65     -9999.00000         0.00000      9999.00000    -1. -- WDSNDL                               
+SV  75     -9999.00000         0.00000      9999.00000    -1. -- WDSNDL                               
+SV  85         0.01000         1.00000       999.00000     0. -- WDSNDL                               
+SV  16         0.00000         1.00000       999.00000     0. -- WDSNDL                               
+SV  26      -999.00000         0.00000      9999.00000     0. -- WDSNDL                               
+SV  36         1.00000         8.00000        15.00000     0. -- WDSNDL                               
+SV  46         1.00000         5.00000       999.00000     0. SZ WDSNDL MUDET                               
+SV  56         0.00100         3.00000       999.00000     0. -- WDSNDL                               
+SV  66     -9999.00000         0.00000      9999.00000    -1. -- WDSNDL                               
+SV  76     -9999.00000         0.00000      9999.00000    -1. -- WDSNDL                               
+SV  86         0.01000         1.00000       999.00000     0. -- WDSNDL                               
+MO  -1         0.              0.              0.          0. __ colour modes
+MO   1         0.00000         2.00000         0.00000     0. -- colour mode TRACK
+MO   2         0.00000         0.00000         0.00000     0. -- colour mode ---
+MO   3         0.00000         2.00000         0.00000     0. -- colour mode VDET
+MO   4         0.00000         1.00000         0.00000     0. -- colour mode ITC
+MO   5         0.00000         1.00000         0.00000     0. -- colour mode TPC
+MO   6         0.00000         1.00000         0.00000     0. -- colour mode LCAL
+MO   7         0.00000         1.00000         0.00000     0. -- colour mode ECAL
+MO   8         0.00000         0.00000         0.00000     0. -- colour mode ECAL OBJECTS
+MO   9         0.00000         1.00000         0.00000     0. -- colour mode HCAL
+MO  10         0.00000         2.00000         0.00000     0. -- colour mode GG:CO; 0=CH,1=CT.2=HT
+PD  -1         0.              0.              0.          0. __ colour parameters (PDCODD)
+PD   1         0.00000         0.00000       999.00000    -1. RA MXSADD max draw radius of SATR       
+PD   2         0.00000         0.00000       999.00000    -1. RL MXLUDD max draw radius of LCAL       
+PD   3         0.00000       200.00000       999.00000     1. RV MXVDDD max draw radius of V.DET.     
+PD   4         0.00000       200.00000       999.00000    -1. RI MXITDD max draw radius of ITC        
+PD   5         0.00000       300.00000       999.00000    -1. RT MXTPDD max draw radius of TPC        
+PD   6         0.00000        12.00000        31.00000     1. LV ICLVDD colour of VD "grey-line"      
+PD   7         0.00000         1.00000        31.00000     1. BP ICBPDD color of beam pipe            
+PD   8         0.00000         5.00000        31.00000     1. BS ICSADD color of SATR                 
+PD   9         0.00000         4.00000        31.00000     1. BL ICLUDD color of LCAL                 
+PD  10         0.00000         1.00000        31.00000     1. BV ICVDDD color of VDET                 
+PD  11         0.00000         3.00000        31.00000     1. BI ICITDD color of ITC                  
+PD  12         0.00000         2.00000        31.00000     1. BT ICTPDD color of TPC                  
+PD  13         0.00000         4.00000        31.00000     1. BE ICECDD color of ECAL                 
+PD  14         0.00000         6.00000        31.00000     1. BC ICMADD color of magnet               
+PD  15         0.00000         5.00000        31.00000     1. BH ICHCDD color of HCAL                 
+PD  16         0.00000         3.00000        31.00000     1. B1 ICM1DD color of MUON 1               
+PD  17         0.00000         3.00000        31.00000     1. B2 ICM2DD color of MUON 2               
+PD  18         0.00000         7.00000        31.00000    -1. BW ICBWDD color of window without scales     
+PD  19         0.00000         0.00000        31.00000     1. BG ICBGDD color of background           
+PD  20         0.00000         0.00000        31.00000     1. BA ICBADD color of aleph-header         
+PD  21         0.00000         8.00000        31.00000    -1. CN ICCNDD color of all hits ...         
+PD  22         0.00000         2.00000         3.00000     0. MO MODEDD simple,detail,nogaps          
+PD  23         0.00000         5.00000        20.00000     0. NP NUPODD # of points of curve          
+PD  24         0.00000         2.00000         3.00000     0. ST ISTYDD grey line,co. l.,ar.+l.,area  
+PD  25         0.00000         1.00000         5.00000     0. LD LIDTDD line width of detector        
+PD  26         0.00000         1.00000         5.00000     0. LI LITRDD line width of tracks          
+PD  27         0.00000         1.00000         5.00000     0. LG LIGLDD line width of grey b.g. lines 
+PD  28         0.00000         0.00000         2.20000     0. SH ISTHDD Style of Hcal histogram       
+PD  29         0.00000         8.00000        31.00000     1. FR ICFRDD color of frame                
+PD  30         0.00000         8.00000        31.00000     1. TX ICTXDD color of text                 
+PD  31         0.00000        12.00000        31.00000     1. CA ICALDD color of ALEPH sign           
+PD  32         0.00000         8.00000        31.00000     1. HD ICHDDD color of header text          
+PD  33         0.00000         0.00000         1.00000     1. BW LCBWDD colour of BW foreground       
+PD  34         0.00000         8.00000        31.00000     1. RZ ICRZDD color of xy-cut line for RZ  and rubberband
+PD  35         0.00000         2.00000        31.00000     1. LF ICLFDD color of lines at 180,360 deg 
+PD  36         0.00000         8.00000        31.00000     0. VX ICVXDD Color of vertex (X or ellips).
+PD  37         0.00000         0.00000         0.00000     0. ..                               
+PD  38         0.00000         8.00000        31.00000     0. CN LCVDDD                               
+PD  39         0.00000         0.00000         0.00000     1. ..                                      
+PD  40         0.00000         8.00000        31.00000     1. CN LCITDD associated track coordinates  
+PD  41         0.00000         8.00000        31.00000     1. UC LCIUDD unassociated coordinates      
+PD  42         0.00000         0.00000         0.00000     1. NB LCNBDD                                      
+PD  43         0.00000         8.00000       127.00000     1. CN LCNCDD constant track color          
+PD  44         0.00000         7.00000        31.00000     0. CI LCNIDD colour of ITC tracks          
+PD  45         0.00000        10.00000        31.00000     1. HA LCSHDD colour of sical histogram area
+PD  46         0.00000         1.00000        31.00000     1. HL LCSLDD histogram colour                                    
+PD  47         0.00000         1.00000        31.00000     1. FA LCSADD frame area                                    
+PD  48         0.00000         7.00000        31.00000     0. FL LCSRDD frame line
+PD  49         0.00000         8.00000        31.00000     0. SS LCSSDD square colour                                    
+PD  50         0.00000         1.00000        31.00000     0. SD LCSDDD diagonal colour                                    
+PD  51         0.00000         8.00000        31.00000     1. PA LCTPDD pads                          
+PD  52         0.00000         8.00000        31.00000     1. BC LCTBDD bad coordinates               
+PD  53         0.00000         8.00000        31.00000     1. CN LCTCDD all track coordinates         
+PD  54         0.00000         0.00000        31.00000     1. .. LCTFDD fitted track coordinates      
+PD  55         0.00000         8.00000        31.00000     0. UC LCTUDD unfitted coordinates          
+PD  56        -1.00000         7.00000        31.00000     0. RC LCTRDD rejected coordinates          
+PD  57         0.00000         0.00000        31.00000     1. .. LCTWDD wires rho/z                   
+PD  58         0.00000         7.00000        31.00000     0. BL LCLGDD grey lines                    
+PD  59         0.00000         8.00000        31.00000     0. CN LCLCDD constant color                
+PD  60         0.00000         0.00000        31.00000     1. .. LCLHDD histogram color NOT USED      
+PD  61         0.00000         9.00000        31.00000     0. L1 LCLKDD(1) "  layer 1                 
+PD  62         0.00000        14.00000        31.00000     0. L2 LCLKDD(2) "  layer 2                 
+PD  63         0.00000        12.00000        31.00000     0. L3 LCLKDD(3) "  layer 3                 
+PD  64         0.00000         8.00000        32.00000     0. EO LCEODD ecal objects                  
+PD  65         0.00000         7.00000        31.00000     0. CG LCEGDD grey lines                    
+PD  66         0.00000        10.00000        31.00000     0. EC LCECDD constant color                
+PD  67         0.00000         1.00000        31.00000     0. HL LCELDD histogram lines               
+PD  68         0.00000         8.00000        31.00000     0. L1 LCEKDD(1) "  layer 1                 
+PD  69         0.00000         8.00000        31.00000     0. L2 LCEKDD(2) "  layer 2                 
+PD  70         0.00000         8.00000        31.00000     0. L3 LCEKDD(3) "  layer 3                 
+PD  71         0.00000         0.20000        31.00000     0. SL LCESDD < scale: draw hist.lines      
+PD  72         0.00000         9.00000        31.00000     0. WA LCWEDD(1)                            
+PD  73         0.00000        10.00000        31.00000     0. WB LCWEDD(2)                            
+PD  74         0.00000         8.00000        31.00000     0. WI LCWEDD(3)                            
+PD  75         0.00000         0.00000         0.00000     1. ..
+PD  76         0.00000         8.00000        31.00000     0. M1 LCMUDD(1)                            
+PD  77         0.00000         8.00000        31.00000     0. M2 LCMUDD(2)                            
+PD  78         0.00000        10.00000        31.00000     0. CG LCHGDD grey lines                    
+PD  79         0.00000         6.00000        31.00000     0. CN LCHCDD constant color for hist.      
+PD  80       -31.00000        14.00000        31.00000     0. LH LCHLDD histogram lines               
+PD  81         0.00000         8.00000        31.00000     0. F1 LCHTDD(1) tubes angle F1             
+PD  82         0.00000         8.00000        31.00000     0. F2 LCHTDD(2)  "     "    F2             
+PD  83         0.00000         8.00000        31.00000     0. F3 LCHTDD(3)  "     "    F3             
+PD  84         0.00000         8.00000        32.00000     0. BA LCHTDD(4)  "     "    F4             
+PD  85         0.00000        15.00000        31.00000     0. C1 NCOLDD(1) color to energy            
+PD  86         0.00000        14.00000        31.00000     0. C2 NCOLDD(2)                            
+PD  87         0.00000        13.00000        31.00000     0. C3 NCOLDD(3)                            
+PD  88         0.00000        12.00000        31.00000     0. C4 NCOLDD(4)                            
+PD  89         0.00000        11.00000        31.00000     0. C5 NCOLDD(5)                            
+PD  90         0.00000        10.00000        31.00000     0. C6 NCOLDD(6)                            
+PD  91         0.00000         9.00000        31.00000     0. C7 NCOLDD(7)                            
+PD  92         0.00000         8.00000        31.00000     0. C8 NCOLDD(8)                            
+PD  93         0.00000         0.00000         0.00000     1. ..                                      
+PD  94         0.00000         0.00000         0.00000     1. ..                                      
+PD  95         0.00000         0.00000         0.00000     1. ..                                      
+PD  96         0.00000         0.00000         0.00000     1. ..                                      
+PD  97         0.00000         0.00000         0.00000     1. ..                                      
+PD  98         0.00000         0.00000         1.00000     0. lt MOLTDD 0 LTABDD=NORMAL 1=1,2,3,4..
+PD  99         0.00010         0.25000       999.00000    -1. SC JSTRDD energy scale for color ramp   
+PD 100         0.00000         0.00000         0.00000     1. .. JSSADD                               
+PD 101         0.00000         0.00000         0.00000     1. .. JSVDDD                               
+PD 102         0.00000         0.00000         0.00000     1. .. JSITDD                               
+PD 103         0.00000         0.00000         0.00000     1. .. JSTPDD                               
+PD 104         0.00010         0.02500       999.00000     1. SC JSLCDD                               
+PD 105         0.00010         0.02500       999.00000     1. SC JSECDD                               
+PD 106         0.00010         0.10000       999.00000     1. SC JSEODD                               
+PD 107         0.00010         0.10000       999.00000     1. SC JSHCDD                               
+PD 108         0.00000         0.00000         0.00000     1. ..                                      
+PD 109         0.00000         0.00000         0.00000     1. ..
+PD 110         0.00000         0.00000         0.00000     1. ..
+PD 111         0.00000         0.00000         0.00000     1. ..                               
+PD 112         0.00000         0.00000         0.00000     1. .. 
+PD 113         0.00000         0.00000         0.00000     1. ..                                      
+PD 114         0.00000         0.00000         0.00000     1. ..                                      
+PD 115         0.00000         0.00000         0.00000     1. ..                                      
+PD 116         0.00000         0.00000         0.00000     1. ..                                      
+PD 117         0.00000         7.00000        31.00000     1. LB KCBPDD color of BEAMPIPE                 
+PD 118         0.00000         7.00000        31.00000     1. LS KCSADD color of SATR                 
+PD 119         0.00000         7.00000        31.00000     1. LL KCLUDD color of LCAL                 
+PD 120         0.00000         7.00000        31.00000     1. LV KCVDDD color of VDET                 
+PD 121         0.00000         7.00000        31.00000     1. LI KCITDD color of ITC                  
+PD 122         0.00000         7.00000        31.00000     1. LT KCTPDD color of TPC                  
+PD 123         0.00000         7.00000        31.00000     1. LE KCECDD color of ECAL                 
+PD 124         0.00000         7.00000        31.00000     1. LC KCMADD color of Magnet                                      
+PD 125         0.00000         7.00000        31.00000     1. LH KCHCDD color of HCAL                 
+PD 126         0.00000         7.00000        31.00000     1. L1 KCM1DD color of MUON1               
+PD 127         0.00000         7.00000        31.00000     1. L2 KCM2DD color of MUON 2              
+PD 128         0.00000         7.00000        31.00000     1. LG KCLGDD grey lines                                    
+PD 129         0.00000         0.00000         0.00000     1. ..                                      
+PD 130       -99.00000       -20.00000        99.00000     0. DB KSDBDD                                      
+PD 131         0.00000         7.00000        31.00000    -1. AI KSAIDD                                     
+PD 132         0.00000        15.00000        31.00000    -1. AO KSAODD                                     
+PD 133         0.00000         1.00000        31.00000     1. LB KSLBDD                               
+PD 134         0.00000         0.00000         0.00000     0. ..
+PD 135         0.00000         0.00000         0.00000     0. ..
+PD 136         0.00000         0.00000         0.00000     0. ..
+PD 137         0.00000         0.00000         0.00000     0. ..
+PD 138         0.00000         0.00000         0.00000     0. ..
+PD 139         0.00000         0.00000         0.00000     0. ..
+PD 140         0.00000         0.00000         0.00000     0. ..
+PD 141         0.00000         1.00000        31.00000     1. .. NFVHDD VD HITS frame color           
+PD 142         0.00000         1.00000        31.00000     1. .. NFVCDD VD COORD. frame color           
+PD 143         0.00000         1.00000        31.00000     1. .. NFVEDD VD ELLIP. frame color           
+PD 144         0.00000         1.00000        31.00000    -1. .. NFITDD ITC frame color           
+PD 145         0.00000         1.00000        31.00000    -1. FT NFTPDD TPC,MD frame color           
+PD 146         0.00000         1.00000        31.00000     1. FE NFECDD ECAL frame color           
+PD 147         0.00000         1.00000        31.00000    -1. FH NFHTDD HC.TU. frame color           
+PD 148         0.00000         1.00000        31.00000     1. ..            
+PD 149         0.00000         1.00000        31.00000    -1. FK NFTRDD TRACK frame color           
+CO  -1         0.00000         0.00000         0.00000     0. -- current colour
+CO   0         0.00000         0.00000         0.40000     0. -- RDCODD , GRCODD , BLCODD             
+CO   1         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO   2         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO   3         0.40000         0.00000         0.30000     0. -- RDCODD , GRCODD , BLCODD             
+CO   4         0.00000         0.45000         0.25000     0. -- RDCODD , GRCODD , BLCODD             
+CO   5         0.80000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO   6         0.00000         0.00000         0.80000     0. -- RDCODD , GRCODD , BLCODD             
+CO   7         0.60000         0.60000         0.60000     0. -- RDCODD , GRCODD , BLCODD             
+CO   8         1.00000         1.00000         1.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO   9         0.00000         1.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  10         1.00000         1.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  11         1.00000         0.45000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  12         1.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  13         1.00000         0.00000         1.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  14         0.00000         0.80000         1.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  15         0.40000         0.50000         1.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  16         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  17         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  18         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  19         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  20         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  21         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  22         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  23         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  24         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  25         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  26         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  27         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  28         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  29         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  30         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  31         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  32         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  33         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  34         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  35         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  36         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  37         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  38         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  39         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  40         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  41         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  42         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  43         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  44         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  45         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  46         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  47         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  48         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  49         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  50         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  51         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  52         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  53         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  54         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  55         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  56         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  57         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  58         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  59         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  60         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  61         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  62         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  63         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  64         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  65         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  66         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  67         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  68         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  69         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  70         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  71         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  72         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  73         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  74         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  75         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  76         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  77         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  78         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  79         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  80         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  81         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  82         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  83         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  84         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  85         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  86         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  87         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  88         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  89         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  90         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  91         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  92         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  93         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  94         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  95         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  96         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  97         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  98         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO  99         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 100         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 101         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 102         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 103         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 104         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 105         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 106         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 107         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 108         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 109         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 110         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 111         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 112         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 113         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 114         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 115         1.00000         1.00000         1.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 116         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 117         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 118         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 119         0.00000         0.00000         0.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 120         1.00000         1.00000         1.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 121         1.00000         1.00000         1.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 122         1.00000         1.00000         1.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 123         1.00000         1.00000         1.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 124         1.00000         1.00000         1.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 125         1.00000         1.00000         1.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 126         1.00000         1.00000         1.00000     0. -- RDCODD , GRCODD , BLCODD             
+CO 127         1.00000         1.00000         1.00000     0. -- RDCODD , GRCODD , BLCODD             
+CP  -1         0.              0.              0.          0. __ print colours (RDCDDD + RDCODD ...)
+CP   0         0.00000         0.80000         1.00000     0. --                                      
+CP   1         0.00000         0.00000         0.00000     0. --                                      
+CP   2         0.00000         0.00000         0.00000     0. --                                      
+CP   3         0.20000         0.00000         0.30000     0. --                                      
+CP   4         0.00000         0.45000         0.00000     0. --                                      
+CP   5         1.00000         0.00000         0.00000     0. --                                      
+CP   6         0.00000         0.00000         1.00000     0. --                                      
+CP   7         0.60000         0.60000         0.60000     0. --                                      
+CP   8         1.00000         1.00000         1.00000     0. --                                      
+CP   9         0.50000         1.00000         0.00000     0. --                                      
+CP  10         1.00000         0.85000         0.00000     0. --                                      
+CP  11         0.80000         0.40000         0.00000     0. --                                      
+CP  12         1.00000         0.00000         0.00000     0. --                                      
+CP  13         1.00000         0.40000         1.00000     0. --                                      
+CP  14         0.30000         1.00000         1.00000     0. --                                      
+CP  15         0.00000         0.80000         1.00000     0. --                                      

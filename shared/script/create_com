@@ -1,0 +1,245 @@
+#!/usr/local/bin/perl 
+require "complete.pl"; 
+require "ctime.pl";
+###############################################################################
+#                              create_com
+# 29/08/96                                                            F.Blin   
+###############################################################################
+# to create $ALDOC/${PROG}${CYCLE}.comcom and $ALDOC/${PROG}${CYCLE}.comvar
+#
+# parameters: program cycle [any order]
+# eg: create_com 305 julia
+#                  outputs : $ALDOC/jul305.comcom
+#                            $ALDOC/jul305.comvar
+###############################################################################
+$ALROOT = $ENV{'ALROOT'};
+$ALINC = $ENV{'ALINC'};
+$ALDOC = $ENV{'ALDOC'};
+$dir_prog = "";
+$CYCLE = "";
+
+foreach $i (0.. $#ARGV){
+   $new_PAR = shift(@ARGV);
+   &help if ($new_PAR eq "-h");
+   $PROG_name = $new_PAR if ($new_PAR=~ /^[a-zA-Z]+$/);
+   $CYCLE = $new_PAR if ($new_PAR=~ /^(\d+)$/);
+}
+
+$PROG_name =~ tr/A-Z/a-z/;
+exit if ($PROG_name eq "bos77");
+
+$PROG_name = "alephlib" if ($PROG_name eq "aleph");
+$PROG = "";
+$PROG = $PROG_name if ($PROG_name eq "alephio");
+$PROG = $PROG_name if ($PROG_name eq "alpha");
+$PROG = $PROG_name if ($PROG_name eq "alook");
+$PROG = $PROG_name if ($PROG_name eq "mini"); 
+
+$PROG = substr($PROG_name,0,5) if ($PROG_name eq "alephlib");
+$PROG = substr($PROG_name,0,3) if ($PROG_name eq "julia" || $PROG_name eq "galeph" || $PROG_name eq "tpcsim"); 
+
+&help if ($PROG eq "");
+
+if ($PROG_name eq "alephio"){ 
+    $dir_prog = "$ALROOT/$PROG";
+    $file_out = ${PROG};
+   }
+else {
+   $dir_prog = "${ALROOT}/${PROG}${CYCLE}"; 
+   $file_out = "${PROG}${CYCLE}";
+}
+$l_dir_prog = length($dir_prog);
+print "Directory -> $dir_prog \n";
+
+$PROG_name =~ tr/a-z/A-Z/;
+
+if(-e "$ALDOC/${file_out}.comcom"){
+  print "Please check : file $ALDOC/${file_out}.comcom exist !...\n";
+  exit;
+}
+
+@alinc = ();
+@prog_inc = ();
+@all_inc = ();
+print "$PROG_name\n";
+@alinc = `find $ALINC | grep .h | grep -v jj.h`;
+if (-e "$dir_prog/inc"){ 
+   @prog_inc = `ls $dir_prog/inc/*.h`;
+}
+else {
+    print "Sorry not found $dir_prog/inc\n";
+    exit;
+}
+
+$new = 0;
+foreach $i (0 .. $#alinc){
+    $new++;
+    $all_inc[$new] = $alinc[$i];
+}
+foreach $i (0 .. $#prog_inc){
+    $new++;
+    $all_inc[$new] = $prog_inc[$i];
+}
+
+foreach $i (1 .. $#all_inc){
+    @com_comments = ();
+    $n_com_comments = 0;
+    $all_inc[$i] =~ s/\s+$//;
+    $l_begin = index($all_inc[$i],"/inc/")+5;
+    $h_name = substr($all_inc[$i],$l_begin,(length($all_inc[$i])-($l_begin+2)));
+    print "==> ${h_name}.h\n";
+    $h_name =~ tr/a-z/A-Z/;
+    @buf = `cat $all_inc[$i]`;
+    @new_buf = ();
+    $n_new = 0;
+    $new_line = "";
+    $flag = 0;
+    foreach $j (0 ..$#buf+1){
+        $line = $buf[$j];
+        $line =~ s/\s+$//;
+#        $line =~ tr/a-z/A-Z/;
+        if ($flag){
+	   if (substr($line,5,1) ne " " && substr($line,0,5) eq "     "){
+              $line = substr($line,6);
+              $line = join('',split(/ */,$line));    
+              $new_line = "${new_line}${line}"; 
+              next;
+           }
+        }
+        if (substr($new_line,0,6) eq "COMMON" || substr($new_line,0,9) eq "PARAMETER"){
+           $n_new++;
+           $new_buf[$n_new] = $new_line;
+#           print "new_buf$n_new->$new_buf[$n_new]\n";
+           $new_line = "";
+        }
+        if ((index($line," COMMON") > 4 || index($line," PARAMETER") > 4) && (substr($line,0,1) ne "C")){
+           $temp = join('',split(/ */,$line));
+	   if (index($temp,"COMMON/") == 0 || index($temp,"PARAMETER(") == 0){
+	      $flag = 1;
+              $new_line = join('',split(/ */,$line));    
+              next;
+           }
+	}
+        $flag = 0;
+        next if ($line eq "");
+        next if ($line eq "C");
+        next if (substr($line,0,1) eq "#");
+        next if (substr($line,0,3) eq "*CD");
+        next if (substr($line,0,3) eq "*DK");
+        $line =~ s/\n//;
+        next if (index($line,"LOGICAL") == 6);
+        next if (index($line,"CHARACTER") == 6);
+        next if (index($line,"DATA") == 6);
+        $line = substr($line,2) if (substr($line,0,1) eq "C");
+        $line = join(' ',split(/  */,$line));    
+        $line =~ s/^\s+//; 
+        $n_comments++;
+        $comments[$n_comments] = $line;
+#        print "comments->$comments[$n_comments]\n";
+    }
+    foreach $CP (1 ..$#new_buf){
+       $line = $new_buf[$CP];
+       if (substr($line,0,3) eq "COM"){
+          $line = substr($line,7);
+          $line = substr($line,index($line,"/")+1);
+       }
+       $line = substr($line,10,length($line)-11) if (substr($line,0,3) eq "PAR");
+       @com_para = ();
+       @com_para_2 = ();
+       &split_com_para($line);
+       foreach $i_cp (0 ..$#com_para){
+#           print "search ->$com_para[$i_cp]\n";
+           foreach $i_com (1 ..$#comments){
+               $temp = join(':',split(/ /,$comments[$i_com])); 
+	       $temp = substr($temp,0,index($temp,":"));
+	       $com_temp = pack(A29, "${com_para[$i_cp]}${com_para_2[$i_cp]}");
+               $routine_temp = pack(A6, "$h_name");
+	       $comments_temp = pack(A40, "?");
+	       if ("$com_para[$i_cp] " eq "$temp " || "$com_para[$i_cp] " eq "${temp}(" || "${com_para[$i_cp]}(" eq substr($temp,0,index($temp,"(")+1)){
+                   $temp = substr($comments[$i_com],length($temp)+1);
+                   $temp =~ s/^[.-=:#]*//;
+                   $temp =~ s/^\s+//;
+		   $first = substr($temp,0,1);
+		   $first =~ tr/a-z/A-Z/;
+                   $end = substr($temp,1);
+		   $comments_temp = pack(A40, "${first}${end}");
+		   last;
+              }
+           }
+#           print " $com_temp $routine_temp = $comments_temp\n";
+           open (OUT_COM, ">>${file_out}.com");
+           print OUT_COM " $com_temp $routine_temp = $comments_temp\n";
+           close OUT_COM;
+       }
+    }
+}
+
+system(`sort -b -o $ALDOC/${file_out}.comcom -k2 ${file_out}.com`) ;
+system(`sort -o $ALDOC/${file_out}.comvar ${file_out}.com`) ;
+system(`rm -f ${file_out}.com`) if(open(INPUT, "${file_out}.com"));
+exit;
+###############################################################################
+sub help {
+    print "Syntax     : create_com  program_name [- cycle]\n";
+
+    print "examples : create_com alephio \n";
+    print "           create_com alephib 214 \n";
+    print "           create_com julia 281 \n";
+    exit;
+}
+###############################################################################
+sub split_com_para {
+
+       $n = 0;
+       local($new_line) = "";
+ 
+       if (index($line,"(") == -1 && index($line,"=") == -1){
+          @com_para = split(/,/,$line);
+          return;
+       }
+       $ij = -1;
+       $new_line = "${line},";
+       while (length($new_line) > 0){
+           $new_line = substr($new_line,0,1) if (substr($new_line,0,1) eq ",");
+           $l_e = index($new_line,"=");
+           $l_v = index($new_line,",");
+           $l_op = index($new_line,"(");
+           $l_cp = index($new_line,")");
+#           print "$l_e $l_v $l_op $l_cp \n";
+#           print "$com_para[$ij] $com_para_2[$ij] $new_line\n" if ($ij > -1);
+           if ($l_e == -1 && $l_op == -1 && $l_cp == -1){ 
+              $ij++;
+               $com_para[$ij] = substr($new_line,0,$l_v);
+               $com_para_2[$ij] = " ";
+               $new_line = substr($new_line,($l_v+1));
+               next;
+           }
+           if ($l_e > -1 && $l_e < $l_v){
+               $ij++; 
+               $com_para[$ij] = substr($new_line,0,$l_e);
+               $com_para_2[$ij] = substr($new_line,$l_e,($l_v - $l_e));
+               $new_line = substr($new_line,($l_v+1));
+               next;
+           }
+           if ($l_e == -1 || $l_e > $l_v){
+            if ($l_op > $l_v){
+               $ij++; 
+               $com_para[$ij] = substr($new_line,0,$l_v);
+               $com_para_2[$ij] = " ";
+               $new_line = substr($new_line,($l_v+1));
+               next;
+            } 
+            if ($l_op < $l_v){
+               $ij++; 
+               $com_para[$ij] = substr($new_line,0,$l_op);
+               $com_para_2[$ij] = substr($new_line,$l_op,($l_cp-$l_op)+1);
+               $new_line = substr($new_line,($l_v+1)) if ($l_cp < $l_v);
+               $new_line = substr($new_line,($l_cp+2)) if ($l_cp > $l_v);
+               next;
+            } 
+#            print "$com_para[$ij] $com_para_2[$ij] $new_line\n";
+            last;
+	   }
+       }
+   return;        
+}

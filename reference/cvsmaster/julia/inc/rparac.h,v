@@ -1,0 +1,369 @@
+head	1.3;
+access;
+symbols
+	jul313_3:1.3
+	jul313_2:1.3
+	jul313_1:1.3
+	jul313:1.3
+	jul312_1:1.3
+	jul312:1.3
+	jul311:1.3
+	jul310_1:1.3
+	jul310:1.3
+	jul309_1:1.3
+	jul309:1.3
+	jul308_6:1.3
+	jul308_5:1.3
+	jul308_4:1.3
+	jul308_3:1.3
+	jul308_2:1.3
+	jul308_1:1.3
+	jul308:1.3
+	jul307_4:1.3
+	jul307_3:1.3
+	jul307_2:1.3
+	jul307_1:1.3
+	jul307:1.3
+	jul306_3:1.3
+	jul306_2:1.3
+	jul306_1:1.3
+	jul306:1.3
+	jul305_4:1.3
+	jul305_3:1.3
+	jul305_2:1.3
+	jul305_1:1.3
+	jul305:1.3
+	jul304_3:1.3
+	jul304_2:1.3
+	jul304_1:1.3
+	jul304:1.3
+	jul303_7:1.3
+	jul303_6:1.3
+	jul303_5:1.3
+	jul303_4:1.3
+	jul303_3:1.3
+	jul303_2_mc1:1.3
+	jul303_2:1.3
+	jul303_1_mc1:1.3
+	jul303_1:1.3
+	jul303_v:1.3
+	jul303:1.3
+	jul302_6:1.3
+	jul302_5:1.3
+	jul302_4:1.3
+	jul302_3:1.3
+	jul302_2:1.3
+	jul302_1:1.3
+	jul302:1.3
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2
+	jul280_1:1.2
+	jul280:1.2
+	jul279:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	97.03.06.09.54.54;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.03.12.15.17.45;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.16.54;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.16.55;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@Tracking upgrade
+@
+text
+@      PARAMETER (JULVD=1,JULIT=2,JULTP=3,JULEC=4,JULLC=5)
+      PARAMETER (JULSA=6,JULHC=7,JULMU=8,JULCA=9,JULSK=10)
+      PARAMETER (JULYR=11,JULYT=12,JULEF=13,JULBC=14,JULFA=15
+     +           ,JULBO=16,JULSI=17)
+      PARAMETER (MODEND=0,MODREA=1,MODPRV=2,MODPRI=3,MODPRT=4)
+      PARAMETER (MODPRE=5,MODPRL=6,MODPRS=7,MODPRH=8,MODPRM=9)
+      PARAMETER (MODTPT=10,MODTPW=11,MODDEX=12,MODITC=13 ,MODVDE=14)
+      PARAMETER (MODFIT=15,MODFTR=16,MODECL=17,MODMIP=18,MODEID=19)
+      PARAMETER (MODFEO=20,MODFEP=21,MODHCL=22,MODHDP=23,MODEHG=24)
+      PARAMETER (MODMUF=25,MODMUA=26,MODLCA=27,MODSAT=28,MODLTR=29)
+      PARAMETER (MODPID=30,MODYMA=31,MODYTO=32,MODYV0=33,MODHIS=34)
+      PARAMETER (MODPOT=35,MODBSP=36,MODWRI=37)
+      PARAMETER (MODCOM=38,MODBCA=39,MODMUO=40,MODMON=41,MODENF=42)
+      PARAMETER (MODGAM=43,MODEDI=44,MODGMX=45)
+      PARAMETER (MODSUM=46,MODBOM=47)
+      PARAMETER (MODPSI=48,MODSIC=49,MODGMP=50)
+      PARAMETER (MODVTP=51,MODKNK=52,MODNUC=53)
+      PARAMETER (LASTMO=53)
+      CHARACTER*33 RNTXTM  (LASTMO)
+      CHARACTER*8  RNTXTS  (LASTMO)
+      INTEGER RNCALL (LASTMO)
+      REAL    RNTIME (LASTMO)
+C ----> Title of Modules
+      DATA RNTXTM(1 )/'Reading records..................'/
+      DATA RNTXTM(2 )/'Prepare data VDET................'/
+      DATA RNTXTM(3 )/'Prepare data ITC.................'/
+      DATA RNTXTM(4 )/'Prepare data TPC.................'/
+      DATA RNTXTM(5 )/'Prepare data ECAL................'/
+      DATA RNTXTM(6 )/'Prepare data LCAL................'/
+      DATA RNTXTM(7 )/'Prepare data SATR................'/
+      DATA RNTXTM(8 )/'Prepare data HCAL................'/
+      DATA RNTXTM(9 )/'Prepare data MUON................'/
+      DATA RNTXTM(10)/'TPC track finding................'/
+      DATA RNTXTM(11)/'TPC wire association.............'/
+      DATA RNTXTM(12)/'dE/dx calculation................'/
+      DATA RNTXTM(13)/'ITC reconstruction...............'/
+      DATA RNTXTM(14)/'VDET reconstruction..............'/
+      DATA RNTXTM(15)/'Global fit VDET,ITC,TPC..........'/
+      DATA RNTXTM(16)/'Extrapolate track ECAL,Coil,Hcal.'/
+      DATA RNTXTM(17)/'Find ECAL clusters...............'/
+      DATA RNTXTM(18)/'Minimum ionizing in ECAL.........'/
+      DATA RNTXTM(19)/'Electron identification..........'/
+      DATA RNTXTM(20)/'ECAL cluster analysis............'/
+      DATA RNTXTM(21)/'ECAL statistics..................'/
+      DATA RNTXTM(22)/'Find HCAL clusters...............'/
+      DATA RNTXTM(23)/'HCAL digital pattern analysis....'/
+      DATA RNTXTM(24)/'ECAL - HCAL global analysis......'/
+      DATA RNTXTM(25)/'HCAL muon finding................'/
+      DATA RNTXTM(26)/'MUON-hit - track association.....'/
+      DATA RNTXTM(27)/'LCAL reconstruction..............'/
+      DATA RNTXTM(28)/'SATR reconstruction..............'/
+      DATA RNTXTM(29)/'Luminosity track-cluster assoc...'/
+      DATA RNTXTM(30)/'Particle identification summary..'/
+      DATA RNTXTM(31)/'Main vertex finding (Mermikides).'/
+      DATA RNTXTM(32)/'Topology reconstruction..........'/
+      DATA RNTXTM(33)/'V0 reconstruction................'/
+      DATA RNTXTM(34)/'Histogramming....................'/
+      DATA RNTXTM(35)/'Build pot banks..................'/
+      DATA RNTXTM(36)/'Beam Spot Position...............'/
+      DATA RNTXTM(37)/'Write event......................'/
+      DATA RNTXTM(38)/'Compress data....................'/
+      DATA RNTXTM(39)/'BCAL reconstruction..............'/
+      DATA RNTXTM(40)/'MUON HCAL + Chambers association.'/
+      DATA RNTXTM(41)/'Monitoring.......................'/
+      DATA RNTXTM(42)/'Energy Flow......................'/
+      DATA RNTXTM(43)/'ECAL Photon identification.......'/
+      DATA RNTXTM(44)/'EDIR Class Word..................'/
+      DATA RNTXTM(45)/'Gammas in charged clusters.......'/
+      DATA RNTXTM(46)/'Summary File.....................'/
+      DATA RNTXTM(47)/'BOM Calculate Beam Parameters....'/
+      DATA RNTXTM(48)/'SICAL prepare data...............'/
+      DATA RNTXTM(49)/'SICAL reconstruction.............'/
+      DATA RNTXTM(50)/'GAMPEC + mod PECO + BULOS........'/
+      DATA RNTXTM(51)/'Track preselection for VDET......'/
+      DATA RNTXTM(52)/'Kink search......................'/
+      DATA RNTXTM(53)/'Nuclear interaction search.......'/
+C ----> Name of Modules
+      DATA RNTXTS(1 )/'RLOOPR'/
+      DATA RNTXTS(2 )/'VPREDA'/
+      DATA RNTXTS(3 )/'IPREDA'/
+      DATA RNTXTS(4 )/'TPREDA'/
+      DATA RNTXTS(5 )/'EPREDA'/
+      DATA RNTXTS(6 )/'LPREDA'/
+      DATA RNTXTS(7 )/'SPREDA'/
+      DATA RNTXTS(8 )/'HPREDA'/
+      DATA RNTXTS(9 )/'MPREDA'/
+      DATA RNTXTS(10)/'TPCREC'/
+      DATA RNTXTS(11)/'TRKWIR'/
+      DATA RNTXTS(12)/'TRKELS'/
+      DATA RNTXTS(13)/'ITCREC'/
+      DATA RNTXTS(14)/'VDLINK'/
+      DATA RNTXTS(15)/'FITALL'/
+      DATA RNTXTS(16)/'FTRACK'/
+      DATA RNTXTS(17)/'ECFCLU'/
+      DATA RNTXTS(18)/'ECRMIP'/
+      DATA RNTXTS(19)/'ELECID'/
+      DATA RNTXTS(20)/'ECFOBJ'/
+      DATA RNTXTS(21)/'ECPRIN'/
+      DATA RNTXTS(22)/'HCFCLU'/
+      DATA RNTXTS(23)/'HDPREC'/
+      DATA RNTXTS(24)/'ECHCGL'/
+      DATA RNTXTS(25)/'HMFIND'/
+      DATA RNTXTS(26)/'MUASS '/
+      DATA RNTXTS(27)/'LCAREC'/
+      DATA RNTXTS(28)/'SATREC'/
+      DATA RNTXTS(29)/'LTRACK'/
+      DATA RNTXTS(30)/'FPIDEN'/
+      DATA RNTXTS(31)/'YFMAIN'/
+      DATA RNTXTS(32)/'YTOPOL'/
+      DATA RNTXTS(33)/'YMFV0S'/
+      DATA RNTXTS(34)/'RHSEVT'/
+      DATA RNTXTS(35)/'RDEFPO'/
+      DATA RNTXTS(36)/'VBSPOT'/
+      DATA RNTXTS(37)/'RWREVT'/
+      DATA RNTXTS(38)/'CMPLIS'/
+      DATA RNTXTS(39)/'BPREDA'/
+      DATA RNTXTS(40)/'MUIDO '/
+      DATA RNTXTS(41)/'RMONIT'/
+      DATA RNTXTS(42)/'EMSKEV'/
+      DATA RNTXTS(43)/'EBEGID'/
+      DATA RNTXTS(44)/'ALCLASW'/
+      DATA RNTXTS(45)/'ECGMIX'/
+      DATA RNTXTS(46)/'RCJSUM'/
+      DATA RNTXTS(47)/'OMBREC'/
+      DATA RNTXTS(48)/'SIPREDA'/
+      DATA RNTXTS(49)/'SICREC'/
+      DATA RNTXTS(50)/'GASTEER'/
+      DATA RNTXTS(51)/'VTRPRE'/
+      DATA RNTXTS(52)/'KINKS'/
+      DATA RNTXTS(53)/'NUCVTX'/
+#if defined(DOC)
+C
+C
+C-------> PARAMETERS GLOBAL OVER PROGRAM
+C
+C SKELETON Parameters
+C -------------------
+C JULVD   =  1, VDET    identifier
+C JULIT   =  2, ITC     identifier
+C JULTP   =  3, TPC     identifier
+C JULEC   =  4, ECAL    identifier
+C JULLC   =  5, LCAL    identifier
+C JULSA   =  6, SATR    identifier
+C JULHC   =  7, HCAL    identifier
+C JULMU   =  8, MUON    identifier
+C JULCA   =  9, CALO    identifier
+C JULSK   = 10, SKEL    identifier
+C JULYR   = 11, YREC    identifier
+C JULYT   = 12, YTOP    identifier
+C JULEF   = 13, EFLO    identifier
+C JULBC   = 14, BCAL    identifier
+C JULFA   = 15, FALCON  identifier
+C JULBO   = 16, BOM     identifier
+C JULSI   = 17, SICAL   identifier
+C
+C MODULE identifiers USED IN RNXMOD
+C ---------------------------------
+C MODEND              = 0   NOMODULE -used to close a module
+C LASTMO              = 53  Largest module number
+C RNTXTM  (LASTMO)    = Text describing the Modules
+C RNTXTS  (LASTMO)    = Subroutine name of the Module
+C RNCALL  (LASTMO)    = Number of call to the Module
+C RNTIME  (LASTMO)    = Time spent in the Module
+C
+#endif
+@
+
+
+1.2
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+ 	gambnk.F gapeco.F gasteer.F
+ 	hcalib.F hcalrd.F hcatow.F hcbhis.F hcfclu.F hchist.F hclcra.F
+ 	hcltst.F hclufi.F hcos.F hcsimm.F hdgdeb.F hdgfil.F hdgpot.F
+ 	hdgsum.F hdprec.F hdspre.F hflnoi.F hinijo.F hiniru.F hmener.F
+ 	hmfind.F hmroad.F hnoise.F hnoisy.F hpatco.F hphnoi.F hplink.F
+ 	hprana.F hpranp.F hprdig.F hpreda.F hprpot.F hprsum.F hprunc.F
+ 	hrcomp.F hrcpat.F hrdcal.F hroad.F hslink.F hslowc.F hspare.F
+ 	hsptre.F hstofi.F htrack.F htubfi.F htwcr.F
+ 	iasign.F iattma.F ibnkin.F icaswt.F icftoi.F iclimb.F icrcco.F
+ 	ideadw.F idigpr.F ienang.F ifind1.F ifind2.F ifitp.F iftrak.F
+ 	igetti.F igettp.F igicha.F iheler.F iinijo.F iiniru.F iintrk.F
+ 	imatch.F inigap.F insect.F intrak.F ipakdi.F ipdsti.F iphcor.F
+ 	ipreda.F iprsum.F ipstat.F irefin.F ireopd.F isave.F ishuff.F
+ 	ishufl.F islowc.F isrch.F itbook.F itccut.F itcopr.F itcrec.F
+ 	itcrep.F itctpc.F itctrk.F itcxng.F iterr.F itextn.F ithist.F
+ 	itidy1.F itidy2.F itlnk1.F itlnk2.F itpcan.F itrak.F itrecf.F
+ 	itreci.F itree.F itrkci.F itrkeq.F itrkzr.F itrmca.F
+@
+text
+@d17 2
+a18 1
+      PARAMETER (LASTMO=50)
+d74 4
+a77 1
+C ----> Name of Moduls
+d128 3
+d159 1
+a159 1
+C LASTMO              = 50  Largest module number
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*CD rparac
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

@@ -1,0 +1,101 @@
+KCAR 0 / $TEXT                                                                  
+POFF                                                                            
+*   RUN #               RUN'S TITLE                                             
+RUN  101        'FOUR LEPTONS PRODUCTION ELW2TAG '                              
+*     FIRST EVENT   LAST EVENT TO BE GENERATED                                  
+TRIG       1           200                                                      
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG                                 
+DEBU    6   /      1            10                                              
+*    UNIT # / FORMAT                                                            
+*FILO ' SCWEEK:ELW201.EPIO  | EPIO '                                            
+*       sigma-x   sigma-y  sigma-z  (cm)                                        
+SVRT     0.018    0.0010    1.00                                                
+* give resonnances non discrete masses ( Rho in tau decays..)                   
+MST 8 /1                                                                        
+*   generator parameters                                                        
+* EB      BEAM ENERGY (GEV)                                                     
+* IPROC   EVENT TYPE REQUESTED                                                  
+*               = 1  MU  MU  TAU TAU        = 2  MU  MU  MU  MU                 
+*               = 3  E   E   MU  MU         = 4  E   E   TAU TAU                
+*               = 5  E   E   E   E          = 6  TAU TAU TAU TAU                
+* IREJ    REJECTION ALGORYTHM FLAG (1 OR 2)                                     
+* IDUMP   = 0    NO INFORMATION ON EVENT GENERATION IS PRINTED                  
+*         = 1    information on weights is printed                              
+*         = 2    also information on angles and energies is print               
+*         = 3    also information on common blocks is printed                   
+*         = 4    also information on kinematics is printed                      
+*         = 5    also information on random numbers is printed                  
+* very detailed information on the actual event generation can be               
+* obtained by increasing the parameter idump up to 5.Because of the             
+* enormous amount of output one then obtains,one is advized only to do          
+* this in case one suspects that an error in the event generation occurred.     
+* INFO : very detailed information on the calculation of the complete           
+*  matrix element (on the amplitude level) is obtained by increasing            
+*  the parameter info. if info equals 1 one gets information on the             
+*  initialization occurring in subroutine spinox and getrid. if info            
+*  equals 2 additional information on the occurring helicity amplitude          
+*  is printed. if one increases info up to 5 more and more results for          
+*  intermediate calculations in functions graaf and zz are printed.In           
+*  this case one gets an extremely large amount of output for each event.       
+* ILEARN                                                                        
+*  = 1 if program should 'learn' good values for ESWE,ESFT,WAP(4),WBP(4).       
+*     At present only works if  IREJEC = 2                                      
+*  =0  to produce events on output                                              
+* ESWE    ESTIMATED MAXIMUM WEEV WEIGHT  only used if IREJEC = 2                
+* ESFT    ESTIMATED MAXIMUM FT WEIGHT                                           
+* THETA0  CENTRAL DETECTOR THETA ANGLE                                          
+* ZMAS       =  ZMASS in GEV                                                    
+* ZWID       =  Zwidth in GEV                                                   
+* SINW2      = sin**2(theta Weinberg)                                           
+*       EB     IPROC  IREJEC IDUMP INFO ILEARN                                  
+GENE    45.6    1      2      0     1    0                                      
+*      ESWE    ESFT   THET0   ZMAS    ZWID    SINW2                             
+        41.     0.39   15.    91.18   2.484   0.232                             
+*  THMIN        = MINIMUM SCATTERING ANGLE ELECTRON IN DEGREES                  
+*  THMAX        = MAXIMUM SCATTERING ANGLE ELECTRON IN DEGREES                  
+*  THMUI        = MINIMUM SCATTERING ANGLE of 'muon' IN DEGREES                 
+*  THMUA        = MAXIMUM SCATTERING ANGLE of 'muon' IN DEGREES                 
+*    IF any of WMIN4,WMAX4, or PERR4  < 0., a default is taken                  
+*  WMIN         = MINIMUM INVARIANT MASS MUON PAIR IN GEV (or of                
+*                any opp. ch pair if 4 identical fermions in final state)       
+*  WMAX         = MAXIMUM INVARIANT MASS MUON PAIR IN GEV (or of                
+*                any opp. ch. pair if 4 identical fermions in final state)      
+*  WMINE        = MINIMUM INVARIANT MASS NON-MUON PAIR IN GEV (ignored          
+*                     if 4 identical fermions in final state)      
+*  WMAXE        = MAXIMUM INVARIANT MASS NON-MUON PAIR IN GEV (ignored          
+*                     if 4 identical fermions in final state)                   
+*  PMIN         = MINIMUM MOMENTUM (IN GEV) OF EACH MUON                        
+*  PMINE        = MINIMUM MOMENTUM (IN GEV) OF EACH NON-MUON                    
+*  PERR         = % uncertainty desired on final cross-section                  
+*                     (operational if ILEARN = 1, and default = .1)             
+*     WMIN  WMAX  WMINE  WMAXE  PMIN  PMINE                                     
+GCUT   -1.   -1.  -1.     -1.   .2     .2                                       
+*       THMIN   THMAX   THMUI  THMUA   PERR                                     
+       15.     165.     15.   165.      3.                                      
+* WAP(1:4)  RELATIVE IMPORTANCE FACTORS FOR SUBGENERATORS A,B,C,D.              
+* WBP(1:4)  IMPORTANCE FACTORS FOR SUBGENERATORS A,B,C,D                        
+**  WBP(1)       = INVERSE WEIGHT FACTOR OF SUBGENERATOR MCA's events           
+**  WBP(2)       = INVERSE WEIGHT FACTOR OF SUBGENERATOR MCB's events           
+**  WBP(3)       = INVERSE WEIGHT FACTOR OF SUBGENERATOR MCC's events           
+**  WBP(4)       = INVERSE WEIGHT FACTOR OF SUBGENERATOR MCD's events           
+*                                                                               
+* ** NOTE ** IF ILEARN = 1, ESWE, ESFT, WAP(1-4), WBP(1-4) ARE GIVEN            
+* hard-wired values for the 1st iteration, and then optimal values are          
+* 'learned' by the program in subsequent iterations                             
+* WAP   1    2    3     4  WBP    1       2      3      4                       
+*GIMP   .0   .45  .42    1.     .006    .0069   .064    .29                     
+GIMP    0.  0.   2.1     1.       1.      1.    .21     .74                     
+*  use RANMAR generator for random numbers                                      
+*  INSEED : first seed (range assigned per institute)                           
+*  LOSEED : second seed (incremented locally for new runs)                      
+*      INSEED          LOSEED (1-30000)                                         
+RMAR     78             12345                                                   
+ENDQ                                                                            
+*   EXAMPLES of starting values for the different final states:                 
+*          ESWE4  ESFT4  WAP  1    2    3   4  WBP  1    2    3   4             
+* IPROC 1   41.0   0.39      .0   .0   2.1  1.      1.   1.   .21 0.74          
+* IPROC 2   52.0   0.56      .0   .0   3.3  0.99    1.   1.   .087 .64          
+* IPROC 3   100.   37.0      .0   .45  .42  1.    .006  .0069 .064 .29          
+* IPROC 4   48.0   13.0      .0   .0   .48  1.    .0024  .0021 .19 .25          
+* IPROC 5   100.   7.4       3.6  .077 .33  1.    .18E-2 .01  .042 .22          
+* IPROC 6   21.0   0.36      0.0  0.0  3.6  1.      1.0   1.  .083 .54     

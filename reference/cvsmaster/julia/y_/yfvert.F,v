@@ -1,0 +1,455 @@
+head	1.4;
+access;
+symbols
+	jul313_3:1.4
+	jul313_2:1.4
+	jul313_1:1.4
+	jul313:1.4
+	jul312_1:1.3
+	jul312:1.3
+	jul311:1.3
+	jul310_1:1.3
+	jul310:1.3
+	jul309_1:1.3
+	jul309:1.3
+	jul308_6:1.3
+	jul308_5:1.3
+	jul308_4:1.3
+	jul308_3:1.3
+	jul308_2:1.3
+	jul308_1:1.3
+	jul308:1.3
+	jul307_4:1.3
+	jul307_3:1.3
+	jul307_2:1.3
+	jul307_1:1.3
+	jul307:1.3
+	jul306_3:1.3
+	jul306_2:1.3
+	jul306_1:1.3
+	jul306:1.3
+	jul305_4:1.3
+	jul305_3:1.3
+	jul305_2:1.3
+	jul305_1:1.3
+	jul305:1.3
+	jul304_3:1.3
+	jul304_2:1.3
+	jul304_1:1.3
+	jul304:1.3
+	jul303_7:1.3
+	jul303_6:1.3
+	jul303_5:1.3
+	jul303_4:1.3
+	jul303_3:1.3
+	jul303_2_mc1:1.3
+	jul303_2:1.3
+	jul303_1_mc1:1.3
+	jul303_1:1.3
+	jul303_v:1.3
+	jul303:1.3
+	jul302_6:1.3
+	jul302_5:1.3
+	jul302_4:1.3
+	jul302_3:1.3
+	jul302_2:1.3
+	jul302_1:1.3
+	jul302:1.3
+	jul285_1:1.3
+	jul285:1.3
+	jul284_1:1.3
+	jul284:1.3
+	jul283_1:1.3
+	jul283:1.3
+	jul282_1:1.3
+	jul282:1.3
+	jul281_3:1.3
+	jul281_2:1.3
+	jul281_1:1.3
+	jul281:1.3
+	jul280_1:1.3
+	jul280:1.3
+	jul279:1.2
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.4
+date	2000.10.30.08.40.13;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.03.12.15.49.23;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.11.29.17.22.16;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.20.41;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.20.42;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@bug fix to yfvert
+@
+text
+@      SUBROUTINE YFVERT(NT,ITLIS,ERRD,ERRZ,IER)
+C----------------------------------------------------------
+C!   -Perform vertex fit using specified set of tracks
+C!    Author   : M. Mermikides,  Sept., 1987
+C!    Modified :M.A.Ciocci 16/4/89 from 216 julia version
+C!    Modified :- E. Lancon             14-FEB-1992
+C!          To make it work with FRFT,FRTL
+C!    Modified :- E. Lancon              1-OCT-1992
+C!          return if diagonal ERMXV are <0
+C!    Modified :- M. Cattaneo           30-OCT-2000
+C!          Return if UXSFIT fails
+C!
+C!    INPUT:
+C!             NT         I/   No of tracks to be used in vertex fit
+C!             ITLIS(NT)  I/   Row indices in TGFT of tracks to be used
+C!             ERRD(NT)   F/   Error on d0 for each track
+C!             ERRZ(NT)   F/   Error on Z0 for each track
+C!
+C!    Description
+C!    ===========
+C!        For the time being we use a 3-D vertex fitter derived
+C!    from D. Saxon (see my note) to find the position and
+C!    associated error matrix of the point closest to all tracks
+C!    in space.   The results of the vertex fit are stored in
+C!    the bank YVXL. The tracks are refitted to include the vertex
+C!    point and the updated parameters are stored in bank YTRL.
+C!    Please note that this strategy is provisional, and will be
+C!    eventually replaced by a something better.
+#ifndef DOC
+#include "bcs.h"
+#include "tpnamc.h"
+#include "yynamc.h"
+#include "ytrljj.h"
+#include "yvxljj.h"
+#include "frftjj.h"
+#include "frtljj.h"
+#include "tpcojj.h"
+#include "tparac.h"
+#include "tpgpar.h"
+#include "tpccon.h"
+      LOGICAL FIRST
+C
+      DIMENSION ITLIS(NT),ERRD(NT),ERRZ(NT)
+C
+C Working arrays for vertex fitter
+      DIMENSION TPAR(6,40),XYZV(3),ERMXV(6)
+C Working arrays for track fitter
+      DIMENSION XYZT(3,35),ERXY(35),ERZ(35),PARF(6),ERMXT(21)
+C
+      PARAMETER (NWVXL = 14, NDVXL= 5*NWVXL+2, NXVXL= 3*NWVXL+2)
+      PARAMETER (NWTRL = 13, NDTRL=25*NWTRL+2, NXTRL=10*NWTRL+2)
+C
+C Parameters for vertex fitter   ***** THESE SHOULD GO ON DATA BASE
+      DATA NPAR/3/,RSCAT/30./,XCON/0.03/
+C Cut on chisq/deg of freedom for accepting vertex fit
+      DATA CHCUT/10./
+      DATA FIRST / .TRUE. /
+C
+#include "bmacro.h"
+C
+      IF ( FIRST ) THEN
+         FIRST = .FALSE.
+         NAYVXL = NAMIND('YVXL')
+         NAYTRL = NAMIND('YTRL')
+         NAFRFT = NAMIND('FRFT')
+         NAFRTL = NAMIND('FRTL')
+         NAFTCL = NAMIND('FTCL')
+         NATPCO = NAMIND('TPCO')
+      ELSE
+      ENDIF
+      IER = 0
+      KYVXL = IW(NAYVXL)
+      KYTRL = IW(NAYTRL)
+C
+C  Book on first entry to this event the banks YVXL and YTRL for
+C  storing results of vertex fit.
+C
+      IF (KYVXL.EQ.0) THEN
+         IW(1) = 1
+         CALL AUBOS('YVXL',0,NDVXL,KYVXL,IGARB)
+         CALL BLIST(IW,'E+','YVXL')
+         IF (IGARB.EQ.2) GO TO 810
+         IW(KYVXL + LMHCOL) = NWVXL
+         IW(KYVXL + LMHROW) = 0
+      ENDIF
+C
+      IF (KYTRL.EQ.0) THEN
+         IW(1) = 1
+         CALL AUBOS('YTRL',0,NDTRL,KYTRL,IGARB)
+         CALL BLIST(IW,'E+','YTRL')
+         IF (IGARB.EQ.2) GO TO 820
+         IW(KYTRL + LMHCOL) = NWTRL
+         IW(KYTRL + LMHROW) = 0
+         IF (IGARB.NE.0) KYVXL = IW(NAYVXL)
+      ENDIF
+C
+C  Do vertex fit
+C
+      KFRFT = IW(NAFRFT)
+C
+      DO 80 I= 1,NT
+         IT = ITLIS(I)
+C M.A.Ciocci modified in accord with the new convenction
+C         TPAR(1,I) = 1./RW(KROW(KTGFT,IT) + JTGFIR)
+         TPAR(1,I) = -1./RW(KROW(KFRFT,IT) + JFRFIR)
+C M.A.Ciocci modified in accord with the new convenction
+C         TPAR(2,I) = RW(KROW(KFRFT,IT) + JFRFD0)
+C the following line is fixed as suggested by A.Finch
+         TPAR(2,I) = RW(KROW(KFRFT,IT) + JFRFD0)*SIGN(1.,-TPAR(1,I))
+         TPAR(3,I) = RW(KROW(KFRFT,IT) + JFRFP0)
+         TPAR(4,I) = RW(KROW(KFRFT,IT) + JFRFZ0)
+         TPAR(5,I) = RW(KROW(KFRFT,IT) + JFRFTL)
+         TPAR(6,I) = 0.
+   80 CONTINUE
+C
+      CALL UVPFIT(NT,TPAR,ERRD,ERRZ,NPAR,  NIT,NDF,CHISQ,XYZV,ERMXV)
+C
+      CHPD = CHISQ/NDF
+C
+      IF (CHPD.GT.CHCUT.OR.NIT.LT.0) THEN
+         IER= 3
+         GO TO 999
+      ENDIF
+      IF ( ERMXV(1).LT.0. .OR. ERMXV(3).LT.0. .OR. ERMXV(6).LT.0. ) THEN
+        IER = 3
+        GOTO 999
+      ENDIF
+C
+C  Save good fit in YVXL bank
+C
+      IF(NWVXL*(IW(KYVXL+LMHROW)+1)+LMHLEN.GT.IW(KYVXL)) THEN
+         NDATA = IW(KYVXL) + NXVXL
+         IW(1) = 1
+         CALL AUBOS('YVXL',0,NDATA,KYVXL,IGARB)
+         IF (IGARB.EQ.2) GO TO 810
+         IF (IGARB.NE.0) THEN
+            KYTRL=IW(NAYTRL)
+         ENDIF
+      ENDIF
+      KVX = KNEXT(KYVXL)
+C
+      IW(KVX + JYVXVT) = 0
+      RW(KVX + JYVXXP) = XYZV(1)
+      RW(KVX + JYVXYP) = XYZV(2)
+      RW(KVX + JYVXZP) = XYZV(3)
+      DO 8 I=1,6
+         RW(KVX + JYVXEM + I -1) = ERMXV(I)
+    8 CONTINUE
+      RW(KVX + JYVXCH) = CHISQ
+      IW(KVX + JYVXDF) = NDF
+      IW(KVX + JYVXOF) = IW(KYTRL+LMHROW)
+      IW(KVX + JYVXNT) = NT
+      IW(KYVXL+LMHROW) = IW(KYVXL+LMHROW) + 1
+C
+C  If vertex fit was successful, refit tracks incorporating the vertex
+C  point just found in each track.
+C
+      IF (IER.NE.0) GO TO 999
+C
+      XYZT(1,1) = XYZV(1)
+      XYZT(2,1) = XYZV(2)
+      XYZT(3,1) = XYZV(3)
+      ERXY(1) = SQRT(1./ERMXV(1)+1./ERMXV(3))
+      ERZ(1) = SQRT(1./ERMXV(6))
+C
+C Extract hits from TPCO bank for fitter
+C
+      KFRTL = IW(NAFRTL)
+      KFTCL = IW(NAFTCL)
+      KTPCO = IW(NATPCO)
+C
+      DO 200 I=1,NT
+         IT = ITLIS(I)
+         NHIT = IW(KROW(KFRTL,IT) + JFRTNT)
+         IOFF=KFTCL+LMHLEN+ITABL(KFRTL,I,JFRTIT)
+         DO 210 IH = 1,NHIT
+           IC=IW(IOFF+IH)
+            R = RW(KROW(KTPCO,IC) + JTPCRV)
+            PHI = RW(KROW(KTPCO,IC) + JTPCPH)
+            XYZT(1,IH+1) = R*COS(PHI)
+            XYZT(2,IH+1) = R*SIN(PHI)
+            XYZT(3,IH+1) = RW(KROW(KTPCO,IC) + JTPCZV)
+            ERXY(IH+1) = SQRT(RW(KROW(KTPCO,IC) + JTPCSR))
+            ERZ(IH+1)  = SQRT(RW(KROW(KTPCO,IC) + JTPCSZ))
+  210    CONTINUE
+         NXYZ = NHIT + 1
+C
+         CALL UXSFIT(TPAR(1,I),NXYZ,XYZT,ERXY,ERZ,RSCAT,XCON,BFIELD,
+     &            NIT,CHISQ,NPARF,PARF,ERMXT)
+CMC Protect against failed fit
+         IF( NIT .LT. 0 ) THEN
+           IER = 3
+           GOTO 999
+         ENDIF
+CMC
+         NDF = 2*NXYZ - NPARF
+C
+C  Save good fit in YTRL bank
+C
+         IF(NWTRL*(IW(KYTRL+LMHROW)+1)+LMHLEN.GT.IW(KYTRL)) THEN
+            NDATA = IW(KYTRL) + NXTRL
+            IW(1) = 1
+            CALL AUBOS('YTRL',0,NDATA,KYTRL,IGARB)
+            IF (IGARB.EQ.2) GO TO 820
+            IF (IGARB.NE.0) THEN
+               KYVXL=IW(NAYVXL)
+               KFRTL = IW(NAFRTL)
+               KFTCL = IW(NAFTCL)
+               KTPCO = IW(NATPCO)
+            ENDIF
+         ENDIF
+         KTR = KNEXT(KYTRL)
+C M.A.Ciocci modified in accord with the new convenction
+C         RW(KTR + JYTRIR) = 1./PARF(1)
+         RW(KTR + JYTRIR) = -1./PARF(1)
+         RW(KTR + JYTRTL) = PARF(5)
+         RW(KTR + JYTRP0) = PARF(3)
+C M.A.Ciocci modified in accord with the new convenction
+C         RW(KTR + JYTRD0) = PARF(2)
+         RW(KTR + JYTRD0) = PARF(2)*SIGN(1.,-PARF(1))
+         RW(KTR + JYTRZ0) = PARF(4)
+C M.A.Ciocci modified in accord with the new convenction
+C  THE INVERSE OF COOVARIANCE MATRIX IS RELIED
+C  (SEE ALEPH NOTE) TO -Q/RHO,LAMBDA,PHI
+         RW(KTR + JYTREM) = ERMXT(1)
+         RW(KTR + JYTREM + 1) = ERMXT(11)
+         RW(KTR + JYTREM + 2) = ERMXT(15)
+         RW(KTR + JYTREM + 3) = ERMXT(4)
+         RW(KTR + JYTREM + 4) = ERMXT(13)
+         RW(KTR + JYTREM + 5) = ERMXT(6)
+         IW(KTR + JYTRVN) = IW(KYVXL+LMHROW)
+         IW(KTR + JYTRTN) = IT
+         IW(KYTRL+LMHROW) = IW(KYTRL+LMHROW) + 1
+  200 CONTINUE
+      GO TO 999
+C
+  810 IER = 2
+      CALL REPORT('YFVERT','Error booking/extending bank YVXL',0)
+      GO TO 999
+  820 IER = 2
+      CALL REPORT('YFVERT','Error booking/extending bank YTRL',0)
+  999 RETURN
+      END
+#endif
+@
+
+
+1.3
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+ 	gambnk.F gapeco.F gasteer.F
+ 	hcalib.F hcalrd.F hcatow.F hcbhis.F hcfclu.F hchist.F hclcra.F
+ 	hcltst.F hclufi.F hcos.F hcsimm.F hdgdeb.F hdgfil.F hdgpot.F
+ 	hdgsum.F hdprec.F hdspre.F hflnoi.F hinijo.F hiniru.F hmener.F
+ 	hmfind.F hmroad.F hnoise.F hnoisy.F hpatco.F hphnoi.F hplink.F
+ 	hprana.F hpranp.F hprdig.F hpreda.F hprpot.F hprsum.F hprunc.F
+ 	hrcomp.F hrcpat.F hrdcal.F hroad.F hslink.F hslowc.F hspare.F
+ 	hsptre.F hstofi.F htrack.F htubfi.F htwcr.F
+ 	iasign.F iattma.F ibnkin.F icaswt.F icftoi.F iclimb.F icrcco.F
+ 	ideadw.F idigpr.F ienang.F ifind1.F ifind2.F ifitp.F iftrak.F
+ 	igetti.F igettp.F igicha.F iheler.F iinijo.F iiniru.F iintrk.F
+ 	imatch.F inigap.F insect.F intrak.F ipakdi.F ipdsti.F iphcor.F
+ 	ipreda.F iprsum.F ipstat.F irefin.F ireopd.F isave.F ishuff.F
+ 	ishufl.F islowc.F isrch.F itbook.F itccut.F itcopr.F itcrec.F
+ 	itcrep.F itctpc.F itctrk.F itcxng.F iterr.F itextn.F ithist.F
+ 	itidy1.F itidy2.F itlnk1.F itlnk2.F itpcan.F itrak.F itrecf.F
+ 	itreci.F itree.F itrkci.F itrkeq.F itrkzr.F itrmca.F
+@
+text
+@d10 2
+d190 6
+@
+
+
+1.2
+log
+@julia version 279
+@
+text
+@a0 1
+*DK yfvert
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a27 1
+C ----------------------------------------------------------------
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

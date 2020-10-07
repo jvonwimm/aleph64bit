@@ -1,0 +1,120 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.54.26;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.32;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.33;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      FUNCTION MDARD(JW,LUN,NAME,NR)
+
+*     READ BANK (NAME,NR) FROM RECORD IREC IN DATASET LUN
+*     RETURNS INDEX OF BANK
+*     IF BANK EXISTING IN ARRAY JW, ITS INDEX IS RETURNED
+*     IND = 0 MEANS BANK NOT EXISTING ON DATA SET
+*             OR DATA SET NOT OPENED (BDABF)
+*
+      COMMON/BCS/IW(1000)
+#include "dacom.h"
+#include "param.h"
+      INTEGER JW(*)
+      CHARACTER*4 NAME
+*     ...
+      JW1=JW(1)
+      JW(1)=0
+      JW(2)=0
+      MDARD=MLINK(JW,NAME,NR)
+      IF(MDARD.NE.0) GOTO 100
+      IUB=NLINK('+BUF',LUN)
+      IF(IUB.EQ.0) GOTO 100
+      LUNDA=LUN
+      NWRDA=IW(IUB+11)
+      NADA=INTCHA(NAME)
+      NRDA=NR
+      NDDA=0
+      INDA=0
+      IDRR=0
+      IDDR=0
+      CALL DADIR(1)
+      IF(NRD.EQ.0) GOTO 100
+      NDDA=NDDR
+      JW(1)=JW1
+      INDA=MBANK(JW,NAME,NR,NDDA)
+      CALL DADAT(1,JW,*10)
+      MDARD=INDA
+      JW(2)=NDTR
+      GOTO 100
+
+   10 IF(JW(LUP).GT.0) WRITE(JW(LUP),101) LUNDA,NAME,NRDA
+      CALL DARES
+      CALL DADAT(2,JW,*20)
+   20 CALL DADIR(2)
+      CALL DAFWR(0,1)
+      CALL DAFWR(0,0)
+      CALL DADES
+      CALL BABEND('MDARD')
+
+  100 RETURN
+  101 FORMAT('0----------  INCONSISTENCY FOUND ON DIRECT ACCESS DATA',
+     + 'SET',I3,/13X,'DIRECTORY ENTRY FOR BANK ',A4,I9,' SHOWS LENGTH ',
+     + 'DIFFERENT FROM LENGTH OF BANK IN DATA RECORD'/
+     + 13X,'THE INCONSISTENCY WILL BE REMOVED BY DELETING THE BANK,'
+     + ,' AND THE PROGRAM WILL STOP WITH ABEND'/)
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK mdard
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

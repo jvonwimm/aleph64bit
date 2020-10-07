@@ -1,0 +1,121 @@
+      SUBROUTINE ASEVST
+C ---------------------------------------------------------------------
+C - F.Ranjard - 851021
+C! Build the event headers
+C - Add this block to list 'E'.
+C - Called by    ASCEVE                                from this .HLB
+C - Calls        NBANK, BLIST, BKFMT, BPRNT, NAMIND    from BOS77.hlb
+C                ALBOS                                 from this .HLB
+C ----------------------------------------------------
+      SAVE
+      INTEGER LMHLEN, LMHCOL, LMHROW
+      PARAMETER (LMHLEN=2, LMHCOL=1, LMHROW=2)
+C
+      COMMON /BCS/   IW(1000)
+      INTEGER IW
+      REAL RW(1000)
+      EQUIVALENCE (RW(1),IW(1))
+C
+      COMMON /NAMCOM/   NARUNH, NAPART, NAEVEH, NAVERT, NAKINE, NAKRUN
+     &                 ,NAKEVH, NAIMPA, NAASEV, NARUNE, NAKLIN, NARUNR
+     &                 ,NAKVOL, NAVOLU
+      EQUIVALENCE (NAPAR,NAPART)
+C
+      PARAMETER (LFIL=6)
+      COMMON /IOCOM/   LGETIO,LSAVIO,LGRAIO,LRDBIO,LINPIO,LOUTIO
+      DIMENSION LUNIIO(LFIL)
+      EQUIVALENCE (LUNIIO(1),LGETIO)
+      COMMON /IOKAR/   TFILIO(LFIL),TFORIO(LFIL)
+      CHARACTER TFILIO*60, TFORIO*4
+C
+      PARAMETER (LOFFMC = 1000)
+      PARAMETER (LHIS=20, LPRI=20, LTIM=6, LPRO=6, LRND=3)
+      PARAMETER (LBIN=20, LST1=LBIN+3, LST2=3)
+      PARAMETER (LSET=15, LTCUT=5, LKINP=20)
+      PARAMETER (LDET=9,  LGEO=LDET+4, LBGE=LGEO+5)
+      PARAMETER (LCVD=10, LCIT=10, LCTP=10, LCEC=15, LCHC=10, LCMU=10)
+      PARAMETER (LCLC=10, LCSA=10, LCSI=10)
+      COMMON /JOBCOM/   JDATJO,JTIMJO,VERSJO
+     &                 ,NEVTJO,NRNDJO(LRND),FDEBJO,FDISJO
+     &                 ,FBEGJO(LDET),TIMEJO(LTIM),NSTAJO(LST1,LST2)
+     &                 ,IDB1JO,IDB2JO,IDB3JO,IDS1JO,IDS2JO
+     &                 ,MBINJO(LST2),MHISJO,FHISJO(LHIS)
+     &                 ,IRNDJO(LRND,LPRO)
+     &                 ,IPRIJO(LPRI),MSETJO,IRUNJO,IEXPJO,AVERJO
+     3                 ,MPROJO,IPROJO(LPRO),MGETJO,MSAVJO,TIMLJO,IDATJO
+     5                 ,TCUTJO(LTCUT),IBREJO,NKINJO,BKINJO(LKINP),IPACJO
+     6                 ,IDETJO(LDET),IGEOJO(LGEO),LVELJO(LGEO)
+     7                 ,ICVDJO(LCVD),ICITJO(LCIT),ICTPJO(LCTP)
+     8                 ,ICECJO(LCEC),ICHCJO(LCHC),ICLCJO(LCLC)
+     9                 ,ICSAJO(LCSA),ICMUJO(LCMU),ICSIJO(LCSI)
+     &                 ,FGALJO,FPARJO,FXXXJO,FWRDJO,FXTKJO,FXSHJO,CUTFJO
+     &                 ,IDAFJO,IDCHJO,TVERJO
+      LOGICAL FDEBJO,FDISJO,FHISJO,FBEGJO,FGALJO,FPARJO,FXXXJO,FWRDJO
+     &       ,FXTKJO,FXSHJO
+      COMMON /JOBKAR/   TITLJO,TSETJO(LSET),TPROJO(LPRO)
+     1                 ,TKINJO,TGEOJO(LBGE),TRUNJO
+      CHARACTER TRUNJO*60
+      CHARACTER*4 TKINJO,TPROJO,TSETJO,TITLJO*40
+      CHARACTER*2 TGEOJO
+C
+      PARAMETER (LERR=20)
+      COMMON /JOBERR/   ITELJO,KERRJO,NERRJO(LERR)
+      COMMON /JOBCAR/   TACTJO
+      CHARACTER*6 TACTJO
+C
+      COMMON /KINCOM/   IPROKI,ECMSKI,IDEVKI,ISTAKI,WEITKI
+     &                 ,NOTRKI,NITRKI,NIVXKI
+C
+      PARAMETER(JACUMN=1,JACUGC=2,JACUEC=3,JACUHC=4,JACUNC=5,JACUMC=6,
+     +          LACUTA=6)
+      PARAMETER(JAFIAR=1,JAFIAZ=2,JAFIMF=3,JAFIBE=4,LAFIDA=4)
+      PARAMETER(JAJOBM=1,JAJORM=2,JAJOGI=3,JAJOSO=4,JAJOSD=5,JAJOGC=6,
+     +          JAJOJD=7,JAJOJT=8,JAJOGV=9,JAJOAV=10,JAJOFT=11,
+     +          JAJOFS=12,JAJOFC=13,JAJODV=14,JAJODD=15,JAJOTV=16,
+     +          JAJOCV=17,JAJOGN=18,LAJOBA=18)
+      PARAMETER(JAKIKT=1,JAKIKP=2,LAKINA=9)
+      PARAMETER(JAPRPF=1,JAPRRG=2,LAPROA=4)
+      PARAMETER(JARURC=1,LARUNA=10)
+      PARAMETER(JASERG=1,LASEVA=3)
+      PARAMETER(JATIRT=1,LATITA=1)
+      EXTERNAL NAMIND, NBANK
+      INTEGER ALEVEH,ALKEVH
+C ----------------------------------------------------------------------
+C
+C - Build the 'EVEH' if not there
+      IF (IW(NAEVEH) .EQ. 0) THEN
+         ISTAT = 1
+         IF (KERRJO.NE.0) ISTAT = LOFFMC + KERRJO
+         JEVEH = ALEVEH (NEVTJO,IEXPJO,IRUNJO,ECMSKI,IPROKI,ISTAT)
+         IF (JEVEH.EQ.0) THEN
+            CALL ALTELL ('ASEVST: not enough space to book EVEH ',1,
+     &                   'NEXT')
+         ENDIF
+      ENDIF
+C
+C - Build  the kine event header KEVH if not there
+      IF (IPROJO(1) .NE. 0) THEN
+         JKEVH = ALKEVH (IRNDJO(1,1),NITRKI,NIVXKI,IPROKI,WEITKI)
+          IF (JKEVH.EQ.0) THEN
+             CALL ALTELL ('ASEVST: not enough space to book KEVH',1,
+     &                    'NEXT')
+          ENDIF
+          CALL BLIST (IW,'E+','KEVH')
+      ENDIF
+C
+C - Build event header 'ASEV'
+C
+      CALL AUBOS ('ASEV',0,LMHLEN+LPRO*LASEVA,JASEV,IGARB)
+      IF (JASEV.EQ.0) THEN
+         CALL ALTELL ('ASEVST: not enough space to book ASEV ',1,
+     &                'NEXT')
+      ENDIF
+      CALL BLIST (IW,'E+','ASEV')
+      IW(JASEV+LMHCOL) = LASEVA
+      IW(JASEV+LMHROW) = LPRO
+      KASEV = JASEV+LMHLEN
+      CALL UCOPY (IRNDJO(1,1),IW(KASEV+JASERG),LASEVA*LPRO)
+C
+ 999  CONTINUE
+      RETURN
+      END

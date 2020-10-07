@@ -1,0 +1,62 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  aleph212:1.1.1.1 ALEPH212:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.02.07.11.40.52;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.02.07.11.40.53;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE UTPRDB(IBKNA)
+C ---------------------------------------------------------------------
+C.
+C! - Print the content of tables on d/a files
+C.
+C. - Author   : A. Putzer  - 89/03/07
+C.
+C.
+C.   Arguments: -  IBKNA (input) Name of the bank wanted (or 'ALL ')
+C.              -                (or 'X   ' for all banks starting
+C.              -                with X)
+C.
+C ---------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "bcs.h"
+C
+      IBSNR = 0
+      IRWNR = 0
+      LDBAS = JUNIDB(0)
+      CALL UTDBPR(IBKNA,IBSNR,IRWNR,LDBAS,IW(6),IFLAG)
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

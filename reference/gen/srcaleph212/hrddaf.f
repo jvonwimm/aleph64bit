@@ -1,0 +1,384 @@
+      SUBROUTINE HRDDAF (LDBAS,IRUN,IFLAG)
+C------------------------------------------------------------------
+CKEY HCALDES HCAL READ DAF BANK /USER
+C - G.Catanesi - 871007            modified by - F.Ranjard - 880202
+C            Modify: L.Silvestris 09/07/90
+C! Get HCAL banks and store the content in the commons
+C
+C - input arguments:
+C           LDBAS  : data base logical unit
+C           IRUN   : run number
+C - output argument:
+C           IFLAG  : return flag  ( = ALGTDB(LDBAS,list,IRUN) )
+C
+C           Called by : HCIRUN
+C           Calls     : ALGTDB,ALTELL,HDEADM from Alephlib
+C                       UCOPY from CERNLIB
+C
+      INTEGER LMHLEN, LMHCOL, LMHROW
+      PARAMETER (LMHLEN=2, LMHCOL=1, LMHROW=2)
+C
+      COMMON /BCS/   IW(1000)
+      INTEGER IW
+      REAL RW(1000)
+      EQUIVALENCE (RW(1),IW(1))
+C
+C!    GEOMETRY COMMONS FOR HADRON CALORIMETER
+      PARAMETER( LPHC=3,LSHC=3,LPECA=1,LPECB=3,LPBAR=2)
+      PARAMETER( LHCNL=23,LHCSP=2,LHCTR=62,LHCRE=3)
+      PARAMETER (LHCNO = 3)
+      PARAMETER( LPHCT = 4)
+      PARAMETER( LPHCBM = 24,LPHCES = 6)
+      COMMON /HCALGE/HCRMIN(LSHC),HCRMAX(LSHC),HCZMIN(LSHC),HCZMAX(LSHC)
+     &              , NHCSUB,NHCTWR,NHCPHC,NHCREF,IHCTID(LHCRE-1)
+     &              , HCTUTH,HCIRTH,HCLSLA,NHCPLA(LPHC),HCTIRF(LPHC)
+     &              , HCSMTH
+      COMMON / HBAR / NHCBMO,NHCBFS,NHCBBS,NHCBLA,HCLTNO(LHCNO)
+     &              , HCWINO(LHCNO),HCDEWI,NHBLA2,NHBLI3,NHBLO3
+     &              , NEITHC(LHCNL),NEITSP(LHCNL,LHCSP)
+     &              , HCSPLT(LHCNL,LHCSP), HFSPBL,HFSRBL,HCPHOF
+C
+      COMMON /HEND/  HCDREC,HCDSTP,HCAPSL,HFSPEC,NHCSEX
+     &           ,NHCEFS,NHCEBS,NHCTRE,NHCINL,NHCOUL
+     &           ,NHCIND,NHCOUD
+C
+       PARAMETER (LHCBL=4,LHCEI=10,LHCEO=20,LHNLA=4)
+      COMMON /HCCONS/ HCTHRF,HCRSIZ,HCZSIZ,NHCBAR,NHCECA
+     &               ,NHCEIT,HCEIWI,HCDOWI,HCTUGA,HCSEPO
+     &               ,HCSABL,HCSAEC,HCTUEN,XLNHCE(LHCBL)
+     &               ,HCTLEI(LHNLA,LHCEI),HCTLEO(LHNLA,LHCEO)
+     &               ,HCTAEI(LHCEI),HCTAEO(LHCEO),HTINBL,HTINEC(2)
+     &               ,HTPIEC,HTPOEC,HBWREC,HBWCEC(2),HBSREC
+     &               ,HBSCEC,HBWRBL,HBSCBL,NHMBDF(2),NHTY4D
+     &               ,NHTY3D,NHTY2D,NHMBFL(2),NHBDOU,NHDLEC
+     &               ,NHDET0,NHDEBS,NHL8EC(LHCNL-1),HCTUSH,XHCSHI(LHCBL)
+
+      PARAMETER (LHCTR1=LHCTR+1)
+      COMMON /HCSEVA/ NTHCFI(LHCRE),HCAPDE(LPHCT),HCFITW(LHCRE)
+     &               ,HCBLSP(LHCNL,LHCSP),NHCTU1(LHCNL),HCTHUL(LHCTR1)
+     &               ,PHCTOR(LHCTR),IHCREG(LHCTR)
+     &               ,HCLARA(LHCNL),HCLAWI(LHCNL)
+     &               ,YBAST1,YBARMX,ZENST1,ZENDMX
+     &               ,XBARR0,XENDC0
+C
+C
+C! global HCAL data base HAC parameters
+      PARAMETER(LHBDN8=23,LHBDT8=46,LHBDSP=46)
+      PARAMETER(LHETLT=4,LHETLI=40,LHETLO=80,LHETAI=10,LHETAO=20)
+      PARAMETER(LHSBXS=3,LHSBRS=3)
+      PARAMETER(LHSCST=4)
+      PARAMETER(LHSEXS=3,LHSERS=3)
+      PARAMETER(LHTIIE=2,LHTIPE=2,LHTUMN=2,LHTUMS=2)
+      PARAMETER(JHBAID=1,JHBAVR=2,JHBASN=4,JHBANS=5,JHBARP=6,JHBARR=9,
+     +          JHBANF=12,JHBANB=13,JHBANL=14,LHBARA=14)
+      PARAMETER(JHBDID=1,JHBDVR=2,JHBDL1=4,JHBDW1=5,JHBDL2=6,JHBDW2=7,
+     +          JHBDL3=8,JHBDW3=9,JHBDDW=10,JHBDT2=11,JHBDT3=12,
+     +          JHBDNB=13,JHBDN8=14,JHBDT8=37,JHBDSP=83,JHBDHB=129,
+     +          LHBDEA=129)
+      PARAMETER(JHBGID=1,JHBGVR=2,JHBGYI=4,JHBGYX=5,JHBGZX=6,JHBGIT=7,
+     +          JHBGRA=8,JHBGPO=9,JHBGHB=10,LHBGEA=10)
+      PARAMETER(JHCAID=1,JHCAVR=2,JHCACN=4,JHCANS=5,JHCANT=6,JHCANP=7,
+     +          JHCANR=8,JHCAIT=9,JHCAIH=10,JHCAGA=11,JHCATF=12,
+     +          JHCATL=13,LHCALA=13)
+      PARAMETER(JHCCID=1,JHCCVR=2,JHCCTR=4,JHCCRR=5,JHCCZR=6,JHCCNB=7,
+     +          JHCCNE=8,LHCCOA=8)
+      PARAMETER(JHCTID=1,JHCTVR=2,JHCTEP=4,JHCTBP=5,JHCTET=6,JHCTBT=7,
+     +          JHCTTM=8,LHCTGA=193)
+      PARAMETER(JHEDID=1,JHEDVR=2,JHEDWT=4,JHEDST=5,JHEDDS=6,JHEDFP=7,
+     +          JHEDHE=8,LHEDEA=8)
+      PARAMETER(JHEGID=1,JHEGVR=2,JHEGZI=4,JHEGZX=6,JHEGRI=8,JHEGRX=10,
+     +          JHEGHE=12,LHEGEA=12)
+      PARAMETER(JHEMID=1,JHEMVR=2,JHEMMT=4,JHEMXM=5,JHEMYM=13,JHEMNI=21,
+     +          JHEMNO=22,JHEMHS=23,LHEMTA=23)
+      PARAMETER(JHENID=1,JHENVR=2,JHENSN=4,JHENNS=5,JHENRP=6,JHENRR=9,
+     +          JHENSG=12,JHENNF=13,JHENNB=14,JHENNW=15,JHENNL=16,
+     +          LHENDA=17)
+      PARAMETER(JHEPID=1,JHEPVR=2,JHEPHN=4,JHEPMT=5,JHEPHE=6,JHEPHS=7,
+     +          LHEPMA=7)
+      PARAMETER(JHETID=1,JHETVR=2,JHETNT=4,JHETEW=5,JHETDW=6,JHETTG=7,
+     +          JHETE2=8,JHETIZ=9,JHETLT=10,JHETLI=14,JHETLO=54,
+     +          JHETAI=134,JHETAO=144,LHETCA=163)
+      PARAMETER(JHRDEA=1,LHRDTA=1)
+      PARAMETER(JHSBID=1,JHSBVR=2,JHSBEN=4,JHSBSN=5,JHSBMT=6,JHSBXS=7,
+     +          JHSBRS=10,JHSBPM=13,JHSBHB=14,LHSBAA=14)
+      PARAMETER(JHSCID=1,JHSCVR=2,JHSCHC=4,JHSCST=5,JHSCTS=9,LHSCOA=9)
+      PARAMETER(JHSEID=1,JHSEVR=2,JHSEFN=4,JHSESN=5,JHSESL=6,JHSEMT=7,
+     +          JHSEXS=8,JHSERS=11,JHSEPM=14,JHSEHE=15,LHSECA=15)
+      PARAMETER(JHTIIB=1,JHTIIE=2,JHTICI=4,JHTICO=5,JHTIPC=6,JHTIPE=7,
+     +          JHTIPR=9,JHTIPB=10,JHTIPL=11,JHTIPO=12,LHTIDA=12)
+      PARAMETER(JHTUMN=1,JHTUN4=3,JHTUN3=4,JHTUN2=5,JHTUMS=6,JHTUN8=8,
+     +          JHTULN=9,JHTUN0=10,JHTUNF=11,LHTUEA=11)
+      PARAMETER(JHTXEA=1,LHTXDA=1)
+      PARAMETER(JHTUTE=1,JHTUTS=2,LHTUSA=5)
+      CHARACTER*48 LISTG
+C
+      INTEGER ALGTDB
+      EXTERNAL ALGTDB
+C
+      DATA LISTG/'HCCOHETCHCALHBGEHEGEHBARHENDHBDEHEDEHEMTHTXD    '/
+C
+C!    set of intrinsic functions to handle BOS banks
+C - # of words/row in bank with index ID
+      LCOLS(ID) = IW(ID+1)
+C - # of rows in bank with index ID
+      LROWS(ID) = IW(ID+2)
+C - index of next row in the bank with index ID
+      KNEXT(ID) = ID + LMHLEN + IW(ID+1)*IW(ID+2)
+C - index of row # NRBOS in the bank with index ID
+      KROW(ID,NRBOS) = ID + LMHLEN + IW(ID+1)*(NRBOS-1)
+C - # of free words in the bank with index ID
+      LFRWRD(ID) = ID + IW(ID) - KNEXT(ID)
+C - # of free rows in the bank with index ID
+      LFRROW(ID) = LFRWRD(ID) / LCOLS(ID)
+C - Lth integer element of the NRBOSth row of the bank with index ID
+      ITABL(ID,NRBOS,L) = IW(ID+LMHLEN+(NRBOS-1)*IW(ID+1)+L)
+C - Lth real element of the NRBOSth row of the bank with index ID
+      RTABL(ID,NRBOS,L) = RW(ID+LMHLEN+(NRBOS-1)*IW(ID+1)+L)
+C
+C ----------------------------------------------------------------------
+C
+C  If the physical constants are required loads the banks
+C    from the D.A file ADBSCOMB.DAF (unit 4) to the
+C            HCCONS common
+C
+      LL = LNBLNK(LISTG)
+      IF (IRUN.GT.2000) LISTG = LISTG(1:LL)//'HRDT'
+      IFLAG=ALGTDB(LDBAS,LISTG,IRUN)
+C
+C
+C      Get index for constant banks
+C
+      JHCCO = IW(NAMIND( 'HCCO'))
+C
+      IF(JHCCO.NE.0)THEN
+C
+C  Store the content of the HCCO bank
+C
+         HCTHRF = RTABL(JHCCO,1,JHCCTR)
+         HCRSIZ = RTABL(JHCCO,1,JHCCRR)
+         HCZSIZ = RTABL(JHCCO,1,JHCCZR)
+         NHCBAR = ITABL(JHCCO,1,JHCCNB)
+         NHCECA = ITABL(JHCCO,1,JHCCNE)
+C
+      ENDIF
+C
+C Store the content of the HETC bank
+C
+      JHETC = IW(NAMIND( 'HETC'))
+      IF(JHETC.NE.0)THEN
+C
+         NHCEIT = ITABL(JHETC,1,JHETNT)
+         HCEIWI = RTABL(JHETC,1,JHETEW)
+         HCDOWI = RTABL(JHETC,1,JHETDW)
+         HCTUGA = RTABL(JHETC,1,JHETTG)
+         HCSEPO = RTABL(JHETC,1,JHETE2)
+         HCTUEN = RTABL(JHETC,1,JHETIZ)
+         HCSABL = HCEIWI/NHCEIT
+         HCSAEC = HCDOWI/(2*NHCEIT)
+         CALL UCOPY(RW(JHETC+LMHLEN+JHETLT),XLNHCE(1),LHETLT)
+C
+         CALL UCOPY(RW(JHETC+LMHLEN+JHETLI),HCTLEI(1,1),LHETLI)
+         CALL UCOPY(RW(JHETC+LMHLEN+JHETLO),HCTLEO(1,1),LHETLO)
+C
+         CALL UCOPY(RW(JHETC+LMHLEN+JHETAI),HCTAEI(1),LHETAI)
+         CALL UCOPY(RW(JHETC+LMHLEN+JHETAO),HCTAEO(1),LHETAO)
+C
+C
+      ENDIF
+C
+      IRET = ALGTDB (LDBAS,'HTUS',IRUN)
+      JHTUS = IW(NAMIND('HTUS'))
+      IF(JHTUS.NE.0) THEN
+         HCTUSH = RTABL(JHTUS,1,JHTUTE)
+         CALL UCOPY(RW(JHTUS+LMHLEN+JHTUTS),XHCSHI(1),LHCBL)
+      ENDIF
+C
+      JHCAL = IW(NAMIND( 'HCAL'))
+      JHBGE = IW(NAMIND( 'HBGE'))
+      JHEGE = IW(NAMIND( 'HEGE'))
+      JHBAR = IW(NAMIND( 'HBAR'))
+      JHEND = IW(NAMIND( 'HEND'))
+      JHBDE = IW(NAMIND( 'HBDE'))
+      JHEDE = IW(NAMIND( 'HEDE'))
+      JHEMT = IW(NAMIND( 'HEMT'))
+C
+      IF(JHCAL.NE.0)THEN
+C
+C  Store the content of the HCAL bank in the HCALGE common
+C
+         NHCSUB = ITABL(JHCAL,1,JHCANS)
+         NHCTWR = ITABL(JHCAL,1,JHCANT)
+         NHCPHC = ITABL(JHCAL,1,JHCANP)
+         NHCREF = ITABL(JHCAL,1,JHCANR)
+         IHCTID(1) = ITABL(JHCAL,1,JHCAIT)
+         IHCTID(2) = ITABL(JHCAL,1,JHCAIH)
+         HCTUTH = RTABL(JHCAL,1,JHCAGA)
+         HCIRTH = RTABL(JHCAL,1,JHCATF)
+         HCLSLA = RTABL(JHCAL,1,JHCATL)
+C
+C  sampling thickness (iron + tubes layer)
+C
+         HCSMTH = HCTUTH + HCIRTH
+      ENDIF
+C
+C Store the content of HBGE bank (Barrel Geometry) in HCALGE
+C      and HBAR
+C
+      IF(JHBGE.NE.0)THEN
+C
+         HCRMIN(1) = RTABL(JHBGE,1,JHBGYI)
+         HCRMAX(1) = RTABL(JHBGE,1,JHBGYX)
+         HCZMIN(1) = 0.
+         HCZMAX(1) = RTABL(JHBGE,1,JHBGZX)
+         HFSPBL = RTABL(JHBGE,1,JHBGIT)
+         HFSRBL = RTABL(JHBGE,1,JHBGRA)
+         HCPHOF = RTABL(JHBGE,1,JHBGPO)
+C
+      ENDIF
+
+C Store the content of HEGE bank (End-Cap Geometry) in HCALGE
+C
+      IF(JHEGE.NE.0)THEN
+C
+         CALL UCOPY(RW(JHEGE+LMHLEN+JHEGZI),HCZMIN(2),2)
+         CALL UCOPY(RW(JHEGE+LMHLEN+JHEGZX),HCZMAX(2),2)
+         CALL UCOPY(RW(JHEGE+LMHLEN+JHEGRI),HCRMIN(2),2)
+         CALL UCOPY(RW(JHEGE+LMHLEN+JHEGRX),HCRMAX(2),2)
+C
+      ENDIF
+C
+C Store the content of HBAR bank (Barrel Geometry) in HBAR common
+C
+      IF(JHBAR.NE.0)THEN
+C
+         NHCBMO = ITABL(JHBAR,1,JHBANS)
+         NHCBFS = ITABL(JHBAR,1,JHBANF)
+         NHCBBS = ITABL(JHBAR,1,JHBANB)
+         NHCBLA = ITABL(JHBAR,1,JHBANL)
+C
+      ENDIF
+C
+C Store the content of HBDE bank (Barrel Geometry) in HBAR common
+C
+      IF(JHBDE.NE.0)THEN
+C
+         KHBDE = JHBDE + LMHLEN + JHBDL1 - 1
+         DO 10 J=1,3
+            HCLTNO(J) = RW(KHBDE+J*2-1)
+            HCWINO(J) = RW(KHBDE+J*2)
+   10    CONTINUE
+C
+         HCDEWI = RTABL(JHBDE,1,JHBDDW)
+         NHBLA2 = ITABL(JHBDE,1,JHBDT2)
+         NHBLI3 = ITABL(JHBDE,1,JHBDT3)
+         NHBLO3 = ITABL(JHBDE,1,JHBDNB)
+         CALL UCOPY(IW(JHBDE+LMHLEN+JHBDN8),NEITHC(1),LHBDN8)
+         CALL UCOPY(IW(JHBDE+LMHLEN+JHBDT8),NEITSP(1,1),LHBDT8)
+         CALL UCOPY(RW(JHBDE+LMHLEN+JHBDSP),HCSPLT(1,1),LHBDSP)
+C
+      ENDIF
+C
+      IF(JHEDE.NE.0)THEN
+C
+C  Store the content of the HEDE bank in the HEND common (End-Cap)
+C
+         HCDREC = RTABL(JHEDE,1,JHEDWT)
+         HCAPSL = RTABL(JHEDE,1,JHEDST)
+         HCDSTP = RTABL(JHEDE,1,JHEDDS)
+C
+C  -  these 3 quantities are modified to take into account the air
+C     between tubes in the following way
+C     IF TOL is the difference between the distance between spacers
+C        HCDSTP and the space occupied by 5 double-eightfolders
+C        5*HCDOWI
+C     THEN enlarge the iron edge HCDREC by 0.5*TOL and the spacer
+C        width HCAPSL by TOL and reduce the distance between spacers
+C        HCDSTP by TOL
+C
+         TOL = HCDSTP - 5.*HCDOWI
+         HCDREC = HCDREC + 0.5*TOL
+         HCAPSL = HCAPSL + TOL
+         HCDSTP = HCDSTP - TOL
+C
+      ENDIF
+C
+      IF(JHEND.NE.0)THEN
+C
+C  Store the content of the HEND bank in the HEND common
+C
+         NHCSEX = ITABL(JHEND,1,JHENNS)
+         NHCEFS = ITABL(JHEND,1,JHENNF)
+         NHCEBS = ITABL(JHEND,1,JHENNB)
+         NHCTRE = ITABL(JHEND,1,JHENNW)
+         NHCINL = ITABL(JHEND,1,JHENNL)
+         NHCOUL = ITABL(JHEND,1,JHENNL+1)
+C
+      ENDIF
+C
+      IF(JHEMT.NE.0)THEN
+C
+C  Store the content of the HEMT bank in the HEND common
+C
+         NHCIND = ITABL(JHEMT,1,JHEMNI)
+         NHCOUD = ITABL(JHEMT,1,JHEMNO)
+C
+      ENDIF
+C
+      HCTIRF(1) = HCIRTH
+      HCTIRF(2) = HFSPBL
+      HCTIRF(3) = HCIRTH
+C
+      NHCPLA(1) = NHCINL + NHCOUL
+      NHCPLA(2) = NHCBLA
+      NHCPLA(3) = NHCPLA(1)
+C
+C Create and store look-up table to take in account dead tubes
+C
+C
+C Create and store look-up table to take in account dead tubes
+C
+      JHTXD = IW(NAMIND( 'HTXD'))
+      JHRDT = IW(NAMIND( 'HRDT'))
+      IF(JHTXD.NE.0.OR.JHRDT.NE.0)CALL HDEADM
+C
+C get STATIC banks HTID and HTUE
+C
+      JHTID = MDARD (IW,LDBAS,'HTID',0)
+      IF(JHTID.NE.0)THEN
+         HTINBL  = RTABL(JHTID,1,JHTIIB)
+         CALL UCOPY(RW(JHTID+LMHLEN+JHTIIE),HTINEC(1),LHTIIE)
+         HTPIEC  = RTABL(JHTID,1,JHTICI)
+         HTPOEC  = RTABL(JHTID,1,JHTICO)
+         HBWREC  = RTABL(JHTID,1,JHTIPC)
+         CALL UCOPY(RW(JHTID+LMHLEN+JHTIPE),HBWCEC(1),LHTIPE)
+         HBSREC  = RTABL(JHTID,1,JHTIPR)
+         HBSCEC  = RTABL(JHTID,1,JHTIPB)
+         HBWRBL  = RTABL(JHTID,1,JHTIPL)
+         HBSCBL  = RTABL(JHTID,1,JHTIPO)
+       ELSE
+         IFLAG = 0
+         RETURN
+       ENDIF
+C
+       JHTUE = MDARD (IW,LDBAS,'HTUE',0)
+       IF(JHTUE.NE.0)THEN
+         CALL UCOPY(IW(JHTUE+LMHLEN+JHTUMN),NHMBDF(1),LHTUMN)
+         NHTY4D =  ITABL(JHTUE,1,JHTUN4)
+         NHTY3D =  ITABL(JHTUE,1,JHTUN3)
+         NHTY2D =  ITABL(JHTUE,1,JHTUN2)
+         CALL UCOPY(IW(JHTUE+LMHLEN+JHTUMS),NHMBFL(1),LHTUMS)
+         NHBDOU  = ITABL(JHTUE,1,JHTUN8)
+         NHDLEC  = ITABL(JHTUE,1,JHTULN)
+         NHDET0  = ITABL(JHTUE,1,JHTUN0)
+         NHDEBS  = ITABL(JHTUE,1,JHTUNF)
+      ELSE
+         IFLAG = 0
+         RETURN
+      ENDIF
+C
+C Secondary variables computation
+C
+       CALL HCSECO
+C
+      RETURN
+      END

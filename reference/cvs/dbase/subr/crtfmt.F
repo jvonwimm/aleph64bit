@@ -1,0 +1,131 @@
+      SUBROUTINE CRTFMT (LUFMT,TCOL,TTAB)
+C----------------------------------------------------------------------
+C! Extract the bank format from TCOL,TTAB
+C!
+C!   Author   :-    F.RANJARD                   22-JAN-1990
+C!
+C!   Inputs:
+C!        - LUFMT/ INTE   : logical unit number of the FMT file
+C!        - TCOL / CHA4   : column description bank name
+C!        - TTAB / CHA4   : table list bank name
+C!
+C!   Outputs:
+C!        -
+C!
+C!   Libraries required:
+C!
+C!   Description
+C!   ===========
+C! extract bank formats and write them on an ASCII file
+C! call BKFMT for each of them
+C! if a bank has no miniheader it must be given on a NOTA data card
+C?
+C!======================================================================
+#ifndef DOC
+      CHARACTER*(*) TCOL,TTAB
+      CHARACTER*4 NAME,CHAINT,BNAME
+      CHARACTER BFMT*120,AFI*512
+      PARAMETER (LBFMT=120)
+      CHARACTER*4 IPROV,IWFMT,FMT
+      CHARACTER BLANK,CHS,CHOLD
+      INTEGER NSAM(512)
+#include "bcs.h"
+#include "tcoljj.h"
+#include "ttabjj.h"
+#include "tdocjj.h"
+      DATA BLANK /' '/
+#include "bmacro.h"
+C
+C ------------------------------------------------------------------
+C
+      JTCOL = IW(NAMIND(TCOL))
+      JTTAB = IW(NAMIND(TTAB))
+      JNOTA = IW(NAMIND('NOTA'))
+      IF (JTCOL.EQ.0 .OR. JTTAB.EQ.0) RETURN
+C
+      NRTAB = LROWS(JTTAB)
+      NRCOL = LROWS(JTCOL)
+C
+C - loop over all banks
+C
+      DO 10 IRTAB =1,NRTAB
+C     get name of bank
+         INAME = ITABL(JTTAB,IRTAB,JTTANA)
+         BNAME = CHAINT(INAME)
+         ICOL1 = ITABL(JTTAB,IRTAB,JTTARC)
+C        get number of columns for this name
+         IC = 0
+         AFI = BLANK
+         DO 110 IRCOL = ICOL1,NRCOL
+            IF (INAME.NE.ITABL(JTCOL,IRCOL,JTCONA)) GOTO 111
+            FMT(1:4)=CHAINT(ITABL(JTCOL,IRCOL,JTCOFO))
+C        find number of columns
+            IC = IC+1
+            NSAM(IC) = ITABL(JTCOL,IRCOL,JTCONI)
+            IF (FMT(1:1).EQ.'F'.OR.FMT(1:1).EQ.'G'.
+     &           OR.FMT(1:1).EQ.'E') FMT(1:1) = 'F'
+            AFI(IC:IC) = FMT(1:1)
+ 110     CONTINUE
+ 111     CONTINUE
+C
+C     if pure INTEGER format set it to 'I'
+         IF (INDEX(AFI,'F').EQ.0 .AND. INDEX(AFI,'A').EQ.0) THEN
+            BFMT = 'I'
+            GOTO 125
+         ENDIF
+C
+C     reduce the format
+         NSAME = NSAM(1)
+         NSAM(IC+1) = 0
+         BFMT  = '2I,('
+         IF (BNAME.EQ.'KINE' .OR. BNAME.EQ.'VERT') BFMT = '3I,('
+         N = 4
+         DO 120 I=1,IC+1
+           IF (NSAME.GT.9999) GOTO 130
+           IF (AFI(I+1:I+1).NE.AFI(I:I)) THEN
+              IF (NSAME.EQ.1) THEN
+                 IF (N+2.GT.LBFMT) GOTO 130
+                 BFMT = BFMT(1:N)//AFI(I:I)//','
+                 N = N+2
+              ELSE
+                 NN=1
+                 IF(NSAME.GT.9) NN=2
+                 IF(NSAME.GT.99) NN=3
+                 IF(NSAME.GT.999) NN=4
+                 WRITE(CHS,'(I1)') NN
+                 IWFMT = '(I'//CHS//')'
+                 WRITE(IPROV,IWFMT) NSAME
+                 IF (N+NN+2 .GT. LBFMT) GOTO 130
+                 BFMT = BFMT(1:N)//IPROV(:NN)//AFI(I:I)//','
+                 N = N + NN+2
+              ENDIF
+              NSAME = NSAM(I+1)
+           ELSE
+              NSAME = NSAME + NSAM(I+1)
+           ENDIF
+ 120     CONTINUE
+         BFMT(N:N) = ')'
+         IF (JNOTA .NE.0) THEN
+            DO M=1,IW(JNOTA)
+               IF (INAME.EQ.IW(JNOTA+M)) THEN
+                  BFMT = BFMT(5:N-1)
+                  N = N-5
+                  GOTO 125
+               ENDIF
+            ENDDO
+         ENDIF
+C
+C     write BFMT onto LUFMT
+ 125     IF (LUFMT.GT.0) WRITE (LUFMT,'(A4,1X,A)')
+     &        BNAME,BFMT(1:LNBLNK(BFMT))
+         CALL BKFMT (BNAME,BFMT(1:LNBLNK(BFMT)))
+         GOTO 10
+ 130     WRITE (IW(6),'(A4,1X,A,A)') BNAME,' wrong format ',
+     &           BFMT(1:LNBLNK(BFMT))
+C
+  10  CONTINUE
+C
+C - error
+C
+      END
+#endif

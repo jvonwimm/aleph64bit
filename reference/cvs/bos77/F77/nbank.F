@@ -1,0 +1,169 @@
+      FUNCTION NBANK(NAME,NR,ND)
+C
+C     CREATE NAMED BANK OR CHANGE LENGTH OF EXISTING BANK
+C
+C     JW(1)=1 ADDITIONAL WORDS NOT ZEROD
+C     JW(1)=2 MOVE (UNLESS LAST BANK)
+C
+#include "boscom.h"
+#include "param.h"
+#include "mparam.h"
+      INTEGER    JW(1000)
+      EQUIVALENCE (IW(1),JW(1))
+      CHARACTER*4 CHNA,CHAINT
+#include "namcha.h"
+      IF(JW(ICK).NE.12345) CALL BBNOT(JW,'NBANK')
+      JW1=JW(1)
+      JW2=0
+      JW(1)=0
+      IF(ND.LT.0) THEN
+C
+C        ARGUMENT ND LESS THAN ZERO
+C
+         IF(JW(LUP).GT.0) WRITE(JW(LUP),1001) NAME,NR,ND
+         CALL BABEND('NBANK')
+      END IF
+#include "namen.h"
+      IFD=0
+C     DROP OTHER BANKS/RENUMBER BANK
+      IF(JW1.EQ.3) THEN
+         JW1=0
+         IFL=0
+         IND=JW(NAMI)
+         IF(IND.NE.0) THEN
+   20       NN=JW(IND-2)
+            IF(JW(IND-1).NE.0) THEN
+               IF(NN.EQ.NR) THEN
+                  IFL=IND
+                  IND=JW(IND-1)
+               ELSE
+                  IND=JW(IND-1)
+                  IDR=MDROP(JW,NAME,NN)
+               END IF
+               GOTO 20
+            END IF
+            IF(IFL.EQ.0.AND.JW(IND-2).NE.NR) THEN
+               IF(JW(IND-2).NE.NR) THEN
+                  JW(IND-2)=NR
+                  DO 22 M=1,JW(IND)
+   22             JW(IND+M)=0
+                  IFD=1
+               END IF
+            ELSE
+               NN=JW(IND-2)
+               IDR=MDROP(JW,NAME,NN)
+            END IF
+         END IF
+      END IF
+#include "index.h"
+      IND=INDI
+      IF(IND.NE.0) GOTO 10
+C
+C     BANK NOT FOUND, CREATE NEW BANK
+C
+      NDIF=ND+4
+      IF(JW(IGP)+NDIF.GT.JW(IWK)) THEN
+         CALL WGARB(JW)
+         IF(JW(IGP)+NDIF.GT.JW(IWK)) GOTO 91
+      END IF
+      IND=JW(IGP)+3
+      JW(IND-3)=NAMA
+      JW(IND-2)=  NR
+      JW(IND-1)=JW(INDJ-1)
+      JW(IND  )=  ND
+      JW(INDJ-1)= IND
+      JW(IGP   ) =JW(IGP)+NDIF
+      IF(ND.GT.0.AND.JW1.EQ.0) THEN
+         DO 24 M=1,ND
+   24    JW(IND+M)=0
+      END IF
+      GOTO 90
+C
+C     BANK FOUND, CHANGE LENGTH OF BANK
+C
+   10 NDIF=ND-JW(IND)
+      IF(NDIF.EQ.0.AND.JW1.NE.2) GOTO 90
+      IF(IND+JW(IND)+1.EQ.JW(IGP)) THEN
+C
+C        LAST BANK, CHECK SPACE
+C
+         IF(JW(IGP)+NDIF.GT.JW(IWK)) THEN
+             CALL WGARB(JW)
+             IF(JW(IGP)+NDIF.GT.JW(IWK)) GOTO 92
+         END IF
+      ELSE
+C
+C        NOT LAST BANK
+C
+         IF(NDIF+4.LE.0.AND.JW1.NE.2) THEN
+C
+C           INSERT DUMMY DROPPED BANK
+C
+            JW(IND)=ND
+            JW(IND+ND+4)=NDIF
+            JW(IGN)=MIN(JW(IGN),IND+ND+4)
+            JW( NDN)=JW(NDN)-NDIF
+            GOTO 90
+         ELSE
+C
+C           MOVE BANK
+C
+            IF(JW(IGP)+ND+4.GE.JW(IWK)) THEN
+               CALL WGARB(JW)
+               IF(JW(IGP)+ND+4.GE.JW(IWK)) GOTO 92
+            END IF
+            NCOP=4+MIN(ND,JW(IND))
+            CALL UCOPY2(JW(IND-3),JW(JW(IGP)),NCOP)
+            JW(IND)=-JW(IND)-4
+            JW( NDN)=JW(NDN)-JW(IND)
+            JW(IGN)=MIN(JW(IGN),IND)
+            IND=JW(IGP)+3
+            JW( IGP)=JW(IGP)+NCOP
+            JW(IND)=NCOP-4
+            JW(INDJ-1)=IND
+            IF(NDIF.LE.0) GOTO 90
+         END IF
+      END IF
+C
+C     CHANGE LAST BANK
+C
+      IZERO=IND+JW(IND)
+      JW(IND)=JW(IND)+NDIF
+      JW(IGP)=JW(IGP)+NDIF
+      IF(NDIF.GT.0.AND.JW1.NE.1) THEN
+         DO 80 M=1,NDIF
+   80    JW(IZERO+M)=0
+      END IF
+C
+      GOTO 90
+C
+C     CODE 2   INSUFFICIENT SPACE TO INCREASE LENGTH OF BANK
+C
+   92 JW2=JW2+1
+C
+C     CODE 1   INSUFFICIENT SPACE FOR NEW BANK
+C
+   91 JW2=JW2+1
+      IND=0
+      JW(IRC+JW2)=JW(IRC+JW2)+1
+      IF(JW(LUP).EQ.0.OR.JW(LUW).EQ.0) GOTO 90
+      CHNA=CHAINT(NAMA)
+      CALL BBRET(JW,JW2,'NBANK',CHNA)
+C
+C
+C
+   90 JW(1)=0
+      JW(2)=JW2
+      IF(IND.NE.INDI) THEN
+C
+C        RESET LINK BANKS
+C
+         JND=JW(IDL)+NAMI-NSYST
+         IF(JW(JND).NE.0) JW(JW(JND))=0
+      END IF
+C
+  100 NBANK=IND
+      RETURN
+ 1001 FORMAT('0BOS--NBANK-  WRONG ARGUMENT - STOP'/
+     1                 14X,'NAME,NR,ND= ',A4,2I10)
+      END

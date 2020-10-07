@@ -1,0 +1,41 @@
+*   HERE ARE THE STEERING DATA CARDS        *
+*============================================
+NREF 4
+FDBA 'DBASE:ADBSTEST.DAF | DAF'  ! use test data base
+*     RUN #     RUN'S TITLE
+RUN 111  'HEAVY FLAVOR HVFL05:DYMU3+FSR PS+photos,MIXED FLAVORS'   <======
+*     FIRST EVENT    LAST EVENT    TO BE GENERATED
+TRIG    1             5                              <======
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG
+DEBU  6     /     1          2
+*FILO    to be filled .....                   <======
+*  Keep some time at end of job  (IBM 168 seconds)
+TIME    10
+*  use RANMAR generator for random numbers
+*  INSEED : first seed (range assigned per institute)
+*  LOSEED : second seed (incremented locally for new runs)
+*      INSEED          LOSEED (1-30000)
+RMAR     89             12                      <======
+ENDQ
+KCAR 0 / $TEXT
+POFF
+*SVRT  0.0140   0.0005   0.79  ! vertex smearing x y z 97 values
+SVRT  0.0124   0.0005   0.72  ! vertex smearing x y z 94 values
+*XVRT   0.01   0.    0.1  ! vertex offset dx,dy,dz + possible spread  
+*    IGENE  : qqbar producer code  1 = LUND 7.4+ PARTON SHOWER
+*                                  3 = DYMU3   + PARTON SHOWER
+*                                 -1 = SINGLE PARTICLE MODE
+*    IWEIT  : weight flag  0 = produce unweighted events, 1 = weighted
+*    WTMAX  : in case IWEIT=0 required , maximum weight produced by basic
+*             generator (used for rejection method).Irrelevant for LUND
+*    IPPART : lowest digit ON =Printout of PART and decay tables
+*             decimal digit ON = event analysis in terms of particles
+*    IGENE IWEIT   WTMAX   IPPART
+GHVF    3    0     1.001      11
+*         FTYPE   EBEAM  ZMASS  GAMM   SW2  IDEBUG
+GDYM      10.     45.6   91.182 2.484  .232     0
+* ID2    TAU    FINEXP   POIDS    XK0  QCDFAC    NQUA  IFIRST   NEVMA
+0.     0.      1.       1.    0.003  1.04       5    11      5000
+*           HERE ARE THE MODIFICATIONS TO PARAMETERS   *
+*   none at the moment
+END$

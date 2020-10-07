@@ -1,0 +1,161 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.41.51;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.41.52;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE FYREDC (FDRTK,FDRSH,CUTF)
+C ------------------------------------------------------------
+CKEY FYXX MCARLO KINE CARDS / USER
+C - F.Ranjard - 880622
+C! decode FXXX data card
+C - output arguments:
+C            FDRTK /L   = .T. if one of the arguments = 'DRTK'
+C                       = .F. if one of the arguments = 'KPTK'
+C            FDRSH /L   = .T. if one of the arguments = 'DRSH'
+C                       = .F. if one of the arguments = 'KPSH'
+C            CUTF  /R   = momentum cut
+#ifndef DOC
+      SAVE
+#include "bcs.h"
+      LOGICAL FDRTK,FDRSH
+      CHARACTER*4 ZCHAR,CHAINT
+C -------------------------------------------------------------
+      JFXXX = IW(NAMIND('FXXX'))
+      IF (JFXXX .EQ. 0) RETURN
+C
+      IF (IW(JFXXX) .GT. 0) THEN
+C        FXXX output : FXXX  'flag1'   'flag2'  cut
+C                      flag1 : DRTK if tracks must be dropped (def)
+C                              KPTK if tracks must be kept
+C                      flag2 : DRSH if showers must be dropped (def
+C                              KPSH if showers must be kept
+C                      flag3 : CUTF if momentum cut has to be redefined
+C                              must be followed by:
+C                      cut   : momemtum cut (=0.1 by def.)
+C
+         I=1
+ 301     CONTINUE
+            ZCHAR = CHAINT (IW(JFXXX+I))
+            IF (ZCHAR .EQ. 'DRTK') THEN
+               FDRTK = .TRUE.
+            ELSEIF (ZCHAR .EQ. 'KPTK') THEN
+               FDRTK = .FALSE.
+            ELSEIF (ZCHAR .EQ. 'DRSH') THEN
+               FDRSH = .TRUE.
+            ELSEIF (ZCHAR .EQ. 'KPSH') THEN
+               FDRSH = .FALSE.
+            ELSEIF (ZCHAR .EQ. 'CUTF') THEN
+               I = I + 1
+               CUTF = RW(JFXXX+I)
+            ENDIF
+         I = I + 1
+         IF (I .LE. IW(JFXXX)) GOTO 301
+      ENDIF
+C
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

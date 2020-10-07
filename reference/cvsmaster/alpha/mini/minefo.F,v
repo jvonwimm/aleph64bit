@@ -1,0 +1,166 @@
+head	1.1;
+access;
+symbols
+	alpha126_22:1.1
+	alpha122_22:1.1
+	alpha126_21:1.1
+	alpha126_20:1.1
+	alpha126_19:1.1
+	alpha126_18:1.1
+	alpha126_17:1.1
+	alpha126_16:1.1
+	alpha126_15:1.1
+	alpha126_14:1.1
+	alpha126_13:1.1
+	alpha126_12:1.1
+	alpha126_11:1.1
+	alpha126_10:1.1
+	alpha126_09:1.1
+	alpha126_08:1.1
+	alpha126_07:1.1
+	alpha126_06:1.1
+	alpha126_05:1.1
+	alpha126_04:1.1
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	99.03.22.14.06.55;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE MINEFO
+C
+CKEY MDST /USER
+C-----------------------------------------------------------------------
+C! Fill EFOL bank from DENF and DENW.
+C
+C     Author: Stephen Haywood      05-Feb-91
+C     Modify: Agnieszka Jacholkowska   20-Oct-98
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+#include "denfjj.h"
+#include "denwjj.h"
+#include "efoljj.h"
+#include "minfac.h"
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+C++   Need Mini version number later.
+C
+      MVER = MINGTV(DUM)
+C
+C++   Loop over different energy flow algorithms.
+C
+      DO 1000 IBNK=0,3
+C
+      KDENF = NLINK('DENF',IBNK)
+      IF(KDENF.LE.0) GOTO 1000
+C
+      KDENW = NLINK('DENW',IBNK)
+C
+C++   Create EFOL bank.
+C
+      NEFOL = LROWS(KDENF)
+      IF(NEFOL.LE.0) GOTO 1000
+      LEN = LMHLEN + LEFOLA * NEFOL
+      CALL AUBOS('EFOL',IBNK,LEN, KEFOL,IGARB)
+      CALL BLIST(IW,'S+','EFOL')
+      IF(IGARB.GE.2) THEN
+         RETURN
+      ELSE IF(IGARB.NE.0) THEN
+         KDENF = NLINK('DENF',IBNK)
+      ENDIF
+      IW(KEFOL+LMHCOL) = LEFOLA
+      IW(KEFOL+LMHROW) = NEFOL
+C
+C++   Fill EFOL bank.
+C++   The change arising from the storing of mass rather than energy
+C++   is handled here rather than in MINUPD due to various bank numbers.
+C
+      DO 100 I=1,NEFOL
+         RW(KROW(KEFOL,I)+JEFOPX) = FLOAT(ITABL(KDENF,I,JDENPX))/EFACTM
+         RW(KROW(KEFOL,I)+JEFOPY) = FLOAT(ITABL(KDENF,I,JDENPY))/EFACTM
+         RW(KROW(KEFOL,I)+JEFOPZ) = FLOAT(ITABL(KDENF,I,JDENPZ))/EFACTM
+         IF (MVER.GE.90) THEN
+            AM = FLOAT(ITABL(KDENF,I,JDENE0))/EFACTM
+            ESQ = AM**2 + VMOD(RW(KROW(KEFOL,I)+JEFOPX),3)**2
+            RW(KROW(KEFOL,I)+JEFOEW) = SQRT(ESQ)
+         ELSE
+            RW(KROW(KEFOL,I)+JEFOEW)=FLOAT(ITABL(KDENF,I,JDENE0))/EFACTM
+         ENDIF
+         RW(KROW(KEFOL,I)+JEFOWE) = FLOAT(ITABL(KDENF,I,JDENWE))/1000.
+         IW(KROW(KEFOL,I)+JEFOTY) = ITABL(KDENF,I,JDENTY)
+         ICALO = ITABL(KDENF,I,JDENPC)
+         IF(ICALO.GT.0) THEN
+            IW(KROW(KEFOL,I)+JEFOLE) = + ICALO
+         ELSE
+            IW(KROW(KEFOL,I)+JEFOLH) = - ICALO
+         ENDIF
+         IW(KROW(KEFOL,I)+JEFOLT) = ITABL(KDENF,I,JDENDT)
+         IW(KROW(KEFOL,I)+JEFOLJ) = ITABL(KDENF,I,JDENDJ)
+C
+         IF(KDENW.GT.0) THEN
+           IW(KROW(KEFOL,I)+JEFOLC) = ITABL(KDENW,I,JDENLC)
+         ENDIF
+  100 CONTINUE
+C
+ 1000 CONTINUE
+C
+      RETURN
+      END
+#endif
+@

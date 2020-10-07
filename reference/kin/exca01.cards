@@ -1,0 +1,339 @@
+************************************************************************
+* General MC prod setup section
+*
+*  Use RANMAR generator for random numbers
+*  Inseed : first seed (range assigned per institute)
+*  Loseed : second seed (incremented locally for new runs)
+*      Inseed          Loseed (1-30000)
+RMAR    1234            1
+*     Run #               Run's Title
+RUN    123        '4 fermion production at LEPII - Excalibur'
+*     First Event  Last Event
+TRIG       1         1000
+*    Unit # / First Event   Last Event To Debug
+DEBU    6   /      1          10
+* Event Output File
+*FILO 'exca01.epio |EPIO'
+*
+* Load default MC96 values from database 
+NREF 9600
+ENDQ
+************************************************************************
+* =============================================
+* ====== Now cards specific to EXCALIBUR ======
+* =============================================
+KCAR 0 / $TEXT
+POFF
+************************************************************************
+* Standard Model Parameters
+*    MZ      :  Z mass  (GeV/c**2)                      [91.1888]
+*    GZ      :  Total/Electro-Weak Z width (GeV)        [2.4974]
+*    MW      :  W mass  (GeV/c**2)		        [80.25]
+*    GW      :  Total/Electro-Weak W width (GeV)        [-1.0]
+*               For Gw<0.0 Gw it is calculated using
+*               Gf and Mw
+*    GF      :  Fermi constant (GeV**-2)                [1.16639E-5]
+*    STH2    :  sine squared theta Weinberg             [0.0]
+*               STH2=0 Forces use of value consistent 
+*               with EXCALIBUR-scheme (from Gf and Mw)
+*    ALPHAR  :  Alpha QED                               [1/137.0359895]
+*    ALPHA   :  Alpha QED for 4-fermion system          [1/128.07]
+*    ALPHAS  :  Alpha QCD for 4-quark system            [0.110]
+*               If set to zero then gluon-diagrams are
+*               not included.
+*    ALPHASZ :  Alpha QCD at Mz (Corr. to boson widths) [0.12]
+*
+*         MZ      GZ     MW        GW        GF         STH2
+GSMO  91.18880  2.4974  80.25    -1.0   1.16639E-5       0.0
+*        ALPHAR      ALPHA    ALPHAS     ALPHASZ
+      137.0359895   128.07    0.000       0.12
+*
+************************************************************************
+* Tau decays
+*
+*   MSTJ(28) : Tell Jetset to use external tau decay package.
+*              (ALEPH default is TAUOLA)
+*        = 0 : off
+*        = 1 : on for secoundary taus only (Mothers are known)
+* -->    = 2 : on for all taus
+*
+MSTJ  28 / 2
+* JETSET tau mass. This must agree with the mass used in TAUOLA.
+*
+PMA1 15 / 1.777           ! [1.777GeV]
+************************************************************************
+* Generator options:  ( ---> = preferred value )                               
+*
+*    IEXDIA  : Contributing diagrams (IEXDIA=Kleiss def.)
+*      (WARNING: in order to avoid double counting, final states with 
+*                different particles should be used if IEXDIA is not 0.
+*  -->   = 0 : all diagrams
+*        = 1 : WW diagram
+*        = 2 : ZZ diagrams
+*        = 3 : W+ e- nue_bar production
+*        = 4 : Z e+ e- production
+*        = 5 : Z nue nue_bar production
+*    IEXUWT  : Event weights
+*        = 0 : for weighted events
+* -->    = 1 : for unweighted events
+*    IEXISR  : Initial state radiation
+*        = 0 : for no initial state radiation
+* -->    = 1 : for initial state radiation
+*    IEXFSR  : Final state radiation
+*        = 0 : for no final state radiation
+* -->    = 1 : FSR using PHOTOS (Z. Was, B. van Eijk)
+*        = 2 : FSR using FINALG (Francois Le Diberder)
+*    IEXNNG  : Max number of FSR photons from FINALG (max 4) [4]
+*              Only relevant for IEXFSR=2
+*    IEXHAD  : LUND Fragmentation
+*        = 0 : off
+* -->    = 1 : on
+*    IEXCOU  : Correction for Coulomb singularity for WW-diagrams
+*        = 0 : off
+* -->    = 1 : on
+*    IEXPAF  : Fermion pairing flag used for Color connection/PHOTOS
+*
+*    Total amplitude:
+*
+*      |A|^2 = |A1+A2|^2 = |A1|^2 + |A2|^2 + delta
+*
+*    No interference:
+*
+*                  |A1|^2                           |A2|^2
+*    Prob1 = ---------------            Prob2 = ---------------
+*            |A1|^2 + |A2|^2                    |A1|^2 + |A2|^2
+*
+*    With Interference (delta):
+*
+*               |A1|^2 + [delta]                   |A2|^2 + [delta]
+*    Prob1 = -----------------------    Prob2 = -----------------------
+*            |A1|^2 + |A2|^2 + delta            |A1|^2 + |A2|^2 + delta
+*
+*        = 0 : Force WW pairing otherwise ZZ pairing
+*        = 1 : Pair according to phase space
+*        = 2 : Pair acc. to max amp. (no interference)
+*        = 3 : Pair acc. to max amp. (delta added acc. to phasespace)
+* -->    = 4 : Pair acc. to relative prob. (no interference)
+*        = 5 : Pair acc. to rel. (delta added acc. to phasespace)
+*        = 6 : Pair acc. to rel. (delta added acc. to max aplitude)
+*    IEXCRC  : Color reconnection
+* -->    = 0 : No reconnection
+*        = 1 : Instantaneous reconnection - reconnection before shower
+*        = 2 : Intermediate  reconnection - reconnection after  shower
+*        = 3 : Strings described as spheres - instantaneous overlap.
+*        = 4 : Strings described as spheres - time retarded overlap.
+*        = 5 : Strings described as cylinders - instantaneous overlap.
+*        = 6 : Strings described as cylinders - time retarded overlap.
+*        = 7 : Strings as Vortex lines. May reconnect when they cross.
+*        = 8 : Strings as Vortex lines. May reconnect when the total
+*              String length is reduced.
+*    IEXQDW  : Q dependent width for bosons
+*        = 0 : Fixed width
+* -->    = 1 : Dependent width (Converted into fixed width scheme to ensure
+*              gauge invariance (see LEP2 report))
+*    IEXQCD  : QCD corrections to boson widths
+*        = 0 : off
+* -->    = 1 : Order alpha corrections to W boson width as in the LEP2
+*              report.
+*        = 2 : Order alpha corrections to W and Z boson widths
+*              NOTE : IEXDIA = 0 include some 2. order QCD diagrams for
+*                     the Z boson when ALPHAS>0.0.
+*    IEXEWD  : Use together with IEXQCD to toggle specified widths as
+*              Electro Weak/Total width of the Z and the W.
+* -->    = 0 : Total specified widths remain unchanged - partial widths
+*              are recalculated.
+*        = 1 : Total width is recalculated as a sum of corrected partial
+*              widths.
+*    IEXINT  : Number of events per process in initial integration [2000]
+*    ECM     : Center-of-mass energy (GeV)                          [172]
+*    EXEPHO  : Min energy for ISR photons (GeV)                   [0.001]
+*
+*    IEXDIA IEXUWT IEXISR IEXFSR IEXNNG IEXHAD IEXCOU IEXPAF IEXCRC
+GENE    0      1      1      1      4      1      1      4      0
+*    IEXQDW IEXQCD IEXEWD IEXINT  ECM   EXEPHO
+        1      1      0    5000   172.   0.001
+*     
+************************************************************************
+* Advanced Color Reconnection card (for use when IEXCRC>=4)
+*
+* Reference:  T. Sjostrand, V.A.Khoze: Z. Phys. C62 (1994),281-309
+* Short Summary:
+*    Color reconnection is based on the overlap in time and space of
+*    the two W systems. The extension of the system in time is described
+*    by a Gaussian with sigma TFRAG. The spacial size is described
+*    either by a sphere or a cylinder Gaussian distributed radius with
+*    sigma RHAD or a vortex.
+*
+*    TFRAG : Sigma of the timal distribution of the two W systems.
+*    RHAD  : Sigma of the distribution of radius of sphere/cylinder
+*    RPROB : Strength of reconnection probability
+*      
+*  Recommended values:  RHAD   RPROB (see Reference above)
+*            Sphere   :  0.5    0.6
+*            Cylinder :  0.7    0.6
+*      
+*      TFRAG  RHAD   RPROB
+GCRC    1.5    0.7    0.6
+*     
+************************************************************************
+*
+* Special Color Reconnection file cards
+*
+*   To be able to investigate the effect of color reconnection it is
+*   possible to read and write and event just before fragmentation. 
+*   First run a sample with no color reconnection and with the XXCR card
+*   set to write (2). After the run you can use the card again in read
+*   mode (1) with color reconnection on. The second sample has all the
+*   4q states of the first. If color reconnection did not happen we
+*   just copy the old event. If color reconnection occured the event will
+*   be the same on parton level and shower level. However the
+*   fragmentation will not be the same. The output from the generator on
+*   the log file concerning weights and cross-sections should be
+*   ignored.
+*
+*    IEXFCR  : File acces mode
+* -->   = 0  : Normal (No read/write)
+*       = 1  : Read event record (IEXHAD has no effect now)
+*       = 2  : Write event record
+*    IEXUCR  : Fortran unit for Color Reconnection event.
+*       = 23 : Default 
+*    FNAME   : Filename of the file to store event information.
+*              
+*     IEXFCR IEXUCR
+XXCR    0      23
+*     FNAME
+*CRIO 'KINEBANK OUT A | NATIVE '
+*CRIO 'SCWEEK:KINEBANK.OUT | NATIVE '
+*CRIO 'kinebank.out |NATIVE'
+*CRIO 'kinebank.epio |EPIO'
+*
+************************************************************************
+* Anomalous couplings
+*
+* Couplings 2,3,4,5,6 and 8 can be changed
+* 2 -> delta_z
+* 3 -> x_gamma
+* 4 -> x_Z          (Bilenky et al. notation)      
+* 5 -> y_gamma
+* 6 -> y_Z
+* 8 -> z_Z
+*
+*      delta_z x_gamma  x_Z  y_gamma   y_Z  z_Z
+ANOM      0.      0.     0.     0.      0.   0.
+*
+************************************************************************
+* Specify desired final states
+*
+* PROC(1-138): Specify final states (PDG numbering scheme (positive))
+*              If PROC(1)=0 all states are selected
+*              If PROC(..)=-1 all leptonic states are added
+*              If PROC(..)=-2 all semi-leptonic states are added
+*              If PROC(..)=-3 all hadronic states are added
+*              Otherwise set PROC(I)=8-digit code for f1 f2~ f3 f4~, eg.
+*              11120201 for e- anti-nu_e u anti-d.
+*              Wildcards for fermion flavours may specified by putting
+*                00 match all fermion flavours, ex. 11120001
+*                09 match all quark   flavours, ex. 11120901
+*                19 match all lepton  flavours, ex. 11121919
+*
+*      e+ ne u d    e+ ne u- nm
+*KPRO   11120201      11121413
+*      e+e-qqbar
+*KPRO 11110909
+*
+* All WW states (in unique EXCALIBUR codes)
+* Leptonic
+*KPRO 11111212 13131414 15151616 11121919 12111919 13141919 15161919
+* Semi-leptonic
+*KPRO 11120909 12110909 13140909 14130909 15160909 16150909
+* Hadronic
+*KPRO 02020101 04040303 02020303 02020505 04040101 04040505
+*     02010909 01020909 02030909 03020909 02050909 05020909
+*     04010909 04030909 04050909
+*
+*      All states
+KPRO 0
+************************************************************************
+* Kinematic cuts on specified processes
+*
+* PROC :  Final state for which cuts apply (Notation as for KPRO-card)
+*         In case of redundant specified final states/cuts the last
+*         specification apply.
+*         Setting PROC=-5 invoke special "minimal" cut-option, where a
+*         cut is applied only on the angle between the incomming e (e~)
+*         and the outgoing e (e~) to avoid the Bremsstrahlung pole.
+*         The cut in cos-theta is given by SHCUT (the other
+*         cuts have to be given for the card to be accepted - but they
+*         are _NOT_ used).
+*         Remember that PROC=0 and PROC=-5 _MUST_ be specified in first
+*         CUTS-card, ie. only one of them can be specified.
+*         Setting PROC=-1xx, where xx = 01(d-quark),...,16(n_tau) one can
+*         specify cuts on particle-type basis. Possibilities are
+*                SHCUT  : Minimum energy of particle AND antiparticle
+*                ECUT(3): Cut on cos-theta between incoming electron
+*                         (positron) and the outgoing (anti)particle
+*                ECUT(4): Cut on cos-theta between incoming positron
+*                         (electron) and the outgoing (anti)particle
+*                ECUT(5): Minimum invariant mass squared of any
+*                         particle-antiparticle pair in a final state.
+*         Again the other cuts have to be given for the card to be accepted -
+*         but they are _NOT_ used.
+*
+* In general we have:
+* SHCUT : Invariant mass of colliding e+e- after ISR.
+* ECUT(3-6) : Energy cuts on four outgoing fermions
+* SCUT(34)-SCUT(56) : Cuts on min inv. mass of pairs of outgoing fermions
+* CMAX(13)-CMAX(56) : Cuts on cos-theta between incoming(1,2) and out-
+*                     going(4-6) fermions, and on cos-thetas between out-
+*                     going fermion pairs.
+* Particle numbering:
+*   e~(1) e(2) ---> f(3) f~(4) f(5) f~(6)
+*
+*    PROC  SHCUT   ECUT(3)  ECUT(4)  ECUT(5)  ECUT(6)
+CUTS   0    0.0     0.0      0.0      0.0      0.0
+*
+* SCUT(34) SCUT(35) SCUT(36) SCUT(45) SCUT(46) SCUT(56)
+    0.0      0.0      0.0      0.0      0.0      0.0
+*
+* CMAX(13) CMAX(14) CMAX(15) CMAX(16) CMAX(23) CMAX(24) CMAX(25) CMAX(26)
+    1.0      1.0      1.0      1.0      1.0      1.0      1.0      1.0
+* CMAX(34) CMAX(35) CMAX(36) CMAX(45) CMAX(46) CMAX(56)
+    1.0      1.0      1.0      1.0      1.0      1.0
+*
+* Special "minimal" cut-option (PROC=-5):
+* -----------------------------
+*    PROC  SHCUT   ECUT(3)  ECUT(4)  ECUT(5)  ECUT(6)
+*CUTS  -5   0.9997     0.0      0.0      0.0      0.0
+*
+* SCUT(34) SCUT(35) SCUT(36) SCUT(45) SCUT(46) SCUT(56)
+*    0.0      0.0      0.0      0.0      0.0      0.0
+*
+* CMAX(13) CMAX(14) CMAX(15) CMAX(16) CMAX(23) CMAX(24) CMAX(25) CMAX(26)
+*    1.0      1.0      1.0      1.0      1.0      1.0      1.0      1.0
+* CMAX(34) CMAX(35) CMAX(36) CMAX(45) CMAX(46) CMAX(56)
+*    1.0      1.0      1.0      1.0      1.0      1.0
+*---------------- flavour-type cuts---------------
+*    PROC  SHCUT   ECUT(3)  ECUT(4)  ECUT(5)  ECUT(6)
+CUTS -111   1.0    0.9997   0.9997    0.00      0.0
+*
+* SCUT(34) SCUT(35) SCUT(36) SCUT(45) SCUT(46) SCUT(56)
+    0.0      0.0      0.0      0.0      0.0      0.0
+*
+* CMAX(13) CMAX(14) CMAX(15) CMAX(16) CMAX(23) CMAX(24) CMAX(25) CMAX(26)
+    1.0      1.0      1.0      1.0      1.0      1.0      1.0      1.0
+* CMAX(34) CMAX(35) CMAX(36) CMAX(45) CMAX(46) CMAX(56)
+    1.0      1.0      1.0      1.0      1.0      1.0
+*------------------ PROC dep. cuts ---------------
+*       PROC    SHCUT   ECUT(3)  ECUT(4)  ECUT(5)  ECUT(6)
+CUTS 11110909    0.0     1.0      1.0      0.0      0.0
+*
+* SCUT(34) SCUT(35) SCUT(36) SCUT(45) SCUT(46) SCUT(56)
+    0.0      0.0      0.0      0.0      0.0      1.0
+*
+* CMAX(13) CMAX(14) CMAX(15) CMAX(16) CMAX(23) CMAX(24) CMAX(25) CMAX(26)
+   0.9997   0.9997    1.0      1.0     0.9997   0.9997    1.0      1.0
+* CMAX(34) CMAX(35) CMAX(36) CMAX(45) CMAX(46) CMAX(56)
+    1.0      1.0      1.0      1.0      1.0      1.0
+*
+************************************************************************
+END$

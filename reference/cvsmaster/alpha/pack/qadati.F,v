@@ -1,0 +1,266 @@
+head	1.4;
+access;
+symbols
+	alpha126_22:1.4
+	alpha126_21:1.4
+	alpha126_20:1.4
+	alpha126_19:1.4
+	alpha126_18:1.4
+	alpha126_17:1.4
+	alpha126_16:1.4
+	alpha126_15:1.4
+	alpha126_14:1.4
+	alpha126_13:1.4
+	alpha126_12:1.4
+	alpha126_11:1.4
+	alpha126_10:1.4
+	alpha126_09:1.4
+	alpha126_08:1.4
+	alpha126_07:1.4
+	alpha126_06:1.4
+	alpha126_05:1.4
+	alpha126_04:1.4
+	alpha126_03:1.4
+	alpha126_02:1.4
+	alpha126_1:1.4
+	alpha125_17:1.4
+	alpha125_16:1.4
+	alpha125_15:1.4
+	alpha125_14:1.4
+	alpha125_13:1.4
+	alpha125_12:1.4
+	alpha125_11:1.4
+	alpha125_10:1.4
+	alpha125_09:1.4
+	alpha125_08:1.4
+	alpha125_07:1.4
+	alpha125_06:1.4
+	alpha125_05:1.4
+	alpha125_04:1.4
+	alpha125_03:1.4
+	alpha125_02:1.4
+	alpha125_01:1.4
+	alpha124_19:1.4
+	alpha125:1.4
+	alpha124_18:1.3
+	alpha124_17:1.3
+	alpha124_16:1.3
+	alpha124_15:1.3
+	alpha124_14:1.3
+	alpha124_13:1.3
+	alpha124_12:1.3
+	alpha124_11:1.3
+	alpha124_10:1.3
+	alpha124_09:1.3
+	alpha124_08:1.3
+	alpha124_07:1.3
+	alpha124_7:1.3
+	alpha124_06:1.3
+	alpha124_05:1.3
+	alpha124_04:1.3
+	alpha124_03:1.3
+	alpha124_02:1.3
+	alpha124_01:1.3
+	alpha124:1.3
+	alpha123_12:1.3
+	alpha123_11:1.3
+	alpha123_10:1.3
+	alpha123_9:1.3
+	alpha123_8:1.3
+	alpha123_7:1.3
+	alpha123_6:1.3
+	alpha123_5:1.3
+	alpha123_4:1.3
+	alpha123_3:1.3
+	alpha123_2:1.3
+	alpha123:1.3
+	alpha122_48:1.3
+	alpha122_47:1.3
+	alpha122_46:1.3
+	alpha122_45:1.2
+	alpha122_44:1.2
+	alpha122_43:1.2
+	alpha122_42:1.2
+	alpha122_41:1.2
+	alpha122_40:1.2
+	alpha122_39:1.2
+	alpha122_38:1.2
+	alpha122_37:1.2
+	alpha122_36:1.2
+	alpha122_35:1.2
+	alpha122_34:1.2
+	alpha122_33:1.2
+	alpha122_32:1.2
+	alpha122_31:1.2
+	alpha122_30:1.2
+	alpha122_29:1.2
+	alpha122_28:1.2
+	alpha122_27:1.2
+	alpha122_26:1.2
+	alpha122_25:1.2
+	alpha122_24:1.2
+	alpha122_23:1.2
+	alpha122_22:1.2
+	alpha122_21:1.2
+	alpha122_20:1.2
+	alpha122_19:1.2
+	alpha122_18:1.2
+	alpha122_17:1.2
+	alpha122_16:1.2
+	alpha122_15:1.2
+	alpha122_14:1.2
+	alpha122_13:1.2
+	alpha122_12:1.2
+	alpha122_11:1.2
+	alpha122_10:1.2
+	alpha122_9:1.2
+	alpha122_8:1.2
+	alpha122_6:1.2
+	alpha122_5:1.2
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.4
+date	99.12.08.09.02.28;	author flr;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.05.15.14.40.30;	author boucrot;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.06.25.14.10.58;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.03.14.12.41.28;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.41.29;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@alpha125 - Y2K compliant
+@
+text
+@      SUBROUTINE QADATI
+CKEY INIT /INTERNAL
+C----------------------------------------------------------------------
+C! Print ALPHA header
+C! called from QMINIT
+C!                                                  H.Albrecht 06.11.88
+C!                                                  E. Blucher 08.04.89
+C!                               Modified:          E. Blucher 02.09.92
+C----------------------------------------------------------------------
+#ifndef DOC
+#include "qcdesh.h"
+C----------------------------------------------------------------------
+      DIMENSION JDAT(2), JTIM(2)
+      CHARACTER * 4 CHAINT
+      PARAMETER (NUMAC= 20)
+      CHARACTER*8 COMPU
+      CHARACTER*8 CALVER
+C Get computer type
+      CALL ALMACH(COMPU)
+C Alephlib number
+      IW(6)=0
+      CALL ALVERS (ALVER)
+      IF (ALVER.LT.314.0) THEN
+         WRITE(KUPRNT,*)' _QADATI_ STOP because ALEPHLIB ',
+     &   ALVER,' is not Y2K compliant - use ALEPHLIB>=314 '
+         CALL EXIT
+      ENDIF
+C
+C           date,time
+C
+      CALL TIMEST(1000000.)
+      CALL TIMEL (QTIMEL)
+      CALL TIMEX (QTIMES)
+C
+      CALL DATIMH (JDAT,JTIM)
+      IF(COMPU.EQ.'CRAY')THEN
+C       on Cray all 8 character are in one word JDAT or JTIM
+        WRITE(CQDATE(1:8),'(A8)') JDAT(1)
+        WRITE(CQTIME(1:8),'(A8)') JTIM(1)
+      ELSE
+        WRITE(CQDATE(1:4),'(A4)') JDAT(1)
+        WRITE(CQDATE(5:8),'(A4)') JDAT(2)
+        WRITE(CQTIME(1:4),'(A4)') JTIM(1)
+        WRITE(CQTIME(5:8),'(A4)') JTIM(2)
+      ENDIF
+C
+C           print header
+C
+      CQHTIT = 'A L P H A   ' // CQVERS // '   ' // CQTIME // ' ' //
+     +         CQDATE
+      CALL QWMESS ('--------------------------------------------------')
+      CALL QWMESS (CQHTIT(39:55) // CQHTIT(1:38))
+      CALL QWMESS (' ')
+      CALL QWMESS (CQHTIT(39:64) // ' running on ' // COMPU)
+      CALL QWMESS (' ')
+      WRITE (KUPRNT, 1000)  ALVER
+      IF (KUPTER .NE. 0)
+     &  WRITE (KUPTER, 1000) ALVER
+ 1000 FORMAT(26X,'ALEPHLIB Version ',F7.2)
+      CALL QWMESS ('--------------------------------------------------')
+      END
+#endif
+@
+
+
+1.3
+log
+@*** empty log message ***
+@
+text
+@d23 5
+@
+
+
+1.2
+log
+@update alpha122 with corr.file no.5
+@
+text
+@d54 1
+a54 1
+ 1000 FORMAT(26X,'ALEPHLIB Version ',F5.2)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d26 3
+a28 3
+      CALL TIMAST(1000000.)
+      CALL TIMAL (QTIMEL)
+      CALL TIMAX (QTIMES)
+@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

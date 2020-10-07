@@ -1,0 +1,212 @@
+head	1.2;
+access;
+symbols
+	alio83:1.2
+	alio82:1.2
+	alio81:1.2
+	alio80:1.2
+	alio74:1.2
+	alio73:1.2
+	alio72:1.2
+	alio71:1.2
+	alio70:1.2
+	alio68:1.2
+	alio69:1.2
+	alio67:1.2
+	alio66:1.2
+	alio65:1.2
+	alio64:1.2
+	alio63:1.2
+	alio62:1.2
+	alio61:1.2
+	alio60:1.2
+	alephio53:1.2
+	v4:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.13.15.02.01;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.52.43;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.52.44;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import alephio 52 from historian. Modify aclose.F to NOT call brwnd twice
+for the same file. update version.h to 5.3
+@
+text
+@      SUBROUTINE DMPLIS(LIST,ERLIST,NER)
+C-----------------------------------------------------------------------
+C!    Decompress banks contained in list LIST
+CKEY PRESS DMPLIS DECOMPRESS /USER
+C!
+C!    Author : D.Harvatis   APR 89
+C!    Modified: S.Haywood 04/03/92 Allow selective decompression.
+C!
+C!    Arguments :
+C!
+C!    INPUT :
+C!           - LIST   : (CHARACTER*1) list of banks to be decompressed.
+C!                      After the decompression, the names of the
+C!                      compressed banks are removed from the
+C!                      list and the names of the decompressed banks are
+C!                      added.
+C!                      Compressed bank names start with a lower case
+C!                      character. The list may contain normal, not
+C!                      compressed banks. These are not affected.
+C!
+C!                      If a list of compressed banks is given with a
+C!                      DLIS card, only those banks are decompressed.
+C!
+C!    OUTPUT:
+C!           - ERLIST : (CHARACTER*(*)) Character string containing the
+C!                      compressed banks where errors occured.
+C!                      It doesn't contain banks that weren't existing.
+C!                      The length of the string is defined by the
+C!                      calling program. If ERLIST is not long enough to
+C!                      hold all compressed bank names were errors
+C!                      occured, then, the remaining names are not
+C!                      removed from the list LIST.
+C!                      ERLIST is set as CHARACTER*80 in ABRSEL
+C!                      the internal list ERLIS is set as CHARACTER*80 in
+C!                      this routine.
+C!
+C!           - NER    : Error code
+C!                      If 0 then no errors.
+C!                      else :
+C!                      (NER/1000)    Number of bank names where no
+C!                                    decompression was done. This could
+C!                                    be either because the information
+C!                                    block was corrupted, or because
+C!                                    there was not enough space in the
+C!                                    BOS array (even after garbage
+C!                                    collection).
+C!                      MOD(NER,1000) Number of bank names where data
+C!                                    check failed. Decompressed banks
+C!                                    produced.
+C!    ENTRY POINT:
+C!                 DMPGER (LIST,ERLIST,NER)
+C!                 can be called by a user program to get back the ERLIST
+C!                 and error code NER, the first 20 errors are kept
+C!
+C!
+C!    Calls : DMPBAN, NLISTF, BLIST
+C!
+C!    Description :
+C!
+C!     This subroutine loops through all bank names contained
+C!     in list LIST. The bank decompression function DMPBAN
+C!     is called for every compressed bank found.
+C-----------------------------------------------------------------------
+#ifndef DOC
+      INTEGER      DMPBAN,TOLOWER
+      CHARACTER*1    LIST
+      CHARACTER*(*)  ERLIST
+      CHARACTER*4    BNAM,NLISTF,BNAM2,CHAINT
+      CHARACTER*80   ERLIS,DLIST
+#include "bcs.h"
+#ifndef CRAY
+      EQUIVALENCE    (BNAM,IBNAM)
+      EQUIVALENCE    (BNAM2,IBNA2)
+#endif
+      SAVE
+      DATA  IFI /0/
+C-----------------------------------------------------------------------
+      IF (IFI.EQ.0) THEN
+#include "ctolow.h"
+C
+C - Determine whether there is a list of selected banks to decompress.
+C
+        KDLIS = NLINK('DLIS',0)
+        DLIST = ' '
+        IF (KDLIS.GT.0) THEN
+          DO 5 I=1,MIN(IW(KDLIS),20)
+   5      DLIST(4*I-3:4*I) = CHAINT(IW(KDLIS+I))
+        ENDIF
+        IFI = 1
+      ENDIF
+C
+C - set local variables
+C
+      LE=LEN(ERLIS)
+      ERLIS = '    '
+      LEPOS=4
+      JER=0
+      LIPOS=0
+C
+C - loop over banks
+C
+   10     LIPOS=LIPOS+1
+          BNAM=NLISTF(IW,LIPOS,LIST)
+          IF (DLIST.NE.' ' .AND. INDEX(DLIST,BNAM).LE.0) GOTO 10
+#if defined(CRAY)
+          IBNAM=INTCHA(BNAM)
+#endif
+          IF (BNAM.EQ.' ') GOTO 900
+          IF (LLT(BNAM(1:1),'a')) GO TO 10
+          IER=DMPBAN(BNAM)
+          IF (IER) 91,92,93
+   91     IF (IER.EQ.-2) JER=JER+999
+          JER=JER+1
+          IF (LEPOS.GT.LE) GO TO 991
+          ERLIS(LEPOS-3:LEPOS)=BNAM
+          LEPOS=LEPOS+4
+   92     CALL BLIST(IW,LIST//'-',BNAM)
+          LIPOS=LIPOS-1
+  991     IBNA2=IBNAM-TOLOWER
+#if defined(CRAY)
+          BNAM2=CHAINT(IBNA2)
+#endif
+          CALL BLIST(IW,LIST//'+',BNAM2)
+   93     GO TO 10
+C
+C - save output arguments NER and ERLIST for ENTRY DMPGER
+C
+      ENTRY DMPGER (LIST,ERLIST,NER)
+ 900  CONTINUE
+      NER = JER
+      LOUT = LEN(ERLIST)
+      LT = MIN (LE,LOUT)
+      ERLIST(1:LT) = ERLIS(1:LT)
+      RETURN
+C
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK dmplis
+@
+
+
+1.1.1.1
+log
+@import alephio 4
+@
+text
+@@

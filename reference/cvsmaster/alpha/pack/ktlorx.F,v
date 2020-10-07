@@ -1,0 +1,342 @@
+head	1.2;
+access;
+symbols
+	alpha126_22:1.2
+	alpha126_21:1.2
+	alpha126_20:1.2
+	alpha126_19:1.2
+	alpha126_18:1.2
+	alpha126_17:1.2
+	alpha126_16:1.2
+	alpha126_15:1.2
+	alpha126_14:1.2
+	alpha126_13:1.2
+	alpha126_12:1.2
+	alpha126_11:1.2
+	alpha126_10:1.2
+	alpha126_09:1.2
+	alpha126_08:1.2
+	alpha126_07:1.2
+	alpha126_06:1.2
+	alpha126_05:1.2
+	alpha126_04:1.2
+	alpha126_03:1.2
+	alpha126_02:1.2
+	alpha126_1:1.2
+	alpha125_17:1.2
+	alpha125_16:1.2
+	alpha125_15:1.2
+	alpha125_14:1.2
+	alpha125_13:1.2
+	alpha125_12:1.2
+	alpha125_11:1.2
+	alpha125_10:1.2
+	alpha125_09:1.2
+	alpha125_08:1.2
+	alpha125_07:1.2
+	alpha125_06:1.2
+	alpha125_05:1.2
+	alpha125_04:1.2
+	alpha125_03:1.2
+	alpha125_02:1.2
+	alpha125_01:1.2
+	alpha124_19:1.2
+	alpha125:1.2
+	alpha124_18:1.2
+	alpha124_17:1.2
+	alpha124_16:1.2
+	alpha124_15:1.2
+	alpha124_14:1.2
+	alpha124_13:1.2
+	alpha124_12:1.2
+	alpha124_11:1.2
+	alpha124_10:1.2
+	alpha124_09:1.2
+	alpha124_08:1.2
+	alpha124_07:1.2
+	alpha124_7:1.2
+	alpha124_06:1.2
+	alpha124_05:1.2
+	alpha124_04:1.2
+	alpha124_03:1.2
+	alpha124_02:1.2
+	alpha124_01:1.2
+	alpha124:1.2
+	alpha123_12:1.2
+	alpha123_11:1.2
+	alpha123_10:1.2
+	alpha123_9:1.2
+	alpha123_8:1.2
+	alpha123_7:1.2
+	alpha123_6:1.2
+	alpha123_5:1.2
+	alpha123_4:1.2
+	alpha123_3:1.2
+	alpha123_2:1.2
+	alpha123:1.2
+	alpha122_48:1.2
+	alpha122_47:1.2
+	alpha122_46:1.2
+	alpha122_45:1.2
+	alpha122_44:1.2
+	alpha122_43:1.2
+	alpha122_42:1.2
+	alpha122_41:1.2
+	alpha122_40:1.2
+	alpha122_39:1.2
+	alpha122_38:1.2
+	alpha122_37:1.2
+	alpha122_36:1.2
+	alpha122_35:1.2
+	alpha122_34:1.2
+	alpha122_33:1.2
+	alpha122_32:1.2
+	alpha122_31:1.2
+	alpha122_30:1.2
+	alpha122_29:1.2
+	alpha122_28:1.1.1.1
+	alpha122_27:1.1.1.1
+	alpha122_26:1.1.1.1
+	alpha122_25:1.1.1.1
+	alpha122_24:1.1.1.1
+	alpha122_23:1.1.1.1
+	alpha122_22:1.1.1.1
+	alpha122_21:1.1.1.1
+	alpha122_20:1.1.1.1
+	alpha122_19:1.1.1.1
+	alpha122_18:1.1.1.1
+	alpha122_17:1.1.1.1
+	alpha122_16:1.1.1.1
+	alpha122_15:1.1.1.1
+	alpha122_14:1.1.1.1
+	alpha122_13:1.1.1.1
+	alpha122_12:1.1.1.1
+	alpha122_11:1.1.1.1
+	alpha122_10:1.1.1.1
+	alpha122_9:1.1.1.1
+	alpha122_8:1.1.1.1
+	alpha122_6:1.1.1.1
+	alpha122_5:1.1.1.1
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.05.13.11.54.48;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.03.14.12.41.26;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.41.27;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@      FUNCTION KTLORX (ITK,ICL,IFL,ITKRST)
+CKEY KINEMATICS /INTERNAL
+C----------------------------------------------------------------------
+C! Boost ITK into the rest frame of ITKRST.
+C                                                    H.Albrecht  2.1.89
+C Mod. I.Tomalin 9.5.97 : Allows boost of tracks with zero attributes.
+C----------------------------------------------------------------------
+#ifndef DOC
+      SAVE IERR
+#include "qcdesh.h"
+      DATA IERR /0/
+      JR(J) = KOQVEC + KTLORX  * KCQVEC + J
+      J1(J) = KOQVEC + ITKRST * KCQVEC + J
+      J2(J) = KOQVEC + ITK    * KCQVEC + J
+C
+      IF (ITK .LE. KLUST)  GO TO 30
+      IPC = IW(J2(JQVEPA))
+      IFR = IW(J2(JQVECL))
+C
+C       new track :
+C
+   30 IFL = 0
+      IF (KTDROP .NE. 0)  THEN
+        KTLORX = KTDROP
+        KTDROP = IW(JR(JQVENP))
+      ELSE
+        KTLORX = KFFRT
+        KFFRT = KFFRT + 1
+        IF (KFFRT .GE. KLFRT)  CALL QSBANK ('QVEC', KFFRT+200)
+      ENDIF
+C
+C       mass > 0 ?
+C
+      IF (RW(J1(JQVEQM)) .LT. 1.E-9)  GO TO 60
+C
+C       basic attributes :
+C
+      RW(JR(JQVEQM)) = RW(J2(JQVEQM))
+      RW(JR(JQVECH)) = RW(J2(JQVECH))
+      P1P2 = RW(J1(JQVEQX)) * RW(J2(JQVEQX)) +
+     &       RW(J1(JQVEQY)) * RW(J2(JQVEQY)) +
+     &       RW(J1(JQVEQZ)) * RW(J2(JQVEQZ))
+      DELB2 = (RW(J1(JQVEQP))/RW(J1(JQVEQE)))**2 + 
+     &        (RW(J2(JQVEQP))/RW(J2(JQVEQE)))**2 -
+     &         2.0*P1P2/(RW(J1(JQVEQE))*RW(J2(JQVEQE)))
+C
+      IF (DELB2.GT.1.0E-6) THEN
+        RW(JR(JQVEQE)) = (RW(J1(JQVEQE)) * RW(J2(JQVEQE)) - P1P2) /
+     &    RW(J1(JQVEQM))
+        FAC = - (RW(JR(JQVEQE)) + RW(J2(JQVEQE))) /
+     &          (RW(J1(JQVEQE)) + RW(J1(JQVEQM)))
+        RW(JR(JQVEQX)) = RW(J2(JQVEQX)) + FAC * RW(J1(JQVEQX))
+        RW(JR(JQVEQY)) = RW(J2(JQVEQY)) + FAC * RW(J1(JQVEQY))
+        RW(JR(JQVEQZ)) = RW(J2(JQVEQZ)) + FAC * RW(J1(JQVEQZ))
+        RW(JR(JQVEQP)) = SQRT (RW(JR(JQVEQX))**2 + RW(JR(JQVEQY))**2 +
+     &    RW(JR(JQVEQZ))**2)
+      ELSE
+        RW(JR(JQVEQX)) = RW(J2(JQVEQX)) * 1.E-9
+        RW(JR(JQVEQY)) = RW(J2(JQVEQY)) * 1.E-9
+        RW(JR(JQVEQZ)) = RW(J2(JQVEQZ)) * 1.E-9
+        RW(JR(JQVEQP)) = RW(J2(JQVEQP)) * 1.E-9
+        RW(JR(JQVEQE)) = RW(J2(JQVEQM))
+      ENDIF
+C
+      IF (ITK .LE. KLUST)  GO TO 90
+C
+C       all boosted tracks from the same class ?
+C
+      IF (KCLAFR(ICL) .EQ. 0)  THEN
+        KCLAFR(ICL) = IFR
+        IF (IFR .GT. 0) KCLARM(ICL) = KCLARM(IFR)
+      ELSE
+        IF (IFR .NE. KCLAFR(ICL))  CALL QMTERM
+     &      ('_KTLORX_ Particles from different classes mixed up')
+      ENDIF
+C
+C       particle code, class :
+C
+      IW(JR(JQVECL)) = ICL
+      IW(JR(JQVEPA)) = IPC
+      IF (IPC .NE. 0)  THEN
+        IFP = IW(KOQPLI+IPC)
+        IF (IFP .EQ. 0)  IFP = KFPADR (IPC)
+        IW(JR(JQVENP)) =
+     &      IW(KOQFPA+IFP*KCQFPA+ICL)
+        IW(KOQFPA+IFP*KCQFPA+ICL) = KTLORX
+      ELSE
+        IW(JR(JQVENP)) = 0
+      ENDIF
+C
+C       KSAME pointer :
+C
+      IW(JR(JQVESP)) = IW(J2(JQVESP))
+      IW(J2(JQVESP)) = KTLORX
+C
+C       daughter - mother - daughter relation; match :
+C
+      IW(JR(JQVEND)) = 0
+      IW(JR(JQVENO)) = 0
+      IW(JR(JQVENM)) = IW(J2(JQVENM))
+      IW(JR(JQVEML)) = IW(J2(JQVEML))
+C
+C        bit masks :
+C
+      DO 9 IB=1,KLOCKM
+        IW(JR(JQVEBM+IB-1)) = IW(J2(JQVEBM+IB-1))
+9     CONTINUE
+      IW(JR(JQVELK)) = IW(J2(JQVELK))
+C
+C       vertices :
+C
+      IW(JR(JQVESC)) = IW(J2(JQVESC))
+      IW(JR(JQVEOV)) = IW(J2(JQVEOV))
+      IW(JR(JQVEEV)) = IW(J2(JQVEEV))
+      RW(JR(JQVEDB)) = RW(J2(JQVEDB))
+      RW(JR(JQVEZB)) = RW(J2(JQVEZB))
+      RW(JR(JQVESD)) = RW(J2(JQVESD))
+      RW(JR(JQVESZ)) = RW(J2(JQVESZ))
+      RW(JR(JQVECB)) = RW(J2(JQVECB))
+C
+C       other pointers etc. :
+C
+      IW(JR(JQVEKS)) = IW(J2(JQVEKS))
+      IW(JR(JQVETN)) = IW(J2(JQVETN))
+      IW(JR(JQVEQD)) = IW(J2(JQVEQD))
+C
+C       error matrix : not yet implemented.
+C
+      RW(JR(JQVEEM)) = -1.
+      RW(JR(JQVECF)) = RW(J2(JQVECF))
+      GO TO 90
+C
+C       Mass = 0 :
+C
+   60 IERR = IERR + 1
+      IF (IERR .LE. 10)  CALL QWMESE
+     &  ('_QVLORX_ Lorentz boost : beta close to 1')
+      CALL QVZERO (KTLORX)
+      KTLORX = 0
+C
+   90 END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d6 1
+a19 10
+C       Same particle already boosted ?
+C
+      KTLORX = ITK
+   20 KTLORX = IW(JR(JQVESP))
+      IF (KTLORX .EQ. ITK)  GO TO 30
+      IF (IW(JR(JQVECL)) .NE. ICL .OR. IW(JR(JQVEPA)) .NE. IPC .OR.
+     &    RW(JR(JQVEQM)) .NE. RW(J2(JQVEQM)))  GO TO 20
+      IFL = 1
+      GO TO 90
+C
+d43 5
+a47 1
+      IF (ABS (RW(J1(JQVEQP))**2 - P1P2) .GT. 0.0001 * P1P2)  THEN
+a68 1
+      IF (IFR .EQ. 0)  GO TO 70
+d71 1
+a71 1
+        KCLARM(ICL) = KCLARM(IFR)
+d138 1
+a138 9
+      GO TO 80
+C
+C       track ITK has zero attributes :
+C
+   70 IERR = IERR + 1
+      IF (IERR .LE. 10)  CALL QWMESE
+     &  ('_QVLORX_ Particle to be boosted has zero attributes')
+C
+   80 CALL QVZERO (KTLORX)
+@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

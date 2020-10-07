@@ -1,0 +1,99 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.52.25;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.27;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.28;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE DAFWR(IREC,ITYPE)
+
+*     FORTRAN WRITE FOR DIRECTORY RECORD (ITYPE=0) OR DATA RECORD
+*     If IREC=0 write last record, if modified
+#include "dacom.h"
+      COMMON/BCS/IW(1000)
+#include "param.h"
+      JREC=IREC
+      IF(ITYPE.EQ.0) THEN
+*        DIRECTORY RECORD
+         IF(JREC.EQ.0.AND.IDRR.GE.0) GOTO 100
+         IF(JREC.EQ.0) JREC=-IDRR/100
+         IDRR=LUNDA+100*JREC
+*        WRITE(UNIT=LUNDA,REC=JREC,ERR=90) (IW(IDR+I-1),I=1,NWRDA)
+         CALL DAFWRS(LUNDA,JREC,IW(IDR),NWRDA,*90)
+C        WRITE(6,'(''  WRITEDIR'',2I6)')  JREC
+         IW(IUB+5)=IW(IUB+5)+1
+      ELSE
+*        DATA RECORD
+         IF(JREC.EQ.0.AND.IDDR.GE.0) GOTO 100
+         IF(JREC.EQ.0) JREC=-IDDR/100
+         IDDR=LUNDA+100*JREC
+*        WRITE(UNIT=LUNDA,REC=JREC,ERR=90) (IW(IDD+I-1),I=1,NWRDA)
+         CALL DAFWRS(LUNDA,JREC,IW(IDD),NWRDA,*90)
+C        WRITE(6,'(''  WRITEDAT'',2I6)')  JREC
+         IW(IUB+5)=IW(IUB+5)+1
+      END IF
+      GOTO 100
+   90 IF(IW(LUP).EQ.0) GOTO 99
+      WRITE(IW(LUP),1001) LUNDA
+   99 CALL BABEND('DAFWR')
+  100 RETURN
+ 1001 FORMAT('0---------- DA-UNIT',I4,' WRITE ERROR - STOP')
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK dafwr
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

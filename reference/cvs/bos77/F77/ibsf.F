@@ -1,0 +1,18 @@
+      FUNCTION IBSF(SUBNAM,ID)
+      CHARACTER*(*) SUBNAM
+      CHARACTER*5   SUBNA
+      CHARACTER*26 ATOZ
+      DATA ATOZ/'ABCDEFGHIJKLMNOPQRSTUVWXYZ'/
+
+      IF(ID.LT.100) THEN
+         SUBNA=SUBNAM
+         DO 10 I=1,5
+         J=INDEX(ATOZ,SUBNA(I:I))
+         IF(J.EQ.0) J=26
+   10    IBSF=25*IBSF+J-1
+         IBSF=100*IBSF+ID
+      ELSE
+         IBSF=ID
+      END IF
+  100 RETURN
+      END

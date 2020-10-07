@@ -1,0 +1,174 @@
+head	1.3;
+access;
+symbols
+	alio83:1.3
+	alio82:1.3
+	alio81:1.3
+	alio80:1.3
+	alio74:1.3
+	alio73:1.3
+	alio72:1.3
+	alio71:1.3
+	alio70:1.3
+	alio68:1.3
+	alio69:1.3
+	alio67:1.3
+	alio66:1.3
+	alio65:1.3
+	alio64:1.3
+	alio63:1.3
+	alio62:1.3
+	alio61:1.3
+	alio60:1.3
+	alephio53:1.3
+	v4:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	96.03.13.15.00.08;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.01.18.13.49.05;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.52.36;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.52.37;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@import alephio 52 from historian. Modify aclose.F to NOT call brwnd twice
+for the same file. update version.h to 5.3
+@
+text
+@      SUBROUTINE AFILOU(FNAME,FTYPE,FDEVI,IRET)
+C-----------------------------------------------------------------------
+CKEY ALREAD RUNCARDS FILO
+C - Author:       D.Schlatter                      - 880811
+C   Modified by : H.Albrecht                       - 881108
+C   Modified by : D.Schlatter and M.Talby          - APR 89
+C
+C!  get filename and alephtype from output banks 'FILO','POT ','DST '
+C   as defined in AIOCAR
+C
+C  'filename' means 'fn ft fm' on IBM ,'fname.ext' on
+C             VAX, APOLLO and DECS
+C  'filetype' means 'ft' on IBM ,'ext' on VAX, APOLLO and DECS.
+C
+C     input:    runcard  FILO  'filename '
+C                         if filetype is not an alephtype then:
+C                        FILO  'filename | alephtype'
+C                         other allowed cards are: POT, DST, MINI
+C                  e.g:  FILO 'ABC.NATIVE'
+C                        FILO 'XYZ.DAT | NATIVE'
+C
+C     output:   FNAME      filename
+C               FTYPE      alephtype (NATIVE,EPIO,EDIR )
+C               FDEVI      device ('DISK'/ 'TAPE')
+C               IRET       ACDARG RETURN code
+C                          = 0  bank FILO found with correct filename
+C
+C   Calls:   AIOCAR,ACDARG
+C
+C   ENTRY    AFILO0(ISTR,IND,NR)      RETURNs namind+nr for given stream
+C-----------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "alrcom.h"
+      CHARACTER*(*) FNAME(1),FTYPE(1),FDEVI(1)
+      CHARACTER*80  FN,FT,FD
+      CHARACTER*4   CARINP(MINPUT),CAROUT(MOUTPT)
+      CHARACTER*50  CPARA
+      INTEGER       NAMFO(MOUTPT),NRFO(MOUTPT)
+      INTEGER       ACARD0
+      INTEGER       ACARD3
+      LOGICAL FIRST
+      SAVE
+      DATA NAMFO/MOUTPT*0/,NRFO/MOUTPT*0/
+      DATA FIRST/.TRUE./
+
+      IF(FIRST) THEN
+        FIRST=.FALSE.
+        CALL AIOCAR(CARINP,MINPUT,CAROUT,MOUTPT)
+        NPAR=2
+      ENDIF
+C-----------------------------------------------------------------------
+C
+C                    loop over all legal output cards
+C
+      ISTRM = 1
+      IRET = -1
+      DO 10 IC=1, MOUTPT
+C                    get filename/type from next card FILO,POT,,,
+        CALL ACDARG(CAROUT(IC),'NATIVE','A',FN,FT,FD,IRC)
+        IF (IRC .NE. -1) IRET=IRC
+        IF (IRC .EQ. 1)  IRET = 5
+        IF (IRC .NE. 0) GO TO 9
+        FNAME(ISTRM)=FN
+        FTYPE(ISTRM)=FT
+        FDEVI(ISTRM)=FD
+        ILEN=ACARD3(NPAR,'WITH',CPARA)
+        IF(ILEN.NE.0) FDEVI(ISTRM)=CPARA(6:ILEN)
+        NAMFO(ISTRM) = ACARD0( NR )
+        NRFO(ISTRM) = NR
+    9   IF(IRC .NE. -1) ISTRM = ISTRM + 1
+   10 CONTINUE
+C
+  999 RETURN
+C                   RETURN namind + number of card-bank
+      ENTRY AFILO0( JSTRM, NAID,NUM )
+      NAID = NAMFO(JSTRM)
+      NUM  = NRFO(JSTRM)
+      END
+#endif
+@
+
+
+1.2
+log
+@ Modified Files:
+	acdarg.F afilin.F afilou.F ainqui.F amount.F aoptap.F astage.F
+	awrtap.F
+@
+text
+@a0 1
+*DK afilou
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d13 2
+a14 2
+C             VAX, APOLLO and DEC
+C  'filetype' means 'ft' on IBM ,'ext' on VAX, APOLLO and DEC.
+@
+
+
+1.1.1.1
+log
+@import alephio 4
+@
+text
+@@

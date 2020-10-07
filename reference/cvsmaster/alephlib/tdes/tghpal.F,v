@@ -1,0 +1,263 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.2
+	aleph304_5:1.2
+	aleph304_4:1.2
+	aleph304_3:1.2
+	aleph304_2:1.2
+	aleph304_1:1.2
+	aleph304:1.2
+	aleph303_3:1.2
+	aleph303_2:1.2
+	aleph303_1_mc1:1.2
+	aleph303_1:1.2
+	aleph303:1.2
+	aleph302_9:1.2
+	aleph302_8:1.2
+	aleph302_7:1.2
+	aleph302_6:1.2
+	aleph302_5:1.2
+	aleph302_4:1.2
+	aleph302_3:1.2
+	aleph302_2:1.2
+	aleph302_1:1.2
+	aleph302:1.2
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.03.06.11.59.40;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.43.36;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.43.37;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@1st test version aleph302
+@
+text
+@      SUBROUTINE TGHPAL(P,PA)
+C
+C----------------------------------------------------------------------
+C! Transform helix from ALEPH coordinates to TPC coordinates
+CKEY TPCDES HELIX TRANSFORM / USER
+C     Author:   R. Johnson   19-08-89
+C     Modified: R. Johnson   21-1-91 separate the geometry calculations
+C                            into another routine which can be called
+C                            in a different context
+C               D. Casper    05-03-97 handle new style alignment bank
+C                            (TNOS)
+C
+C     Input:
+C       - P(5)       /R     Helix parameters in ALEPH frame
+C                           1/r,tanl,phi0,d0,z0
+C                           (d0>0 = positive ang. mom. about z axis)
+C                           (r>0  = counterclockwise rotation)
+C     Output:
+C       - PA(5)     /R      Helix parameters in TPC frame
+C
+C   Remarks:  only translations and rotations about the z axis are
+C             possible in this case.  Rotations about x and y are
+C             ignored since the helix model always assumes a helix
+C             about the z axis.
+C
+C----------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "alcons.h"
+#include "tposjj.h"
+#include "tnosjj.h"
+#include "evehjj.h"
+#include "bcs.h"
+C
+      DIMENSION P(*),PA(*),DX(3)
+      INTEGER ALGTDB
+      LOGICAL FIRST
+      DOUBLE PRECISION XC,YC
+      DATA FIRST/.TRUE./,EPS/0.001/
+C
+#include "bmacro.h"
+C
+      IF (FIRST) THEN
+        FIRST=.FALSE.
+        NTPOS=NAMIND('TPOS')
+        NTNOS=NAMIND('TNOS')
+        NTOAL=NAMIND('TOAL')
+        NEVEH=NAMIND('EVEH')
+      ENDIF
+      DO 10 I=1,5
+        PA(I)=P(I)
+   10 CONTINUE
+C
+C++   Find the run number
+C
+      KEVEH=IW(NEVEH)
+      IF (KEVEH.EQ.0) THEN
+        CALL ALTELL('TGHPAL: cannot find EVEH bank',0,'RETURN')
+        RETURN
+      ENDIF
+      IRUN=IW(KEVEH+JEVERN)
+C
+C++   Link to the bank of alignment constants.  Read them from the
+C++   database if necessary.  Look for TNOS bank (new alignment) first.
+C
+      KTNOS = 0
+      KTPOS = 0
+      IF (IW(NTOAL).EQ.0) THEN
+        KTNOS=IW(NTNOS)
+        IF (KTNOS.EQ.0) THEN
+            IRET=ALGTDB(JUNIDB(0),'TNOS',IRUN)
+            KTNOS=IW(NTNOS)
+        ELSE IF (KTNOS.GT.0 .AND. (IRUN.LT.ITABL(KTNOS,1,JTNOVR) .OR.
+     &        IRUN.GT.ITABL(KTNOS,1,JTNOVR+1))) THEN
+          IRET=ALGTDB(JUNIDB(0),'TNOS',IRUN)
+          KTNOS=IW(NTNOS)
+        ENDIF
+      ENDIF
+      IF (KTNOS.EQ.0) THEN
+        KTPOS=IW(NTPOS)
+        IF (KTPOS.EQ.0) THEN
+            IRET=ALGTDB(JUNIDB(0),'TPOS',IRUN)
+            KTPOS=IW(NTPOS)
+        ELSE IF (IRUN.LT.ITABL(KTPOS,1,JTPOVR)
+     &        .OR. IRUN.GT.ITABL(KTPOS,1,JTPOVR+1)) THEN
+          IRET=ALGTDB(JUNIDB(0),'TPOS',IRUN)
+          KTPOS=IW(NTPOS)
+        ENDIF
+      ENDIF
+      IF (KTPOS.EQ.0 .AND. KTNOS.EQ.0) THEN
+        CALL ALTELL('TGHPAL: Cannot locate TPOS or TNOS on database',
+     &      0,'RETURN')
+        RETURN
+      ENDIF
+C
+      IF (KTNOS.GT.0) THEN
+        DX(1)=RTABL(KTNOS,1,JTNOTL)
+        DX(2)=RTABL(KTNOS,1,JTNOTL+1)
+        DX(3)=RTABL(KTNOS,1,JTNOTL+2)
+        DPHI=RTABL(KTNOS,1,JTNORT+2)
+      ELSE
+        DX(1)=RTABL(KTPOS,1,JTPOTL)
+        DX(2)=RTABL(KTPOS,1,JTPOTL+1)
+        DX(3)=RTABL(KTPOS,1,JTPOTL+2)
+        DPHI=RTABL(KTPOS,1,JTPORT+2)
+      ENDIF
+      CALL THTRAN(P,DX,DPHI,PA)
+C
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d10 2
+d31 1
+d46 2
+d64 1
+a64 1
+C++   database if necessary.
+d66 11
+a76 6
+      KTPOS=IW(NTPOS)
+      IF (KTPOS.EQ.0) THEN
+        IRET=ALGTDB(JUNIDB(0),'TPOS',IRUN)
+        IF (IRET.EQ.0) THEN
+          CALL ALTELL('TGHPAL: cannot find TPOS on database',0,'RETURN')
+          RETURN
+d78 2
+d81 4
+a84 2
+      ELSE
+        IF (IRUN.LT.ITABL(KTPOS,1,JTPOVR)
+a86 5
+          IF (IRET.EQ.0) THEN
+            CALL ALTELL('TGHPAL: cannot find TPOS on database',
+     &                                                  0,'RETURN')
+            RETURN
+          ENDIF
+d90 5
+d96 11
+a106 4
+      DX(1)=RTABL(KTPOS,1,JTPOTL)
+      DX(2)=RTABL(KTPOS,1,JTPOTL+1)
+      DX(3)=RTABL(KTPOS,1,JTPOTL+2)
+      DPHI=RTABL(KTPOS,1,JTPORT+2)
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

@@ -1,0 +1,57 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	tpc300_1:1.1.1.1
+	tpc300:1.1.1.1
+	tpc218:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	94.12.09.14.29.50;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.09.14.29.51;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*CD faster
+C
+C  FASTER : variables used in fast simulation
+C
+      COMMON / LANDAU / NITLAN,NITIND,INTWRD
+      COMMON / EXBEFF / XPROP,TTTT,XXXX(1001),XSHFT(50)
+      COMMON / EVT / IEVNT,ISECT
+      COMMON / T3TR / JSEGT,NSEGT,ITYPE,WIRRAD(4),WIRPHI(4)
+     &               ,AVTIM(4),NELE(4),NCL,SIGT(4)
+      COMMON / TPSG / CC(3),XX(3),TOTDIS,XLEN,ISTY,IE
+      COMMON / XBIN / IBIN(4),NAVBIN(4),NB
+      DIMENSION XEX(4,4)
+      PARAMETER (SQ2=1.4142136,SQ3=1.7320508)
+@
+
+
+1.1.1.1
+log
+@import tpcsim 300
+@
+text
+@@

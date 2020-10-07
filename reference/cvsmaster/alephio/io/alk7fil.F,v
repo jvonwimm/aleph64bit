@@ -1,0 +1,183 @@
+head	1.4;
+access;
+symbols
+	alio83:1.4
+	alio82:1.4
+	alio81:1.4
+	alio80:1.4
+	alio74:1.4
+	alio73:1.4
+	alio72:1.3
+	alio71:1.1
+	alio70:1.1
+	alio68:1.1
+	alio69:1.1
+	alio67:1.1
+	alio66:1.1
+	alio65:1.1
+	alio64:1.1
+	alio63:1.1
+	alio62:1.1
+	alio61:1.1
+	alio60:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.4
+date	97.11.24.14.51.01;	author flr;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.11.14.15.31.29;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.11.14.15.22.07;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.04.23.09.59.38;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@alephio 7.3 enforce -s 600 in alk7fil and not -S 600
+@
+text
+@       SUBROUTINE ALK7FIL (TAPE,IRET)
+C ------------------------------------------------------------------
+C - F.Ranjard - 920114
+CKEY ALEF RUN TAPE / USER
+C! set the FILI CARD for a given K7
+C - Input   : TAPE       / A  = tape number i.e. AA1234_99
+C - Output  : IRET       / I  = return code
+C                               =0  Ok
+C                               =1  no K7
+C                               =2  no space to create FILI card
+C -------------------------------------------------------------------
+#ifndef DOC
+      CHARACTER*(*) TAPE
+#include "bcs.h"
+      INTEGER ACARD1
+      CHARACTER STRING*68, TYPE*4, LABEL*3, CART*30, SIZE*7
+C -------------------------------------------------------------------
+      IER = 0
+      IND = ACARD1(' ')
+      IND = NDROP ('FILI',0)
+      CART = TAPE
+      CALL CLTOU (CART)
+      IF (CART(1:1) .EQ. ' ') THEN
+         IER = 1
+         GOTO 999
+      ENDIF
+      IND = NBANK ('FILI',0,17)
+      IF (IND.EQ.0) THEN
+         IER = 2
+      ELSE
+C
+         LC = LNBLNK(CART)
+         IF (LC.EQ.6) CART = CART(1:6)//'.1'
+         JU = INDEX (CART,'_')
+         IF (JU.GT.0) CART(JU:JU) = '.'
+         JP = INDEX(CART(8:),'.')
+         IF (JP.EQ.0) THEN
+            LABEL = '.SL'
+            IF (CART(1:2).EQ.'AR' .OR. 
+     &          CART(1:2).EQ.'AS' .OR.
+     &          CART(1:2).EQ.'AU' .OR.
+     &          CART(1:2).EQ.'AV' .OR.
+     &          CART(1:2).EQ.'AT' .OR.
+     &          CART(1:1).EQ.'Y' ) LABEL = '.AL'
+            IF (CART(1:2).EQ.'AX') LABEL = '.NL'
+            LC = LNBLNK(CART)
+            CART = CART(1:LC)//LABEL
+         ENDIF
+         JS = INDEX(CART,'-S')
+         IF (JS.EQ.0) THEN
+            SIZE = ' -S 200'
+            IF (CART(1:2).EQ.'AR' .OR. 
+     &          CART(1:2).EQ.'AS' .OR.
+     &          CART(1:2).EQ.'AU' .OR.
+     &          CART(1:2).EQ.'AV' .OR.
+     &          CART(1:2).EQ.'AT' .OR.
+     &          CART(1:1).EQ.'Y') SIZE = ' -S 600'
+            LC = LNBLNK(CART)
+            CART = CART(1:LC)//SIZE 
+         ENDIF
+         JS = INDEX(CART,'-S')
+         CART(JS+1:JS+1) = 's'
+         LC = LNBLNK(CART)
+         STRING = 'ALDATA | EPIO | CART '//CART(1:LC)
+         CALL ALINST (STRING,IW(IND+1),NWRDS)
+         IND = NBANK('FILI',0,NWRDS)
+      ENDIF
+C
+ 999  CONTINUE
+      END
+#endif
+@
+
+
+1.3
+log
+@alephio72 size param in alk7fil.F
+@
+text
+@d61 2
+@
+
+
+1.2
+log
+@alephio 7.2 introduce -s parameter in alk7fil
+@
+text
+@d57 1
+a57 2
+     &          CART(1:1).EQ.'Y') SIZE = ' -S 600'            LC = LNBLNK(CART)
+
+@
+
+
+1.1
+log
+@move alph, dbas, a part of alef and a part of c to alephio
+Modified Files:
+ 	version.h
+ Added Files:
+ 	adbrow.F adbrpn.F adbrun.F adbswp.F adbver.F agetdb.F agtfil.F
+	albos.F aldawr.F aldtyp.F aleveh.F alfind.F alfmt.F algtbk.F
+ 	algtdb.F algtlu.F algtro.F algtyp.F alinst.F alk7fil.F
+ 	alk7fru.F alk7op.F alk7tru.F alredb.F alrune.F alrunh.F
+ 	alrunr.F alseed.F alstho.F alstin.F alstri.F altabl.F alvsn.F
+ 	aopdbs.F aublis.F aubos.F aubprs.F bkcari.F bkinca.F bkrhab.F
+ 	bkrhal.F bkrhaw.F bktobk.F cafiht.F chahol.F dafrds.F gtdbas.F
+ 	gtstup.F igtfmt.F jhocha.F julrec.F junial.F junidb.F
+ 	kbytrec.F loctab.F nameru.F ubpack.F uclean.F uindxs.F usbos.F
+ 	usgtdb.F utcblk.F utccop.F utcofo.F utwocl.F utwoex.F
+Removed Files:
+	noibm.F
+@
+text
+@d16 1
+a16 1
+      CHARACTER STRING*68, TYPE*4, LABEL*3, CART*12
+d22 1
+d39 7
+a45 4
+            IF (CART(1:2) .EQ.'AA')LABEL = '.AL'
+            IF (CART(1:2) .EQ.'AR')LABEL = '.AL'
+            IF (CART(1:2) .EQ.'AS')LABEL = '.AL'
+            IF (CART(1:2) .EQ.'AX')LABEL = '.NL'
+d48 13
+@

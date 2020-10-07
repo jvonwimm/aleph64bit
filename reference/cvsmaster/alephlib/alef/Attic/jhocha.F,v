@@ -1,0 +1,50 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  aleph212:1.1.1.1 ALEPH212:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.02.07.11.40.41;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.02.07.11.40.42;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      INTEGER FUNCTION JHOCHA (CHAR)
+C -----------------------------------------------------------------
+C - F.Ranjard - 890228
+C! return in JHOCHA the hollerith representation of the character
+C! variable CHAR
+C  ----------------------------------------------------
+#ifndef DOC
+      CHARACTER*4   CHAR
+      CALL UCTOH (CHAR,IHOL,4,4)
+      JHOCHA = IHOL
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

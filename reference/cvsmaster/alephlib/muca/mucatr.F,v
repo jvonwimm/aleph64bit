@@ -1,0 +1,183 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.42.43;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.42.44;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE MUCATR(ITRA,PR1OUT,PR2OUT,IFLAG)
+C---------------------------------------------------------------
+C! Probability for a track to be a muon from MUCALO
+C  Author:    R.Tenchini     900128
+CKEY MUCAL TRACK CALO / USER
+C  Input :
+C     ITRA = track index in PFRF
+C  Output:
+C     PR1OUT  = Probability (from 0 to 100%) to have muon in
+C               the calobject linked to that track
+C     PR2OUT  = Same meaning as PR1, but for prompt muons only
+C               (i.e. exiting HCAL)
+C     IFLAG = return flag.
+C                          1 = OK
+C                          0 = Calob without Digital Patterns
+C                         -1 = Track not linked to calobs
+C                         -2 = Maklis or Mucalo vectors underdimensioned
+C
+C - Input banks : PCRL
+C
+C--------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "mucapa.h"
+#include "bcs.h"
+#include "pcrljj.h"
+      DIMENSION IPLIS(LENVEC),ICLOS(LENVEC)
+      PARAMETER(MAXL=100)
+      DIMENSION NCAVEC(MAXL)
+      DATA IFI /0/
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+C
+C - 1st entry : set name-indices
+C
+      IF (IFI .EQ. 0) THEN
+         IFI = 1
+         NAPCRL = NAMIND('PCRL')
+      ENDIF
+C
+C - next entry
+C
+      IPCRL = IW(NAPCRL)
+      IF(IPCRL.LE.0) GOTO 909
+C
+      IFLAG=-2
+      CALL MAKLIS(IPCRL,JPCRPF,JPCRPC,ITRA,NCLOB,ICLOS,IER)
+      IF(IER.NE.0) RETURN
+      IFLAG=-1
+      IF(NCLOB.EQ.0) RETURN
+      PR1OUT=0.
+      PR2OUT=0.
+      IFLAG=0
+      DO 100 J=1,NCLOB
+         ICAL=ICLOS(J)
+         CALL MAKLIS(IPCRL,JPCRPC,JPCRPP,ICAL,NPATT,IPLIS,IER)
+         IF(IER.NE.0) THEN
+            IFLAG=-2
+            RETURN
+         ENDIF
+         IF(NPATT.EQ.0) GO TO 100
+         CALL MUCALO(ICAL,PR1,ERPR1,PR2,ERPR2,NCAL,NCAVEC,MAXL,IER)
+         IF(IER.NE.0) THEN
+            IFLAG=-2
+            RETURN
+         ENDIF
+         IFLAG=1
+         IF(PR1OUT.LT.PR1) PR1OUT=PR1
+         IF(PR2OUT.LT.PR2) PR2OUT=PR2
+100   CONTINUE
+909   RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

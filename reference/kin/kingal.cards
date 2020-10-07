@@ -1,0 +1,36 @@
+*   RUN #                   RUN'S TITLE
+RUN  514  'BHLUMI GENERATOR - BHLU02 PRODUCTION SICAL'
+*     FIRST EVENT   LAST EVENT TO BE GENERATED
+TRIG       1           1000
+*  use RANMAR generator for random numbers
+*                   (see KINLIB DOC for informations)
+*  INSEED : first seed (range assigned per institute)
+*  LOSEED : second seed (incremented locally for new runs)
+*      INSEED          LOSEED (1-30000)
+RMAR     514               1
+*FILO 'ALDATA | EPIO  | CART AC5260.1.SL SIZE 200 AUTOPUT'
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG
+DEBU  6/           1         2
+* requested time left at the end of job (in sec)
+TIME 10
+*    to save event file (EPIO format)
+*FILO 'BHLUPRO2 EPIO A '
+*    to save histograms
+*HSTO 'SNL:BHLUM.HIS'
+*  93   sigma-x      sigma-y     sigma-z  (cm)
+SVRT     0.011       0.0005       0.70
+*  93   Xpos    Ypos     Zpos    INCLUDING SICAL OFFSETS IN X Y ONLY
+XVRT    0.0757  0.0737    0.18
+*  93   alpha x  alpha y
+AVRT    0.131E-03  -0.266E-03
+* CMSENE : Center of mass energy ( in GeV);
+* THMIN  : Minimum generation angle (in degrees)
+* THMAX  : Maximum generation angle (in degrees)
+* EPSCM  : Separation between soft and hard photons (in units of beam
+*          energy) - recommanded value 0.0001;
+* KEYRAD : 1 see BHLUMI manual
+* KEYOPT : 3001    see BHLUMI manual
+* WTMAX  : Maximum generation weight
+*       CMSENE   THMIN     THMAX    EPSCM   KEYRAD  KEYOPT  WTMAX
+GBHL    91.191   0.600     4.100    0.0001    1      3001   3.0
+ENDQ

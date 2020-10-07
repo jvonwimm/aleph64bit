@@ -1,0 +1,76 @@
+      REAL FUNCTION HCORFC(ENE,ITH,IPH)
+C***********************************************************
+C!  HCAL tower energy correction for the bug that was      *
+C   present on the online software in 1996, 1997 and       *
+C   early 1998 data                                        *
+C                                                          *
+C   Author: A. Sciaba`     27/05/98                        *
+C                                                          *
+C   Input: R  ENE    tower energy                          *
+C          I  ITH    tower theta index                     *
+C          I  IPH    tower phi index                       *
+C                                                          *
+C   Input banks: HNGR, HCCV                                *
+C                                                          *
+C   Called by HPRANA                                       *
+C?
+C!===========================================================
+#ifndef DOC
+#include "bcs.h"
+#include "rcurnt.h"
+      REAL FIC(36)
+      LOGICAL FIRST / .TRUE. /
+      DATA FIC / 0.599, 0.477, 0.466, 0.460, 0.518, 0.472,
+     &           0.508, 0.547, 0.536, 0.500, 0.527, 0.623,
+     &           0.624, 0.692, 0.773, 0.753, 0.706, 0.722,
+     &           0.819, 0.741, 0.778, 0.799, 0.653, 0.699,
+     &           0.625, 0.621, 0.591, 0.566, 0.631, 0.667,
+     &           0.674, 0.676, 0.751, 0.660, 0.698, 0.645 /
+#include "bmacro.h"
+C
+C     Loads the HNGR bank
+      IF (FIRST) THEN
+         IND = MDARD(IW,KUCONS,'HNGR',0)
+         FIRST = .FALSE.
+      ENDIF
+
+      HCORFC = ENE
+
+C     Corrects only a the runs affected by the bug
+      IF (IRUNRC.LT.41298.OR.IRUNRC.GT.45289) RETURN
+
+C     Loads online calibration constant
+      JHCCV = IW(NAMIND('HCCV'))
+      IF (JHCCV.LE.0) THEN
+         CALL RERROR('HCORFC',1,'HCCV is missing: '//
+     &        'HCAL online bug cannot be corrected')
+         RETURN
+      ENDIF
+
+C     Determines the module number (1-24 barrel, 25-36 endcaps)
+      JHNGR = IW(NAMIND('HNGR'))
+      IF (JHNGR.LE.0) THEN
+         CALL RERROR('HCORFC',2,'HNGR bank missing: '//
+     &        'HCAL online bug cannot be corrected')
+         RETURN
+      ENDIF
+      IHNGR = ITABL(JHNGR,ITH,IPH)
+      IHBA = MOD(IHNGR,1000)
+      IHEC = IHNGR/1000
+      IF (IHBA .GT. 0) THEN
+         ISUB = 1
+         IMD = (IPH-1)/4 + 1
+      ELSE
+         ISUB = 2
+         IMD = (IHEC-1)/10 + 1 + 24
+      ENDIF
+
+C     Rescales the tower energy to the right value
+      TUB = REAL(IW(JHCCV+3))
+      CAL = 10000.*FIC(IMD)/TUB
+      WRG = REAL(INT(CAL))
+      HCORFC = ENE * CAL / WRG
+C
+      RETURN
+      END
+#endif

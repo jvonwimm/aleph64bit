@@ -1,0 +1,947 @@
+*DK DJBOP
+CH..............+++
+CH
+CH
+CH
+CH
+CH
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  DJBOP
+CH
+      SUBROUTINE DJBOP(IW6)
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+CH
+C ---------------------------------------------------------------------
+C
+C    Created by H.Drevermann                   28-JUL-1988
+C    Modifications:
+C   15-Oct-1991 F.Ranjard Call ALPHREAD package
+C
+C ---------------------------------------------------------------------
+      INCLUDE 'J_RLUNIT.INC'
+      INCLUDE 'A_BCS.INC'
+C     ................................ SEE HLIMIT BELOW
+      COMMON /PAWC/ IHBDD(10000)
+C     ................................
+      LOGICAL FBNOP
+      DATA FBNOP/.TRUE./
+      CHARACTER *3 TER
+      DATA LIBR/0/
+      DATA LENBC/400000/
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+      CALL TIMEST(99999999.)
+C     WE NEED A BIG NUMBER TO AVOID THAT THE JOB IS STOPPED BY TIMEL!!!
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+      LRCONS=JUNIDB(0)
+      LRGEOM = LRCONS
+      IF (FBNOP)THEN
+        LOUTRL = IW6
+        LDEBRL = IW6
+        CALL BNAMES(3000)
+        CALL DPARGV(81,'BOS',4,FBOS)
+        IF(FBOS.NE.1.) THEN
+          CALL BOS(IW,LENBCS)
+        ELSE
+          CALL DPARGI(81,'BOS',LBOS)
+          LBOS=100000*LBOS
+          CALL DGTIM0
+          CALL BOS(IW,LBOS)
+          CALL DGTIM1
+        END IF
+C       IW(6)=LOUTRL
+        IW(6)=IW6
+        CALL LKSTOUT(IW6)
+        CALL DJCARD(IER)
+    1   CALL AOPDBS(' ',IER)
+    2   IF(IER.NE.0) THEN
+          WRITE(TER,1000) IER
+ 1000     FORMAT(I3)
+          CALL DWRT('/aleph/dbase/adbscons.daf not found. IER='//TER)
+          CALL DWRT('or     DBASE:ADBSCONS.DAF not found. IER='//TER)
+        ELSE
+          FBNOP=.FALSE.
+        END IF
+C       ........................ in TRNCON hbook is set up which leads to a
+C       ........................ crash in unix if one does not set up:
+        CALL HLIMIT(10000)     ! and the COMMON /PAWC/ IHBDD(10000)
+C - call ALPHREAD package
+        CALL ABMODE ('INTE')
+        CALL ABRSEL ('E','    ',JRET)
+        CALL RERROR('RINERR',IDUM1,' ')
+        CALL VINIJO
+      END IF
+      IF(LIBR.EQ.456) THEN
+C       THESE ROUTINES SHOULD NOT BE CALLED HERE BUT ARE INCLUDED TO
+C       GET THEM IN THE LIBRARY
+        CALL TFILTJ(IER)
+        CALL AUNPCK(' ',' ',IER)
+        CALL VBSINR
+        CALL TRNCON
+      END IF
+C     ...................... data card for BTAG
+      IDUM=NBANK('JRES',0,1)
+      NUMJ=NBANK('NUMJ',0,1)
+      IDUM=NBANK('QFND',0,1)
+      END
+
+
+
+
+
+
+C
+C +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+C
+      SUBROUTINE DJCARD(IER)
+C  Author : Christoph  Grab
+C           Read an input cards file into DALI.
+C           Needs log. assignments to cards file.
+C
+C
+C------------------------------------------------------------------  DC
+C     HARD WIRED IN P_DALB_ALEPH.FOR
+      COMMON /DCFTVT/ TFILDC,TITLDC,TDEFDC
+      CHARACTER*8 TFILDC
+      CHARACTER *10 TITLDC
+      CHARACTER *3 TDEFDC
+C
+C  ------------------------------------------------------
+C
+C Input logical units: (17=cards)
+      INTEGER LUNCAR, IER
+      DATA LUNCAR/17/
+      INCLUDE 'A_BCS.INC'
+C  ------------------------------------------------------
+C
+C Log.unit to read card file must be redefined:
+      IW(5)  = LUNCAR
+      CALL DGOPEN(LUNCAR,TFILDC//'CARDS',12,*10,IER)
+      IF(IER.LT.0) GO TO 10
+      CALL BREADC
+      RETURN
+   10 CALL DWRT_SETUP('DEFAULT')
+      CALL DWRT('Error opening '//TFILDC//'CARDS')
+      CALL EXIT
+      END
+*DK DJMINI
+CH..............+++
+CH
+CH
+CH
+CH
+CH
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  DJMINI
+CH
+      SUBROUTINE DJMINI
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+CH
+C ---------------------------------------------------------------------
+C
+C    Created by H.Drevermann                   28-JUL-1988
+C
+C!:  READ MINI
+C ---------------------------------------------------------------------
+      CHARACTER*2 TR
+      DATA TR/'TR'/
+      CALL MINFIL
+      CALL DHTMO1(1,TR,FYES)
+      END
+*DK DOPSEQ
+CH..............+++
+CH
+CH
+CH
+CH
+CH
+CH
+CH +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ DOPSEQ
+CH
+      SUBROUTINE DOPSEQ(LUN,FNAME,IER)
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+CH
+C   OLD : SUBROUTINE DAODIR(,,'SEQ',)
+C           open files for sequential reading
+C           LUN      logical unit
+C           FNAME    filename (including type)
+C           IRET     return code = 0   ok
+C
+      CHARACTER*(*) FNAME
+C*CD ABRCOM
+      COMMON /ABRCOM/ BATCH,INIT,CLOSE1,CLOSE2,FWFILM
+     &               ,IUNDAT(2),IUTDAT(5),IUNSEL,IUNSE2,IUTSEL
+     &               ,MASKA,MASKW
+     &               ,WLIST,TLIST
+      LOGICAL BATCH, INIT, CLOSE1, CLOSE2, FWFILM
+      CHARACTER*1   TLIST, WLIST
+C
+
+      CALL BISELU(LUN,0,0,0)
+      CALL AOPEN(LUN,FNAME ,'    ','     ',  IER)
+      IUNDAT(1)=LUN
+      END
+*DK DOPREC
+CH..............+++
+CH
+CH
+CH
+CH
+CH
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ DOPREC
+CH
+      SUBROUTINE DOPREC(LUN,TNAM,TTYP,TDEV,IER)
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+CH
+C           open files for direct reading  (with record nr or sequential
+C           LUN      logical unit
+C           TNAM     filename
+C           TTYP     type = EPIO
+C           TDEV     device = disk
+C           IRET     return code = 0   ok
+C
+      CHARACTER*(*) TNAM,TTYP,TDEV
+      CHARACTER *70 TNAM1,TDEV1
+C*CD ALRCOM
+      COMMON/ALRCOM/ DIRECT, DUM(12)
+      LOGICAL DIRECT
+
+C*CD ABRCOM
+      COMMON /ABRCOM/ BATCH,INIT,CLOSE1,CLOSE2,FWFILM
+     &               ,IUNDAT(2),IUTDAT(5),IUNSEL,IUNSE2,IUTSEL
+     &               ,MASKA,MASKW
+     &               ,WLIST,TLIST
+      LOGICAL BATCH, INIT, CLOSE1, CLOSE2, FWFILM
+      CHARACTER*1   TLIST, WLIST
+C
+      LOGICAL FIRST/.TRUE./
+C
+C     ....................................................................
+C#ifdef UNIX
+C      INTEGER SYSTEM
+C#endif /* UNIX */
+C     ....................................................................
+      DIRECT=.FALSE.
+C     ... Schlatter: AOPEN is called twice. First sequentially to read the
+C     ... first records (run records + first event record).
+      LNAM=LENOCC(TNAM)
+C     ....................................................................
+C#ifdef UNIX
+CC
+CC  Check if file is staged, but only if TDEV starts with CART.
+CC
+C      I1 = INDEX(TDEV, 'CART')
+C      IF (I1 .NE. 0) THEN
+C        I2 = INDEX(TDEV, '.')
+C        IF (I2 .NE. 0) THEN
+C          TTEMP = 'x=`stageqry -V '//TDEV(I1+4:I2-1)//
+C     .   ' -q '//TDEV(I2+1:I2+1)//' | wc -l` ; exit $x'
+C        ELSE
+C          TTEMP = 'x=`stageqry -V '//TDEV(I1+4:I2-1)//
+C     .   ' | wc -l` ; exit $x'
+C        ENDIF
+C        IER = SYSTEM(TTEMP(1:LENOCC(TTEMP)))/256
+C        IF (IER .EQ. 0) THEN
+C          IER = -1
+C          RETURN
+C        ENDIF
+C      ENDIF
+C#endif /* UNIX, testing */
+      TNAM1=TNAM
+      TDEV1=TDEV
+C     ....................................................................
+      CALL AOPEN(LUN,TNAM1,TTYP,TDEV1,IER)
+      IF(IER.NE.0) RETURN
+      IF(FIRST) THEN
+        FIRST=.FALSE.
+        IUNDAT(1)=LUN
+    1   CALL ABRREC('E','   ',IRET)
+        IF(IRET.GT.4) GOTO 99
+        IF(IRET.NE.1) GOTO 1
+      ENDIF
+C
+      DIRECT=.TRUE.
+C     Schlatter: Second call to AOPEN to read in direct access mode.
+      CALL AOPEN(LUN,TNAM1,TTYP,TDEV1,IER)
+      RETURN
+   99 IER=-1
+      END
+*DK DARDIR
+CH..............+++
+CH
+CH
+CH
+CH
+CH
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ DARDIR
+CH
+      SUBROUTINE DARDIR(LUN,ULIST,IREC,IER)
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+CH
+C
+C           read BOS record IREC in direct access mode
+C           without EDIR.
+C
+C           LUN   = logical unit
+C           ULIST = list of unpacking commands
+C           IREC  = record + segment number ( as in EDIR )
+C
+C           IER=-1 WRONG RECORD NUMBER OR NO EVENT RECORD
+      INCLUDE 'A_BCS.INC'
+      CHARACTER*(*)             ULIST
+      CHARACTER*80 ERLIST
+      LOGICAL FIRST
+      DATA FIRST/.TRUE./
+
+      IF(FIRST) THEN
+        NAEVEH=NAMIND('EVEH')
+        FIRST=.FALSE.
+      ENDIF
+      CALL BDROP(IW,'E'  )
+      CALL BDROP(IW,'S'  )
+      CALL BGARB(IW)
+      IBF=NLINK('+BUF',LUN)
+C     .........................................      IW(IBF+1)=1+8 +0*64
+      IW(IBF+1)=IAND(IOR(IW(IBF+1),8),63)
+      IW(1)=IREC
+      CALL BREAD(IW,LUN,'E' ,*80,*80)
+      CALL DMPLIS('E' ,ERLIST, NER)
+      IF(NER.NE.0) THEN
+        WRITE(IW(6),*) ' *** DARDIR *** ERROR in decompression.'
+        WRITE(IW(6),'(2X,A80)') ERLIST
+      ENDIF
+      JEVEH=IW(NAEVEH)
+      IF(JEVEH.EQ.0) THEN
+        IER=-1
+      ELSE
+        IRUN=IW(JEVEH+2)
+        IEVT=IW(JEVEH+6)
+        CALL AUNPCK('E' ,ULIST,IER)
+      END IF
+   80 RETURN
+      END
+*DK ABRUEV
+CH..............+++
+CH
+CH
+CH
+CH
+CH
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ ABRUEV
+CH
+      SUBROUTINE ABRUEV(NRUN, NEVT)
+CH
+C     final version!    21.4.93    D.Schlatter
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+CH
+      INCLUDE 'A_BCS.INC'
+      LOGICAL FIRST/.TRUE./
+      DATA L/0/
+      IF(FIRST) THEN
+        FIRST=.FALSE.
+        NAEVEH=NAMIND('EVEH')
+      ENDIF
+      NRUN=0
+      NEVT=0
+      IF(IW(NAEVEH).NE.0) THEN
+        NEVT=IW(IW(NAEVEH)+6)
+        NRUN=IW(IW(NAEVEH)+2)
+      ENDIF
+      L=L+1
+      END
+*DK AUNPCK
+CH..............+++
+CH
+CH
+CH
+CH
+CH
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ AUNPCK
+CH
+      SUBROUTINE AUNPCK(LIST,ULSTI,IER)
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+CH
+C-------------------------------------------------------------------
+CKEY ALREAD POT UNPACK
+C   Created  by : D.SCHLATTER          11-AUG-1988
+C   modified by : F.Ranjard - 881200
+C   modified by : F.Ranjard - 911105
+C                 DALI version - suppress calls to xRDDAF which
+C                                are already made in xINIRU
+C                                include the code of AUNPUS
+C                                call ANEWRN
+C
+C! Unpacks the banks  (POT,DST...  format to JULIA format )
+C  Needs database ADBSCONS. Will be opened if not yet opened.
+C
+C   Inputs:  ULIST:  character string for unpacking of banks:
+C                    'AL '  all banks are unpacked but no
+C                           coordinate sorting.
+C                    'VD '
+C                    'IT '  only ITC
+C                    'TP '  only TPC
+C                    'TE '  only dE/dx
+C                    'EC '  Ecal ( electron id. )
+C                    'HC '
+C                    'MU '
+C                    'LC '
+C                    'SA '
+C                    'FI '  track fits
+C                    'SO '  to sort coordinates in phi
+C                           to redo pattern recognition
+C                    'CR '  cal-object relationship banks
+C                    '   '  NO unpacking
+C              Example:  ULIST='IT TP EC HA '
+C                        ULIST='AL  SO '
+C
+C                LIST  = BOS list of bank names
+C                        if LIST(2:2) .eq. '-' then
+C                           POT banks are dropped.
+C
+C   OUTPUT:      IER   = 0  successful unpacking
+C                        -1 OK but garbage collection
+C                        1  at least 1 POT bank does not exist
+C                        2  not enough space
+C                        >2 TPC internal error
+C                'S'list    contains the list of created banks
+C                           it is dropped and reset to '0' in AREAD
+C
+C   Calls:     JUNIDB,AOPDBS,ERDDAF,ECDFRD,HRDDAF,TRDDAF,IRDDAF
+C              PITCOJ,FPTOJ,TPTOJ,PHSTOJ,PHMADJ,PEIDTJ,AUNPUS
+C
+C----------------------------------------------------------------
+C*IF .NOT.DOC
+      INCLUDE 'A_BCS.INC'
+c
+      CHARACTER*(*) LIST,TE
+      CHARACTER*(*) ULSTI
+C     ..........................       in DALI ULIST must be always = 'AL '
+      CHARACTER *3 ULIST
+      DATA ULIST/'AL '/
+      CHARACTER *6 TED
+      CHARACTER*80 UNLIST,UOLIST
+      CHARACTER*3 UNAM(12)
+      CHARACTER*1 TMIN,TMI
+      DATA TMIN/' '/
+      LOGICAL FIRST,NEWRUN
+      LOGICAL FLAGS(15),NOINI(15)
+      DATA FIRST/.TRUE./
+      DATA FLAGS /15*.FALSE./
+C            NU= number of detectors to unpack corresponding to 'AL'
+C                       excluding  'SO'rt !!
+      DATA IROLD/0/,NU/10/
+      DATA UNAM/'VD ','IT ','TP ','EC ','HC ',
+     &  'MU ','LC ','SA ','TE ','FI ','SO ','AL '/
+C*CA BMACRO
+C!    set of intrinsic functions to handle BOS banks
+C - # of words/row in bank with index ID
+      LCOLS(ID) = IW(ID+1)
+C - # of rows in bank with index ID
+      LROWS(ID) = IW(ID+2)
+C - index of next row in the bank with index ID
+      KNEXT(ID) = ID + LMHLEN + IW(ID+1)*IW(ID+2)
+C - index of row # NRBOS in the bank with index ID
+      KROW(ID,NRBOS) = ID + LMHLEN + IW(ID+1)*(NRBOS-1)
+C - # of free words in the bank with index ID
+      LFRWRD(ID) = ID + IW(ID) - KNEXT(ID)
+C - # of free rows in the bank with index ID
+      LFRROW(ID) = LFRWRD(ID) / LCOLS(ID)
+C - Lth integer element of the NRBOSth row of the bank with index ID
+      ITABL(ID,NRBOS,L) = IW(ID+LMHLEN+(NRBOS-1)*IW(ID+1)+L)
+C - Lth real element of the NRBOSth row of the bank with index ID
+      RTABL(ID,NRBOS,L) = RW(ID+LMHLEN+(NRBOS-1)*IW(ID+1)+L)
+C
+C*IF1 ETA
+C*EI1
+C*CC BMACRO
+C----------------------------------------------------------------
+      IF(TED.EQ.'EDIR') THEN
+        CALL DJ_GET_RUN_EVENT(IRUN,IEVT,ICUR)
+        CALL ABRUEV(IR,IE)
+        IF(IRUN.NE.IR.OR.IEVT.NE.IE) THEN
+          WRITE(IW(6),*) 'AUNPCK stopped on EDIR and wrong run/event.'
+          RETURN
+        END IF
+      END IF
+      IF(FIRST) THEN
+        FIRST=.FALSE.
+        UOLIST = ' '
+C           ITC
+        NAPIDI=NAMIND('PIDI')
+C           TPC
+        NAPTCO=NAMIND('PTCO')
+        NAPTBC=NAMIND('PTBC')
+        NAPTNC=NAMIND('PTNC')
+C            DEDX
+        NAPTEX=NAMIND('PTEX')
+C           TRACKS
+        NAPFRT=NAMIND('PFRT')
+        NAPFRF=NAMIND('PFRF')
+C             ECAL
+        NAPEID=NAMIND('PEID')
+        NAEIDT=NAMIND('EIDT')
+C             HCAL
+        NAPHST=NAMIND('PHST')
+C            HCAL/MUON
+        NAPHMA=NAMIND('PHMA')
+C
+        NAEVEH=NAMIND('EVEH')
+      ENDIF
+
+C
+C - Decode ULIST if different from previous call ====================
+      IF (ULIST .NE. UOLIST) THEN
+        UOLIST = ULIST
+        LE=LENOCC(ULIST)
+C
+C     which banks should be unpacked ?
+C
+        UNLIST=ULIST(1:LE)//' '
+        DO 1 I=1,15
+          NOINI(I)=.TRUE.
+          FLAGS(I)=.FALSE.
+          IF(I.GT.NU) GOTO 1
+          I2=INDEX(UNLIST,'AL ')
+          IF(INDEX(UNLIST,UNAM(I)).NE.0 .OR. I2.NE.0)  FLAGS(I)=.TRUE.
+    1   CONTINUE
+C
+C        set special flags for TPC
+        IF(INDEX(UNLIST,'SO ').NE.0) then
+          FLAGS(11)=.TRUE.
+        ENDIF
+        IF(FLAGS(3)) THEN
+C             bank TPCO
+          FLAGS(13)=.TRUE.
+C             bank TBCO
+          FLAGS(14)=.TRUE.
+        ENDIF
+C             dE/dx : bank TEXS
+        FLAGS(15)=FLAGS(9)
+      ENDIF
+C
+C - new run ?   ===================================================
+C
+      KEVEH=IW(NAEVEH)
+      NEWRUN=.FALSE.
+      IF (IROLD.NE.IW(KEVEH+2)) THEN
+        IROLD=IW(KEVEH+2)
+        IRUNRC=IROLD
+        NEWRUN=.TRUE.
+C       get the magnetic field at begin of run
+        FIELD = ALFIEL (0)
+        CALL ANEWRN (IRUNRC)
+      END IF
+C
+CC     .................................................. CHECK IF MINI OR NOT.
+CC     ...... IT IS ASSUMED THAT DTBP EXISTS IN EACH MINI EVENT AND ONLY THERE.
+C      NDTBP=IW(NAMIND('DTBP'))
+C      IF(NDTBP.GT.0) THEN
+
+      TMIN=' '
+      CALL ALDTYP(ITYP)
+      IF(ITYP.GE.5) THEN
+        WRITE(IW(6),*) ' Mini : MINFIL called from AUNPCK.'
+        CALL DJMINI
+        TMIN='M'
+c        GO TO 999
+      END IF
+      WRITE(IW(6),*) ' DST : AUNPCK executed in total.'
+C
+c      IF(TMIN.eq.' ') then
+       IF(FLAGS(10).AND.IW(NAPFRF).NE.0) THEN
+c         write(6,*)'calling fptoj ',LIST
+         CALL FPTOJ (LIST,IER)
+c         write(6,*)'called fptoj ier= ',ier
+         IF (IER .GE. 2) GO TO 999
+c          write(6,*)'calling pitmaj ',LIST
+         CALL PITMAJ(LIST,FIELD,IER)
+c          write(6,*)'called pitmaj ier= ',ier
+         IF (IER .EQ. 2) GO TO 999
+       ENDIF
+c      ENDIF
+C
+C - Unpack  ITC coordinates  =======================================
+C
+      IF(FLAGS(2).AND.IW(NAPIDI).NE.0.and.TMIN.ne.'M') THEN
+        CALL PITCOJ( LIST, IER )
+      ENDIF
+C
+C - Unpack  TPC coordinates  =====================================
+C
+      IF((FLAGS(13) .AND.
+     &      (IW(NAPTCO).NE.0 .OR. IW(NAPTNC).NE.0)) .OR.
+     &      (FLAGS(14).AND.IW(NAPTBC).NE.0) .OR.
+     &      (FLAGS(15).AND.IW(NAPTEX).NE.0)) THEN
+c        write(6,*)'calling tptoj',flags(13),flags(11),LIST
+        CALL TPTOJ( FLAGS(13),FLAGS(11),LIST,IER )
+c        write(6,*)'tptoj returns ier=',ier
+        IF (IER .GE. 2) GO TO 999
+C
+      ENDIF
+C
+C - Unpack ECAL  ===================================================
+C
+      IF (FLAGS(4).AND.(IW(NAPEID).NE.0.or.IW(NAEIDT).NE.0)) THEN
+c        write(6,*)'calling peidtj',LIST
+        CALL PEIDTJ (LIST,IER)
+c        write(6,*)'called peidtj ier= ',ier
+        IF (IER .GE. 2) GO TO 999
+      ENDIF
+C
+C  Test for ESDA bank existing already:
+      KKKK=NAMIND('ESDA')
+      IESDA = IW(NAMIND('ESDA'))
+      IF (IESDA.EQ.0) THEN
+        IF (INDEX(ULIST,'EC ').NE.0.OR.INDEX(ULIST,'AL ').NE.0) THEN
+          CALL ECRNDX
+          CALL EPREDA
+c          write(6,*)'build ESDA'
+        ENDIF
+      ENDIF
+C
+C - Unpack HCAL  ===================================================
+C
+      IF(FLAGS(5).AND.IW(NAPHST).NE.0) THEN
+        CALL PHSTOJ (LIST,IER)
+        IF (IER .GE. 2) GO TO 999
+      ENDIF
+C
+      IF((FLAGS(5).OR.FLAGS(6)).AND.IW(NAPHMA).NE.0) THEN
+        CALL PHMADJ (LIST,IER)
+        IF (IER .GE. 2) GO TO 999
+      ENDIF
+C
+C - Unpack PCRL ( cal-object relationships ) ========================
+C
+      IF(INDEX(ULIST,'CR ').NE.0) THEN
+        CALL PCRLTJ(IER)
+      ENDIF
+C
+  999 RETURN
+CH..............---
+CH
+CH
+CH
+CH
+CH
+CH
+CH +++++++++++++++++++++++++++++++++++++++++++++++++++++++ AUNPCK_IN
+CH
+      ENTRY AUNPCK_IN(TE)
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+CH
+      TED=TE
+      RETURN
+CH..............---
+CH
+CH
+CH
+CH
+CH
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ DJAUNM
+CH
+      ENTRY DJAUNM(TMI)
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+CH
+C     OUTPUT: TMI='M' if MINI else TMI=' '
+      TMI=TMIN
+      END
+*DK ANEWRN
+CH..............+++
+CH
+CH
+CH
+CH
+CH
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ ANEWRN
+CH
+      SUBROUTINE ANEWRN(IRUN)
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+CH
+C ---------------------------------------------------------------------
+C! initialize JULIA prepare data used in DALI
+C
+C    Created by H.Drevermann                   28-JUL-1988
+C    Modifications:
+C    9-May-1989 C.Grab    - Adapted to CERNVM
+C   28-AUG-90   C.Grab    - Added clean-up of run-records (bdrop+blist)
+C   05-NOV-91   F.Ranjard - clean it and call it in DALI AUNPCK version
+C
+C    Inputs    : IRUN    / I  =     new run number
+C    Outputs   :
+C
+C    Called by :  AUNPCK (DALI version)
+C ---------------------------------------------------------------------
+      COMMON /DVDGE1/ FEVDDV
+      LOGICAL FEVDDV
+      INCLUDE 'J_RCURNT.INC'
+      INCLUDE 'J_RLUNIT.INC'
+      INCLUDE 'A_BCS.INC'
+C     CHARACTER*2 DT2
+      INTEGER GTSTUP,VNRWAF
+      LOGICAL FTRD1
+      DATA FTRD1/.TRUE./
+C     DATA IRUNL / 6000 /,IGET2/2/
+      DATA IGET2/2/,IGETL/0/,NWAFL/0/
+      DATA IDEB/0/
+C ----------------------------------------------------------------------
+C
+      CALL DWRT('Run initialisation')
+C
+C  set IRUNRC in /RCURNT/ to be used by xRDDAF routines
+      IRUNRC=IRUN
+C
+C  set LRCONS, LRGEOM  and LOUTRL in /RLUNIT/
+C  JULIA print out is made on LOUTRL=90
+      LOUTRL = 90
+      LRCONS = JUNIDB(0)
+      LRGEOM = LRCONS
+C
+C
+C Zero and Initialise conditions for all ALEPH subdetectors:
+      CALL RZERUN
+      CALL RINCND
+C
+C Zero and Initialise conditions for all ALEPH subdetectors:
+C Removed V,L,S,Y:
+C
+C     ................................... changing subdetectors .............
+C
+C     ...................... Beampipe radius is each time read from database.
+C
+      IGET=GTSTUP('VD',IRUN)
+      IF(IGET.LE.IGET2) THEN
+        FEVDDV=.FALSE.
+      ELSE
+        FEVDDV=.TRUE.
+        CALL VINIRU
+C       IF(IGET.NE.GTSTUP('VD',IRUNL)) CALL DGIVDT(IRUN)
+C       IRUNL = IRUN
+        IF(IGET.NE.IGETL) THEN
+          CALL DPARGV(81,'OVD',2,OVD)
+          IF(OVD.EQ.0.) THEN
+            CALL DGIVDT_OLD(IRUN)
+          ELSE
+            CALL DGIVDT(IRUN)
+          END IF
+          IGETL=IGET
+        ELSE
+          NWAF=VNRWAF(DUMMY)
+          IF(NWAF.NE.NWAFL) THEN
+            CALL DPARGV(81,'OVD',2,OVD)
+            IF(OVD.EQ.0.) THEN
+              CALL DGIVDT_OLD(IRUN)
+            ELSE
+              CALL DGIVDT(IRUN)
+            END IF
+            NWAFL=NWAF
+          END IF
+        END IF
+      END IF
+      CALL IINIRU
+      IF(FTRD1) THEN
+        IF(IDEB.EQ.0) THEN
+          CALL TRDDAF(LRCONS,IRUNRC,IRET)
+        ELSE
+          CALL TINIRU
+        END IF
+      END IF
+      CALL EINIRU
+      CALL HINIRU
+      CALL MINIRU
+C
+      CALL BLIST(IW,'E-','PART')
+      CALL BLIST(IW,'T-','PART')
+C
+      RETURN
+      END
+*DK DJ_SEVT_IN
+CH..............+++
+CH
+CH
+CH
+CH
+CH
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++ DJ_SEVT_IN
+CH
+      SUBROUTINE DJ_SEVT_IN(NUMR)
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+CH
+C     read DSEVT.CARDS and fill C-list for DALPHA.EPIO
+C     NUMR = # of runs
+C
+C     INCLUDE 'DALI_CF.INC'
+C------------------------------------------------------------------- DU
+      PARAMETER (MPNPDU=60)
+      REAL DACUDU
+      COMMON /DUSDAC/ NUNIDU,
+     1 WAITDU,ECCHDU,BOXSDU,ECSQDU,HCSQDU,
+     1 HIMXDU,RESCDU,SLOWDU,WISUDU,SETTDU,
+     1 USLVDU,SYLRDU,SDATDU,RZDHDU,ROTADU,
+     1 SCMMDU,CLMMDU,CUMMDU,WIMIDU,CCMIDU,
+     1 ECMIDU,HCMIDU,SHTFDU(2)    ,FTDZDU,
+     1 FRNLDU,DACUDU,SHECDU,SHHCDU,DRLIDU,
+     1 SQLCDU,CHLCDU,HEADDU,VRDZDU,CHHCDU,
+     1 AREADU,DFWIDU(0:1)  ,DFLGDU,PBUGDU,
+     1 CHTFDU,RNCLDU,PR43DU,PR44DU,PR45DU,
+     1 DSOFDU,TPOFDU,ROVDDU,ROECDU,ROHCDU,
+     1 HSTRDU,REALDU,PR53DU,PR54DU,PR55DU,
+     1 PR56DU(4),                  PR60DU
+      DIMENSION PARADU(MPNPDU)
+      EQUIVALENCE (PARADU,WAITDU)
+      COMMON /DUSDA2/PLIMDU(2,MPNPDU)
+      COMMON /DUSDAT/ TPR1DU(MPNPDU)
+      CHARACTER *2 TPR1DU
+C------------------------------------------------------------------- DW
+      COMMON /DWORKT/ TXTADW
+      CHARACTER *80 TXTADW
+      CHARACTER *1 TXT1DW(80)
+      EQUIVALENCE (TXTADW,TXT1DW)
+C
+C-------------------End of DALI_CF commons----------------
+      EXTERNAL SIND,COSD,ACOSD,TAND,ATAND,ATAN2D! Not implemented in g77
+      INCLUDE 'A_BCS.INC'
+      NUMR=0
+      CALL AOPEN(NUNIDU,'DSEVT.CARDS',' ',' ',IER)
+      IF(IER.NE.0) GO TO 9
+      IW5=IW(5)
+      IW(5)=NUNIDU
+C     ............ Schlatter, F.Ranjard: correct reset pointer in BREADC.
+      NDUM=MRESET(NUNIDU)
+      CALL BREADC
+      CALL ACLOSE(NUNIDU,IER)
+      IW(5)=IW5
+      IND=NAMIND('SEVT')+1
+   10 IND=IW(IND-1)
+      IF(IND.EQ.0) GO TO 2
+      NUMR=NUMR+1
+      GO TO 10
+    2 WRITE(TXTADW,1002) NUMR
+ 1002 FORMAT('DSEVT.CARDS contains ',I3,' runs.')
+      RETURN
+    9 CALL DWRT('Error reading DSEVT.CARDS.#')
+      RETURN
+CH..............---
+CH
+CH
+CH
+CH
+CH
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  DJ_SEVT_RUN
+CH
+      ENTRY DJ_SEVT_RUN(IROW,NRUN,NUMEV)
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+CH
+C     Input : IROW = run IN SEVT BANK
+C     Output : NRUN = run # , NUMEV = # of events per run
+C
+      IND=NLINK('SEVT',IROW-1)
+      NRUN=IW(IND+1)
+      NUMEV=IW(IND)-1
+      JROW=IROW
+      RETURN
+CH..............---
+CH
+CH
+CH
+CH
+CH
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  DJ_SEVT_EV
+CH
+      ENTRY DJ_SEVT_EV(IEV,NEV)
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+CH
+C     Input : IEV # of entry
+C     Output : NEV = event #
+C
+      NEV=IW(IND+IEV+1)
+      RETURN
+CH..............---
+CH
+CH
+CH
+CH
+CH
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  DJ_SEVT_END
+CH
+      ENTRY DJ_SEVT_END
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+CH
+C     drop sevt bank
+      CALL BDROP(IW,'SEVT')
+      END
+*DK TFILTJ
+CH..............+++
+CH
+CH
+CH
+CH
+CH
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ TFILTJ
+CH
+      SUBROUTINE TFILTJ(IER)
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+CH
+C ---------------------------------------------------------------------
+      END
+*DK VBSINR
+CH..............+++
+CH
+CH
+CH
+CH
+CH
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ VBSINR
+CH
+      SUBROUTINE VBSINR
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+CH
+C ---------------------------------------------------------------------
+      END
+*DK TRNCON
+CH..............+++
+CH
+CH
+CH
+CH
+CH
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ TRNCON
+CH
+      SUBROUTINE TRNCON
+CH
+CH ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+CH
+C ---------------------------------------------------------------------
+C     INCLUDE 'DALI_CF.INC'
+C
+C-------------------End of DALI_CF commons----------------
+      EXTERNAL SIND,COSD,ACOSD,TAND,ATAND,ATAN2D! Not implemented in g77
+      CALL DWRT('DUMMY TRNCON CALLED #')
+      END

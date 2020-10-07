@@ -1,0 +1,63 @@
+*DK packdoc
+#if defined(DOC)
+.chapter PACKAGES used by GALEPH
+    GALEPH makes use of the following packages :
+    GEANT3       geom. + draw. + track
+    GHEISHA      hadronic package
+    TPCSIM       TPC digitization
+
+.section WHERE TO FIND FILES
+.subsection ON CERNVM
+
+      GALEPH is maintained under IBM VM/CMS at CERN  on  the  GAL  minidisk
+  described below :
+                    address  196   userid   PUBXU
+       GALEPH library is compiled with IBM VS compiler .
+
+     Minidisks are given a nick-name stored either on CERN P-disk
+   (GIME NAMES file) or ALEPH GENERA-disk (GIMEGRP NAMES file).  A
+   general way to find GALEPH files is obtained with the command
+   ALEP_GET LIST under VM/CMS.  This exec will list all ALEPH info
+   stored in GLOBALV.
+
+
+ DISKS       Nickname    Access mode
+ -----------------------------------
+ UDISK       UDISK          U
+ CERNPAMS    CERNPAMS       *
+ GAL         GAL            F
+ GENERA      GENERA         G
+
+
+ PAM'S            |  disk
+ -----------------------------
+ GEANT            |  CERNPAMS
+ GEANG            |  CERNPAMS
+ GEANH            |  CERNPAMS
+ GEANX            |  CERNPAMS
+
+ TXTLIB'S         |  disk
+ -----------------------------
+ GEANT            |  UDISK
+ GENLIB           |    P
+ PACKLIB          |    P
+ GALEPH           |  GAL
+ TPCSIM           |  GAL
+ BOS77            |  GENERA
+ ALEPHLIB         |  GENERA
+ GRAFLIB          |    P             (HPLOT/GKS library)
+
+
+ HISTOR OLDLIB'S  |  disk
+ -----------------------------
+ BOS77            | GENERA
+ ALEPHLIB         | GENERA
+ GALEPH           | GAL
+ TPCSIM           | GAL
+
+ TEXT FILES       |  disk
+ -----------------------------
+ GXINT            | UDISK
+
+.subsection On ALWS or VXCERN
+#endif

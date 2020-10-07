@@ -1,0 +1,49 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  aleph212:1.1.1.1 ALEPH212:1.1.1;
+locks    ; strict;
+comment  @ * @;
+
+
+1.1
+date     96.02.07.11.40.05;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.02.07.11.40.06;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#if defined(ETA)
+C!  The following intrinsic functions must be redefined from
+C   specific ETA or CERNLIB functions
+      IBITS (IWORD,IS,NBIT) = JBYT (IWORD,IS+1,NBIT)
+      ISHFT (IWORD,NBIT)    = SHIFT (IWORD,NBIT)
+      IAND (K,L)            = AND (K,L)
+      IOR (K,L)             = OR (K,L)
+      BTEST (K,L)           = Q8SEXTB (K,1,63-L) .EQ. 1
+      IBSET (K,L)           = SBIT1 (K,L+1)
+      VMOD (Q,N)            = VMODCR (Q,N)
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

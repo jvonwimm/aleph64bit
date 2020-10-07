@@ -1,0 +1,427 @@
+head	1.4;
+access;
+symbols
+	jul313_3:1.4
+	jul313_2:1.4
+	jul313_1:1.4
+	jul313:1.4
+	jul312_1:1.4
+	jul312:1.4
+	jul311:1.4
+	jul310_1:1.4
+	jul310:1.4
+	jul309_1:1.4
+	jul309:1.4
+	jul308_6:1.4
+	jul308_5:1.4
+	jul308_4:1.4
+	jul308_3:1.4
+	jul308_2:1.4
+	jul308_1:1.4
+	jul308:1.4
+	jul307_4:1.4
+	jul307_3:1.4
+	jul307_2:1.4
+	jul307_1:1.4
+	jul307:1.4
+	jul306_3:1.4
+	jul306_2:1.4
+	jul306_1:1.4
+	jul306:1.4
+	jul305_4:1.4
+	jul305_3:1.4
+	jul305_2:1.4
+	jul305_1:1.4
+	jul305:1.4
+	jul304_3:1.4
+	jul304_2:1.4
+	jul304_1:1.4
+	jul304:1.4
+	jul303_7:1.4
+	jul303_6:1.4
+	jul303_5:1.4
+	jul303_4:1.4
+	jul303_3:1.4
+	jul303_2_mc1:1.4
+	jul303_2:1.4
+	jul303_1_mc1:1.4
+	jul303_1:1.4
+	jul303_v:1.3
+	jul303:1.4
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2
+	jul280_1:1.2
+	jul280:1.2
+	jul279:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.4
+date	97.05.16.08.33.19;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.05.15.13.29.52;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.03.12.15.31.27;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.19.14;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.19.15;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@Call TSUMVD before kinks/nuclear interactions
+@
+text
+@      SUBROUTINE RDETEC
+C-----------------------------------------------------------------------
+C!  - Set selected detectors
+C!
+C!  Author S. Orteu              Date :  13-JAN-1987
+C!  Modified J.Knobloch          Date :  31-JUL-1989
+C!  Modified M.Cattaneo          Date :  15-MAY-1996
+C!    Switch off tracking upgrade refinements in PASS0,
+C!    by forcing YNSV,YNLV,YNKF,TNPX,ENKF,VNSL
+C!  Modified I.Tomalin           Date :  16-MAY-1996
+C!    Switch on use of TPC wires in PASS0.
+C!
+C!
+C?
+C!======================================================================
+#ifndef DOC
+#include "rparac.h"
+#include "bcs.h"
+#include "bosext.h"
+#include "rflags.h"
+#include "rlunit.h"
+      CHARACTER*4 TCHR,TOPT
+#include "ittime.h"
+#include "bmacro.h"
+C
+C detector names order !
+C--------------------------------------------------------------------
+C
+      TNAMRD(JULVD) = 'VDET'
+      TNAMRD(JULIT) = 'ITC '
+      TNAMRD(JULTP) = 'TPC '
+      TNAMRD(JULEC) = 'ECAL'
+      TNAMRD(JULLC) = 'LCAL'
+      TNAMRD(JULSA) = 'SATR'
+      TNAMRD(JULHC) = 'HCAL'
+      TNAMRD(JULMU) = 'MUON'
+      TNAMRD(JULCA) = 'CALO'
+      TNAMRD(JULSK) = 'SKEL'
+      TNAMRD(JULYR) = 'YREC'
+      TNAMRD(JULYT) = 'YTOP'
+      TNAMRD(JULEF) = 'EFLO'
+      TNAMRD(JULBC) = 'BCAL'
+      TNAMRD(JULFA) = 'FALC'
+      TNAMRD(JULBO) = 'BOM '
+      TNAMRD(JULSI) = 'SICA'
+C--------------------------------------------------------------------
+C
+C?   Debug Flag
+C
+      FDEBRF = .TRUE.
+C
+C decode the requested detectors for reconstruction.
+C
+      KPROC = NLINK('PROC',0)
+      IF (KPROC.EQ.0) THEN
+C No control card; take defaults
+        DO 5 J=1,MDET
+          FDETRF(J) = .TRUE.
+          JDBDRF(J) = 0
+          JHISRF(J) = 0
+          JPRSRF(J) = 1
+          JPRERF(J) = 1
+    5   CONTINUE
+        JDBDRF (JULSK) = 2
+        FDETRF(JULFA) = .FALSE.
+      ELSE
+C Set according to PROC card
+        DO 10 I=1,MDET
+          FDETRF(I) = .FALSE.
+          JDBDRF(I) = 0
+          JHISRF(I) = 0
+          JPRSRF(I) = 1
+          JPRERF(I) = 1
+   10   CONTINUE
+        FDETRF (JULSK) = .TRUE.
+        JDBDRF (JULSK) = 2
+C Scan PROC bank
+        NDETR = IW(KPROC)
+        DO 15 IDETR=1,NDETR
+          DO 20 IDET=1,MDET
+            TCHR = CHAINT(IW(IDETR+KPROC))
+            IF (TNAMRD(IDET)(:2).EQ.TCHR(:2)) THEN
+              FDETRF(IDET) = .TRUE.
+              GOTO 15
+            ENDIF
+   20     CONTINUE
+C This detector doesn't exist.
+          WRITE(LOUTRL,'(3A)') '0RDETEC- Unrecognized detector ',TCHR,
+     $                           ' in PROC card.'
+   15   CONTINUE
+      ENDIF
+C
+C decode detector options
+C
+      DO 30 IDET = 1, MDET
+        KNDTC = NLINK(TNAMRD(IDET),0)
+        IF (KNDTC.NE.0.AND.FDETRF(IDET)) THEN
+          FDETRF(IDET) = .TRUE.
+          DO 35 IOPT = 1, IW (KNDTC), 2
+            TOPT = CHAINT(IW(KNDTC+IOPT))
+            IF     (TOPT.EQ.'PRIN') THEN
+              JDBDRF(IDET) = IW(KNDTC+IOPT+1)
+              GOTO 35
+            ELSEIF (TOPT.EQ.'HIST') THEN
+              JHISRF(IDET) = IW(KNDTC+IOPT+1)
+              GOTO 35
+            ELSEIF (TOPT.EQ.'SPRI') THEN
+              JPRSRF(IDET) = IW(KNDTC+IOPT+1)
+              GOTO 35
+            ELSEIF (TOPT.EQ.'EPRI') THEN
+              JPRERF(IDET) = IW(KNDTC+IOPT+1)
+              GOTO 35
+            ELSE
+C Error
+              WRITE(LOUTRL,'(3A)') '0RDETEC- Option ', TOPT,
+     +                     ' doesn''t exist; option ignored'
+            ENDIF
+   35     CONTINUE
+        ENDIF
+        KNDTC = NDROP(TNAMRD(IDET),0)
+   30 CONTINUE
+C
+C?   Special case for PASS0
+C
+      KPASS0 = IW ( NAMIND('PAS0') )
+      FPASS0 = KPASS0.GT.0
+      IF ( FPASS0 ) THEN
+        IF ( KPROC.EQ.0 ) THEN
+          DO 40  I =  1,  MDET
+            FDETRF(I) = .FALSE.
+   40     CONTINUE
+          FDETRF(JULTP) = .TRUE.
+          FDETRF(JULVD) = .TRUE.
+        ENDIF
+        FDETRF(JULSK) = .TRUE.
+C Skip tracking upgrade refinements not necessary for PASS0
+        CALL AUBOS ('YNSV', 0, 0, KYNSV, IYNSV)
+        CALL AUBOS ('YNLV', 0, 0, KYNLV, IYNLV)
+        CALL AUBOS ('YNKF', 0, 0, KYNKF, IYNKF)
+        CALL AUBOS ('TNPX', 0, 0, KTNPX, ITNPX)
+        CALL AUBOS ('ENKF', 0, 0, KENKF, IENKF)
+        CALL AUBOS ('VNSL', 0, 0, KVNSL, IVNSL)
+      ENDIF
+C
+C?   Special case for REPR -> No LCAL
+C
+      KREPR = IW(NAMIND('REPR'))
+      FREPRO = KREPR.GT.0
+      IF ( FREPRO ) THEN
+        FDETRF(JULLC) = .FALSE.
+      ENDIF
+C
+C?   Set maximum error print out
+C
+      IF ( IW(NAMIND('ERRP')).EQ.0 ) THEN
+        CALL AUBOS ('ERRP', 0, 1, KERRP, IGARB)
+        IW(KERRP+1) = 1
+      ENDIF
+C
+C?   Set these options as default from now on
+C
+C         GAMP default use NGAM to switch off
+C         VFIT             NVFI
+C         EWTH             NEWT
+C         ESCA             NESC
+C         GARB             NGAR
+C
+      IF ( IW(NAMIND('NGAM')).EQ.0 ) THEN
+        CALL AUBOS ('GAMP', 0, 0, KGAMP, IGAMP)
+      ENDIF
+      IF ( IW(NAMIND('NVFI')).EQ.0 ) THEN
+        CALL AUBOS ('VFIT', 0, 0, KVFIT, IVFIT)
+      ENDIF
+      IF ( IW(NAMIND('NEWT')).EQ.0 ) THEN
+        CALL AUBOS ('EWTH', 0, 0, KEWTH, IEWTH)
+      ENDIF
+      IF ( IW(NAMIND('NESC')).EQ.0 ) THEN
+        CALL AUBOS ('ESCA', 0, 0, KESCA, IESCA)
+      ENDIF
+      IF ( IW(NAMIND('NGAR')).EQ.0 ) THEN
+        CALL AUBOS ('GARB', 0, 0, KGARB, IGARB)
+      ENDIF
+C
+C?   COMP 'INTE' is the default
+C
+      IF ( IW(NAMIND('COMP')).EQ.0 ) THEN
+        CALL AUBOS ('COMP', 0, 1, KCOMP, IGARB)
+        IW(KCOMP+1) = INTCHA ('INTE')
+      ENDIF
+C
+C?   Set time measurement flags : For ITC, presence of ITTI
+C
+      IFITTI = IW(NAMIND('ITTI')) .NE. 0
+C
+C
+C Set special option  CALO. CALO = ECAL.or.HCAL
+      FDETRF(JULCA) = FDETRF(JULEC).OR.FDETRF(JULHC)
+C--------------------------------------------------------------------
+      IF (FDEBRF.AND.JDBDRF (JULSK).GE.1) WRITE(LOUTRL,500)
+  500 FORMAT('0The detectors scheduled for reconstruction are :' /,
+     +  1X,'Detector    Debug level    Histogram level' /,1X,
+     +  '--------    ----------     --------------')
+      DO 70 IDET=1,MDET
+        IF (FDETRF(IDET)) WRITE(LOUTRL,'(3X,A,8X,I3,15X,I3)')
+     1                     TNAMRD(IDET),JDBDRF(IDET),JHISRF(IDET)
+   70 CONTINUE
+      WRITE(LOUTRL,520)
+  520 FORMAT(1X,80('+'))
+      GOTO 999
+  999 CONTINUE
+      END
+#endif
+@
+
+
+1.3
+log
+@Speed up Pass0
+@
+text
+@d10 2
+a135 2
+        CALL AUBOS ('TOPT', 0, 1, KTOPT, IGARB)
+        IW(KTOPT+1) = INTCHA ('NOWI')
+@
+
+
+1.2
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+ 	gambnk.F gapeco.F gasteer.F
+ 	hcalib.F hcalrd.F hcatow.F hcbhis.F hcfclu.F hchist.F hclcra.F
+ 	hcltst.F hclufi.F hcos.F hcsimm.F hdgdeb.F hdgfil.F hdgpot.F
+ 	hdgsum.F hdprec.F hdspre.F hflnoi.F hinijo.F hiniru.F hmener.F
+ 	hmfind.F hmroad.F hnoise.F hnoisy.F hpatco.F hphnoi.F hplink.F
+ 	hprana.F hpranp.F hprdig.F hpreda.F hprpot.F hprsum.F hprunc.F
+ 	hrcomp.F hrcpat.F hrdcal.F hroad.F hslink.F hslowc.F hspare.F
+ 	hsptre.F hstofi.F htrack.F htubfi.F htwcr.F
+ 	iasign.F iattma.F ibnkin.F icaswt.F icftoi.F iclimb.F icrcco.F
+ 	ideadw.F idigpr.F ienang.F ifind1.F ifind2.F ifitp.F iftrak.F
+ 	igetti.F igettp.F igicha.F iheler.F iinijo.F iiniru.F iintrk.F
+ 	imatch.F inigap.F insect.F intrak.F ipakdi.F ipdsti.F iphcor.F
+ 	ipreda.F iprsum.F ipstat.F irefin.F ireopd.F isave.F ishuff.F
+ 	ishufl.F islowc.F isrch.F itbook.F itccut.F itcopr.F itcrec.F
+ 	itcrep.F itctpc.F itctrk.F itcxng.F iterr.F itextn.F ithist.F
+ 	itidy1.F itidy2.F itlnk1.F itlnk2.F itpcan.F itrak.F itrecf.F
+ 	itreci.F itree.F itrkci.F itrkeq.F itrkzr.F itrmca.F
+@
+text
+@d7 3
+d136 7
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK rdetec
+d18 1
+d180 4
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

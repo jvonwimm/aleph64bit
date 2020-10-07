@@ -1,0 +1,155 @@
+head	1.2;
+access;
+symbols
+	alio83:1.2
+	alio82:1.2
+	alio81:1.2
+	alio80:1.2
+	alio74:1.2
+	alio73:1.2
+	alio72:1.2
+	alio71:1.2
+	alio70:1.2
+	alio68:1.2
+	alio69:1.2
+	alio67:1.2
+	alio66:1.2
+	alio65:1.2
+	alio64:1.2
+	alio63:1.2
+	alio62:1.2
+	alio61:1.2
+	alio60:1.2
+	alephio53:1.2
+	v4:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.01.18.13.52.52;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.52.44;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.52.45;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@ Modified Files:
+	acdarg.F afilin.F afilou.F ainqui.F amount.F aoptap.F astage.F
+	awrtap.F
+ Modified Files:
+	cmphost.h ctolow.h gtchdecl.h version.h
+ Removed Files:
+	albitw.h
+ Modified Files:
+ 	altell.F babend.F jalrec.F noibm.F opensq.F sdrsx.F sibsdr.F
+	sxsdr.F
+ Modified Files:
+	ardnews.h news.h
+ Modified Files:
+	cfrvax.F cmpban.F cmpdro.F cmpin2.F cmpini.F cmplis.F cmpsum.F
+	cmptoi.F cotest.F detest.F dmpban.F dmpchr.F dmpfmt.F udmper.F
+@
+text
+@      SUBROUTINE UDMPER (IRTYP,TLIST,ERLIST,IFLG)
+C -------------------------------------------------------
+C! user routine, treat decompression errors, set error=0
+C - F.Ranjard - 900511
+CKEY PRESS DECOMPRESS ERROR / USER
+C
+C - input    : IRTYP   / INTE          = record type
+C                                        1 event, 2 run, 3 unknown
+C              TLIST   / CHARACTER*1   = input list
+C              ERLIST  / CHARACTER*(*) = error list
+C              IFLG    / INTE          = error flag
+C
+C - output   : IFLG    / INTE           = 0 keep the record anyway
+C
+C --------------------------------------------------------------
+#ifndef DOC
+      SAVE
+      CHARACTER*(*) TLIST,ERLIST
+#include "bcs.h"
+C
+C ----------------------------------------------------------------
+      IF (IFLG .EQ. 0) RETURN
+C
+C - get run and event number
+C
+      IRUN = 0
+      IEVT = 0
+      IF (IRTYP.EQ.1) THEN
+         JEVEH = IW(NAMIND('EVEH'))
+         IF (JEVEH.NE.0) THEN
+            IRUN = IW(JEVEH+2)
+            IEVT = IW(JEVEH+6)
+         ENDIF
+      ELSEIF (IRTYP.EQ.2) THEN
+         JRUNR = IW(NAMIND('RUNR'))
+         IF (JRUNR.NE.0) THEN
+            IRUN = IW(JRUNR+2)
+         ENDIF
+      ENDIF
+C
+C - NER = number of bank names where no compression was done. Because
+C         of errors or lack of space in the BOS array
+C
+      NER = IFLG/1000
+C
+C - IER = number of bank names where data check failed. Decompressed
+C         banks produced
+C
+
+      IER = MOD (NER,1000)
+C
+C - decode error list
+C
+      WRITE (IW(6),800) IRTYP,IRUN,IEVT,TLIST,IFLG,NER,ERLIST
+ 800  FORMAT(1X,  '+++UDMPER+++ ',
+     &            ' record type= ',I2,
+     &            ' run ',I8, ' event ',I8,
+     &            ' LIST= ',A,' IFLG= ',I8,
+     &            ' the ERLIST contains ',I3,' banks'/14X,
+     &            ' list of non decompressed banks= ',A)
+C
+C- reset error flag to 0
+C
+      IFLG = 0
+C
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK udmper
+@
+
+
+1.1.1.1
+log
+@import alephio 4
+@
+text
+@@

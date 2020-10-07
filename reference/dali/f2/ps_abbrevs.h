@@ -1,0 +1,8 @@
+#define PS_lineto "LT"
+#define PS_moveto "MV"
+#define PS_newpath "NP"
+#define PS_moveto_show "MS"
+#define PS_moveto_show_vert "MSV"
+#define PS_stroke "S"
+#define PS_setdash "SD"
+#define PS_point "PO"

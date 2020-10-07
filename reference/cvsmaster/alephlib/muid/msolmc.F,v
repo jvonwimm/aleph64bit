@@ -1,0 +1,150 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.42.41;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.42.42;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      LOGICAL FUNCTION MSOLMC(ITR1)
+C----------------------------------------------------------------------
+C
+CKEY MUONID MUON SHADOW / INTERNAL
+C
+C!  Find out if track ITR1 has a mu chamber hit which it shares with
+C!  no other track
+C!  author : G. TAYLOR        7-APR-1992
+C!
+C!  input : ITR1 track numbers (in JULIA)
+C!  output: MSOLMC = .TRUE. if track has a non shared mu ch hit
+C=======================================================================
+#ifndef DOC
+#include "bcs.h"
+      LOGICAL SHARED
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+C
+C                check much hits in common to 2 tracks
+C
+      MSOLMC=.FALSE.
+      JMTHR=IW(NAMIND('MTHR'))
+      IF (JMTHR.LE.0) GO TO 39
+      DO 31 K=1,LROWS(JMTHR)
+        ITRAC=ITABL(JMTHR,K,3)
+        IF (ITRAC.EQ.ITR1) THEN
+          IHIT=ITABL(JMTHR,K,1)
+          SHARED=.FALSE.
+          DO 32 J=1,LROWS(JMTHR)
+            NHIT=ITABL(JMTHR,J,1)
+            NTRAC=ITABL(JMTHR,J,3)
+            IF (NHIT.EQ.IHIT .AND. NTRAC.NE.ITRAC) SHARED=.TRUE.
+   32     CONTINUE
+          IF(.NOT.SHARED) MSOLMC=.TRUE.
+        ENDIF
+   31 CONTINUE
+   39 CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

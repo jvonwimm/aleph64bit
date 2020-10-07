@@ -1,0 +1,123 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	mini202_9:1.1.1.1
+	mini202_8:1.1.1.1
+	mini202_7:1.1.1.1
+	mini202_6:1.1.1.1
+	mini202_5:1.1.1.1
+	mini202_4:1.1.1.1
+	mini202_2:1.1.1.1
+	mini202_1:1.1.1.1
+	mini202:1.1.1.1
+	mini201_1:1.1.1.1
+	mini104_1:1.1.1.1
+	mini103_1:1.1.1.1
+	mini102_7:1.1.1.1
+	mini102_5:1.1.1.1
+	mini102_4:1.1.1.1
+	mini102_3:1.1.1.1
+	mini102_2:1.1.1.1
+	mini102_1:1.1.1.1
+	mini102:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.08.15.11.09.41;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.08.15.11.09.42;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE MINFRI
+C
+CKEY MDST /USER
+C-----------------------------------------------------------------------
+C! Fill FRID bank from DTRA.
+C
+C     Author: Stephen Haywood      14-Jan-91
+C
+C     Track quality is filled from DTRA if it is contained there.
+C     If not, UFITQL is called, and this requires FRFT, FRTL and YV0V.
+C     These banks can be obtained by calling MINFRF, MINFRT and MINYV0.
+C     These banks will not be present if NOCH or NOV0 are used.
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+#include "dtrajj.h"
+#include "fridjj.h"
+C
+      INTEGER UFITQL
+C
+#include "bmacro.h"
+C
+      KDTRA = NLINK('DTRA',100)
+      IF (KDTRA.LE.0) THEN
+         CALL MINUPD('DTRA')
+         KDTRA = NLINK('DTRA',100)
+         IF (KDTRA.LE.0) RETURN
+      ENDIF
+C
+C++   Get version number: used to decide whether to call UFITQL.
+C
+      MVER = MINGTV(DUM)
+C
+C++   Create FRID bank.
+C
+      NFRID = LROWS(KDTRA)
+      IF(NFRID.LE.0) RETURN
+      LEN = LMHLEN + LFRIDA * NFRID
+      CALL AUBOS('FRID',0,LEN, KFRID,IGARB)
+      CALL BLIST(IW,'S+','FRID')
+      IF(IGARB.GE.2) THEN
+         RETURN
+      ELSE IF(IGARB.NE.0) THEN
+         KDTRA = NLINK('DTRA',100)
+      ENDIF
+      IW(KFRID+LMHCOL) = LFRIDA
+      IW(KFRID+LMHROW) = NFRID
+C
+C++   Fill FRID bank.
+C
+      DO 100 I=1,NFRID
+         IW(KROW(KFRID,I)+JFRIBP) = ITABL(KDTRA,I,JDTRHO)
+         IW(KROW(KFRID,I)+JFRIDZ) = ITABL(KDTRA,I,JDTRHM)
+         IF (MVER.GE.53) THEN
+            IW(KROW(KFRID,I)+JFRIQF) = ITABL(KDTRA,I,JDTRQF)
+         ELSE
+            IW(KROW(KFRID,I)+JFRIQF) = UFITQL(I)
+         ENDIF
+  100 CONTINUE
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@1st release of mini under cvs
+@
+text
+@@

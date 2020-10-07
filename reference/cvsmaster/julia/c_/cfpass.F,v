@@ -1,0 +1,207 @@
+head	1.2;
+access;
+symbols
+	jul313_3:1.2
+	jul313_2:1.2
+	jul313_1:1.2
+	jul313:1.2
+	jul312_1:1.2
+	jul312:1.2
+	jul311:1.2
+	jul310_1:1.2
+	jul310:1.2
+	jul309_1:1.2
+	jul309:1.2
+	jul308_6:1.2
+	jul308_5:1.2
+	jul308_4:1.2
+	jul308_3:1.2
+	jul308_2:1.2
+	jul308_1:1.2
+	jul308:1.2
+	jul307_4:1.2
+	jul307_3:1.2
+	jul307_2:1.2
+	jul307_1:1.2
+	jul307:1.2
+	jul306_3:1.2
+	jul306_2:1.2
+	jul306_1:1.2
+	jul306:1.2
+	jul305_4:1.2
+	jul305_3:1.2
+	jul305_2:1.2
+	jul305_1:1.2
+	jul305:1.2
+	jul304_3:1.2
+	jul304_2:1.2
+	jul304_1:1.2
+	jul304:1.2
+	jul303_7:1.2
+	jul303_6:1.2
+	jul303_5:1.2
+	jul303_4:1.2
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2
+	jul280_1:1.2
+	jul280:1.2
+	jul279:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.12.14.39.39;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.17.24;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.17.25;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+ Modified Files:
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+@
+text
+@      SUBROUTINE CFPASS(IER)
+C***********************************************************************
+C! Det. TPC-HC assoc. param.                                           *
+C!                                                                     *
+C!  AUTHOR   : A. BONISSENT  870831                                    *
+C!                                                                     *
+C!                                                                     *
+C!  BANKS :                                                            *
+C!    INPUT   : ETP1,EFET,ECOB,ETCK                                    *
+C!    OUTPUT  : NONE                                                   *
+C!    CREATED : NONE                                                   *
+C!                                                                     *
+C!                                                                     *
+C***********************************************************************
+#ifndef DOC
+#include "rparac.h"
+#include "rlunit.h"
+#include "ecnamc.h"
+#include "etp1jj.h"
+#include "efetjj.h"
+#include "bcs.h"
+      DIMENSION IECO(20),ICLUH(20)
+      DATA PMIP/0.500/
+#include "bmacro.h"
+      MXCLU=20
+C
+C?  LOOP ON TRACKS
+C
+      KETP1=IW(NAETP1)
+      KEFET=IW(NAEFET)
+      NTRK=LROWS(KEFET)
+      DO 100 ITR=1,NTRK
+C
+C?  GET TRACK MOMENTUM
+C
+      PTR=RTABL(KETP1,ITR,JETPPT)
+C
+C?   Select tracks with momentum larger then pmip
+C
+      IF(PTR.LT.PMIP)GO TO 100
+C
+C    Get extrap. flag
+C
+      IEFL=ITABL(KEFET,ITR,JEFEEF)
+      IF(IEFL.NE.1)GO TO 100
+C
+C?   find Ec Objects in which track has deposited energy
+C
+C
+C?   find Hc clusters in which track has deposited energy
+C
+         CALL CTRTOC(ITR,IECO,NECO,ICLUH,NCLU,MXCLU,IER2)
+         IF(IER2.NE.0)GO TO 998
+C
+C?  See if track is MIP
+C
+      CALL CCTRMI(ITR,IFMIP)
+      IF (IFMIP.EQ.1)THEN
+         CALL CFPMIP(ITR,ICLUH,NCLUH)
+      ELSE
+         CALL CFPNMP(ITR,IECO,NECO,ICLUH,NCLUH)
+      ENDIF
+  100 CONTINUE
+      IER=0
+      RETURN
+  998 CONTINUE
+      CALL RERROR('CFPASS',1,' Error from CTRTOC')
+      IER=1
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK cfpass
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

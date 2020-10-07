@@ -1,0 +1,123 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.48.48;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.15;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.16;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE BKTOW(JW1,NAME,NR,JW2,ID,*)
+C
+C     COPY NAMED BANK TO WORK BANK
+C
+      INTEGER JW1(*),JW2(*),ID(*)
+      CHARACTER*4 NAME
+#include "boscom.h"
+#include "mparam.h"
+#include "param.h"
+C     ...
+      JW1(1)=0
+      JW2(1)=0
+      IND= MLINK(JW1,NAME,NR)
+      IF(IND.EQ.0) GOTO 10
+      ND1=JW1(IND)
+      IFM=0
+      IDF=IW(IDFMT+NAMI-NSYST)
+      IF(IDF.NE.0) IFM=IW(IDF+3)
+      IF(IFM.EQ.3) THEN
+         ND2=ND1*NBYTWD
+      ELSE IF(IFM.EQ.2) THEN
+         ND2=ND1*NBYTWD/2
+      ELSE IF(IFM.EQ.1) THEN
+         ND2=ND1*NBYTWD/4
+      ELSE
+         ND2=ND1
+      END IF
+      CALL WBANK(JW2,ID,ND2,*20)
+      IF(IFM.EQ.3) THEN
+         CALL BLO8W(JW1(IND+1),1,JW2(ID(1)+1),1,ND2)
+      ELSE IF(IFM.EQ.2) THEN
+         CALL BLO16W(JW1(IND+1),1,JW2(ID(1)+1),1,ND2)
+      ELSE IF(IFM.EQ.1) THEN
+         CALL BLO32W(JW1(IND+1),1,JW2(ID(1)+1),1,ND2)
+      ELSE
+         CALL UCOPY(JW1(IND+1),JW2(ID(1)+1),ND2)
+      END IF
+      GOTO 100
+C
+C     NAMED BANK NOT FOUND
+C
+   10 JW2(2)=0
+      JW1(2)=6
+      GOTO 30
+C
+C     INSUFFICIENT SPACE
+C
+   20 JWTWO=JW2(2)
+      JW2(2)=0
+      JW1(2)=JWTWO
+   30 JW1(IRC+JW1(2))=JW1(IRC+JW1(2))+1
+      IF(JW1(LUP).NE.0.AND.JW1(LUW).NE.0)
+     +   CALL BBRET(JW1,JW1(2),'BKTOW',NAME)
+      GOTO 101
+C
+  100 RETURN
+  101 RETURN 1
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK bktow
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

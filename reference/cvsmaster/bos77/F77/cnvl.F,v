@@ -1,0 +1,104 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.50.59;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.25;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.26;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE CNVL(IA,IB)
+
+*     Data conversion to an internal character string
+*
+*     EXTERNAL STRUT
+*
+*     CALL CNVL(IA,IB)        reset and define byte range  IA...IB
+*
+*     CALL CNVI(NUM,N,STRUT)  convert integer and store
+*
+*     CALL CNVF(FLT,N,STRUT)  convert real and store
+*
+*     CALL CNVA(ATE,N,STRUT)  convert hollerith data and store (with '')
+*
+*     CALL CNVT(TEXT, STRUT)  store text (without ' ')
+*
+*     CALL STRUT   as final call, to write last string
+*
+*     STRUT is a subroutine (which the user has to supply), which
+*     has to write or store one complete string. A model is:
+*
+*
+*     SUBROUTINE STRUT
+*     CHARACTER*256 STR
+*     COMMON/FMTSTR/STR
+*     COMMON/STRSTR/JS,IAST,IBST
+*     IF(JS.EQ.0) GOTO 100
+*     WRITE(6,101)   STR(1:IBST)
+*     JS=0
+* 100 RETURN
+* 101 FORMAT(A)
+*     END
+*
+      COMMON/STRSTR/JS,IAST,IBST
+      JS  = 0
+      IAST=IA
+      IBST=IB
+      RETURN
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK cnvl
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

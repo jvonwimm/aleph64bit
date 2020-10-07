@@ -1,0 +1,81 @@
+      SUBROUTINE BKRHAL(PRNAM,IPVER,ICVER,NATOU,IFAIL)
+C-----------------------------------------------------------------------
+C! Enlarges and fills the bank RHAH (  Run Header Analysis History )
+C! according to the input arguments
+CKEY BOOK RUN HEADER / INTERNAL
+C Author     J. Boucrot     25-Sep-1988   modified 02-Feb-1989
+C Auxiliary to BKRHAW                          from ALEPHLIB
+C NOT User-callable
+C Calls AUBOS,ALVERS,ADBVER                    from ALEPHLIB
+C Input arguments :
+C    PRNAM  : Name of the production program ( JULIA or ALPHA )
+C    IPVER  : Program version number
+C    ICVER  : Correction set version number
+C    NATOU  : Code for the output written by the calling program:
+C              2 = RAW           3 = POT           4 = DST
+C              5 = MiniDST       6 = MicroDST      7 = NanoDST
+C Output argument :  IFAIL = 0 if all OK ,  =1 if no room for RHAH
+C Modified: P. Comas  8-JUN-1994, Store computer type in last word of RHAH
+C                                 after a call to ALMACH from ALEPHLIB.
+C-----------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "bcs.h"
+#include "rhahjj.h"
+      COMMON /SLATE/ ISL(40)
+      COMMON / NAMRHA / NARHAH,NARHOH,NARUNH,NAAJOB,
+     +                  NAKJOB,NAKRUN
+        EXTERNAL NAMIND,INTCHA
+        CHARACTER*8 PRNAM,COMPU
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+C Check if RHAH already exists ; if not, create it ; if yes , enlarge it
+        IFAIL=1
+        JRHAH=IW(NARHAH)
+        IF (JRHAH.EQ.0) THEN
+           LENRH=LMHLEN+LRHAHA
+           NROWS=1
+        ELSE
+           NROWS=LROWS(JRHAH)+1
+           LENRH=LMHLEN+NROWS*LCOLS(JRHAH)
+        ENDIF
+        CALL AUBOS('RHAH',0,LENRH,JRHAH,IGARB)
+        IF (IGARB.EQ.2) GO TO 999
+        IW(JRHAH+LMHCOL)=LRHAHA
+        IW(JRHAH+LMHROW)=NROWS
+C
+C Fill the last row with the required entities  :
+C
+        KRHAH=KROW(JRHAH,NROWS)
+        IW(KRHAH+JRHAPN)=INTCHA(PRNAM(1:4))
+        IW(KRHAH+JRHAPN+1)=INTCHA(PRNAM(5:8))
+C Day , time , program version :
+        CALL DATIME(IDAY,ITIM)
+        IDAY = ISL(1)*10000+MOD(IDAY,10000)
+        IW(KRHAH+JRHAPD)=IDAY
+        IW(KRHAH+JRHAPH)=ITIM
+        IW(KRHAH+JRHAPV)=IPVER
+        IW(KRHAH+JRHACV)=ICVER
+C Computer type:
+        CALL ALMACH(COMPU)
+        IW(KRHAH+JRHANU)=INTCHA(COMPU(1:4))
+C Alephlib version , Database version and date :
+        ISAV=IW(6)
+        IW(6)=0
+        CALL ALVERS(ALVER)
+        CALL ADBVER(IDBVE,IDBDA)
+        IW(6)=ISAV
+C
+        IW(KRHAH+JRHAAV)=NINT(10.*ALVER)
+        IW(KRHAH+JRHADV)=IDBVE
+        IW(KRHAH+JRHADD)=IDBDA
+C Nature of input is taken from previous step , if any :
+        NATIN=0
+        IF (NROWS.GT.1)  NATIN=ITABL(JRHAH,NROWS-1,JRHANO)
+        IW(KRHAH+JRHANI)=NATIN
+        IW(KRHAH+JRHANO)=NATOU
+        IFAIL=0
+C
+ 999   RETURN
+       END
+#endif

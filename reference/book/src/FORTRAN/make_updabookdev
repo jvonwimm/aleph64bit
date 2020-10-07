@@ -1,0 +1,15 @@
+NAME     = updabookdev
+FFILES   = updabookdev.f
+FFLAGS   = -w -O1 -G 3
+LDFLAGS  = -G 3
+LIBS     =     /afs/cern.ch/aleph/OSF1/lib/libalephlib.a         \
+		/afs/cern.ch//aleph/OSF1/lib/libbos77.a            \
+		/cern/pro/lib/libmathlib.a       \
+		/cern/pro/lib/libpacklib-shift.a  \
+		/usr/local/lib/libshift.a
+
+SRCFILES =  $(FFILES)
+OBJFILES =  $(FFILES:.f=.o)
+ 
+$(NAME): $(OBJFILES)
+	f77 -o $@ $(LDFLAGS) $(OBJFILES) $(LIBS)

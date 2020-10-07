@@ -1,0 +1,99 @@
+head	1.1;
+access;
+symbols
+	aleph316_2:1.1
+	aleph316_1:1.1
+	aleph316:1.1
+	aleph315_7:1.1
+	aleph315_6:1.1
+	aleph315_5:1.1
+	aleph315_4:1.1
+	aleph315_3:1.1
+	aleph315_2:1.1
+	aleph315_1:1.1
+	aleph315:1.1
+	aleph314_2:1.1
+	aleph314_1:1.1
+	aleph314:1.1
+	aleph313_1:1.1
+	aleph313:1.1
+	aleph312_1:1.1
+	aleph312:1.1
+	aleph311_1:1.1
+	aleph311:1.1
+	aleph310_3:1.1
+	aleph310_2:1.1
+	aleph310_1:1.1
+	aleph310:1.1
+	aleph309_1:1.1
+	aleph309:1.1
+	aleph308_3:1.1
+	aleph308_2:1.1
+	aleph308_1:1.1
+	aleph308:1.1
+	aleph307_6:1.1
+	aleph307_5:1.1
+	aleph307_4:1.1
+	aleph307_2:1.1
+	aleph307_1:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	98.02.06.14.27.08;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@New interface routines to Pythia 6.1
+@
+text
+@        SUBROUTINE KXP6TO(KLUN,TLIF)
+C-----------------------------------------------------------------------
+C January 12 1998 B. Bloch for Pythia 6.1
+C! LUND application routine to find lifetime of non-standard particles
+CKEY KINE KINGAL LUND7 LIFETIME /   INTERNAL
+C - input   :  KLUN = LUND particle code
+C - output  :  TLIF = particle lifetime ( in seconds )
+C Useful only for particles not defined in the ALEPH database
+C-----------------------------------------------------------------------
+#ifndef DOC
+        DATA       TCHAB ,          TBMES  ,         TBBAR
+     + /           4.3E-13        , 1.5E-12    ,    1.22E-12      /
+C         Charmed baryons          B   mesons     B   baryons
+C
+        TLIF=0.
+        K=IABS(KLUN)
+C B MESONS have code 5xx  or x05xx
+C B BARYONS have code 5xxx
+C C BARYONS have code 4xxx
+C Diquarks  have code xx0x            :life time set to 0
+C Excited states with 2s+1>= 3        :life time set to 0
+C Higher meson multiplets with spin=1 :life time set to 0
+        IBARY = MOD(K/1000,10)
+        IMESO = MOD(K/100,10)
+        IDIQU = MOD(K/10,10)
+        IEXCI = MOD(K,10)
+        IHIGH = MOD(K/10000,10)
+        IF (IDIQU.EQ.0) GO TO 999
+        IF (IEXCI.GE.3) GO TO 999
+        IF (IEXCI.EQ.1 .AND. IHIGH.GT.0) GO TO 999
+        IF ( IBARY.EQ.4) THEN
+           TLIF = TCHAB
+        ELSEIF ( IBARY.EQ.5) THEN
+           TLIF = TBBAR
+        ELSEIF ( IBARY.EQ.0 .AND. IMESO.EQ.5) THEN
+           TLIF = TBMES
+        ENDIF
+C
+ 999    RETURN
+        END
+#endif
+@

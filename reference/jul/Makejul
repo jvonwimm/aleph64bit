@@ -1,0 +1,90 @@
+# =======================================================
+# to link a jul300 version (tracking upgrade version)
+# gmake VERSION=300 ALIB=trk
+# =======================================================
+# to link a jul301 version (tracking upgrade version)
+# gmake VERSION=301 ALIB=trk1
+# =======================================================
+# to link jul280 cvs version with alephlib 212 cvs version
+# gmake VERSION=280 ALIB=io212
+# =======================================================
+# to link current version 
+# gmake
+# ========================================================
+# to link in debug mode
+# gmake DBX=_dbx
+# =======================================================
+
+SYS     =
+VERSION = 281
+ALIB    = lib
+DBX     =
+NAME    = jul$(VERSION)$(DBX)$(SYS)
+
+ifeq ($(DBX),_dbx)
+ gflag  = -g
+else
+ gflag  =
+endif
+
+ifeq ($(OS),HPUX9)
+ FC      = fort77
+ LDFLAGS = $(UNDEF),-lm
+else
+ FC      = f77
+ LDFLAGS = $(UNDEF),-m
+endif
+
+# ===============update following parameters =====================
+
+#     list of .c files to be compiled
+CFILES  =
+#     list of .f files to be compiled
+FFILES  =
+#     list of .F files to be compiled
+FPPFILES =  
+
+#     update the list of directories where to find include files
+FFLAGS  = $(FCOPT) $(gflag) -I$(ALROOT)/jul${VERSION}/inc
+
+#     .o and module are built in OBJDIR
+OBJDIR  = $(HOME)/$(OS)
+
+#     update the list of directories where to find source files
+vpath %.f /u3/xu/flr/julia 
+vpath %.F $(ALROOT)/trackup/alephlib: $(ALROOT)/trackup/julia
+vpath %.c $(ALROOT)/aleph213/c
+vpath %.o $(OBJDIR)
+
+# ==================================================================
+
+MAIN    = /aleph/jul/jmain$(VERSION).o
+CERNLIB = `cernlib mathlib packlib shift`
+
+LIBS    = \
+		$(ALEPH)/jul/libjul$(VERSION)$(DBX).a \
+		$(ALEPH)/gen/libaleph$(ALIB)$(DBX).a \
+		$(ALEPH)/lib/libbos77$(DBX).a \
+                $(CERNLIB)
+
+
+# Rules...
+
+# Rules...
+F_FILES := $(FFILES) $(FPPFILES)
+O_FILES := $(FFILES:%.f=%.o) $(FPPFILES:%.F=%.o) 
+OBJFILES := $(addprefix $(OBJDIR)/,$(notdir $(O_FILES)))
+
+$(OBJDIR)/%.o : %.f
+	$(FC) $(FFLAGS) $< -o $@
+$(OBJDIR)/%.o : %.F
+	$(FC) $(FFLAGS)  $< -o $@
+
+$(OBJDIR)/$(NAME): $(OBJFILES) 
+	$(FC) -o $@  $(MAIN) $(OBJFILES) $(LIBS) $(LDFLAGS) > $(OBJDIR)/$(NAME).map
+ 
+
+
+
+
+

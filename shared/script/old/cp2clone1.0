@@ -1,0 +1,207 @@
+#! /bin/csh -f
+#
+# =======================================================================
+#                                                              FLR
+#                     cp2clone
+# =======================================================================
+# copy new files to a afs
+# =======================================================================
+# P1 -> directory to copy
+# P2 -> afs name
+# P3 -> number of days (def.=1)
+# ======================================================================
+# cp2clone1.0
+# 980210
+# ======================================================================
+
+set exec_name = "cp2clone1.0"
+set verbflr = ""
+set nar = $#argv
+if (${nar} != 0) then
+  if ($argv[${nar}] == "-v") then
+     echo "${exec_name}"
+     set verbflr = "-v" 
+     set echo on
+     set argv[${nar}] = ""
+     @ nar = ${nar} - 1 
+  endif
+endif
+#
+if ( $?ENVIRONMENT ) then
+ if ( ("$ENVIRONMENT" == "INTERACTIVE" || "$ENVIRONMENT" == "LOGIN") && $1 == "-h" ) then
+   echo ""
+   echo "usage:"
+   echo " cp2clone <prog_dir> "
+   echo ""
+   echo "an example:"
+   echo " cp2clone " \$ALROOT"/aleph307 "
+   echo " finds all files modified/created since yesterday on "\$ALROOT"/aleph307"
+   echo " copy them onto the nfs platform if on afs or vice-versa"
+   echo ""
+   echo ""
+   exit(1)
+ endif
+endif
+#
+unset noclobber
+set flag = "OK"
+
+set prog_dir = $1
+set arg2     = $2
+
+set ndays    = "1"
+if (${arg2} != "") set ndays = ${arg2}
+
+set libn = `basename ${prog_dir}`
+set dir = `dirname ${prog_dir}`
+
+set IGNORE = ". HPUX9 HPUX10 IRIX5 OSF1 CVS"
+set origin = `echo ${prog_dir} | awk '{print substr($0,2,3)}'`
+if (${origin} == "afs") then
+   set CURRENT = "/afs/cern.ch"
+   set OTHER   = "/al"
+else
+   set CURRENT = "/al"
+   set OTHER   = "/afs/cern.ch"
+endif
+set OTHERCVS = "${OTHER}/aleph/reference/cvs"
+set OTHERLIB = "${OTHER}/aleph/${OS}"
+
+# ====== get a token for user $USER
+
+tokens | grep $USER
+if ($status == 1) then
+  echo -n " Enter afs password for user $USER -> "
+  set pass = $<
+  klog -pr $USER -pa $pass
+  if ($status != 0) then
+    set flag = " wrong afs password : STOP"
+    goto spy
+  endif
+endif
+
+#==========================================================
+
+if (${dir} == ${ALROOT}) then
+
+#  ==== if the directory does not exist :copy the new version
+#       and change Repository and Root names to the OTHER ones
+
+  if !( -d ${OTHERCVS}/${libn}) then
+    cd ${ALROOT}
+    cp -r ${libn} ${OTHERCVS}
+    if ($status !=0) then
+       set flag = " ${prog_dir} not copied : STOP"
+       goto spy
+    endif
+#
+    cd ${OTHERCVS}/${libn}
+    set listcvs = `find . -type d -name "CVS"`
+    foreach cvs ( ${listcvs[*] )
+      cd ${cvs}
+      sed s/"${CURRENT}/"${OTHER}"/ Repository > Repository.tmp
+      mv -f Repository.tmp Repository
+      sed s/"${CURRENT}"/"${OTHER}"/ Root > Root.tmp
+      mv -f Root.tmp Root
+    end
+    goto spy       
+  endif
+        
+#  ==== existing directory : copy new *.F and *.h files
+
+  cd ${prog_dir}
+   set listdir = `find . -type d -mtime -${ndays} -print`
+   if ("${listdir}" == "") then
+      set flag = " nothing new on ${prog_dir} : EXIT"
+      goto spy
+   endif
+
+#  ---- update CVS directory 
+   set lcvs = `ls CVS/Entries CVS/Tag` 
+   cp ${lcvs} ${OTHERCVS}/${libn}/CVS
+   if ($status != 0) then
+      set flag = " ${prog_dir}/CVS not copied : STOP"
+      goto spy
+   endif
+
+#  ---- if $ALROOT/inc directory : copy new *.h files
+   if (${libn} == "inc") then
+     set listfile = `find . \( -name '*.h' \) -mtime -${ndays} -print`
+     if ("${listfile}" != "") then
+       cp  ${listfile} ${OTHERCVS}/${libn}
+       if ($status != 0) then
+          set flag = " ${listfile} from ${prog_dir} not copied : STOP"
+          goto spy
+       endif
+     endif
+
+   else
+
+#   ---- if not $ALROOT/inc directory : copy new *.F and *.h files
+#                                       and update CVS directory
+
+    foreach listd ( $listdir[*] )
+     set dirn = `basename ${listd}`
+     foreach ign ( $IGNORE[*] )
+       if (${dirn} == ${ign}) then
+          goto nextlistd
+       endif
+     end
+     cd ${prog_dir}/${dirn}
+     set listfile = `find . \( -name '*.F' -o -name '*.h' \) -mtime -${ndays} -print`
+     if ("${listfile}" != "") then
+       cp  ${listfile} ${OTHERCVS}/${libn}/${dirn}
+       if ($status != 0) then
+          set flag = " ${listfile} from ${prog_dir}/${dirn} not copied : STOP"
+          goto spy
+       endif
+     endif
+     set lcvs = `ls CVS/Entries CVS/Tag` 
+     cp ${lcvs} ${OTHERCVS}/${libn}/${dirn}/CVS
+     if ($status != 0) then
+        set flag = " ${prog_dir}/${dirn}/CVS not copied : STOP"
+        goto spy
+     endif
+     cd ..
+nextlistd:
+    end
+
+   endif
+#
+else
+#
+#  ========= if not $ALROOT directory : copy library directories
+#
+  if (${dir} == ${ALEPH}) then
+    cd ${prog_dir}
+    set list = `find . -type f -mtime -${ndays} -print` 
+    if ("${list}" == "") then
+       set flag = " nothing new on ${prog_dir} : EXIT"
+       goto spy
+    else
+       cp ${list} ${OTHERLIB}/${libn}
+       if ($status != 0) then
+          set flag = " ${list} from ${prog_dir} not copied : STOP"
+          goto spy
+       endif
+    endif
+  endif
+
+endif 
+
+# ================================================================================
+spy:
+#*******> spy
+echo `date` " END of ${exec_name} ${OS} ${user} ${prog_dir} ${flag}" >> ${HOME}/spy
+ 
+# ===============================================================================
+script_end:
+exit
+
+
+
+
+
+
+
+

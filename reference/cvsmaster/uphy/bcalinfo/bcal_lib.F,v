@@ -1,0 +1,965 @@
+head	1.3;
+access;
+symbols
+	bcalinfo_1:1.1.1.1
+	OSF1:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	98.09.08.18.26.02;	author merino;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.04.20.10.13.46;	author merino;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.02.23.11.51.20;	author merino;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	98.02.23.11.51.20;	author merino;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@update
+@
+text
+@
+      subroutine FillCtes(Year)
+*=========================================================================
+* 
+* Author: G. Merino  - 19980522
+*
+* Description:
+*  
+*         Subroutine called at the beggining of bcalmc or bcaldata.
+*         Fills some internal-used commons with the correction parameters.  
+*
+*-------------------------------------------------------------------------
+
+      integer i,j,I_db
+      integer Year
+
+c-> Constants DATABASE (_db)
+      integer Nperiods 
+      parameter (Nperiods = 2)
+c -> Correction parameters
+      real PhSSparA_db(5,Nperiods),PhSSparP_db(5,Nperiods)
+      real PhEparA_db(5,4,Nperiods),PhEparP_db(5,4,Nperiods)
+      real REparA_db(6,4,Nperiods),REparP_db(6,4,Nperiods)
+      real Xsh_db
+      common /PhSS_db/ PhSSparA_db,PhSSparP_db
+      common /PhE_db/ PhEparA_db,PhEparP_db
+      common /RE_db/ REparA_db,REparP_db
+      common /Xshift_db/ Xsh_db(Nperiods)
+
+c-> Internally Used correction constants commons
+      real PhSSparA(5),PhSSparP(5)
+      real PhEparA(5,4),PhEparP(5,4)
+      real REparA(6,4),REparP(6,4)
+      real Xsh
+      common /PhSS/ PhSSparA,PhSSparP
+      common /PhE/ PhEparA,PhEparP
+      common /RE/ REparA,REparP
+      common /Xshift/ Xsh
+c
+      real xtmp(16,6),ytmp(16,6)
+      real rpos(16),phpos(16,6)
+      common /silmap/ rpos,phpos
+      real Rpad(16,6),PhPad(16,6)      
+      common /silmap_shifted/ Rpad,PhPad
+ 
+*= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =      
+
+      if (Year.eq.97) then
+c*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+c 1997 setting
+c*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+         I_db = 1         
+      elseif (Year.eq.98) then 
+c*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+c 1998 setting
+c*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+         I_db = 2
+      else
+         write(6,*) 'FillCtes: Wrong Geometry Year given in BCAL card',Year
+         stop
+      endif
+
+      do i = 1,4
+c-> Energy correction along Phi & R
+         do j = 1,5
+           PhEparP(j,i) = PhEparP_db(j,i,I_db)
+           PhEparA(j,i) = PhEparA_db(j,i,I_db)
+         enddo
+         do j = 1,6
+           REparP(j,i) = REparP_db(j,i,I_db)
+           REparA(j,i) = REparA_db(j,i,I_db)
+         enddo
+      enddo	
+
+c-> S-shape correction along Phi
+      do j = 1,5
+        PhSSparP(j) = PhSSparP_db(j,I_db)
+        PhSSparA(j) = PhSSparA_db(j,I_db)
+      enddo
+         
+c-> Include the X-shift of the BCAL++ Modules (Alignement) in the silicon Mapping.
+      Xsh = Xsh_db(I_db)
+      do i = 1,16
+       do j = 1,6
+        xtmp(i,j) = rpos(i)*cosd(phpos(i,j)) + Xsh_db(I_db)
+        ytmp(i,j) = rpos(i)*sind(phpos(i,j))
+        Rpad(i,j) = sqrt(xtmp(i,j)**2+ytmp(i,j)**2)
+        PhPad(i,j) = atand(ytmp(i,j)/xtmp(i,j))
+       enddo
+      enddo
+
+c*= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+      return
+      end
+
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+      subroutine quad_sim(ebeam,ich,vtx,p,pout,xout,iflag)
+c
+c Author : G. Merino and F. Sanchez - 19970424
+c
+c Description: Routine to simulate the Quadrupole bending of the e- tracks
+c 
+c Inputs: P(3) = 3-momenta at the IP (GeV).
+c         ICH = 1 => particle charge matches with the 4pole. 
+c         ICH = 0 =>    "       "  doesn't match with the 4pole.
+c         VTX(3) = Vertex position (Meters)
+c Output: POUT(3) = 3-momenta at BCAL++ front end (GeV).
+c         XOUT(3) = position at BCAL++ front end (Meters).
+c         IFLAG = 0=> Particle not tagged in BCAL++
+c
+      implicit none
+c
+      integer imod
+      real d,d1,d2,d3,d4,rin,rinbc,rotbc,phabc,qksc,ebeam
+      real p(3),ptot,pout(3),ppp,squad,tmp,xout(3)
+      real m1(8),m2(8),m3(8),mqsc(8),mlum(8)
+      real vtx(3)
+      integer iflag,ich
+c
+      common/quad_par/qksc,d1,d2,d3,d4,rin
+      common/bcal/rinbc,rotbc,phabc
+c
+      iflag = 1
+c
+      if (ich.eq.0) then
+         tmp = p(1) 
+         p(1) = p(2)
+         p(2) = tmp
+         tmp = vtx(1)
+         vtx(1) = vtx(2)
+         vtx(2) = tmp  
+      endif
+c
+      ptot = sqrt(p(1)*p(1)+p(2)*p(2)+p(3)*p(3))
+c
+      squad = qksc*ebeam/ptot
+c
+c to the end of the quad.
+c
+      if (p(3).gt.0.) then
+         d = d1 - vtx(3)
+      else
+         d = d1 + vtx(3)
+      endif
+c
+      call quad(0.,d,m1)
+      call quad(squad,d2,m2)
+      call matmul(m1,m2,mqsc)
+c
+      xout(1) = mqsc(2)*p(1)/ptot + mqsc(1)*vtx(1)
+      xout(2) = mqsc(6)*p(2)/ptot + mqsc(5)*vtx(2)
+c
+      if(sqrt(xout(1)**2.+xout(2)**2.).gt.rin) then
+         iflag = 0
+      endif
+c
+c at the end of the flange.
+c
+      call quad(0.,d4,m1)
+      call matmul(mqsc,m1,mlum)
+c
+      xout(1) = mlum(2)*p(1)/ptot + mqsc(1)*vtx(1)
+      xout(2) = mlum(6)*p(2)/ptot + mqsc(5)*vtx(2)
+c
+      if(sqrt(xout(1)**2.+xout(2)**2.).gt.rin) then
+         iflag = 0
+      endif
+c
+c to bcal++
+c
+      call quad(0.,d3-d4,m1)
+      call matmul(mlum,m1,mqsc)
+c
+      xout(1) = mqsc(2)*p(1)/ptot + mqsc(1)*vtx(1)
+      xout(2) = mqsc(6)*p(2)/ptot + mqsc(5)*vtx(2)
+      xout(3) = d1+d2+d3
+c
+      pout(1) = mqsc(4)*p(1)
+      pout(2) = mqsc(8)*p(2)
+c
+      ppp = pout(1)*pout(1) + pout(2)*pout(2)
+      if (ppp.ge.ptot*ptot) then
+        iflag = 0
+        goto 999
+      endif       
+      pout(3) = sqrt(ptot*ptot-ppp)
+c
+      if (ich.eq.0) then
+         tmp = pout(1) 
+         pout(1) = pout(2)
+         pout(2) = tmp
+         tmp = xout(1)
+         xout(1) = xout(2)
+         xout(2) = tmp
+      endif
+c
+      call BCAL_Acceptance(xout,iflag)
+c
+ 999  continue
+c
+c Restore the input variables
+c
+      if (ich.eq.0) then
+         tmp = p(2) 
+         p(2) = p(1)
+         p(1) = tmp
+         tmp = vtx(2)
+         vtx(2) = vtx(1)
+         vtx(1) = tmp
+      endif
+c
+      return
+      end
+
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+      subroutine quad_inv(ebeam,ptot,xout,p,iflag)
+c
+c Author : G. Merino - 19970424
+c
+c Description: Routine to invert the quad effect and recover the 
+c              3-vector of the e- at the IP from the BCAL++ observables.
+c
+c inputs : ebeam = Nominal beam energy (GeV) [REAL]
+c          ptot = 3-momenta module measured (GeV) [REAL] 
+c          xout(2) = X,Y position at the BCAL++ front end (measured) (Meters)
+c 
+c output : p(3) = 3-momenta at the ip (GeV) [REAL]
+c          iflag = 0 (no problem) [INTEGER]
+c                  1 (problems in reconstruction)
+c
+      implicit none
+c
+      real d1,d2,d3,d4,rin,rinbc,rotbc,phabc,qksc,ebeam 
+      real m1(8),m2(8),m3(8),mqsc(8),mlum(8)
+      real p(3),ppp,ptot,xout(2),squad
+      integer iflag
+c
+      common/quad_par/qksc,d1,d2,d3,d4,rin
+c
+      iflag = 0
+c
+      squad = qksc*ebeam/ptot
+c
+      call quad(0.,d1,m1)
+      call quad(squad,d2,m2)
+      call matmul(m1,m2,mqsc)
+c
+      call quad(0.,d3,m1)
+      call matmul(mqsc,m1,mlum)
+c
+c (x,y) >>> (px,py)
+c
+      if(abs(mlum(2)).lt.1.e-20.or.abs(mlum(6)).lt.1.e-20) then
+       iflag = 1 
+       return 
+      endif
+c
+      p(1) = xout(1)*ptot/mlum(2)
+      p(2) = xout(2)*ptot/mlum(6)
+c
+      ppp = p(1)*p(1) + p(2)*p(2)
+c
+      if(ppp.gt.ptot*ptot) then
+       iflag = 1 
+       return 
+      endif
+c
+      p(3) = sqrt(ptot*ptot-ppp)
+c
+      return
+      end
+
+cccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+      subroutine quad(k,s,mq)
+c
+c Author : F. Sanchez 
+c
+c Description: Quadrupole transfermatrix
+c
+      real mx(8),my(8),mq(8),k,qk,s
+      if(k.eq.0.)goto 950
+      qk=sqrt(abs(k))
+      eh=exp(qk*s)
+      mx(1)=cos(qk*s)
+      mx(2)=sin(qk*s)/qk
+      mx(3)=-mx(2)*qk*qk
+      mx(4)=mx(1)
+      my(1)=(eh+1./eh)/2
+      my(2)=(eh-1./eh)/(2.*qk)
+      my(3)=+my(2)*qk*qk
+      my(4)=my(1)
+      if(k.gt.0.)goto 920
+      do 910 i=1,4
+      mq(i)=mx(i)
+  910 mq(i+4)=my(i)
+      return
+  920 do 930 i=1,4
+      mq(i)=my(i)
+  930 mq(i+4)=mx(i)
+      return
+  950 mx(1)=1.
+      mx(2)=s
+      mx(3)=0.
+      mx(4)=1.
+      do 960 i=1,4
+      mq(i)=mx(i)
+  960 mq(i+4)=mx(i)
+      return
+      end
+
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+      subroutine matmul(mx,my,mz)
+c
+c Author : F. Sanchez
+c
+c Description: Multipl. of two (2*2)-matrices:mz)ij=my)ik*mx)kj
+c
+      real mx(8),my(8),mz(8)
+      mz(1)=my(1)*mx(1)+my(2)*mx(3)
+      mz(2)=my(1)*mx(2)+my(2)*mx(4)
+      mz(3)=my(3)*mx(1)+my(4)*mx(3)
+      mz(4)=my(3)*mx(2)+my(4)*mx(4)
+      mz(5)=my(5)*mx(5)+my(6)*mx(7)
+      mz(6)=my(5)*mx(6)+my(6)*mx(8)
+      mz(7)=my(7)*mx(5)+my(8)*mx(7)
+      mz(8)=my(7)*mx(6)+my(8)*mx(8)
+      return
+      end
+
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+      subroutine Bcal_Tag(Ebeam,ICh,P,Vtx,IMod)
+c
+c Author : G. Merino - 19971206
+c
+c Description: Looks if a certain particle arrives to BCAL++ 
+c
+c Inputs: Ebeam = LEP Beam energy [REAL] (GeV)
+c         ICh = Particle charge [INTEGER]
+c         P(4) = Particle 4-momenta [REAL] (GeV)
+c         Vtx(3) = Particle Origin Vertex [REAL] (cm)
+c
+c Outputs: IMod = BCAL++ Module number in which the particle 
+c                 hitted (0 if it didn't hit any module)
+c
+      implicit none
+c
+      integer ICh,IMod
+      real Ebeam,P(4),Vtx(3)
+      real x(3)
+      real pVec(3),pout(3),xout(3)
+      real Theta
+      integer itag,ichflg
+c
+      IMod = 0
+c
+c Safety cuts in 3-momenta module and Theta angle
+c
+c         P > 1 GeV & Theta > 1 mrad 
+c
+      Theta = acos(abs(P(3))/P(4))
+      if (P(4).lt.1..or.Theta.lt.0.001) goto 999
+c
+c Which module might be hitted?
+c
+      call module(P,IMod)
+C     
+C Neutral Particles
+C
+      if (ICh.eq.0) then 
+         call neutral(P,x,itag)
+         if (itag.eq.0) then
+            IMod = 0
+         endif
+         goto 999
+C
+C Consider the particle charge for the 4pole behaviour
+C 
+      elseif ((ICh.eq.-1.and.(imod.eq.1.or.imod.eq.2)).or.
+     .         (ICh.eq.1.and.(imod.eq.3.or.imod.eq.4))) then
+         ichflg = 1 
+      else 
+         ichflg = 0
+      endif
+C     
+C Simulate the effect of the quadrupole
+C
+      Vtx(1) = Vtx(1)/100.
+      Vtx(2) = Vtx(2)/100.
+      Vtx(3) = Vtx(3)/100.  
+      pVec(1) = P(1)
+      pVec(2) = P(2)
+      pVec(3) = P(3)
+      call quad_sim(Ebeam,ichflg,Vtx,pVec,pout,xout,itag)
+      if (itag.eq.0) IMod = 0
+c
+ 999  continue
+      return
+      end
+
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+      subroutine module(p,imod)
+C
+C Author : G. Merino - 19970424
+C
+C Description: Returns the # of BCAL++ module which will be hitted by the e- with
+C              3-momenta P(3) 
+C
+C Inputs:   P(3) = MC true 3-momenta of the incident particle (REAL)
+C   
+C Outputs:  IMOD = # of module hitted (1,2,3,4) (INTEGER)
+C
+C
+C
+C                          LEP center
+C
+C                            X ^
+C          __                  |                  __
+C         |__| #3              |                 |__| #1
+C                     e- --->  |  <--- e+
+C       -----------------------.---------------------------> Z
+C          __                                     __
+C         |__| #4                                |__| #2
+C                               
+C                             
+
+      implicit none
+c
+      real p(3)
+      integer imod
+c
+      if (p(3).gt.0.) then
+         if (p(1).gt.0.) then
+            imod = 1
+         else
+            imod = 2
+         endif
+      else
+         if (p(1).gt.0.) then
+            imod = 3
+         else
+            imod = 4
+         endif
+      endif
+c
+      return
+      end
+
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+      subroutine neutral(p,xout,itag)
+C
+C Author : G. Merino - 19970424
+C
+C Description: Propagates neutral tracks to BCAL++ position
+C
+C Input: P(3) = Particle 3-momenta in the interaction point (REAL)
+C
+C Output:
+C        xout(3) = Position of the particle at the BCAL++ entrance (REAL) 
+C        itag = (1 => tag ; 0 => not tag) (INTEGER)
+C
+      implicit none
+c
+      real d1,d2,d3,d4,rin,rinbc,rotbc,phabc,qksc
+      real th,thmax,pmod,ph,xout(3),p(3)
+      integer itag
+c
+      common/quad_par/qksc,d1,d2,d3,d4,rin
+
+*= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+
+      itag = 0
+c
+      pmod = sqrt(p(1)**2+p(2)**2+p(3)**2)
+      th = acos(abs(p(3))/pmod)
+      ph = atan2(abs(p(2)),abs(p(1)))
+
+c-> See if it is stopped by the Flange
+      thmax = rin/(d1+d2+d4)
+      if (th.ge.thmax) goto 999
+c
+      xout(1) = (d1+d2+d3)*tan(th)*cos(ph)
+      xout(2) = (d1+d2+d3)*tan(th)*sin(ph)
+      xout(3) = (d1+d2+d3)
+c
+      call BCAL_Acceptance(xout,itag)
+
+c*= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+ 999  continue 
+      return
+      end
+
+
+      subroutine BCAL_Acceptance(xout,itag)
+C
+C Author : G. Merino - 19980609
+C
+C Description : Defines the BCAL++ acceptance in the XY plane at the BCAL Z position  
+C 
+C Input:  xout(3) = 3-position of the particle at the BCAL++ entrance (meters) [REAL]
+C Output: itag    = 1 => tag ; 0 => not tag) [INTEGER]
+C   
+
+      implicit none
+
+      real xtmp(2),rtmp,phtmp
+      real xout(3)
+      integer itag
+c
+      real rinbc,rotbc,phabc  
+      common/bcal/rinbc,rotbc,phabc     
+c
+      real Xsh
+      common /Xshift/ Xsh
+
+*= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+     
+      itag = 0
+
+c-> Have into account the X-Shift of the BCAL modules (xout in Meters and Xsh in microns)
+      xtmp(1) = xout(1) - Xsh*1.e-6
+      xtmp(2) = xout(2)
+      rtmp = sqrt(xtmp(1)**2+xtmp(2)**2)
+      if (xtmp(1).eq.0.0) goto 999
+      phtmp = atand(xtmp(2)/xtmp(1))
+c
+      if (rtmp.gt.rinbc.and.rtmp.lt.rotbc.and.
+     .    abs(phtmp).lt.phabc) then 
+         itag = 1 
+      endif
+
+c*= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+ 999  continue 
+      return
+      end
+      
+
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+      blockdata param
+c----------------------------------------------------------------
+c Author : G. Merino - 19970424
+c
+c Description: Blockdata with all the parameters used in the 
+c              subroutines BCALDATA and BCALMC
+c
+c Modifications:
+c  
+c  19980117 = Add the Parametrisation of the radial dependence of the 
+c             energy resolution EResPar(4)
+c  19980420 = Include Module-dependent REpar,PhEpar parameterisations.
+c  19980609 = Include Year-dependent and Device-dependent REpar,PhEpar and 
+c              PhSSpar parameterisations.
+c             Include Year-dependent X-axis location of the BCAL++ modules
+c--------------------------------------------------------------------------
+      implicit none
+c
+      real d1,d2,d3,d4,qksc,rin
+c
+      common /quad_par/qksc,d1,d2,d3,d4,rin
+c
+      real rinbc,rotbc,phabc
+      common /bcal/rinbc,rotbc,phabc
+c
+      real rpos(16),phpos(16,6)
+      common /silmap/ rpos,phpos
+c
+      real sigma_e,sigma_r,sigma_phi
+      real EResPar(4)
+      common /smear/ sigma_e,sigma_r,sigma_phi
+      common /REMC/ EResPar
+
+c-> Constants DATABASE (_db)
+      integer Nperiods 
+      parameter (Nperiods = 2)
+c -> Correction parameters
+      real PhSSparA_db(5,Nperiods),PhSSparP_db(5,Nperiods)
+      real PhEparA_db(5,4,Nperiods),PhEparP_db(5,4,Nperiods)
+      real REparA_db(6,4,Nperiods),REparP_db(6,4,Nperiods)
+      real Xsh_db
+      common /PhSS_db/ PhSSparA_db,PhSSparP_db
+      common /PhE_db/ PhEparA_db,PhEparP_db
+      common /RE_db/ REparA_db,REparP_db
+      common /Xshift_db/ Xsh_db(Nperiods)	
+
+c -> Default  APD/PMT gains and Inter-ADC calibrations
+      real Gain_PMT_db(4,Nperiods),Gain_APD_db(4,Nperiods)
+      real PMT_lumitofb_db(4,Nperiods),APD_lumitofb_db(4,Nperiods)
+      real PMT_fbtosc_db(4,Nperiods),APD_fbtosc_db(4,Nperiods)
+      common/Gains_db/ Gain_PMT_db,Gain_APD_db,
+     .                 PMT_lumitofb_db,APD_lumitofb_db,
+     .                 PMT_fbtosc_db,APD_fbtosc_db 
+
+*= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+C
+C BCAL++ Monitor "effective" dimensions
+C
+C  RINBC = interal radius (metres) 
+C  ROTBC = external radius (metres)
+C  PHABC = phi acceptance (degrees)
+C     
+      data rinbc / 0.06555 /    ! Interal radius (metres)      
+      data rotbc / 0.103   /    ! External radius (metres)
+      data phabc / 33.75   /    ! Phi acceptance (degrees)
+
+c*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+c Smearing parameters for the BCAL++ Fast Simulation
+c*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      data sigma_e   / 0.30  /  ! Sigma_Energy (GeV^1/2)
+      data sigma_r   / 0.004 /  ! Sigma_R (METRES*GEV^1/2) 
+ccc      data sigma_phi / 10.   /  ! Sigma_phi (DEG*GEV^1/2)
+      data sigma_phi / 40.   /  ! Sigma_phi (DEG*GEV^1/2)
+
+c*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+c rpos :  radial position of silicon pads (microns)
+c phpos : azimuthal  position of silicon pads (degrees)
+c Xsh_db:    Year-dependent shift in the X axis of the BCAL++ modules with 
+C         respect to the "nominal" position (microns) 
+c*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      data rpos/ 
+     .     64925.,66175.,68050.,70550.,73050.,75550.,78050.,80550.,
+     .     83050.,85550.,88050.,90550.,93050.,95550.,98050.,100550./      
+c
+      data phpos/ 
+     .-28.125,-28.125,-28.125,-28.125,-28.125,-28.125,-28.125,-28.125,
+     .-28.125,-28.125,-28.125,-28.125,-28.125,-28.125,-28.125,-28.125,
+     .-16.875,-16.875,-16.875,-16.875,-16.875,-16.875,-16.875,-16.875,
+     .-16.875,-16.875,-16.875,-16.875,-16.875,-16.875,-16.875,-16.875,
+     .-5.625,-5.625,-5.625,-5.625,-5.625,-5.625,-5.625,-5.625,
+     .-5.625,-5.625,-5.625,-5.625,-5.625,-5.625,-5.625,-5.625,
+     . 5.625,5.625,5.625,5.625,5.625,5.625,5.625,5.625, 
+     . 5.625,5.625,5.625,5.625,5.625,5.625,5.625,5.625, 
+     . 16.875,16.875,16.875,16.875,16.875,16.875,16.875,16.875,
+     . 16.875,16.875,16.875,16.875,16.875,16.875,16.875,16.875,
+     . 28.125,28.125,28.125,28.125,28.125,28.125,28.125,28.125, 
+     . 28.125,28.125,28.125,28.125,28.125,28.125,28.125,28.125/
+c
+      data Xsh_db/
+c->1997 parameters
+     .          0.0   ,
+c->1998 parameters
+     .          -3760.0/
+
+c*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+c Parameters for the S_shape Phi correction (Fitted for 90 GeV e-)
+c*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      data PhSSparA_db/
+c->1997 parameters
+     .     -.1105633,-.1469902E-04,-29.90563,-5.919351,-.1725036E-01,
+c->1998 parameters
+     .     -.1105633,-.1469902E-04,-29.90563,-5.919351,-.1725036E-01/
+      data PhSSparP_db/
+c->1997 parameters
+     .     -.1105633,-.1469902E-04,-29.90563,-5.919351,-.1725036E-01,
+c->1998 parameters
+     .     -.1105633,-.1469902E-04,-29.90563,-5.919351,-.1725036E-01/
+
+c*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+c Energy correction depending on Phi
+c*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      data PhEparA_db/
+c->1997 parameters
+     .     1.,0.5033444E-03,-.1263766E-03,0.1516041E-05,-.2046320E-07,
+     .     1.,0.2609203E-02,-.3624565E-04,0.8813412E-06,0.8813412E-06,
+     .     1.,0.2949292E-02,0.5102744E-04,0.1166111E-06,-.1514475E-06,
+     .     1.,0.9311813E-04,-.1256403E-04,0.1107677E-05,-.1205497E-06,
+c->1998 parameters
+     .     1.,9.97494E-05,-2.11887E-05,2.63972E-06,-2.20157E-07,
+     .     1.,0.00327261,-6.57034E-05,-8.53749E-07,-9.50151E-08,
+     .     1.,0.00250315,0.0001079,1.87742E-06,-3.01435E-07,
+     .     1.,-0.000475603,5.39246E-05,2.73181E-06,-2.50773E-07/
+      data PhEparP_db/
+c->1997 parameters
+     .     1.,0.5033444E-03,-.1263766E-03,0.1516041E-05,-.2046320E-07,
+     .     1.,0.2609203E-02,-.3624565E-04,0.8813412E-06,0.8813412E-06,
+     .     1.,0.2949292E-02,0.5102744E-04,0.1166111E-06,-.1514475E-06,
+     .     1.,0.9311813E-04,-.1256403E-04,0.1107677E-05,-.1205497E-06,
+c->1998 parameters
+     .     1.,0.00374711,1.49975E-05,3.9212E-07,-2.22967E-07,
+     .     1.,0.0019217,2.522E-05,5.13386E-07,-1.56124E-07,
+     .     1.,0.00248732,9.80158E-06,1.87332E-06,-2.47555E-07,
+     .     1.,0.00107299,4.93443E-05,1.41341E-06,-2.05974E-07/
+c*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+c Energy correction depending on R
+c*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      data REparA_db/
+c->1997 parameters
+     .     -13.294,191.98,-602.76,-15.499,220.91,7.0466,
+     .     -12.177,190.27,-641.21,-13.439,193.63,6.8038,
+     .     -12.222,194.72,-669.77,-8.5889,123.67,6.8454,
+     .     -13.935,200.45,-629.33,-10.557,150.18,7.1662,
+c->1998 parameters
+     .     -13.7683,191.106,-571.597,-13.1112,190.711,6.6736,
+     .     -13.1254,191.243,-600.357,-9.34139,134.371,7.05409,
+     .     -13.1582,191.213,-598.446,-7.1542,105.576,7.6085,
+     .     -13.1853,191.198,-597.317,-10.9278,158.654,6.9909/
+      data REparP_db/
+c->1997 parameters
+     .     -13.294,191.98,-602.76,-15.499,220.91,7.0466,
+     .     -12.177,190.27,-641.21,-13.439,193.63,6.8038,
+     .     -12.222,194.72,-669.77,-8.5889,123.67,6.8454,
+     .     -13.935,200.45,-629.33,-10.557,150.18,7.1662,
+c->1998 parameters
+     .     -14.1014,191.049,-555.863,-13.8402,201.417,6.70117,
+     .     -13.0561,191.365,-602.307,-7.97856,115.079,6.72753,
+     .     -13.2128,191.394,-597.305,-5.36758,78.1046,7.40858,
+     .     -13.5338,191.331,-582.185,-12.8768,187.965,6.79592/
+
+c*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+c Default APD/PMT gains and Inter-ADC calibrations  
+c*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      data Gain_PMT_db/ 
+     .              0.0850,0.1220,0.1400,0.0590,
+     .              0.0780,0.0650,0.0640,0.0740/
+      data Gain_APD_db/
+     .              0.1050,0.0990,0.0760,0.0730,
+     .              0.0660,0.0560,0.0480,0.0520/
+      data PMT_lumitofb_db/
+     .              0.5,0.5,0.5,0.5,
+     .              1.0,1.0,1.0,1.0/
+      data APD_lumitofb_db/
+     .              0.439,0.455,0.435,0.448,
+     .              1.0,1.0,1.0,1.0/
+      data PMT_fbtosc_db/
+     .              1.0,1.0,1.0,1.0,
+     .              0.978,1.002,0.993,0.964/
+      data APD_fbtosc_db/
+     .              1.0,1.0,1.0,1.0,
+     .              0.991,0.958,0.965,0.972/
+
+c*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+c Parametrisation of radial dependence of E resolution for the Fastsim
+c*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      data EResPar/-0.14712,3.4845,-27.373,72.364/ 
+
+c*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+c Quadrupole related parameters
+c
+c  x-------xxxxxxx-----xx----------[  ]
+c ip        quad      flng.       bcal
+c   <----> <-----><----->
+c     d1     d2      d4
+c                 <--------------->
+c                        d3
+c*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      data qksc / 0.16106 /  ! quad strength
+      data rin  / 0.077 /       ! Beam pipe internal radius.
+c     
+      data d1  / 3.72 /          ! ip to internal quad border. 
+      data d2  / 2.0  /          ! quad length.
+      data d3  / 1.98 /          ! external quad border to monitor.
+      data d4  / 1.4  /          ! Straigth line after dipole to the end of 2nd flange.
+c
+      end
+@
+
+
+1.2
+log
+@G. Merino - Different E correction parameterisations per module added.
+@
+text
+@d1 95
+d99 13
+a111 13
+C
+C Author : G. Merino and F. Sanchez - 19970424
+C
+C Description: Routine to simulate the Quadrupole bending of the e- tracks
+C 
+C Inputs: P(3) = 3-momenta at the IP (GeV).
+C         ICH = 1 => particle charge matches with the 4pole. 
+C         ICH = 0 =>    "       "  doesn't match with the 4pole.
+C         VTX(3) = Vertex position (Meters)
+C Output: POUT(3) = 3-momenta at BCAL++ front end (GeV).
+C         XOUT(3) = position at BCAL++ front end (Meters).
+C         IFLAG = 0=> Particle not tagged in BCAL++
+C
+d116 1
+a116 1
+      real p(3),ph,ptot,pout(3),ppp,r,squad,tmp,xout(3)
+d198 1
+a198 8
+      r = sqrt(xout(1)**2.+xout(2)**2.)
+      ph = atan2(abs(xout(2)),abs(xout(1)))*180./3.141592
+c
+      if(r.gt.rinbc.and.r.lt.rotbc.and.ph.lt.phabc) then 
+       continue    
+      else
+       iflag = 0
+      endif
+d471 1
+a471 1
+      real th,thmin,thmax,pmod,ph,xout(3),p(3)
+d475 3
+a477 2
+      common/bcal/rinbc,rotbc,phabc     
+c
+d483 8
+d492 40
+a531 2
+      thmin = rinbc/(d1+d2+d3)
+      thmax = rin/(d1+d2+d4)
+d533 2
+a534 2
+      if (th.lt.thmax.and.th.gt.thmin.and.
+     .    ph*180./3.141593.lt.phabc) then 
+a535 3
+         xout(1) = (d1+d2+d3)*tan(th)*cos(ph)
+         xout(2) = (d1+d2+d3)*tan(th)*sin(ph)
+         xout(3) = (d1+d2+d3)
+d537 3
+a539 1
+c
+d542 1
+d547 1
+a547 1
+c
+d558 4
+a561 1
+c
+a563 6
+      real rpos(16),phpos(16,6)
+      real PhSSpar(5)
+      real PhEpar(5,4)
+      real REpar(6,4)
+      real EResPar(4)
+c     
+d565 3
+a567 1
+      real sigma_e,sigma_r,sigma_phi
+d569 1
+d571 5
+a575 2
+      common /quad_par/qksc,d1,d2,d3,d4,rin 
+      common/bcal/rinbc,rotbc,phabc
+a576 4
+      common /silmap/ rpos,phpos
+      common /PhSS/ PhSSpar
+      common /PhE/ PhEpar
+      common /RE/ REpar
+d578 23
+d611 2
+a612 1
+c
+d614 1
+a614 1
+c
+d619 2
+a620 1
+c
+d623 3
+a625 1
+c
+d628 1
+a628 2
+     .     83050.,85550.,88050.,90550.,93050.,95550.,98050.,100550./
+      
+d644 7
+d652 13
+a664 4
+c
+      data PhSSpar/-.1105633,-.1469902E-04,-29.90563,-5.919351,
+     .         -.1725036E-01/
+c
+d666 14
+a679 2
+c
+      data PhEpar/
+d683 7
+a689 2
+     .     1.,0.9311813E-04,-.1256403E-04,0.1107677E-05,-.1205497E-06/
+c
+d691 14
+a704 2
+c
+      data REpar/
+d708 33
+a740 1
+     .     -13.935,200.45,-629.33,-10.557,150.18,7.1662/
+d742 1
+a742 5
+c
+c Parametrisation of radial dependence of E resoltion
+c
+      data EResPar/-0.14712,3.4845,-27.373,72.364/ 
+c
+d751 1
+a751 1
+c
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d422 1
+d428 2
+a429 2
+      real PhEpar(5)
+      real REpar(6)
+d491 5
+a495 2
+      data PhEpar/1.0011,0.98521E-03,-0.90767E-05,0.18612E-06,
+     .            -0.58218E-07/
+d499 6
+a504 1
+      data REpar/-706.49,10055.,-34235.,-66.920,977.87,7.0957/
+@
+
+
+1.1.1.1
+log
+@import 
+@
+text
+@@

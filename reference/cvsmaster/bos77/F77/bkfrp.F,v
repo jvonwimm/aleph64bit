@@ -1,0 +1,92 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.48.36;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.14;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.15;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE BKFRP(JW,NAME,NR,P,MP,NP,MC,NC)
+*
+*     COPY DATA FROM BANK 'NAME',NR TO TWODIM. ARRAY P
+*
+*     ERRORS: MC<=0 OR MC<=0 OR MP<MC
+*             INSUFFICIENT SPACE (BOS ERROR PRINT)
+*
+*
+      INTEGER JW(1000),P(MP,NP)
+      CHARACTER*4 NAME
+      IF(MC.LE.0.OR.NC.LE.0) GOTO 100
+      IF(MP.LT.MC) GOTO 100
+      IND=MBANK(JW,NAME,NR,1+MC*NC)
+      IF(IND.EQ.0) GOTO 100
+      JW(IND+1)=MC
+      IF(MC.EQ.MP) THEN
+         CALL UCOPY(P,JW(IND+2),MC*NC)
+      ELSE
+         IOF=IND+1
+         DO 30 J=1,NC
+         DO 10 I=1,MC
+   10    JW(IOF+I)=P(I,J)
+         IOF=IOF+MC
+   30    CONTINUE
+      END IF
+  100 RETURN
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK bkfrp
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

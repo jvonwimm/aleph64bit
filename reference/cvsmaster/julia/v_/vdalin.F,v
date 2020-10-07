@@ -1,0 +1,160 @@
+head	1.1;
+access;
+symbols
+	jul313_3:1.1
+	jul313_2:1.1
+	jul313_1:1.1
+	jul313:1.1
+	jul312_1:1.1
+	jul312:1.1
+	jul311:1.1
+	jul310_1:1.1
+	jul310:1.1
+	jul309_1:1.1
+	jul309:1.1
+	jul308_6:1.1
+	jul308_5:1.1
+	jul308_4:1.1
+	jul308_3:1.1
+	jul308_2:1.1
+	jul308_1:1.1
+	jul308:1.1
+	jul307_4:1.1
+	jul307_3:1.1
+	jul307_2:1.1
+	jul307_1:1.1
+	jul307:1.1
+	jul306_3:1.1
+	jul306_2:1.1
+	jul306_1:1.1
+	jul306:1.1
+	jul305_4:1.1
+	jul305_3:1.1
+	jul305_2:1.1
+	jul305_1:1.1
+	jul305:1.1
+	jul304_3:1.1
+	jul304_2:1.1
+	jul304_1:1.1
+	jul304:1.1
+	jul303_7:1.1
+	jul303_6:1.1
+	jul303_5:1.1
+	jul303_4:1.1
+	jul303_3:1.1
+	jul303_2_mc1:1.1
+	jul303_2:1.1
+	jul303_1_mc1:1.1
+	jul303_1:1.1
+	jul303_v:1.1
+	jul303:1.1
+	jul302_6:1.1
+	jul302_5:1.1
+	jul302_4:1.1
+	jul302_3:1.1
+	jul302_2:1.1
+	jul302_1:1.1
+	jul302:1.1
+	jul285_1:1.1
+	jul285:1.1
+	jul284_1:1.1
+	jul284:1.1
+	jul283_1:1.1
+	jul283:1.1
+	jul282_1:1.1
+	jul282:1.1
+	jul281_3:1.1
+	jul281_2:1.1
+	jul281_1:1.1
+	jul281:1.1
+	jul280_1:1.1
+	jul280:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.05.06.15.52.01;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@re-installed jul280 from the historian source because some routines were missing.
+@
+text
+@      SUBROUTINE VDALIN
+C ----------------------------------------------------------------------
+C!  smears the VDXY and VDZT coordinates in accordance with
+C!         the errors in the alignment quantities.
+C!
+C -  Author         Manoj Thulasidas  5-Nov-1994
+CKEY V_DECK VDET
+C!
+C!  Description
+C!  ===========
+C!  The alignment procedure for the VDET essentially measures the
+C!  position of each wafer with respect to the rest of the detector.
+C!  The results are given in the form of 6 quantities - 3
+C!  translations and 3 rotations to go from the nominal position to
+C!  the measure postion.  The statistical accuracy of these
+C!  measurements is given in the 6x6 (symmetric) error matrix (21
+C!  numbers) for each wafer.  There is no mathematically rigorous way
+C!  of treating the uncertainty in the real position of the wafers -
+C!  especially because it is measured with respect to the rest of the
+C!  detector which is, in turn, subject to the same uncertainties,
+C!  and the global correlations are not stored.
+C!  Many possible treatments can be thought about:
+C!
+C!  This subroutine does treatment B.
+C!  (Treatment A => VDOSMR   and   Treatment C => VDWSMR)
+C!
+C!  B:  Propagate the error analytically from the error matrix on
+C!  the six quantities to an arbitray position on the wafer.  Smear
+C!  the hits at that position using this error.  (See the subroutine-
+C!  header for VDSIGM for the mathematical details.)
+C!     While this procedure recovers the position and angular
+C!  dependence of the smearing quantities (and results in a near
+C!  perfect agreement between the data and MC resolution measurement
+C!  as a function of the incident angle), it is still not completely
+C!  satisfactory.  For instance, all the hits in one wafer get some
+C!  random smearing, while in reality the smearing should be highly
+C!  correlated.
+C
+C
+C  Output : smeard VDZT and VDXY banks
+C
+C-----------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+      INTEGER NLINK
+      INTEGER KVALC
+      LOGICAL FIRST
+      SAVE NAVALC
+      DATA FIRST/.TRUE./
+C
+C-- load the right VALC bank from the database
+C
+      IF (FIRST) THEN
+        FIRST = .FALSE.
+        NAVALC = NAMIND('VALC')
+        KVALC = IW(NAVALC)
+        IF (KVALC.LE.0) THEN
+          CALL RERROR('VDALIN',1,'No alignment matrix!')
+          RETURN
+        ENDIF
+      ENDIF
+      IF (KVALC.LE.0) THEN
+        RETURN
+      ENDIF
+      CALL VDALZT
+      CALL VDALXY
+      RETURN
+      END
+#endif
+@

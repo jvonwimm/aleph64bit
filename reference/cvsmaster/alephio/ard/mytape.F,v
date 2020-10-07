@@ -1,0 +1,101 @@
+head	1.3;
+access;
+symbols
+	alio83:1.3
+	alio82:1.3
+	alio81:1.3
+	alio80:1.3
+	alio74:1.3
+	alio73:1.3
+	alio72:1.3
+	alio71:1.3
+	alio70:1.3
+	alio68:1.3
+	alio69:1.3
+	alio67:1.3
+	alio66:1.3
+	alio65:1.3
+	alio64:1.3
+	alio63:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	96.07.19.07.42.46;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.07.19.07.05.19;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.07.15.07.43.21;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@add line feed at end of mytape.F
+@
+text
+@#if defined(ALEPH_DEC) &&  ! defined(UNIX)
+      SUBROUTINE MYTAPE(LUN,FNAME,ATYPE,FDEVI,IER )
+C----------------------------------------------------------------------
+C
+C   Author: J. Hilgart June 1989
+C!  Purpose   : User interface to tape or cartridge service on VAX
+C   Inputs    : LUN      logical unit
+C
+C               FNAME    DSN of tape file, can be ' ' if NL tape
+C                        is used or if you wish to ignore the dsn
+C
+C               ATYPE    'NATIVE'  for native fortran
+C                        'EPIO'    for EPIO
+C               FDEVI     'TAPE my_options'
+C                         'CART my_options'
+C
+C               where 'my_options' are any options required
+C
+C   Outputs   : IER  = 0  successful opening
+C
+C Description : User routine which can be filled in w/ code for
+C site-specific handling of tape drives on VAX w/in fortran. Note
+C the file opening is still handled by AOPTAP. This version is a
+C dummy which does nothing.
+C
+C----------------------------------------------------------------------
+#ifndef DOC
+      CHARACTER*(*) FNAME,ATYPE,FDEVI
+C
+      END
+#endif
+#endif
+@
+
+
+1.2
+log
+@replace Call SYSTEM with IST=SYSTEM
+@
+text
+@d32 1
+a32 1
+#endif@
+
+
+1.1
+log
+@alephio63 cut aoptap into aoptap and mytape
+@
+text
+@d27 1
+d32 1
+@

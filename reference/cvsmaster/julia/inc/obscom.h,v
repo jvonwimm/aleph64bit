@@ -1,0 +1,147 @@
+head	1.1;
+access;
+symbols
+	jul313_3:1.1
+	jul313_2:1.1
+	jul313_1:1.1
+	jul313:1.1
+	jul312_1:1.1
+	jul312:1.1
+	jul311:1.1
+	jul310_1:1.1
+	jul310:1.1
+	jul309_1:1.1
+	jul309:1.1
+	jul308_6:1.1
+	jul308_5:1.1
+	jul308_4:1.1
+	jul308_3:1.1
+	jul308_2:1.1
+	jul308_1:1.1
+	jul308:1.1
+	jul307_4:1.1
+	jul307_3:1.1
+	jul307_2:1.1
+	jul307_1:1.1
+	jul307:1.1
+	jul306_3:1.1
+	jul306_2:1.1
+	jul306_1:1.1
+	jul306:1.1
+	jul305_4:1.1
+	jul305_3:1.1
+	jul305_2:1.1
+	jul305_1:1.1
+	jul305:1.1
+	jul304_3:1.1
+	jul304_2:1.1
+	jul304_1:1.1
+	jul304:1.1
+	jul303_7:1.1
+	jul303_6:1.1
+	jul303_5:1.1
+	jul303_4:1.1
+	jul303_3:1.1
+	jul303_2_mc1:1.1
+	jul303_2:1.1
+	jul303_1_mc1:1.1
+	jul303_1:1.1
+	jul303_v:1.1
+	jul303:1.1
+	jul302_6:1.1
+	jul302_5:1.1
+	jul302_4:1.1
+	jul302_3:1.1
+	jul302_2:1.1
+	jul302_1:1.1
+	jul302:1.1
+	jul285_1:1.1
+	jul285:1.1
+	jul284_1:1.1
+	jul284:1.1
+	jul283_1:1.1
+	jul283:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	96.09.10.13.19.16;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@mods to LEP BOM for Julia 283
+@
+text
+@COS   modified version of vbscom.h, O.Schneider, Sept 1996
+      INTEGER NBSBUF, LBPTRK
+#ifdef ALP2
+      INTEGER IBSUNI
+#endif
+      REAL BSPFAC, BSEFAC
+      INTEGER IBSTRK, IBSBUF, JBSBUF, KBSBUF, IBSFEV
+      INTEGER IVBPC, ICHOP, NCHOP
+      REAL BSD0SCUT, XBMC, YBMC, SIGX0, SIGY0, S2MIN
+#ifndef ALP2
+      INTEGER KALPB
+#endif
+      PARAMETER ( NBSBUF = 2 )
+      PARAMETER ( LBPTRK = 10 )
+#ifdef ALP2
+      PARAMETER ( IBSUNI = 32 )
+      PARAMETER ( BSPFAC = 0.00005 )
+      PARAMETER ( BSEFAC = 0.00001 )
+#else
+      PARAMETER ( BSPFAC = 0.000001 )
+      PARAMETER ( BSEFAC = 0.000001 )
+#endif
+      COMMON /OBSCOM/ IBSTRK(NBSBUF), IBSBUF, JBSBUF, KBSBUF, IBSFEV,
+     &          BSD0SCUT, IVBPC, ICHOP, NCHOP, XBMC, YBMC,
+     &          SIGX0, SIGY0, S2MIN
+#ifndef ALP2
+     &         ,KALPB
+#endif
+#if defined(DOC)
+NBSBUF   = number of buffers
+LBPTRK   = number of attributes of work banks
+#ifdef ALP2
+IBSUNI   = unit number for printout of ALPB bank (for debug)
+#endif
+BSPFAC   = packing factor for beam position
+BSEFAC   = packing factor for uncertainty on beam position
+IBSTRK   = indices of work banks
+IBSBUF   = buffer number for active buffer
+JBSBUF   = buffer number for backup buffer
+KBSBUF   = buffer number (used for swapping the other buffer numbers)
+IBSFEV   = first event number in run
+BSD0SCUT = d0 sigma cut for the VCBFIT
+IVBPC    = row index in VBPC = LEP energy regime number
+
+The following permit the accumulated tracks in the active buffer
+to be fitted in customized chunks.  Under normal conditions,
+ICHOP = JCHOP = 0.
+
+ICHOP    = chunk number to be fitted
+NCHOP    = total number of chunks
+
+XBMC,YBMC = effective beam position to be used for extracting the
+impact parameters in Monte Carlo events only.  Under normal conditions,
+no beam position measurement is made for Monte Carlo.
+
+SIGX0,SIGY0 = rms sizes of luminous region
+
+S2MIN    = sigma(d0)**2 corresponding to the maximum weight a track
+should be given in the *first iteration* of the beam position fit.
+
+#ifndef ALP2
+KALPB = index of work bank containing results of beam spot fit
+#endif
+#endif
+@

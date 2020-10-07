@@ -1,0 +1,256 @@
+head	1.9;
+access;
+symbols
+	aleph316_2:1.9
+	aleph316_1:1.9
+	aleph316:1.9
+	aleph315_7:1.9
+	aleph315_6:1.9
+	aleph315_5:1.9
+	aleph315_4:1.9
+	aleph315_3:1.9
+	aleph315_2:1.9
+	aleph315_1:1.9
+	aleph315:1.9
+	aleph314_2:1.9
+	aleph314_1:1.9
+	aleph314:1.9
+	aleph313_1:1.9
+	aleph313:1.9
+	aleph312_1:1.9
+	aleph312:1.9
+	aleph311_1:1.9
+	aleph311:1.9
+	aleph310_3:1.9
+	aleph310_2:1.9
+	aleph310_1:1.9
+	aleph310:1.9
+	aleph309_1:1.9
+	aleph309:1.9
+	aleph308_3:1.9
+	aleph308_2:1.9
+	aleph308_1:1.9
+	aleph308:1.8
+	aleph307_6:1.8
+	aleph307_5:1.8
+	aleph307_4:1.8
+	aleph307_2:1.7
+	aleph307_1:1.7
+	aleph307:1.7
+	aleph306:1.7
+	aleph305_4:1.7
+	aleph305_3:1.7
+	aleph305_2:1.7
+	aleph305_1:1.7
+	aleph305:1.7
+	aleph304_5:1.6
+	aleph304_4:1.5
+	aleph304_3:1.5
+	aleph304_2:1.5
+	aleph304_1:1.5
+	aleph304:1.4
+	aleph303_3:1.4
+	aleph303_2:1.4
+	aleph303_1_mc1:1.4
+	aleph303_1:1.4
+	aleph303:1.4
+	aleph302_9:1.3
+	aleph302_8:1.3
+	aleph302_7:1.3
+	aleph302_6:1.3
+	aleph302_5:1.3
+	aleph302_4:1.3
+	aleph302_3:1.3
+	aleph302_2:1.3
+	aleph302_1:1.3
+	aleph302:1.4
+	aleph216:1.2
+	aleph215_3:1.2
+	aleph215_2:1.2
+	aleph215:1.2
+	aleph214:1.2
+	aleph213:1.2
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.9
+date	98.06.05.09.51.47;	author cattanem;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	98.03.10.14.55.36;	author cattanem;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	97.08.20.07.13.08;	author cattanem;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	97.07.30.16.18.00;	author cattanem;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	97.07.08.15.36.22;	author cattanem;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	97.05.12.13.40.19;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.03.06.11.59.33;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.05.27.10.08.40;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.40.28;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.40.29;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.9
+log
+@Mods for Alephlib 308.1
+@
+text
+@C! TPC geometry package
+ ! correction file no.1 for ALEPHLIB 30.8
+    TRDDAF : Print calibration bank style message once only (M.Cattaneo)
+
+ ! correction file no.4 for ALEPHLIB 30.7
+    THTRAN : Use DOUBLE PRECISION for SP0,CP0, to avoid numerical problems
+                                                              (M.Cattaneo)
+
+ ! ALEPHLIB 30.5
+    TSCINT : Add 201 statement after end of DO loop for Linux (A.Waananen)
+
+ ! ALEPHLIB 30.4 correction file 1
+    TSCINT : Protect against infinite momentum tracks 
+             (e.g. if magnetic field is off)           (M.Cattaneo)
+
+ ! ALEPHLIB 30.3
+    TCTSEC - Correct for transverse drift velocity                (D.Casper)
+    TCTGLB - disable transverse drift correction if sector number
+             is negative (to allow old behavior to be selected)   (D.Casper)
+
+ ! ALEPHLIB 30.2
+    new alignment (W.Wiedenman) is introduced
+
+    TRDDAF, TGHPAL, TALINI, TCTGLB - support for new alignment banks.
+    TCRTRN - new routine (copied from TCRTRA) for new alignment.
+    TMATUT - new routine auxillary to TALINI.
+
+ ! ALEPHLIB 21.3
+    TGEPBK : Fix multiline strings (M.Cattaneo)
+@
+
+
+1.8
+log
+@precision fixes for 1992 repro
+@
+text
+@d2 3
+@
+
+
+1.7
+log
+@Alephlib 305
+@
+text
+@d2 4
+@
+
+
+1.6
+log
+@bugfix in tscint
+@
+text
+@d2 1
+a2 1
+ ! ALEPHLIB 30.4 correction file 5
+@
+
+
+1.5
+log
+@check for TOAL in vgrdal
+@
+text
+@d2 3
+@
+
+
+1.4
+log
+@correct for transverse drift velocity
+@
+text
+@d2 4
+@
+
+
+1.3
+log
+@1st test version aleph302
+@
+text
+@d2 4
+d10 3
+a12 3
+   TRDDAF, TGHPAL, TALINI, TCTGLB - support for new alignment banks.
+   TCRTRN - new routine (copied from TCRTRA) for new alignment.
+   TMATUT - new routine auxillary to TALINI.
+@
+
+
+1.2
+log
+@Fix multiline strings
+@
+text
+@d3 7
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 3
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

@@ -1,0 +1,1702 @@
+\chapter{\label{sec-OARD}Other ALPHA Physics Routines}
+\par
+\section{\label{sec-OARDEDX}dE/dx Analysis}
+ 
+\par
+\subsection{\label{sec-ARDEDX1}Calculate dE/dx for Track ITK from TPC wires}
+\par
+\fbox{CALL QDEDX(ITK,NHYP,RMASS,Q,RI,NS,TL,RIEXP,SIGMA,IER)}
+\par
+This routine is an ALPHA interface to the ALEPHLIB routine TIDHYP.
+Note that the user must check the return code IER before trying
+to use any of the output arguments $-$ not all charged tracks have
+dE/dx information!
+\par
+{\bf Input arguments:}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{ITK}ALPHA track number of a charged reconstructed track.
+\indentitem{NHYP}Number of hypotheses the user wishes to try.
+If NHYP=1, then RMASS, Q, RIEXP, and SIGMA may be scalar variables.
+\indentitem{RMASS(nhyp)}Array of masses, one for each hypothesis.
+\indentitem{Q(nhyp)}Array of charges, one for each hypothesis.
+\end{indentlist}
+\par
+{\bf Output arguments:}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{RI}The measured truncated mean ionization, normalized
+such that
+RI=1 corresponds to minimum ionizing.
+\indentitem{NS}Number of useful wire samples on the track.
+\indentitem{TL}Useful length of the track (cm).
+\indentitem{RIEXP(nhyp)}Expected ionization for each mass hypothesis,
+normalized such that RIEXP=1 corresponds to minimum ionizing.
+\indentitem{SIGMA(nhyp)}One standard deviation resolution error for
+each
+hypothesis.  This is the expected dE/dx
+resolution, given NS, TL, RIEXP, and
+the momentum resolution.
+{\bf Note} that one can calculate a $\chi^2$ with 1 d.o.f. as:
+$\chi^2$ =((RI$-$RIEXP)/SIGMA)$^2$.
+\indentitem{IER}Error return code=0: successful return.
+\begin{itemize}
+\item =1:  cannot find the track, or ITK is not a charged KRECO track.
+\item =2:  cannot find the measured dE/dx information (bank TEXS).
+\item =3:  input KRECO charged track has no dE/dx information.
+\item =4:  cannot find the necessary database calibration banks,
+TC1X, TC2X, and/or TC3X.
+\item =5:  cannot find RUNH or EVEH bank
+\item =6:  there is no valid dE/dx calibration for this run
+\end{itemize}
+\end{indentlist}
+ 
+\par
+\subsection{\label{sec-ARDEDXP}Calculate dE/dx for Track ITK from TPC pads}
+\par
+\fbox{CALL QPADX(ITK,NHYP,RMASS,Q,RI,XNS,TL,RIEXP,SIGMA,IER)}
+\par
+This routine is an ALPHA interface to the ALEPHLIB routine TPDHYP.
+Note that the user must check the return code IER before trying
+to use any of the output arguments.
+\par
+{\bf Input arguments:}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{ITK}ALPHA track number of a charged reconstructed track.
+\indentitem{NHYP}Number of hypotheses the user wishes to try.
+If NHYP=1, then RMASS, Q, RIEXP, and SIGMA may be scalar variables.
+\indentitem{RMASS(nhyp)}Array of masses, one for each hypothesis.
+\indentitem{Q(nhyp)}Array of charges, one for each hypothesis.
+\end{indentlist}
+\par
+{\bf Output arguments:}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{RI}Measured ionization, normalized
+such that
+RI=1 corresponds to minimum ionizing.
+\indentitem{XNS}Number of wires on the track (NOT integer!).
+\indentitem{TL}Useful length of the track (cm).
+\indentitem{RIEXP(nhyp)}Expected ionization for each mass hypothesis,
+normalized such that RIEXP=1 corresponds to minimum ionizing.
+\indentitem{SIGMA(nhyp)}One standard deviation resolution error for
+each
+hypothesis.  This is the expected dE/dx
+resolution, given XNS, TL, RIEXP, and
+the momentum resolution.
+{\bf Note} that one can calculate a $\chi^2$ with 1 d.o.f. as:
+$\chi^2$ =((RI$-$RIEXP)/SIGMA)$^2$.
+\indentitem{IER}Error return code=0: successful return.
+\begin{itemize}
+\item =1:  cannot find the track, or ITK is not a charged KRECO track.
+\item =2:  cannot find the measured dE/dx information
+\item =3:  input charged track has no dE/dx information.
+\item =4:  cannot find the necessary database calibration banks,
+TC1X, TC2X, TP3X and/or TC3X.
+\item =5:  cannot find RUNH or EVEH bank
+\item =6:  cannot find TCSX or TCGX banks
+\end{itemize}
+\end{indentlist}
+
+\subsection{\label{sec-OARDDX}Combined dE/dx estimation using both wires and pads}
+\par
+\fbox{CALL QDDX(ITK,NHYP,RMASS,Q,NS,XNPAD,EXTIM,IER)}
+\par
+
+Provided by Tommaso Boccali, 19 April 1999.
+
+\par
+ 
+{\bf Input arguments:}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{ITK}ALPHA track number of a charged reconstructed track.
+\indentitem{NHYP}Number of hypotheses the user wishes to try.
+If NHYP=1, then RMASS, Q, and EXTIM may be scalar variables.
+\indentitem{RMASS(nhyp)}Array of masses, one for each hypothesis.
+\indentitem{Q(nhyp)}Array of charges, one for each hypothesis.
+\end{indentlist}
+
+{\bf Output arguments:}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{NS}Number of wires on the track, -1 if none.                   
+\indentitem{XNPAD}Number of pads on the track (Floating !), -1. if none.
+\indentitem{EXTIM(nhyp)} (ri-riexp)/$\sigma$  for each  particle hypothesis.
+\indentitem{IER}Error return code\\
+=0: an estimator was computed;\\
+ =1: no information available.
+\end{indentlist}
+\par
+
+
+
+
+\subsection{\label{sec-OARDEDM}Modified QDEDX for Monte Carlo (Obsolete ! Kept only for backward-compatibility).}
+\par
+\fbox{CALL QDEDXM(ITK,NHYP,RMASS,Q,RI,NS,TL,RIEXP,SIGMA,IER)}
+\par
+To be called only for Monte Carlo datasets produced before December 1993; for more recent datasets one has to use
+QDEDX (see the use of the CHTSIM function just below).
+\par
+This routine serves the same purpose as QDEDX,
+but treats Monte Carlo differently.
+QDEDX takes the dE/dx from the detailed simulation program TPCSIM.
+QDEDXM, however, only takes the number of samples and the track length
+from TPCSIM, from which a prediction for the resolution is obtained.
+The measured momentum and the Monte Carlo true mass then are used
+to predict the mean dE/dx, which is smeared by a gaussian random
+number to give the simulated dE/dx.
+ 
+The advantage of this approach is that it is easy to adjust the
+parameterization to give agreement with data, whereas to do so
+with TPCSIM is nontrivial and would require regeneration of the
+Monte Carlo data set.
+The disadvantage is that the non$-$gaussian tails (which are
+small and arise primarily on the high side, due to unresolved
+track overlap) are not simulated.
+An option does exist to try to get the best of both worlds:
+by calling QMTAIL one can set a parameter to tell QDEDXM to
+retain the tail simulated by TPCSIM beyond a specified number
+of standard deviations.
+The distribution below that number of standard deviations then
+is obtained from the gaussian random number generator.
+Clearly this solution
+is not perfect, since the distributions
+generally will not match at the chosen cut value.
+ 
+The arguments to this routine are identical to those of QDEDX.
+When QDEDXM is used on Monte Carlo events, error code 6
+means that no Monte
+Carlo truth information is available.
+Note that if QDEDXM is used with real data, it is identical
+to QDEDX.
+\par
+\noindent\fbox{CALL QMTAIL(CUT)}
+\par
+QMTAIL is an entry point in QDEDXM which can be used to set the
+cut value, in standard deviations, beyond which the dE/dx
+non$-$gaussian tail produced by TPCSIM is retained.  By default,
+CUT is set to 999.
+
+%\newpage
+
+\subsection{\label{sec-OARDEDC}QDEDXM or not QDEDXM ? ( Obsolete ! Kept only for backward-compatibility).}
+\par
+\fbox{LOGICAL FUNCTION CHTSIM(IVERS)}
+\par
+Function defined only for MCarlo datasets .
+\par
+Since the release of TPCSIM version 216 in December 1993 , it is much better
+to use QDEDX for MCarlo data as well as for real data . The logical function
+CHTSIM is .TRUE. if the Monte$-$Carlo dataset currently read has been produced
+with a version of TPCSIM , IVERS , which allows to use QDEDX . If CHTSIM is .FALSE. , one has
+to use QDEDXM .
+\par
+ CHTSIM needs to be called only once for a given Monte-Carlo run .
+\par
+{\bf Output argument:}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{IVERS}The TPCSIM version number for the current dataset .
+\end{indentlist}
+\subsection{\label{sec-OARDEDV}Check TPC High Voltage for dE/dx}
+\par
+\fbox{LOGICAL FUNCTION TCHKHV(KRUN,KEVT,IFLG)}
+\par
+The function TCHKHV, from the ALEPHLIB, is used to check the
+TPC high voltage before using the dE/dx information from the TPC.
+It checks the data base bank TDBS to find whether any sectors
+were being intentionally
+operated at reduced voltage during the run in question.
+If so, then only the normal TPC HV bit is checked.
+Otherwise, the ``dE/dx'' HV bit is checked.
+\par
+{\bf Input arguments:}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{KRUN}ALEPH run number.
+\indentitem{KEVT}ALEPH event number.
+\end{indentlist}
+\par
+{\bf Output arguments:}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{IFLG}What kind of test was made?
+\begin{itemize}
+\item =0:  test was made on dE/dx HV bit.
+\item =1:  test was made on TPC tracking HV bit.
+\item =2:  no test was made (banks not found).  TCHKHV=.FALSE.
+\end{itemize}
+\indentitem{TCHKHV} = .TRUE. if HV is on; .FALSE. otherwise.
+\end{indentlist}
+\par
+\subsection{\label{sec-OARDEDE}Check Existence of dE/dx Calibration
+for Run}
+\par
+\fbox{LOGICAL FUNCTION TCHKEX(KRUN)}
+\par
+TCHKEX returns .TRUE. if a valid
+dE/dx calibration exists for run KRUN.  If a valid calibration
+does not exist (because it has not yet been done or because
+the run was bad), then TCHKEX returns .FALSE.
+This routine resides in the ALEPHLIB.
+\par
+\section{\label{sec-OARPAIR}Photon conversions}
+\par
+\fbox{CALL QPAIRF (I1,I2,DXY,DZ0,DZ2,DTH,RMA,ZMA,XMA,NC1,DIN1,NC2, DIN2,P,IER)}
+\par
+This routine is an ALPHA interface to the ALEPHLIB routine PAIRFD.
+Electrons from photon conversion initially will have parallel
+trajectories. This algorithm
+finds the point on each helix where the tracks are
+parallel in the X$-$Y plane and pass closest together; this point
+is called the materialization point.
+Note that photon conversions are also found in JULIA, and are available
+as V0s (see Sections \ref{sec-AL} and \ref{sec-TVAV0M}).
+\par
+{\bf Input arguments:}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{I1}ALPHA track number of a charged track.
+\indentitem{I2}ALPHA track number of a another charged track.
+\end{indentlist}
+ 
+{\bf Output arguments:}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{DXY}distance(cm) in the xy plane between the two tracks
+at the closest approach to the materialization point.
+\indentitem{DZ0}Distance(cm) in z between the two tracks at the origin.
+\indentitem{DZ2}The z separation of the tracks at the
+closest approach to
+the materialization point.
+\indentitem{DTH}the theta difference of the two tracks.
+\indentitem{RMA}the rho value at the materialization point.
+\indentitem{ZMA}the z value at the materialization point.
+\indentitem{XMA}The invariant mass of the tracks at the materialization
+point assuming they are both electrons.
+\indentitem{NC1,2}Number of coordinates with radius less than RMA
+for
+track 1,2.  0 if no coordinate information is available or
+if there are no such coordinates.
+\indentitem{DIN1,2}Radial distance between the coordinate closest
+to
+the origin and RMA for track 1,2;
+variable is 0. if no coordinate
+information is available or if there are no such coordinates.
+\indentitem{P(3)}Summed momentum of the two tracks at the materialization
+point in the order x,y,z.
+\indentitem{IER} = 0 if calculation is successful; 1 otherwise.
+\end{indentlist}
+\par
+\section{\label{sec-OARMUID}Muon Identification: QMUIDO}
+\par
+\fbox{
+\parbox{4.6in}{CALL~QMUIDO(ITK,IRUN,IBE,IBT,IM1,IM2,NEXP,NFIR,N10,
+\ \ N03,XMULT,RAPP,ANG,ISHAD,SUDNT,IDF,IMCF,IER)}
+}
+\par
+This routine is an ALPHA interface to the ALEPHLIB routine
+AMUID.
+It collects useful information from the banks
+HMAD, MCAD, and MUID. 
+
+For most users, who only look at the identification flag
+IDF, this routine is useless since this flag
+can be accessed with the statement function KMUIIF (see section \ref{sec-TVAMUID}).
+  The only purpose of calling  this routine
+is to look in more detail at the muon identification.
+\par
+  QMUIDO cannot be called when reading a Nano-Dst .
+\par
+{\bf Input argument:}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{ITK}ALPHA track number of a charged reconstructed track.
+\end{indentlist}
+\par
+{\bf Output arguments:}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{IRUN}No longer filled (needed for backwards compatability)
+\indentitem{IBE}Bitmap of the planes EXPECTED to have fired in the HCAL
+\indentitem{IBT}Bitmap of the planes which have fired in the HCAL
+\indentitem{IM1}Number of associated muon chamber hits in the inner layer
+\indentitem{IM2}Number of associated muon chamber hits in the outer layer
+\indentitem{NEXP}Number of planes expected to have fired in the HCAL
+\indentitem{NFIR}Number of planes fired in the HCAL
+\indentitem{N10}Number of planes fired in the last ten expected HCAL planes
+\indentitem{N03}Number of planes fired in the last three expected HCAL planes
+\indentitem{XMULT}Excess hit multiplicity in the last ten planes on the HCAL
+\indentitem{RAPP}Distance between track extrapolation and closest muon chamber hit in
+standard deviations (the distribution is only approximately normal)
+\indentitem{ANG}    Angle between track extrapolation and closest muon chamber hits in
+       standard deviations (the distribution is only approximately normal).
+       Only available for tracks with at least one muon chamber hit in each
+       layer
+\indentitem{ISHAD}Shadowing flag = 0 if track is not shadowed; otherwise it is the JULIA
+       track number of the shadowing track.
+\indentitem{SUDNT}Sum of HCAL hit to track residuals in the last 10 planes.
+\indentitem{IDF}Official muon identification flag.
+\begin{itemize}
+\item     = 1 if muon flagged only by HCAL
+\item     = 2 if muon flagged only by MUON
+\item     = 3 if muon flagged by both HCAL and MUON
+               3 is the .AND. of 1 and 2
+\item     = 10 is one hit in each layer of MUON chambers but failing tight matching criteria
+\item     = 11 is good HCAL pattern
+\item     = 12 is one and only one MUON hit
+\item     = 13 is good HCAL + one and only one muon
+\item     = 14 is good HCAL + one hit in each layer
+\item     = 15 is one hit in each layer of MUON chambers passing tight matching criteria
+\item     = 0 not a muon
+\item     = -1 to -15 as above but lost shadowing contest
+\end{itemize}
+\indentitem{IMCF}     Monte Carlo true source of this track
+\begin{itemize}
+\item     = 0   ambiguous or data
+\item     = 1   primary b
+\item     = 2   secondary c
+\item     = 3   primary c
+\item     = 4   b to tau
+\item     = 5   other muon
+\item     = 6   non decaying hadron or electron
+\item     = 7   decay hadron
+\end{itemize}
+\indentitem{IER}      No longer filled (needed for backwards compatability)
+\end{indentlist}
+\par
+\section{\label{sec-OARVDET}Utility Routines for VDET Analysis}
+\par
+\subsection{\label{sec-QVDHIT}Number of VDET hits per layer for track ITK}
+\par
+\fbox{CALL QVDHIT(ITK,IVHIT)}
+\par
+{\bf Input argument:}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{ITK}ALPHA track number of a reconstructed charged track.
+\end{indentlist}
+\par
+{\bf Output argument:}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{IVHIT}
+\begin{itemize}
+\item{IVHIT(1)} Number of VDET hits in $r-\phi$ on inner layer
+\item{IVHIT(2)} Number of VDET hits in $r-\phi$ on outer layer
+\item{IVHIT(3)} Number of VDET hits in $z$ on inner layer
+\item{IVHIT(4)} Number of VDET hits in $z$ on outer layer
+\end{itemize}
+\end{indentlist}
+\par
+\subsection{\label{sec-XVDEOK}VDET HV status}
+\par
+\fbox{LOGICAL FUNCTION XVDEOK(dummy)}
+\par
+A detailed description of this function can be found in the report ALEPH 91$-$161 ( PHYSIC 91$-$137 ) .
+ 
+The function XVDEOK
+returns .TRUE. if the VDET HV is on for the current event and .FALSE. otherwise.
+XVDEOK uses the HV bits and also calls KVGOOD (see below).
+\par
+If you want to use tracks with high quality VDET data,
+first, check that the HV is on and second, check that the tracks in which
+you are interested have VDET hits (see QVDHIT above).
+\par
+ XVDEOK cannot work when one is reading a Nano-Dst.
+\par
+\subsection{\label{sec-KVGOOD}VDET Readout Status}
+\par
+\noindent\fbox{INTEGER FUNCTION KVGOOD(dummy)}
+\par
+\par
+From time to time, there are problems with the VDET
+readout which cause VDET information to be read out when the HV is off.
+The VDET hits read out during these periods are just noise and can
+distort tracks fitted with the VDET.
+The function KVGOOD
+identifies whether the current event is in one of the bad periods, and if so,
+whether or not the HV was on.
+\par
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{KVGOOD}readout and HV status:
+\begin{itemize}
+\item $= 0$:  no readout problems, HV is either ON or OFF.
+\item $=+1$:  readout problems, HV is ON.
+\item $=-1$:  readout problems, HV is OFF.
+\end{itemize}
+\end{indentlist}
+\par
+\section{\label{sec-OARQIPB}B-Tagging routine  QIPBTAG}
+\par
+\subsection{\label{sec-QIPBCA}General considerations}
+\par
+QIPBTAG is an algorithm for tagging the presence of long-lived particles written by  D. Brown and M. Frank.
+\par
+It computes the impact parameter of tracks relative to the primary vertex reconstructed
+using the QFNDIP subroutine
+(\ref{sec-DCQFND} on p.~\pageref{sec-DCQFND}).
+ After calibration, the algorithm converts the track signed impact parameter significance
+ into a probability that the track came from the primary vertex found by QFNDIP.
+  Track probabilities are
+ combined to give jet, hemisphere and event probabilities.
+\par
+Several important modifications have been done to the original QIPBTAG, especially to take into account the new VDET for data from
+1996 and after (VDET96 option, J.Carr and M. Thulasidas, June 1997), to
+have a consistent b-tag for LEP2 data, and to get from the database bank QIPC the calibration constants which are dependant on the 
+period of data taking.
+
+The last version released with ALPHA124.05 (thanks to I. Tomalin, April 1999) recognises automatically
+ the type of data being read and 
+gives the best possible b-tagging efficiency. See ALPHA124.NEWS for more details.
+
+
+\par
+To use QIPBTAG properly, one must read the complete description of the method and of
+the package in the Aleph Note 92$-$135 (August 1992).
+\subsection{\label{sec-QIPBCC}Calling the QIPBTAG routine}
+\par
+\fbox{CALL QIPBTAG(IRET,NTRK,NJET,ITRK,IFRF2,PRTRK,PRJET,PRHEMI,PREVT)}
+\par
+{\bf Input argument: none}
+\par
+{\bf Output arguments:}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{IRET}
+\begin{itemize}
+\item     = 0   good event , analysis performed
+\item     = 1   Number of jets less than 2
+\item     = 2   Jets outside solid angle cuts
+\item     = -2  No beam spot information
+\item     = 3,4 No tracks suitable for btag analysis
+\item     = -3  Error in interaction point finding
+\end{itemize}
+\indentitem{NTRK}Number of tracks used to calculate the probabilities (maximum 400)
+\indentitem{NJET}Number of jets found (maximum 40)
+\indentitem{ITRK}Array (dim 40) of ALPHA track numbers of the NJET jets found,
+sorted by energy
+\indentitem{IFRF2}Array (dim 400) of row numbers in FRFT 2 of the NTRK tracks
+used in the analysis
+\indentitem{PRTRK}Array (dim 400) of the probabilities of each track used in the analysis
+\indentitem{PRJET}Array (dim 40) of the probabilities of each jet of ITRK
+\indentitem{PRHEMI}Array (dim 2) of the probabilities of each hemisphere
+\indentitem{PREVT}Probability of the event
+\end{indentlist}
+\par
+All the above arrays must be properly dimensioned in the calling routine.
+\par
+Additional QIPBTAG informations are available in the ALPHA include file BTAGRAW, which may be found in
+\$ALROOT/alphavsn/inc/btagraw.h
+\par
+\subsection{\label{sec-QIPBCD}Data cards for  QIPBTAG}
+\par
+{\bf Mandatory data card :}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{QFND}       QFNDIP is needed to find the event interaction point
+\end{indentlist}
+\par
+{\bf Optional data cards :}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{BHIS nnnn}  Books default diagnostic histograms, offset by  nnnn
+ 
+\indentitem{CALB}            Create a private calibration.  The user must also
+                        CALL BTAG$\_$FIT('filename') in QWTERM, and the
+                        output calibration cards will be written to the file
+                        'filename'.
+ 
+ 
+\indentitem{NUMJ nn}      with nn$>3$, will force QIPBTAG to calculate the b-tagging probability for the
+                          first nn jets of the event, ordered by decreasing energy.
+                          If this data card is not provided, nn=3 by default.
+ 
+\indentitem{BTRK nn 'name'}     Define a user track type with ALPHA track name
+'name'.
+                        Up to 3 track types can be defined per job,
+                  nn must be $\leq3$. These tracks will never be removed by
+                        QIPBTAG selection cuts.  Tracks should be selected or
+                        created in QUEVNT and copied to name 'name' before
+                        calling QIPBTAG.  If the track is a mother track
+                        created by vertexing (see KVFITN), its daughter
+                        tracks are excluded from QIPBTAG, and the FRFT 2 track
+                        number is set to 20000 + ALPHA track number.
+                        If the CALB card is present, user defined track
+                        types will be calibrated along with the rest.
+ 
+\indentitem{BNEG}   Use negative impact parameter tracks in the definition
+                        of jet, hemisphere, and event probabilities.  This
+                        slightly enhances efficiency at the cost of the
+                        negative impact parameter control sample.
+\indentitem{NOBG}   Forces BNEG option off, even if VDET96 option is ON.   
+                    (Of course, must not be used together with BNEG !).
+\indentitem{HJET}        Define the hemispheres according to the leading
+                        jet direction.  By default, the event is split
+                        by the thrust direction (hemi 1 being positive).
+                        The hemisphere axis can also be supplied externally
+                        for each event as the ALPHA track of name 'THRUST'.
+\indentitem{JRES}    Overwrite the default jet definition and corresponding
+                        angular resolution parameterization.  User-supplied
+                        jets should have ALPHA track name  'QIPBJETS'.
+
+\indentitem{NQIP}    Include VDET 96 modifications even if one is reading LEP 1 data or MCarlo
+                     (VDET description of years 1991 to 1995 included).
+
+\indentitem{OQIP}    Do NOT Include VDET 96 modifications even if one is reading LEP 2 data or MCarlo
+                     (VDET description of 1996 and after).
+                     Strongly recommended if you are reading  LEP1 data reprocessed in 1998.   
+\indentitem{TRA2}   Overwrite the default track selection cuts.
+                    This card is for use by experts only .
+ 
+\indentitem{QITI}   Calls the QIPBTCPU routine, see section \ref{sec-QIPBTCP}.
+\end{indentlist}
+\par
+\subsection{\label{sec-QIPBCR}Remarks on QIPBTAG}
+ QIPBTAG cannot work  on 1989 and 1990 real data or Monte Carlo (no VDET).
+\par
+ QIPBTAG                              works properly only on real data for which
+the VDET is OK (runs given by the SCANBOOK selection VDET OK), and on
+events for which XVDEOK = .TRUE. and for which QFNDIP has found a good
+interaction point.
+
+
+\par
+To use QIPBTAG only for events with a good interaction point
+and VDET OK  you should call it after performing some tests like
+in the example below:
+\begin{verbatim}
+      IF (XVDEOK(DUMM).AND.XGETBP.AND.QVCHIF(KFREV).GT.0.) THEN
+         CALL QIPBTAG(.....)
+      ENDIF
+\end{verbatim}
+ 
+\par
+\subsection{\label{sec-QIPBTCP}Auxiliary routine  QIPBTCPU}
+\par
+If you want to know where QIPBTAG is spending CPU time , you can add a
+\begin{verbatim}
+         CALL QIPBTCPU('SUMMARY',2)
+\end{verbatim}
+  at the end of your program .
+
+
+\par
+\section{\label{sec-QMSCALL}Smear 3-d impact parameter in Monte Carlo: QSMEAR}
+
+
+
+     The routine QSMEAR may be used AFTER a call to     QIPBTAG.
+
+Its purpose is to
+ smear the three dimensional impact parameter
+significance and delete extra tracks in the Monte Carlo. It includes
+options for doing this work dependently on the polar angle and
+momentum of the tracks.
+
+{\bf Calling sequence:}
+
+ 
+\par
+\fbox{
+\parbox{4.6in}{CALL~QSMEAR(FIRST,QIPVER,SMBIN,RTBIN,
+\ \         NTRK,NJET,IFRF2,PREVT,PRHEMI,PRJET,PRTRK)}
+}
+\par
+
+{\bf Input Arguments:}
+ 
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+
+\indentitem{FIRST}     LOGICAL  = Is this the first call to QSMEAR since
+                          calling QIPBTAG (or QIPBTAG2) ?
+
+\indentitem{QIPVER}         CHAR*1   = '1' if being used after call to QIPBTAG\\
+                        = '2' if being used after call to QIPBTAG2.
+\indentitem{SMBIN}         CHAR*1    = '0' no smearing correction at all.\\
+                        = 'N' no binning in theta/p for smearing.\\
+                        = 'T' binning in theta for smearing.\\
+                        = 'P' binning in p for smearing.\\
+                        = 'B' binning in both theta/p for smearing.
+\indentitem{RTBIN}         CHAR*1    = '0' no track deletion at all.\\
+                        = 'N' no binning in theta/p for deletion.\\
+                        = 'T' binning in theta for deletion.\\
+                        = 'P' binning in p for deletion.\\
+                        = 'B' binning in both theta/p for deletion.
+\indentitem{NTRK,NJET,..}
+         Same arguments of call to QIPBTAG.
+
+\end{indentlist}
+
+\par
+{\bf Output Arguments:}  
+ 
+    Same arguments overwritten with smeared values.
+
+           The -ve tag quantities in /BTAGRAW/ are also smeared.
+
+It is possible to smear Monte Carlo from a different year than the
+data by including the card    QPYR in the ALPHA card file with a YYMM  
+code as an argument.  Example:
+
+QPYR 9701
+
+
+
+
+\par
+\section{\label{sec-BMTAG}Invariant mass b tag: QBMTAG}
+
+
+       The routine QBMTAG can be used in conjunction with QIPBTAG
+       to provide extremely pure (99\%) b hemisphere tagging.
+
+      In addition to providing  a btag for each event
+       hemisphere, it  also does so for each jet in the event.
+
+\par
+\subsection{\label{sec-QIPBMA}General considerations}
+\par
+
+    Invariant mass b tag.
+
+     Can be called after QIPBTAG or QVSRCH, to further increase b purity.
+
+     For each event-half QBMTAG loops over tracks in order of decreasing
+     inconsistency with primary vertex, and stops when their combined
+     invariant mass exceeds 1.8 GeV. (i.e. The mass of a typical charmed
+     hadron). It then returns a tag, CLMASS, indicating the probablity
+     that the ``last track" used came from primary vertex.
+
+     For a very high purity tag, CLMASS should be combined with the
+     QIPTBAG or QVSRCH tags. The optimal linear combination (together
+     with suggested cuts) is:
+\begin{verbatim} 
+         0.7*CLMASS - 0.3*log10(QIPBTAG) > 2.4
+     or   0.7*CLMASS + 0.3*QVSRCH > 8.3
+\end{verbatim}  
+
+\par
+\subsection{\label{sec-QIPBMC}Calling the QBMTAG routine}
+  
+
+\par
+\fbox{
+\parbox{4.6in}{CALL~QBMTAG(METHOD,NTRACK,NJET,TRKJET,PROBTRK,
+\ \ FRF2TRK,PVTX,SVTX,DJET,CLMASS,CTSTAR,NSEC,CLMASJ,
+\ \ CTSTAJ,NSECJ,LISTTRK,LISTEH,LISTJET)}
+}
+\par
+
+{\bf INPUT ARGUMENTS:}
+
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{METHOD}
+       INTE  : =1 if using QIPBTAG, =2 if using QVSRCH.
+
+\end{indentlist}
+
+  {\bf    Following arguments only needed if METHOD=1\\ 
+     (dummy otherwise):}
+
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+
+\indentitem{NTRACK}
+        INTE     : Number of tracks used by QIPBTAG.
+\indentitem{NJET}
+        INTE       : Number of jets considered by QIPBTAG.
+\indentitem{TRKJET(*)}
+         INTE  : ALPHA track number of QIPBTAG jets.
+\indentitem{PROBTRK(*)}
+          REAL : QIPBTAG track probabilities.
+\indentitem{FRF2TRK(*)}
+   INTE : Row in FRFT bank of QIPBTAG tracks.
+\end{indentlist}
+
+{\bf   Following arguments only needed if METHOD=2\\
+ (dummy otherwise).}
+
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+
+\indentitem{PVTX(3)}
+        REAL   : Position of primary vertex from QVSRCH.
+
+         Only needed if METHOD=2 (dummy otherwise), same for following arguments.
+\indentitem{SVTX(3,2)}                                  
+        REAL  : Positions of two secondary vertices in jet
+                         coordinate system from QVSRCH.
+\indentitem{DJET(3,2)}
+        REAL DJET(3,2) : Unitized jet directions from QVSRCH.
+  
+\end{indentlist}
+
+\par
+{\bf OUTPUT ARGUMENTS:\\
+ Dimensioned 2 to correspond to two event-halves:}
+ 
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{CLMASS(2)}
+        REAL  : For METHOD=1, = -log10(confidence level) for
+                     ``last track" to come from primary vertex
+                     (c.l. in range 0-1).\\
+                     For METHOD=2, = QSQT(CHI**2 (primary) minus
+                     CHI**2 (secondary)) for ``last track".
+\indentitem{CTSTAR(2)}
+        REAL : Decay angle of ``last track" in ``b" rest frame.
+\indentitem{NSEC(2)}
+        INTE   : Number of tracks used to reach 1.8 GeV mass.
+                     (zero if couldn't reach 1.8 GeV).
+\end{indentlist}
+
+  {\bf    Following jet info available only if METHOD=1:}
+
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+
+\indentitem{CLMASJ(*)}
+
+        REAL  : Same variables as CLMASS for jets, ordered as in TRKJET
+\indentitem{CTSTAJ(*)}
+        REAL  : Same variables as CTSTAR for jets, ordered as in TRKJET
+\indentitem{NSECJ(*)}
+        INTE   : Same variables as NSEC   for jets, ordered as in TRKJET
+\indentitem{LISTTRK(*)}    
+               INTE : List of all ALPHA charged tracks and V0s which
+                     were considered by QBMTAG.
+                     If the track is neutral, it is a V0. If a V0
+                     is not in the range KFV0T-KLV0T, then it has
+                     been created using YTOP, and its daughters
+                     are (refitted) copies of tracks from the
+                     KFCHT-KLCHT section.
+\indentitem{LISTEH(*)}
+        INTE : If track comtributed to 1.8 GeV hemisphere mass
+                     then =1 or =2 to show which hemisphere it's in.
+                     If =0, then track was rejected.
+\indentitem{LISTJET(*)}
+        INTE : If track comtributed to 1.8 GeV jet mass,
+                     then =ALPHA track number of jet.
+                     If =0, then track was rejected.
+\end{indentlist}
+
+
+
+\par
+\subsection{\label{sec-QBMTAM}Remarks on QBMTAG}
+\par
+
+     If  Method=1, then one can obtain higher purities by using the
+      BNEG card. This allows QIPBTAG and QBMTAG to use information from
+      both +ve and -ve impact parameter tracks. (See ALNEWS 1389 in
+      OFFLINE folder). If one omits this card, however, then in the same
+      way as one can measure the uds efficiency of QIPBTAG using the -ve
+      hemisphere tag NPROBHEMI, it is possible to create a -ve tag from
+      QBMTAG for the same purpose. This can be done by calling it with
+      argument NPROBTRK instead of PROBTRK.
+
+
+      Please send all remarks concerning this package to :
+      Ian.Tomalin@cern.ch
+   
+
+\par
+\section{\label{sec-OARVSRC}QVSRCH : Secondary vertices and b-tagging}
+\par
+\fbox{
+\parbox{4.6in}{CALL ~QVSRCH(BPOS,BSIZ,PVTX,EPVTX,DJET,BTAG,SVTX,ESVTX,
+\ \  AVTX,CAVTX,JERR)}
+}
+\par
+This routine from T. Mattison performs a primary vertex finding , a 2-jet finding
+and a secondary vertices finding with an estimation of b quark tagging variables .
+\par
+To use it properly , one must read the complete description of the method and of the
+package in the Aleph Note 92$-$173 (December 1992).
+\par
+ QVSRCH cannot be used when reading a Nano-Dst, since it needs the track error matrices.
+\par
+{\bf Input arguments:}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{BPOS(3)}Beam position.
+      BPOS(2) must be an accurate beam y coordinate,
+      i.e., QVYNOM or QVTXBP(2)  (output from GET$\_$BP).
+      BPOS(1),BPOS(3) are used for X and Z track cuts
+       and as additional constraints on primary vertex
+\indentitem{BSIZ(3)}Size of luminous region (1 sigma).
+      Fixed values of .0200, .0020, 2.0 will work OK.
+      Any negative element of BSIZ will suppress internal primary finding,
+      in which case PVTX() and EPVTX() become input variables.
+\end{indentlist}
+\par
+{\bf Output arguments:}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{PVTX(3)}  Primary vertex in Aleph XYZ coordinates
+\indentitem{EPVTX(3)} Error (not variance) in PVTX
+\indentitem{DJET(3,2)} Two normalized XYZ direction vectors for two jets
+\indentitem{BTAG(2)} B-tagging variable for the two hemispheres
+      it is basically the half the chi-square difference between the
+      hypothesis that all tracks in the hemisphere come from primary,
+      or that some tracks come from the secondary and some from primary
+      a cut at 10, or at 20 on the sum, is reasonable
+\indentitem{SVTX(3,2)} Two secondary vertices in coordinate systems
+      that are used internally, (one system per jet).
+\begin{itemize}
+\item Origins are at PVTX(), and are oriented by DJET(,)
+\item The third coordinate is the decay length in the jet direction
+\item The first coordinate is R-Phi-like, the second is Z-like
+\end{itemize}
+\indentitem{ESVTX(3,2)}Errors on SVTX() in the internal rotated system
+      where geometrical correlations are small and ignored .
+      May be negative, indicating a problem, not necessarily severe,
+      in finding the vertex
+\indentitem{AVTX(3,2)}Two secondary vertices in ALEPH XYZ coordinates
+\indentitem{CAVTX(3,3,2)}Two covariance matrices for AVTX()
+\indentitem{JERR}Error flag
+\begin{itemize}
+\item 0 All OK
+\item +1 for secondary vertex 1 errors questionable
+\item +2 for secondary vertex 2 errors questionable
+\item +3 for questionable errors on both secondary vertices
+\item +4 for no good tracks in jet 1
+\item +8 for no good tracks in jet 2
+\item +12 for no good tracks in either jet
+\item +16 for questionable primary vertex
+\item +32 for not enough tracks for primary vertex
+\item +64 for no jets found
+\end{itemize}
+\end{indentlist}
+\par
+    QVSRCH performs an internal jet finding. If you don't want it, a data card:
+\par
+ {\bf NQVJ}
+\par
+      will suppress the internal jet finding,
+      in which case DJET becomes an input variable which must be filled in by
+      the user.
+\par
+\section{\label{sec-OARQPI0}QPI0DO: $\pi^0$ finding routine}
+\par
+The $\pi^0$ finding routine QPI0DO
+is described in the report ALEPH 93$-$095 / PHYSIC 93$-$078.
+It uses the photons from the ALPHA GAT section
+(\ref{sec-TVAPGPC} on p.~\pageref{sec-TVAPGPC}).
+ 
+\par
+To use QPI0DO, one has simply to put in QUEVNT:
+\par
+\fbox{CALL QPI0DO}
+\par
+{\bf Input argument: none}
+\par
+{\bf Output arguments:}
+\par
+      All output arguments are returned in the ALPHA common deck GAMPI0:
+\begin{verbatim}
+      PARAMETER (MXPI0=200)
+      COMMON / GAMPI0 / IQPI0, NTPI0, PI0MOM(4,MXPI0),ITYPI0(MXPI0),
+     +                  IPI0GAM(2,MXPI0),CHIPI0(MXPI0)
+\end{verbatim}
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{IQPI0}Return code
+\begin{itemize}
+\item  = 0  : All OK
+\item  = 1  : No $\pi^0$ found
+\item  $>$ 1  :    More than MXPI0 $\pi^0$ found
+\end{itemize}
+\indentitem{NTPI0}
+                          Number of $\pi^0$  found
+\indentitem{PI0MOM}
+                     Refitted 4 momentum of the NTPI0  $\pi^0$
+\indentitem{IPI0GAM}
+                    Number of photons 1 and 2 giving the $\pi^0$ , in the GAT section
+\indentitem{CHIPI0}
+                    Chi2 value after refit. Set to -999. if no convergence.
+\indentitem{ITYPI0}
+                    $\pi^0$ type, see below:
+\begin{itemize}
+\item =1 : 2 photons in same PECO, with N=2 photons in the PECO
+\item =2 : 2 photons in same PECO, with N$>$2 photons in the PECO
+\item =3 : 2 photons in different PECO, with N=1 photons in each PECO
+\item =4 : 2 photons in different PECO, with N$>$1 photons in one PECO
+\end{itemize}
+ 
+\end{indentlist}
+\par
+ QPI0DO uses automatically the best photons from the GAT section.
+ For POTs, DSTs and MINIs $\geq 10$  the PGAC photons (sec \ref{sec-TVAPGAC}) are used.
+ For MINIs $\leq 9$, these are the PGPC photons (sec \ref{sec-TVAPGPC}).
+ 
+\par
+  Beware that the mass cut used to find the $\pi^0$ candidates in QPI0DO
+  photons is quite wide: this mass window is $\pm 2\sigma$  around the
+  mean GAMPEX reconstructed $\pi^0$ mass and is parametrised in the internal subroutine
+  PI0LIM.  For some specific analyses, a tighter cut
+  might be needed, in that case one has to come back to the original
+  GAMPEX photons and check their invariant mass.
+\par
+  Five control histograms 9001 to 9005  can optionally be filled.
+  They give a display of the $\gamma-\gamma$ invariant mass versus $\gamma$ energy
+   for all photon pair  types ITYPI0 (see above), in scatter plot 9000+ITYPI0 +1 ,
+   plot 9001 giving the sum over all types.
+\par
+  To get these histograms , you need simply to put:
+\par
+CALL QPI0BK
+\par
+in your QUINIT subroutine.
+ 
+\par
+  A debug printout routine is also provided to print all $\pi^0$s found in an event;
+  to call it, put:
+\par
+CALL PI0DEB
+\par
+in your QUEVNT subroutine.
+ 
+ 
+\par
+\section{\label{sec-OAQBEAM}QBEAMX : Size of luminous region (LEP 1 only)}
+\par
+\fbox{CALL QBEAMX(KRUN,KEVT,IRET,SIGX)}
+\par
+The ALPHA array QVTSBP (section \ref{sec-CHUNKINF}) provides an average
+horizontal beam size sigma$\_$x for each year.  QBEAMX is designed
+to provide run/event-dependent sigma$\_$x values for the real data
+and to provide corresponding information for Monte Carlo.  The
+data is divided into ``metachunks'' of typically 275 qqbar events
+(about four beam position ``chunks'') for the measurements. The numerical values are
+read automatically by ALPHA at initialisation time and put in internal banks VBWP,WIDE and WIDN .
+ 
+To use QBEAMX, one must make the above subroutine call during the event analysis stage .
+ 
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+ 
+\indentitem{KRUN}   Input argument : run number
+\indentitem{KEVT}   Input argument : event number
+\indentitem{IRET}   Return code
+                               (=0 if successful).  Notice that QBEAMX will
+  not succeed if XGETBP (section \ref{sec-CHUNKINF}) is .FALSE..
+\indentitem{SIGX}
+            Output rms size (in cm) of the luminous region in the x direction.
+\end{indentlist}
+\par
+{\bf Real data:}
+The measured value of SIGX is taken from the WIDE bank.  A bias
+correction (from the database bank VBWP) is applied.
+\par
+ 
+{\bf Monte Carlo: }
+The value of sigma$\_$x thrown in the subroutine QFGET$\_$BP is recovered by means of
+the entry QFMCSX.  NEVE, the number of events in the metachunk,
+is thrown according to the distribution in the real data, as found
+in the WIDN bank.  The value of sigma$\_$x is smeared according to
+the resolution (as a function of NEVE, with parameters in VBWP)
+and the result is returned in SIGX.  Thus the data and Monte Carlo
+should be directly comparable as far as SIGX is concerned.
+ 
+\par
+\section{\label{sec-OAQSELE}QSELEP : Lepton Identification for Heavy Flavours}
+\par
+ 
+      QSELEP is a general lepton identification package
+      for Heavy Flavour Physics.
+      The corresponding physics results are described in the paper:
+ 
+      `` Heavy quark tagging with leptons in the ALEPH detector ''
+ 
+      Nucl. Instr. Meth. {\bf A 346} ( 1994 ) pp 461 $-$ 475.
+ 
+ 
+      QSELEP is built basically from the LEPTAG package    (note ALEPH 92-101 / PHYSICS 92-090)
+      written by Mark Parsons ,
+      adapted to ALPHA by Ingrid Ten Have and M-N Minard in November 1994. However it contains also
+      most features of HEVLEP, the physics results and properties of which are described in detail in the note
+      ALEPH 94-055 / PHYSIC 94-049. Due to technical reasons, the CALPOIDS package, auxiliary to HEVLEP,
+      is not included into QSELEP and is still on UPHY.
+ 
+      The Monte-Carlo part of QSELEP: QTRUTH,  is described in the next section (\ref{sec-OAQTRUT}).
+ 
+\subsection{\label{sec-QSELCA}How to call QSELEP}
+\par
+         You don't have to call explicitely the QSELEP routine: either you
+         get the results directly from MINI banks, or you trigger its execution
+         through data cards as explained in \ref{sec-QSELCU}.
+ 
+{\bf When reading a MINI version $\geq 10$:}
+ 
+                  If you are happy with the standard cuts used to build the
+         MINIs, you have nothing to do: the QSELEP results are available
+         directly through the ALPHA variables described afterwards in sec
+                             \ref{sec-QSELTL} to \ref{sec-QSELJT}.
+ 
+                  If you want to use tighter cuts, please refer to sec \ref{sec-QSELCU}.
+         This may be useful e.g. to use the CALPOIDS weighting (in UPHY).
+ 
+{\bf When reading a POT or a DST or an old MINI:}
+ 
+         If you want to call QSELEP yourself on a POT or DST (or on old MINIs
+         made with MINILIB version 9.0 and before): you have to put in your
+         CARDS file the  data cards described in sec \ref{sec-QSELCU}. You don't have to call
+         QSELEP in your Fortran program: the call and all the necessary
+         initialisations will be triggered by the QLID data card.
+ 
+         Then you may access the tagged leptons informations by the new ALPHA
+         statement functions described below in sec
+                             \ref{sec-QSELTL} to \ref{sec-QSELJT}.
+ 
+\par
+\subsection{\label{sec-OAQSELW}Important warning if you call QSELEP yourself:}
+ 
+\par
+         If you call QSELEP when reading a POT/DST, or when reading a MINI
+         with ``non-standard'' cuts (see sec \ref{sec-QSELCU})  be aware that:
+ 
+         QSELEP RESETS ALL ALPHA TRACK LOCKS and uses them internally.
+         It uses also internally ALL ALPHA TRACK USER WORDS. Therefore you
+         must be very careful if your analysis needs these locks and/or user
+         words, and if you call QSELEP through the QLID card and user's cuts.
+ 
+ 
+\subsection{\label{sec-QSELOU}Output of QSELEP}
+ 
+      The output of QSELEP consists of two banks PDLT,PLJT for real data, plus an additional
+      one PMLT for MCarlo data. These banks are made using the default  cuts
+      described in \ref{sec-QSELCU} and are written on MINIs versions $\geq 10$.
+      They are also available on NANOs versions $\geq115$.
+ 
+      User access to these banks is done through the ALPHA variables and statement functions
+      described below in \ref{sec-QSELTL} to \ref{sec-QSELJT}.
+ 
+      When a MINI version $\geq 10$ is written,
+      all the cuts used by QSELEP are written onto a run header
+      bank, PLSC. This bank is used to set the default cuts for QSELEP when reading this MINI with ALPHA.
+ 
+\subsection{\label{sec-QSELCU}Default cuts and users cuts}
+ 
+         If you are not happy with the standard cuts used when running QSELEP to make a MINI
+         (version $\geq 10$) , or if you want to create
+                          the QSELEP information from a POT/DST/old MINI:
+            you have first to put in your CARDS file the two data cards
+ 
+  {\bf   QLID}
+ 
+  {\bf   EFLJ}
+ 
+         If you don't provide any of the other data cards below, QSELEP will
+         not be called when reading MINIs $\geq 10$ since the cuts are the same as used to build it.
+         If you run on a POT/DST/old MINI, QSELEP will be called using
+         the default values described below.
+ 
+         If you want to use other cuts, you have to put in your CARDS file
+         any combination of the data cards
+         described below.  
+         The data cards described below correspond to the default values used
+         to produce MINIs.  Comments are self-explanatory.
+\begin{verbatim}
+*
+*--  User card for general charged track selection
+*
+*-- * #tracks e_frac #tpc   d0    z0     cos(theta_max)
+LSHD    5      0.10    4    2.0   10.0      0.95
+*
+*--   User card to select electron candidates in charged tracks
+*--
+*-- *  #tpc   d0    z0    cos(the_max)   pcut  p_tcut
+LSET    5    2.0   10.0      0.95        2.0    0.0
+*--
+*--   User card electron identification cuts
+*--
+*-- *  rt_min rt_max rl_min rl_max #wires ri_min ri_max
+LSEC   -3.0   999.0  -3.0   3.0      0    -999.  999.
+*--
+*--   User card rejection of photon conversions and Dalitz decays
+*--
+*-- * XY_max Z_max  M_max   W_conv(1=write,0=reject)
+LSCV   1.0    1.0   0.020   1
+*--
+*--   User card to select muon candidates in charged tracks
+*--
+*-- * #TPC  d0    z0    cos(the_max)  pcut   p_tcut
+LSMT    5   2.0  10.0      0.95       3.0     0.0
+*--
+*--   User card muon identification cuts
+*--
+*-- *  QMUIDO return flags accepted
+LSMC   13  14
+*--
+*--   User card jet cuts
+*--
+*-- * #objects/jet  Max P(lepton)/E(jet) #jets   Ycut      Jrej
+*--                                                       1=keep,0=cut
+LSJT      5                 0.9            2     0.004       1
+ 
+\end{verbatim}
+ 
+\subsection{\label{sec-QSELRS}Access to QSELEP results }
+\par
+         In all circumstances :
+ 
+           - either if you have called QSELEP yourself through QLID + cards
+ 
+           - or if you read a MINI / NANO containing the QSELEP output banks
+ 
+         you can access the results of QSELEP through the ALPHA variables
+         described in the following subsections .
+ 
+\subsection{\label{sec-QSELTL}Properties of selected tagged Leptons }
+\par
+              When doing a loop on all reconstructed charged tracks :
+ 
+                    DO ITK=KFCHT,KLCHT
+ 
+              you can access the QSELEP results as follows :
+ 
+      ALPHA Track ITK is a Lepton tagged by QSELEP if :
+ 
+           {\bf XLEPTG(ITK) = .TRUE.}
+ 
+          If yes , then :
+ 
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{KLEPPA(ITK)}    QSELEP lepton  type :
+\par
+\begin{itemize}
+ 
+\item                 2 = e+
+\item                12 = e+ in crack region
+\item                22 = e+ in overlap region
+\item                 3 = e-
+\item                13 = e- in crack region
+\item                23 = e- in overlap region
+\item                 5 = mu+ QMUIDO IDF=14
+\item                15 = mu+ QMUIDO IDF=13
+\item                25 = mu+ QMUIDO IDF=11
+\item                35 = mu+ QMUIDO IDF=15
+\item                45 = mu+ all other QMUIDO flags
+\item                 6 = mu- QMUIDO IDF=14
+\item                16 = mu- QMUIDO IDF=13
+\item                26 = mu- QMUIDO IDF=11
+\item                36 = mu- QMUIDO IDF=15
+\item                46 = mu- all other QMUIDO flags
+\end{itemize}
+\indentitem{KLEPJT(ITK)}    ALPHA "track" Number of nearest jet
+                          in LJET section of ALPHA
+                          The properties of this jet can be accessed directly
+                          by standard ALPHA functions
+ 
+                          e.g. PXJET = QX(KLEPJT(ITK))
+\indentitem{QLEPPI(ITK)}  Transverse momentum respect to the jet , lepton included
+\indentitem{QLEPPE(ITK)}  Transverse momentum respect to the jet lepton excluded
+\indentitem{KLEPVP(ITK)}  Flag giving the validity of the Pt calculation :
+\par
+\begin{itemize}
+ 
+\item                0 = OK
+\item               10 = No E-flow track found
+\item               20 = No valid jet
+\item               30 = Not enough objects in jet
+\end{itemize}
+\end{indentlist}
+ 
+\subsection{\label{sec-QSELTH}QTRUTH flags for recontructed leptons (Mcarlo only)}
+\par
+ 
+              When reading MCarlo events, results from the QTRUTH part of QSELEP
+              can be accessed as follows :
+ 
+              When doing a loop on all reconstructed charged tracks :
+ 
+                    DO ITK=KFCHT,KLCHT
+ 
+          ALPHA Track ITK is a MCARLO tagged lepton with QTRUTH results if :
+ 
+            {\bf XLEPTH(ITK) = .TRUE.}
+ 
+          If yes , then :
+ 
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{KLEPFL(ITK)}      Primary quark Flavour of the event
+ 
+                              1=d, 2=u, 3=s, 4=c, 5=b
+\indentitem{KLEPPO(ITK)}      Flavour of the quark from gluon splitting
+ 
+                              4 or 5 if the chain is originating from a
+                                     c or a b quark respectively, which
+                                     are coming from gluon splitting
+ 
+                              0      otherwise
+\indentitem{KLEPCH(ITK)}     H.F. process originating the decay chain
+ 
+\begin{itemize}
+ 
+\item                         -2    b $\rightarrow$ cbar u ; cbar $\rightarrow$ X
+\item                         -1    b $\rightarrow$ u X
+\item                          1    b $\rightarrow$ c X
+\item                          2    b $\rightarrow$ cbar c ; cbar $\rightarrow$ X
+\item                          3    b $\rightarrow$ c $\rightarrow$ X
+\item                          4    c $\rightarrow$ X
+\item                          5    fragmentation or uds
+\end{itemize}
+\indentitem{KLEPSP(ITK)}     End of the decay chain
+ 
+\begin{itemize}
+\item                          0   lepton from H.F. hadron
+\item                          1   K $\rightarrow$ l
+\item                          2   pi $\rightarrow$ l
+\item                          3   gamma $\rightarrow$ l
+\item                          4   J/psi $\rightarrow$ l
+\item                          5   psi' $\rightarrow$ l
+\item                          6   pi0 $\rightarrow$ l
+\item                          7   other $\rightarrow$ l
+\item                          8   K
+\item                          9   pi
+\item                         10   other
+\end{itemize}
+\indentitem{KLEPLE(ITK)}     Track identity
+ 
+\begin{itemize}
+\item                         -1   unidentified
+\item                          0   non lepton
+\item                          1   mu
+\item                          2   tau $\rightarrow$ mu
+\item                          3   electron
+\item                          4   tau $\rightarrow$ e
+\end{itemize}
+\indentitem{KLEPME(ITK)}     Identity of the decaying b particle (if any)
+ 
+\begin{itemize}
+\item                         -2   "oscillated" Bs
+\item                         -1   "oscillated" Bd
+\item                          0   b baryon or non b particle
+\item                          1   Bd
+\item                          2   Bs
+\item                          3   B+
+\end{itemize}
+\indentitem{KLEPKT(ITK)}     FKIN   track number of the lepton
+\end{indentlist}
+ 
+\subsection{\label{sec-QSELJT}Jets built by QSELEP : ``LJET'' section}
+\par
+ 
+                  As QSELEP builds its own jets , a new ALPHA section is built
+         to access them through standard ALPHA calls . These jets are stored
+         as standard ALPHA ``tracks" in a new ALPHA ``track" section .
+ 
+         Name of the Section : 'LJET'
+\begin{itemize}
+\item        KLFJET     = ALPHA ``track'' number of 1st  QSELEP jet
+\item        KLLJET     = ALPHA ``track'' number of last QSELEP jet
+\item        KLNJET     = number of QSELEP jets
+\item        KLJTNO(I)  = number of objects inside QSELEP jet I
+\end{itemize}
+         The access to the jet properties can be done either by a DO LOOP :
+\begin{verbatim}
+             DO IJET = KLFJET,KLLJET
+                PXJET = QX(IJET)
+                PYJET = QY(IJET)
+                PZJET = QZ(IJET)
+                 EJET = QE(IJET)
+                 NOBJ = KLJTNO(IJET)
+             etc..
+ 
+     or by an implicit loop on "particles" with name 'LJET' of class KRECO :
+ 
+             IJET = KPDIR('LJET',KRECO)
+        10   IF (IJET.EQ.0) GO TO 100
+                PXJET = QX(IJET)
+                .....
+             IJET = KFOLLO('LJET')
+             GO TO 10
+        100  CONTINUE
+\end{verbatim}
+ 
+ 
+\subsection{\label{sec-QSELED}New EDIR classes from QSELEP }
+\par
+ 
+         When an output file is written in an ALPHA job which called QSELEP ,
+         two new EDIR classes are defined on the output class word in bank REVH
+ 
+              Class 27 :  Electron selected ( Rt $\geq -3.$ , $ -3. \leq$  Rl $ \leq 3.$ )
+ 
+              Class 28 :  Muon selected ( QMUIDO flag = 13 or 14 )
+ 
+     Events with these EDIR classes may be accessed directly through the standard  CLAS data card ( \ref{sec-DCEVD} on p.
+     ~\pageref{sec-DCEVD} )  when reading a MINI version $\geq 10$ .
+ 
+\par
+\section{\label{sec-OAQTRUT}QTRUTH : History of a recontructed MCarlo track:}
+\par
+\fbox{CALL QTRUTH(ITK,IFLA,IPOP,ICHAIN,ISPLIT,LEPID,IBMES)}
+\par
+ 
+ 
+     QTRUTH is part of the QSELEP package described in the previous section. However it may be called
+     independently, outside the context of QSELEP.
+ 
+     QTRUTH gives information about the ``history" of
+     a RECONSTRUCTED MCarlo track ITK. It works on Monte Carlo
+     hadronic events generated with JETSET (or coming from an
+     event generator interfaced with JETSET). The information
+     provided is aimed to the classification of candidate
+     leptons for heavy flavour tagging, but may be useful
+     also in many other cases.
+ 
+ 
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{ITK}
+      Input argument :   Alpha index of the reconstructed track
+\indentitem{IFLA}      Primary quark Flavour of the event
+ 
+                              1=d, 2=u, 3=s, 4=c, 5=b
+\indentitem{IPOP}      Flavour of the quark from gluon splitting
+ 
+                              4 or 5 if the chain is originating from a
+                                     c or a b quark respectively, which
+                                     are coming from gluon splitting
+ 
+                              0      otherwise
+\indentitem{ICHAIN}   H.F. process originating the decay chain
+ 
+\begin{itemize}
+\item                         -2    b $\rightarrow$ cbar u ; cbar $\rightarrow$ X
+\item                         -1    b $\rightarrow$ u X
+\item                          1    b $\rightarrow$ c X
+\item                          2    b $\rightarrow$ cbar c ; cbar $\rightarrow$ X
+\item                          3    b $\rightarrow$ c $\rightarrow$ X
+\item                          4    c $\rightarrow$ X
+\item                          5    fragmentation or uds
+\end{itemize}
+\indentitem{ISPLIT}    End of the decay chain
+ 
+\begin{itemize}
+\item                          0   lepton from H.F. hadron
+\item                          1   K $\rightarrow$ l
+\item                          2   pi $\rightarrow$ l
+\item                          3   gamma $\rightarrow$ l
+\item                          4   J/psi $\rightarrow$ l
+\item                          5   psi' $\rightarrow$ l
+\item                          6   pi0 $\rightarrow$ l
+\item                          7   other $\rightarrow$ l
+\item                          8   K
+\item                          9   pi
+\item                         10   other
+\end{itemize}
+\indentitem{LEPID}    Track identity
+ 
+\begin{itemize}
+\item                         -1   unidentified
+\item                          0   non lepton
+\item                          1   mu
+\item                          2   tau $\rightarrow$ mu
+\item                          3   electron
+\item                          4   tau $\rightarrow$ e
+\end{itemize}
+\indentitem{IBMES}   Identity of the decaying b particle (if any)
+ 
+\begin{itemize}
+\item                         -2   "oscillated" Bs
+\item                         -1   "oscillated" Bd
+\item                          0   b baryon or non b particle
+\item                          1   Bd
+\item                          2   Bs
+\item                          3   B+
+\end{itemize}
+\end{indentlist}
+ 
+\par
+\section{\label{sec-OAMCMAT}MCMATCH : Matching of a Monte Carlo truth track with a reconstructed track}
+\par
+\fbox{CALL MCMATCH(IMCTRU,IRECTR,IFLAG)}
+\par
+ 
+ 
+     The routine MCMATCH checks if a ``truth" track at the FKIN (generator) level is reconstructed or not
+     after GALEPH and JULIA. See the note of D.Brown ALEPH 94-135 (PHYSIC 94-118) for more details.
+ 
+ 
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{IMCTRU}
+      Input argument :   Alpha index of a ``truth"  track (between KFMCT and KLMCT)
+\indentitem{IRECTR}      Alpha index of the matching reconstructed charged track (between KFCHT and KLCHT)
+ 
+                         = 0 if no matching found
+\indentitem{IFLAG}   Flag describing the matching status:
+ 
+\begin{itemize}
+\item                         -3    No match (lost ``truth" track)
+\item                         -2    Track decays before making hits
+\item                         -1    No well matching track
+\item                          0    MC track double counted
+\item                          1    Normal good match from primary vertex
+\item                          2    Normal good match from secondary vertex
+\item                          2    Normal good match from V0 decay
+\item                          4    Kink fit as 2 tracks
+\item                          5    Kink fit as 1 track
+\item                          6    Normal good match from material interaction
+\end{itemize}
+\end{indentlist}
+ 
+\par
+\section{\label{sec-OAJULMAT}JULMATCH : Matching of a reconstructed charged track with a MC ``truth" track}
+\par
+\fbox{CALL JULMATCH(IALTRK,IMCTRU,IFLAG)}
+\par
+ 
+ 
+     The routine JULMATCH checks if a reconstructed track comes from a
+     ``truth" track at the FKIN (generator) level.
+                             See the note of D.Brown ALEPH 94-135 (PHYSIC 94-118) for more details.
+ 
+ 
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{IALTRK}
+      Input argument :   Alpha index of a reconstructed charged track (between KFCHT and KLCHT)
+\indentitem{IMCTRU}      Alpha index of the ``truth"  track (between KFMCT and KLMCT)
+ 
+                         = 0 if no matching found (IFLAG described below is -2 or -3)
+\indentitem{IFLAG}   Flag describing the matching status:
+ 
+\begin{itemize}
+\item                         -3    Hits not related to MC true hits
+\item                         -2    Hits mixed from several MC true particles (not decays)
+\item                         -1    Spiral branch or calorimetric reflection
+\item                          0    Double counted particles (2 tracks for 1 true particle)
+\item                          1    True track comes from true primary
+\item                          2    True track comes from HF decay
+\item                          3    True track comes from neutral decay
+\item                          4    True track comes from charged decay (split kink)
+\item                          5    Kink fit as 1 track
+\item                          6    True track comes from material interaction
+\item                          7    Unknown
+\end{itemize}
+\end{indentlist}
+ 
+\par
+\section{\label{sec-OAVDHMAT}VDHMATCH : Counting of matching VDET hits for a given track}
+\par
+\fbox{CALL VDHMATCH(IALTRK,IMCTRU,NTRUE,NWRONG,NMISS,NDOUBLE)}
+\par
+ 
+ 
+     The routine VDHMATCH must be called only AFTER a call to JULMATCH.
+                             See the note of D.Brown ALEPH 94-135 (PHYSIC 94-118) for more details.
+ 
+     This routine cannot be called when running on a MINI, since it needs the detailed VDET hits
+which are not stored on the MINIs.
+ 
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{IALTRK}
+      Input argument :   Alpha index of a reconstructed charged track (between KFCHT and KLCHT)
+\indentitem{IMCTRU}
+      Input argument :   Alpha index of the matching ``truth"  track as given by JULMATCH
+                         (must not be 0)
+\indentitem{NTRUE}   Number of true VDET hits on this track
+\indentitem{NWRONG}   Number of true hits on the reconstructed track which truly came from a track other than IMCTRK
+                      (split z/r$\phi$)
+\indentitem{NMISS}   Number of true VDET hits not used in reconstruction (split z/r$\phi$)
+\indentitem{NDOUBLE}  Number of true hits on the reconstructed track which
+                      are associated with 2 or more true Monte Carlo tracks (split z/r$\phi$)
+\end{indentlist}
+ 
+\par
+\section{\label{sec-ELEP2}QWHICH$\_$EN: to know how the LEP energy QELEP was found}
+\par
+\fbox{CALL QWHICH$\_$EN(ISTAT)}
+\par
+ 
+ 
+     The output argument ISTAT may be used to know how the  center-of-mass LEP energy QELEP was found.
+     For most LEP2 events, this energy is defined in 15 minutes time slices by the
+     LEP Energy Working group. It is available only for high energy runs of 1996 and after.
+                             See the note of P.Bright-Thomas ALEPH 97-029 (PHYSIC 97-024) for more details.
+ 
+ 
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{ISTAT}
+     Output argument:   flag telling how QELEP was obtained.
+ 
+\begin{itemize}
+\item                        = 0    No QELEP energy found! This should NEVER happen !
+
+\item                        = 1    QELEP  is obtained from the 'RLEP' bank. This is always the case for Monte Carlo events.       
+                                    For real data, this should be very rare, and only if all other methods described below 
+                                    have failed.
+
+\item                        = 2    QELEP  is an averaged value over the current LEP fill.
+                                     This is the case for 1989 to 1992  real data (from database bank LFIL),
+                                     or for events in some very short runs taken in 1993 
+                                     and after (from database bank RNF2).
+
+\item                        = 3    QELEP  is an average value over the current run, taken from the database bank RNR2. 
+                                    This is the case for
+                                    LEP 2 data if no time slice value was available for the event (mostly events taken before or
+                                    after the official start/stop time of a LEP fill, as recorded in the LEP Energy working group
+                                    tables).
+
+                                     For LEP 1 data from 1993 to 1995 included, the values are run averages computed from the LEP
+                                     Working Group values.
+
+\item                        = 4    QELEP was obtained from the 15 minutes time-slice energy determinations for ALEPH, from the LEP
+                                    energy working group, stored in the database bank RNL2. These time-slices exist
+                                    only for LEP2 High Energy data for 1996 and after. 
+
+\end{itemize}
+\end{indentlist}
+
+
+\par
+\section{\label{sec-EBSPOT}QWHICH$\_$BP: to know how the beam spot was found}
+\par
+\fbox{CALL QWHICH$\_$BP(ISTAT)}
+\par
+
+
+     The output argument ISTAT may be used to know how the beam spot was found (see
+ \ref{sec-CHUNKINF} on p.~\pageref{sec-CHUNKINF}).
+
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{ISTAT}
+     Output argument :   flag telling how the beam spot parameters were obtained.
+
+\begin{itemize}
+\item                        = 0    No beam position found! This should NEVER happen !
+
+\item                        = 1    obtained from the run header bank  JSUM.
+                                    This should be very rare, and only if all other methods described below
+                                    have failed.
+
+\item                        = 2    obtained from an averaged value over the current LEP fill (database bank LFIL).
+                                    This is the case only if the two methods described below have failed.
+
+
+\item                        = 3    obtained from an averaged value over the current run  (database bank RXYZ).
+                                    This happens  only for LEP1 data in old processings (JULIA version below 300) 
+                                    if no event-chunk position exists. 
+
+\item                        = 4     obtained from the event-chunk beam positions (run header bank ALPB).
+
+\end{itemize}
+\end{indentlist}
+
+
+\par
+\section{\label{sec-BOMSTAT}QFILBP$\_$STATUS: to know how the LEP beam position with BOMS was found:}
+\par
+\fbox{CALL QFILBP$\_$STATUS(ISTAT)}
+\par
+
+
+     The output argument ISTAT may be used to know how the LEP beam position with BOMS was found.
+     This implies that the data card BOBS was used (see \ref{sec-DCBOBS} on p.~\pageref{sec-DCBOBS}).
+
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{ISTAT}
+     Output argument :   flag telling how the LEP beam position with BOMS was found.
+
+\begin{itemize}
+\item                        = 0    No standard chunk-by-chunk beam position (XGETBP is    FALSE.)\\
+                                     All positive values below are obtained for XGETBP = .TRUE.
+
+\item                        = 1    VDET (x)       VDET (y)
+\item                        = 2    BOM+QSO (x)   VDET (y)
+\item                        = 3    VDET (x)      BOM+QSO (y)
+\item                        = 4    BOM+QSO (x)   BOM+QSO (y)
+\item                        = 5    Average (x)    VDET (y)
+\item                        = 6    VDET (x)       Average  (y)
+\item                        = 7    Average (x)   Average  (y)
+
+
+\end{itemize}
+\end{indentlist}
+
+
+
+
+\par
+\section{\label{sec-EWSU2}QEWSUM : ECAL Wire Energy on even/odd wire planes}
+\par
+\fbox{CALL QEWSUM(EWEVEN,EWODD,IER)}
+\par
+
+
+     The routine QEWSUM 
+gives the energy on ECAL wires summed over even/odd
+      planes. These quantities are available from POTs/DSTs but cannot be obtained from MINIs 
+version 102 and before; on MINIs they are available only for datasets written with MINI version 
+       103 and after, since May 1997.
+                        
+
+\begin{indentlist}{ 3.50cm}{ 3.75cm}
+\indentitem{EWEVEN(36)}
+     Output array:
+      sum of wire energies on even wire planes for the 36 ECAL modules
+\indentitem{EWODD(36)}
+        Output array: 
+      sum of wire energies on odd  wire planes for the 36 ECAL modules 
+
+\indentitem{IER}
+     Output argument :   
+
+= 1 if no banks of wire energies for this event
+
+             = 0 if all OK
+             
+\end{indentlist}
+
+      In the arrays EWEVEN and EWODD above, ECAL modules 1 $-$ 12 refer to endcap A, 13 $-$ 24 to the barrel, and 25
+$-$ 36 to endcap B.
+
+\par
+\section{\label{sec-QPCOR}QPCORR : Correction of charged particle momenta (``Sagitta correction")}
+
+     This function has been provided by I. Tomalin and introduced in ALPHA 122.44 in March 1998.
+ This is the so called ``sagitta correction".
+ It corrects particle momenta for the effects of residual distortions in
+     the central tracking detector.
+     It depends upon $\cos(\theta)$ and the year of data taking.
+  
+    Every year, even after the detector alignment is finished and
+     corrections have been made for field distortions etc., it is found
+     that Ebeam/P in $Z0 \rightarrow  \mu^+ \mu^-$ events is not precisely 1, presumably
+     because of residual distortions.
+     (Typically, in the region $|\cos(\theta)| > 0.9$, Ebeam/p is about 0.94
+     for +ve tracks and 1.06 for -ve tracks. Elsewhere, Ebeam/p is usually
+     consistent with 1 to within a percent or so. The effect is not quite
+     forward-backward symmetric).
+
+     The relative bias in momentum is proportional to P, so most people
+     analysing hadronic events can ignore it. Exceptions include analyses
+     using the ECAL electron identifiers in the region $|\cos(\theta)| > 0.9$
+     or analyses which are very sensitive to systematic biases in the
+     momenta (e.g. jet charge, $\tau$ polarization).
+   
+   QPCORR  provides a correction for the momenta based upon
+     Ebeam/P measurements in $Z0 \rightarrow  \mu^+ \mu^-$ events. It assumes that the
+     corrections for -ve and +ve particles are equal in size, but of
+     opposite sign. This is observed to be true, apart from a constant
+     offset, Ebeam/p = 1.002, which is also present in the MC and so not
+     corrected for.
+
+     In principle, the correction depends upon your track selection
+     cuts, but providing that the corrections have a small effect on your
+     analysis, you can ignore this. Arguement NVDET does correct for this
+     to first approximation however.
+     
+\par
+\fbox{FUNCTION  QPCORR(ITRK,ASCALE,NVDET,ERCORR)}
+
+{\bf Input arguments:}
+
+\begin{indentlist} { 3.50cm}{ 3.75cm}
+
+\indentitem{ITRK}     Integer: ALPHA track number.
+
+\indentitem{ASCALE}   Logical: Set .TRUE. if ALPHA variables like QX,QY,QZ
+                          are to be rescaled by calling QVSCAL.\\
+                          N.B. Don't call this routine twice for the
+                          same track with ASCALE = .TRUE. !
+\indentitem{NVDET}   Integer: If your analysis only uses tracks with at
+                          least 1 VDET hit, set NVDET=1; otherwise =0.
+\end{indentlist}
+{\bf Output arguments:}
+\begin{indentlist} { 3.50cm}{ 3.75cm}
+
+\indentitem{QPCORR}   Real    : Scale factor applied/to be applied to momentum.
+\indentitem{ERCORR}   Real    : Statistical error on this factor.
+    
+\end{indentlist}
+
+{\bf Important remark: data card PCOR allows to call QPCORR automatically:}
+
+\begin{indentlist}{ 2.50cm}{ 2.75cm}
+\indentitem{PCOR 0}Call QPCORR  for all charged tracks 
+\indentitem{PCOR 1}Call QPCORR  only for charged tracks having VDET coordinates 
+\end{indentlist}
+
+
+
+

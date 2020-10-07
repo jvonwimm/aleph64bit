@@ -1,0 +1,86 @@
+head	1.1;
+access;
+symbols
+	alpha126_22:1.1
+	alpha122_22:1.1
+	alpha126_21:1.1
+	alpha126_20:1.1
+	alpha126_19:1.1
+	alpha126_18:1.1
+	alpha126_17:1.1
+	alpha126_16:1.1
+	alpha126_15:1.1
+	alpha126_14:1.1
+	alpha126_13:1.1
+	alpha126_12:1.1
+	alpha126_11:1.1
+	alpha126_10:1.1
+	alpha126_09:1.1
+	alpha126_08:1.1
+	alpha126_07:1.1
+	alpha126_06:1.1
+	alpha126_05:1.1
+	alpha126_04:1.1
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	2000.10.17.13.01.31;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@
+
+C=======================================================================
+      logical function bpl_e14(module,iplane)
+C------------------------------------------------------------
+C Was this wire plane dead during the high energy running
+C Auxiliary to QGETE14_MOD
+C Author G. Taylor Oct 1997
+C------------------------------------------------------------
+      bpl_e14=.false.
+      if (module.eq.15 .and. iplane.eq. 1) bpl_e14=.true. ! .1 Gev
+      if (module.eq.22 .and. iplane.eq. 1) bpl_e14=.true. ! .1 Gev
+      if (module.eq. 7 .and. iplane.eq. 2) bpl_e14=.true. ! .2 Gev
+      if (module.eq.20 .and. iplane.eq. 2) bpl_e14=.true. ! .2 Gev
+      if (module.eq.11 .and. iplane.eq. 6) bpl_e14=.true. ! .4 Gev
+      if (module.eq.10 .and. iplane.eq.12) bpl_e14=.true. ! .8 Gev
+      if (module.eq.3  .and. iplane.eq.18) bpl_e14=.true. ! .9 Gev
+      if (module.eq.11 .and. iplane.eq.18) bpl_e14=.true. ! .9 Gev
+      if (module.eq.11 .and. iplane.eq.27) bpl_e14=.true. ! .5 Gev
+      if (module.eq. 9 .and. iplane.eq.30) bpl_e14=.true. ! .4 Gev
+      if (module.eq.27 .and. iplane.eq.32) bpl_e14=.true. ! .3 Gev
+      if (module.eq.20 .and. iplane.eq.34) bpl_e14=.true. ! .7 Gev
+      if (module.eq. 6 .and. iplane.eq.39) bpl_e14=.true. ! .2 Gev
+      if (module.eq. 4 .and. iplane.eq.40) bpl_e14=.true. ! .2 Gev
+      if (module.eq. 5 .and. iplane.eq.42) bpl_e14=.true. ! .1 Gev
+      if (module.eq. 1 .and. iplane.eq.45) bpl_e14=.true. ! .1 Gev
+      if (module.eq. 2 .and. iplane.eq.45) bpl_e14=.true. ! .1 Gev
+C new in 98
+      if (module.eq. 3 .and. iplane.eq.42) bpl_e14=.true. ! .1 Gev
+      if (module.eq.17 .and. iplane.eq.43) bpl_e14=.true. ! .1 Gev
+      if (module.eq.17 .and. iplane.eq.45) bpl_e14=.true. ! .1 Gev
+      return
+      end
+@

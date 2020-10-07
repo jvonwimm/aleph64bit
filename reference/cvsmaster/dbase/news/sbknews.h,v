@@ -1,0 +1,167 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	dbase22:1.1.1.1
+	dbase21:1.1.1.1
+	dbase20:1.1.1.1
+	dbase19:1.1.1.1
+	dbase18:1.1.1.1
+	dbase17:1.1.1.1
+	dbase04:1.1.1.1
+	dbase03:1.1.1.1
+	dbase02:1.1.1.1
+	dbase01:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	97.02.12.10.06.01;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.02.12.10.06.01;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@C! 1st entry in SBANK
+
+   ---------------------------------------------------------
+ ! 930112 - SBANK  version 8 date 930112
+            H.Meinhard introduces a UNIX version of SBANK.
+
+            files are stored on /aleph/doc/:
+            - input files : /aleph/doc/sbank.lbf
+                            /aleph/doc/all/assign
+                            /aleph/doc/sbank.adr
+            - program     : /aleph/doc/sbank.f
+                            /aleph/doc/sbkmain.c
+            - makefile    : /aleph/doc/sbank.make
+            - executable  : /aleph/doc/sbank
+                            with a link in /aleph/bin
+
+            the Fortran part has to be extracted with:
+             @@ HISTE P=DOC:SBANK.HLB,E=SBANK.F
+               C,D
+               *DF UNIX              (VAX for VAX machines)
+               *E SBKMAIN.GTREFER
+               *EX
+
+            the C part (UNIX only) has to be extracted with:
+             @@ HISTE P=DOC:SBANK.HLB,E=SANK.C
+               C,D
+               *DF C
+               *E SBKMAIN
+               *EX
+
+             On UNIX the makefile is as follow:
+             NAME    = sbank
+             CFILES  = sbkmain.c
+             CFLAGS  = -g
+             FFILES  = sbank.f
+             FFLAGS  = -g -static -G 3 -w1
+             LDFLAGS = -G 3
+
+             LIBS    = \
+                /cern/pro/lib/libkernlib.a -ltermcap
+
+
+             # Rules...
+
+             SRCFILES = $(CFILES) $(FFILES)
+             OBJFILES = $(CFILES:.c=.o) $(FFILES:.f=.o)
+
+             $(NAME): $(OBJFILES)
+             f77 -o $@@  $(OBJFILES) $(LIBS) $(LDFLAGS)
+
+   ---------------------------------------------------------
+   920401 - SBANK  version 3 date 920401
+
+   mods in:   SBKPAR
+              reduce NBNK to 1100 and NENTR to 120
+   ----------------------------------------------------------
+   920326 - SBANK  version 2 date 920326
+   is maintained under Historian with flag VAX.
+   It contains 2 programs: CREATE and SBANK:
+
+   CREATE is used to build DOC:CREATE_SBANK_INDEX.EXE which is run
+          everytime  DOC:SBANK.LBF or DOC:ALL.ASSIGN has been changed.
+
+          It can be extracted with:
+             @@ HISTE P=DOC:SBANK.HLB,E=CREATE.FOR
+               C,D
+               *DF VAX
+               *E CREIND.STREFER
+               *EX
+
+       input files:
+       -----------
+          DOC:SBANK.LBF is updated by the DOC:UPDATE_SBANK.COM which
+                        makes a new data base.
+          DOC:ALL.ASSIGN is updated by the documentation procedure
+                         everytime a program has changed.
+
+
+       output file:
+       -----------
+          DOC:SBANK.ADR which contains information of:
+                        bank name
+                        short decription of bank
+                        position of full bank description in SBANK.LBF
+                        where the bank is booked
+                        where the bank is referenced
+
+   SBANK is used to build DOC:SBANK.EXE
+
+          It can be extracted with:
+             @@ HISTE P=DOC:SBANK.HLB,E=SBANK.FOR
+               C,D
+               *DF VAX
+               *E PRSBANK.GTREFER
+               *EX
+
+       input files:
+       -----------
+          DOC:SBANK.LBF
+          DOC:ALL.ASSIGN
+          DOC:SBANK.ADR
+
+   HACPAR is used to build DOC:BOS.COMCOM. Since DOC:SBANK.LBF has
+          changed format with ADAMO 3.2, the ADAMO version must be
+          specified when extracting the code : ADA31 or ADA32.
+
+          It can be extracted with:
+             @@ HISTE P=DOC:SBANK.HLB,E=HACPAR.FOR
+               C,D
+               *DF VAX,ADA31
+               *E HACPAR.ADJLEN
+               *EX
+
+       input file:
+       ----------
+          DOC:SBANK.LBF
+
+@
+
+
+1.1.1.1
+log
+@1st release of dbase library
+@
+text
+@@

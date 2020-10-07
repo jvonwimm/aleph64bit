@@ -1,0 +1,89 @@
+head	1.2;
+access;
+symbols
+	look25:1.2
+	look24:1.2
+	look23:1.2
+	look22:1.2
+	look21:1.2
+	look20:1.2
+	v15:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.04.18.09.05.30;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.09.15.50.22;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.09.15.50.23;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@change VAX to DEC.AND..NOT.UNIX ==> version 20
+
+ Modified Files:
+ 	lkevt.h lkfil.h lklast.h lkunpk.h version.h
+ Removed Files:
+	lookend.h
+@
+text
+@      SUBROUTINE LKDDL(COMAND)
+C -------------------------------------------------------------
+#ifndef DOC
+#include "lkfil.h"
+#include "bcs.h"
+      CHARACTER COMAND*80,CH,NMBK*4
+C ------------------------------------------------------------
+      IF (.NOT.DIRFIL) THEN
+          WRITE(LOUT,*) '[Direct access file not opened]'
+          RETURN
+      ENDIF
+      CALL LKGTNAM(COMAND,NMBK,*999)
+      IF (NMBK.EQ.'*') GOTO 998
+      CALL LKGTINT(COMAND,2,'_Bank number: ',NR,CH)
+      IF (CH.EQ.'*') GOTO 998
+      IF (CH.NE.'I') GOTO 999
+      CALL UTDBPR(NMBK,NR,0,LDBAS,IW(6),IFLAG)
+      RETURN
+ 998  WRITE(LOUT,*) '[Wild cards not permitted for this operation]'
+      RETURN
+ 999  WRITE(LOUT,*) '[Four letter bank name and bank number required]'
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK lkddl
+@
+
+
+1.1.1.1
+log
+@import look 15
+@
+text
+@@

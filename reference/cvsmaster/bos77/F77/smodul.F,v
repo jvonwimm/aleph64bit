@@ -1,0 +1,235 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.56.59;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.38;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.39;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE SMODUL(SUBNAM)
+*
+*     CONTROL SUBROUTINE FOR MODULES
+*
+*
+      PARAMETER (NDIM=100)
+*     NDIM IS MAXIMUM NUMBER OF DIFFERENT SUBNAMS AND OF SETDF CALLS,
+*     WHICH GET ACCEPTED. ICPRNT IS PRINT UNIT.
+*     THE SECOND DIMENSION PARAMETER OF ARRAY IHB IN COMMON
+*     /CONCOM/ IS NDIM AND FIXED TO 100.
+*     THE LOCAL ARRAY NH HAS DIMENSION NPRIM+NDIM.
+      PARAMETER (NPRIM=47,LNH=NPRIM+NDIM)
+
+      CHARACTER*(*) SUBNAM
+
+#include "bosmdl.h"
+C
+C     IHA = HISTOGRAM OFFSET IN STEPS OF 100
+C     IBS = BOS HISTOGRAM OFFSET = XXXXXXX00
+C     IDB = DEBUG FLAG
+C     ISN =
+C     JSN =
+C     IDATEL = DATE OF PREVIOUS APPLICATION OF MODULE
+C
+      COMMON/BCS/IW(1000)
+      CHARACTER*26  ATOZ
+      CHARACTER*8 TEXTAR
+#include "concom.h"
+*     NHB = DIMENSION
+*     NHN = NUMBER OF STORED NAMES
+*     NH4 = NUMBER OF USED WORDS IN 4.TH COLUMN
+*     IHB(1,I) = HISTOGRAM OFFSET
+*     IHB(2,I) = COUNTER
+*     IHB(3,I) = POINTER TO 4.TH COLUMN
+*     IHB(4,I) = DEBUG DATA
+*     IHB(5,I) = COUNTER
+*     IHB(6,I) = 7-DIGIT SUBNAM*5
+*     IHB(7,I) = SUBNAM FIRST A4
+*     IHB(8,I) = SUBNAM SECOND A4
+*
+      INTEGER NH(LNH)
+      LOGICAL INIT,EMSG
+      DATA    INIT/.TRUE./,EMSG/.TRUE./
+      DATA    NH     /LNH*0/,IBOOK/0/
+      DATA ATOZ/'ABCDEFGHIJKLMNOPQRSTUVWXYZ'/
+
+*     INIT - SET ALL ELEMENTS TO BLANK OR ZERO
+      IEN=1
+    1 IF(INIT) THEN
+         INIT=.FALSE.
+         NHB=NDIM
+         NHN=0
+         NH4=0
+         CALL GLUNP(ICPRNT)
+         ICPR=ICPRNT
+         LUP=ICPRNT
+         TEXTAR=' '
+         IHE(7)=INTCHA('    ')
+         IHE(8)=IHE(7)
+         DO 10 I=1,NDIM
+         IHB(7,I)=IHE(7)
+         IHB(8,I)=IHE(7)
+         DO 10 J=1,6
+   10    IHB(J,I)=0
+         L=0
+      END IF
+
+*     DETERMINE INDEX L FOR TEXT SUBNAM
+      IF(SUBNAM.EQ.' ') THEN
+         L=0
+C     ELSE
+      ELSE IF(L.EQ.0.OR.SUBNAM.NE.TEXTAR) THEN
+         TEXTAR=SUBNAM
+         IHE(7)=INTCHA(TEXTAR(1:4))
+         IHE(8)=INTCHA(TEXTAR(5:8))
+*        HASH FUNCTION
+         L=NDIM+1+MOD( IABS(IHE(7)+IHE(8)/17)  ,NPRIM)
+*        LOOP TO FIND TEXT
+   20    J=L
+         L=NH(L)
+         IF(IHE(7).NE.IHB(7,L)) GOTO 20
+         IF(IHE(8).NE.IHB(8,L)) GOTO 20
+*        END OF LOOP
+         IF(L.EQ.0) THEN
+*           ADD NEW SUBNAM TO INTERNAL LIST
+            IF(NHN.EQ.NDIM) THEN
+               L=0
+               IF(EMSG) THEN
+                   EMSG=.FALSE.
+                   WRITE(ICPR,101) NDIM
+               END IF
+            ELSE
+*              ADD NEW NAME
+               NHN=NHN+1
+               L  =NHN
+               NH(J)=L
+               IHB(7,L)=IHE(7)
+               IHB(8,L)=IHE(8)
+               IHB( 1,L)=100*L
+*              7-DIGIT TEXT
+               DO 25 I=1,5
+               J=INDEX(ATOZ,TEXTAR(I:I))
+               IF(J.EQ.0) J=26
+   25          IHB(6,L)=25*IHB(6,L)+J-1
+               IHB(6,L)=100*IHB(6,L)
+            END IF
+         END IF
+      END IF
+      JSN=L
+      IF(IEN.NE.1) GOTO 100
+      IHB(5,L)=-1
+*     CHECK BOOK BANK, IF PRESENT
+      IF(IBOOK.EQ.0) IBOOK=NAMIND('BOOK')
+      IND=IBOOK+1
+   26 IND=IW(IND-1)
+      IF(IND.NE.0) THEN
+         IF(IW(IND-2).NE.0) GOTO 26
+         DO 28 J=1,IW(IND),3
+         IF(IW(IND+J  ).NE.IHE(7)) GOTO 28
+         IF(IW(IND+J+1).NE.IHE(8)) GOTO 28
+         IHB(5,L)=J+2
+         IDATL=IW(IND+J+2)
+         GOTO 29
+   28    CONTINUE
+      END IF
+   29 ISN=L
+*     HISTOGRAM OFFSETS AND DEBUG FLAG
+      IF(L.EQ.0) THEN
+         IHA=0
+         IBS=0
+         IDB=0
+      ELSE
+*     HISTOGRAM IDENTIFIER OFFSET
+         IHA=IHB(1,L)
+         IBS=IHB(6,L)
+*     DEBUG FLAG
+         IR=0
+         IHB(2,L)=IHB(2,L)+1
+*        POINTER TO ENTRIES
+         J=IHB(3,L)
+         IF(J.NE.0) THEN
+            IAB=IABS(IHB(4,J))
+            IR=MOD(IAB,10)-1
+            IAB=IAB-10
+            IF(IAB.GT.10) THEN
+               IHB(4,J)=ISIGN(IAB,IHB(4,J))
+            ELSE
+*              DELETE THIS ENTRY
+               IAB=IHB(4,J)
+               DO 30 K=J+1,NH4
+  30           IHB(4,K-1)=IHB(4,K)
+               NH4=NH4-1
+               IF(IAB.GT.0) IHB(3,L)=0
+               DO 40 K=1,NHN
+               IF(IHB(3,K).GE.J) IHB(3,K)=IHB(3,K)-1
+  40           CONTINUE
+            END IF
+         END IF
+         IF(IR.GT.0) WRITE(ICPR,102) SUBNAM,IR
+         IDB=IR
+      END IF
+      GOTO 100
+      ENTRY TMODUL(SUBNAM)
+      IEN=2
+      GOTO 1
+  100 RETURN
+  101 FORMAT('0SMODUL-----  MORE THAN ',I4,' DIFFERENT',
+     +   ' ARGUMENTS'/)
+  102 FORMAT('0SMODUL-----  SUBPROGRAM ',A8,'  DEBUG FLAG =',I2)
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK smodul
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

@@ -1,0 +1,90 @@
+head	1.1;
+access;
+symbols
+	aleph316_2:1.1
+	aleph316_1:1.1
+	aleph316:1.1
+	aleph315_7:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	2000.11.08.16.06.05;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@add iqverp
+@
+text
+@      integer function iqverp(prog)
+C------------------------------------------------------------------------------
+C! Return program version used to produce the current file
+CKEY
+C Author     A. Bonissent     25-Oct-2000
+C Input arguments :
+C   prog = Program name ( KINGAL,ONLINE,GALEPH,JULIA,ALPHA)
+C   Return value : version number
+C------------------------------------------------------------------------------
+      character*(*) prog
+      character*20 prgbk
+      logical first
+         data first/.true./
+      INTEGER JRHAPN,JRHAPD,JRHAPH,JRHAPV,JRHAAV,JRHADV,JRHADD,JRHANI,
+     +          JRHANO,JRHACV,JRHANU,LRHAHA
+      PARAMETER(JRHAPN=1,JRHAPD=3,JRHAPH=4,JRHAPV=5,JRHAAV=6,JRHADV=7,
+     +          JRHADD=8,JRHANI=9,JRHANO=10,JRHACV=11,JRHANU=12,
+     +          LRHAHA=12)
+      INTEGER LMHLEN, LMHCOL, LMHROW
+      PARAMETER (LMHLEN=2, LMHCOL=1, LMHROW=2)
+C
+      COMMON /BCS/   IW(1000)
+      INTEGER IW
+      REAL RW(1000)
+      EQUIVALENCE (RW(1),IW(1))
+C----------------------------------------------------------------------------
+C!    set of intrinsic functions to handle BOS banks
+C - # of words/row in bank with index ID
+      LCOLS(ID) = IW(ID+1)
+C - # of rows in bank with index ID
+      LROWS(ID) = IW(ID+2)
+C - index of next row in the bank with index ID
+      KNEXT(ID) = ID + LMHLEN + IW(ID+1)*IW(ID+2)
+C - index of row # NRBOS in the bank with index ID
+      KROW(ID,NRBOS) = ID + LMHLEN + IW(ID+1)*(NRBOS-1)
+C - # of free words in the bank with index ID
+      LFRWRD(ID) = ID + IW(ID) - KNEXT(ID)
+C - # of free rows in the bank with index ID
+      LFRROW(ID) = LFRWRD(ID) / LCOLS(ID)
+C - Lth integer element of the NRBOSth row of the bank with index ID
+      ITABL(ID,NRBOS,L) = IW(ID+LMHLEN+(NRBOS-1)*IW(ID+1)+L)
+C - Lth real element of the NRBOSth row of the bank with index ID
+      RTABL(ID,NRBOS,L) = RW(ID+LMHLEN+(NRBOS-1)*IW(ID+1)+L)
+C -------------------------------------------------------------------
+      iqverp = -1
+      julout = 0
+      if(first)then
+         first = .false.
+         narhah = namind('RHAH')
+      endif
+      krhah = iw(narhah)
+      if(krhah .gt. 0)then
+        nrhah = lrows(krhah)
+        ncar = len(prog)
+        do irhah = 1,nrhah
+           call alstin(iw(krow(krhah,irhah)+jrhapn),2,prgbk)
+           if(prgbk(1:ncar) .eq. prog)then
+              iqverp = itabl(krhah,irhah,jrhapv)
+           endif
+        enddo
+      endif
+      return
+      end
+@

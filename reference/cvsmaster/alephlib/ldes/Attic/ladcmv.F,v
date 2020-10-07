@@ -1,0 +1,67 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.42.35;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.42.36;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      INTEGER FUNCTION LCALMV (LSTAK)
+C ---------------------------------------------------
+C - F.Ranjard - 890428
+C! return the number of MeV per LCAL ADC count
+C  information is taken from the data base
+CKEY LCALDES LCAL ADC ENERGY / USER
+C - Input   : none
+C - Output  : LSTAK(3) / I  number of MeV per ADC count
+C                           for the 3 stacks
+C             LCALMV        return code :
+C                           =0 means information not avalaible
+C - Banks   : none
+C
+#ifndef DOC
+      SAVE
+      INTEGER LSTAK(*)
+C ------------------------------------------------------------
+      LSTAK(1) = 32.
+      LSTAK(2) = 32.
+      LSTAK(3) = 32.06
+C
+      LCALMV = 1
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

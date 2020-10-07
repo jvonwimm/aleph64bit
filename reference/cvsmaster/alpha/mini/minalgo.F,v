@@ -1,0 +1,124 @@
+head	1.1;
+access;
+symbols
+	alpha126_22:1.1
+	alpha122_22:1.1
+	alpha126_21:1.1
+	alpha126_20:1.1
+	alpha126_19:1.1
+	alpha126_18:1.1
+	alpha126_17:1.1
+	alpha126_16:1.1
+	alpha126_15:1.1
+	alpha126_14:1.1
+	alpha126_13:1.1
+	alpha126_12:1.1
+	alpha126_11:1.1
+	alpha126_10:1.1
+	alpha126_09:1.1
+	alpha126_08:1.1
+	alpha126_07:1.1
+	alpha126_06:1.1
+	alpha126_05:1.1
+	alpha126_04:1.1
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1
+	alpha125_01:1.1
+	alpha124_19:1.1
+	alpha125:1.1
+	alpha124_18:1.1
+	alpha124_17:1.1
+	alpha124_16:1.1
+	alpha124_15:1.1
+	alpha124_14:1.1
+	alpha124_13:1.1
+	alpha124_12:1.1
+	alpha124_11:1.1
+	alpha124_10:1.1
+	alpha124_09:1.1
+	alpha124_08:1.1
+	alpha124_07:1.1
+	alpha124_7:1.1
+	alpha124_06:1.1
+	alpha124_05:1.1
+	alpha124_04:1.1
+	alpha124_03:1.1
+	alpha124_02:1.1
+	alpha124_01:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	99.03.22.14.06.50;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE MINALGO
+CKEY MDST/INTERNAL
+C ----------------------------------------------------------------------
+C Create thrust DTHR and impact parameter DBTG banks
+C A. Jacholkowska Oct 1994
+C Put in ALPHA 8-Jan-1999
+C Called from MQUEVNT
+C ----------------------------------------------------------------------
+#ifndef DOC
+#include "minprd.h"
+#include "qcde.h"
+      DIMENSION SUMRY(7)
+      CHARACTER*800 ELIST,RLIST
+      DIMENSION CTHR(4)
+#include "qmacro.h"
+C ----------------------------------------------------------------------
+C Perform Thrust algorithm
+      CALL QJOPTR('EF',' ')
+      CALL QJTHRU (THRU,'THRUST',KRECO)
+      ITHRU = KPDIR('THRUST',KRECO)
+      CTHR(1) = QX(ITHRU)
+      CTHR(2) = QY(ITHRU)
+      CTHR(3) = QZ(ITHRU)
+      CTHR(4) = QE(ITHRU)
+C
+C Create and Fill Mini DTHR bank if THRU gt 0.
+C
+      IF (THRU .GT. 0.) CALL MINTHR (THRU,CTHR)
+C
+C Perform the IMPACT PARAMETER TAG (VDET)
+C
+      CALL MDIPBT
+C
+C Create and fill the DBTG bank
+C
+      CALL MDWRIP(IRET)
+C
+      RETURN
+      END
+#endif
+@

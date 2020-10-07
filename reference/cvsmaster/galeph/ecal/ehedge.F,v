@@ -1,0 +1,134 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.07.14.02.09;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.10;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK ehedge
+      SUBROUTINE EHEDGE (NST,PV,XV,YV,ZV,UV,VV,WV,DPERP,DTOT,MFLEG)
+C.----------------------------------------------------------------
+C R.CLIFFT
+C! Shower edge proximity
+C *** CALCULATE PROXIMITY TO EDGES AND DECIDE TO CONTAIN
+C *** SHOWER OR NOT
+C
+C.----------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "ehfcon.h"
+      MFLEG=0
+      PTB=0.
+C
+C *** TRANSFORM INTO COORDINATE SYSTEM OF MODULE , Z IS
+C *** ORTHOGONAL TO FRONT FACE IN BARREL AND Y IS ORTHOGONAL
+C *** TO FRONT FACE IN END CAP
+C
+      CALL EHTRAN (XV,YV,ZV,UV,VV,WV,X,Y,Z,U,V,W)
+C
+C *** SET PARAMETERS
+C
+      ILAY=2
+      IF(ABS(NST-2).EQ.1) ILAY=1
+C
+C *** CALCULATE DISTANCE TO EDGES OF VOLUME,
+C *** AND CHECK THAT WE CONTAIN ENOUGH OF THE SHOWER
+C
+      GO TO (10,20,10,20) ,NST
+C
+C ***  BARREL MODULE
+C
+ 10   CALL EHGEOB (ILAY,X,Y,Z,U,V,W,XSEP,YSEP,PTB,DTB,MFLSI)
+      IF(MFLSI.EQ.0)  RETURN
+      EDGM=AMIN1 (XSEP,YSEP)
+      COF=(EDGM+CEDGEH(1))/CEDGEH(2)
+      FREN=CEDGEH(3)*COF**(CEDGEH(4))*EXP(-COF**(CEDGEH(4)+1.))
+      IF (FREN*PV.GT.CUTFEH)  RETURN
+      GO TO 50
+C
+C ***  END CAP MODULE
+C
+ 20   CALL EHGEOE  (ILAY,X,Y,Z,U,V,W,ZSEP,XSEP,PTB,DTB,MFLSI)
+      IF (MFLSI.EQ.0)  RETURN
+      EDGM= AMIN1 (XSEP,ZSEP)
+      COF=(EDGM+CEDGEH(1))/CEDGEH(2)
+      FREN=CEDGEH(3)*COF**(CEDGEH(4))*EXP(-COF**(CEDGEH(4)+1.))
+      IF (FREN*PV.GT.CUTFEH)  RETURN
+C
+C *** WE MADE IT, SET PARAMETRISATION FLAG
+C
+ 50   MFLEG=1
+      DPERP=PTB
+      DTOT=DTB
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

@@ -1,0 +1,37 @@
+      integer function iqverp(prog)
+C------------------------------------------------------------------------------
+C! Return program version used to produce the current file
+CKEY
+C Author     A. Bonissent     25-Oct-2000
+C Input arguments :
+C   prog = Program name ( KINGAL,ONLINE,GALEPH,JULIA,ALPHA)
+C   Return value : version number
+C------------------------------------------------------------------------------
+#ifndef DOC
+      character*(*) prog
+      character*20 prgbk
+      logical first
+         data first/.true./
+#include "rhahjj.h"
+#include "bcs.h"
+#include "bmacro.h"
+      iqverp = -1
+      julout = 0
+      if(first)then
+         first = .false.
+         narhah = namind('RHAH')
+      endif
+      krhah = iw(narhah)
+      if(krhah .gt. 0)then
+        nrhah = lrows(krhah)
+        ncar = len(prog)
+        do irhah = 1,nrhah
+           call alstin(iw(krow(krhah,irhah)+jrhapn),2,prgbk)
+           if(prgbk(1:ncar) .eq. prog)then
+              iqverp = itabl(krhah,irhah,jrhapv)
+           endif
+        enddo
+      endif
+      return
+      end
+#endif

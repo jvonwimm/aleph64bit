@@ -1,0 +1,172 @@
+#! /bin/csh
+#============================================================================
+#                             compile
+#                                                       F.Ranjard
+#============================================================================
+# compile all files in a source directory
+# OSF1 IRIX5 HPUX9 are used to compile *.F or *.c
+# if it does not exist it is created
+#============================================================================
+# P1 -> source directory
+# P2 -> " " or  sub-directory name
+# P3 -> " " or "dbx"      compile in debug mode
+# last arg -> -v  for verbose
+#============================================================================
+# compile1.0
+# 960411 - 1st version
+# 960904 - compile1.1
+# when mini source compile it with -I/aleph/src/alpha/inc
+#============================================================================
+#
+set exec_name = "compile1.1"
+set nar = $#argv
+if (nar != 0) then
+  if ($argv[${nar}] == "-v") then
+     set echo on
+     set argv[${nar}] = ""
+     @ nar = ${nar} - 1
+  endif
+endif
+#
+if ( $?ENVIRONMENT ) then
+ if ( "$ENVIRONMENT" == "INTERACTIVE" && $1 == "-h") then
+   echo " "
+   echo " usage: "
+   echo " compile <source directory> [<sub-directory>] [<dbx>] "
+   echo " "
+   echo " i.e. - compile /al/reference/cvs/c  "
+   echo " will create c/${OS} directory if it does not exist"
+   echo " will remove all c/${OS}/*.o files and then "
+   echo " will create without debug c/${OS}/*.o from c/*.c"
+   echo " will create /al/reference/cvs/gal303/${OS}/*.o from"
+   echo " "
+   echo "      - compile /al/reference/cvs/gal303  dbx"
+   echo " will create /al/reference/cvs/gal303/${OS}/*.o from"
+   echo " /al/reference/cvs/gal303/*/*.F compiled in debug mode"
+   echo "      - compile /al/reference/cvs/gal303  ecal "
+   echo " will create /al/reference/cvs/gal303/${OS}/*.o from"
+   echo " /al/reference/cvs/gal303/ecal/*.F compiled without debug "
+   echo " "
+   exit(1)
+ endif
+endif
+#
+set src_dir = $1
+set arg2    = $2
+set arg3    = $3
+set debug   = ""
+set opt     = ""
+set sub_dir = ""
+if (${arg2} == "dbx" || ${arg3} == "dbx") then
+    set opt   = "dbx"
+    set debug = "-g"
+endif
+if (${arg2} != "" && ${arg2} != "dbx" ) set sub_dir = ${arg2}
+#   
+#*******>
+set UNAME = `uname`
+#*******<
+unset noclobber
+#
+set flag = "OK"
+ 
+set src_inc = "."
+if ( -d ${src_dir}/inc ) set src_inc = "${src_dir}/inc"
+if !( -d ${src_dir}/${OS} ) then
+   cd ${src_dir}
+   mkdir ${OS}
+endif
+#
+# =========================================================================
+#
+echo `date` "=== START ${exec_name} ${HOST} ${src_dir} ${debug} ===" >> ${src_dir}/spy
+#
+# ===============================================================================
+#
+#  ---> compile all *.F and *.c just created < ---------------------
+#
+set prog_name = `basename ${src_dir}` 
+set p_name = `echo ${prog_name} | tr -d '[0-9]'`
+
+if (${p_name} == "jul") set FCOPT = "${FCOPT} -fno-range-check" 
+set FC_OPT = "${FC} ${FCOPT} ${debug} -I${src_inc}"
+if (${p_name} == "mini") set FC_OPT = "${FC_OPT} -I${ALEPH}/src/alpha/inc"
+
+set CC_OPT = "cc ${CCOPT} ${debug} -I${src_inc}"
+#
+cd ${src_dir}/${OS}
+  
+### compile c routines if any
+
+set flagc = " "
+if (${sub_dir} != "") then
+   set lsc = "../${sub_dir}/*.c"
+else
+   set lsc = "../*.c ../*/*.c"
+endif
+ls ${lsc}
+if ( $status == 0 ) then
+   ${CC_OPT} ${lsc} | & tee -a comp{opt}.log
+   if ($status == 1) then
+      set flagc = "C NOT OK"
+      goto cend
+   endif
+   set flagc = "C OK" 
+endif  
+#
+
+#### compile *.F routines if any
+set flagf = " "
+if (${sub_dir} != "") then
+   set lsD = "${sub_dir}"
+   set upF = ""
+else
+   set lsD = `ls .. `
+   set upF = `ls ../*.F ../*.f`
+endif
+
+foreach dir ( $lsD[*] )
+   if ( -d ../${dir} || ${upF} != "") then
+      set lsF = "${upF} ../${dir}/*.F ../${dir}/*.f"
+      ls ${lsF} 
+      if ($status == 0) then
+         ${FC_OPT} ${lsF} | & tee -a comp${opt}.log   
+         if ($status == 1) then
+            set flagf = "F NOT OK"
+            goto cend
+         else
+            set flagf = "F OK"
+         endif
+      endif
+      set upF = ""
+   endif
+end
+if ($status == 1) then
+   set flagf = "no *.F or *.f"
+   goto cend
+endif
+#
+
+# ===============================================================
+
+cend:
+set flag = "${flagf} ${flagc}"
+
+# ================================================================
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> spy
+spy:
+
+cd ${src_dir}
+echo `date` " END ${exec_name} ${HOST} ${src_dir} ${opt} ${flag}" >> ${src_dir}/spy
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> exec_end
+exec_end:
+ exit
+ 
+
+
+
+

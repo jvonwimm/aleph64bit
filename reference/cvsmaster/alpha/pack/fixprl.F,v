@@ -1,0 +1,407 @@
+head	1.6;
+access;
+symbols
+	alpha126_22:1.6
+	alpha126_21:1.6
+	alpha126_20:1.6
+	alpha126_19:1.6
+	alpha126_18:1.6
+	alpha126_17:1.6
+	alpha126_16:1.6
+	alpha126_15:1.5
+	alpha126_14:1.5
+	alpha126_13:1.5
+	alpha126_12:1.5
+	alpha126_11:1.4
+	alpha126_10:1.3
+	alpha126_09:1.3
+	alpha126_08:1.3
+	alpha126_07:1.3
+	alpha126_06:1.3
+	alpha126_05:1.3
+	alpha126_04:1.3
+	alpha126_03:1.3
+	alpha126_02:1.3
+	alpha126_1:1.3
+	alpha125_17:1.3
+	alpha125_16:1.3
+	alpha125_15:1.3
+	alpha125_14:1.3
+	alpha125_13:1.3
+	alpha125_12:1.3
+	alpha125_11:1.3
+	alpha125_10:1.3
+	alpha125_09:1.3
+	alpha125_08:1.3
+	alpha125_07:1.3
+	alpha125_06:1.3
+	alpha125_05:1.3
+	alpha125_04:1.3
+	alpha125_03:1.3
+	alpha125_02:1.3
+	alpha125_01:1.3
+	alpha124_19:1.3
+	alpha125:1.3
+	alpha124_18:1.3
+	alpha124_17:1.3
+	alpha124_16:1.3
+	alpha124_15:1.3
+	alpha124_14:1.3
+	alpha124_13:1.3
+	alpha124_12:1.2
+	alpha124_11:1.2
+	alpha124_10:1.2
+	alpha124_09:1.2
+	alpha124_08:1.2
+	alpha124_07:1.2
+	alpha124_7:1.2
+	alpha124_06:1.2
+	alpha124_05:1.2
+	alpha124_04:1.2
+	alpha124_03:1.2
+	alpha124_02:1.2
+	alpha124_01:1.2
+	alpha124:1.2
+	alpha123_12:1.2
+	alpha123_11:1.2
+	alpha123_10:1.2
+	alpha123_9:1.2
+	alpha123_8:1.2
+	alpha123_7:1.2
+	alpha123_6:1.2
+	alpha123_5:1.2
+	alpha123_4:1.2
+	alpha123_3:1.2
+	alpha123_2:1.2
+	alpha123:1.2
+	alpha122_48:1.2
+	alpha122_47:1.2
+	alpha122_46:1.2
+	alpha122_45:1.2
+	alpha122_44:1.2
+	alpha122_43:1.2
+	alpha122_42:1.2
+	alpha122_41:1.2
+	alpha122_40:1.2
+	alpha122_39:1.2
+	alpha122_38:1.2
+	alpha122_37:1.2
+	alpha122_36:1.2
+	alpha122_35:1.2
+	alpha122_34:1.2
+	alpha122_33:1.2
+	alpha122_32:1.2
+	alpha122_31:1.2
+	alpha122_30:1.2
+	alpha122_29:1.2
+	alpha122_28:1.2
+	alpha122_27:1.2
+	alpha122_26:1.2
+	alpha122_25:1.2
+	alpha122_24:1.2
+	alpha122_23:1.2
+	alpha122_22:1.1
+	alpha122_21:1.1
+	alpha122_20:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.6
+date	2002.03.15.08.23.22;	author alphy;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	2001.07.26.14.04.34;	author boucrot;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	2001.07.25.12.23.30;	author boucrot;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	99.08.25.09.41.51;	author boucrot;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.02.21.12.44.30;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.02.18.08.26.38;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.6
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE FIXPRL
+C =========================================================================
+C! Computes corrected Rl for all Monte Carlo 
+C Execution activated by the data card UPRL in the users cards
+C called from QFILL
+C      For Monte-Carlo event :
+C                - recalculate Rl Galeph version > 304 and < 400
+C                                 Database > 206 and < 400
+C                                 Author: P. Perret   31/01/97
+c                                 modified I. Debonis 24/07/01 
+c                                 modified P. Azzurri 08/02/02 
+C
+C     Input  ITK   Track number
+C     Output RLnew new Rl electron estimator
+C =========================================================================
+#ifndef DOC
+      implicit none
+#include "qdecl.h"
+#include "qcde.h"
+#include "rhahjj.h"
+      character*4 chaint
+      character*8 PRNAM
+      integer namind
+      external chaint, namind
+      integer naasim,kasim,imc,igeom,krhah,nrhah,irhah
+     &     ,igver,idver
+      integer ideb1,ideb2,ideb3
+      data ideb1, ideb2, ideb3 / 0 , 0 , 0 /
+      integer itk,iecl
+      real tetifl,rlo,rlnew,rlmin,rlmax
+      DATA RLMIN, RLMAX / -10.3 , 999. /
+      integer igvermin,igvermax,igdbmin,igdbmax
+      data igvermin,igvermax,igdbmin,igdbmax / 304, 400, 206, 400 /
+#include "qmacro.h"
+C -------------------------------------------------------------------------
+C Initialisations and checks to know if the correction has to be done:
+      if(ideb1.eq.0) then
+        naasim = namind('ASIM')
+        ideb1 = 1
+      endif
+c
+c Check if update Rl needed
+c
+      if(iw(namind('UPRL')).eq.0) return
+c
+c For data : do nothing
+c
+      if(.not.xmcev) then
+         if(ideb3.eq.0) then
+           write(iw(6),'(///,4(/,10x,a),///)')
+     > '+----------------------------------------------------------+',
+     > '|                    WARNING!                              |',
+     > '| Data NOT processed with RL electron estimator correction |',
+     > '+----------------------------------------------------------+'
+           ideb3 = 1
+         endif
+         return
+      endif	
+c 
+c Get version of Galeph/db used for processing this event
+c
+      krhah = iw(narhah)
+      if(krhah.eq.0) return
+      igver = 0
+      idver = 0
+      nrhah = lrows(krhah)
+      do irhah = 1,nrhah
+        PRNAM(1:4) = chaint(itabl(krhah,irhah,jrhapn))
+        PRNAM(5:8) = chaint(itabl(krhah,irhah,jrhapn+1))
+        if(PRNAM.EQ.'GALEPH') THEN
+          igver = itabl(krhah,irhah,jrhapv)
+          idver = itabl(krhah,irhah,jrhadv)
+        endif
+      enddo
+
+      if(igver.lt.igvermin.or.igver.gt.igvermax) return 
+      if(idver.lt.igdbmin.or.idver.gt.igdbmax) return 
+c
+c
+c  Rl re-computed
+c
+      if(ideb2.eq.0) then
+        write(iw(6),'(///,5(/,10x,a),///)')
+     > '+----------------------------------------------------------+',
+     > '|    Data processed with RL electron estimator correction  |',
+     > '|              FIXPRL called to fix RL value               |',
+     > '|      !!!! Output banks are equal to input banks !!!      |',
+     > '+----------------------------------------------------------+'
+        ideb2 = 1
+      endif
+C -------------------------------------------------------------------------
+C-    Extract RL
+C
+      DO ITK = KFCHT,KLCHT
+C
+      TETIFL  = 399.
+C
+C-    Keep old RL value
+C
+      RLO = QEIDRI(ITK,3)
+      RLnew = RLO
+C
+C-    Check electron extrapolation
+C
+        IF (XEID(ITK)) THEN
+C
+C
+C-      Calculate the row number in theta
+C
+          CALL QCPTETI(ITK,TETIFL,IECL)
+C
+C
+          IF ( IECL.NE.0.AND.TETIFL.NE.399.) THEN
+C
+C-       Calculate longitudinal profile
+C
+            IF ((RLO.GT.RLMIN).and.(RLO.LT.RLMAX))
+     >          CALL QCPRLN(RLO,TETIFL,QP(ITK),RLnew)
+C
+            rw(iw(kjqdet(itk)+jqdeae) + 3 +jeidr1-1) = RLnew
+          ENDIF
+        ENDIF
+      ENDDO
+      RETURN
+      END
+#endif
+@
+
+
+1.5
+log
+@*** empty log message ***
+@
+text
+@d3 1
+a3 1
+C! Computes corrected Rl for Monte Carlo (1996 -> 2000) 
+d11 1
+d46 1
+a46 1
+c Check Monte Carlo version
+d48 1
+a48 11
+      kasim = iw(naasim)
+      imc = 0
+      if(xmcev) then
+        igeom = iw(kasim+3)      
+        if((igeom.ge.9600.and.igeom.lt.10000).or.(igeom.ge.199600)
+     + 	   .or.(igeom.lt.1000)) imc=1
+      endif
+c
+c For data and other Monte - Carlo years: do nothing
+c
+      if(imc.eq.0) then
+d53 1
+a53 1
+     > '| Data NO processed with Rl electron estimator correction  |',
+d85 2
+a86 2
+     > '|    Data processed with Rl electron estimator correction  |',
+     > '|              FIXPRL called to fix Rl value               |',
+@
+
+
+1.4
+log
+@*** empty log message ***
+@
+text
+@d65 1
+a65 1
+	 endif
+@
+
+
+1.3
+log
+@*** empty log message ***
+@
+text
+@d3 1
+a3 1
+C! Computes corrected Rl for 96 Monte Carlo
+d7 2
+a8 2
+C                - recalculate Rl Galeph version > 304 
+C                                 Database > 206
+d10 1
+d24 1
+a24 1
+      integer naasim,kasim,imc,igeom,krhah,ijver,ilver,nrhah,irhah
+d26 2
+a27 2
+      integer ideb1,ideb2
+      data ideb1, ideb2 / 0 , 0 /
+a30 2
+      integer ijvermin,ijvermax, ijdbmin,ijdbmax
+      data ijvermin,ijvermax,ijdbmin,ijdbmax / 282, 300, 214, 300 /
+d32 1
+a32 1
+      data igvermin,igvermax,igdbmin,igdbmax / 304, 400, 206, 300 /
+d50 3
+a52 2
+        igeom = iw(kasim+3)
+        if(igeom.ge.9600.or.igeom.lt.1000) imc = 1
+d57 13
+a69 4
+      if(imc.eq.0) return
+c
+c Check Julia version number used 
+c Get version of julia/db used for processing this event
+a72 2
+      ijver = 0
+      ilver = 0
+a78 4
+        if(PRNAM.EQ.'JULIA') THEN
+          ijver = itabl(krhah,irhah,jrhapv)
+          ilver = itabl(krhah,irhah,jrhadv)
+        endif
+a84 14
+c      
+c correction made if : Julia processing > 282 and db > 214
+c
+c      if(ijver.lt.282) return 
+c      if(ilver.lt.214) return 
+c
+c      if(ijver.lt.ijvermin.or.ijver.gt.ijvermax) return 
+c      if(ilver.lt.ijdbmin.or.ilver.gt.ijdbmax) return 
+c
+c correction made if : Galeph processing > 303 and db > 206
+c
+c      if(igver.lt.304) return 
+c      if(idver.lt.206) return 
+c
+@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@d52 1
+a52 1
+        if(igeom.ge.9600) imc = 1
+@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@d113 3
+a121 2
+C
+      DO ITK = KFCHT,KLCHT
+@

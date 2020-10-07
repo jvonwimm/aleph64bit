@@ -1,0 +1,350 @@
+head	1.6;
+access;
+symbols
+	gal309_3:1.6
+	gal309_2:1.6
+	gal309_1:1.6
+	gal309:1.6
+	gal308_2:1.6
+	gal308_1:1.6
+	gal308:1.6
+	gal307_2:1.6
+	gal307_1:1.6
+	gal307:1.6
+	gal306_3:1.6
+	gal306_2:1.6
+	gal306_1:1.6
+	gal306:1.6
+	gal305_3:1.6
+	gal305_2:1.6
+	gal305_1:1.6
+	gal305:1.6
+	gal304_11:1.6
+	gal304_10:1.6
+	gal304_9:1.6
+	gal304_8:1.6
+	gal304_7:1.6
+	gal304_6:1.5
+	gal304_5:1.5
+	gal304_4:1.5
+	gal304_3:1.4
+	gal304_2:1.4
+	gal304_1:1.3
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.6
+date	96.06.11.11.19.33;	author flr;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.05.28.15.44.45;	author flr;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.05.20.12.17.10;	author flr;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.05.13.11.38.37;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.06.30.07.13.33;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.01.45;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.46;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.6
+log
+@correct UPTPC in asktrk
+@
+text
+@*DK asktrk
+      SUBROUTINE ASKTRK
+C ----------------------------------------------------------------------
+C - B.Bloch-Devaux - 850315                       F.Ranjard - 860929
+C! Store new tracks:
+C    - in the kinematic banks if Pmod > 1.Gev  or Pmod > 0.1Gev in the
+C      inner part of the apparatus.
+C    - other tracks are stored in the stack.
+C. - called from    GUSTEP                            from this .HLB
+C. - calls          GSVERT, GSKINE, GSKING            from GEANT3 pam
+C.                  IUCOMP                            from KERNLIB
+C.
+C -----------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "gctmed.h"
+#include "gckine.h"
+#include "gctrak.h"
+#include "gcking.h"
+#include "gcvolu.h"
+#include "iocom.h"
+#include "jobcom.h"
+#include "jqcom.h"
+#include "trkcom.h"
+#include "capano.h"
+#include "kvoljj.h"
+      PARAMETER (NOMOR=3)
+      REAL GADD(3)
+      LOGICAL  UPTPC,UPECA,EMPA,HADPA,MUPA,PRIMA,TINO,BREMP,INMSK
+      EXTERNAL IUCOMP
+      CHARACTER*4 TCASE,CHAINT,CHAHOL
+C - define central region and beam tube region
+      DATA KCDET,KBTUB/4HCDET,4HBTUB/
+C - define MASK and SHIELDS regions
+      DATA KBMSK,KBSH1,KBSH2/4HBMSK,4HBSH1,4HBSH2/
+C - define ITC endplate, TPC endplate and TPC outer wall
+      DATA KITND,KTPEP,KTPWO /4HITND,4HTPEP,4HTPWO/
+C - define TPC region
+      DATA KTPCR / 4HTPCR/
+C - particles w/ momentum below 40.Mev up to the TPC, and 100Mev
+C   in the TPC are kept in STAK bank
+C - brem or dray which take more than 15% of the incident particle
+C   provoke the stopping of the incident particle and the creation
+C   of a new one.
+C - muons which are daughters of primaries are kept as primaries.
+      DATA PERC /0.15/, CUTPC /0.1/, CUTIT /0.04/
+C - Statment functions
+#include "bmacro.h"
+C                      to define e.m. particles, had. part. or muon part.
+      TINO(I) = INT(GKIN(5,I)).GE.LTYPEL .AND. INT(GKIN(5,I)).LE.LTYPGA
+      EMPA(I) = INT(GKIN(5,I)).LE.3
+      MUPA(I) = INT(GKIN(5,I)).EQ.5 .OR. INT(GKIN(5,I)).EQ.6
+      HADPA(I)= INT(GKIN(5,I)).EQ.4 .OR. INT(GKIN(5,I)).GT.6
+C - define region in Tungsten mask and shield (beam pipe region)
+      INMSK = (NGAMES(NGLEVE).EQ.KBMSK).OR.(NGAMES(NGLEVE).EQ.KBSH1).OR.
+     &        (NGAMES(NGLEVE).EQ.KBSH2)
+C - define region up to TPC
+      UPTPC   = ((NGAMES(2).EQ.KBTUB) .OR.
+     &          (NGAMES(2).EQ.KCDET .AND. NGAMES(3).NE.KTPCR .AND.
+     &          NGAMES(4).NE.KITND)) .AND. (.NOT.INMSK)
+
+C - define region up to ECAL
+      UPECA   = UPTPC .OR. (NGAMES(3).EQ.KTPCR .AND. NGAMES(4).NE.KTPEP
+     &                .AND. NGAMES(4).NE.KTPWO)
+C ----------------------------------------------------------------------
+C
+C   IF there are secondaries THEN
+C      IF a primary has created secondaries w/o loosing its identity
+C         (BREM or DRAY) and the secondaries take more than 15% of
+C         the enery of the primary THEN
+C            stop the current particle
+C            create a new particle w/ the residual energy
+C      ENDIF
+C      store the secondaries:
+C      a particle is a primary IF its mother is a primary
+C                             AND its momentum is above 40Mev up to TPC
+C                              OR its momentum is above 100Mev up to ECAL
+C                             AND its origin vertex is up to the outer
+C                                 TPC wall but the TPC and ITC endplate
+C                             AND it is not in the mask and shields part
+C      store primaries in KINE and VERT banks and others in the STAK
+C   ENDIF
+C
+      NVTX = 0
+      IF (NGKINE .GT. 0) THEN
+        TCASE = CHAHOL (KGCASE)
+        BREMP = IGSTAK.EQ.0 .AND. UPECA. AND. GVECT(7).GT.CUTPC
+     &           .AND.(TCASE.EQ.'BREM' .OR. TCASE.EQ.'DRAY')
+     &           .AND.NGKINE.LT.LGKINE
+        IF (BREMP) THEN
+          PSUM = 0.
+          DO 10 I=1,NGKINE
+            PSUM = PSUM+SQRT(GKIN(1,I)**2+GKIN(2,I)**2+GKIN(3,I)**2)
+   10     CONTINUE
+          IF (PSUM .GT. PERC*GVECT(7)) THEN
+            IGSTOP = NOMOR
+            NGKINE = NGKINE+1
+            DO 11 IK=1,3
+                GPOS(IK,NGKINE) = GVECT(IK)
+                GKIN(IK,NGKINE) = GVECT(3+IK)*GVECT(7)
+   11       CONTINUE
+            GKIN(4,NGKINE) = SQRT(GMASS**2+GKIN(1,NGKINE)**2+
+     &                            GKIN(2,NGKINE)**2+GKIN(3,NGKINE)**2)
+            GKIN(5,NGKINE) = REAL(IGPART)
+          ENDIF
+        ENDIF
+        DO 30 I=1,NGKINE
+C        store particle# I either in the STACK or in KINE banks
+          PMOD  = SQRT (GKIN(1,I)**2+GKIN(2,I)**2+GKIN(3,I)**2)
+          PRIMA = ((IGSTAK.EQ.0).AND.( (UPTPC.AND.(PMOD.GT.CUTIT))
+     &                 .OR.(UPECA.AND.(PMOD.GT.CUTPC)).OR.MUPA(I)) )
+     &                 .OR. TINO(I)
+          IF (PRIMA) THEN
+C           primary daughter AND
+C               ( muon OR
+C                 part. with Pmod>0.04Gev up to TPC  OR
+C                 part. with Pmod>0.1Gev up to ECAL )
+C           OR geantino
+C           are stored in KINE and VERT banks
+            IGFLGK(I) = 1
+            NVTX = 1
+          ELSE
+C           other particles are in stack
+            IGFLGK(I) = 0
+          ENDIF
+   30   CONTINUE
+        CALL GSKING (0)
+      ENDIF
+C
+C   IF  a charged primary stopped and no vertex was stored yet THEN
+C      store an end vertex ==> NVTX>0
+C   ENDIF
+C
+      IF ((GCHARG.NE.0..AND.IGSTOP.NE.0.AND.IGSTAK.EQ.0)
+     &     .AND. NVTX.EQ.0) THEN
+        CALL GSVERT(GVECT,IGTRA,0,0,0, NVTX)
+        IF(NVTX.LE.0) GO TO 999
+      ENDIF
+C
+C   IF a new vertex has been stored THEN
+C      store vertex volume name in KVOL bank
+C   ENDIF
+C
+      IF (NVTX .GT.0) THEN
+        JKVOL = IW(NAKVOL)
+        IF (LFRROW(JKVOL).LT.1) THEN
+          CALL ALBOS ('KVOL',0,IW(JKVOL)*2,JKVOL,IGARB)
+        ENDIF
+        IW(KNEXT(JKVOL)+JKVOVN) = INTCHA(TRKVOL)
+        IW(KNEXT(JKVOL)+JKVOVM) = INTCHA(TCASE)
+        IW(JKVOL+LMHROW) = LROWS(JKVOL) + 1
+      ENDIF
+C
+C - end
+  999 CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.5
+log
+@many corrections for gal303 were missing
+@
+text
+@d58 1
+a58 1
+      UPTPC   = (NGAMES(2).EQ.KBTUB) .OR.
+d60 1
+a60 1
+     &          NGAMES(4).NE.KITND) .AND. (.NOT.INMSK)
+@
+
+
+1.4
+log
+@add LOGICAL INMSK which was forgotten
+@
+text
+@d99 2
+a100 1
+              GKIN(IK,NGKINE) = GVECT(3+IK)*GVECT(7)
+@
+
+
+1.3
+log
+@release gal304 corr.file no.1
+@
+text
+@d29 1
+a29 1
+      LOGICAL  UPTPC,UPECA,EMPA,HADPA,MUPA,PRIMA,TINO,BREMP
+@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ cahtra.h gmacro.h lccomc.h lcnamc.h ljjpar.h siconst.h
+ sigeco.h version.h
+ itmsk1.F itmsk2.F itnois.F itres.F itxtlk.F
+ lcadc.F lcamp.F lcasig.F lcbhab.F lcbkpr.F lcdigi.F lcfral.F
+ lchit.F lcirun.F lcnami.F lcnois.F lcpad.F lcroc.F lcsamp.F
+ lcsatu.F lcshow.F lcstrt.F lctrak.F lctrdi.F lctrht.F lcwire.F
+ lcwsum.F lcwtri.F
+ muasig.F mubook.F muirun.F muunoi.F muwsum.F
+ trignews.h
+ siasig.F sitrak.F siwsum.F
+ asasig.F asbook.F ascjob.F ascrun.F asctra.F asevst.F asfxxx.F
+ asieve.F asigea.F asijob.F asimod.F asinit.F asipac.F asirun.F
+ askine.F asksin.F asktrk.F aspeve.F asprun.F asread.F asredc.F
+ asreve.F asrkin.F asrtyp.F asrust.F astdeb.F astgea.F astrac.F
+ astrig.F aswkin.F aswrtp.F aswsum.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+ xtrcom.h
+ ecalnews.h geomnews.h lcalnews.h news.h skelnews.h vdetnews.h
+@
+text
+@d34 2
+d54 3
+d60 2
+a61 1
+     &          NGAMES(4).NE.KITND)
+d80 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d12 2
+a13 1
+C ---------------------------------------------------------------------
+d15 1
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

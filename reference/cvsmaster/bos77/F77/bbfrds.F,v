@@ -1,0 +1,126 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.46.40;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.06;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.07;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE BBFRDS(LUN,IACM,NRECA,NRECR,NTOT,BUF,NDIM,*,*)
+*
+*     FORTRAN read / skip
+*
+*        LUN     = unit
+*        IACM    = 0 sequential = 1 direct access    = 2 special
+*        NRECA   = actual record number                       updated
+*        NRECR   = number of record, to be read
+*        NTOT    = length of input                     -      defined
+*        BUF     = buffer area for input               -       filled
+*        NDIM    = length of area for input
+*        *1        return 1 = read error
+*        *2        return 2 = end-of-file
+*
+*     the arguments are input/unchanged except NRECA,NTOT,BUF(.), which
+*     at return should contain the record, which is of the form
+*                      NTOT,BUF(I),I=1,NTOT)
+      INTEGER BUF(NDIM)
+
+      IF(IACM.EQ.0) THEN
+*        sequential - FORTRAN version
+         NREC=NRECA
+         IF(NREC+1.GT.NRECR) THEN
+*           rewind because of reverse order
+            REWIND LUN
+            NREC=0
+         END IF
+   10    IF(NREC+1.LT.NRECR) THEN
+*           read without list is skip (read error destroys counting)
+            READ(LUN,END=102)
+            NREC=NREC+1
+            GOTO 10
+         END IF
+         READ(LUN,ERR=101,END=102) NTOT,(BUF(I),I=1,NTOT)
+         NREC=NREC+1
+         NRECA=NREC
+      ELSE IF(IACM.EQ.1) THEN
+*        direct access - FORTRAN version
+         READ(LUN,REC=NRECR,ERR=201) NTOT,(BUF(I),I=1,NTOT)
+         NREC=NRECR
+         NRECA=NREC
+      ELSE IF(IACM.EQ.2) THEN
+*        direct access - FORTRAN version
+         READ(LUN,REC=NRECR,ERR=201) NTOT,(BUF(I),I=1,NTOT)
+         NREC=NRECR
+         NRECA=NREC
+      END IF
+
+  100 RETURN
+
+*     read error, skip one record
+
+  101 READ(LUN)
+      NREC=NREC+1
+      NRECA=NREC
+  201 RETURN 1
+
+*     end-of-file
+
+  102 RETURN 2
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK bbfrds
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

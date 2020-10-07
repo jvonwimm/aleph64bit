@@ -1,0 +1,59 @@
+KCAR 0 / $TEXT                                                                  
+POFF                                                                            
+*   RUN #              RUN'S TITLE                                              
+RUN  101         'e* Generator - ESTA01'                                        
+*     FIRST EVENT   LAST EVENT TO BE GENERATED                                  
+TRIG       1           1000                                                     
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG                                 
+DEBU    6   /      1            10                                              
+* requested time left at the end of job (in sec)                                
+TIME 10                                                                         
+*    to save event file (EPIO format)                                           
+*FILO 'SCWEEK:ESTA01.EPIO | EPIO '                                              
+*    to save histograms                                                         
+*HSTO 'SCWEEK:ESTA01.HIST | NATIVE '                                            
+*...  Monte carlo parameters :                                                  
+* CME    : center of mass energy (GeV);                                         
+* XMZ    : Z0 mass (in GeV);                                                    
+* SW2    : Sin(theta-w)**2;                                                     
+* NF     : Number of fermion families;                                          
+* ... for the standard model diagrams the options are the following:            
+* NWEAK  = 0 ===> QED,                                                          
+*        = 1 ===> Electroweak;                                                  
+* NFAST  = 0 ===> complete matrix element squared,                              
+*        = 1 ===> Z0 t-channel diagrams neglected,                              
+*        = 2 ===> only photon t-channel diagrams included,                      
+*        = 3 ===> no standard model diagrams taken into account;                
+* ... for the e* diagrams the options are given by:                             
+* IFULL  = 0 ===> no e* diagrams taken into account,                            
+*        = 1 ===> only photon t-channel diagrams included,                      
+*        = 2 ===> photon and Z0 s-channel diagrams also included,               
+*        = 3 ===> complete matrix element squared;                              
+* ... other generation parameters:                                              
+* PLP    : positron longitudinal polarization;                                  
+* PLM    : electron longitudinal polarization;                                  
+* XLAM   : lambda cut-off in the lagrangian of the e*-e-gamma and               
+*          e*-e-Z0 interactions (GeV);                                          
+* CL,CR  : left and right handed parts of the e*-e-gamma coupling               
+*          ((G-2) experiments indicate that CL*CR has to be 0);                 
+* XMEST  : e* mass (GeV);                                                       
+* EDL    : minimum detectable photon (electron) energy (GeV);                   
+* ACD    : minimum detectable photon (electron) angle (degrees);                
+* ... missing particles:                                                        
+* ACV    : veto angle (degrees) for the missing final state e- (e+);            
+* ... integration parameters:                                                   
+* WAPE   : weight factor for sub-generator "e" (e*);                            
+* WAPQ   : weight factor for sub-generator "Q" (QED);                           
+*     CME   XMZ   SW2   NF  NWEAK  NFAST  IFULL  PLP  PLM  XLAM   CL            
+GENE 91.2   91.18 0.232  3     0      2      1     0.   0.  100. -0.5           
+*     CR  XMEST  EDL   ACD  ACV  WAPE  WAPQ                                     
+      0.   30.   1.    10.   5.   1.    1.                                      
+*  use of RANMAR generator for random numbers:                                  
+*                   (see KINLIB DOC for informations)                           
+*  INSEED : first seed (range assigned per institute);                          
+*  LOSEED : second seed (incremented locally for new runs);                     
+*      INSEED          LOSEED (1-30000)                                         
+RMAR    89                 1                                                    
+*       sigma-x   sigma-y  sigma-z  (cm)                                        
+SVRT     0.018    0.0010    0.72                                                
+ENDQ                                                                            

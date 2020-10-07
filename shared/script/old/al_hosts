@@ -1,0 +1,25 @@
+#!/bin/csh -f
+#
+# U. Schafer,10 Mar 1994
+# Checks for availability of all ALEPH UNIX hosts as specified in al_hosts,
+# writes them to table  host_table 
+ set al_hosts='saga0% shift6 shift9 afal%% dxal%%'
+ set host_table=/aleph/log/aleph_hosts
+ set tries=3
+#
+   set al_hosts=^`echo $al_hosts | sed 's/%/./g;s/ /$|^/g'`$
+ set al_hosts=`echo ls cern.ch | nslookup | awk '{print $1}' | egrep $al_hosts       |sort || exit $status`
+ if ( $status ) then
+   echo error
+   exit 7 
+ else
+   set host_alive=""
+   foreach al_host ($al_hosts)
+     set perc=`/usr/etc/ping -c $tries $al_host |tr "," "\12" |grep loss|tr " " "\12"              |grep %`
+     if ("$perc" == "100%") set al_host="#$al_host" 
+     set host_alive=`echo $host_alive $al_host`
+   end
+   echo "$host_alive" | tr " " "\12" >! $host_table 
+   exit 0
+ endif
+ exit 0

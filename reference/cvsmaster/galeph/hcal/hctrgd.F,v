@@ -1,0 +1,184 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.29.16.23.06;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.22;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.23;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+@
+text
+@*DK hctrgd
+      SUBROUTINE HCTRGD
+C --------------------------------------------
+C
+C! Implements the module FORM TUBE TRIGGER SIGNAL
+C!
+C!     Author     :G.Zito   86/05/21
+C!      Modified by :G.Catanesi   88/01/20
+C!                   F.Ranjard    89/02/10
+C!
+C!      Input bank  : HWHT  McHcTubeSignal
+C!      Output bank : HWTR  McHcTubeTrigSignal
+C!
+C!
+C!   -Called by :HCDIGI
+C!   -Calls     :none
+C -----------------------------------------
+#ifndef DOC
+      SAVE
+#include "bcs.h"
+#include "jobcom.h"
+#include "iocom.h"
+#include "hccoun.h"
+#include "hcpara.h"
+#include "hcnamc.h"
+#include "hwhtjj.h"
+#include "hwtrjj.h"
+#include "hctrig.h"
+#include "bmacro.h"
+C ----------------------------------------------------------
+      JHWHT = IW(NAHWHT)
+      KHWHT = JHWHT + LMHLEN
+      NHWHT = LROWS (JHWHT)
+      IF (NHWHT.EQ.0) RETURN
+      JHWTR = IW(NAHWTR)
+      KHWTR = JHWTR + LMHLEN
+C
+C     Scan McHcTubeSignal
+C
+      IPREV = -1
+      DO 10 I = 1, NHWHT
+         IMOD = IW(KHWHT+1)/100000
+         ILL = IW(KHWHT + 1)/1000
+         ILL = MOD(ILL,100)
+         IF(ILL.EQ.1)THEN
+            IL = ILL
+         ELSE
+            IL = ILL/ 2+ 1
+         ENDIF
+         IF(IMOD .EQ. IPREV) THEN
+            IF(IL .NE. ILPRE) THEN
+               ILPRE = IL
+               IW(KHWTR+1) = IW(KHWTR+1) + 1
+            ENDIF
+         ELSE
+            IPREV = IMOD
+            IM = MOD(IMOD,100)
+            IP = IMOD/100
+            IF(IP.EQ.LPBAR) IM = IM + LPHCTR/2
+            IF(IP.EQ.LPECB) IM = IM + LPHCTF + LPHCTR/2
+            KHWTR = JHWTR + LMHLEN + (IM-1) * LHWTRA
+            IW(KHWTR+1) = 1
+            ILPRE = IL
+         ENDIF
+         KHWHT= KHWHT + LHWHTA
+   10 CONTINUE
+C
+      IF(FHCDB1)THEN
+         WRITE(LOUTIO,500)
+         KHWTR = JHWTR + LMHLEN
+         WRITE (LOUTIO,510) (I,I=1,36)
+         WRITE (LOUTIO,510) (IW(KHWTR+K),K=1,36)
+      ENDIF
+C
+      RETURN
+  500 FORMAT(/1X,'+++HCTRGD+++ HWTR McTubeTrigSignal (plane)')
+  510 FORMAT (1X,36I3)
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d17 1
+a17 1
+C ------------------------------------------------------
+d19 1
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

@@ -1,0 +1,258 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	manoj302:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.07.13.11.39.51;	author algal;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.53;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.54;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@gal302 correction file no. 2
+@
+text
+@*DK vdclu
+      SUBROUTINE VDCLU(IMOD,NHITM)
+C!----------------------------------------------------------------------
+C! Find clusters
+CKEY VDET DIGITIZE
+C!
+C!  Author         A. Bonissent 15-Jan-1994
+C!
+C!  Description
+C!  ===========
+C!
+C!   Find clusters
+C!   Input is the arrays (banks VWC1 and VWC2) of all R/O channels
+C!   in one module
+C!
+C!   For each view
+C!   Say that we start from channel 1 and finish at last channel
+C!   If first and last channels are fired and it is new Vdet (95)
+C!                      and it is view 1 then
+C!         there is a cluster spanning over last and first channels
+C!         find first not fired channel,
+C!         and say that we shall start the clustering from there
+C!         and process Nchannels (equal to tot. nr channels in module)
+C!         if channel number is larger than max, will be reduced to
+C!            ichannel-nmax
+C!   endif
+C!   Start a cluster when a strip above 0 is found
+C!   Finish it when a fired strip is found,
+C!       or last channel is reached
+C!   Keep a cluster only if at least one strip is above threshold
+C!-       Do iloop = 1, maxchannels
+C!          ich =iloop+ibeg
+C!-         if (signal(ich) .ne. 0) then
+C!-           if (nsiz .eq. 0) ibeg = ich
+C!            if signal above threshold, cluster is good
+C!-           nsiz = nsiz + 1
+C!-           endif
+C!-           if (nsiz .gt. 0) then
+C!-             if (signal(ich).eq.0 .or. ich.eq.maxchannels) then
+C!                 If cluster is good then
+C!-                  --  here the cluster has been found;  starting
+C!-                  --  ibeg, made of nsiz channels, out put to bank
+C!                 endif
+C!-             nsiz = 0
+C!-           endif
+C!-         endif
+C!-       Enddo
+C!-       end
+C!   endloop on views
+C!
+C!
+C! Input :  VWC1,VWC2  banks : readout channel content
+C! Input : Module number and number of hits (tracks) for this module
+C!
+C! Output : VCLU bank
+C!
+C-----------------------------------------------------------------------
+C
+#ifndef DOC
+      SAVE NAVWCX,NAVCLU,VDET95
+C
+      PARAMETER (NADCL=10)
+      DIMENSION THRES(2), NAVWCX(2)
+#include "vclujj.h"
+#include "vwc1jj.h"
+#include "bcs.h"
+      INTEGER VNRWAF
+      LOGICAL LGOOD,VDET95
+      LOGICAL FIRST
+      DATA FIRST /.TRUE./
+#include "bmacro.h"
+      IF(FIRST)THEN
+        FIRST=.FALSE.
+        NAVWCX(1) = NAMIND('VWC1')
+        NAVWCX(2) = NAMIND('VWC2')
+        NAVCLU = NAMIND('VCLU')
+        VDET95 = VNRWAF().EQ.3
+      ENDIF
+C
+C First, get clustering thresholds
+C
+      CALL VFNDTH(IMOD,THRES)
+C
+C Drop old cluster bank if any
+C and create new empty bank with reasonable size
+C
+      CALL BDROP(IW,'VCLU')
+      NROWS = NHITM*2
+      NDATA = NROWS*LVCLUA+LMHLEN
+      CALL ALBOS('VCLU',0,NDATA,KVCLU,IGARB)
+      IW(KVCLU+LMHCOL)=LVCLUA
+      IW(KVCLU+LMHROW)=0
+C
+C Loop on views and find clusters
+C
+      DO 100 IV=1,2
+        KVWCX = IW(NAVWCX(IV))
+        NVWCX = LROWS(KVWCX)
+C
+C This had not been foreseen from the beginning :
+C We do not want a cluster to extend over 2 wafers.
+C NLIM defines a strip position at which a cluster has
+C to stop in any case.
+C For view 2 or Vdet95, this can be the end of a module.
+C For view 1 and VDET92 should stop at end of first wafer,
+C which happens to be half a module
+C
+        IF(VDET95.OR.IV.EQ.2)THEN
+           NLIM=NVWCX
+        ELSE
+           NLIM=NVWCX/2
+        ENDIF
+C
+        IFIRC=1
+        IF(RTABL(KVWCX,1,JVWCCC).GT.0..AND.
+     >     RTABL(KVWCX,NVWCX,JVWCCC).GT.0..AND.
+     >     VDET95.AND.IV.EQ.1)THEN
+           DO IVWCX=1,NVWCX
+              IF(RTABL(KVWCX,1,JVWCCC).EQ.0)THEN
+                 IFIRC=IVWCX
+                 GO TO 110
+              ENDIF
+           ENDDO
+ 110       CONTINUE
+        ENDIF
+        NSIZ = 0
+        LGOOD = .FALSE.
+        DO 101 ILOOP=1,NVWCX
+          IVWCX = ILOOP+IFIRC-1
+          IF(IVWCX.GT.NVWCX)IVWCX=IVWCX-NVWCX
+          SIGNL = RTABL(KVWCX,IVWCX,JVWCCC)
+          IF(SIGNL.NE.0.)THEN
+            LGOOD = (LGOOD.OR.SIGNL.GT.THRES(IV))
+            IF(NSIZ.EQ.0)IBEG = IVWCX
+            NSIZ = NSIZ + 1
+          ENDIF
+          IF(NSIZ.GT.0)THEN
+            IF(SIGNL.EQ.0..OR.IVWCX.EQ.NVWCX.OR.IVWCX.EQ.NLIM)THEN
+               IF(LGOOD)THEN
+                  KVCLU=IW(NAVCLU)
+                  NCLU=LROWS(KVCLU)+1
+                  IF(LFRROW(KVCLU).LT.1)THEN
+C If there is not enough space left in the bank, we extend it for
+C NADCL more clusters
+                    NDATA = IW(KVCLU) + NADCL*LVCLUA
+                    CALL ALBOS('VCLU',0,NDATA,KVCLU,IGARB)
+                    KVWCX = IW(NAVWCX(IV))
+                  ENDIF
+                  IW(KVCLU+LMHROW)=NCLU
+                  KADDR = KROW(KVCLU,NCLU)
+                  IW(KADDR+JVCLVI) = IV
+                  IW(KADDR+JVCLFS) = IBEG
+                  IW(KADDR+JVCLCS) = NSIZ
+               ENDIF
+               LGOOD=.FALSE.
+               NSIZ = 0
+            ENDIF
+          ENDIF
+ 101    CONTINUE
+ 100  CONTINUE
+C
+C Adjust bank size
+C
+      CALL AUBPRS('VCLU')
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d99 15
+d138 1
+a138 1
+            IF(SIGNL.EQ.0..OR.IVWCX.EQ.NVWCX)THEN
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

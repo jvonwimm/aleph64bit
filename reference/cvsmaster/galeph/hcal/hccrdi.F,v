@@ -1,0 +1,164 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.29.16.22.00;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.16;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.17;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+@
+text
+@*DK hccrdi
+      SUBROUTINE HCCRDI
+C --------------------------------------------
+C
+C!   Implements the module CREATE DIGITAL PATTERN
+C!
+C!         Author     : G.Zito 86/05/21
+C!
+C!         Input bank : JDHCHI  McHcHits
+C!                      JDHCSE  McHcTubesSegment
+C!         Output bank : HWHT  McHcTubeSignal
+C!
+C!   -Called by :HCASIG
+C!   -Calls     :none
+C-------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "bcs.h"
+#include "jobcom.h"
+#include "iocom.h"
+#include "hccoun.h"
+#include "hcnamc.h"
+#include "hchijj.h"
+#include "hcsejj.h"
+#include "hwhtjj.h"
+#include "bmacro.h"
+C
+C      Loop on Hits
+C
+      NHCHI = LROWS (JDHCHI)
+      IF (NHCHI.EQ.0) RETURN
+      KHCHI = JDHCHI + LMHLEN
+      JHWHT = IW(NAHWHT)
+      KHWHT = JHWHT + LMHLEN
+      IPREV = 0
+      NHWHT = 0
+C
+      DO 20 I=1, NHCHI
+         NSEG = IW(KHCHI+1)
+         KHCSE = KROW (JDHCSE,NSEG)
+         IF (IW(KHCSE+5) .EQ. IPREV) GOTO 10
+         NHWHT = NHWHT + 1
+         IW(KHWHT+1)=IW(KHCSE+5)
+         IPREV = IW(KHCSE+5)
+         KHWHT = KHWHT + LHWHTA
+   10    IW(KHCSE+JHCSFT) = NHWHT
+         KHCHI = KHCHI + LHCHIA
+   20 CONTINUE
+      IW(JHWHT +2) = NHWHT
+C
+C
+      IF(FHCDEB)THEN
+         KHWHT = JHWHT + LMHLEN
+         WRITE(LOUTIO,500) NHWHT
+         WRITE (LOUTIO,510) (IW(KHWHT+I),I=1,NHWHT*LHWHTA,LHWHTA)
+      ENDIF
+C
+      RETURN
+  500 FORMAT (1X,'+++HCCRDI+++ HWHT  McHcTubeSignal',I5)
+  510 FORMAT (1X,10I10)
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d17 1
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

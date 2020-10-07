@@ -1,0 +1,243 @@
+#! /bin/csh
+#============================================================================
+#                             update
+#                                                       F.Ranjard
+#============================================================================
+# procedure to update a given version of a given library from CVSROOT
+# to ALROOT
+# and to compile it on SHIFT9, CSF and SAGA making a library
+#============================================================================
+# call "cvs update" to update an existing source file on ALROOT/sourcexxx
+# send a batch job "updlib" on various machines to compile and update the library.
+#============================================================================
+# P1 -> prog_name i.e: alephio
+# P2 -> cycle     i.e.: 214 version no. of the library to be updated
+#                           when P1=alephio , P2 is the alephlib version no.
+# P3 -> tag       i.e.: alio64 (if not given the tag is built from the mnemonic
+#                             stored in script_dir/alib.dir and the cycle no.)
+# P4 -> ndays     i.e.: 7 elapse number of days since last updates, all *.F
+#                         files modified in the last ndays will recompiled.
+#                         (default is <2 days)
+# when the prog_name is not part of script_dir all arguments must be given,
+# and the mnemonic is assumed to be the prog_name.
+#============================================================================
+# 960711 - update1.0
+#===========================================================================
+#include "~/flr/bin/verbflr.h"
+#
+set exec_name = "update1.0"
+set verbflr = ""
+set donot   = ""
+set nar = $#argv
+if (${nar} != 0) then
+  if ($argv[${nar}] == "-v" || $argv[${nar}] == "-n") then
+     echo "${exec_name}"
+     set verbflr = "-v" 
+     set echo on
+     if ($argv[${nar}] == "-n") set donot = "-n"     
+     set argv[${nar}] = ""
+     @ nar = ${nar} - 1
+  endif
+endif
+#
+if ( $?ENVIRONMENT ) then
+ if ( "$ENVIRONMENT" == "INTERACTIVE" && $1 == "-h") then
+  echo " "
+  echo "usage: " 
+  echo " update <prog_name> <version no.> <tag> [<ndays>]"
+  echo ""
+  echo " some examples:"
+  echo " update julia 281 jul281_2"
+  echo " makes a cvs update of $ALROOT/jul281 with jul281_2 tag and"
+  echo " updates /aleph/jul/libjul281.a, _dbx.a with routines modified"
+  echo " since yesterday"
+  echo " "
+  echo " update alephlib 214 aleph214_3 7"
+  echo " makes a cvs update of $ALROOT/aleph214 with aleph214_3 tag and"
+  echo " updates /aleph/gen/libalephio214.a, _dbx.a with routines modified"
+  echo " since less than 7 days"
+  echo ""
+  echo " update alephio 214 alio64" 
+  echo " makes a cvs update of $ALROOT/alephio with alio64 tag and"
+  echo " updates /aleph/gen/libalephio214.a, _dbx.a with routines modified"
+  echo " since yesterday"
+  echo ""
+  exit(1)
+ endif
+endif
+#
+unset noclobber
+set script_dir = "${ALEPH}/script"
+set alib_dir = "${script_dir}/alib.dir"
+set flag = "OK"
+ 
+# =====================================================================
+#
+#------> get program name from 1st argument
+#
+if ($1 == "") then
+  echo -n "Enter Aleph program name [eg:alephlib <CR>=exit]-> "
+   set prog_name = $<
+   if (${prog_name} == "") goto exec_end
+else
+   set prog_name = $1
+endif
+#
+#-------> get version number from 2nd argument
+#
+if ($2 == "") then
+   set string_cr = "<CR>=exit"
+   echo -n "Enter version number[${string_cr}]-> "
+   set cycle = $<
+   if (${cycle} == "") goto exec_end
+else
+   set cycle = $2
+endif
+# 
+#-------> get idir, mnemonic and src_dir 
+#
+if (-e ${alib_dir}) then
+# - idir -
+      set idir = `egrep ^" ${prog_name} " ${alib_dir} | awk '{print $2}'`
+      if (${idir} == "") then
+         set string_cr = "<CR>=exit"
+         echo -n "Enter /aleph sub-directory where to store library[${string_cr}]-> "
+         set idir = $<
+         if (${idir} == "") goto exec_end
+      endif
+# - mnemonic -   
+   set mnemonic = `egrep ^" ${prog_name} " ${alib_dir} | awk '{print $3}'`
+   if (${mnemonic} == "") then
+      set mnemonic = ${prog_name}
+   endif 
+# - src_nam-
+   set src_nam  = `egrep ^" ${prog_name} " ${alib_dir} | awk '{print $4}'`
+   if (${src_nam} == "") then
+      set src_nam = ${mnemonic}${cycle}
+   endif
+endif 
+#
+#-------> get tag from 3rd argument or from mnemonic and cycle no.
+#
+if ($3 != "") then
+   set tag = $3
+else
+   set tag = ${mnemonic}${cycle}
+endif
+#
+#-------> get elapse number of days since last update
+#         if NOT given it is set to 2
+#
+if ($4 != "") then
+   set ndays = $4
+else
+   set ndays = 2
+endif
+#
+#-------> set src_dir and lib_name
+#
+set src_dir  = "${ALROOT}/${src_nam}"
+
+if (${mnemonic} == "aleph" || ${mnemonic} == "alio") set mnemonic = "alephio" 
+set lib_name = "lib${mnemonic}${cycle}"
+#
+ 
+# ======================= check existence of src_dir  ==============
+# if src_dir does not exist then STOP
+ 
+if ! (-d ${src_dir}) then
+   set flag =  "${src_dir} does not exist - STOP"
+   goto exec_end
+endif
+ 
+# ======================== update src_dir ===============================
+
+cd ${src_dir}
+
+if (${donot} == "") cvs update -P -A -r ${tag}
+
+cd ${src_dir}/inc
+
+################# get a list of updated routines in the past $ndays ###############
+#
+set listF = `find ../ -name '*.F' -mtime -${ndays}`
+if ("${listF}" == "") then
+   echo " nothing has changed - STOP"
+   goto exec_end
+endif
+#
+set v_depend = ""
+set listh = `find ../inc -name '*.h' -mtime -${ndays}`
+if ("${listh}" == "") then
+   echo " the version number has not been updated"
+   echo -n " do you want to continue [Y/N][CR=N] -> "
+   set YN = $<
+   if (${YN} == "Y" || ${YN} == "y") goto upd_lib
+   echo " the version number has not been updated - STOP"
+   goto exec_end
+endif
+#
+set listd = `ls ../inc/*.d`
+set v_depend = `egrep '.F' ${listd}`
+#
+upd_lib:
+set listAllF = "${v_depend} ${listF}"
+if ("${listAllF}" == "") then
+   echo " nothing to update - STOP"
+   goto exec_end
+endif
+#
+# =====================================================================
+#          compile and update the library on various unix platforms
+# =====================================================================
+#
+cd ${src_dir}
+set batch = "${src_dir}/${tag}"
+#  
+# build the file ${batch}.job
+echo '#@$-s /bin/csh' > ${batch}.job
+echo '#@$-eo' >> ${batch}.job
+echo '#@$-lt 200' >> ${batch}.job
+echo '#@$-r '"${tag}_${HOST}" >> ${batch}.job
+echo '#@$-mu '"${USER}" >>  ${batch}.job
+echo '#@$-me' >>  ${batch}.job
+echo "time ${script_dir}/updlib < ${batch}.input" >> ${batch}.job
+echo 'exec_end:' >> ${batch}.job
+echo 'exit' >> ${batch}.job
+#
+# build the file ${batch}.input
+echo "${src_dir}" > ${batch}.input
+echo "${idir}" >> ${batch}.input
+echo "${lib_name}" >> ${batch}.input
+echo "${listAllF}" >> ${batch}.input
+echo "${verbflr}" >> ${batch}.input 
+#
+chmod +x ${batch}.job
+#
+
+if (${donot} == "-n") goto exec_end
+
+#
+
+if ( ${SERVICE} == "AFAL" || ${SERVICE} == "SHIFTALEPH" || ${SERVICE} == "SAGA" || \
+     ${SERVICE} == "CSF" ) then
+### submit the job in batch to build libraries
+   unalias qsub
+   qsub -h shift9 ${batch}.job
+   qsub -h saga ${batch}.job
+   qsub -h csf -q cpqS ${batch}.job
+else
+### build libraries interactively
+   ${batch}.job
+endif
+#
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> spy
+spy:
+#*******> spy
+echo `date` " END of ${exec_name} ${OS} ${user} ${prog_name} ${cycle} ${flag}" >> ${src_dir}/spy
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> exec_end
+exec_end:
+ exit
+ 

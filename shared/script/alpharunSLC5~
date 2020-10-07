@@ -1,0 +1,1219 @@
+#!/bin/csh
+# test
+########################################################
+#     ALPHARUN  for UNIX
+#   Joel Closier
+########################################################
+#Modification:
+# JC 8-09-93 : the makefile is saved as exec.mk instead of alpha.mk
+#   5.0        if $exec.opt or $exec.mk exist, they are saved with
+#              the extension .BAK
+#              The option -g is added to use the debug mode
+# JC 23-09-93 : add log file to know how often is use the
+#   5.1         script alpharun
+# JC 29-10-93 : If version is 116 then don't use qfndip, qbtag
+#   5.2         now libkernlib is in libpacklib so I remove it
+# JC 22-12-93 : Add command cernlib packlib shift for the loader
+#   6.0       : Modify the log file
+# JC 22-04-93 : Modify the order to compile alpha
+#   6.1         remove jmuid.o
+# JC 23-06-94 : remove qiptag stuff
+#   6.2
+# JC 08-11-94 : remove alpha version 115
+#   7.0
+# JC 21-02-95 : remove alcor if version=120
+#   7.1
+# JC 17-03-95 : run in an output
+#   7.2
+# JC 26-07-95 : add the option for PVM
+#   7.3
+# JC 18-10-95 : Add the option to submit an job
+#   8.0
+# JC 18-12-95 : Add option -I to include file
+#   8.1     
+# JC 22-08-96 : change makefile to use cvs and clean code
+#   9.0
+# RH 9.1  01-12-96 : small bug fixe  etc. 
+# F.Blin 05/12/96 : modify lines for rcp in the job
+###############
+# F.Blin 19/12/96 : rewrite interactive mode
+#  10.1  13/01/97   debug (-g) activated for alpharun OPTIONS 
+#        16/01/97   suppressed file test.def
+#                   new protection for argv
+# F.Blin 14/03/97 : remove $(ALEPH)/phy/alenflw.o (nomore needed)
+#  10.2             debug (-g) take _dbx libraries 
+#                   save .F files in .optx
+#                   $batch is taken from .optx
+# FBl/RH  21/05/97 : Link always with Julia, Julia question now: 
+#   10.3            Do you want to link with old tracking? jul285+alephio216
+#                   -j old tracking will be taken! 
+# F.Blin 12/02/98 : replace shfit9 by $STAGE_HOST
+# J. Closier 10/08/98 : add alpha122_46 for tracking_old
+# J. Closier 4/09/98 : modify for LSF
+#    11
+# J. Closier 31/03/99 : modify for for alpha124. remove libmini
+#    11.2
+#########################################################
+#
+#set echo on
+onintr END 2
+set VER = "11.6"
+echo "     ***********************************************"
+echo "     **********        ALPHA RUN      **** $VER ***"
+echo "     ***********************************************"
+echo "     ***********************************************" 
+echo ""
+echo `date`
+set USE=`id | cut -f2 -d"(" | cut -f1 -d")"`
+set me=$USE
+set DATE=`date "+%Y %m %d %H:%M:%S"`
+set LOGFILE="$ALEPH/log/alpharun.log"
+####> 
+set alphar_prog = `echo $0`
+#set alphar_prog = /u3/xu/fblxu/dir_alpharun/alpharun_new
+####<
+set NODE=`uname -n`
+set opt_name = ""
+set flag_optx = "NO"
+#  initialisation of variables
+set pvm         = n
+set enfl 	= n       #not used
+### tracking old or new
+set tracking_old = n
+set his         = "" 
+set alpver_current = `egrep -i alphaver ${ALEPH}/phy/alpha.version | awk '{print $3}'`
+set alpver      = ${alpver_current}
+set fprog 	= ""
+set Fprog 	= ""
+set obj         = "" 
+set cprog 	= ""
+set exec  	= ""
+set alp   	= "$ALPHACARDS"
+set run         = "n"
+set run_exec    = "n"
+set FILEOPT     = "${cwd}/alpha.optx"
+set debug       = "n"
+set inc         = ""
+set inc_I       = ""
+set cdir        = ""
+set fdir        = ""
+set upd         = ""
+set corr        = ""
+set corrs       = ""
+set machine     = "$STAGE_HOST"
+set timel       = "10000"
+set queue       = "ALEPH"
+set batch       = "n"
+set cluster     = "shift"
+#  test which model will be used
+switch ($#argv)
+	case 0: 
+                goto DIALOG
+                breaksw
+	case 1:
+                if ("$argv[1]" == "-help" || "$argv[1]" == "-h") goto FULLHELP
+                if(`echo $argv[1] | awk '{print index($0,"-")}'` != 1) goto HELP
+                breaksw       
+endsw
+
+#  test if you can write where you are
+if !(-w $cwd) then
+   echo "you can't write in the current directory $cwd"
+   exit 0
+endif
+
+set MODE="OPTIONS"
+#   parse the options and put the right values
+set argv=`getopt xrgbpjf:c:v:m:t:o:C:F:I:s: $*`
+if ($status != 0) goto HELP
+
+while ($#argv > 0)
+	switch ($argv[1])
+                case -x:
+                        set echo on
+                        breaksw
+                case -r:
+                        set run="y"
+                        breaksw
+                case -g:
+                        set debug="y"
+                        breaksw
+		case -j:
+			set tracking_old = "y"
+			breaksw
+		case -b:
+			set batch = "y"
+			breaksw
+		case -p:
+			set pvm = "y"
+			breaksw
+		case -f:
+                        if(`echo $argv[2] | awk '{print index($0,"-")}'` == 1) goto HELP
+			set fprog = "$fprog $argv[2]"
+                        set fdir="$fdir `dirname $argv[2]`"
+			shift
+			breaksw
+		case -I:
+                        if(`echo $argv[2] | awk '{print index($0,"-")}'` == 1) goto HELP
+			set inc = "$inc $argv[2]"
+			shift
+			breaksw
+		case -o:
+                        if(`echo $argv[2] | awk '{print index($0,"-")}'` == 1) goto HELP
+			set obj = "$obj $argv[2]"
+			shift
+			breaksw
+		case -c:
+                        if(`echo $argv[2] | awk '{print index($0,"-")}'` == 1) goto HELP
+			set cprog = "$cprog $argv[2]"
+                        set cdir="$cdir `dirname $argv[2]`"
+			shift
+			breaksw
+		case -C:
+                        if(`echo $argv[2] | awk '{print index($0,"-")}'` == 1) goto HELP
+			set alp = $argv[2]
+			shift
+			breaksw
+                case -s:
+                        if(`echo $argv[2] | awk '{print index($0,"-")}'` == 1) goto HELP
+                        set FILEOPT = $argv[2]
+                        shift
+                        breaksw
+                case -v:
+                        if(`echo $argv[2] | awk '{print index($0,"-")}'` == 1) goto HELP
+                        set alpver = $argv[2]
+                        shift
+                        breaksw
+                case -t:
+                        if(`echo $argv[2] | awk '{print index($0,"-")}'` == 1) goto HELP
+                        set timel = $argv[2]
+                        shift
+                        breaksw
+                case -m:
+                        if(`echo $argv[2] | awk '{print index($0,"-")}'` == 1) goto HELP
+                        set machine = $argv[2]
+                        shift
+                        breaksw
+                case -F:
+                        if(`echo $argv[2] | awk '{print index($0,"-")}'` == 1) goto HELP
+                        set FILEOPT = $argv[2]
+                        set point = `echo $FILEOPT | awk '{print index($0,".")-1}'`
+                        if ($point == -1) set opt_name = $FILEOPT
+                        if ($point > -1) set opt_name = `echo $FILEOPT | awk '{print substr ( $0,1,index($0,".")-1)}'`
+                        goto FILE
+                        breaksw
+                case --:
+                        breaksw
+                case *:
+                        if(`echo $argv[1] | awk '{print index($0,"-")}'` == 1) goto HELP
+                        set exec = $argv[1]
+                        breaksw
+		case -?:
+                        goto HELP
+                        breaksw
+	endsw
+	shift
+end
+
+#   test if the name of the executable has been given
+if ($exec == "") then
+  echo There is no name for the binary
+  goto HELP
+endif
+
+#if ($inc == "") then
+#   set incstd="$ALROOT/alpha${alpver}/inc $ALROOT/inc"
+#endif
+goto MAKEF
+
+########################################################## DIALOG #####
+DIALOG:
+  set MODE = "DIALOG"
+  unset noclobber
+  set run_exec = "y"
+
+  echo " With this script, you can run ALPHA with your own FORTRAN, your own C code"
+  echo " and your own CARDS."
+  echo " This script works with the current version of ALPHA and the current"
+  echo " version of all the libraries."
+  echo " The scripts helps you to set up a job to be submitted to run on the"
+  echo " ALEPH-Unix-machines."
+  echo ""
+  echo " Please answer the questions."
+  echo " CR = Carriage Return = RETURN"
+  echo " With CR , you select the defaults presented in brackets." 
+  echo " To remove an option, you type none."
+  echo ""
+  echo " To quit at any moment: Ctrl/C followed by CR"
+  echo ""
+  echo "       *******************************************************"
+  echo "       ***  optx files existing in the current directory   ***"
+  set files = `ls -t *.optx`
+  if ($status == 1) then
+    echo no optx file found in this directory
+    set files = ""
+  else 
+    foreach i (${files})
+      echo " $i"
+    end
+  endif
+  set str_CR = ""
+  if ("$files" == "") then
+     set str_CR  = "myanal"
+  else
+     set str_CR = `echo ${files[1]} | awk '{print substr ( $0,1,index($0,".")-1)}'`
+  endif
+  echo " "
+  echo -n " Enter the name for the option file [CR = $str_CR] : "
+  set buf=$<
+  if ($buf == "") set buf = "${str_CR}.optx"
+  set s = `echo "$buf" | awk '{print index($0,"/")+1}'`
+  set point_buf = `echo $buf | awk '{print index($0,".")-1}'`
+  if ($s > -1) then
+     set opt_name = `echo "$buf" | awk '{print substr($0,index($0,"/")+1)}'` 
+     set point = `echo "$opt_name" | awk '{print index($0,".")-1}'`
+     if ($point > -1) set opt_name = `echo "$opt_name" | awk '{print substr($0,1,index($0,".")-1)}'`
+  else
+     if ($point_buf > -1) set opt_name = `echo $buf | awk '{print substr($0,1,index($0,".")-1)}'`
+  endif
+  set FILEOPT = "$buf"
+  if ($point_buf == -1) set FILEOPT = ${opt_name}.optx
+#  echo "point_buf=$point_buf point=$point buf=$buf opt_name=$opt_name FILEOPT=$FILEOPT"
+
+  if (-r $FILEOPT) goto FILE
+
+DIALOG_BEGIN:
+  set MODE = "DIALOG"
+  set exec = "myexec"
+  if (-r $FILEOPT) set exec = `awk '{if ((NR == 1) && ($1 != "\n")) printf "%s\n",$1 }' $FILEOPT`
+  set str_CR = "${exec}" 
+  echo -n " Enter the name for the binary [CR = $str_CR] : "
+  set buf=$<
+  if ($buf == "") set buf = $str_CR 
+  set exec = $buf
+  if ($opt_name == "") set opt_name = $exec 
+
+###> his not used
+  set his = ""
+  echo ""
+
+###> alpver
+#  if (-r $FILEOPT) set alpver=`awk '{if ((NR == 9) && ($1 != "\n")) printf "%s\n",$1 }' $FILEOPT`
+#  set str_CR = "CR = $alpver"
+#  if ($alpver != $alpver_current) set str_CR = "${str_CR}; last version is ${alpver_current}"
+#  echo -n " Enter the number for the version of alpha [${str_CR}] : "
+#  set buf=$<
+#  if ($buf == "") set buf = $alpver
+#  if ($buf != "") set alpver = $buf
+#  echo ""
+
+###> .f
+  if (-r $FILEOPT) set fprog=`awk '{if ((NR == 2) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+  set string_cr = "CR or "
+  if ("$fprog" != "") set string_cr = "CR = ${fprog}, "
+DIALOG_F:
+  set temp = ""
+  set flag = ""
+  echo -n " Enter the name of the fortran file(s) [${string_cr}'none' = nothing] : "
+  set buf=$<
+  if ("$buf" == "none" || "$buf" == "NONE") then
+     set fprog = ""
+     goto DIALOG_F_END
+  endif
+  if ("$buf[1]" == "") goto DIALOG_F_END
+  set temp = ($buf)
+  set i=1
+  while ($i <= $#temp)
+     if !(-f $temp[$i]) then
+        echo $temp[$i] file does not exist
+        set flag = "NO"
+     else 
+        set fdir="$fdir `dirname $temp[$i]`"
+     endif
+     @ i++
+  end
+  if ("$flag" == "NO") goto DIALOG_F
+DIALOG_F_END:
+  if ("$temp" != "") set fprog = ($temp)
+  echo ""
+
+###> .c  
+  if (-r $FILEOPT) set cprog=`awk '{if ((NR == 3) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT` 
+  set string_cr = "CR or "
+  if ("$cprog" != "") set string_cr = "CR = ${cprog}, "
+DIALOG_C:
+  set temp = ""
+  set flag = ""
+  echo -n " Enter the name of the C file(s) [${string_cr}'none' = nothing] : "
+  set buf=$<
+  if ("$buf" == "none" || "$buf" == "NONE") then
+     set cprog = ""
+     goto DIALOG_C_END
+  endif
+    if ("$buf[1]" == "") goto DIALOG_C_END
+    set temp = ($buf)
+    set i=1
+    while ($i <= $#temp)
+       if !(-f $temp[$i]) then
+          echo $temp[$i] file does not exist
+          set flag = "NO"
+       else 
+          set cdir="$cdir `dirname $temp[$i]`"
+       endif
+       @ i++
+    end
+    if ("$flag" == "NO") goto DIALOG_C
+DIALOG_C_END:
+  if ("$temp" != "") set cprog = ($temp)
+  echo ""
+
+###> .obj
+  if (-r $FILEOPT) set obj=`awk '{if ((NR == 7) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+  set string_cr = "CR or "
+  if ("$obj" != "") set string_cr = "CR = ${obj}, "
+DIALOG_O:
+    set temp = ""
+    set flag = ""
+    echo -n " Enter the name of the obj file(s) [${string_cr}'none' = nothing] : "
+    set buf=$<
+    if ("$buf" == "none" || "$buf" == "NONE") then
+       set obj = ""
+       goto DIALOG_O_END
+    endif
+
+    if ("$buf[1]" == "") goto DIALOG_O_END
+    set temp = ($buf)
+    set i=1
+    while ($i <= $#temp)
+       if !(-f $temp[$i]) then
+          echo $temp[$i] file does not exist
+          set flag = "NO"
+       endif
+       @ i++
+    end
+    if ("$flag" == "NO") goto DIALOG_O
+DIALOG_O_END:
+  if ("$temp" != "") set obj = ($temp)
+  echo ""
+
+###> .inc
+  if (-r $FILEOPT) set inc=`awk '{if ((NR == 12) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+  set string_cr = "CR or "
+  if ("$inc" != "") set string_cr = "CR = ${inc}, "
+DIALOG_I:
+    set temp = ""
+    set flag = ""
+    echo -n " Enter the path where you find your include file(s) [${string_cr}'none' = nothing] : "
+    set buf=$<
+    if ("$buf" == "none" || "$buf" == "NONE") then
+       set inc = ""
+       goto DIALOG_I_END
+    endif     
+    if ("$buf[1]" == "") goto DIALOG_I_END
+    set temp = ($buf)
+    set i=1
+    while ($i <= $#temp)
+       if !(-d $temp[$i]) then
+          echo $temp[$i] path does not exist
+          set flag = "NO"
+       endif
+       @ i++
+    if ("$flag" == "NO") goto DIALOG_I
+    end
+DIALOG_I_END:
+  if ("$temp" != "") set inc = ($temp)
+  echo ""
+
+###> link tracking_old  
+  set STR_Y_N = " Do you want to link with old tracking "
+  set STR_Y_N_CR = "$tracking_old"
+  set STR_RETURN_Y_N = "DIALOG_Y_N_JUL"
+  goto Y_N
+DIALOG_Y_N_JUL:
+  set tracking_old = $yn
+
+###> pwm
+  set pvm="n"
+#  echo ""
+#  set STR_Y_N = " Do you want to use PVM"
+#  set STR_Y_N_CR = "$pvm"
+#  set STR_RETURN_Y_N = "DIALOG_Y_N_PVM"
+#  goto Y_N
+DIALOG_Y_N_PVM:
+#  set pvm = $yn
+
+###> .cards
+  echo ""
+  echo "       *****************************************"
+  echo "       ***  Cards in the current directory   ***"
+  echo "       *****************************************"
+  set files = `ls *.cards`
+  if ($status == 1) then
+     echo no cards file found in this directory
+  else 
+     foreach i (${files})
+       set ALPHACARDS = $i
+       echo ${cwd}/$i
+    end
+  endif
+  if (-r $FILEOPT) set ALPHACARDS=`awk '{if ((NR == 4) && ($1 != "\n")) printf "%s\n",$1 }' $FILEOPT`
+  if ("$ALPHACARDS" == "") set ALPHACARDS = ${cwd}/${exec}.cards
+  echo ""
+  set flag = ""
+  while ($flag != "OK")
+    echo -n " Enter the name of the alpha cards [CR = ${ALPHACARDS}] : "
+    set alp=$<
+    if ($alp !="") then
+     if !(-f $alp) then
+       echo $alp file does not exist
+     else set flag = "OK"
+     endif
+    else 
+       set alp=$ALPHACARDS
+       set flag = "OK"
+    endif
+  end
+  echo ""
+
+###> debug
+  echo " Do you want to use the debug mode, it will apply only to your"
+  set STR_Y_N = "fortran and the alpha package"
+  set STR_Y_N_CR = "n"
+  set STR_RETURN_Y_N = "DIALOG_Y_N_DEBUG"
+  goto Y_N
+DIALOG_Y_N_DEBUG:
+  set debug = $yn
+  set STR_RETURN_OPT = "DIALOG_OPT_1"
+  goto LIST_OPT
+DIALOG_OPT_1:
+  if ("$yn" == "n") goto DIALOG_BEGIN
+
+  echo ""
+  set string_options_1 = "create the binary interactively"
+  set menu_1 = "MAKEF"
+  goto ASK_OPTIONS
+
+###################################################### END ###
+END:
+  echo "$DATE $USE $MODE $VER $NODE" >> $LOGFILE
+  exit 0
+
+################################################################
+#      Read the file for the option -F
+####################################################### FILE ###
+FILE:
+if !(-r $FILEOPT) then 
+   echo "The file $FILEOPT does not exist."
+   exit 0
+endif
+set MODE="FILE"
+
+set exec=`awk '{if ((NR == 1) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set fprog=`awk '{if ((NR == 2) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set cprog=`awk '{if ((NR == 3) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set alp=`awk '{if ((NR == 4) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set tracking_old=`awk '{if ((NR == 6) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set obj=`awk '{if ((NR == 7) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set his=`awk '{if ((NR == 8) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set alpver=`awk '{if ((NR == 9) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set debug=`awk '{if ((NR == 10) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set pvm=`awk '{if ((NR == 11) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set inc=`awk '{if ((NR == 12) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set upd=`awk '{if ((NR == 13) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set corr=`awk '{if ((NR == 14) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set corrs=`awk '{if ((NR == 15) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set timel=`awk '{if ((NR == 16) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set machine=`awk '{if ((NR == 17) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set batch=`awk '{if ((NR == 18) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+
+   set STR_RETURN_OPT = "FILE_LIST_OPT_END"
+   goto LIST_OPT
+FILE_LIST_OPT_END:
+   if ("$yn" == "n") goto DIALOG_BEGIN
+
+   if ($batch == "y") goto SUBMIT
+
+   echo ""
+   set string_options_1 = "create the binary interactively"
+   set menu_1 = "MAKEF"
+   goto ASK_OPTIONS
+
+#######################################################################
+#      Create the makefile alpha.mk
+############################################################# MAKEF ###
+MAKEF:
+  
+if ("$MODE" != "OPTIONS") then
+   if (-x $exec) then
+      set STR_Y_N = "This binary already exist. Do you want to use it"
+      set STR_Y_N_CR = "n"
+      set STR_RETURN_Y_N = "END_Y_N_BINARY"
+      goto Y_N
+END_Y_N_BINARY:
+      if ($yn == "n") rm $exec
+      if ($yn == "y")then
+        set string_options_1 = "run interactively"
+        set menu_1 = "RUN"
+        goto ASK_OPTIONS
+      endif
+   endif
+endif
+
+set j=1
+set inct=($inc)
+if ("$inct" != "") then
+  set inct = ($inct)
+  while ($j <= $#inct)
+     set inc_I="$inc_I -I$inct[$j]"
+     @ j++
+  end
+endif
+
+#test if file with .f or .F
+set progf=""
+set j=1
+set progftemp=($fprog)
+set fprog=""
+set Fprog=""
+if ("$progftemp" != "") then
+  while ($j <= $#progftemp)
+     set base=`basename $progftemp[$j]`
+     set baseprog=`basename $progftemp[$j] .f`
+     if ($baseprog == $base ) then
+        set Fprog="$Fprog $progftemp[$j]"
+     else
+        set fprog="$fprog $progftemp[$j]"
+     endif
+     @ j++
+  end
+endif
+
+if ($pvm == "y" || $pvm == "Y") then
+  if ( -d $PVM_ROOT/lib/$PVM_ARCH/object ) then
+     foreach i (`\ls $PVM_ROOT/lib/$PVM_ARCH/object`)
+       set obj="$obj $PVM_ROOT/lib/$PVM_ARCH/object/$i"
+     end
+  endif
+  set obj="$obj $PVM_ROOT/lib/$PVM_ARCH/libfpvm3.a $PVM_ROOT/lib/$PVM_ARCH/libpvm3.a"
+endif
+
+### Create the file alpha.mk  ####
+if (-w ${cwd}/${exec}.mk) mv ${cwd}/${exec}.mk ${cwd}/${exec}.mk.BAK
+cat >${cwd}/${exec}.mk <<END-OF-MAKE
+# ALPHA is linked with standard versions of various libraries
+# taken from \$(ALEPH)/lib etc. 
+# > gmake     or  > gmake DBX=_dbx
+#
+# to link WITH JUL285 (old tracking from before May97) and then link with the
+# corresponding alephlib (\$(ALEPH)/gen/libalephio216.a, alephlib version 216) 
+# > gmake WITH=JUL285   or  > gmake WITH=JUL285 DBX=_dbx
+#
+# to link with a different version of alpha
+# > gmake AVER=123  or > gmake AVER=123 WITH=JUL285
+#fj_test.mk
+# to change the name of the module
+## > gmake AVER=123 WITH=JUL285 NAME=enflw123 DBX=_dbx
+# > gmake AVER=123 WITH=JUL285 DBX=_dbx
+#
+# to link with jetset
+# > gmake CLIB=jetset WITH=JUL285
+#
+# to link with user library
+# > gmake ULIB=/u/xu/myid/lmylib.a
+#
+# libraries are linked in the following order:
+# ULIB alpha mini julia alephlib bos77 CERNLIBS
+#
+# ================================================================
+
+include \$(ALEPH)/phy/alpha.version
+include \$(ALEPH)/phy/mini.version
+
+STR_g=
+DBX=
+ifeq (\$(DBX),_dbx)
+  STR_g=-g
+endif
+#ifeq (\$(debug),y)
+#  STR_g=-g
+#  DBX=_dbx
+#endif
+
+AVER      = $alpver
+MVER      = \$(miniver)
+ifeq (\$(AVER),124)
+  MAIN      = \$(ALEPH)/phy/qmain.o
+else
+  ifeq (\$(AVER),125)
+    MAIN      = \$(ALEPH)/phy/qmain.o
+  else
+    MAIN      = \$(ALEPH)/phy/qmain.o \$(ALEPH)/phy/qusig.o
+  endif
+endif
+WITH      =
+NAME      = $exec
+
+# list of *.f files
+fFILES    = $fprog
+FFILES    = $Fprog
+# *.f files are stored in srcdir
+srcdir    = $fdir
+
+# list of *.c files
+CFILES  = $cprog
+# *.c files are stored in SRCDIR
+SRCDIR  = $cdir
+
+# alpha *.h files are stored in IDIR
+IDIR      = \$(ALROOT)/alpha\$(AVER)/inc
+# general *.h files
+INCDIR    =\$(ALROOT)/inc
+
+# link with some specific cernlib libraries (i.e.CLIB=jetset)
+CLIB    = 
+
+# link with some user libraries (i.e. ULIB=/u3/xu/flr/lib.a)
+ULIB    = $obj
+
+# ===============================================================
+
+# set FORTRAN flags
+
+CFLAGS  = \$(STR_g) \$(CCOPT) -I\$(IDIR)
+FFLAGS  = \$(STR_g) \$(FCOPT) -I\$(IDIR) $inc_I
+ifeq (\$(OS),OSF1)
+  FFLAGS += -fpe2
+endif
+
+ifeq (\$(WITH),JUL285)  
+  ALIB    = -lalpha122_46 -lmini201
+else
+  ifeq (\$(AVER),124)
+    ALIB    = -lalpha\$(AVER)
+  else
+    ifeq (\$(AVER),125)
+      ALIB    = -lalpha\$(AVER)
+    else
+      ifeq (\$(AVER),126)
+        ALIB    = -lalpha\$(AVER)
+      else
+        ALIB    = -lalpha\$(AVER) -lmini\$(MVER)
+      endif
+    endif
+  endif
+endif
+#ALIB    = -lalpha\$(AVER)\$(DBX) -lmini\$(MVER)
+
+# link with julia (i.e.WITH=JUL285)
+ifeq (\$(WITH),JUL285)  
+  ALIB     += -ljul285 -lalephio216
+else
+  ALIB     += -ljulia -lalephlib 
+endif
+LDFLAGS     = \$(JMUID) \$(UNDEF) -L\$(ALEPH)/lib -L\$(ALEPH)/phy -L\$(ALEPH)/jul  -L\$(ALEPH)/gen -L/usr/lib/gcc/x86_64-redhat-linux/4.1.1/
+32
+##LDFLAGS    = \$(UNDEF) -L\$(ALEPH)/lib -L\$(ALEPH)/phy -L\$(ALEPH)/jul  -L\$(ALEPH)/gen
+
+ALIB       += -lbos77
+CERNLIBS = \`cernlib \$(CLIB) mathlib packlib_noshift\` -lgfortran
+
+vpath %.F \$(srcdir)
+vpath %.f \$(srcdir)
+vpath %.c \$(SRCDIR)
+
+# *.o files are stored in \$(OBJDIR)
+
+OBJDIR  = ./
+vpath %.o \$(OBJDIR):
+
+O_FILES  := \$(FFILES:%.F=%.o) \$(fFILES:%.f=%.o) \$(CFILES:%.c=%.o) 
+OBJFILES := \$(addprefix \$(OBJDIR)/,\$(notdir \$(O_FILES)))
+
+
+# Rules...
+
+\$(OBJDIR)/%.o : %.f
+	\$(FC) \$(FFLAGS) \$< -o \$@
+
+\$(OBJDIR)/%.o : %.F
+	\$(FC) \$(FFLAGS) \$< -o \$@
+
+\$(OBJDIR)/%.o : %.c
+	\$(CC) \$(CFLAGS)  \$< -o \$@
+
+\$(OBJDIR)/\$(NAME): \$(OBJFILES) 
+	\$(FC) -w \$(STR_g) -o \$@  \$(MAIN) \$(OBJFILES) -I\$(INCDIR) -I\$(IDIR) $inc_I \$(LDFLAGS) \$(ULIB) \$(ALIB) \$(CERNLIBS)
+
+
+.PHONY: help
+help:
+	@echo " ALPHA is linked with standard versions of various libraries"
+	@echo " taken from \$(ALEPH)/lib"
+	@echo " to link with standard versions with (new tracking May97):"
+	@echo " > gmake     or  > gmake DBX=_dbx"
+	@echo ""
+	@echo " to link WITH JUL285:"
+	@echo " > gmake WITH=JUL285   or  > gmake WITH=JUL285 DBX=_dbx"
+	@echo ""
+	@echo " to link with a different version of alpha"
+	@echo " > gmake AVER=123  or > gmake AVER=123 WITH=JUL285"
+	@echo ""
+	@echo " to change the name of the module"
+	@echo " > gmake AVER=123 WITH=JUL285 DBX=_dbx"
+	@echo ""
+	@echo " to link with jetset"
+	@echo " > gmake CLIB=jetset WITH=JUL285"
+	@echo ""
+	@echo " to link with user library"
+	@echo " > gmake ULIB=/u/xu/myid/lmylib.a
+	@echo ""
+	@echo " libraries are linked in the following order:"
+	@echo " ULIB alpha mini JUL285 alephlib bos77 CERNLIBS"
+
+END-OF-MAKE
+  
+################################################## GMAKE ###
+GMAKE:
+  echo ""
+  echo "   **************************************************************"
+  echo "   ***    Compilation  and creation of the makefile ${exec}.mk"
+  echo "   **************************************************************"
+     ### Compile the job  #####
+  set name_gmake = "${cwd}/${exec}"
+  set str_JULIA = ""
+  set ass_DBX = ""
+  if ($tracking_old == "y") set str_JULIA = "WITH=JUL285"
+  if ($debug == "y") set ass_DBX = "DBX=_dbx"
+  echo "gmake -f ${name_gmake}.mk $str_JULIA $ass_DBX"
+  gmake -f ${name_gmake}.mk $str_JULIA $ass_DBX
+
+  if ("$MODE" != "OPTIONS") then
+     set string_options_1 = "continue and run interactively"
+     set menu_1 = "RUN"
+     goto ASK_OPTIONS
+  endif
+  if ($run == "y" || $run == "Y") goto RUN 
+  goto END
+
+#################################################### RUN ###
+RUN:
+  setenv ALPHACARDS $alp
+
+  chmod +x $exec
+  echo ""
+  echo "   ********************"
+  echo "   ***  Execution   ***"
+  echo "   ********************"
+  ### Run the job  ####
+ if (-x $exec && "$MODE" != "OPTIONS") then
+     set rep = ""
+     set batch = "n"
+     if ($debug == "y") set rep = "t"
+     if ($rep == "") then
+        echo -n "Do you want to have the output on your (t)erminal or in a (f)ile [CR = t] ? : "
+        set rep=$<
+     endif
+     set ok="n"
+     set run_exec = "y"
+     set STR_RETURN_exec = "ASK_keep_bin" 
+     if ($rep == "f" || $rep == "F") then
+        while ($ok == "n")
+         echo -n "Name of your output file ? : "
+         set file_exec=$<
+         if (-r $file_exec) then
+            echo "File already exist ..."
+            set ok="n" 
+         else
+            set ok="y"
+            goto RUN_EXEC
+         endif
+        end
+     else
+        goto RUN_EXEC
+     endif
+ASK_keep_bin:
+     echo ""
+     set STR_Y_N = "Do you want to keep the binary $exec"
+     set STR_Y_N_CR = "n"
+     set STR_RETURN_Y_N = "END_Y_N_RM_BIN"
+     goto Y_N
+END_Y_N_RM_BIN:
+     if ($yn == "n") rm $exec
+     if ("$MODE" == "DIALOG") then
+        set STR_RETURN_ASK_optx = "END"
+        goto ASK_optx
+     endif 
+     goto END
+  else
+     set STR_RETURN_exec = "END" 
+     goto RUN_EXEC
+  endif
+  
+################################################## RUN_EXEC ### 
+RUN_EXEC:
+
+if ("$MODE" == "OPTIONS") $exec
+if ("$MODE" != "OPTIONS") then
+  if ($debug == "y") then
+     if (`uname` == "HP-UX") then
+        set DBX_OS = "xdb" 
+     else
+        set DBX_OS = "dbx" 
+     endif
+     set incstd = "-I${ALROOT}/alpha${alpver}/inc -I${ALROOT}/inc"
+#DBXDIR = -I${ALROOT}/alpha\$(AVER)/src
+     set all_INC = "$incstd $inc_I"
+     echo "You run  dbx for debugging purposes"
+     echo "${DBX_OS} $all_INC -r $exec"
+     echo "***  To leave dbx type quit  ***"
+     ${DBX_OS} $all_INC -r $exec
+  else
+     if ($rep == "f" || $rep == "F") then
+        $exec > $file_exec
+     else
+        $exec
+     endif
+  endif
+endif
+goto $STR_RETURN_exec
+################################################## SUBMIT ######
+SUBMIT:
+  if (-e ${cwd}/${opt_name}.job_end) rm ${cwd}/${opt_name}.job_end
+  touch ${cwd}/${opt_name}.job_end
+  set j=1
+  set ofprog=""
+  if ("$fprog" != "") then
+    set fprog = ($fprog)
+    while ($j <= $#fprog)
+      set te=`echo $fprog[$j] | grep '/'`
+      if ($status == 1) set fprog[$j] = "${cwd}/$fprog[$j]"
+      set realfprog=`echo $fprog[$j] | awk -F/ '{if (i = NF) print $i}'`
+      cat >>${cwd}/${opt_name}.job_end << END-OF-JOB
+cp ${fprog[$j]} ${realfprog}
+END-OF-JOB
+      set ofprog="$ofprog -f ${realfprog}"
+      @ j++
+    end
+  endif
+
+  set j=1
+  set ocprog=""
+  if ("$cprog" != "") then
+    set cprog = ($cprog)
+    while ($j <= $#cprog)
+      set te=`echo $cprog[$j] | grep '/'`
+      if ($status == 1) set cprog[$j] = "${cwd}/$cprog[$j]"
+      set realcprog=`echo $cprog[$j] | awk -F/ '{if (i = NF) print $i}'`
+      cat >>${cwd}/${opt_name}.job_end << END-OF-JOB
+cp ${cprog[$j]} ${realcprog}
+END-OF-JOB
+      set ocprog="$ocprog -c ${realcprog}"
+      @ j++
+    end
+  endif
+
+  set j=1
+  set ooprog=""
+  if ("$obj" != "") then
+    set obj = ($obj)
+    while ($j <= $#obj)
+      set te=`echo $obj[$j] | grep '/'`
+      if ($status == 1) set obj[$j] = "${cwd}/$obj[$j]"
+      set realoprog=`echo $obj[$j] | awk -F/ '{if (i = NF) print $i}'`
+      cat >>${cwd}/${opt_name}.job_end << END-OF-JOB
+cp ${obj[$j]} ${realoprog} 
+END-OF-JOB
+      set ooprog="$ooprog -o ${realoprog}"
+      @ j++
+    end
+  endif
+
+  set j=1
+  set oinc=""
+  if ("$inc" != "") then
+    set inc = ($inc)
+    while ($j <= $#inc)
+       set oinc="$oinc -I$inc[$j]"
+      @ j++
+    end
+  endif
+
+#    create the parameter for alpharun
+  set jjul=""
+  if ("$tracking_old" == "y") set jjul="-j"
+  set gdebug=""
+  if ("$debug" == "y") set gdebug="-g"
+
+  if ("$alp" != "") then
+      set te=`echo $alp | grep '/'`
+      if ($status == 1) set alp = "${cwd}/$alp"
+      set realalp=`echo $alp | awk -F/ '{if (i = NF) print $i}'`
+      cat >>${cwd}/${opt_name}.job_end << END-OF-JOB
+cp ${alp} ${realalp}
+END-OF-JOB
+  endif
+  set alphar="$alphar_prog $gdebug -v $alpver $jjul -C $realalp"
+  if ("$pvm" == "y" || "$pvm" == "Y") set alphar="$alphar -p"
+  set DATE_JOB=`date`
+  set DATE_JOB=`echo $DATE_JOB | awk '{print $2,$3,$4}'`
+
+  set alphar="$alphar $ofprog $ocprog $oinc $ooprog -r $exec"
+
+set flag_rcp = "OK"
+set string_rcp = "#"
+# check for user-initiated hist file transfers
+set u_dispose = `grep HIST ${alp} | grep -i dispose`
+if ("$status" == "0") set flag_rcp = "NO" 
+# do HIST file transfer for user
+set hist_fil = `grep HIST ${alp} | cut -f2 -d"'"`
+if ("$hist_fil" == "") set flag_rcp = "NO"  
+set first_c = `echo $hist_fil | awk '{print substr ( $0,1,1 )}'`
+if ("$first_c" == "/") set flag_rcp = "NO"
+#if ($flag_rcp == "OK") set string_rcp = "rcp ${hist_fil} ${NODE}:${cwd}/${hist_fil}"
+if ($flag_rcp == "OK") set string_rcp = "cp ${hist_fil} ${cwd}/${hist_fil}"
+
+cat >> ${cwd}/${opt_name}.job_end <<END-OF-JOB
+# === execute
+${alphar}
+$string_rcp
+# === clean up at jobend
+EndJob:
+if ( -r core) then
+   if (`uname` == "HP-UX") then
+      set DBX_OS = "xdb" 
+   else
+      set DBX_OS = "dbx" 
+   endif
+\$DBX_OS ${opt_name} <<EOF
+where
+quit
+EOF
+endif
+echo " Files in the LSF directory  "
+ls -l
+exit
+END-OF-JOB
+if ("$MODE" == "DIALOG") then
+     echo ""
+     echo -n " Enter the time limit [CR = ${timel}] : "
+     set buf=$<
+     if ("$buf" != "") set timel=($buf)
+     echo ""
+     echo  " Enter the machine where to submit [CR = ${machine}] "
+     echo -n " Your choice : $STAGE_HOST or ALOHA etc : "
+     set buf=$<
+     if ("$buf" != "") set machine=($buf)
+     if ("$machine" == "$STAGE_HOST") then
+        set cluster="shift"
+     else
+        set cluster="aleph"
+     endif
+endif
+if ($opt_name == "") set FILEJOB = "${cwd}/${opt_name}.job"
+if ($opt_name != "") set FILEJOB = "${cwd}/${opt_name}.job"
+if ($timel <= 380) set queue=8nm
+if (($timel > 380) && ($timel <= 2839)) set queue=1nh
+if (($timel > 2839) && ($timel <= 22200)) set queue=8nh
+if ($timel > 22200) set queue=1nd
+if (-e $FILEJOB) rm $FILEJOB
+  cat >$FILEJOB <<END-OF-JOB
+#!/bin/csh
+#BSUB -q $queue
+#BSUB -r
+#BSUB -J $exec
+#
+#
+echo ALPHA job prepared by $alphar_prog on $DATE_JOB
+#
+echo ALPHA job run on \`date\` in the directory \`pwd\`
+set echo on
+cd \$WORKDIR
+#
+END-OF-JOB
+cat ${opt_name}.job_end >> $FILEJOB
+rm ${opt_name}.job_end
+if ("$MODE" != "OPTIONS") then
+   if ("$MODE" == "DIALOG") then  
+      set FILEOPT     = "${cwd}/${opt_name}.optx"
+      set STR_RETURN_ASK_optx = "SUBMIT_ASK_optx"
+      goto ASK_optx
+   endif
+SUBMIT_ASK_optx:
+   if ($flag_optx == "OK") then
+       set temp = `echo $FILEOPT | awk '{print substr($0,1,index($0,".")-1)}'`
+       if ($FILEJOB != "${temp}.job") mv $FILEJOB ${temp}.job
+       set FILEJOB = ${temp}.job
+   endif
+   echo " "
+   echo "   $FILEJOB   has been saved"
+   echo ""
+   set STR_Y_N = "Do you want to submit your job in batch with $timel sec on $machine"
+   set STR_Y_N_CR = "$batch"
+   set STR_RETURN_Y_N = "SUBMIT_BATCH"
+   goto Y_N
+SUBMIT_BATCH:
+  set batch = $yn
+endif
+  if ($batch == "y") then
+     echo " CPU time limit = $timel "
+     echo "Submitting to $machine via LSF"
+     chmod +x $FILEJOB
+     bsub < $FILEJOB
+  endif
+  goto END
+
+##################################################### ASK_optx #####
+ASK_optx: 
+     set FILEOPT = "${cwd}/${opt_name}.optx"
+     echo ""
+     echo -n " Save your options in [CR = ${FILEOPT}] "
+     set buf=$<
+     if ("$buf" == "none" || "$buf" == "NONE") goto $STR_RETURN_ASK_optx
+     if ($buf != "") then
+        set n = `echo $buf | awk '{print index($1,".optx")}'`
+        if ($n > 0) set FILEOPT = ($buf)
+        if ($n < 1) set FILEOPT = (${buf}.optx)
+        set flag_optx = "OK"
+     endif
+     if (-e ${FILEOPT}) mv ${FILEOPT} ${FILEOPT}.BAK
+     set CAT_OPT = ${FILEOPT}
+     goto CAT_OPT
+
+##################################################### ASK_OPTIONS ##### 
+ASK_OPTIONS:
+     set default = 1
+     if ($batch == "y") set default = 2
+     echo  " Do you want with these options : "
+     echo  "                                  1. $string_options_1"
+     echo  "                                  2. run the complete job in batch"
+     echo  "                                  3. exit "
+     echo -n " Please type your choice (1, 2 or 3) [CR = ${default}] : "
+     set buf=$<
+     if ("$buf" == "") set buf = ${default}
+     if ($buf == 1) goto ${menu_1}
+     if ($buf == 2) then
+        set batch = "y"
+        goto SUBMIT
+     endif
+     if ($buf == 3) then
+        set STR_RETURN_ASK_optx = "END"
+        goto ASK_optx
+     endif
+     goto ASK_OPTIONS
+
+######################################################## CAT_OPT ####
+CAT_OPT:
+cat >${CAT_OPT} <<END-OF-CAT
+$exec
+$fprog $Fprog
+$cprog
+$alp
+$enfl
+$tracking_old
+$obj
+$his
+$alpver
+$debug
+$pvm
+$inc
+$upd
+$corr
+$corrs
+$timel
+$machine
+$batch
+END-OF-CAT
+goto $STR_RETURN_ASK_optx
+
+######################################################## LIST_OPT ####
+LIST_OPT:
+  echo ""
+  echo " >>>Your options for ALPHARUN are :"
+  echo "alpha version   = $alpver"
+  echo "fortran file(s) = $fprog"
+  echo "c       file(s) = $cprog"
+  echo "obj     file    = $obj"
+  echo "include path    = $inc"
+  echo "card    file    = $alp"
+  echo "JUL285 (old tracking) = $tracking_old"
+  echo "PVM             = $pvm"
+  echo "Debug mode      = $debug"
+  echo "binary  name    = $exec"
+  if ("$MODE" == "FILE") then
+     echo "time limit      = $timel"
+     echo "machine         = $machine"
+     echo "batch           = $batch"
+  endif
+  echo ""
+  set STR_Y_N = "Are these options correct"
+  set STR_Y_N_CR = "y"
+  set STR_RETURN_Y_N = ${STR_RETURN_OPT}
+
+############################################################# Y_N ####
+Y_N:
+  set yn = "${STR_Y_N_CR}"
+  echo -n " ${STR_Y_N} (y/n) [CR = ${STR_Y_N_CR}] ? " 
+  set buf=$<
+  if ("$buf" != "") set yn = `echo $buf | awk '{print substr ( $0,1,1 )}'` 
+  if ("$yn" == "q" || "$yn" == "Q") goto END
+  if ($yn == "n" || $yn == "N" || $yn == "y" || $yn == "Y") then
+     if ($yn == "N") set yn = "n"
+     if ($yn == "Y") set yn = "y"
+  else goto Y_N
+  endif
+  goto $STR_RETURN_Y_N
+########################################################### FULLHELP ##
+FULLHELP:
+cat <<EOF
+"alpharun"
+ With this script, you can run ALPHA interactively or in batch with your 
+ own FORTRAN, your own C code, your own CARDS etc.
+ This script works with the current version of ALPHA and the current
+ version of all the libraries.
+ The scripts helps you to set up a job to be submitted to run on the
+ ALEPH-Unix-machines just answering the questions having typed  alpharun
+
+"alpharun"  can be used in 3 modes
+     1 -- DIALOG
+Interactively with a dialog, just type e.g.   
+alpharun
+This is the mode most improved and affected by the changes.
+     2 -- FILE
+By using an option file (produced by alpharun in mode 1)  e.g.   
+alpharun -F my.optx   
+     3 -- OPTIONS
+With options. This is the mode important for batch processing  e.g.
+alpharun -v 122 -j -C myalpha.cards  -f myalp.f -f myyalp.f -r aldata
+In this mode now the -g option works, but otherwise it should be essentially 
+unchanged compared with  alpharun9.0  from Joel.
+
+
+EOF
+echo "==========  Syntax  ============"
+############################################################## HELP ###
+HELP:
+echo "Usage :alpharun -help "
+echo "      :alpharun [-F filename] "
+echo "      :alpharun [-f fortran_file] [-c c_file] [-C card_file] [-g] [-j]"
+echo "        [-v version] [-o obj_file] [-s file_opt] [-p] [-r]"
+echo "        [-I include_path] [-m machine] [-t time_limit] <binary_name> "
+echo " " 
+echo "Where: "
+echo "     -help             get this (h)elp"
+echo "     -F <string>       expected (F)ilename which alpharun options"
+echo "     -f <string>       expected (f)ortran file  (my_fortran.f)"
+echo "     -c <string>       expected (C) file  (my_cfile.c)"
+echo "     -o <string>       expected (o)bject file  (my_objfile.o)"
+echo "     -C <string>       expected "C"ard file  (my_cards.cards)"
+echo "     -g                for debug options to compile"
+echo "     -j                (j)ul285 is used (old tracking from before May97)"
+echo "     -I <string>       expected (I)nclude path"
+echo "     -b                to run in (b)atch"
+echo "     -m <string>       expected machine to submit your job to"
+echo "     -t <number>       (t)ime limit of your batch job in seconds"
+echo "     -p                (P)VM is used"
+echo "     -v <number>       (v)ersion of alpha"
+echo "     -s <string>       expected name of the file to (s)ave the options"
+echo "     -r                (r)uns the binary after creating it"
+echo "       <binary_name>   expected name for the binary"
+exit

@@ -1,0 +1,107 @@
+*---   First section : steering
+NREF 9701       ! loads setup 9700 and 9701 from Data Base
+* PLEASE, LOOK AT INSTRUCTIONS TO SET UP PROPERLY NEXT CARD
+RUN    101 'PYTHIA 5.7 RUNNING q qbar' ! RUN # , RUN'S TITLE
+TRIG     1 210 !    FIRST,LAST EVENT TO BE GENERATED
+DEBU 6 / 1  5   !    FIRST,LAST EVENT TO BE debugged
+TIME    10
+*FILO 'gg161_test.epio | EPIO'
+* PLEASE, LOOK AT INSTRUCTIONS TO SET UP PROPERLY NEXT CARD
+RMAR    101   202 ! INSEED  LOSEED (1-30000)
+ENDQ
+*---   second section : modifications to Data Base setup
+KCAR 0 / $TEXT
+POFF
+SVRT  0.0113   0.0005   0.79 !  vertex smearing x y z for 98
+*SVRT   0.0140  0.0005   0.79 ! vertex smearing x y z 97 values
+*XVRT   0.01 0.0 0.1 0. 0. 0. ! offset and spread for vertex pos
+* IFLAVOR select subprocesses
+* IFLAVOR =  FLAVOR CODE  0= HADRONS 6 FLAVOURS,
+*                         1= HADRONS 5 FLAVOURS,
+*                         2= T TBAR,
+*                         3= W+W-,
+*                         4= Z0 Z0
+*                         5= GAMMA Z0 ,
+*                         6= GAMMA GAMMA,
+*                         7= GAMMA H0(+), 8=H0 H0 (+)
+*                         9= Z0 H0
+*                        10= NEUTRINO ANTI-NEUTRINO ONLY
+*                        11= LEPTON ANTI-LEPTON ONLY
+*                        12= PHOTOPRODUCTION WITH QCD JETS ONLY
+*                        13= PHOTOPRODUCTION WITH HIGH PT PHOTONS ONLY
+*                        14- GAMMA-GAMMA from Lonnblad's example
+* (+) = not yet implemented in PYTHIA
+* you can get any other production channels using pythia data cards
+* but then set : IFLAVOR = 99 and choose your own frame using pythia cards
+* ECMS  Center of mass energy in Gev
+* IPRINT   0=noprintout ,1=PRINTOUT of PART bank , 2= as 1 plus Decay ta
+* IPSHO  hadronisation scheme : 1=JETSET, 2=ARIADNE
+*     IFLAVOR     ECMS     IPRINT  IPSHO 
+GPYT    99       188.6       1      1
+MSUB 1 / 1                  !   select q qbar final state
+*------------this section for 2-photons option ----------------------
+* SELECTIONS FOR GAMMA-GAMMA
+* set MDME values, for QPM in particular
+*    d u s c b t l h e mu tau chi
+*GGMD 1 1 1 1 1 0 0 0 0  0   0   0
+*GFVD  1   ! used to turn on (1) or off (0) the VDM form factor at generation
+*   Geometrical cuts control
+* ICUT =0 NO restriction on scattered electron ('NOTAG')
+*       1 At least one electron between TMIN and TMAX(rad )('SINGLE TAG'
+*       2 Both electrons between TMIN and TMAX (double TAG )
+* TMIN    Minimum tag angle in radians , used when ICUT= 1 or 2
+* TMAX    Maximal tag angle in radians used when ICUT = 1 or 2.
+* The angle theta is measured between the electron's original direction
+* and its scattered direction.
+*        ICUT   TMIN   TMAX
+*GCUT      0     0.025   0.200
+*ETAG   0.  ! Min tag energy
+* 0.28 radians == cos(theta)=0.96
+* 0.25 radians == cos(theta)=0.97
+*TKCU    0 0.28 ! Min no tracks with abs(theta) greater than (rad)
+*GGEM 3.5       ! Min mass for gamma-gamma prod, do not go below 3.GeV
+*MSTP 93 / 1    ! kt distribution of parton within a photon
+*PARP 99 / 1.6  ! width of kt distribution in a photon 
+*PARP 100 /10.  ! upper limit for width of kt distribution in a photon
+*MSTP 14 / 10   ! GAMMA-GAMMA OPTIONS
+*PARJ 21 / 0.32 ! SIGMA MT   
+*PARJ 23 / 0.02 ! fraction of non gaussian tail
+*PARJ 41 / 0.60 ! a 
+*PARJ 42 / 0.90 ! B 
+*------------end  section for 2-photons option ----------------------
+END$
+ENDQ
+*-Activate this section if using  ARIADNE  ( IPSHO =2 )           ---   
+*  (comment both END$ and ENDQ with a  *, so the next cards are active) 
+*----------------------------------------------------------------------
+*  standard modification to Ariadne  parameters
+*  published  best fit ARIADNE4 parameters  commom part
+MSTA 20 / 1           ! SWITCH ON FSR IN ARIADNE
+MSTJ  41 / 0          ! FSR is done by Ariadne
+PARJ  41 / 0.40       ! A
+PARJ  54 / -0.040     ! eps_c
+PARJ  55 / -0.0035    ! eps_b
+PARJ  11 / 0.5716     ! V_u,d
+PARJ  12 / 0.4648     ! V_s
+PARJ  13 / 0.65       ! V_c,b
+PARJ  17 / 0.20       ! JP=2+ L=1
+PARJ  16 / 0.12       ! JP=1+
+PARJ  15 / 0.04       ! JP=0+
+PARJ  14 / 0.12       ! JP=1+
+PARJ  26 / 0.2884     ! eta' suppress.
+PARJ  1  / 0.1154     ! qq/q
+PARJ  2  / 0.2863     ! s/d
+PARJ  3  / 0.6507     ! su/du
+PARJ  19 / 0.52       ! 1st rank baryon suppress.
+*    Ariadne without color reconnection   from GR sept 23, 1998
+*----------Activate also this section if NO Color reco in ARIADNE ---
+*----------------------------------------------------------------------
+MSTA  35 / 0          ! color reconnection mode (off)
+PARA  1  / 0.2297     ! Lambda_QCD
+PARA  3  / 0.7907     ! ptmin cut
+PARJ  21 / 0.3577     ! sigma
+PARJ  42 / 0.823      ! B
+*--------get standard setting from block data ------------
+MSTA 3 / 0            ! 0 = setting from Block data 1= EMC-like setting
+END$
+ENDQ

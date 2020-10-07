@@ -1,0 +1,226 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	V0060:1.1.1.1
+	V0059:1.1.1.1
+	V0058:1.1.1.1
+	V0057:1.1.1.1
+	V0056:1.1.1.1
+	V0055:1.1.1.1
+	V0054:1.1.1.1
+	V0053:1.1.1.1
+	V0052:1.1.1.1
+	V0051:1.1.1.1
+	V0050:1.1.1.1
+	V0049:1.1.1.1
+	V0048:1.1.1.1
+	V0047:1.1.1.1
+	V0046:1.1.1.1
+	V0045:1.1.1.1
+	V0044:1.1.1.1
+	V0043:1.1.1.1
+	V0042:1.1.1.1
+	V0041:1.1.1.1
+	V0040:1.1.1.1
+	V0039:1.1.1.1
+	V0038:1.1.1.1
+	V0037:1.1.1.1
+	V0036:1.1.1.1
+	V0035:1.1.1.1
+	V0034:1.1.1.1
+	V0033:1.1.1.1
+	V0032:1.1.1.1
+	V0031:1.1.1.1
+	V0030:1.1.1.1
+	V0029:1.1.1.1
+	V0028:1.1.1.1
+	V0027:1.1.1.1
+	V0026:1.1.1.1
+	V0025:1.1.1.1
+	V0024:1.1.1.1
+	V0023:1.1.1.1
+	V0022:1.1.1.1
+	V0021:1.1.1.1
+	V0020:1.1.1.1
+	V0019:1.1.1.1
+	V0018:1.1.1.1
+	V0017:1.1.1.1
+	V0016:1.1.1.1
+	V0015:1.1.1.1
+	V0014:1.1.1.1
+	V0013:1.1.1.1
+	V0000:1.1.1.1
+	V0001:1.1.1.1
+	v1:1.1.1.1
+	jacotf:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2000.03.01.10.29.36;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	2000.03.01.10.29.36;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@import java.awt.*;               // ScrollPane, PopupMenu, MenuShortcut, etc..
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.ItemEvent;
+
+class listDisplay extends Panel
+            implements ItemListener, fillable{
+
+  List list = new List(20);
+  Panel mainPanel = new Panel();
+  String menuName;
+  TextArea hdr;
+  listDisplay(String header, String m, Color fg, Color bg) {
+    super();
+    setFont(scanbook.myFont);
+    menuName = m;
+    GridBagLayout gblmain =  new GridBagLayout();
+    setLayout(gblmain);
+    GridBagConstraints gbcmain = new GridBagConstraints();
+    gbcmain.fill = GridBagConstraints.HORIZONTAL;
+    gbcmain.weightx = 1;
+    gblmain.setConstraints(mainPanel,gbcmain);
+    add(mainPanel);
+    mainPanel.setBackground(fg);
+
+    GridBagLayout gbl =  new GridBagLayout();
+    mainPanel.setLayout(gbl);
+    GridBagConstraints gbc = new GridBagConstraints();
+    gbc.gridx = 0;
+    gbc.gridy = GridBagConstraints.RELATIVE;
+    gbc.fill = GridBagConstraints.BOTH;
+    gbc.weightx = 1;
+    gbc.weighty = 0;
+    //
+    String work = new String(header);
+    int nrows = 1;
+    //    System.out.println("work start ="+work+"***");        
+    int iw = work.indexOf("\n");
+    int ncols = header.length();
+    if(iw >0){
+     ncols = header.indexOf("\n");
+     while(work.length()>0){
+      iw = work.indexOf("\n");
+      if(iw >0){
+        nrows++;
+        if( iw < work.length()-2){
+          String w2 = new String(work.substring(iw+2));  
+	  //          System.out.println("w2 ="+w2+"***");        
+          work = new String(w2);
+	  //	  System.out.println("work ="+work+"***");        
+        }else{
+          work = new String("");
+	}
+      }
+     }
+    }
+    //    System.out.println("Finiiii nrows, ncols = "+String.valueOf(nrows)+" "+String.valueOf(ncols));
+    hdr = new TextArea(header,nrows,ncols,TextArea.SCROLLBARS_NONE);
+    hdr.setFont(scanbook.myFont);
+    hdr.setEditable(false);
+
+    gbl.setConstraints(hdr,gbc);
+    mainPanel.add(hdr);
+
+    gbl.setConstraints(list,gbc);
+    mainPanel.add(list);
+    list.addItemListener(this);
+    Dimension dh = hdr.getPreferredSize();
+    Dimension dl = list.getPreferredSize();
+    setSize(dh.width,dh.height+dl.height);
+  }
+  //  public void sendSelection(oconnect c){
+  //    c.put_value(menuName,getSelection());
+  //  }
+  public void resetEmpty(){
+    removeAll();
+    showIfNeeded();
+  }
+  public void showIfNeeded(){
+    if(list.getItemCount() > 0){
+      setVisible(true);
+    }else{
+      setVisible(false);
+    }
+    if(scanbook.m1 != null){
+      scanbook.m1.packshow();
+      //    }else{
+      //     System.out.println("Null ---");        
+    }
+  }
+  public String getSelection(){
+    return list.getSelectedItem();
+  }
+  public String getMenuName(){
+    return menuName;
+  }
+  void setTitle(String s){
+      hdr.setText(s);
+  }
+  public void addItem(String lbl){
+    addItem(lbl,false,true);
+  }
+  public void addItem(String lbl, boolean select, boolean enabled){
+    if(enabled){
+      list.addItem(lbl);
+      if(select){
+        list.select(list.getItemCount()-1);
+      }
+    }else{
+      setTitle(lbl);
+    }
+  }
+    /*
+  public void addItem(String lbl, boolean select, boolean enabled){
+    list.addItem(lbl);
+    if(select){
+      list.select(list.getItemCount()-1);
+    }
+  }
+    */
+  public void removeAll(){
+    if(list.getItemCount()>0){
+      list.removeAll();
+    }
+  }
+  public Insets getInsets(){
+    return new Insets(10,10,10,10);
+  }
+  public void itemStateChanged(ItemEvent e) {
+        String lbl = list.getItem(((Integer)(e.getItem())).intValue());
+	//      System.err.println("2");
+        scanbook.callbacks(menuName,lbl);
+  }
+}
+@
+
+
+1.1.1.1
+log
+@ import jscanbook
+@
+text
+@@

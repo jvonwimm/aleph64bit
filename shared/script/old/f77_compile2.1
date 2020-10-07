@@ -1,0 +1,103 @@
+#! /bin/csh
+#============================================================================
+#                         f77_compile
+# 20/10/92                                          F.Blin
+#============================================================================
+# compile *.f from src_dir onto obj_dir=src_dir/${OS}
+# src_dir = current directory `pwd`
+# f77 parameters are taken from ${prog_dir}/f77_options or f77_dbx_options
+# prog_dir = current directory `pwd` or an official ALEPH directory when
+#            P1 is an ALEPH program name
+#=============================================================================
+# P1 program name
+# P2 "dbx" or blank
+#============================================================================
+# f77_compile1.0                                    FLR
+# 930802 - remove writing on /aleph/alib/pub/spy
+# f77_comile1.1                                     FLR
+# 931014 - set echo on when last argument is "-v"
+# f77_compile2.0                                    FLR
+# 940314 - compile on ${src_dir}/${OS}
+#          compile all a*.f first, then b*.f,... z*.f
+# f77_compile2.1                                    FLR
+# 940922 - compile all a*.f,b*.f,...with one call to f77
+#          use ${ALEPH} instead of /aleph
+#============================================================================
+#set echo on when last arg is "-v"
+ set exec_name = "f77_compile2.1"
+set nar = $#argv
+if (nar != 0) then
+  if ($argv[${nar}] == "-v") then
+     echo "${exec_name}"
+     set echo on
+     set argv[${nar}] = ""
+  endif
+endif
+#*******>
+ set UNAME = `uname`
+ set flag = "OK"
+ set alib_dir = "${ALEPH}/alib"
+#*******> first parameter
+if ($1 == "") then
+  echo -n "Enter Aleph program name [eg:julia <CR>=exit]-> "
+   set prog_name = $<
+   if (${prog_name} == "") exit
+else
+   set prog_name = $1
+endif
+# 
+set idir = `egrep ${prog_name} ${alib_dir}/pub/progl | awk '{print $2}'`
+set src_dir = `pwd`
+set obj_dir = "${src_dir}/${OS}"
+#
+if !(-d ${obj_dir}) then
+   mkdir ${src_dir}/${OS}
+endif
+#
+if (${idir} == "") then
+   set prog_dir = `pwd`
+else
+   set prog_dir = "${ALEPH}/${idir}"
+endif
+ 
+#*******> second parameter
+ set dbx = $2
+ set file_para = "${prog_dir}/f77_options"
+ if (${dbx} == "dbx") then
+    set dbx = "_dbx"
+    set file_para = "${prog_dir}/f77_dbx_options"
+ endif
+ if !(-e ${file_para}) then
+    set flag = "FATAL: ${file_para} is unknown"
+    goto spy
+ endif
+ set all_para = `egrep "${prog_name} " ${file_para} | awk '{print substr($0,15)}'`
+
+#*******> f77 foreach routine
+ cd ${obj_dir}
+ echo `date` "${prog_name} -> f77 begin" > f77_check${dbx}.log
+#
+ set init  = ( a b c d e f g h i j k l m n o p q r s t u v w x y z )
+ foreach in ( $init[*] )
+    ls ../${in}*.f
+    if ( $status == 0) then
+      f77 ${all_para} ../${in}*.f | & tee -a ${prog_name}${dbx}.log
+      if ( $status == 1) then
+        set flag = "FATAL: f77 failure"
+        goto spy
+      endif
+    endif 
+ end
+ echo `date` "${prog_name} -> f77 end" >> f77_check${dbx}.log
+#
+ grep -n 'Error' ${prog_name}${dbx}.log > ${prog_name}${dbx}.Error
+ if !(-z ${prog_name}${dbx}.Error) then
+    set flag = "FATAL: compilation errors"
+ endif
+ 
+#*******> spy
+spy:
+ echo `date` "${exec_name} ${user} ${OS} ${prog_name} ${all_para} ${flag}" >> ${prog_dir}/spy
+ 
+exec_end:
+cd ${src_dir}

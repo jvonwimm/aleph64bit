@@ -1,0 +1,103 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	mini202_9:1.1.1.1
+	mini202_8:1.1.1.1
+	mini202_7:1.1.1.1
+	mini202_6:1.1.1.1
+	mini202_5:1.1.1.1
+	mini202_4:1.1.1.1
+	mini202_2:1.1.1.1
+	mini202_1:1.1.1.1
+	mini202:1.1.1.1
+	mini201_1:1.1.1.1
+	mini104_1:1.1.1.1
+	mini103_1:1.1.1.1
+	mini102_7:1.1.1.1
+	mini102_5:1.1.1.1
+	mini102_4:1.1.1.1
+	mini102_3:1.1.1.1
+	mini102_2:1.1.1.1
+	mini102_1:1.1.1.1
+	mini102:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.08.15.11.09.40;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.08.15.11.09.41;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE MINLOL
+C
+CKEY MDST /USER
+C-----------------------------------------------------------------------
+C! Fill LOLE bank from DEVT or DHEA.
+C
+C     Author: Stephen Haywood      03-Apr-90
+C-----------------------------------------------------------------------
+#ifndef DOC
+C
+#include "bcs.h"
+#include "devtjj.h"
+#include "dheajj.h"
+#include "lolejj.h"
+#include "bmacro.h"
+C
+      KDEVT = NLINK('DEVT',0)
+      KDHEA = NLINK('DHEA',0)
+      IF (KDEVT.LE.0 .AND. KDHEA.LE.0) RETURN
+C
+C++   Create LOLE bank.
+C
+      LEN = LMHLEN + LLOLEA
+      CALL AUBOS('LOLE',0,LEN, KLOLE,IGARB)
+      CALL BLIST(IW,'S+','LOLE')
+      IF(IGARB.GE.2) THEN
+         RETURN
+      ELSE IF(IGARB.NE.0) THEN
+         KDEVT = NLINK('DEVT',0)
+         KDHEA = NLINK('DHEA',0)
+      ENDIF
+      IW(KLOLE+LMHCOL) = LLOLEA
+      IW(KLOLE+LMHROW) = 1
+C
+      IF (KDEVT.GT.0) THEN
+         IER = ITABL(KDEVT,1,JDEVLE)
+      ELSE
+         IER = ITABL(KDHEA,1,JDHERS)
+      ENDIF
+      IW(KROW(KLOLE,1)+JLOLER) = IER
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@1st release of mini under cvs
+@
+text
+@@

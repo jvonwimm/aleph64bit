@@ -1,0 +1,138 @@
+      SUBROUTINE WBANK(JW,ID,ND,*)
+C
+C     CREATE WORKBANK AT INDEX ID OR CHANGE LENGTH
+C        JW(1)=1   NO RESET TO ZERO OF ADDITIONAL WORDS
+C        JW(1)=4   IF LENGTH IS REDUCED, BANK IS REALLY MADE SHORTER
+C
+      INTEGER JW(*),ID(1)
+#include "boscom.h"
+#include "param.h"
+#include "mparam.h"
+      INTEGER HWORK
+      DATA HWORK/0/
+C
+C     ...
+      IF(JW(ICK).NE.12345) CALL BBNOT(JW,'WBANK')
+      IF(ND.LT.0) THEN
+C
+C        VALUE OF ARGUMENT ND LESS THAN ZERO
+C
+         IF(JW(LUP).GT.0) WRITE(JW(LUP),1001) ND
+         CALL BABEND('WBANK')
+      END IF
+      NRESRV=NRESR
+   10 IF(HWORK.EQ.0) HWORK=INTCHA('WORK')
+      JW1  =JW(1)
+      JW2  =0
+      JW(1)=0
+      LD=LOCF(ID(1))-JW(LJW)+1
+C
+C
+C
+   20 IF(ID(1).EQ.0) THEN
+C
+C        CREATE NEW WORK BANK
+C
+         IF(ND+4+NRESRV.GT.JW(IWK)-JW(IGP)) THEN
+            CALL WGARB(JW)
+            IF(ND+4+NRESRV.GT.JW(IWK)-JW(IGP)) GOTO 91
+         END IF
+         JW(IWK)=JW(IWK)-ND-4
+         ID(1)=JW(IWK)+3
+         JW(ID(1)-3)=HWORK
+         JW(ID(1)-2)=ND+4
+         JW(ID(1)-1)=LD
+         JW(ID(1)  )=ND
+         IZER=ID(1)+1
+         NZER=ND
+      ELSE
+C
+C        VERIFY VALUE OF WORK BANK INDEX ID
+C
+         IF(ID(1).GT.JW(IWK).AND.ID(1).LT.JW(NJW)) THEN
+            IF(JW(ID(1)).GE.0.AND.JW(ID(1)-1).EQ.LD) GOTO 25
+         END IF
+         IF(JW(LUP).GT.0) WRITE(JW(LUP),1002) ID(1)
+         CALL BABEND('WBANK')
+C
+C        CHANGE LENGTH OF EXISTING BANK
+C
+   25    NDIF=ND+4-JW(ID(1)-2)
+         IF(NDIF.LE.0.AND.JW1.NE.4) THEN
+C
+C           CHANGE IN PLACE
+C
+            IZER=ID(1)+JW(ID(1))+1
+            NZER=ND-JW(ID(1))
+            JW(ID(1)  )=ND
+         ELSE
+C
+C           CHANGE REQUIRES SHIFT
+C
+            IF(NDIF.GT.0.AND.NDIF+NRESRV.GT.JW(IWK)-JW(IGP)) THEN
+               CALL WGARB(JW)
+               IF(NDIF+NRESRV.GT.JW(IWK)-JW(IGP)) GOTO 92
+            END IF
+            ID(1) = JW(LD)
+            ICOP=JW(IWK)
+            IF(NDIF.GT.0) THEN
+               NCOP=ID(1)+JW(ID(1))+1-ICOP
+            ELSE
+               NCOP=ID(1)+ND+1-ICOP
+            END IF
+            NZER=ND-JW(ID(1))
+            IZER=ID(1)+JW(ID(1)-2)-NZER-3
+            CALL UCOPY2(JW(ICOP),JW(ICOP-NDIF),NCOP)
+            IF(JW(IGW).NE.0.AND.JW(IGW).LT.ID(1))
+     1                                      JW(IGW)=JW(IGW)-NDIF
+            ID(1)=ID(1)-NDIF
+            JW(ID(1)-2)=ND+4
+            JW(ID(1)  )=ND
+            JW(IWK)=JW(IWK)-NDIF
+            JD=JW(IWK)+3
+   30       IF(JD.LT.ID(1)) THEN
+               IF(JW(JD).GE.0) JW(JW(JD-1))=JD
+               JD=JD+JW(JD-2)
+               GOTO 30
+            END IF
+         END IF
+      END IF
+C
+C     PRESET TO ZERO
+C
+      IF(NZER.GT.0.AND.JW1.NE.1) THEN
+         DO 40 M=1,NZER
+   40    JW(IZER-1+M)=0
+      END IF
+      GOTO 90
+C
+C     CODE 2   INSUFFICIENT SPACE TO INCREASE LENGTH OF EXISTING BANK
+C
+   92 JW2=JW2+1
+C
+C     CODE 1   INSUFFICIENT SPACE TO CREATE NEW BANK
+C
+   91 JW2=JW2+1
+      IF(JW(LUP).NE.0.AND.JW(LUW).NE.0)
+     1   CALL BBRET(JW,JW2,'WBANK','WORK')
+      JW(2)=JW2
+      JW(IRC+JW2)=JW(IRC+JW2)+1
+      GOTO 101
+C
+C     INTERNAL ENTRY
+C     CREATE WORKBANK AT INDEX ID OR CHANGE LENGTH (NO RESERVED WORDS)
+C
+      ENTRY WBANC(JW,ID,ND,*)
+      NRESRV=0
+      GOTO 10
+C
+C
+C
+   90 JW(2)=0
+  100 RETURN
+  101 RETURN 1
+ 1001 FORMAT('0BOS--WBANK-  WRONG ARGUMENT - STOP'/
+     1 14X,'ND= ',I10)
+ 1002 FORMAT('0BOS--WBANK-  INDEX ID INCORRECT - STOP'/
+     1 14X,'ID= ',I12)
+      END

@@ -1,0 +1,94 @@
+*DK tpinrf
+      SUBROUTINE TPINRF
+C-----------------------------------------------------------------------
+C! Initialize BOS signal reference banks for analog signals for each
+C!  active channel type
+C
+C  Called from:  TSINIT
+C  Calls:        BDROP, WBANK
+C
+C  Inputs:
+C            TPCONS.INC:  --NTSCAN, the number of sections into which
+C                                   to divide the full analog signal
+C                                   collection time
+C            TPCOND.INC:  --TPDGBN, time bin length
+C                         --DRFVEL, drift velocity
+C                         --LTANSV, channel types for which to save
+C                                   raw analog signals
+C
+C  Outputs:
+C            BANKS:       --named bank ANLHED, NR 0: analog signal
+C                           header bank, containing flags for channel
+C                           types saved, plus drift velocity and time
+C                           bin length.
+C                         --work bank id INDREF, analog signal reference
+C                           bank, filled in TPSGNL
+C
+C                           IW(INDREF+1) = num of channels of type
+C                           IW(INDREF+2) = words per channel
+C
+C                           KREF = INDREF + 2 + (JCH-1)*IW(INDREF+2)
+C                           IW(KREF+1) = 1st time bin hit on JCH
+C                           IW(KREF+2) = last time bin hit on JCH
+C                           IW(KREF+2+JSC) = pointer into signal bank
+C                                            for JSCth section of analog
+C                                            signal for channel JCH
+C
+C                         --work bank id ITPULS, bank for analog signal
+C                           pulse on one channel over full signal
+C                           collection time; filled as needed in TPRESP
+C                           and TORAWO; dropped in TSFINI
+C  D. DeMille
+C
+C  Modifications:
+C
+C     1.  22feb89 DFC -- Add in error message in case the call to WBANK
+C                        gives an error return.
+C-----------------------------------------------------------------------
+#include "bcs.h"
+#include "tpcbos.h"
+#include "tpcond.h"
+#include "tpcons.h"
+C
+C  Set the analog signal time bin
+C
+      TPANBN = TPDGBN / FLOAT(NTBAPD)
+C
+C  Open the single-pulse bank
+C
+      CALL WBANK(IW,ITPULS,NTMXAN,*999)
+C
+C  Now we're ready to open reference banks.  Set the number of words
+C  per channel to allow 1 word for the earliest time bin hit, one word
+C  for the latest time bin hit, and one word for a pointer into the
+C  signal bank for each division of the analog signal
+C
+      NWPCH = 2 + NTSCAN
+C
+      DO 3 KCHAN = 1,NCHAN
+C
+C  If this channel type is on, open the reference bank for it
+C  nd = lhdr + max num of channels of this type * num words per channel
+C
+         IF ( .NOT. LTDIGT(KCHAN) ) GOTO 3
+C
+         NDREF = 2 + MAXNCH(KCHAN)*NWPCH
+         CALL WBANK(IW,INDREF(KCHAN),NDREF,*999)
+C
+C  Fill the ref bank header.
+C  + 1 = nrows = number of channels of this type
+C  + 2 = ncols = num of words per channel
+C
+         IW(INDREF(KCHAN)+1) = MAXNCH(KCHAN)
+         IW(INDREF(KCHAN)+2) = NWPCH
+C
+C  Next channel type
+C
+ 3    CONTINUE
+C
+      RETURN
+C
+  999 WRITE(6,'(/'' +++TPINRF+++ Insufficient BOS array space!''/)')
+      RETURN
+C
+      END

@@ -1,0 +1,228 @@
+head	1.2;
+access;
+symbols
+	jul313_3:1.2
+	jul313_2:1.2
+	jul313_1:1.2
+	jul313:1.2
+	jul312_1:1.2
+	jul312:1.2
+	jul311:1.2
+	jul310_1:1.2
+	jul310:1.2
+	jul309_1:1.2
+	jul309:1.2
+	jul308_6:1.2
+	jul308_5:1.2
+	jul308_4:1.2
+	jul308_3:1.2
+	jul308_2:1.2
+	jul308_1:1.2
+	jul308:1.2
+	jul307_4:1.2
+	jul307_3:1.2
+	jul307_2:1.2
+	jul307_1:1.2
+	jul307:1.2
+	jul306_3:1.2
+	jul306_2:1.2
+	jul306_1:1.2
+	jul306:1.2
+	jul305_4:1.2
+	jul305_3:1.2
+	jul305_2:1.2
+	jul305_1:1.2
+	jul305:1.2
+	jul304_3:1.2
+	jul304_2:1.2
+	jul304_1:1.2
+	jul304:1.2
+	jul303_7:1.2
+	jul303_6:1.2
+	jul303_5:1.2
+	jul303_4:1.2
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2
+	jul280_1:1.2
+	jul280:1.2
+	jul279:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.12.14.38.39;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.17.22;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.17.23;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+ Modified Files:
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+@
+text
+@      SUBROUTINE CASMP(ITR,IFND)
+C***********************************************************************
+C! assoc. hc and tpc mip                                               *
+C!                                                                     *
+C!  AUTHOR   : A. BONISSENT  870911                                    *
+C!  MODIFIED : A. BONISSENT  901206                                    *
+C!                                                                     *
+C!                                                                     *
+C!  BANKS :                                                            *
+C!    INPUT   : TREX                                                   *
+C!    OUTPUT  : NONE                                                   *
+C!    CREATED : NONE                                                   *
+C!                                                                     *
+C!   itr = track number                                                *
+C!                                                                     *
+C***********************************************************************
+#ifndef DOC
+#include "ecnamc.h"
+#include "etckjj.h"
+#include "hclujj.h"
+#include "hcnamc.h"
+#include "bcs.h"
+#include "trexjj.h"
+      DIMENSION XPT(3)
+      EXTERNAL NLINK
+#include "bmacro.h"
+      KTREX=NLINK('TREX',ITR)
+      KETCK=IW(NAETCK)
+      KHCLU=IW(NAHCLU)
+C
+C? Get associated ecob
+C
+      IECOB=ITABL(KETCK,ITR,JETCEC)
+C
+C?  Get number of points and loop on them
+C
+      NPTS=LROWS(KTREX)
+      DO 100 IPT=1,NPTS
+C
+C?   Eliminate points which are not in Hcal
+C
+      IRG=IABS(ITABL(KTREX,IPT,JTRERG))/1000
+      IF(IRG.NE.3)GO TO 100
+C
+C?   Get x,y,z and make encoded storey address
+C
+         DO 45 KC=1,3
+   45    XPT(KC)=RTABL(KTREX,IPT,JTREX3-1+KC)
+         CALL HFNDTW(XPT,'ALEPH',JT,IFI,KS,ISUBC,IMOD,IPL,IDEAD)
+         IF(IDEAD.NE.0)GOTO 100
+C
+C?   See if storey is hit
+C
+      CALL CISHIT(IFI,JT,KS,IHCLU)
+      IF(IHCLU.NE.0)THEN
+C
+C? Skip noisy hclusters
+C
+C
+C This was considered unwise, suppress it (july 1991)
+C
+C         NOISE=ITABL(KHCLU,IHCLU,JHCLNF)
+C         IF(NOISE.EQ.0)THEN
+         CALL CINSRL(ITR,IHCLU,0.,IECOB)
+         IFND=1
+C         ENDIF
+C
+C? IF storey is hit, we can exit since neighbouring storeys
+C?         belong to the same cluster
+C
+         GO TO 100
+      ELSE
+C
+C?     Go into cnighb, to loop on neighbouring storeys and find
+C?       associated clusters
+         RMS=RTABL(KTREX,IPT,JTRERM)
+C
+         CALL CNIGHB(XPT,RMS,JT,IFI,KS,ITR,IECOB,IFND)
+      ENDIF
+  100 CONTINUE
+C
+C? If no hclu was associated, put the track-ecob relation
+C?  but only if ecob exists
+C
+      IF(IFND.EQ.0.AND.IECOB.NE.0)THEN
+         IHCLU=0
+         CALL CINSRL(ITR,IHCLU,0.,IECOB)
+      ENDIF
+  999 CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK casmp
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

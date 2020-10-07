@@ -1,0 +1,133 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.48.11;	author flr;	state Exp;
+branches
+	1.2.2.1;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.12;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.13;	author flr;	state Exp;
+branches;
+next	;
+
+1.2.2.1
+date	99.10.28.09.33.23;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE BEPRW(LUN)
+C
+C     REWIND UNIT LUN
+C
+#include "boscom.h"
+#include "param.h"
+#include "mparam.h"
+C     ...
+      IF(LEPIO.EQ.0) THEN
+         CALL EPINIT
+*        CALL EPSTAT
+         LEPIO=1
+*        IF(IW(6).NE.0) CALL EPIOT(IW(6))
+      END IF
+      IBF= NLINK('+BUF',LUN)
+      IF(IBF.EQ.0) GOTO 100
+#include "unpackio.h"
+      IF(IOMD.NE.1) THEN
+         IF(IW(LUP).GT.0) WRITE(IW(LUP),1001) LUN
+         CALL BABEND('BEPRW')
+      END IF
+      IF(MOD(IOST,4).NE.0) THEN
+         CALL EPRWND(LUN,IW(IBF+21),IER)
+         IF(IOST.EQ.2) IW(IBF+4)=IW(IBF+4)+1
+         IOST=MOD(IOST,4)+4
+#include "packio.h"
+         IF(IER.NE.0) GOTO 202
+         IF(IW(LUP).NE.0.AND.IW(LUW).GT.0) THEN
+            WRITE(IW(LUP),1003) LUN
+            IW(LUW)=IW(LUW)-1
+         END IF
+      END IF
+      IBF= NBANK('+BUF',LUN,20)
+      IF(IBF.EQ.0) GOTO 201
+  100 RETURN
+  201 CALL BBSPC(IW,'BEPRW')
+      GOTO 100
+  202 IF(IW(LUP).GT.0) WRITE(IW(LUP),1002) IER
+      CALL BABEND('BEPRW')
+      GOTO 100
+ 1001 FORMAT('0BOS--BEPRW-  WRONG UNIT - STOP',
+     1       14X,'UNIT =',I3)
+ 1002 FORMAT('0BOS--BEPRW-  EPIO ERROR',I3,' - STOP')
+ 1003 FORMAT('0BOS--BEPRW-  REWIND UNIT',I3)
+      END
+@
+
+
+1.2.2.1
+log
+@bos3489-1: beprw.F - do not call eprwnd for output file
+@
+text
+@d23 2
+a24 7
+         IF(IOST.EQ.2) THEN
+*         write mode: do not rewind it has been done by BEPRW 
+           IW(IBF+4)=IW(IBF+4)+1
+         ELSE
+*         read mode: rewind 
+           CALL EPRWND(LUN,IW(IBF+21),IER)
+         ENDIF
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK beprw
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

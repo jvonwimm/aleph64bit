@@ -1,0 +1,195 @@
+#! /bin/csh
+#============================================================================
+#                             UPDCORR
+# 16/10/92                                                      F.Blin
+#============================================================================
+# procedure to create a new ALEPH correction file on UNIX
+#============================================================================
+# all Aleph libraries on file -> ${alib_dir}/pub/progl
+# all Aleph CERNVM disks on file -> ${alib_dir}/alibdisk
+# Call ${alib_dir}/alftp -> run FTP on CERNVM to search one file on PUBXU
+# Call by ${alib_dir}/newver
+#============================================================================
+# P1 -> prog_name                          eg: julia
+# P2 -> version number                     eg: 273
+# P2 -> call by                            eg: newver or ""
+#============================================================================
+# updcorr2.0                                                    FLR
+# 11/07/93 - add lib_dir :*.o files are stored on lib_dir       
+#            lib_dir is set to `pwd`
+# 14/07/93 - get cycle number and last date from ${corr_dir}/alib.log
+# 15/07/93 - on CSF and DXAL//OSF1 compile the existing correction
+#            file on SHIFT or ULTRIX
+# updcorr2.2                                                    FLR
+# 31/08/93 - use the environment variable MASTER to retrieve the corr. file
+# updcorr2.3                                                    FLR
+# 13/10/93 - compile correction file without dbx
+#            set echo on if last argv is "-v"
+# updcorr2.4                                                    FLR
+# 9/11/93 - fortran is stored on corr_dir = /al/${MASTER}/${idir}
+#           object file is stored on lib_dir
+#           lib_dir is set to `pwd` 
+#           when updcorr is called directly a warning is printed when 
+#           lib_dir is not /aleph/${idir}
+# updcorr2.5
+# 16/05/94 - introduce version number as argument# 2            FLR
+#            the exec_name which can call updcorr is the 3rd argument
+#            it can be "newver" which means that updcorr is called from newver
+#            and the correction file has already been fetched from CERNVM.
+# updcorr2.6                                                    
+# 09/06/94 - it can be "new" or "" which means get a new correction file 
+#            from CERNVM.
+#            it can be "old" which means use the correction file from ${MASTER}
+# updcorr2.7
+# 27/06/94 - remove the exec-name as 3rd argument : it must be "new" or "old"
+#            when called from newver or newlib it is "old"
+#            by default it is "new"
+#============================================================================
+#set echo on if last argument is "-v"
+set nar = $#argv
+if (${nar} != 0) then
+  if ($argv[${nar}] == "-v") then
+     set echo on
+     echo "updcorr2.7" 
+     set argv[${nar}] = ""
+     @ nar = ${nar} - 1 
+  endif
+endif
+#
+set exec_name = "updcorr"
+set fget = "new"
+if (${nar} != 0) then
+   if ($argv[${nar}] == "old") set fget = "old"  
+   set argv[${nar}] = ""
+endif
+#*******>
+set UNAME = `uname`
+set alib_dir = "/aleph/alib"
+set lib_dir  = `pwd`
+set mnemonic = ""
+set all_para_dbx = ""
+set flag = "OK"
+#
+#*******>
+if ($1 == "") then
+  echo -n "Enter Aleph program name [eg:julia <CR>=exit]-> "
+   set prog_name = $<
+   if (${prog_name} == "") goto end
+else
+   set prog_name = $1
+endif
+ 
+if (${prog_name} == "julia" || ${prog_name} == "galeph" || ${prog_name} == "alpha" ) goto begin
+echo " Only alpha, galeph or julia ."
+goto end
+
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> begin
+begin:
+#*******
+set idir = `egrep ^" ${prog_name} " ${alib_dir}/pub/progl | awk '{print $2}'`
+if (${idir} == "") then
+   echo " WARNING ***> see file ${alib_dir}/pub/ progl"
+   goto end
+endif
+set mnemonic = `echo ${prog_name} | awk '{print substr($0,1,1) "cor"}'`
+if (${prog_name} == "alpha") then
+   set mnemonic = `echo ${prog_name} | awk '{print substr($0,1,2) "cor"}'`
+endif
+ 
+#*******
+set prog_dir = "/al/${OS}/${idir}"
+ 
+set cycle_old = `egrep ^" ${prog_name} " ${prog_dir}/alib.log | awk '{print $3}'`
+set dmy_old = `egrep ^" ${prog_name} " ${prog_dir}/alib.log | awk '{print $4}'`
+
+if (${exec_name} == "updcorr") then
+  if ($2 == "") then
+    set string = "<CR=${cycle_old}>"
+    echo -n "Enter version number [${string}]->"
+    set cycle = $<
+    if (${cycle} == "") then
+      set cycle = ${cycle_old}
+    endif
+  else
+    set cycle = $2
+  endif
+else
+  set cycle = ${cycle_old} 
+endif
+ 
+set file_name = ${mnemonic}${cycle}
+#*******
+
+set ref_dir = "/al/${MASTER}/${idir}"
+
+#*******> if a new file is requested run ftp and fnice
+if (${fget} == "new") then
+   cd ${ref_dir}
+   set file_type = `egrep ^" ${prog_name} " ${alib_dir}/pub/progl | awk '{print $5}'`
+   set disk_ibm_name = "pub"
+   set transfert_type = "ascii"
+   set disk_ibm = `egrep "${disk_ibm_name} " ${alib_dir}/alibdisk | awk '{print $2 "." $3}'`
+   echo "Now run FTP -> alftp ${file_name} ${file_type} ${disk_ibm} ${transfert_type}"
+   alftp ${file_name} ${file_type} ${disk_ibm} ${transfert_type}
+ 
+   if !(-e ${ref_dir}/${file_name}.${file_type}) then
+      echo " WARNING ***> file ${ref_dir}/${file_name}.${file_type} is unknown"
+      set flag = "problem with FTP"
+      goto exec_end
+   endif
+ 
+   mv -f ${ref_dir}/${file_name}.${file_type} ${ref_dir}/${file_name}.f
+ 
+   if (-e ${file_name}.f) then
+      echo "Now -> fnice for ${file_name}.f"
+      fnice ${file_name}.f && rm ${file_name}.fugly
+   else
+      echo " WARNING ***> fnice"
+      set flag = "fnice problems"
+      goto exec_end
+   endif
+endif 
+#*******> set a link into prog_dir
+unalias ln
+ln -fs ${ref_dir}/${file_name}.f ${prog_dir}/${file_name}.f
+
+#*******> compile ${ref_dir}/${file_name}.f on to ${lib_dir}
+compile:
+
+if ( ${exec_name} == "updcorr" && ${lib_dir} != "/al/${OS}/${idir}" ) then
+  echo " WARNING you are not in the official directory pwd = ${lib_dir}"
+  echo -n " do you want to go to the official directory [yes or no <CR>=no]-> "
+  if ($< == "yes") set lib_dir = "/al/${OS}/${idir}"
+endif
+echo " lib_dir = ${lib_dir}"
+cd ${lib_dir}
+
+set file_para = "${lib_dir}/f77_options"
+if !(-e ${file_para}) then
+   echo " WARNING ***> file ${file_para} is unknown"
+   goto end
+endif
+
+set all_para_dbx = `egrep ^" ${prog_name} " ${file_para} | awk '{print substr($0,15)}'`
+
+echo "Now -> f77 ${all_para_dbx} ${ref_dir}/${file_name}.f"
+f77 ${all_para_dbx} ${ref_dir}/${file_name}.f | & tee ${file_name}.log
+
+set file_error = "${file_name}_Error"
+echo "Now -> grep -n 'Error' ${file_name}.log > ${file_error}.log"
+grep -n 'Error' ${file_name}.log > ${file_error}.log
+if !(-z ${file_error}.log) then
+    set flag = "COMPILATION PROBLEMS"
+    echo " WARNING ***> compilation problems"
+    echo "see file -> ${file_error}.log"
+endif
+#
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> exec_end
+exec_end:
+#*******> spy
+set dmyh = `date '+%d-%h-19%y %T'`
+echo "${exec_name} ${user} ${dmyh} ${prog_name} ${fget} ${file_name} ${all_para_dbx} ${flag}" >> ${lib_dir}/spy
+
+end:
+exit

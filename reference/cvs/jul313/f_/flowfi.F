@@ -1,0 +1,377 @@
+      SUBROUTINE FLOWFI(IERR)
+C========================================================================
+C!   Steering routine for Energy-flow calculation
+C-
+C-   Authors : M.N. Minard , M. Pepe       10/05/89
+C-   Modified: M.N  Minard                 04/01/91
+C-
+C
+C?
+C!======================================================================
+#ifndef DOC
+#include "ecnmsk.h"
+#include "esdajj.h"
+#include "hsdajj.h"
+#include "eclujj.h"
+#include "ecobjj.h"
+#include "ectejj.h"
+#include "hctejj.h"
+#include "ectyjj.h"
+#include "prtmjj.h"
+#include "frftjj.h"
+#include "lclujj.h"
+#include "jarray.h"
+#include "alcons.h"
+#include "ectcom.h"
+#include "rparac.h"
+#include "bcs.h"
+      EXTERNAL NAMIND
+      DIMENSION COSI(8) , XPOIN(3,8) , PV(4)  , EVECT(4)
+      DATA EMINE ,EHMINE /0.030 , 0.200 /
+      DATA NAPRTM /0/
+#include "bmacro.h"
+C
+      IF (NAPRTM.EQ.0) THEN
+        NAFRFT = NAMIND ('FRFT')
+        NAPRTM = NAMIND ('PRTM')
+        NAECTY = NAMIND ('ECTY')
+        NAECTE = NAMIND ('ECTE')
+        NAECLU = NAMIND ('ECLU')
+        NAESDA = NAMIND ('ESDA')
+        NAECOB = NAMIND ('ECOB')
+        NAHCTE = NAMIND ('HCTE')
+        NALCLU = NAMIND ('LCLU')
+        NAHSDA = NAMIND ('HSDA')
+      ENDIF
+C
+      IERR = 0
+      NINDMX = 0
+      INDEX = NINDMX
+      CALL VZERO(IARRAY(1,1),9000)
+
+C- Different Type of elements defined for E-Flow
+C  1 = Tracks
+C  2 = muons
+C  3 = identified gammas in Ecal stacks 1+2 i.e. Egamma(1+2)
+C  4 = identified gammas in Ecal stack  3   i.e. Egamma(3)
+C  5 = Ecal(1+2)-Ecal(1+2)mask-Egamma(1+2)
+C  6 = Ecal(3)-Ecal(3)mask-Egamma(3)
+C  7 = Ecal(1+2)mask
+C  8 = Ecal(3)mask
+C  9 = Hcal-Hcalmask
+C 10 = Lcal(1+2)
+C 11 = Lcal(3)
+C
+C-    skip loop on tracks if FRFT or PRTM is missing
+C
+      KFRFT = IW (NAFRFT)
+      IF (KFRFT.EQ.0) GOTO 550
+      KPRTM = IW(NAPRTM)
+      IF (KPRTM.EQ.0) GOTO 550
+C
+C-    Loop on tracks
+C
+      NTRAK = LROWS ( KFRFT )
+      IF ( NCMAX-2*NTRAK-INDEX .LE.0 ) GO TO 999
+C
+      DO 500 ITRAK = 1, NTRAK
+        JFRFT = KROW ( KFRFT , ITRAK )
+C
+C-    Check if track is of good quality
+C
+        CALL ECHTAG( ITRAK,IFLAG,EVECT)
+        IF ( MOD(IFLAG,100).NE.1.AND.MOD(IFLAG,100).NE.3) THEN
+          GO TO 500
+        ENDIF
+C
+C-    Get track momentum
+C
+        RIN    = -RW   ( JFRFT+JFRFIR)
+        TLAM   =  RW   ( JFRFT+JFRFTL)
+        PHI0   =  RW   ( JFRFT+JFRFP0)
+        Q      =  SIGN ( 1.,RIN)
+        R0     =  Q/RIN
+        PV(1)  =  R0 * COS(PHI0)
+        PV(2)  =  R0 * SIN(PHI0)
+        PV(3)  =  R0 * TLAM
+C
+C-    Convert from cm to GeV
+C
+        DO 270 I = 1,3
+          PV(I) = PV(I)*AAAKEC*FILDEC
+  270   CONTINUE
+        PTOT  =  SQRT(PV(1)**2+PV(2)**2+PV(3)**2)
+C
+C-    Sum track energy
+C
+        ITYP = 1
+C
+C-    if muon track, ITYP = 2
+C
+        IST  = ITABL(KPRTM,ITRAK,JPRTCT)
+        IF(IST.EQ.2 .OR. IST.EQ.11) ITYP = 2
+C
+C-    if electron go to next track in loop
+C
+        IF(IST.EQ.1) GO TO 500
+        IF ( IST.EQ.11) IST = 1
+C
+C-    in case of no mask address go away
+C
+        PV ( 4 ) =  PTOT
+        INDEX = INDEX + 1
+C
+C-    store tracks into arrays
+C
+        DO 10 IL = 1,4
+          XARRAY (IL,INDEX) = PV(IL)
+   10   CONTINUE
+        IARRAY (1,INDEX) = ITYP*100+IST
+        IARRAY (3,INDEX) = ITRAK
+C
+  500 CONTINUE
+C
+  550 CONTINUE
+
+C
+C-    Start loop on calorimetry
+C
+      KECTY = IW(NAECTY)
+      KECTE = IW(NAECTE)
+      NECTE = 0
+      IF ( KECTE.NE.0) NECTE = LROWS(KECTE)
+      KECLU = IW(NAECLU)
+      IF (KECLU.EQ.0) GOTO 120
+      NECLU = LROWS(KECLU)
+      IF ( NECLU.EQ.0) GO TO 120
+      KECOB = IW(NAECOB)
+      IF ( KECOB.EQ.0) GOTO 120
+      NECOB = LROWS(KECOB)
+      IF ( NECOB.EQ.0) GO TO 120
+C
+C-    Loop  on ESDA to estimate ESDA contribution
+C
+      KESDA = IW(NAESDA)
+      NEBTH = 0
+      IF ( KESDA.GT.0) THEN
+        DO   45 IESDA = 1,LROWS(KESDA)
+          IF (RW (KROW(KESDA,IESDA)+JESDME). GT.EMINE) NEBTH = NEBTH+1
+   45   CONTINUE
+      ENDIF
+C
+C-    Loop on ECLU  and check if storey is in road
+C
+      IF ( NCMAX-INDEX-2*NEBTH.LE.0) GO TO 999
+      DO 100 IECLU = 1,NECLU
+        CALL ECSUPP (IECLU,ISUP)
+        IF ( ISUP.NE.0) GO TO 100
+C
+C-    GET CORRECTION FACTOR FROM ECOB
+C
+        ETOT = RTABL(KECOB,IECLU,JECOEN)+RTABL(KECOB,IECLU,JECOEN+1)
+     +      +RTABL(KECOB,IECLU,JECOEN+2)
+        ECOR = RTABL(KECOB,IECLU,JECOEG)
+        FCOR = ECOR/ETOT
+        IF (FCOR.GT.1.9) FCOR = 1.
+        JECLU = KROW(KECLU,IECLU)
+        IESDA = IW(JECLU+JECLES)
+C
+C-    Look if cluster is electromagnetic
+C
+        ITYP = 4
+        IEL = 5
+        IF(KECTY.NE.0) THEN
+C-      cluster is gamma or multi gamma or electron
+          IF (ITABL(KECTY,IECLU,JECTCT).EQ.0 ) ITYP = 2
+          IF (ITABL(KECTY,IECLU,JECTCT).EQ.0 ) IEL = 4
+          IF (ITABL(KECTY,IECLU,JECTCT).EQ.2 ) ITYP = 2
+          IF (ITABL(KECTY,IECLU,JECTCT).EQ.2 ) IEL = 1
+        ENDIF
+C
+C-    Loop on storeys in cluster
+C-    check whether they are in mask table
+C
+   50   JESDA = KROW(KESDA,IESDA)
+        ITOW = IW(JESDA+JESDIO)
+C
+C-    Scan ECTE to find storey in mask table
+C
+        IK = IW(JESDA+JESDDK)
+        ERES = RW(JESDA+JESDME)
+        CALL ESRBC('ALEPH',IW(JESDA+JESDTJ),IW(JESDA+JESDFI),IK,COSI)
+        DR = 0.
+        DO 55 I=1,3
+          DR = DR + COSI(I)**2
+   55   CONTINUE
+        DR = SQRT (DR)
+        COSI(4) = DR
+        IREL = 1
+        IF ( IK.EQ.3 ) IREL = 2
+C
+C-    Loop on ECTE . if it does not exist NECTE=0
+C
+        DO 60 IECTE = 1,NECTE
+          IF (ITABL(KECTE,IECTE,JECTCA).EQ.ITOW) THEN
+C
+C-    Sum energy in mask and stock it into arrays
+C-    separatly for stacks 12 (IREL=1) and 3 (IREL=3)
+C
+            ERES = RW(JESDA+JESDME)-RTABL(KECTE,IECTE,JECTCE)
+            IF ( RTABL(KECTE,IECTE,JECTCE).GT.EMINE ) THEN
+              INDEX = INDEX+1
+              IARRAY (1,INDEX) =(IREL+6)*100+IEL
+              IARRAY (3,INDEX) = IECLU
+              DO 58 ISUM = 1,4
+                XARRAY (ISUM,INDEX) = RTABL(KECTE,IECTE,JECTCE)
+     +     *FCOR*(COSI(ISUM)/DR)
+   58         CONTINUE
+            ENDIF
+          ENDIF
+   60   CONTINUE
+C
+        IF ( ERES.LT.EMINE) GO TO 68
+C
+C-    Now stock unmasked energy (ITYP = 5,6 for stacks 1+2,3)
+C-    and photons (ITYP = 3,4 for stacks 1+2,3 )
+C
+        INDEX = INDEX+1
+        IARRAY(1,INDEX) =(IREL+ITYP)*100 + IEL
+        IARRAY (3,INDEX ) = IECLU
+        DO 65 IL =1,4
+          XARRAY(IL,INDEX) = FCOR*ERES*COSI(IL)/DR
+   65   CONTINUE
+   68   CONTINUE
+C
+C-     go to next storey of the cluster
+C
+   70   IESDA = IW( JESDA+JESDES )
+        IF ( IESDA.NE.0 ) GO TO 50
+  100 CONTINUE
+C
+  120 CONTINUE
+
+C
+C-    Now store the hadronic calorimeter information
+C
+      IEL = 6
+      KHSDA = IW (NAHSDA)
+      IF (KHSDA.EQ.0) GOTO 900
+      NHSDA = LROWS(KHSDA)
+      IF ( NHSDA.EQ.0) GO TO 900
+      NHBTA = 0
+      DO 245 IHSDA = 1,NHSDA
+        IF ( RW(KROW(KHSDA,IHSDA)+JHSDDE).GT.EHMINE) NHBTA = NHBTA +1
+  245 CONTINUE
+      IF (NCMAX-INDEX-2*NHBTA.LE.0) GO TO 999
+      ITYP = 9
+C
+C-    Initialise cluster table to be used
+C
+      CALL EHCFLO ( 0 , IDUM1 , DUM2 )
+C
+C-    Loop on HSDA
+C
+      DO 250 IHSDA = 1,NHSDA
+        CALL EHCFLO ( 1 , IHSDA , WEIFL)
+        IF ( WEIFL.LT.0.01 ) GO TO 250
+        JHSDA = KROW ( KHSDA,IHSDA )
+        IK    = IW ( JHSDA+JHSDSN)
+        IPHI  = IW ( JHSDA+JHSDPI )
+        ITET  = IW ( JHSDA+JHSDTI )
+        ERES  = RW ( JHSDA + JHSDDE )
+        ITOW  = (ITET-1) * 256 + (IPHI-1) * 2 + IK - 1
+C
+C-    Calculate cell center coordinates
+C
+        LHPOI = 8
+        CALL HSRCR ( 'ALEPH' , ITET , IPHI, IK , LHPOI , XPOIN )
+C
+C-    Average for center
+C
+        CALL VZERO (COSI,4)
+        DO 140 IJ = 1,LHPOI
+          DO 140 IF = 1,3
+            COSI (IF) = COSI (IF) + XPOIN(IF,IJ)/FLOAT(LHPOI)
+  140   CONTINUE
+C
+C-    Calculate distance to extrapolated point
+C
+        DR = 0.
+        DO 145 IX =1,3
+          DR = DR + COSI(IX)**2
+  145   CONTINUE
+        DR = SQRT ( DR)
+        COSI(4) = DR
+C
+C-    Check if cell not already removed
+C
+        KHCTE = IW (NAHCTE)
+        IF ( KHCTE . NE. 0 ) THEN
+          DO 200 IHCTE = 1,LROWS(KHCTE)
+            IF (ITABL(KHCTE,IHCTE,1).EQ.ITOW) THEN
+              ERES = ERES-RTABL(KHCTE,IHCTE,2)*WEIFL
+              IF ( RTABL(KHCTE,IHCTE,2)*WEIFL.GT.EHMINE ) THEN
+C
+C-          stock energy in mask
+C
+                INDEX = INDEX +1
+                IARRAY (1,INDEX ) = 1000+IEL
+                IARRAY (3,INDEX) = IW(JHSDA+JHSDCN)
+                DO 195 ISUM = 1, 4
+                  XARRAY (ISUM,INDEX) = RTABL(KHCTE,IHCTE,2)
+     +                            *WEIFL*COSI(ISUM)/DR
+  195           CONTINUE
+              ENDIF
+            ENDIF
+  200     CONTINUE
+        ENDIF
+        IF (ERES.LT.EHMINE) GO TO 250
+C
+C-    Stock energy outside mask
+C
+        INDEX = INDEX+1
+        IARRAY(1,INDEX) = ITYP*100+IEL
+        IARRAY(3,INDEX) = IW(JHSDA+JHSDCN)
+        DO 215 IL =1,4
+          XARRAY(IL,INDEX) = ERES*WEIFL*COSI(IL)/DR
+  215   CONTINUE
+  250 CONTINUE
+C
+  900 CONTINUE
+C
+C-    Now loop on Lcal clusters
+C
+      IEL = 7
+      KLCLU  = IW ( NALCLU)
+      IF ( KLCLU.EQ.0 ) GOTO 950
+      NLCLU = LROWS(KLCLU)
+      IF(NLCLU.LE.0 ) GO TO 950
+      IF (NCMAX-INDEX-3*NLCLU.LE.0) GO TO 999
+      DO 910 ICL=1,NLCLU
+        JLCLU = KROW ( KLCLU,ICL )
+        DO 901 IL =1,3
+          EVECT (3) = RW(JLCLU+JLCLE1-1+IL)*COS(RW(JLCLU+JLCLT1-1+IL))
+          ET        = RW(JLCLU+JLCLE1-1+IL)*SIN(RW(JLCLU+JLCLT1-1+IL))
+          EVECT (1) = ET *COS (RW(JLCLU+JLCLF1-1+IL))
+          EVECT (2) = ET *SIN (RW(JLCLU+JLCLF1-1+IL))
+          EVECT (4) = RW(JLCLU+JLCLE4+IL)
+          ITYP = 2
+          IF(IL.LT.3) ITYP = 1
+          INDEX = INDEX+1
+          IARRAY (3,INDEX)=ICL
+          IARRAY (1,INDEX)=(ITYP +10)*100+IEL
+          DO 903 IK =1,4
+            XARRAY (IK,INDEX) = EVECT(IK)
+  903     CONTINUE
+  901   CONTINUE
+  910 CONTINUE
+C
+  950 CONTINUE
+      NINDMX = INDEX
+      RETURN
+C
+  999 CALL RERROR('FLOWFI',1,'Array too small')
+      IERR = 1
+      RETURN
+      END
+#endif

@@ -1,0 +1,73 @@
+# summary of changes
+
+CERNLIB:
+========
+Increase number of steps (MAXNST) before giving up in GTRACK from 10000 to
+100000.
+(see Rene Brun suggestion: https://root.cern.ch/root/vmctalk/vmc09/0062.html)
+Effect: negligible, but removes the "tracking abandoned" error messages
+in GALEPH.
+Increase paw memory from 2000000 to 16000000 in pawbig.inc to handle larger
+files etc.
+Increase number of shared objects from 100 to 1000 in cstab64.inc
+(allows more iterations of calling functions when plotting things)
+
+ALEPHLIB:
+=========
+Minor fixes to make gfortran happy.
+DALEPH_GFORT flag introduced to avoid calling EXTERNAL SYSTEM in various
+alephio routines when compiling with gfortran.
+
+GALEPH:
+=======
+Solved problem that caused GALEPH to produce too few particles. The official
+ALEPH executable (gal309.3) was made with Geant version 3.2113 while the final
+version is 3.2114 and it breaks GALEPH.
+The fix:
+In $ALROOT/gal309/inc/gcking.h  change parameter LGKINE from 100 to 250 and
+in routine $ALROOT/gal309/guse/gdray.F change MXGKIN from 100 to 250. This is
+needed to stay in step with the GEANT update which changed the parameter
+MXGKIN from 100 to 250.
+
+# increase LIW in asigal.F to 1500000 to reduce incidence of not enough working
+space for BOS banks. Removes some error messages, effect seems negligible.
+
+DALI:
+=====
+Changes to enable ECAL info to be displayed with MINIs.
+Better time resolution (seconds) for dali PS output file names.
+Enable jet finding with LUCLUS and DICLUS algorithms -> HELP menu was updated.
+
+KIN:
+====
+photos libraries: bug fix to solve the "too much bremmstrahlung" stopping
+                  problem.
+
+kk2f19:  kk2f generator update to latest version (4.19)
+         comes with newer dizet library: dizet621
+bhwi04:  Bhwide update to version 1.04
+
+coming soon: KRLW03 in quadruple precision, VERY slow! Solves problems with
+instabilities in matrix element etc for low Pt eexx states and t-channel ISR
+corrective weights.
+
+NOTES:
+======
+Large number of warning messages when compiling GRACE can be ignored (according
+to authors of the code):
+Typical warning message:
+Warning: Named COMMON block ‘amwork’ at (1) shall be of the same size as elsewhere (2248 vs 3752 bytes)
+
+For 64-bit Cernlib with gcc version >= 5 the -no-pie option is mandatory to
+avoid errors such as:
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+LOCB/LOCF: address 0x7f68e28cd740 exceeds the 32 bit address space
+or is not in the data segments
+This may result in program crash or incorrect results
+Therefore we will stop here
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
+
+

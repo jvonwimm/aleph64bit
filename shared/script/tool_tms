@@ -1,0 +1,280 @@
+#!/usr/local/bin/perl
+require "complete.pl";
+require "ctime.pl";
+########################################################################
+#                               tool_tms
+# script to query tms 
+# 28/11/97                                                 F.Blin
+########################################################################
+# parameters any order: [menu] [first_tape_number / last_tape_number]
+#          or
+#                     : [login]
+#                     : -h [help]
+#  eg : tool_tms 2 AU0010               idem: tool_tms AU0010 2
+#       tool_tms 3 AU0010 AU0025  
+#       tool_tms hagxu                  idem: hag 
+########################################################################
+$numb_menu = 9;
+
+$menu = 0;
+$userid = "";
+$vid_first = "";
+$numb_first = 0;
+$vid_last = "";
+$numb_last = 0;
+$label = "";
+
+    &HELP if ($ARGV[0] eq "help" || $ARGV[0] eq "?" || $ARGV[0] eq "-h");
+
+    $n_para = @ARGV;
+    if ($n_para > 0){
+	foreach $i (1..$n_para){
+	    $arg = shift(@ARGV);
+            if ($arg > 0 && $arg <= $numb_menu){
+		$menu = $arg;
+                next;
+            }
+	    if ($vid_first eq ""){ 
+		$vid_first = $arg if (&check_TAPENO($arg));
+                next if ($vid_first ne "");
+		$userid = $arg if (length($arg) == 3);
+                &get_uuu($arg) if (length($arg) > 3);
+		next;
+	    }
+	    if ($vid_last eq ""){
+                $vid_last = $arg if (length($arg) == 6 && &check_TAPENO($arg));
+		next;
+	    }
+	}
+#	print "menu=$menu vid_first=$vid_first vid_last=$vid_last userid=$userid \n";
+    }
+
+    $vid_last = $vid_first if ($vid_last eq "" && $vid_first ne "");
+    $menu = 9 if ($userid ne "");
+    &ask_menu if ($menu == 0);
+    &ask_userid if ($menu == 9 && $userid eq "");
+
+    if ($menu == 1) {
+	print "\n Search category : \n";
+	$first_print = "  Vid  Category\n";
+	$str1_sysreq = "TAG VID ";
+        $str2_sysreq = " GET BINARY";
+    }
+    if ($menu == 2) {
+	print "\n Search comments : \n";
+	$first_print = "  Vid  Comments\n";
+        $str1_sysreq = "TAG VID ";
+        $str2_sysreq = " GET TEXT";
+    }
+    if ($menu == 3) {
+	print "\n Search lastread lastwrite and lastused : \n";
+	$first_print = "  Vid       LASTREAD        LASTWRITE       LASTUSED \n";
+        $str1_sysreq = "Q VID ";
+        $str2_sysreq = " \"(\" LASTUSED LASTWRIT LASTUSED"; 
+    }
+    if ($menu > 3 && $menu < 9) {
+        $str = "OWNER USERID" if ($menu == 4);
+	$str = "VSN LIBRARY" if ($menu eq "5");
+	$str = "MODEL   DENSITY" if ($menu eq "6");
+	$str = "STATUS RING" if ($menu eq "7");
+	$str = "READUSER WRITEUSE" if ($menu eq "8");
+
+	print "\n Search $str : \n";
+	$first_print = "  Vid   $str \n";
+        $str1_sysreq = "Q VID ";
+        $str2_sysreq = " \"(\" $str"; 
+    }
+
+    if ($menu == 9){
+        print "\n\n List REDWOOD(s) for one userid : \n";
+	$first_print = "";
+        $str1_sysreq = "Q CONTENT LIBRARY STK_ACS0";
+        &ask_userid if ($userid eq "");
+        $str2_sysreq = " OWNER $userid SLOTS 0"; 
+        &run_tms($str1_sysreq,$str2_sysreq);
+        exit 0;
+    }
+
+    if ($vid_first ne "") {
+	$vid_first = "" if (!&check_TAPENO($vid_first));
+    }
+    &ask_tape ("first") if ($vid_first eq "");
+    $label = substr($vid_first,0,2);
+    $numb_first = substr($vid_first,2,4);
+
+    if ($vid_last ne "") {
+        $vid_last = "" if (!&check_TAPENO($vid_last));
+    }
+    &ask_tape ("last") if ($vid_last eq "");
+    $vid_last = $vid_first if ($vid_last eq "");
+
+    if ($vid_first ne $vid_last){
+       $label_last = substr($vid_last,0,2);
+       if ($label_last ne $label){
+	   print "\n WARNING Please same label!...\n";
+	   &HELP(1);
+       }
+       $numb_last = substr($vid_last,2,4);
+       if ($numb_last < $numb_first){
+	   print "\n Bad number!...\n";
+	   &HELP(1);
+       }
+    }
+    &run_tms ($str1_sysreq,$str2_sysreq);
+
+    exit 1;
+############################################################################
+sub ask_menu {
+
+    local($answer) = "";
+
+    while(1){
+	print "\n    Search : \n\n";
+	print " 1. Category [Intitut name] \n";
+	print " 2. Comments \n";
+	print " 3. Lastread lastwrite lastused \n";
+	print " 4. Owner Userid\n";
+	print " 5. VSN Library\n";
+	print " 6. Model Density\n";
+	print " 7. Status Ring\n";
+	print " 8. Readuser Writeuse \n";
+        print " 9. all REDWOOD(s) in STK_ACS0 for one user \n";
+
+	print "\n ** In order to quit press -> q **\n"; 
+
+	print "\n Please, choose one of the options above <CR>=1 : ";
+	$answer = <>;
+	$answer =~ s/^\s+//;
+	$answer =~ s/\s+$//;
+	$menu = 1 if ($answer eq "");
+	exit 0 if ($answer eq "q" || $answer eq "exit");
+	$menu = $answer if ($answer=~ /^(\d)$/ && $answer > 0 && $answer <= $numb_menu);
+	return 1 if ($menu > 0);
+    }
+}
+############################################################################
+sub ask_tape {
+
+    local ($answer,$str_CR) = "";
+
+    $str_CR = "<CR>=${vid_first} " if ($vid_first ne "" && $_[0] eq "last");
+    while(1){
+       print "\n Please, type $_[0] tape number ${str_CR}: ";
+       $answer = <>;
+       $answer =~ s/^\s+//;
+       $answer =~ s/\s+$//;
+       exit 0 if ($answer eq "q" || $answer eq "exit");
+       last if (&check_TAPENO($answer));
+       last if ($answer eq "" && $_[0] eq "last");
+       last if (&check_TAPENO($answer));
+    }
+    $vid_first = $answer if ($_[0] eq "first");
+    $vid_last  = $answer if ($_[0] eq "last");
+    return 1;
+}
+############################################################################
+sub ask_userid {
+
+    local ($answer) = "";
+    while(1){
+       print "\n Please, type login or userid[3letters] : ";
+       print " eg: HAG or HAGXU \n";
+       $answer = <>;
+       $answer =~ s/^\s+//;
+       $answer =~ s/\s+$//;
+       exit 0 if ($answer eq "q" || $answer eq "exit");
+       $answer =~ tr/A-Z/a-z/;
+       if (length($answer) == 3){
+	   $userid = $answer if (length($answer) == 3);
+           return 1;
+       }
+       
+       return 1 if (&get_uuu($answer));
+    }
+}
+############################################################################
+sub check_TAPENO{
+
+    local($str) = $_[0];
+    local($str_search) = "";
+
+    return 0 if (length($str) != 6);
+    foreach $i (0..6) {
+        $str_search = substr($str,$i,1); 
+        return 0 if ($str_search=~ /^(\d)$/  && $i < 1);
+        return 0 if ($str_search=~ /^(\D)$/  && $i > 1);
+    }
+    return 1;
+}
+############################################################################
+sub get_uuu{
+
+  local ($uid) = 0;
+  local ($str_grep,$line) = "";
+  local (@account_info) = ();
+  local (@line_buffer) = ();
+
+  $logid = $_[0];
+  
+  ($name, $passwd, $uid, $gid)=getpwnam($logid);
+  return 0 if ($uid == 0);
+
+  if(-r "/etc/account") {
+      $str_grep = "grep $logid /etc/account";
+  }
+  else {
+      $str_grep = "ypcat account | grep $logid";
+  }
+#  print "\n get_uuu: str_grep=$str_grep \n";
+  @line_buffer = `$str_grep`;
+  if($?){
+    print "\n *** ERR: $logid is not valid. ****\n";
+    return 0;
+  }
+  foreach $i (0 .. $#line_buffer){
+    $line = $line_buffer[$i];
+#    print "line=$line \n";
+    chop($line);
+    @account_info = split(/:/, $line);
+    if($logid eq $account_info[0]){
+      $userid = substr($account_info[1],0,3);
+      return 1;
+    }
+  }
+  print "\n *** ERR: $logid is not valid. ****\n";
+  return 0;
+}
+############################################################################
+sub HELP{
+
+      print "\n Syntax     : tool_tms  menu first_tape_number [last_tape_number]"; 
+      print "\n         or : tool_tms login \n";  
+      print "\n examples : tool_tms 2 AU0010         idem: tool_tms AU0010 2";
+      print "\n            tool_tms 3 AU0010 AU0025  idem: tool_tms AU0010 AU0025 3 \n";
+      print "\n            tool_tms hagxu            idem: tool_tms hag \n";
+exit 0;
+  }
+############################################################################
+sub run_tms {
+
+    local($vid_tms,$line,$line_tms) = "";
+    local($i) = 0;
+    local(@buffer) = ();
+
+    $vid_tms = "$vid_first - $vid_last" if ($menu < 9);
+    $line_tms = "sysreq tms $_[0] $vid_tms $_[1]";
+    print " TMS=$line_tms \n\n";
+    @buffer = `$line_tms 2>&1`;
+    if ($?){
+	print "\n @buffer \n";
+	exit 1;
+    }
+    print "$first_print";
+    foreach $i (0..$#buffer){
+	$line = $buffer[$i];
+        $line =~ s/^\s+//;
+        print " $line";
+    }
+    return 1;
+}
+############################################################################

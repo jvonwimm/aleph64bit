@@ -1,0 +1,76 @@
+head	1.1;
+access;
+symbols
+	aleph316_2:1.1
+	aleph316_1:1.1
+	aleph316:1.1
+	aleph315_7:1.1
+	aleph315_6:1.1
+	aleph315_5:1.1
+	aleph315_4:1.1
+	aleph315_3:1.1
+	aleph315_2:1.1
+	aleph315_1:1.1
+	aleph315:1.1
+	aleph314_2:1.1
+	aleph314_1:1.1
+	aleph314:1.1
+	aleph313_1:1.1
+	aleph313:1.1
+	aleph312_1:1.1
+	aleph312:1.1
+	aleph311_1:1.1
+	aleph311:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	99.04.06.11.44.05;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Prepare alephlib 311
+@
+text
+@      SUBROUTINE kxlupr(ifl)
+C************************************************************************
+C      print out jetset parameters mstj, parj,mstu,paru
+C      B.Bloch july 96
+C      input  IFL : printout flag
+C               1 = print only the 100 first values of MSTJ,PARJ
+C               2 = print also the 100 first values of MSTU,PARU
+C************************************************************************
+#ifndef DOC
+#include "lun7com.h"
+C
+      WRITE(MSTU(11),*)
+      if ( Ifl.ge.1) then
+      WRITE(MSTU(11),1000)
+      DO 100 I=1,50
+        WRITE(MSTU(11),1010) I,MSTJ(I),MSTJ(I+50),PARJ(I),PARJ(I+50)
+ 100  CONTINUE
+      endif
+      if ( Ifl.ge.2) then
+      WRITE(MSTU(11),1001)
+      DO 101 I=1,50
+        WRITE(MSTU(11),1010) I,MSTU(I),MSTU(I+50),PARU(I),PARU(I+50)
+ 101  CONTINUE
+      endif
+      WRITE(MSTU(11),*)
+ 1000 FORMAT(10X,'Parameters and switches used by Jetset:',/,/,
+     $     '         I   MSTJ(I) MSTJ(I+50)   PARJ(I) PARJ(I+50)',/)
+ 1001 FORMAT(10X,'Parameters and switches used by Jetset:',/,/,
+     $     '         I   MSTU(I) MSTU(I+50)   PARU(I) PARU(I+50)',/)
+ 1010 FORMAT(2I10,I11,3X,2G11.3)
+      RETURN
+      END
+#endif
+@

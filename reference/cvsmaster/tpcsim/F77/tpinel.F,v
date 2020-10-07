@@ -1,0 +1,98 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	tpc300_1:1.1.1.1
+	tpc300:1.1.1.1
+	tpc218:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.09.14.30.03;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.09.14.30.04;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK tpinel
+      SUBROUTINE TPINEL
+C-----------------------------------------------------------------------
+C!  Initialize BOS work banks for the electronics routines of
+C!  the TPC simulation
+C
+C  Called from:  TSINIT
+C  Calls:        WBANK, TPSHAP, TPNOIS, WDROP, WGARB
+C
+C  Inputs:   TPCONS.INC:  --NTMXAN, the max num of bins in an analog
+C                                   signal
+C                         --NTMXDI, the max num of bins in a digitized
+C                                   signal
+C
+C  Outputs:  BANKS:       --work bank id ITMADC, bank for single
+C                           digitized pulse in electronics routine
+C                           TPRESP, where it is filled as needed;
+C                           dropped in TSFINI
+C  D. DeMille
+C
+C  Modifications:
+C
+C     1.  22feb89 DFC -- Add in error message in case the call to WBANK
+C                        gives an error return.
+C-----------------------------------------------------------------------
+#include "bcs.h"
+#include "tpcbos.h"
+#include "tpcons.h"
+C
+C  Book the banks for handling single raw analog and shaped/digitized
+C  signals in the electronics routines
+C
+      CALL WBANK(IW,ITMADC,NTMXDI,*999)
+C
+C  Fill banks with the shaping signal and its derivative
+C
+      CALL TPSHAP
+C
+C  Fill banks with noise arrays
+C
+      CALL TPNOIS
+C
+C  Drop the bank containing the derivative of the shaping signal
+C  and mop up the extra room now in the work bank area.  This should
+C  not be too big an operation, and may keep us from doing bigger
+C  moves and copies later.
+C
+      CALL WDROP(IW,ITDSHP)
+      CALL WGARB(IW)
+C
+      RETURN
+  999 WRITE(6,'(/'' +++TPINEL+++ Insufficient BOS array space!''/)')
+      RETURN
+      END
+@
+
+
+1.1.1.1
+log
+@import tpcsim 300
+@
+text
+@@

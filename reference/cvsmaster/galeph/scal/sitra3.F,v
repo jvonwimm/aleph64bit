@@ -1,0 +1,115 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.07.14.02.48;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.49;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK sitra3
+      SUBROUTINE SITRA3( LAYER , RADIS )
+C--------------------------------------------------------------------
+C! generate transverse em-shower distribution in Sical
+C  Author: J.Rander for Sical         2-SEP-1992
+C  Modified B.Vallage                 5-FEB-1993
+C
+C    Input : LAYER = depth from start of shower (stack)
+C    Output: RADIS = distance from the shower axis (in CM)
+C    Called by : SISHOW
+C!   Description  : Sical radial shower distribution
+C!   ===========
+C!                TRIPLE GAUSSIAN Shape with parameters
+C!                sigmaa(shower core),sigmab(wings),sigmac(cross talk),
+C!                siraab(a over a+b) and sirabc(a+b over a+b+c).
+C!                Their energy dependence defined in SIDFRT
+C!
+C====================================================================
+#ifndef DOC
+      INTEGER LAYER
+      REAL RADIS,ALEX,ALEY,SIG,RNDM
+      EXTERNAL RNDM
+C
+#include "siparm.h"
+C
+      IF(RNDM(RADIS) .LT. SIRABC(LAYER)) THEN
+        IF(RNDM(RADIS).LT.SIRAAB(LAYER)) THEN
+          SIG = SIGMAA(LAYER)
+        ELSE
+          SIG = SIGMAB(LAYER)
+        ENDIF
+      ELSE
+        SIG = SIGMAC(LAYER)
+      ENDIF
+      CALL RANNOR(ALEX,ALEY)
+      RADIS = SIG * SQRT(ALEX*ALEX + ALEY*ALEY) /SQRT(2.)
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

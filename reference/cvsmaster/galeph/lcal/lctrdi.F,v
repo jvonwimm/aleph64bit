@@ -1,0 +1,157 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.30.07.09.00;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.37;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.38;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ gstmed.F guhadr.F guphad.F gustep.F gutrak.F
+ cahtra.h gmacro.h lccomc.h lcnamc.h ljjpar.h siconst.h
+ sigeco.h version.h
+ itmsk1.F itmsk2.F itnois.F itres.F itxtlk.F
+ lcadc.F lcamp.F lcasig.F lcbhab.F lcbkpr.F lcdigi.F lcfral.F
+ lchit.F lcirun.F lcnami.F lcnois.F lcpad.F lcroc.F lcsamp.F
+ lcsatu.F lcshow.F lcstrt.F lctrak.F lctrdi.F lctrht.F lcwire.F
+ lcwsum.F lcwtri.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+ xtrcom.h
+@
+text
+@*DK lctrdi
+      SUBROUTINE LCTRDI
+C--------------------------------------------------------------
+C! Convert trigger signals to MeV
+C. - J.Dines Hansen & P.Hansen - 860417
+C. - Modified P.Hansen - 950202
+C. - Modifies bank LTTR, fills bank LWTR
+C. - Called by  LCDIGI                           from this .HLB
+C. - Calls LCWTRI                                from this .HLB
+C -----------------------------------------------
+#ifndef DOC
+#include "jqcom.h"
+#include "lcnamc.h"
+#include "lccomc.h"
+#include "bmacro.h"
+C -------------------------------------------------------------
+      KINDX = IW(NALTTR)
+      IF(KINDX .LE. 0)                   GOTO 999
+      DO 120 ISEG = 1,LROWS(KINDX)
+        KLL = KROW(KINDX,ISEG)
+        DO 110 IST = 1,3
+C? Convert bank LTTR to MeV
+          IW(KLL+IST) = NINT(IW(KLL+IST)*CHTOE(IST))
+  110   CONTINUE
+  120 CONTINUE
+C
+C - Fill Wire Trigger bank 'LWTR'
+      CALL LCWTRI
+  999 RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d6 1
+d10 1
+a11 1
+      SAVE
+a16 1
+C - Convert bank LTTR to MeV using a factor LCHTOE at each storey
+a18 1
+      KWS = IW(NALCWS)
+a19 1
+        IFB = 2-(ISEG-1)/12
+d23 1
+a23 5
+          IW(KLL+IST) = IW(KLL+IST)*LCHTOE(IST)
+C? Update summary bank
+          IF(KWS.GT.0) THEN
+             IW(KWS+LMHLEN+6+IFB) = IW(KWS+LMHLEN+6+IFB)+IW(KLL+IST)
+          ENDIF
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

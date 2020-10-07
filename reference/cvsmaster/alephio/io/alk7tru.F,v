@@ -1,0 +1,180 @@
+head	1.1;
+access;
+symbols
+	alio83:1.1
+	alio82:1.1
+	alio81:1.1
+	alio80:1.1
+	alio74:1.1
+	alio73:1.1
+	alio72:1.1
+	alio71:1.1
+	alio70:1.1
+	alio68:1.1
+	alio69:1.1
+	alio67:1.1
+	alio66:1.1
+	alio65:1.1
+	alio64:1.1
+	alio63:1.1
+	alio62:1.1
+	alio61:1.1
+	alio60:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.04.23.09.59.49;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@move alph, dbas, a part of alef and a part of c to alephio
+Modified Files:
+ 	version.h
+ Added Files:
+ 	adbrow.F adbrpn.F adbrun.F adbswp.F adbver.F agetdb.F agtfil.F
+	albos.F aldawr.F aldtyp.F aleveh.F alfind.F alfmt.F algtbk.F
+ 	algtdb.F algtlu.F algtro.F algtyp.F alinst.F alk7fil.F
+ 	alk7fru.F alk7op.F alk7tru.F alredb.F alrune.F alrunh.F
+ 	alrunr.F alseed.F alstho.F alstin.F alstri.F altabl.F alvsn.F
+ 	aopdbs.F aublis.F aubos.F aubprs.F bkcari.F bkinca.F bkrhab.F
+ 	bkrhal.F bkrhaw.F bktobk.F cafiht.F chahol.F dafrds.F gtdbas.F
+ 	gtstup.F igtfmt.F jhocha.F julrec.F junial.F junidb.F
+ 	kbytrec.F loctab.F nameru.F ubpack.F uclean.F uindxs.F usbos.F
+ 	usgtdb.F utcblk.F utccop.F utcofo.F utwocl.F utwoex.F
+Removed Files:
+	noibm.F
+@
+text
+@      INTEGER FUNCTION ALK7TRU (LURUK7,TYPE,TAPE,JDRUNL)
+C --------------------------------------------------------
+C - F.Ranjard - 900627
+C! get list of runs of a given type residing on a given tape
+CKEY ALEF TAPE  RUN / USER
+C
+C - Input     : LURUK7  / INTE  = open RUK7FILE.UPDATE on unit LURUK7
+C               TYPE    / A     = data type
+C                                 'RAW'/'POT'/'DST'/'MINI'/'NANO'
+C               TAPE    / A     = tape number
+C
+C - Output    : ALK7FRU   / INTE  = error code
+C                                 = 0  OK
+C                                 = 1  cannot open RUK7FILE
+C                                 = 2  empty file
+C                                 = 3  too many runs, increase K7COM
+C                                 = 23 wrong data type
+C                                 = 24 JDRUNL bank does not exist
+C                                 = 25 TAPE does not exist
+C
+C   IF TAPE is in the list THEN
+C      return in JDRUNL work bank the list of runs present on TAPE
+C      IW(JDRUNL+1) = INTCHA(TAPE(1:4))
+C      IW(JDRUNL+2) = INTCHA(TAPE(5:8))
+C      IW(JDRUNL+3) = INTCHA(TAPE(9:12))
+C      IW(JDRUNL+4) = number of runs on TAPE
+C      IW(JDRUNL+5) = 1st run on TAPE
+C      ...
+C      IW(JDRUNL+IW(JDRUNL+4)) = last run on TAPE
+C   ENDIF
+C ---------------------------------------------------------
+#ifndef DOC
+      CHARACTER*(*) TYPE,TAPE
+      CHARACTER*12 TRUN
+#include "bcs.h"
+      CHARACTER  CHAINT*4
+      INTEGER ALK7OP
+      PARAMETER (MXRUN=200, NXRUN=50)
+#include "alk7com.h"
+      SAVE NK7
+      DATA IFIR / 0/
+#include "bmacro.h"
+C
+C ------------------------------------------------------------------
+C
+      IER = 0
+C - at 1st entry :
+C
+       IF (IFIR.EQ.0) THEN
+          IFIR = 1
+          NK7 = (LK7+3)/4          ! # of words to contain this # of char.
+          JDRUNL = 0
+          CALL WBANK (IW,JDRUNL,MXRUN+NK7+1,*998)
+          DO I=1,NK7
+             IW(JDRUNL+I)=INTCHA ('    ')
+          ENDDO
+          IW(JDRUNL+NK7+1)=0
+          IW(JDRUNL-3)=INTCHA ('RUNL')
+C
+C       open the RUK7FILE.UPDATE file
+          IER = ALK7OP (LURUK7)
+          IF (IER.NE.0) GOTO 999
+       ENDIF
+C
+C - next entry:
+C
+ 10    CONTINUE
+       LT = LNBLNK(TAPE)
+C
+C    check JDRUNL bank
+       IF (JDRUNL .LE.0) THEN
+          IER = 24
+          CALL ALTELL ('ALK7TRU: no JDRUNL bank progamming error',0,
+     &                 'RETURN')
+          GOTO 998
+       ENDIF
+C
+C    tape number in JDRUNL
+       CALL ALSTIN (IW(JDRUNL+1),NK7,TRUN)
+       IF (TRUN(1:4).NE.'    ') THEN
+          IF (TRUN(1:LT).EQ.TAPE(1:LT)) GOTO 999
+       ENDIF
+C
+C    check data type
+       ITYP = INDEX (K7TYPE,TYPE(1:1))
+       IF (ITYP.EQ.0) THEN
+          IER = 23
+          GOTO 999
+       ENDIF
+C
+C    get run #s on TAPE K7
+       LRUN = 0
+       DO 30 ISEG=1,K7SEG
+          IPOS = 1
+          IER = 0
+ 20       JPOS = INDEX (K7CART(ITYP,ISEG)(IPOS:),TAPE(1:LT))
+          IF (JPOS.EQ.0) THEN
+             IF (IPOS.EQ.1) THEN
+                IF (LRUN.GT.0) GOTO 998
+                IER = 25
+             ELSE
+                CALL ALINST (TAPE,IW(JDRUNL+1),NK7)
+                IW(JDRUNL+NK7+1) = LRUN
+             ENDIF
+             GOTO 30
+          ENDIF
+          IF (LRUN+NK7+1.GE.IW(JDRUNL)) THEN
+             CALL WBANK (IW,JDRUNL,IW(JDRUNL)+NXRUN,*998)
+          ENDIF
+          JPOS = JPOS+IPOS-1
+          LINE = (JPOS-1)/LK7 + 1
+          LRUN = LRUN+1
+          IW(JDRUNL+NK7+LRUN) = K7LRUN(LINE,ISEG)
+          IPOS = JPOS+LK7
+          GOTO 20
+ 30    CONTINUE
+C
+ 998   CONTINUE
+       CALL WBANK (IW,JDRUNL,LRUN+NK7,*999)
+ 999   ALK7TRU = IER
+C
+       END
+#endif
+@

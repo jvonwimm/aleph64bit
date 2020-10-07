@@ -1,0 +1,262 @@
+head	1.3;
+access;
+symbols
+	aleph316_2:1.3
+	aleph316_1:1.3
+	aleph316:1.3
+	aleph315_7:1.3
+	aleph315_6:1.3
+	aleph315_5:1.3
+	aleph315_4:1.3
+	aleph315_3:1.3
+	aleph315_2:1.3
+	aleph315_1:1.3
+	aleph315:1.3
+	aleph314_2:1.3
+	aleph314_1:1.3
+	aleph314:1.3
+	aleph313_1:1.3
+	aleph313:1.3
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.2
+	aleph304_5:1.2
+	aleph304_4:1.2
+	aleph304_3:1.2
+	aleph304_2:1.2
+	aleph304_1:1.2
+	aleph304:1.2
+	aleph303_3:1.2
+	aleph303_2:1.2
+	aleph303_1_mc1:1.2
+	aleph303_1:1.2
+	aleph303:1.2
+	aleph302_9:1.2
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.2
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	99.10.26.09.32.45;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.04.25.14.20.52;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.42.54;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.42.55;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@for Alephlib 313
+@
+text
+@      SUBROUTINE EBPREP( MXST , ICLN , NUST , INDX , ESTO , IER )
+C ----------------------------------------------------
+C   AUTHOR   : J. Badier     25/09/89
+C! Prepare the analysis of a cluster.
+CKEY PHOTONS ARRAY STOREYS / INTERNAL
+C
+C   The storeys of the cluster ICLN are stored in the INDX and ESTO
+C   arrays. The number of storeys has to be greater than MXST.
+C   The storeys are searched in the ESDA bank , then if ESDA is missing
+C   in the PEST and ETDI banks.
+C
+C   Input     : MXST    Maximum number of storeys.
+C               ICLN    Cluster number.
+C
+C   Output    : NUST    Number of storeys of the cluster ICLN.
+C               INDX(1,IST) Theta index of the storey IST.
+C               INDX(2,IST) Phi index of the storey IST.
+C               INDX(3,IST) Stack number of the storey IST.
+C               ESTO(IST)   Raw content of the storey IST.
+C                           IST = 1 , NUST
+C               IER     = 0 No error.
+C                       = 1 Storeys bank missing.
+C                       = 2 More than MXST storeys.
+C                       = 3 No storey in the cluster.
+C                       = 4 Energy < EMIN
+C                       = 5 Energy > EMAX
+C
+C   BANKS :
+C     INPUT   : ESDA or PEST,ETDI.
+C     OUTPUT  : NONE
+C
+C ----------------------------------------------------
+#ifndef DOC
+      SAVE
+      PARAMETER ( PTIT = .001 )
+      PARAMETER( EMIN = .050 , EMAX = 150. )
+      DIMENSION INDX(3,*) , ESTO(*)
+#include "bcs.h"
+#include "esdajj.h"
+#include "pestjj.h"
+#include "etdijj.h"
+#include "bmacro.h"
+C
+      IER = 0
+      NUST = 0
+      ERAW = 0.
+C
+      KESDA = IW( NAMIND('ESDA') )
+      IF( KESDA .NE. 0 ) THEN
+C   JULIA banks
+C   Number of storey in ESDA bank.
+        NSTO = LROWS( KESDA )
+C   Loop over the storeys
+        DO 1 ISTO = 1 , NSTO
+          IF( ICLN .NE. ITABL(KESDA,ISTO,JESDEC) ) GO TO 1
+          IF( NUST .GE. MXST ) GO TO 102
+          IT = ITABL(KESDA,ISTO,JESDTJ)
+          IF( IT .EQ. 0 ) GO TO 1
+          ENRJ = RTABL(KESDA,ISTO,JESDME)
+          IF( ENRJ .LE. PTIT ) GO TO 1
+          NUST = NUST + 1
+          INDX(1,NUST) = IT
+          INDX(2,NUST) = ITABL(KESDA,ISTO,JESDFI)
+          INDX(3,NUST) = ITABL(KESDA,ISTO,JESDDK)
+          ESTO(NUST) = ENRJ
+          ERAW = ERAW + ENRJ
+    1   CONTINUE
+C
+      ELSE
+C   POT banks
+        KPEST = IW( NAMIND('PEST') )
+        IF( KPEST .EQ. 0 ) GO TO 101
+        KETDI = IW( NAMIND('ETDI') )
+        IF( KETDI .EQ. 0 ) GO TO 101
+C   Number of storey in PEST bank.
+        NSTO = LROWS( KPEST )
+C   Loop over the storeys
+        DO 2 ISTO = 1 , NSTO
+          IF( ICLN .NE. ITABL(KPEST,ISTO,JPESPE) ) GO TO 2
+          IF( NUST .GE. MXST ) GO TO 102
+          ITDI = ITABL(KPEST,ISTO,JPESET)
+          IF( ITDI .EQ. 0 ) GO TO 2
+          NUST = NUST + 1
+          IWIN = ITABL(KETDI,ITDI,JETDTL)
+C   Depack IWIN
+          INDX(1,NUST) = IBITS ( IWIN  , 16 , 8 )
+          INDX(2,NUST) = IBITS ( IWIN  , 2 , 9 )
+          INDX(3,NUST) = ITABL(KPEST,ISTO,JPESKS)
+          ESTO(NUST) =  RTABL(KPEST,ISTO,JPESER)
+          ERAW = ERAW + ESTO(NUST)
+    2 CONTINUE
+      ENDIF
+      IF( ERAW .LT. EMIN ) GO TO 104
+      IF( ERAW .GT. EMAX ) GO TO 105
+      IF( NUST .LE. 0 ) GO TO 103
+C   Good cluster.
+         IER = 0
+         GO TO 98
+C   Errors
+C   Storeys bank missing.
+  101 CONTINUE
+      IER = 1
+      GO TO 98
+C   Too many storeys in the cluster.
+  102 CONTINUE
+      IER = 2
+      GO TO 98
+C   Zero storeys in the cluster.
+  103 CONTINUE
+      IER = 3
+      GO TO 98
+C   Energy < EMIN.
+  104 CONTINUE
+      IER = 4
+      GO TO 98
+C   Energy > EMAX.
+  105 CONTINUE
+      IER = 5
+   98 CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@Increase energy cuts in /phot
+@
+text
+@d36 1
+a36 1
+      PARAMETER( EMIN = .050 , EMAX = 100. )
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d36 1
+a36 1
+      PARAMETER( EMIN = .050 , EMAX = 80. )
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

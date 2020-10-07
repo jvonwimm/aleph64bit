@@ -1,0 +1,334 @@
+head	1.3;
+access;
+symbols
+	alio83:1.3
+	alio82:1.3
+	alio81:1.3
+	alio80:1.3
+	alio74:1.3
+	alio73:1.3
+	alio72:1.3
+	alio71:1.3
+	alio70:1.3
+	alio68:1.3
+	alio69:1.3
+	alio67:1.3
+	alio66:1.3
+	alio65:1.3
+	alio64:1.3
+	alio63:1.3
+	alio62:1.3
+	alio61:1.3
+	alio60:1.3
+	alephio53:1.3
+	v4:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	96.03.13.14.59.54;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.01.18.13.49.00;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.52.34;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.52.35;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@import alephio 52 from historian. Modify aclose.F to NOT call brwnd twice
+for the same file. update version.h to 5.3
+@
+text
+@      SUBROUTINE ACDARG(CNAME,DTYPE,DMODE,FNAME,ATYPE,FDEVI,IER)
+C-----------------------------------------------------------------------
+C! get arguments of runcards like FILI,FILO,HIST etc
+C - H.Albrecht - 881104
+C  'filename' means 'fn ft fm' on IBM ,'fname.ext' on
+C             VAX, APOLLO, and DECS
+C  'filetype' means 'ft' on IBM ,'ext' on VAX, APOLLO, and DECS.
+C
+C     input:    CNAME      card name
+C               DTYPE      default aleph type (used if not given on inpu
+C                          card)
+C               DMODE      default file mode (used if not given on input
+C                          card; ignored on VAX and APOLLO)
+C
+C     output:   FNAME      filename
+C               ATYPE      aleph type
+C               FDEVI      device = 'DISK' or 'TAPE tape-specification'
+C                                    or 'CART cart-specification'
+C                                   'SMCF Robot-cartridge specific.'
+C                                   '8MM  Exabyte-tape specification'
+C For IBM, FDEVI may contain GIME information, for UNIX, it may
+C contain GIME, ACQUIRE, FETCH, or DISPOSE information
+C               IER        = 0  card  found
+C                          = 1  unknown file type
+C                          = 2  GIME not successful (IBM)
+C                          = 3  contradictory parameters on card
+C                          = 4  insufficient length of FNAME,ATYPE,FDEVI
+C                          =-1  no more card found
+C   Calls:  AFTYPE
+C-----------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "bcs.h"
+#include "alrcom.h"
+      CHARACTER CWORK*80, GTYPE*20, GMODE*10, GNAME*80
+      CHARACTER*80 CHOUT(3)
+      INTEGER LOUT(3)
+      CHARACTER  GMODET*10
+      CHARACTER * 6 CVFT(6)
+      CHARACTER*(*) CNAME, DTYPE, DMODE, FNAME, ATYPE, FDEVI
+      CHARACTER*8 SUBR
+      INTEGER ACARD1,ACARD2
+      DATA INIT /0/
+C-----------------------------------------------------------------------
+      SUBR  = ' ACDARG '
+#if defined(ARDEB)
+      WRITE (IW(6),*) SUBR,' CNAME= ',CNAME,' DTYPE= ',DTYPE ,
+     &                     ' DMODE= ',DMODE
+#endif
+      FNAME = ' '
+      ATYPE = ' '
+      FDEVI = ' '
+      GMODEN = ' '
+      GMODET = ' '
+C
+C         get valid aleph types
+C
+      IF (INIT .EQ. 0)  THEN
+         CALL AFTYPE (CVFT,NT)
+         CALL ADIREC (DIRECT)
+         DO 5 I=1,5
+           IF(I.LE.4) DKMODR(I) = ' '
+    5      DKMODW(I) = ' '
+         INIT = 1
+      ENDIF
+C
+C         card CNAME given ?
+C
+      IER = -1
+   10 IF (ACARD1 (CNAME) .EQ. 0)  GO TO 900
+      IER = 0
+C
+C         1st parameter = data set name
+C
+      NP = 1
+      ILEN = ACARD2 (1,FNAME)
+      LFN = ILEN
+      IF (ILEN .EQ. 0)  GO TO 10
+C       if filename is given in IBM style suppress extra blanks and
+C       remove file mode if given on no  VM machine
+C       if NCHOUT=3, GMODE=CHOUT(3)
+C       if NCHOUT>=2, GTYPE=CHOUT(2)
+C
+      GTYPE = ' '
+      GMODE = ' '
+      GNAME = ' '
+      CALL ALSTRI (FNAME,' ',3,CHOUT,NCHOUT)
+      DO I=1,NCHOUT
+         LOUT(I) = LNBLNK(CHOUT(I))
+      ENDDO
+      GNAME = CHOUT(1)(1:LOUT(1))
+      IF (NCHOUT.GE.2) THEN
+         GTYPE = CHOUT(2)(1:LOUT(2))
+      ENDIF
+#if defined(IBM)
+      IF (NCHOUT.EQ.3) THEN
+         GMODE = CHOUT(3)(1:LOUT(3))
+      ENDIF
+#endif
+C
+C        if only one word given get fname and ftype from it if there
+      IF (NCHOUT.EQ.1) THEN
+         IDIR = INDEX (FNAME,']')
+         IF (IDIR.EQ.0) THEN
+            IB = 0
+  11        IB = IDIR+IB
+            IDIR = INDEX (FNAME(IB+1:),'/')
+            IF (IDIR.NE.0) GOTO 11
+            IDIR = IB
+         ENDIF
+         IDOT = IDIR + INDEX (FNAME(IDIR+1:LFN),'.')
+         IF (IDOT.GT.IDIR) THEN
+            GTYPE = FNAME(IDOT+1:LFN)
+            GNAME = FNAME(1:IDOT-1)
+         ENDIF
+      ENDIF
+      LGN = LNBLNK(GNAME)
+      IF (LGN.EQ.0) GOTO 100
+#if defined(ARDEB)
+      WRITE (IW(6),*) SUBR,' FNAME= ',FNAME(1:LFN),
+     &                     ' GNAME= ',GNAME(1:LGN),
+     &                     ' GTYPE= ',GTYPE,' GMODE= ',GMODE
+#endif
+C ===============================================================
+C         loop over 2nd, 3rd, ... parameter
+C ===============================================================
+  100 NP = NP+1
+      ILEN = ACARD2 (NP,CWORK)
+      IF (ILEN .EQ. 0)  GO TO 200
+C
+#if defined(IBM)
+C -------------- IBM code -----------------------------------------
+C         IBM : look for GIME
+C
+      IF (CWORK(1:4) .EQ. 'GIME')  THEN
+        CALL GIMEDK(CNAME,CWORK,GTYPE,GMODE,IRC)
+        IF(NP.EQ.2) THEN
+          GMODEN = GMODE
+          GMODET = GMODE
+        ELSEIF(NP.GT.2 .AND. GMODET.NE.' ') THEN
+          GMODEN = GMODE
+          GMODE  = GMODET
+        ENDIF
+        IF (IRC.NE.0 .AND. IER.EQ.0)  IER = 2
+        GO TO 100
+      ELSE
+        GMODEN = ' '
+      ENDIF
+C -------------------- end of IBM code ----------------------------
+#else
+#if defined(UNIX)
+C -------------------- UNIX code ----------------------------------
+C        UNIX : look for DISPOSE/ACQUIRE/FETCH
+C        Caution: take care of lower case as well!
+C
+      IF (CWORK(1:4).EQ.'disp' ) CWORK(1:4) = 'DISP'
+      IF (CWORK(1:4).EQ.'acqu' ) CWORK(1:4) = 'ACQU'
+      IF (CWORK(1:4).EQ.'fetc' ) CWORK(1:4) = 'FETC'
+      IF (CWORK(1:4).EQ.'DISP'.OR.CWORK(1:4).EQ.'ACQU'.OR.
+     +    CWORK(1:4).EQ.'FETC' ) THEN
+        FDEVI = 'DISK '//CWORK(1:ILEN)
+        GO TO 100
+      ENDIF
+C ------------------------ end of UNIX code --------------------------
+#endif
+#endif
+C
+C         set ATYPE  or FDEVI from the type parameter
+C
+      IF (CWORK(1:4) .EQ. 'DISK' .OR.
+     &    INDEX(TAPPAR,CWORK(1:4)) .NE. 0) THEN
+        IF (FDEVI .NE. ' ')  IER = 3
+        FDEVI = CWORK
+      ELSEIF (CWORK(1:4) .EQ. 'GIME')  THEN
+        FDEVI = 'DISK '//CWORK(1:ILEN)
+      ELSE
+         DO ITYP=1,NT
+            IF (CWORK(1:3) .EQ. CVFT(ITYP)(1:3))  THEN
+               IF (ATYPE .NE. ' ')  IER = 3
+               ATYPE = CVFT(ITYP)
+            ENDIF
+         ENDDO
+      ENDIF
+      GOTO 100
+C
+ 200  CONTINUE
+C
+C - no more parameter on the data card   ============================
+C
+C         if device not given : assume DISK
+      IF (FDEVI .EQ. ' ')  FDEVI = 'DISK'
+C
+C         file type given as parameter ?
+      IF (ATYPE .NE. ' ')  THEN
+        IF (GTYPE .EQ. ' ')  GTYPE = ATYPE
+      ELSE
+C         file type given neither as param. nor in the data set name
+         IF (GTYPE .EQ. ' ')  THEN
+            GTYPE = DTYPE
+            ATYPE = DTYPE
+         ELSE
+C         get file type from file name
+            DO  ITYP=1,NT
+                IF (GTYPE(1:3) .EQ. CVFT(ITYP)(1:3))  THEN
+                   ATYPE = CVFT(ITYP)
+                   GOTO 300
+                ENDIF
+            ENDDO
+            IF (IER.EQ.0) IER=1
+            ATYPE = DTYPE
+         ENDIF
+      ENDIF
+C
+C - get the whole disk file name  ======================================
+C
+  300 CONTINUE
+      IF (FDEVI(1:4) .NE. 'DISK')  GO TO 900
+#if defined(IBM)
+C ---------------------- IBM code -----------------------------------
+      IF (GMODE .EQ. ' ')  GMODE = DMODE
+      FNAME = GNAME(1:LGN) //' '//GTYPE(1:LNBLNK(GTYPE))//' '//GMODE
+C ---------------------- end of IBM code ---------------------------
+#else
+      IF (GTYPE .NE. ' ') FNAME = GNAME(1:LGN)//'.'//GTYPE
+#endif
+  900 CONTINUE
+#if defined(ARDEB)
+      LEND = MAX (LNBLNK (FDEVI),1)
+      LENF = MAX (LNBLNK (FNAME),1)
+      LENT = MAX (LNBLNK (ATYPE),1)
+      WRITE (IW(6),*) SUBR,' FNAME= ',FNAME(1:LENF),
+     &              ' ATYPE= ',ATYPE(1:LENT),' FDEVI= ',FDEVI(1:LEND)
+#endif
+      IF(IER.EQ.0) THEN
+        IF(CNAME(1:4).EQ.'FILM'.OR.ATYPE(1:3).EQ.'DAF') DIRECT=.TRUE.
+      ENDIF
+C --
+      RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@ Modified Files:
+	acdarg.F afilin.F afilou.F ainqui.F amount.F aoptap.F astage.F
+	awrtap.F
+@
+text
+@a0 1
+*DK acdarg
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d7 2
+a8 2
+C             VAX, APOLLO, and DEC
+C  'filetype' means 'ft' on IBM ,'ext' on VAX, APOLLO, and DEC.
+@
+
+
+1.1.1.1
+log
+@import alephio 4
+@
+text
+@@

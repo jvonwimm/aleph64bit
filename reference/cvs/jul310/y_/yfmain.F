@@ -1,0 +1,229 @@
+      SUBROUTINE YFMAIN
+C----------------------------------------------------------
+C!   -Find the main vertex of the event
+C!    Author   :-F. James,  Sept., 1987
+C!    Modified: M. Mermikides 9 Sept 1987
+C!    Modified :- E. Lancon             14-FEB-1992
+C!               Use FRFT,FRTL bank instead of TGFT,TGTL
+C!               (TGFT,TGTL) are not present in case of DST-DST
+C!               reprocessing without TPC)
+C!    Description
+C!    ===========
+C!    Input:  the bank containing all fiited charged tracks. For the
+C!    moment that is FRFT since we have only TCP tracks, but later it
+C!    will be whatever comes out of joining the inormation from all
+C!    inner tracking detectors.
+C!
+C!    Action: find the point z with the largest associated energy, where
+C!    associated energy is defined as the sum of the momenta of all
+C!    tracks compatible with coming from x=y=0 and the point z.
+C!    The momentum-weighted average value of z0 for those tracks
+C!    compatible with coming from that z point is then taken as the
+C!    nominal starting value for the vertex fit, and the tracks
+C!    participating in the fit are those which are compatible with
+C!    that origin. Later, tracks which are "less compatible" can be
+C!    added to the fit according to the procedure described by Billoir,
+C!    Fruhwirth, and Regler, NIM A241 (1985)p.115.
+C!
+C!    Output: The fitted main vertex point, with error matrix and chisq.
+C!            The list of tracks associated to the main vertex.
+C!            The refitted 1/R, tanl, and phi off all participating
+C!         tracks, with the n 3x3 error matrices.
+C!
+#ifndef DOC
+#include "yynamc.h"
+C--------------------------------------------------------------------
+#include "bcs.h"
+#include "rparac.h"
+#include "rflags.h"
+#include "tparac.h"
+#include "tpgpar.h"
+#include "tpccon.h"
+#include "tpnamc.h"
+#include "tpcojj.h"
+#include "frftjj.h"
+#include "frtljj.h"
+C
+      PARAMETER (ALPH= 3.0 )
+C
+      PARAMETER (NTMAX=40)
+      DIMENSION ITCAN(NTMAX),ITLIS(NTMAX)
+      DIMENSION ERRD(NTMAX),ERRZ(NTMAX)
+C
+      DIMENSION SIGZ0(100),SIGD0(100)
+      LOGICAL FIRST
+C Properties of scattering media
+      DATA X0TPC/10983./, X0SCA/24.1/, RSCAT/30./, TSCAT/0.8/
+C Momentum cut, min. no of coordinates
+      DATA PCUT/0.4/, NCMIN/6/
+      DATA FIRST / .TRUE. /
+C
+#include "bmacro.h"
+C
+      IF ( FIRST ) THEN
+         NAFRFT = NAMIND('FRFT')
+         NAFRTL = NAMIND('FRTL')
+         NATPCO = NAMIND('TPCO')
+         NAFTCL = NAMIND('FTCL')
+         FIRST = .FALSE.
+      ENDIF
+      KFRFT = IW(NAFRFT)
+C If less than two charged tracks, forget it
+      IF (KFRFT.EQ.0) RETURN
+      NTRCH = IW(KFRFT+LMHROW)
+      IF (NTRCH .LT. 2) GO TO 999
+      KFRTL = IW(NAFRTL)
+      KFTCL = IW(NAFTCL)
+      KTPCO = IW(NATPCO)
+C
+C Get errors on Z0 and D0 for the association of tracks.
+C At present we add in quadrature to the measurement error the
+C estimated multiple scattering contribution.
+C This procedure is provisional until we get the final track
+C fit, using information from the vertex detector and ITC.
+C
+      NTRCH = MIN(NTRCH,100)
+      DO 50 ITRCH = 1,NTRCH
+         SIGD0(ITRCH) = -1.
+         SIGZ0(ITRCH) = -1.
+C Accept tracks with at least NCMIN hits in TPC first arc
+         NHIT = IW(KROW(KFRTL,ITRCH) + JFRTNT)
+         IF (NHIT.LT.NCMIN) GO TO 50
+C
+C For m/s projected error use expression:
+C    <x**2> = SUM{theta(i)**2*(t(i)**2/3 + d(i)*t(i) + d(i)**2)}
+C     theta(i) = 0.015/(p*beta)*sqrt(t(i)/X0(i))
+C     t(i) = thickness of material traversed
+C     d(i) = distance to measuring plane
+C We consider two scattering media: the TPC gas traversed
+C and a thin region between the ITC and TPC to represent
+C all the material before the TPC. This corresponds to
+C about 3.3%X0 at normal incidence. The medium is represented
+C by an equivalent thickness of Al (0.8cm) at a radius of
+C RSCAT = 30 cm.
+C
+         TANL = RW(KROW(KFRFT,ITRCH) + JFRFTL)
+C M.A.Ciocci modified in accord with the new convenction
+C         RHO = 1./RW(KROW(KFRFT,ITRCH) + JTGFIR)
+         RHO =-1./RW(KROW(KFRFT,ITRCH) + JFRFIR)
+         SEC2L = 1. + TANL*TANL
+         PTOT = BCFGEV*ABS(RHO)*SQRT(SEC2L)
+C Skip low momentum tracks
+         IF (PTOT.LT.PCUT) GO TO 50
+C
+C Get length of track in TPC volume from padrow radius of last hit used
+C
+         IOFF=KFTCL+LMHLEN+ITABL(KFRTL,ITRCH,JFRTIT)
+         IC=IW(IOFF+NHIT)
+         REND = RTABL(KTPCO,IC,JTPCRV)
+         T1 = REND - RSCAT
+         D1 = RSCAT + TSCAT
+         T2 = TSCAT
+         D2 = RSCAT
+         ACON2 = (0.015/PTOT)**2
+         TH1SQ = ACON2*T1/X0TPC
+         TH2SQ = ACON2*T2/X0SCA
+         XSQ  =  TH1SQ *(T1*T1/3. + T1*D1 + D1*D1)*SEC2L
+     &         + TH2SQ *(T2*T2/3. + T2*D2 + D2*D2)*SEC2L
+C (NB the D0 error given in the TGFT bank is generally much too
+C small compared to value of D0. Set lower limit on meas. error)
+C M.A. Ciocci modified in accord with the new convenction
+C         SMD2 = MAX(0.001,1./RW(KROW(KFRFT,ITRCH)+JTGFEM+9))
+         SMD2 = MAX(0.001,RW(KROW(KFRFT,ITRCH)+JFRFEM+9))
+         SIGD2 = XSQ + SMD2
+C M.A. Ciocci modified in accord with the new convenction
+C         SIGZ2 = XSQ*SEC2L + 1./RW(KROW(KFRFT,ITRCH)+JTGFEM+14)
+         SIGZ2 = XSQ*SEC2L + RW(KROW(KFRFT,ITRCH)+JFRFEM+14)
+         SIGD0(ITRCH) = SQRT(SIGD2)
+         SIGZ0(ITRCH) = SQRT(SIGZ2)
+C Tracks with d0 not consistent with zero are marked
+         IF(ABS(RW(KROW(KFRFT,ITRCH)+JFRFD0)).GT.ALPH*SIGD0(ITRCH)) THEN
+            SIGD0(ITRCH) = -SIGD0(ITRCH)
+            SIGZ0(ITRCH) = -SIGZ0(ITRCH)
+         ENDIF
+   50 CONTINUE
+C
+C Find value of z0 which has most associated energy
+C
+      RMAX = 0.
+      NAS = 0
+      NTAS = NAS
+      DO 100 ITRCH = 1, NTRCH-1
+C Skip track marked as bad
+         IF (SIGD0(ITRCH).LE.0.0) GO TO 100
+         ZTRY = RW(KROW(KFRFT,ITRCH)+JFRFZ0)
+         SUMR = 0.
+         SUMZ = 0.
+         NAS = 1
+         ITCAN(NAS) = ITRCH
+         DO 90 INRLP= ITRCH + 1, NTRCH
+            IF (SIGD0(INRLP).LE.0.0) GO TO 90
+            DZ2 = SIGZ0(ITRCH)**2 + SIGZ0(INRLP)**2
+            ZNOW = RW(KROW(KFRFT,INRLP)+JFRFZ0)
+            IF (ABS(ZTRY-ZNOW)  .GT. ALPH*SQRT(DZ2) ) GO TO 90
+C M.A. Ciocci modified in accord with the new convenction
+C            RAS = 1.0/RW(KROW(KFRFT,INRLP)+JTGFIR)
+            RAS = -1.0/RW(KROW(KFRFT,INRLP)+JFRFIR)
+            RAS = MIN (1000., ABS(RAS))
+            SUMZ = SUMZ + ZNOW
+            SUMR = SUMR + RAS
+C
+C   Fill list of tracks within acceptable distance of
+C   trial main vertex position
+C
+            NAS = NAS + 1
+            ITCAN(NAS) = INRLP
+            IF(NAS.EQ.NTMAX) GO TO 92
+   90    CONTINUE
+C
+C If there are fewer than 2 tracks in cluster or if this is not
+C a new max. energy cluster, drop candidate
+C
+   92    IF (NAS.LT.2. OR. SUMR.LT. 1.0001*RMAX) GO TO 100
+C New maximum associated energy cluster found
+         RMAX = SUMR
+         AVGZ = SUMZ/FLOAT(NAS)
+         NTAS = NAS
+         CALL UCOPY(ITCAN(1),ITLIS(1),NTAS)
+  100 CONTINUE
+C
+C Find vertex if there are enough tracks
+C
+      IF (NTAS .LT.2 ) GO TO 500
+C
+      DO 80 I= 1,NTAS
+         IT = ITLIS(I)
+         ERRD(I) = SIGD0(IT)
+         ERRZ(I) = SIGZ0(IT)
+   80 CONTINUE
+C
+      CALL YFVERT(NTAS,ITLIS,ERRD,ERRZ,IER)
+C
+C Compress YVXL,YTRL banks
+C
+  500 KYVXL = IW(NAYVXL)
+      IF (KYVXL.EQ.0) GO TO 999
+      NDATA = IW(KYVXL+LMHCOL)*IW(KYVXL+LMHROW) + LMHLEN
+      IF (NDATA.EQ.0) THEN
+         CALL BDROP(IW,'YVXL')
+      ELSEIF (NDATA.LT.IW(KYVXL)) THEN
+         CALL AUBOS('YVXL',0,NDATA,KYVXL,IGARB)
+      ENDIF
+C
+      KYTRL = IW(NAYTRL)
+      IF (KYTRL.EQ.0) GO TO 999
+      NDATA = IW(KYTRL+LMHCOL)*IW(KYTRL+LMHROW) + LMHLEN
+      IF (NDATA.EQ.0) THEN
+         CALL BDROP(IW,'YTRL')
+      ELSEIF (NDATA.LT.IW(KYTRL)) THEN
+         CALL AUBOS('YTRL',0,NDATA,KYTRL,IGARB)
+      ENDIF
+C
+C Print out results of vertex fit
+C
+      CALL YPRPOT
+      IF (FDEBRF.AND.JDBDRF(JULYR).GT.1)  CALL PRYFIT
+C
+  999 RETURN
+      END
+#endif

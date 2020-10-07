@@ -1,0 +1,91 @@
+head	1.1;
+access;
+symbols
+	alio83:1.1
+	alio82:1.1
+	alio81:1.1
+	alio80:1.1
+	alio74:1.1
+	alio73:1.1
+	alio72:1.1
+	alio71:1.1
+	alio70:1.1
+	alio68:1.1
+	alio69:1.1
+	alio67:1.1
+	alio66:1.1
+	alio65:1.1
+	alio64:1.1
+	alio63:1.1
+	alio62:1.1
+	alio61:1.1
+	alio60:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.04.23.09.59.09;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@move alph, dbas, a part of alef and a part of c to alephio
+Modified Files:
+ 	version.h
+ Added Files:
+ 	adbrow.F adbrpn.F adbrun.F adbswp.F adbver.F agetdb.F agtfil.F
+	albos.F aldawr.F aldtyp.F aleveh.F alfind.F alfmt.F algtbk.F
+ 	algtdb.F algtlu.F algtro.F algtyp.F alinst.F alk7fil.F
+ 	alk7fru.F alk7op.F alk7tru.F alredb.F alrune.F alrunh.F
+ 	alrunr.F alseed.F alstho.F alstin.F alstri.F altabl.F alvsn.F
+ 	aopdbs.F aublis.F aubos.F aubprs.F bkcari.F bkinca.F bkrhab.F
+ 	bkrhal.F bkrhaw.F bktobk.F cafiht.F chahol.F dafrds.F gtdbas.F
+ 	gtstup.F igtfmt.F jhocha.F julrec.F junial.F junidb.F
+ 	kbytrec.F loctab.F nameru.F ubpack.F uclean.F uindxs.F usbos.F
+ 	usgtdb.F utcblk.F utccop.F utcofo.F utwocl.F utwoex.F
+Removed Files:
+	noibm.F
+@
+text
+@      SUBROUTINE ALDAWR (IW,LUN,LIST)
+C ----------------------------------------------------------------------
+C - F.Ranjard - 900517
+CKEY ALEF WRITE BANK DA
+C! write list of banks on direct access BOS file
+C
+C - Input:    IW      / INTE = BOS array
+C             LUN     / INTE = d.a file logical unit
+C             LIST    / A    = list of banks to be written
+C ----------------------------------------------------------------------
+#ifndef DOC
+      CHARACTER*(*) LIST
+      CHARACTER*4 NAME,NLISTB
+      INTEGER IW(*)
+C ----------------------------------------------------------------
+C
+C - get one bank at a time from the LIST
+C
+      I=0
+ 10   I=I+1
+      NAME=NLISTB(IW,I,LIST)
+      IF (NAME.NE.'    ') THEN
+         NAMI = NAMIND(NAME)
+         JNAME= NAMI+1
+ 11      JNAME= IW(JNAME-1)
+         IF (JNAME.NE.0) THEN
+            CALL BDAWR(IW,LUN,NAME,IW(JNAME-2))
+            GOTO 11
+         ENDIF
+         GOTO 10
+      ENDIF
+C
+      END
+#endif
+@

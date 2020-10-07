@@ -1,0 +1,75 @@
+head	1.1;
+access;
+symbols
+	aleph316_2:1.1
+	aleph316_1:1.1
+	aleph316:1.1
+	aleph315_7:1.1
+	aleph315_6:1.1
+	aleph315_5:1.1
+	aleph315_4:1.1
+	aleph315_3:1.1
+	aleph315_2:1.1
+	aleph315_1:1.1
+	aleph315:1.1
+	aleph314_2:1.1
+	aleph314_1:1.1
+	aleph314:1.1
+	aleph313_1:1.1
+	aleph313:1.1
+	aleph312_1:1.1
+	aleph312:1.1
+	aleph311_1:1.1
+	aleph311:1.1
+	aleph310_3:1.1
+	aleph310_2:1.1
+	aleph310_1:1.1
+	aleph310:1.1
+	aleph309_1:1.1
+	aleph309:1.1
+	aleph308_3:1.1
+	aleph308_2:1.1
+	aleph308_1:1.1
+	aleph308:1.1
+	aleph307_6:1.1
+	aleph307_5:1.1
+	aleph307_4:1.1
+	aleph307_2:1.1
+	aleph307_1:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	98.02.06.14.27.00;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@New interface routines to Pythia 6.1
+@
+text
+@      SUBROUTINE KPYZET(ZB)
+C------------------------------------------------------------------
+C! Transfer the content of fragmention information  to ZB array
+C    B.Bloch-Devaux January   1998 for Pythia 6.1
+C     comdecks referenced : PYT6COM
+C----------------------------------------------------------------------
+#ifndef DOC
+#include "pyt6com.h"
+      REAL*4 ZB(LJNPAR)
+      IF (MSTU(90).GT.0) THEN
+         DO 10 I = 1,MSTU(90)
+         J = MSTU(91+I-1)
+ 10      ZB(J) = PARU(91+I-1)
+      ENDIF
+      RETURN
+      END
+#endif
+@

@@ -1,0 +1,256 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	99.10.26.09.32.06;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.40.48;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.40.49;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@for Alephlib 313
+@
+text
+@      SUBROUTINE TNRHPA(P,X,Q,B,HELIX,XC,S)
+C
+C---------------------------------------------------------------------
+C! Return helix parameters of a track element
+C!
+C!    Author:   R. Johnson    12-08-87
+C!    Modified: R. Johnson    17-04-91  make all variables double prec
+C!    Modified: D. Smith      25-10-99  Double precision fixes for Linux
+C!
+C!    Input:
+C!       - P(3)     /R      Particle 3-momentum at point X
+C!       - X(3)     /R      Point at which P is given
+C!       - Q        /R      Charge of the particle
+C!       - B        /R      Magnitude of the magnetic field (in +z direc
+C!    Output:
+C!       - HELIX(*) /R      Helix parameters with respect to the
+C!                          detector origin:
+C!                           r,phi0,d0,z0,tanl
+C!       - XC(2)    /R      Center of the helix circle
+C!       - S        /R      Distance from closest approach to origin to
+C!                          the point X, along the track.
+C!
+C!-------------------------------------------------------------------
+#ifndef DOC
+C
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+      SAVE FIRST,TWOPI,PI,PIBY2,CLGHT
+      REAL P(*),X(*),Q,B,HELIX(*),XC(*),S
+      LOGICAL FIRST
+      DATA FIRST/.TRUE./
+C
+      IF (FIRST) THEN
+        FIRST=.FALSE.
+        PI=4.D0*DATAN(1.D0)
+        TWOPI=2.D0*PI
+        PIBY2=PI/2.D0
+        CLGHT=29.9792458D0
+      ENDIF
+C
+C++   Find the radius of curvature and the center of the circle
+C
+      PT = DSQRT(DBLE(P(1))**2 + DBLE(P(2))**2)
+      RHO= -DBLE(Q)*PT/(DBLE(B)*CLGHT*1.0D-5)
+      SGN= DSIGN(1.D0,RHO)
+C...Special treatment of charged track with PT=0
+      IF(PT.EQ.0) THEN
+        XC(1)=DBLE(X(1))
+        XC(2)=DBLE(X(2))
+        IF (XC(1).EQ.0. .AND. XC(2).EQ.0.) THEN
+          PHIC=0D0
+        ELSE
+          PHIC = DATAN2(DBLE(XC(2)),DBLE(XC(1)))
+        ENDIF
+        PHI0 = PHIC - PIBY2
+        IF (PHI0.LT.0D0) THEN
+          PHI0 = PHI0 + TWOPI
+        ELSEIF (PHI0.GE.TWOPI) THEN
+          PHI0 = PHI0 - TWOPI
+        ENDIF
+        HELIX(1)=0
+        HELIX(2)=0
+        HELIX(3)=PHI0
+        HELIX(4)=DSQRT(DBLE(X(1))**2+DBLE(X(2))**2)
+        HELIX(5)=0.
+        S=DBLE(ABS(X(3)))
+        GOTO 999
+      ENDIF
+C
+C++   Signed distance of closest approach to the origin and the
+C++   track direction in the plane at that point.
+C
+      XC8=-RHO*DBLE(P(2))/PT + DBLE(X(1))
+      YC8= RHO*DBLE(P(1))/PT + DBLE(X(2))
+      RC = DSQRT(XC8**2+YC8**2)
+      D0 = RHO - SGN*RC
+C
+      XC(1)=XC8
+      XC(2)=YC8
+      IF (XC(1).EQ.0. .AND. XC(2).EQ.0.) THEN
+        PHIC=0D0
+      ELSE
+        PHIC = DATAN2(DBLE(XC(2)),DBLE(XC(1)))
+      ENDIF
+      PHI0 = PHIC - SGN*PIBY2
+      IF (PHI0.LT.0D0) THEN
+        PHI0 = PHI0 + TWOPI
+      ELSEIF (PHI0.GE.TWOPI) THEN
+        PHI0 = PHI0 - TWOPI
+      ENDIF
+C
+C++   Find the distance along the track from origin to X
+C
+      THETA=DATAN2(DBLE(P(2)),DBLE(P(1)))
+      IF (THETA.LT.0D0) THETA=THETA+TWOPI
+      ALPHA=THETA-PHI0
+      IF (ALPHA.LT.-PI) THEN
+        ALPHA=ALPHA+TWOPI
+      ELSEIF (ALPHA.GT.PI) THEN
+        ALPHA=ALPHA-TWOPI
+      ENDIF
+      SP=RHO*ALPHA
+C
+C++   Find the dip angle and z position at approach to origin
+C
+      TANL = DBLE(P(3))/PT
+      Z0 = X(3) - SP*TANL
+C
+      HELIX(1) = 1.D0/RHO
+      HELIX(2) = TANL
+      HELIX(3) = PHI0
+      HELIX(4) = D0
+      HELIX(5) = Z0
+      S= SP*DSQRT(1.D0+TANL**2)
+C
+ 999  CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d8 1
+d51 1
+a51 1
+          PHIC=0.
+d56 1
+a56 1
+        IF (PHI0.LT.0.) THEN
+d81 1
+a81 1
+        PHIC=0.
+d86 1
+a86 1
+      IF (PHI0.LT.0.) THEN
+d95 1
+a95 1
+      IF (THETA.LT.0.) THETA=THETA+TWOPI
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

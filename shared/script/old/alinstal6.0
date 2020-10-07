@@ -1,0 +1,101 @@
+#! /bin/csh
+#==========================================================
+# 9/4/97                                         FLR
+#                        ALINSTAL
+# install new versions on the 2 platforms.
+# call local_instal foreach platforms
+#==========================================================
+#
+# set echo on if last arg is "-v"
+set verbflr = ""
+
+set nar = $#argv
+if (nar != 0) then
+  if ($argv[${nar}] == "-v") then
+     set echo on
+     set verbflr =    "-v"
+     set argv[${nar}] = ""
+     @ nar = ${nar} - 1 
+  endif
+endif
+
+#
+if ( $?ENVIRONMENT ) then
+ if (("$ENVIRONMENT" == "INTERACTIVE" || "$ENVIRONMENT" == "LOGIN") && $1 == "-h" ) then
+   echo ""
+   echo "usage:"
+  echo "  alinstal <prog_name> [<version no.>]"
+  echo "  reset all links for the new version,"
+  echo "  reset the version number,"
+  echo "  run alremove to remove old versions if required."
+  echo "  At CERN does that on the 2 platforms."
+  echo ""
+  echo "some examples"
+  echo ""
+  echo "  alinstal alephlib 215"
+  echo "  set links in $ALEPH/gen:" 
+  echo "  libalephlib.a, _dbx.a --> libalephio215.a, _dbx.a "
+  echo "  srcalephlib           --> $ALROOT/aleph215"
+  echo "  alephlib.news         --> $ALROOT/aleph215/news/news.h"
+  echo "  set alephver = 215 in alephlib.version "
+  echo ""
+  echo "  alinstal galeph"
+  echo "  set links in $ALEPH/gal using the last version no. exported and"
+  echo "  stored in $ALEPH/gal/alib.log:"
+  echo "  if the last version exported is 304 the following links will be set:"
+  echo "  libgaleph.a, _dbx.a   --> libgal304.a, _dbx.a"
+  echo "  srcgaleph             --> $ALROOT/gal304"
+  echo "  galeph.news           --> $ALROOT/gal304/news/news.h"
+  echo "  gmain.o               --> gmain304.o"
+  echo "  galeph                --> gal304"
+  echo "  set galver = 304 in galeph.version"
+  echo ""
+   exit(1)
+ endif
+endif
+#
+unset noclobber
+
+#
+set file = $1
+set version = $2
+#
+# install on /afs
+
+local_instal ${file} ${version}
+
+ if (${SERVICE} == "hpplus") rsh shift50 local_instal ${file} ${version}    
+ if (${SERVICE} == "AFAL" || ${SERVICE} == "SHIFTALEPH" || ${SERVICE} == "dxplus") rsh hpplus ${SHARED}/script/local_instal ${file} ${version}
+
+goto exit
+#
+exit:
+unsetenv NORETRY
+exit
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

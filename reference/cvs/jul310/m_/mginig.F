@@ -1,0 +1,263 @@
+         SUBROUTINE MGINIG(LRGEO,IRUNR,IERR,NEWNR)
+C----------------------------------------------------------------------
+C!  - Initialise MUON reconstruction with New Data Base
+C!
+C!   Author   :- P.Campana    890608
+C!   Modified :- P.Campana    910530 Corr. for 2 layer
+C?
+C!======================================================================
+#ifndef DOC
+         INTEGER ALGTDB
+#include "bcs.h"
+#include "rlunit.h"
+#include "mgjpar.h"
+#include "mgnpar.h"
+#include "mgdeca.h"
+#include "mgeeca.h"
+#include "mgdmda.h"
+#include "mgemda.h"
+#include "mgdcom.h"
+#include "mgdbar.h"
+#include "mgebar.h"
+         CHARACTER LISTG*52
+         CHARACTER LISTH*16
+         DATA LISTG
+     +   /'MUOGMBAGMBSGMBTGMBBGMECGMETGMESGMEBGMMAGMMBGMMTGMMSG'/
+         DATA LISTH /'M1TGM1SGM2SGM3BG'/
+#include "bmacro.h"
+C
+         IBO1=ALGTDB(LRGEO,LISTH,IRUNR)
+         IF(IBO1.EQ.0)
+     +      CALL RERROR('MGINIG',9,'Banks for MUON lay.2 missing')
+C
+         IBOS=ALGTDB(LRGEO,LISTG,IRUNR)
+         IF(IBOS.EQ.0) THEN
+C at least one bank is missing: IERR=1 and RETURN
+            IERR=1
+            NEWNR=0
+            RETURN
+         ELSEIF (IBOS.GT.0) THEN
+C banks are there and have not been reloaded: RETURN
+            IERR=0
+            NEWNR=0
+            RETURN
+         ENDIF
+C banks are there but at least one has been reloaded: fill commons
+ 888        IERR=0
+            NEWNR=1
+C General data
+            JMUOG=IW(NAMIND('MUOG'))
+            WID8TU=RTABL(JMUOG,1,JMUOWI)
+            TUBCEL=RTABL(JMUOG,1,JMUOTU)
+            SPA88T=RTABL(JMUOG,1,JMUOSP)
+            YPITST=RTABL(JMUOG,1,JMUOYS)
+            XPITST=RTABL(JMUOG,1,JMUOXS)
+C Barrel
+            JMBAG=IW(NAMIND('MBAG'))
+            BPLADI =  RTABL(JMBAG,1,JMBAPD)
+C
+            JMBSG=IW(NAMIND('MBSG'))
+            JM1SG=IW(NAMIND('M1SG'))
+            DO 11 KSL=1,NRSLBA
+            MBVOLU(KSL)  =ITABL(JMBSG,KSL,JMBSVO)
+            BZETAC(KSL)  =RTABL(JMBSG,KSL,JMBSZC)
+            BERREC(KSL)  =RTABL(JMBSG,KSL,JMBSRC)
+            BDELTC(KSL)  =RTABL(JMBSG,KSL,JMBSDE)
+            BTOFFS(1,KSL)=RTABL(JMBSG,KSL,JMBST1)
+            BTOFFS(2,KSL)=RTABL(JMBSG,KSL,JMBST2)
+            MBTAST(KSL)  =ITABL(JMBSG,KSL,JMBSTA)
+            MBNAST(KSL)  =ITABL(JMBSG,KSL,JMBSNA)
+            MBPNT2(KSL)  =ITABL(JMBSG,KSL,JMBSK2)
+            IF(JM1SG.GT.0) THEN
+               BYOFFS(1,KSL)=RTABL(JM1SG,KSL,JM1SY1)
+               BYOFFS(2,KSL)=RTABL(JM1SG,KSL,JM1SY2)
+            ELSE
+               BYOFFS(1,KSL)=RTABL(JMBAG,1,JMBAY1)
+               BYOFFS(2,KSL)=RTABL(JMBAG,1,JMBAY2)
+            ENDIF
+ 11         CONTINUE
+C
+            JMBTG=IW(NAMIND('MBTG'))
+            JM1TG=IW(NAMIND('M1TG'))
+            DO 12 KTY=1,NRTYBA
+            BZBOXG(KTY)=RTABL(JMBTG,KTY,JMBTZB)
+            BRBOXG(KTY)=RTABL(JMBTG,KTY,JMBTRB)
+            MBNSY1(KTY)=ITABL(JMBTG,KTY,JMBTY1)
+            MBNSY2(KTY)=ITABL(JMBTG,KTY,JMBTY2)
+            MBNSXT(1,KTY)=ITABL(JMBTG,KTY,JMBTNX)
+            IF(JM1TG.GT.0) THEN
+               MBNSXT(2,KTY)=ITABL(JM1TG,KTY,JM1TX2)
+            ELSE
+               MBNSXT(2,KTY)=MBNSXT(1,KTY)
+            ENDIF
+            BZTOOT(KTY)=RTABL(JMBTG,KTY,JMBTZT)
+            BRTOOT(KTY)=RTABL(JMBTG,KTY,JMBTRT)
+ 12         BPIT16(KTY)=RTABL(JMBTG,KTY,JMBTW1)
+C
+            JMBBG=IW(NAMIND('MBBG'))
+            DO 13 KBU=1,NRBUBA
+            MBTYBU(1,KBU)=ITABL(JMBBG,KBU,JMBBB1)
+            MBTYBU(2,KBU)=ITABL(JMBBG,KBU,JMBBB2)
+            MBTYBU(3,KBU)=ITABL(JMBBG,KBU,JMBBB3)
+            MBTYBU(4,KBU)=ITABL(JMBBG,KBU,JMBBB4)
+            MBTYBU(5,KBU)=ITABL(JMBBG,KBU,JMBBB5)
+            MBTYBU(6,KBU)=ITABL(JMBBG,KBU,JMBBB6)
+            MBLOBU(1,KBU)=ITABL(JMBBG,KBU,JMBBL1)
+            MBLOBU(2,KBU)=ITABL(JMBBG,KBU,JMBBL2)
+            MBLOBU(3,KBU)=ITABL(JMBBG,KBU,JMBBL3)
+            MBLOBU(4,KBU)=ITABL(JMBBG,KBU,JMBBL4)
+            MBLOBU(5,KBU)=ITABL(JMBBG,KBU,JMBBL5)
+            MBLOBU(6,KBU)=ITABL(JMBBG,KBU,JMBBL6)
+            MBUPBU(1,KBU)=ITABL(JMBBG,KBU,JMBBU1)
+            MBUPBU(2,KBU)=ITABL(JMBBG,KBU,JMBBU2)
+            MBUPBU(3,KBU)=ITABL(JMBBG,KBU,JMBBU3)
+            MBUPBU(4,KBU)=ITABL(JMBBG,KBU,JMBBU4)
+            MBUPBU(5,KBU)=ITABL(JMBBG,KBU,JMBBU5)
+            MBUPBU(6,KBU)=ITABL(JMBBG,KBU,JMBBU6)
+            MBSLPN(1,KBU)=ITABL(JMBBG,KBU,JMBBP3)
+ 13         MBSLPN(2,KBU)=ITABL(JMBBG,KBU,JMBBP4)
+C
+C
+C End Cap
+C
+            JMECG=IW(NAMIND('MECG'))
+            EZIPLA=RTABL(JMECG,1,JMECZI)
+            EZEPLA=RTABL(JMECG,1,JMECZE)
+            EPLADI=RTABL(JMECG,1,JMECPD)
+            EXOFFS=RTABL(JMECG,1,JMECXO)
+C
+            JMETG=IW(NAMIND('METG'))
+            DO 51 ITY=1,NRTYEC
+            EXXBOX(ITY)=RTABL(JMETG,ITY,JMETXB)
+            EYYBOX(ITY)=RTABL(JMETG,ITY,JMETYB)
+            EPIT16(ITY)=RTABL(JMETG,ITY,JMETPI)
+            MENXST(ITY)=ITABL(JMETG,ITY,JMETNX)
+            MENYST(ITY)=ITABL(JMETG,ITY,JMETNY)
+C
+            DO 52 IG=1,NRELEC
+ 52         ELENGT(ITY,IG)=RTABL(JMETG,ITY,JMETLE-1+IG)
+ 51         CONTINUE
+C
+            JMESG=IW(NAMIND('MESG'))
+            JM2SG=IW(NAMIND('M2SG'))
+            DO 50 ISL=1,NRSLEC
+            EXXXXC(ISL)=RTABL(JMESG,ISL,JMESXC)
+            EYYYYC(ISL)=RTABL(JMESG,ISL,JMESYC)
+            EZETAC(ISL)=RTABL(JMESG,ISL,JMESZC)
+            METAST(ISL)=ITABL(JMESG,ISL,JMESTA)
+            MENAST(ISL)=ITABL(JMESG,ISL,JMESNA)
+            MEPNTY(ISL)=ITABL(JMESG,ISL,JMESK2)
+            ITY=MEPNTY(ISL)
+            IF(JM2SG.GT.0) THEN
+               EYSTOF(1,ISL)=RTABL(JM2SG,ISL,JM2SY1)
+               EYSTOF(2,ISL)=RTABL(JM2SG,ISL,JM2SY2)
+            ELSE
+               EYSTOF(1,ISL)=RTABL(JMETG,ITY,JMETYS)
+               EYSTOF(2,ISL)=EYSTOF(1,ISL)
+            ENDIF
+            EYSTOC(1,ISL)=EXXBOX(ITY)-
+     +  (FLOAT(MENYST(ITY))*YPITST+EYSTOF(1,ISL))
+            EYSTOC(2,ISL)=EXXBOX(ITY)-
+     +  (FLOAT(MENYST(ITY))*YPITST+EYSTOF(2,ISL))
+C
+            IF(JM2SG.GT.0) THEN
+               EXSTOF(1,ISL)=RTABL(JM2SG,ISL,JM2SX1)
+               EXSTOF(2,ISL)=RTABL(JM2SG,ISL,JM2SX2)
+            ELSE
+               EXSTOF(1,ISL)=RTABL(JMETG,ITY,JMETX1)
+               EXSTOF(2,ISL)=RTABL(JMETG,ITY,JMETX2)
+            ENDIF
+C
+            EXSTOC(1,ISL)=EYYBOX(ITY)-
+     +  (FLOAT(MENXST(ITY))*EPIT16(ITY)/FLOAT(16)+EXSTOF(1,ISL)-0.1)
+            EXSTOC(2,ISL)=EYYBOX(ITY)-
+     +  (FLOAT(MENXST(ITY))*EPIT16(ITY)/FLOAT(16)+EXSTOF(2,ISL)-0.1)
+ 50         CONTINUE
+C
+            JMEBG=IW(NAMIND('MEBG'))
+            DO 53 IBU=1,NRBUEC
+            METYBU(1,IBU)=ITABL(JMEBG,IBU,JMEBB1)
+            METYBU(2,IBU)=ITABL(JMEBG,IBU,JMEBB2)
+            METYBU(3,IBU)=ITABL(JMEBG,IBU,JMEBB3)
+            METYBU(4,IBU)=ITABL(JMEBG,IBU,JMEBB4)
+            METYBU(5,IBU)=ITABL(JMEBG,IBU,JMEBB5)
+            METYBU(6,IBU)=ITABL(JMEBG,IBU,JMEBB6)
+            MELOBU(1,IBU)=ITABL(JMEBG,IBU,JMEBL1)
+            MELOBU(2,IBU)=ITABL(JMEBG,IBU,JMEBL2)
+            MELOBU(3,IBU)=ITABL(JMEBG,IBU,JMEBL3)
+            MELOBU(4,IBU)=ITABL(JMEBG,IBU,JMEBL4)
+            MELOBU(5,IBU)=ITABL(JMEBG,IBU,JMEBL5)
+            MELOBU(6,IBU)=ITABL(JMEBG,IBU,JMEBL6)
+            MEUPBU(1,IBU)=ITABL(JMEBG,IBU,JMEBU1)
+            MEUPBU(2,IBU)=ITABL(JMEBG,IBU,JMEBU2)
+            MEUPBU(3,IBU)=ITABL(JMEBG,IBU,JMEBU3)
+            MEUPBU(4,IBU)=ITABL(JMEBG,IBU,JMEBU4)
+            MEUPBU(5,IBU)=ITABL(JMEBG,IBU,JMEBU5)
+            MEUPBU(6,IBU)=ITABL(JMEBG,IBU,JMEBU6)
+ 53         CONTINUE
+C
+C Middle Angle
+C
+           JMMAG=IW(NAMIND('MMAG'))
+           AZ0PLA=RTABL(JMMAG,1,JMMAZ0)
+           APLADI=RTABL(JMMAG,1,JMMAPD)
+           APIT16=RTABL(JMMAG,1,JMMAPI)
+C
+           JMMSG=IW(NAMIND('MMSG'))
+           DO 31 MSL=1,NRSLMA
+           MADZFL(MSL)=ITABL(JMMSG,MSL,JMMSDZ)
+           MANYST(MSL)=ITABL(JMMSG,MSL,JMMSNY)
+           MAPNTY(MSL)=ITABL(JMMSG,MSL,JMMSK2)
+           MATAST(MSL)=ITABL(JMMSG,MSL,JMMSTA)
+           MANAST(MSL)=ITABL(JMMSG,MSL,JMMSNA)
+           MAOAST(MSL)=ITABL(JMMSG,MSL,JMMSOS)
+           MAVOLU(MSL)=ITABL(JMMSG,MSL,JMMSVO)
+           AZETAC(MSL)=RTABL(JMMSG,MSL,JMMSZC)
+           AERREC(MSL)=RTABL(JMMSG,MSL,JMMSRC)
+           ADELTC(MSL)=RTABL(JMMSG,MSL,JMMSDE)
+           AYLEOF(1,MSL)=RTABL(JMMSG,MSL,JMMSL1)
+           AYLEOF(2,MSL)=RTABL(JMMSG,MSL,JMMSL2)
+           AXOFFS(1,MSL)=RTABL(JMMSG,MSL,JMMSX1)
+ 31        AXOFFS(2,MSL)=RTABL(JMMSG,MSL,JMMSX2)
+C
+           JMMTG=IW(NAMIND('MMTG'))
+           DO 32 MTY=1,NRTYMA
+           AZZBOX(MTY)=RTABL(JMMTG,MTY,JMMTZB)
+           ARRBOX(MTY)=RTABL(JMMTG,MTY,JMMTRB)
+           AZTOOT(MTY)=RTABL(JMMTG,MTY,JMMTZT)
+           ARTOOT(MTY)=RTABL(JMMTG,MTY,JMMTRT)
+ 32        MANXST(MTY)=ITABL(JMMTG,MTY,JMMTNX)
+C
+           JMMBG=IW(NAMIND('MMBG'))
+           JM3BG=IW(NAMIND('M3BG'))
+           IF(JM3BG.GT.0) THEN
+              DO 133 MBU=1,NRBUMA
+              DO 133 MAS=1,NRTAMA
+              MAUPBU(MAS,MBU)=ITABL(JM3BG,MBU,JM3BU1+(MAS-1)*2)
+ 133          MALOBU(MAS,MBU)=ITABL(JM3BG,MBU,JM3BL1+(MAS-1)*2)
+              DO 134 M1=1,NRTAMA
+              ITYBU=ITABL(JM3BG,LM3BTA,JM3BNN+(M1-1)*2)
+              DO 134 M2=1,NRBUMA
+              MATYBU(M1,M2)=ITABL(JM3BG,M2,JM3BB1+(ITYBU-1)*2)
+ 134          MAOFBU(M1,M2)=ITABL(JM3BG,M2,JM3BO1+(ITYBU-1)*2)
+           ELSE
+              DO 33 MBU=1,NRBUMA
+              DO 33 MAS=1,NRTAMA-2
+              MAUPBU(MAS,MBU)=ITABL(JMMBG,MBU,JMMBU1+(MAS-1)*2)
+ 33           MALOBU(MAS,MBU)=ITABL(JMMBG,MBU,JMMBL1+(MAS-1)*2)
+              DO 34 M1=1,NRTAMA-2
+              ITYBU=ITABL(JMMBG,LMMBTA,JMMBNN+(M1-1)*2)
+              DO 34 M2=1,NRBUMA
+              MATYBU(M1,M2)=ITABL(JMMBG,M2,JMMBB1+(ITYBU-1)*2)
+ 34           MAOFBU(M1,M2)=ITABL(JMMBG,M2,JMMBO1+(ITYBU-1)*2)
+           ENDIF
+C Overrite AXOFFS for neg. z slots (offs. always from left side)
+           DO 35 L=NRSLMA/2+1,NRSLMA
+           ITY=MAPNTY(L)
+           DO 35 IP=1,NRPLAN
+ 35        AXOFFS(IP,L)=AZZBOX(ITY)-
+     +     (FLOAT(MANXST(ITY))*APIT16/FLOAT(16)-0.1+AXOFFS(IP,L))
+C
+        RETURN
+        END
+#endif

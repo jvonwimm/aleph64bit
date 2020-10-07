@@ -1,0 +1,80 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  smearfit_1:1.1.1.1 OSF1:1.1.1;
+locks    ; strict;
+comment  @# @;
+
+
+1.1
+date     99.08.23.15.52.54;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     99.08.23.15.52.54;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@Track smearing & deletion parameter calculation :
+
+      CALL SMEARFIT(SMBIN, RTBIN,  NMCFIL, MCFILE, NDAFIL,
+     +     DAFILE, CAFILE, HIFILE)
+
+     Input :
+       CHAR*1   SMBIN     = 'N' no binning in theta/p for smearing.
+                          = 'T' binning in theta for smearing.
+                          = 'P' binning in p for smearing.
+                          = 'B' binning in both theta/p for smearing.
+       CHAR*1   RTBIN     = 'N' no binning in theta/p for deletion.
+                          = 'T' binning in theta for deletion.
+                          = 'P' binning in p for deletion.
+                          = 'B' binning in both theta/p for deletion.
+       INTE     NMCFIL    = number of MC files
+       CHAR*(*) MCFILE(*) = MC file names
+       INTE     NDAFIL    = number of data files
+       CHAR*(*) DAFILE(*) = data file names
+       CHAR*(*) CAFILE    = output card file name
+       CHAR*(*) HIFILE    = output histogram file name
+
+This routine will perform the calculation of the smearing and deletion
+parameters for QIPBTAG/QSMEAR. The procedure to use this is to run two
+ALPHA jobs calling QIPBTAG, with the CALB keyword in the ALPHA card
+file: one on the Monte Carlo and one on the data. SMEARFIT takes the
+path of the histogram files outputed by QIPBTAG as input and outputs
+the smearing/deletion parameters to CAFILE. HIFILE contains histograms
+describing the effect of the smearing on the impact parameter
+significance.
+
+The bank names created are 'Qxyy' where x = P, T, N, B for momentum
+binning, theta binning, none or both, and yy = DE, SM for deletion or
+smearing parameters. The bank number will be 100*(VDET setup code) +
+i, where i = 1 for Z data, 2 for high energy data, 3 or 4 for
+QIPBTAG2.
+
+Note that many analyses apply a cut on the polar angle of the thrust
+axis before calling QIPBTAG. In this case, it makes sense to apply
+the same cut before calling QIPBTAG when following the instructions
+above. If you are producing official smearing/deletion banks for the 
+database, then choose typical |cos(theta)| cuts (e.g. 0.8 at LEP1 and
+0.9 at LEP2).
+@
+
+
+1.1.1.1
+log
+@import 
+@
+text
+@@

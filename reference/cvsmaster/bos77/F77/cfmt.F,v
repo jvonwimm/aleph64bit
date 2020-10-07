@@ -1,0 +1,187 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.50.05;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.24;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.25;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE CFMT(X,N,XCHAR,ECHAR)
+C
+C
+C               SUBROUTINE CFMT
+C                  - -
+C        CALL CFMT(X,N,XF,ECHAR)
+C                      -- --
+C     WHERE X( )  = ARRAY OF N REAL VALUES
+C           XCHAR( ) = ARRAY OF N REAL*8 WORDS
+C           ECHAR = REAL*4 WORD FOR EXPONENT
+C
+C     CFMT CONVERTS AN ARRAY OF N REAL VALUES INTO N REAL*8 WORDS,
+C     CONTAINING THE VALUES IN A-FORMAT, AND A COMMON EXPONENT IN
+C     IA-FORMAT FOR PRINTING. THERE WILL BE NO UNNECCESSARY ZEROS.
+C
+C     EXAMPLE - X(1)=1200.0, X(2)=1700.0 WITH N=2 ARE CONVERTED TO
+C               XCHAR(1)='  1.2   ', XCHAR(2)='  1.7   ', ECHAR='E 03'
+C
+C
+      REAL X(*)
+      CHARACTER*1 CH(10)
+      CHARACTER*4 ECHAR
+      CHARACTER*8 XCHAR(N),FXF,SXF,NULL
+      DATA        CH    /'0','1','2','3','4','5','6','7','8','9'/
+      DATA NULL/'00000000'/
+C     ...
+C
+C     DETERMINE FACTOR FC, SO THAT FC*XMAX IS 5 DIGIT NUMBER
+C
+      IP=0
+      XM=0.0
+      DO 10 I=1,N
+   10 XM=AMAX1(XM,ABS(X(I)))
+      IF(XM.NE.0.0) THEN
+         JP=104-IFIX(ALOG10(ABS(XM))+100.04)
+         FC=10.0**JP
+      ELSE
+         JP=5
+         FC=1.0
+      END IF
+C
+C     STORE DIGITS AS CHARACTERS AND FIND JM = FIRST NONZERO DIGIT
+C
+      IM=6
+      DO 30 I=1,N
+      FXF=NULL
+      IJ=FC*ABS(X(I))+0.5
+      JM=6
+      IF(IJ.NE.0) THEN
+         DO 20 J=1,5
+         JN=MOD(IJ,10)
+         IJ=IJ/10
+         IF(JN.NE.0.AND.JM.EQ.6) JM=J
+   20    FXF(J:J)=CH(JN+1)
+         IM=MIN(IM,JM)
+      END IF
+   30 XCHAR(I)=FXF
+      JM=IM
+C
+C     DETERMINE EXPONENT AS A MULTIPLE OF 3
+
+   32 IF(JP.LT.1) THEN
+         JP=JP+3
+         IP=IP+3
+         GOTO 32
+      END IF
+   34 IF(JP.GT.JM+4.OR.JP.GE.8) THEN
+         JP=JP-3
+         IP=IP-3
+         GOTO 34
+      END IF
+C
+C     LOOP TO CONVERT TO PRINT FORMAT
+C
+      JA=MIN(JM,JP)
+      JB=MAX(6,JP+1)
+      DO 90 I=1,N
+      FXF=XCHAR(I)
+      SXF=' '
+      IB=7+(JB-JA)/2
+      DO 80 J=JA,JB
+      IF(FXF(J:J).NE.CH(1)) GOTO 70
+      IF(J.GT.JP+1) GOTO 50
+      IF(FXF.NE.NULL.OR.J.GE.JP) GOTO 70
+      IB=IB-1
+      GOTO 80
+   50 DO 60 K=J,JB
+      IF(FXF(K:K).NE.CH(1)) GOTO 70
+   60 CONTINUE
+      GOTO 80
+C     INSERT DIGIT
+   70 IB=IB-1
+      SXF(IB:IB)=FXF(J:J)
+      IF(J.EQ.JP) THEN
+C     INSERT DECIMAL DOT
+         IB=IB-1
+         SXF(IB:IB)='.'
+      END IF
+   80 CONTINUE
+C     INSERT - SIGN
+      IF(X(I).LT.0.0) SXF(IB-1:IB-1)='-'
+   90 XCHAR(I)=SXF
+C
+C     PREPARE PRINT FORMAT FOR EXPONENT
+C
+      ECHAR=' '
+      IF(IP.NE.0) THEN
+         ECHAR='E 0'
+         IF(IP.LE.0) THEN
+            ECHAR(2:2)='-'
+            IP=IABS(IP)
+         END IF
+         J=MOD(IP,10)
+         ECHAR(4:4)=CH(J+1)
+         IP=IP/10
+         IF(IP.NE.0) THEN
+            J=MOD(IP,10)
+            ECHAR(3:3)=CH(J+1)
+         END IF
+      END IF
+  100 RETURN
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK cfmt
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

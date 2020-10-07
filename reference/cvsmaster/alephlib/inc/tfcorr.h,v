@@ -1,0 +1,167 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.2
+	aleph304_5:1.2
+	aleph304_4:1.2
+	aleph304_3:1.2
+	aleph304_2:1.2
+	aleph304_1:1.2
+	aleph304:1.2
+	aleph303_3:1.2
+	aleph303_2:1.2
+	aleph303_1_mc1:1.2
+	aleph303_1:1.2
+	aleph303:1.2
+	aleph302_9:1.2
+	aleph302_8:1.2
+	aleph302_7:1.2
+	aleph302_6:1.2
+	aleph302_5:1.2
+	aleph302_4:1.2
+	aleph302_3:1.2
+	aleph302_2:1.2
+	aleph302_1:1.2
+	aleph302:1.2
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	97.03.06.11.59.06;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.40.15;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.40.16;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@1st test version aleph302
+@
+text
+@      PARAMETER (NFCPHI=19,NFCRAD=8,NFCZED=6,NFCVAL=4)
+      PARAMETER (NSPACE=NFCVAL*NFCPHI*NFCRAD*NFCZED)
+      PARAMETER (NGMAX=33)
+      PARAMETER (NVZ = NSPACE/2)
+      COMMON/TFCORR/ RLOWFC,RHIGFC,DRFCOR,NRFCOR,
+     &               PLOWFC,PHIGFC,DPFCOR,NPFCOR,
+     &               ZLOWFC,ZHIGFC,DZFCOR,NZFCOR,
+     &               INDCOR(4),
+     &               FSPACE(NSPACE),NAFCOR(3),AFCORR(NGMAX),
+     &               ZSPACE(NVZ)
+#if defined(DOC)
+C
+C! Constants for TPC coordinate drift field corrections
+C
+C RLOWFC = lower limit of the radial coordinate of the grid
+C RHIGFC = upper limit of the radial coordinate of the grid
+C DRFCOR = grid spacing in the radial coordinate
+C NRFCOR = number of grid points in the radial coordinate
+C PLOWFC = lower limit of the azimuthal coordinate of the grid
+C PHIGFC = upper limit of the azimuthal coordinate of the grid
+C DPFCOR = grid spacing in the azimuthal coordinate
+C NPFCOR = number of grid points in the azimuthal coordinate
+C ZLOWFC = lower limit of the z coordinate of the grid
+C ZHIGFC = upper limit of the z coordinate of the grid
+C DZFCOR = grid spacing in the z coordinate
+C NZFCOR = number of grid points in the z coordinate
+C INDCOR = pointer to first value in FSPACE for each correction:
+C           1    radial displacement for z>0
+C           2    radial displacement for z<0
+C           3    phi displacement for z>0
+C           4    phi displacement for z<0
+C FSPACE = array of coordinate corrections
+C NAFCOR = array of numbers of points for (r,phi,z) on grid
+C AFCORR = description of correction grid
+C ZSPACE =
+C
+C-----------------------------------------------------------------------
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 1
+d9 2
+a10 1
+     &               FSPACE(NSPACE),NAFCOR(3),AFCORR(NGMAX)
+d13 1
+a13 1
+C Constants for TPC coordinate drift field corrections
+d35 1
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

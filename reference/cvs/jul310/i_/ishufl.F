@@ -1,0 +1,564 @@
+      SUBROUTINE ISHUFL(NTKITC,ITKITC,NCOMIN,NSPMIN,IER)
+C-----------------------------------------------------------------------
+C! Shuffle Coord. lists due to reassignments
+C!
+C!   Author     :- J.Sedgbeer  15/01/90
+C!   Modified   :- J.Sedgbeer 07/01/91 Protect against very long
+C!                                     spiralling tracks
+C!
+C!   Input:
+C!     NCOMIN(2) /I : Min. no. of coords allowed on 1st arc for
+C!                    1) ITC-TPC tracks (ITFT#1) and 2) ITFT#2 tracks
+C!     NSPMIN(2) /I : Min. no. of coords allowed on following spiral for
+C!                    1) ITC-TPC tracks (ITFT#1) and 2) ITFT#2 tracks
+C!
+C!     need commons /BCS/    for BOS banks
+C!          params.  IGTLJJ
+C!                   ICTRJJ
+C!                   ITFTJJ
+C!                   TGTLJJ
+C!                   TPCOJJ
+C!
+C!   Output: updated IGTL,IGCL lists.
+C!     IER   /I : Error flag:  0 = O.K.
+C!                             1 = I/P banks missing or no BOS space
+C!                                 (all IGTL and IGCL banks unchanged)
+C!                            -1 = No space to extend IGCL#2. Drop all
+C!                                 banks #2.
+C!
+C!   called by : IREFIN
+C!   calls     : none
+C!
+C!   Libraries required: BOS
+C!
+C!======================================================================
+#ifndef DOC
+#include "rparac.h"
+#include "rflags.h"
+#include "rlunit.h"
+C----------------------------------------------------------------------
+#include "bcs.h"
+#include "bosext.h"
+C----------------------------------------------------------------------
+#include "igtljj.h"
+#include "ictrjj.h"
+#include "itftjj.h"
+#include "tgtljj.h"
+#include "tpcojj.h"
+C----------------------------------------------------------------------
+C 'Local' common for work bank pointers
+      COMMON/IDUMAA/INTLIW,INCLIW,IFLGIW
+      INTEGER NCOMIN(*), NSPMIN(*), NCNEW(2), ITKITC(*)
+      LOGICAL FIRST
+      DATA FIRST/.TRUE./
+C----------------------------------------------------------------------
+#include "bmacro.h"
+C----------------------------------------------------------------------
+C Initialise.
+      IF (FIRST) THEN
+        NICTR = NAMIND('ICTR')
+        INTLIW = 0
+        INCLIW = 0
+        IFLGIW = 0
+        FIRST = .FALSE.
+      ENDIF
+      IER = 1
+C
+C Locate banks.
+C
+      KITCO = NLINK('ITCO',0)
+      IF (KITCO.LE.0) GOTO 998
+      NCO = LROWS(KITCO)
+      IF(NCO.LE.0) GOTO 998
+      KICTR = IW(NICTR)
+      IF(KICTR.LE.0) GOTO 998
+C
+      KITF1 = NLINK('ITFT',1)
+      KITF2 = NLINK('ITFT',2)
+      KIGT1 = NLINK('IGTL',1)
+      KIGT2 = NLINK('IGTL',2)
+      KIGC1 = NLINK('IGCL',1)
+      KIGC2 = NLINK('IGCL',2)
+      IF(KITF1.GT.0) THEN
+        IF(KIGT1.LE.0.OR.KIGC1.LE.0) GOTO 998
+      ENDIF
+      IF(KITF2.GT.0) THEN
+        IF(KIGT2.LE.0.OR.KIGC2.LE.0) GOTO 998
+      ENDIF
+C
+      NT1 = 0
+      NT2 = 0
+      IF(KIGT1.GT.0) NT1 = LROWS(KIGT1)
+      IF(KIGT2.GT.0) NT2 = LROWS(KIGT2)
+      NJT = NT1+NT2
+      IF(NJT.LE.0) GOTO 998
+C
+      NC1 = 0
+      NC2 = 0
+      IF(KIGC1.GT.0) NC1 = LROWS(KIGC1)
+      IF(KIGC2.GT.0) NC2 = LROWS(KIGC2)
+      NCT = NC1+NC2
+      IF(NCT.LE.0) GOTO 998
+C
+C----------------------------------------------------------------------
+C Create work banks, INTLIW and INCLIW, for new track and coord lists
+C (banks similar to IGTL, IGCL - but not the same !)
+C (INTLIW - 2 columns: #coords in 1st arc; #coords in spiral).
+C Create IFLGIW work bank to flag tracks with reassigned coords.
+C Fill header words.
+C
+C First find out maximum # of columns needed in INCLIW
+C                                      (= max in spirals + 8 in 1st arc)
+C
+      NCMX = 0
+      DO 10 I=1,NJT
+        IF(I.LE.NT1) THEN
+          KK = KROW(KIGT1,I)
+        ELSE
+          KK = KROW(KIGT2,I-NT1)
+        ENDIF
+        NSP = IW(KK+JIGTNR)
+        IF(NSP.GT.NCMX) NCMX = NSP
+   10 CONTINUE
+      NCMX = NCMX+8
+C
+      LINTL  = NJT*2 + LMHLEN
+      LINCL  = NJT*NCMX + LMHLEN
+      LIFLG  = NJT + LMHLEN
+      CALL WBANK(IW,INTLIW,LINTL,*990)
+      CALL WBANK(IW,INCLIW,LINCL,*990)
+      CALL WBANK(IW,IFLGIW,LIFLG,*990)
+      IW(INTLIW+LMHCOL)=2
+      IW(INTLIW+LMHROW)=NJT
+      IW(INCLIW+LMHCOL)=NCMX
+      IW(INCLIW+LMHROW)=NJT
+      IW(IFLGIW+LMHCOL)=1
+      IW(IFLGIW+LMHROW)=NJT
+C
+C Fill INTLIW and INCLIW (1st arc coords.) for reassigned trks.
+C Also fill IFLGIW
+C
+      KICTR = IW(NICTR)
+      DO 100 I=1,NCO
+        KK = KROW(KICTR,I)
+        IJT = IW(KK+JICTTN)
+C If coord. is on track then increment #coords counter and add coord
+C (signed)  to list in INCLIW.
+        IF(IJT.GT.0) THEN
+          KT = KROW(INTLIW,IJT)
+          KC = KROW(INCLIW,IJT)
+          IW(KT+1) = IW(KT+1) + 1
+          IW(KC+IW(KT+1)) = ISIGN(I,IW(KK+3))
+        ENDIF
+  100 CONTINUE
+      DO 101 I=1,NTKITC
+          IW(IFLGIW+LMHLEN+ITKITC(I)) = 1
+  101 CONTINUE
+C
+      IF(FDEBRF.AND.JDBDRF(JULIT).GE.4) THEN
+        WRITE(LDEBRL,1010) (IW(IFLGIW+LMHLEN+I),I=1,NJT)
+ 1010   FORMAT(' ISHUFL: IFLGIW bank:',/(9X,10I4))
+        WRITE(LDEBRL,1011)
+ 1011   FORMAT(' ISHUFL: INTLIW,INCLIW after first stage filling.',/
+     +         '  Track',' #Coords.',' List of Coords')
+        DO 120 I=1,NJT
+          KT = KROW(INTLIW,I)
+          KC = KROW(INCLIW,I)
+          N = IW(KT+1)
+          WRITE(LDEBRL,1012) I,N,(IW(KC+J),J=1,N)
+ 1012     FORMAT(1X,10I6)
+  120   CONTINUE
+      ENDIF
+C
+C For non-reassigned tracks transfer all coords. from IGCL to INCLIW
+C and INTLIW removing those reassigned to other tracks (look in ICTR ).
+C For reassigned tranfer spiral coords only, again removing those
+C which are reassigned.
+C
+      KIGT1 = NLINK('IGTL',1)
+      KIGT2 = NLINK('IGTL',2)
+      KIGC1 = NLINK('IGCL',1)
+      KIGC2 = NLINK('IGCL',2)
+C
+C Loop over banks (IB=1 for IGTL#1 etc).
+C
+      DO 250 IB=1,2
+        IF(IB.EQ.1) THEN
+          KIGTL = KIGT1
+          KIGCL = KIGC1
+          NCC   = NC1
+          NTRK  = NT1
+        ELSE
+          KIGTL = KIGT2
+          KIGCL = KIGC2
+          NCC   = NC2
+          NTRK  = NT2
+        ENDIF
+        IF(NTRK.EQ.0.OR.NCC.EQ.0) GOTO 250
+C
+C Loop over tracks
+        DO 210 I=1,NTRK
+          JJ = (IB-1)*NT1 + I
+          KT = KROW(KIGTL,I)
+          KNT = KROW(INTLIW,JJ)
+          KNC = KROW(INCLIW,JJ)
+          N1  = IW(KT+JIGTN1)
+          NSP = IW(KT+JIGTNR)
+          IOF = IW(KT+JIGTIO)
+          IFLG = IW(IFLGIW+LMHLEN+JJ)
+C Loop over coords.on track: for assigned tracks use spiral only
+          I1 = 1
+          IF(IFLG.EQ.1) I1 = N1+1
+          DO 200 IS = I1,N1+NSP
+            ICO = IW(KIGCL+LMHLEN+IOF+IS)
+            KK = KROW(KICTR,IABS(ICO))
+C If not used update INTLIW, INCLIW
+            IF(IW(KK+JICTTN).EQ.0) THEN
+              IF(IS.LE.N1) IW(KNT+1) = IW(KNT+1) + 1
+              IF(IS.GT.N1) IW(KNT+2) = IW(KNT+2) + 1
+              IW(KNC+IW(KNT+1)+IW(KNT+2)) = ICO
+            ENDIF
+  200     CONTINUE
+  210   CONTINUE
+  250 CONTINUE
+C
+      IF(FDEBRF.AND.JDBDRF(JULIT).GE.4) THEN
+        WRITE(LDEBRL,1020)
+ 1020   FORMAT(' ISHUFL: INTLIW,INCLIW after 2nd stage filling.',/
+     +         ' Track',' #Coords.(1st-Spiral)',' List of Coords')
+        DO 260 I=1,NJT
+          KT = KROW(INTLIW,I)
+          KC = KROW(INCLIW,I)
+          N = IW(KT+1)
+          NS = IW(KT+2)
+          WRITE(LDEBRL,1021) I,N,NS,(IW(KC+J),J=1,N+NS)
+ 1021     FORMAT(1X,I6,2I10,20I5)
+  260   CONTINUE
+      ENDIF
+C
+C----------------------------------------------------------------------
+C Check that tracks have enough coords. If not then drop the coords.
+C Also find new total number of used coords. for both track banks.
+C
+      NCNEW(1) = 0
+      NCNEW(2) = 0
+      IB = 1
+      DO 380 I=1,NJT
+        IF(I.GT.NT1) IB = 2
+        KT = KROW(INTLIW,I)
+        KC = KROW(INCLIW,I)
+        N  = IW(KT+1)
+        NS = IW(KT+2)
+        IF( N.LT.NCOMIN(IB)) IW(KT+1) = 0
+        IF(NS.LT.NSPMIN(IB)) IW(KT+2) = 0
+        NCNEW(IB) = NCNEW(IB)+IW(KT+1)+IW(KT+2)
+C If none left in 1st arc then shift spiral coords in INCLIW
+        IF(N.NE.IW(KT+1).AND.IW(KT+2).GT.0) THEN
+          DO 370 J=1,IW(KT+2)
+            IW(KC+J)=IW(KC+N+J)
+  370     CONTINUE
+        ENDIF
+  380 CONTINUE
+C
+      IF(FDEBRF.AND.JDBDRF(JULIT).GE.4) THEN
+        WRITE(LDEBRL,1030) NCNEW(1),NCNEW(2)
+ 1030   FORMAT(' ISHUFL: INTLIW,INCLIW after cuts.',/
+     +         ' Total no. of coords in #1 and #2',2I5,/
+     +         ' Track',' #Coords.(1st-Spiral)',' List of Coords')
+        DO 385 I=1,NJT
+          KT = KROW(INTLIW,I)
+          KC = KROW(INCLIW,I)
+          N = IW(KT+1)
+          NS = IW(KT+2)
+          WRITE(LDEBRL,1021) I,N,NS,(IW(KC+J),J=1,N+NS)
+  385   CONTINUE
+      ENDIF
+C
+C----------------------------------------------------------------------
+C Overwrite IGTL#1 and IGCL#1 with values from INTLIW and INCLIW
+C (Note that IGTL#1 must remain parallel to ITFT#1 and TGFT, i.e
+C tracks with no ITC coords. are O.K. as there are always TPC coords.)
+C
+      IF(FDEBRF.AND.JDBDRF(JULIT).GE.4) THEN
+        WRITE(LDEBRL,1040)
+ 1040   FORMAT(' ISHUFL: IGTL#1,IGCL#1 before shuffle.',/
+     +         ' Track Offset N1   NR  List of Coords')
+        DO 400 I=1,NT1
+          KT = KROW(KIGT1,I)
+          IO = IW(KT+JIGTIO)
+          N1 = IW(KT+JIGTN1)
+          NS = IW(KT+JIGTNR)
+          WRITE(LDEBRL,1041) I,IO,N1,NS,
+     +                       (IW(KIGC1+LMHLEN+IO+J),J=1,N1+NS)
+ 1041     FORMAT(1X,4I5,20I5)
+  400   CONTINUE
+      ENDIF
+C
+C If no such tracks then skip
+      IF(NT1.LE.0) GOTO 500
+C
+C First make sure IGCL#1 big enough.
+      LCO = IW(KIGC1)-LMHLEN
+      IF(NCNEW(1).GT.LCO) THEN
+        CALL AUBOS('IGCL',1,NCNEW(1)+LMHLEN,KIGC1,IGARB)
+        IF(IGARB.EQ.2) GOTO 991
+        IW(KIGC1+LMHROW) = NCNEW(1)
+        IF(IGARB.EQ.1) KIGT1 = NLINK('IGTL',1)
+      ENDIF
+C
+C Loop over (#1) tracks: overwrite IGCL#1, IGTL#1
+      IOF = 0
+      DO 440 I=1,NT1
+        KK = KROW(KIGT1,I)
+        KT = KROW(INTLIW,I)
+        KC = KROW(INCLIW,I)
+        IW(KK+JIGTIO) = IOF
+        IW(KK+JIGTN1) = IW(KT+1)
+        IW(KK+JIGTNR) = IW(KT+2)
+        NC = IW(KT+1) + IW(KT+2)
+        DO 430 J=1,NC
+          IW(KIGC1+LMHLEN+IOF+J) = IW(KC+J)
+  430   CONTINUE
+        IOF = IOF+NC
+  440 CONTINUE
+C
+C Adjust length and header words of IGCL#1:
+      IF(NCNEW(1).LT.LCO) THEN
+        CALL AUBOS('IGCL',1,NCNEW(1)+LMHLEN,KIGC1,IGARB)
+        IW(KIGC1+LMHROW) = NCNEW(1)
+      ENDIF
+C
+      IF(FDEBRF.AND.JDBDRF(JULIT).GE.4) THEN
+        KIGT1 = NLINK('IGTL',1)
+        WRITE(LDEBRL,1042)
+ 1042   FORMAT(' ISHUFL: IGTL#1,IGCL#1 after  shuffle.',/
+     +         ' Track Offset N1   NR  List of Coords')
+        DO 420 I=1,NT1
+          KT = KROW(KIGT1,I)
+          IO = IW(KT+JIGTIO)
+          N1 = IW(KT+JIGTN1)
+          NS = IW(KT+JIGTNR)
+          WRITE(LDEBRL,1041) I,IO,N1,NS,
+     +                      (IW(KIGC1+LMHLEN+IO+J),J=1,N1+NS)
+  420   CONTINUE
+      ENDIF
+C
+  500 CONTINUE
+C-----------------------------------------------------------------------
+C Now deal with tracks #2 - these tracks, by definition, have ITC
+C coords.
+C
+      KIGT2 = NLINK('IGTL',2)
+      KIGC2 = NLINK('IGCL',2)
+      KITF2 = NLINK('ITFT',2)
+C
+      IF(FDEBRF.AND.JDBDRF(JULIT).GE.4) THEN
+        WRITE(LDEBRL,1050)
+ 1050   FORMAT(' ISHUFL: IGTL#2,IGCL#2 before shuffle.',/
+     +         ' Track Offset N1   NR  List of Coords')
+        DO 510 I=1,NT2
+          KT = KROW(KIGT2,I)
+          IO = IW(KT+JIGTIO)
+          N1 = IW(KT+JIGTN1)
+          NS = IW(KT+JIGTNR)
+          WRITE(LDEBRL,1041) I,IO,N1,NS,
+     +                       (IW(KIGC2+LMHLEN+IO+J),J=1,N1+NS)
+  510   CONTINUE
+        DO 511 I=1,NT2
+          KT = KROW(KITF2,I)
+          WRITE(LDEBRL,1051) I,(RW(KT+J),J=1,5)
+ 1051     FORMAT(6X,'ITFT2 before shuffle: row',I3,' 5 pars.',5E10.3)
+  511   CONTINUE
+      ENDIF
+C
+C If no such tracks then skip
+      IF(NT2.LE.0) GOTO 600
+C
+C Overwrite IGTL#2 and IGCL#2 with values from INTLIW and INCLIW.
+C Note that if there are no coords. in the 1st arc then the track
+C is dropped - this necessitates removing the track(row) from
+C ITFT#2, TGTL#2 and TGCL#2. Also coord-to-track relation in TPCO
+C must be adjusted.
+C First make sure IGCL#2 big enough.
+C
+      LCO = IW(KIGC2)-LMHLEN
+      IF(NCNEW(2).GT.LCO) THEN
+        CALL AUBOS('IGCL',2,NCNEW(2)+LMHLEN,KIGC2,IGARB)
+        IF(IGARB.EQ.2) GOTO 992
+        IW(KIGC2+LMHROW) = NCNEW(2)
+        IF(IGARB.EQ.1) THEN
+          KIGT2 = NLINK('IGTL',2)
+          KITF2 = NLINK('ITFT',2)
+        ENDIF
+      ENDIF
+C
+C Loop over (#2) tracks: overwrite IGCL#2, IGTL#2, ITFT#2
+      IOF = 0
+      IT = 0
+      DO 540 I=1,NT2
+        J = NT1 + I
+        KT = KROW(INTLIW,J)
+        KC = KROW(INCLIW,J)
+C Check if any ITC coords. (1st arc) remain. If so, update IGCL,IGTL
+        IF(IW(KT+1).GT.0) THEN
+          IT = IT+1
+          KKI = KROW(KIGT2,IT)
+          KTN = KROW(KITF2,IT)
+          KTO = KROW(KITF2,I)
+          IW(KKI+JIGTIO) = IOF
+          IW(KKI+JIGTN1) = IW(KT+1)
+          IW(KKI+JIGTNR) = IW(KT+2)
+          NC = IW(KT+1) + IW(KT+2)
+          DO 530 N=1,NC
+            IW(KIGC2+LMHLEN+IOF+N) = IW(KC+N)
+  530     CONTINUE
+          IOF = IOF+NC
+          IF(IT.NE.I) CALL UCOPY(IW(KTO+1),IW(KTN+1),LITFTA)
+        ENDIF
+  540 CONTINUE
+C
+C Adjust length and header words of IGCL#2, IGTL#2, ITFT#2
+      IF(NCNEW(2).LT.LCO) THEN
+        CALL AUBOS('IGCL',2,NCNEW(2)+LMHLEN,KIGC2,IGARB)
+        IW(KIGC2+LMHROW) = NCNEW(2)
+      ENDIF
+      IF(IT.NE.NT2) THEN
+        CALL AUBOS('IGTL',2,IT*LIGTLA+LMHLEN,KIGT2,IGARB)
+        IW(KIGT2+LMHROW) = IT
+        CALL AUBOS('ITFT',2,IT*LITFTA+LMHLEN,KITF2,IGARB)
+        IW(KITF2+LMHROW) = IT
+      ENDIF
+C
+      IF(FDEBRF.AND.JDBDRF(JULIT).GE.4) THEN
+        KIGC2 = NLINK('IGCL',2)
+        KIGT2 = NLINK('IGTL',2)
+        WRITE(LDEBRL,1052)
+ 1052   FORMAT(' ISHUFL: IGTL#2,IGCL#2 after  shuffle.',/
+     +         ' Track Offset N1   NR  List of Coords')
+        DO 545 I=1,LROWS(KIGT2)
+          KT = KROW(KIGT2,I)
+          IO = IW(KT+JIGTIO)
+          N1 = IW(KT+JIGTN1)
+          NS = IW(KT+JIGTNR)
+          WRITE(LDEBRL,1041) I,IO,N1,NS,
+     +                       (IW(KIGC2+LMHLEN+IO+J),J=1,N1+NS)
+  545   CONTINUE
+        DO 546 I=1,LROWS(KIGT2)
+          KT = KROW(KITF2,I)
+          WRITE(LDEBRL,1053) I,(RW(KT+J),J=1,5)
+ 1053     FORMAT(6X,'ITFT2 after  shuffle: row',I3,' 5 pars.',5E10.3)
+  546   CONTINUE
+      ENDIF
+C
+C If no. of rows in IGTL has changed (i.e. some tracks removed)
+C then need to change, if they exist, TGCL(2), TGTL(2) and TPCO.
+C
+      IF(IT.EQ.NT2) GOTO 600
+      KTGC2 = NLINK('TGCL',2)
+      KTGT2 = NLINK('TGTL',2)
+      KTPCO = NLINK('TPCO',0)
+      IF(KTGT2.LE.0.OR.KTGC2.LE.0.OR.KTPCO.LE.0) GOTO 600
+C
+      IF(FDEBRF.AND.JDBDRF(JULIT).GE.4) THEN
+        WRITE(LDEBRL,1055)
+ 1055   FORMAT(' ISHUFL: TGTL#2,TGCL#2 before shuffle.',/
+     +         ' Track Offset N1   NR  List of Coords')
+        DO 547 I=1,LROWS(KTGT2)
+          KT = KROW(KTGT2,I)
+          IO = IW(KT+JTGTIO)
+          N1 = IW(KT+JTGTN1)
+          NS = IW(KT+JTGTNR)
+          WRITE(LDEBRL,1041) I,IO,N1,NS,
+     +                       (IW(KTGC2+LMHLEN+IO+J),J=1,N1+NS)
+  547   CONTINUE
+      ENDIF
+C
+C Loop over (#2) tracks: update TGCL#2, TGTL#2, TPCO
+      IOF = 0
+      IT = 0
+      DO 560 I=1,NT2
+        J = NT1 + I
+        KT = KROW(INTLIW,J)
+        KKO = KROW(KTGT2,I)
+        IOFO = IW(KKO+JTGTIO)
+C Check if any ITC coords. (1st arc) remain. If so, update TGCL,TGTL
+        IF(IW(KT+1).GT.0) THEN
+          IT = IT+1
+          KKN = KROW(KTGT2,IT)
+          IW(KKN+JTGTIO) = IOF
+          IW(KKN+JTGTN1) = IW(KKO+JTGTN1)
+          IW(KKN+JTGTNR) = IW(KKO+JTGTNR)
+C Loop over coords. Update TGCL and update TPCO with new track no.
+C                               (in coord-to-track reln column).
+          NEWT = NT1+IT
+          NC = IW(KKN+JTGTN1)+IW(KKN+JTGTNR)
+          DO 550 N=1,NC
+            ICO = IW(KTGC2+LMHLEN+IOFO+N)
+            IW(KTGC2+LMHLEN+IOF+N) = ICO
+            KCC = KROW(KTPCO,ICO)
+            IW(KCC+JTPCTN) = NEWT
+  550     CONTINUE
+          IOF = IOF+NC
+        ELSE
+C if track dropped then set track no. to zero in TPCO
+          NC = IW(KKO+JTGTN1)+IW(KKO+JTGTNR)
+          DO 555 N=1,NC
+            ICO = IW(KTGC2+LMHLEN+IOFO+N)
+            KCC = KROW(KTPCO,ICO)
+            IW(KCC+JTPCTN) = 0
+  555     CONTINUE
+        ENDIF
+  560 CONTINUE
+C
+C Adjust length and header words of TGCL#2, TGTL#2
+      CALL AUBOS('TGCL',2,IOF+LMHLEN,KTGC2,IGARB)
+      IW(KTGC2+LMHROW) = IOF
+      IF(IGARB.EQ.1) KTGT2 = NLINK('TGTL',2)
+      CALL AUBOS('TGTL',2,IT*LTGTLA+LMHLEN,KTGT2,IGARB)
+      IW(KTGT2+LMHROW) = IT
+C
+      IF(FDEBRF.AND.JDBDRF(JULIT).GE.4) THEN
+        WRITE(LDEBRL,1056)
+ 1056   FORMAT(' ISHUFL: TGTL#2,TGCL#2 after  shuffle.',/
+     +         ' Track Offset N1   NR  List of Coords')
+        DO 570 I=1,LROWS(KTGT2)
+          KT = KROW(KTGT2,I)
+          IO = IW(KT+JTGTIO)
+          N1 = IW(KT+JTGTN1)
+          NS = IW(KT+JTGTNR)
+          WRITE(LDEBRL,1041) I,IO,N1,NS,
+     +                       (IW(KTGC2+LMHLEN+IO+J),J=1,N1+NS)
+  570   CONTINUE
+      ENDIF
+C
+  600 CONTINUE
+C
+      IER = 0
+C
+      GOTO 998
+C----------------------------------------------------------------------
+C Errors:
+  990 CALL RERROR('ISHUFL',1,'No space to create work banks.')
+      GOTO 998
+C
+C No space for banks: Leave all banks(#1 and #2) unchanged.
+  991 CALL RERROR('ISHUFL',2,'No space to create banks (#1).')
+      GOTO 998
+C
+C No space for banks: drop all track banks (#2) to avoid problems
+C Note that #1 banks may have been shuffled.
+  992 IER = -1
+      IDUM = NDROP('IGTL',2)
+      IDUM = NDROP('IGCL',2)
+      IDUM = NDROP('TGTL',2)
+      IDUM = NDROP('TGCL',2)
+      IDUM = NDROP('ITFT',2)
+      CALL RERROR('ISHUFL',3,'No space to create banks (#2).')
+C----------------------------------------------------------------------
+C Tidy up
+  998 IF(INTLIW.NE.0) CALL WDROP(IW,INTLIW)
+      IF(INCLIW.NE.0) CALL WDROP(IW,INCLIW)
+      IF(IFLGIW.NE.0) CALL WDROP(IW,IFLGIW)
+  999 CONTINUE
+      END
+#endif

@@ -1,0 +1,79 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.49.32;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.21;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.22;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE BSEQH(NAME,NR,IRUN,IEVT)
+
+*     define another pair (name,nr) for events
+
+      CHARACTER*4 NAME
+#include "boscom.h"
+      IF(NRE.GE.3) GOTO 100
+      NRE=NRE+1
+      NAMERE(NRE)=INTCHA(NAME)
+      NUMMRE(NRE)=NR
+      IRUNRE(NRE)=IRUN
+      IEVTRE(NRE)=IEVT
+  100 RETURN
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK bseqh
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

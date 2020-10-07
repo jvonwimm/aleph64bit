@@ -1,0 +1,3 @@
+      COMMON/ECOXA/ITOV1,ITOV2,ITOV3,ITOV4,ITHTO,
+     &             RESTK1 , ZESTK1 , E4ETB,
+     &             STWIDT , STRPHI(45)

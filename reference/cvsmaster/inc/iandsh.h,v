@@ -1,0 +1,46 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  v1:1.1.1.1 flr:1.1.1;
+locks    ; strict;
+comment  @ * @;
+
+
+1.1
+date     94.12.07.13.41.48;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     94.12.07.13.41.49;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*CD iandsh
+#if defined(APOLLO)
+         I1= AND(RSHFT(IIW, 16),65535)
+         I2= AND(      IIW     ,65535)
+#else
+         I1=IAND(ISHFT(IIW,-16),65535)
+         I2=IAND(      IIW     ,65535)
+#endif
+@
+
+
+1.1.1.1
+log
+@import hac+general include files
+@
+text
+@@

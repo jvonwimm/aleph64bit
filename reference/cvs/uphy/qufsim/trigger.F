@@ -1,0 +1,109 @@
+      SUBROUTINE TRIGGER(IOK)
+C--------------------------------------------------------------
+C! Fast simulation of the trigger -- G. Ganis
+C
+C  IOK= 1  if yes
+C--------------------------------------------------------------
+#include "lundcom.h"
+#include "resolu.h"
+      DATA POLECA /40./, POLECB /140./
+      DATA EPS /.000001/
+C
+      IOK= 0
+C
+      EBAR= 0.
+      EECA= 0.
+      EECB= 0.
+      DO 10 L1=1,n7lu
+       IF(KCUP(L1).EQ.2) GOTO 10
+       ITP = ABS(k7lu(L1,2))
+       POL= PLU(L1,14)
+       EPAR= 0.
+       IF(KCUP(L1).EQ.1) THEN
+        EPAR= p7lu(L1,4)
+       ELSE
+        IF(ITP.EQ.ITPELE) THEN
+         CALL GAUSSE(L1,EPAR)
+        ELSE IF(ITP.EQ.ITPMU) THEN
+         CALL LANDEP(EPAR)
+        ELSE
+         ENEP= PLU(L1,8)
+         IF(ENEP.GT.(0.)) CALL PIDEP(ENEP,EPAR)
+        END IF
+       END IF
+       IF(POL.LT.POLECA) THEN
+        EECA= EECA+EPAR
+       ELSE IF(POL.GT.POLECB) THEN
+        EECB= EECB+EPAR
+       ELSE
+        EBAR= EBAR+EPAR
+       END IF
+10    CONTINUE
+      EC1= AMAX1(EECA,EECB)
+      EC2= AMIN1(EECA,EECB)
+C -- Total em energy
+      INEU= 0
+      IF(EBAR.GT.(6.6)) THEN
+       INEU= 1
+      END IF
+      IF(EC1.GT.(3.8)) THEN
+       INEU= 1
+      END IF
+      IF(EC2.GT.(1.5)) THEN
+       INEU= 1
+      END IF
+C     WRITE(*,*) ' ENEU',EBAR,EC1,EC2,INEU
+C -- Charged triggers
+      ICHM= 0
+      ICHE1= 0
+      ICHE2= 0
+      EDE0= 0.
+      DO 20 L1=1,n7lu
+       IF(KCUP(L1).NE.3) GOTO 20
+       ITP= ABS(k7lu(L1,2))
+C -- charged em
+       IF(ITP.EQ.ITPELE) THEN
+        EPAR= 0.
+        CALL GAUSSE(L1,EPAR)
+        CALL ECONE(L1,EDE1)
+        EPAR= EPAR+EDE1
+        IF(EPAR.GT.(1.3)) THEN
+         ICHE1= 1
+        ELSE
+         IF(EPAR.GT.EDE0) EDE0= EPAR
+        END IF
+       ELSE IF(ITP.NE.ITPMU) THEN
+        EDEP= 0.
+        ENEP= PLU(L1,8)
+        IF(ENEP.GT.(0.)) CALL PIDEP(ENEP,EDEP)
+        CALL ECONE(L1,EDE1)
+        EDEP= EDEP+EDE1
+        IF(EDEP.GT.(1.3)) THEN
+         ICHE2= 1
+        ELSE
+         IF(EDEP.GT.EDE0) EDE0= EDEP
+        END IF
+       END IF
+C -- Muon penetration
+       IF(ITP.NE.ITPELE) THEN
+        ENEP= PLU(L1,8)
+        PRODEP= 0.
+C       XTAU= 10.
+        XTAU=  7.
+        IF(ITP.EQ.ITPMU) XTAU= .5
+        IF(ENEP.GT.(1.)) PRODEP= 1.-EXP(-(ENEP-1.)/XTAU)
+        XR= RNDM(XR)
+        IF(XR.LT.PRODEP) ICHM= 1
+       END IF
+20    CONTINUE
+      IF(ICHE1.EQ.1.OR.ICHE2.EQ.1) THEN
+      ELSE
+      END IF
+C
+      ICHA= 0
+      IF(ICHM.GT.0.OR.ICHE1.GT.0.OR.ICHE2.GT.0) ICHA= 1
+      IF(INEU.GT.0.OR.ICHA.GT.0) IOK= 1
+C     WRITE(*,*) ' ICHE1 ICHE2 ICHM INEU',ICHE1,ICHE2,ICHM,INEU
+C
+      RETURN
+      END

@@ -1,0 +1,115 @@
+#!/bin/csh
+#=======================================================================
+#                          reboot_sycheck
+# 10/06/94 
+# call by sycheck                                                 F.Blin
+#=======================================================================
+# P1 = node_search
+# P2 = TT
+# P3 = TOUT
+# P4 = DT
+#=======================================================================
+#set echo on
+   set node_search = $1
+   set TT = $2
+   set TOUT = $3
+   set DT = $4
+
+REBOOT:
+   set new_line = `rsh ${node_search} uptime`
+   set l_day = `echo ${new_line} | awk '{print index($0," day")}'`
+   if (${l_day} > 0) goto END_REBOOT
+#   echo ${node_search} ${new_line}
+
+   set day = `date +%d`
+   set month = `date +%m`
+   set year = `date +%y`
+
+   set field = `echo ${new_line} | awk '{print $1}'`
+   set field_next = `echo ${new_line} | awk '{print $2}'`
+   set str_return = "FIELD_F"
+   goto SEARCH_INDEX
+
+FIELD_F:
+   set hh_f = ${hh}
+   set mm_f = ${mm}
+   if (${hh_f} == 0 && ${mm_f} == 0) goto END_REBOOT
+#   echo "hh_f->${hh_f}"
+#   echo "mm_f->${mm_f}"
+
+   set field = `echo ${new_line} | awk '{print $3}'`
+   set field_next = `echo ${new_line} | awk '{print $4}'`
+#TEST   set field = `echo ${new_line} | awk '{print $5}'`
+#TEST   set field_next = `echo ${new_line} | awk '{print $6}'`
+   set str_return = "FIELD_L"
+   goto SEARCH_INDEX
+
+FIELD_L:
+   set hh_l = ${hh}
+   set mm_l = ${mm}
+#   echo "hh_l->${hh_l}"
+#   echo "mm_l->${mm_l}"
+ 
+   @ hh = 0
+   @ mm = 0
+   if (${hh_l} > ${hh_f}) then
+      @ hh = 24 - (${hh_l} - ${hh_f})
+      @ day = ${day} - 1
+      if (${day} == 0) then
+         @ month = ${month} - 1
+         set day_months = ('31' '28' '31' '30' '31' '30' '31' '31' '30' '31' '30' '31') 
+         @ day = ${day_months[${month}]}         
+      endif
+   else
+      @ hh = ${hh_f} - ${hh_l}
+   endif
+
+   if (${mm_l} > ${mm_f}) then
+      @ mm = 60 - (${mm_l} - ${mm_f})
+      @ hh = ${hh} - 1
+   else
+      @ mm = ${mm_f} - ${mm_l}
+   endif
+#
+
+   set node_4 = `echo ${node_search} | awk '{print substr($0,1,4)}'`
+   if (${node_4} == "shif") set node_4 = "shift"
+
+#   echo ${node_4}
+   @ mm_search = ${mm} - 1
+ALREADY_REBOOT:
+   set str_reboot = "${day}/${month}/${year} ${hh}:${mm_search} ${node_search} rebooted"
+   grep "${str_reboot}" $ALEPH/log/problem_${node_4}.list > ${DT}/${TT}
+   if !(-z ${DT}/${TT}) goto END_REBOOT
+   @ mm_search++   
+   if (${mm_search} < ${mm} + 2) goto ALREADY_REBOOT
+
+   echo "${day}/${month}/${year} ${hh}:${mm} ${node_search} rebooted" >> $ALEPH/log/problem_${node_4}.list
+   echo "${day}/${month}/${year} ${hh}:${mm} ${node_search} rebooted" >> ${DT}/${TOUT}
+   goto END_REBOOT
+
+SEARCH_INDEX:
+   set l = `echo ${field} | awk '{print index($0,":")}'`
+   set l_am = `echo ${field} | awk '{print index($0,"am")}'`   
+   set l_pm = `echo ${field} | awk '{print index($0,"pm")}'`
+   
+   @ hh = 0
+   @ mm = 0
+   set field_next = `echo ${field_next} | awk '{print substr($0,1,2)}'`
+   if (${field_next} == "hr") set hh = ${field}
+   if (${field_next} == "mi") set mm = ${field}
+
+   if ($l != 0) then
+      set hh = `echo ${field} | awk '{print substr($0,1,(index($0,":")-1))}'`
+      set mm = `echo ${field} | awk '{print substr($0,index($0,":")+1)}'`
+   endif
+   set l_l = `echo ${field} | awk '{print substr($0,length($0),1)}'`
+   if (${l_l} == ",") set mm = `echo ${mm} | awk '{print substr($0,1,length($0)-1)}'`
+   if (${l_pm} > 0) set mm = `echo ${mm} | awk '{print substr($0,1,index($0,"pm")-1)}'`
+   if (${l_am} > 0) set mm = `echo ${mm} | awk '{print substr($0,1,index($0,"am")-1)}'`
+   if (${l_pm} > 0 & ${hh} < 12) @ hh = ${hh} + 12
+   goto ${str_return}
+
+END_REBOOT:
+   if (-e ${DT}/${TT}) rm ${DT}/${TT}   
+exit

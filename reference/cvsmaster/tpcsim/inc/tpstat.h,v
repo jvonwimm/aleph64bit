@@ -1,0 +1,56 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	tpc300_1:1.1.1.1
+	tpc300:1.1.1.1
+	tpc218:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	94.12.09.14.29.53;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.09.14.29.54;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*CD tpstat
+      PARAMETER (LTPST=44)
+      COMMON /TPSTAT/   JTPSTA (LTPST)
+      REAL RTPSTA (LTPST)
+      EQUIVALENCE (RTPSTA(1),JTPSTA(1))
+C
+#if defined(DOC)
+      JTPSTA     1-11   statistics on padrow hits
+                12-22                 trigger pad hits
+                23-33   statistics on tracks
+                44      time spent in TPCSIM
+#endif
+@
+
+
+1.1.1.1
+log
+@import tpcsim 300
+@
+text
+@@

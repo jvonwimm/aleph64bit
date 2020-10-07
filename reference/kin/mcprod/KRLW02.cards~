@@ -1,0 +1,67 @@
+*---   First section : steering ---------------------------------------
+NREFCARD
+*----------------------------------------------------------------------
+DBVSCARD
+*     RUN #    RUN'S TITLE
+RUN   NUMRUN   'KEYWORD PRODUCTION' 
+*     FIRST EVENT    LAST EVENT    TO BE GENERATED
+TRIG     1          NUMEVT
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG
+DEBU  6     /      1          5
+* requested time left at the end of job (in sec)
+TIME 120
+* event file (EPIO format)
+* FILO ' test.epio | EPIO '
+*FILO ' KINDATA | EPIO | CART OUTK7.FSEQ.SL ' 
+FILOCARD
+* histogram file
+*HSTO 'test.his'
+*  use RANMAR generator for random numbers
+*  INSEED : first seed (range assigned per institute)
+*  LOSEED : second seed (incremented locally for new runs)
+*      INSEED          LOSEED (1-30000)
+RMAR     RMAR1           RMAR2
+*----------------------------------------------------------------------
+ENDQ
+*---   second section : modifications to Data Base setup --------------
+KCAR 0 / $TEXT
+POFF
+*-----modify here if wanted--------------------------------------------
+PMA3 20433 / 0.054      ! truncation after 54 mev to avoid infinite loops
+*       x        y        z    vertex smearing x y z 
+SVRTCARD
+* GKRW CARD.
+*      KEYRAD  KEYPHY  KEYTEK  KEYMIS  KEYDWM  KEYDWP  
+GKRW     1101  101111     IPROCESS         0       0
+*        ECMS      GFERMI      ALFWIN
+       CMSENE     1.16639E-5   127.89 
+*        AMAZ    GAMZ    AMAW    GAMW   VVMIN   VVMAX   WT_max
+      91.1888  2.4974   80.35    -2.03  1.E-6    0.99   WTMAX 
+* GKAC CARD.
+* Anomalous couplings (MUST SET KEYACC=1 TO ACTIVATE THEM!!!!!!!!!!) 
+* Definition follows Hagiwara et al., Nucl. Phys. B282 (1987) 253.
+GKACCARD
+*   WWgamma vertex Real part 
+*      g1   kappa  lambda   g4     g5  kappa-tilde lambda-tilde
+*GKAC  1.0    1.0    0.0    0.0    0.0      0.0          0.0
+*   WWgamma vertex Imaginary part 
+*      g1   kappa  lambda   g4     g5  kappa-tilde lambda-tilde
+*      0.0    0.0    0.0    0.0    0.0      0.0          0.0
+*   WWZ vertex Real part 
+*      g1   kappa  lambda   g4     g5  kappa-tilde lambda-tilde
+*      1.0    1.0    0.0    0.0    0.0      0.0          0.0
+*   WWZ vertex Imaginary part 
+*      g1   kappa  lambda   g4     g5  kappa-tilde lambda-tilde
+*      0.0    0.0    0.0    0.0    0.0      0.0          0.0
+*----------------------------------------------------------------------
+*        CMAXEM   CMINEM   CMAXEP   CMINEP
+*GCE1      0.998   -0.998    0.998   -0.998  ! 4f  1. -1. for CC03
+*        ENEMEE   ENEPEE   SCUTEE   PTSMEE
+*GCE2         0.       0.       2.       2.  ! 4f   all 0. for CC03
+*GCUU         0.    0.270                    ! 4f   all 0. for CC03
+GCUTCARD
+*----------------------------------------------------------------------
+END$
+
+
+

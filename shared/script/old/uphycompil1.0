@@ -1,0 +1,151 @@
+#! /bin/csh
+#====================================================================================
+# 940712                                 F.Ranjard
+#                       UPHYCOMPIL
+# ==================================================================================
+# P1 = file name to be compiled
+# P2 = "lib" if a library has to be created
+# ===================================================================================
+# uphycompil1.0
+# 940712 - compile and create a library if required
+# ===================================================================================
+#
+set exec_name = "uphycompil1.0"
+set verbflr = ""
+set nar = $#argv
+if (${nar} != 0) then
+   if ($argv[${nar}] == "-v") then
+      echo "${exec_name}"
+      set verflr = "-v"
+      set echo on
+      set argv[${nar}] = ""
+      @ nar = ${nar} - 1
+   endif
+endif  
+if (${nar} < 1) then
+  echo " "
+  echo "usage: " 
+  echo " uphycompil <IBM fortran filename> [<lib>]"
+  echo " "
+  echo " the IBM fortran file with filetype FORTRAN and filemode UPHY is"
+  echo " imported using sfetch under the filename IBMfilename.fortran"
+  echo " "
+  echo " the existing IBM INCLUDE statments are replaced by UNIX INCLUDE statments"
+  echo " and the file IBMfilename.f is created"
+  echo " IBMfilename.f is compiled using the f77_options file"
+  echo " a library is created with name libIBMfilename.a if the second argument is lib"
+
+  echo " "
+  echo " example"
+  echo " uphycompil obspos "
+  echo " will import CERNVM: OBSPOS FORTRAN UPHY under obspos.fortran "
+  echo " INCLUDE statments will be changed using getfor and obspos.f will be created"
+  echo " obspos.f will be compiled to obspos.o"
+
+  exit(1)
+else
+  set file = $1
+  set flag = "nolib"
+  if (${nar} > 1) set flag = $2
+endif
+#
+if (${file} == "") then
+  echo " uphycompil : no file name given - exit"
+  exit(1)
+endif 
+#
+#********
+#
+set master_dir = "/al/${MASTER}/uphy"
+set uphy_dir = "/aleph/uphy"
+# 
+set disk_ibm_uphy = "pubxu.204"
+#  
+#
+# ============================================< compile
+#
+compile:
+cd uphy_dir
+#
+if (-e {file}.oold) rm {file}.oold
+if (-e lib{file}.aold) rm lib{file}.aold
+#
+# ========= get f77 option file
+set file_para = /aleph/phy/f77_options 
+set all_para  = `egrep "alpha " ${file_para} | awk '{print substr($0,15)}'`
+#
+# ========= compile
+if (${flag} == "nolib") then
+echo "compile to create -> ${uphy_dir}/${file}.o "
+# keep old file.o if any as file.oold
+   if (-e ${file}.o) mv ${file}.o ${file}.oold
+# compile the full file and keep the .o
+   f77 ${all_para} ${master_dir}/${file}.f
+   if !(-f ${file}.o) then
+      echo "*** FATAL compilation errors -> ${file}.o is not there"
+      goto error_end
+   endif
+else   
+#
+# create a temporary directory
+# move file to this temp dir
+# fnice and fsplit    
+   set tmp_dir = ${uphy_dir}/${file}.srctmp
+   mkdir ${tmp_dir}
+   cd ${tmp_dir}
+   cp ${master_dir}/${file}.f tmp.f
+   fnice tmp.f
+   fsplit tmp.f
+   rm tmp.*
+#
+   echo "compile and  create -> ${uphy_dir}/lib${file}.a "
+# compile all .f
+   f77 ${all_para} *.f | & tee -a compile.log
+# check compile.log for 'ERROR'
+   grep -n 'ERROR' compile.log > error.log
+   grep -n 'Error' compile.log >> error.log
+   if !(-z error.log) then
+      echo " FATAL error(s) during compilation, look at "
+      echo "       ${tmp_dir}/compile.log file"
+      goto error_end
+   endif 
+# make a library in the upper directory
+   if (-e ../lib${file}.a) mv ../lib${file}.a ../lib${file}.aold
+   ar rls ../lib${file}.a *.o
+# release temp directory
+   rm *
+   cd ..
+   rmdir ${tmp_dir}
+endif
+# ==========================================> normal exit
+#  remove temporary files
+#
+# ============================
+cd ${uphy_dir}
+rm -f ftp_tmp
+rm -f ${file}.fortran
+rm -f ${file}.fold
+rm -f ${file}.oold
+#
+echo "uphycompil normal exit"
+exit
+#=============================================> abnormal exit
+error_end:
+echo "uphycompil abnormal exit - restore previous files if any "
+cd ${uphy_dir}
+if (-e ${file}.oold) mv ${file}.oold ${file}.o
+if (-e lib${file}.aold) mv lib${file}.aold lib${file}.a
+exit
+ 
+ 
+
+
+
+
+
+
+
+
+
+
+

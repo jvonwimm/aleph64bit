@@ -1,0 +1,206 @@
+head	1.2;
+access;
+symbols
+	jul313_3:1.2
+	jul313_2:1.2
+	jul313_1:1.2
+	jul313:1.2
+	jul312_1:1.2
+	jul312:1.2
+	jul311:1.2
+	jul310_1:1.2
+	jul310:1.2
+	jul309_1:1.2
+	jul309:1.2
+	jul308_6:1.2
+	jul308_5:1.2
+	jul308_4:1.2
+	jul308_3:1.2
+	jul308_2:1.2
+	jul308_1:1.2
+	jul308:1.2
+	jul307_4:1.2
+	jul307_3:1.2
+	jul307_2:1.2
+	jul307_1:1.2
+	jul307:1.2
+	jul306_3:1.2
+	jul306_2:1.2
+	jul306_1:1.2
+	jul306:1.2
+	jul305_4:1.2
+	jul305_3:1.2
+	jul305_2:1.2
+	jul305_1:1.2
+	jul305:1.2
+	jul304_3:1.2
+	jul304_2:1.2
+	jul304_1:1.2
+	jul304:1.2
+	jul303_7:1.2
+	jul303_6:1.2
+	jul303_5:1.2
+	jul303_4:1.2
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2
+	jul280_1:1.2
+	jul280:1.2
+	jul279:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.12.14.39.26;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.17.24;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.17.25;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+ Modified Files:
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+@
+text
+@      SUBROUTINE CESCLU(I,J,K,IECO,NECO,MXCLU,IER)
+C***********************************************************************
+C! Navigate from IJK to EcObject(s)                                    *
+C!                                                                     *
+C!  AUTHOR   : A. BONISSENT  870831                                    *
+C!                                                                     *
+C!                                                                     *
+C!  BANKS :                                                            *
+C!    INPUT   : EBOS,ESDA                                              *
+C!    OUTPUT  : NONE                                                   *
+C!    CREATED : NONE                                                   *
+C!                                                                     *
+C!   I,J,K   : Storey Address                                          *
+C!   IECO    : Table of EcObs                                          *
+C!   NECO    : Number of Ecobs                                         *
+C!                                                                     *
+C***********************************************************************
+#ifndef DOC
+#include "rlunit.h"
+#include "bcs.h"
+#include "esdajj.h"
+#include "ebosjj.h"
+#include "ecnamc.h"
+      DIMENSION IECO(*)
+      DATA FRCMI/0.5/
+#include "bmacro.h"
+      ICCL=0
+      IENC=I*2**8+J*2**16+K*2**24
+      KESDA=IW(NAESDA)
+      NESDA=LROWS(KESDA)
+      KEBOS=IW(NAEBOS)
+      NEBOS=LROWS(KEBOS)
+C
+C?  loop on ebos to find ecobs which contain this esda
+C
+         DO 20 IBOS=1,NEBOS
+            FRAC=RTABL(KEBOS,IBOS,JEBOFR)
+            IF(FRAC.GT.FRCMI)THEN
+               NSDA=ITABL(KEBOS,IBOS,JEBOES)
+               IFL=ITABL(KESDA,NSDA,JESDFI)
+               JTL=ITABL(KESDA,NSDA,JESDTJ)
+               KL=ITABL(KESDA,NSDA,JESDDK)
+               IENCL=IFL*2**8+JTL*2**16+KL*2**24
+               IF(IENCL.EQ.IENC)THEN
+                  ICOB=ITABL(KEBOS,IBOS,JEBOEC)
+C
+C?   check that this ecob is not yet in list
+C
+                  DO 30 IECLD=1,NECO
+                  IF(ICOB.EQ.IECO(IECLD))GO TO 31
+   30             CONTINUE
+C
+C?   Add ecob to list
+C
+                  IF(NECO.GE.MXCLU)GO TO 998
+                  NECO=NECO+1
+                  IECO(NECO)=ICOB
+   31             CONTINUE
+               ENDIF
+            ENDIF
+   20    CONTINUE
+         GO TO 999
+  999 CONTINUE
+      IER=0
+      RETURN
+  998 CALL RERROR('CESCLU',1,' MORE THAN MXCLU CLUSTERS')
+      IER=1
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK cesclu
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

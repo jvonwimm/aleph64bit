@@ -1,0 +1,95 @@
+                                       FLR - 960223    mod : JB  - 960429
+                                                             FLR - 960717
+  /afs/cern.ch/aleph/reference/phy
+  ================================
+ 
+  contains machine independant files.
+ 
+  README   - this file
+ 
+  doc        alpha user's guide directory
+ 
+  alpha.versions
+ 
+    Below is a correspondence-table  between versions of
+    ALPHA and ALEPHLIB / MINI .
+ 
+    People who want to use an old version of  ALPHA are warned that :
+      - they should  also  use  the ALEPHLIB / MINI given in the table.
+      - no bug fix is done on obsolete ALPHA versions
+ 
+            Last update : 13 December  2000
+ 
+ALPHA     DATE      ALEPHLIB   MINI  VERSION STATUS   NEW PACKAGES ADDED
+===============================================================================
+  100  11-NOV-1988    <89              obsolete     first release
+  114   5-OCT-1992    >=140    >=8     obsolete     QMUIDO , YTOP interface
+  115  10-MAY-1993    >=150    >=8     obsolete     ENFLW  , SLUMOK , PGPC phot
+  116  06-DEC-1993    >=155    >=9     obsolete     GET_BP , QFNDIP , QIPBTAG
+  117  15-JUN-1994    >=157    >=9     obsolete     QPI0DO , QVSRCH , NANO Read
+  118  17-OCT-1994    >=203    >=9     obsolete     QTRUTH
+  120  27-MAR-1995    >=204    >=10    obsolete     QSELEP,PGAC photons, MINI10
+  121  12-OCT-1995    >=207    >=10    obsolete     NANO writing , QBEAMX
+  122  29-APR-1996    >=212    >=10    obsolete     MC,JUL,VDHMATCH , TXTREE
+  123  12-OCT-1998    >=310    >=20    obsolete     QELEP,d0,z0 new
+  124  15-APR-1999    >=310    none    obsolete     MINI code is part of ALPHA
+  125  17-JAN-2000    >=314    none    obsolete     Y2K: needs ADBSCONS >=300
+  126  13-DEC-2000    >=316    none    Production   Track Refit ADBSCONS >=306
+
+  ==> environment variables used by alpha
+ 
+  BEAMPOSITION   $REFERENCE/phy/beam.position
+  DBASBANK       $REFERENCE/phy/dbas.bank
+  ALPHACARDS     data cards
+ 
+ 
+  $ALROOT/alphannn
+  ================
+ 
+  alphannn.input |  used to build the alpha library
+  alphannn.job   |  /aleph/phy/libalphannn.a , _dbx.a
+ 
+  inc/              *.h include files
+  news/             news
+  enfl/ to util/    *.F source files
+ 
+ 
+ 
+  $ALEPH/phy
+  ==========
+ 
+  contains alpha and mini libraries and various links to the
+  sources.
+ 
+  README           link to /al/reference/phy/README
+ 
+  alpha.version    set current alpha version number = $alphaver 
+ 
+  alpha.news       link to $ALROOT/alphannn/news/news.h
+                   what has changed between version # nnn and
+                   previous one.
+ 
+  alpha.cards      link to /al/reference/phy/alpha.cards
+                   an example of data cards to be customized.
+ 
+  qmain.o          main program for current alpha version
+ 
+  libalpha.a       link to /aleph/phy/libalphannn.a, _dbx.a
+  libalpha_dbx.a   alpha libraries, version # nnn
+                   the debug library is much too big ( > 30 Mbytes)
+                   and is not maintained any more as of October 1998
+ 
+  srcalpha         link to $ALROOT/alphannn
+ 
+
+  miniprod         executable to create official MINIs with adequate
+                   banks for LEP1 or LEP2 datasets.
+                   ===> this is the version to be used since April 15 1999
+
+  miniprod.cards   example of data cards for official MINI production
+ 
+ 
+ 
+ 
+ 
+ 

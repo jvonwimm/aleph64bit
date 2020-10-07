@@ -1,0 +1,65 @@
+* File to be processed by KINAGAIN  version > 202   
+*FILI '/afs/cern.ch/aleph/shared/edirlink/y13650_6.edir   | EDIR'  ! RUN218 WW 
+*FILO '/aleph/scwork/bbloch/testcrjb.EPIO'  | EPIO' ! new KINGAL output
+NEVT 20000
+DEBU 1   5
+*RUN 110 'KORALW121 WW with CC03,188.6 Gev ' ! No RUN card, keep original one
+* New random seed ( unused )
+*RMAR   10   1
+*=====================================================================
+*   The GAGA card :   you MUST activate ONE GAGA card and ONE READ card
+*   before the ENDQ                     --                --
+*=====================================================================
+*GAGA  ipsho  ihad  ireco(Colreco model) ibe   icopy
+*
+* ipsho 1= jetset   2=ariadne    13 = herwig 6.2
+* ihad  0 = all evts     1 = fully hadronics only
+* ireco 0 =no CR,   1---4 CR =model depending on ipsho ( see later)
+* ibose 0 =no BE,   1= as in appropriate extra cards file
+* icopy 0 =inactive 1= restore original KINGAL ouput (useful from POT)
+*=====================================================================
+* Here follow examples :
+* --------------------JETSET ipsho=1 -------------------------------
+* ipsho=1 : you can further select on ireco or ibe :
+* ireco  1=SKI  2=SKII    3=SKII'   4=GAL  
+*       11     12        13    apply a boost to W+W- system before going for CR
+* ibose = 0 no BE   1= as in appropriate extra cards file
+*
+*    ipsho  ihad  ireco(Colreco model) ibe   icopy
+*GAGA   1     0      0                  0     0       ! JETSET New setup+ BE
+*READ '/afs/cern.ch/aleph/reference/kin/newbe3i.cards | CARD' ! with BEI
+*READ '/afs/cern.ch/aleph/reference/kin/newbe3b.cards | CARD' ! with BEB
+* --------------or one of the followings  with some CR:
+*GAGA   1     1      11                 0     0    ! JETSET CR=SKI
+*READ '/afs/cern.ch/aleph/reference/kin/jetset_sk.cards | CARD'
+*GAGA   1     0      4                  0     0    ! JETSET CR=GAL Model
+*READ '/afs/cern.ch/aleph/reference/kin/jetset_gal.cards | CARD'
+* --------------or one of the followings with some BE:
+*GAGA   1     0      0                  1     0    ! JETSET apply BE afterwards
+*READ '/afs/cern.ch/aleph/reference/kin/be3i.cards | CARD'   ! BEI
+*READ '/afs/cern.ch/aleph/reference/kin/be3b.cards | CARD'   ! BEB
+
+* --------------------ARIADNE ipsho=2 ------------------------------- 
+* ireco = 0 ipsho =2 and READ quoted file for ARIADNE 
+*GAGA   2     0      0                  0     0    ! ARIADNE No CR
+*READ '/afs/cern.ch/aleph/reference/kin/ariadne_nocr.cards | CARD'
+*  or  ireco =1 and One of the quoted CR files
+*GAGA   2     0      1                  0     0    ! ARIADNE With CR
+*READ '/afs/cern.ch/aleph/reference/kin/ariadne_cr2.cards | CARD'   ! CR2
+*READ '/afs/cern.ch/aleph/reference/kin/ariadne_cr3.cards | CARD'   ! CR3
+*  or  ireco =1 and One of the quoted CR files
+
+* --------------------HERWIG ipsho=13 -------------------------------
+* ireco = 0 ipsho=13 and READ quoted file for HERWIG 
+*GAGA   13    0      0                  0     0    ! HERWIG No CR
+*READ '/afs/cern.ch/aleph/reference/kin/herwig62_nocr.cards | CARD'
+*  or  ireco =1 and READ quoted file for HERWIG +CR
+*GAGA   13    0      1                  0     0    ! HERWIG With CR
+*READ '/afs/cern.ch/aleph/reference/kin/herwig62_cr.cards | CARD'
+
+* --------------------The COPY option -NO READ card needed -----------
+*GAGA   1     0      0                  0     1    ! copy mode
+ENDQ
+
+
+

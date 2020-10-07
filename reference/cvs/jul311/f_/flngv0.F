@@ -1,0 +1,353 @@
+      SUBROUTINE FLNGV0
+C--------------------------------------------------------------
+C! Select V0 decaying into the TPC volume
+C   Author P.Spagnolo 2/5/95
+C       DESCRIPTION
+C       ============
+C? This package calls YMFV0V and selects the long V0's decaying into
+C? the TPC volume. As output a flag in bank FXTR is given, in order to
+C? separate long and short V0's and avoid the wrong association of VDET
+C? hits.
+C? To use this package:
+C?   a) data base must be opened
+C?   b) frft,frtl,pyer,eveh must be present ( make unpacking
+C?      tp,it,fi )
+C?   c) yv1c bank (that contains cuts for v0 selection)
+C?      must be present on data base or given by data cards
+C?      if you want change the cuts for v0 analysis.
+C?   d) fvcl,ficl,ftcl,vdco,itco,tpco must be present
+C?      only if you check the number of coordinates
+C?      before the reconstructed vertex
+C?      ( make unpacking tp,it,fi)
+C?      To understand cuts look the ddl of yv1c bank
+C?      (-> sbank yv1c)
+C?    Beware that the different cuts used in different period
+C?    of Aleph data taking (89-90 91-92 93...) are sumarized
+C?    by the different NR of the yv1c bank. So on the data base
+C?    the yv1c is present with 3 different value for NR
+C?
+C?    Modified by D.Casper for Julia 302 to create a YLV0 bank
+C?    containing high-purity V0 candidates for DALI display or
+C?    other offline use.
+C?
+#ifndef DOC
+#include "rparac.h"
+#include "rflags.h"
+      SAVE
+      EXTERNAL YCHIV2,ALFIEL
+#include "bcs.h"
+#include "frftjj.h"
+#include "frtljj.h"
+#include "pyerjj.h"
+#include "jsumjj.h"
+#include "yv1cjj.h"
+#include "yv0vjj.h"
+#include "fxtrjj.h"
+#include "ylv0jj.h"
+      COMMON/Y0JOSU/NV0FOU,NEVV0F
+#include "tpgpar.h"
+#include "tpccon.h"
+C+   output of package:dimension
+C
+      REAL CHIOR(2,50),QGA(50),CHQGA(50),QK0(50),CHQK0(50),QLA(50),
+     $ CHQLA(50),QAL(50),CHQAL(50),XMGA(50),CXMGA(50),XMK0(50),CXMK0(50)
+     $    ,XMLA(50),CXMLA(50),XMAL(50),CXMAL(50),NCOR(2,50),DISCO(2,50)
+C
+C+  END OUTPUT DIMENSION
+C
+C
+C-----variables of this program
+C
+      REAL VPRIM(3),SIVPR(3,3),XV,YV,ZV,ZZ,RV,LL,VF(3),PV0(3),
+     &   PP,CS,CT,XX(2),XXM(3),EP(21),DL,DA,DK,DG,XCHI1,XCHI2,
+     &   PP2,ALF,V0D01,V0Z01,V0D02,V0Z02,P1(3),P2(3),VD0(3),VFF,
+     &   TPAR1(5),TPAR2(5),BFIELD,CHI1(3),CHI2(3)
+      INTEGER V0FLAG
+      INTEGER KYV0V, NV0, NFXTR, NYV0V, NPYER, NFRFT
+      INTEGER IV0BK/2000/
+      LOGICAL IBOOK/.FALSE./,INIT/.TRUE./
+      LOGICAL LONG
+#include "bmacro.h"
+C
+      IF(INIT)THEN
+        INIT=.FALSE.
+        NFXTR = NAMIND('FXTR')
+        NYV0V = NAMIND('YV0V')
+        NPYER = NAMIND('PYER')
+        NFRFT = NAMIND('FRFT')
+      ENDIF
+C
+C----- drop output bank if it exists
+C
+      CALL BDROP(IW,'YLV0')
+C
+C----- call V0 package
+C
+      CALL YMFV0V(IBOOK,IV0BK,IERCO,NUMV0,CHIOR,QGA,CHQGA,QK0,
+     $                  CHQK0,QLA,CHQLA,QAL,CHQAL,XMGA,CXMGA,XMK0,
+     $                  CXMK0,XMLA,CXMLA,XMAL,CXMAL,NCOR,DISCO)
+C
+C--- test ierco
+C
+      IF(IERCO.NE.0)THEN
+         CALL RERROR('FLNGV0',100+IERCO,'Error calling YMFV0V')
+         GO TO 999
+      ENDIF
+C
+C--- book the (empty) output bank
+C
+      CALL AUBOS('YLV0',0,LMHLEN,KYLV0,IGARB)
+      IF (IGARB.EQ.2) THEN
+        CALL RERROR('FLNGV0',1,'Unable to book YLV0 bank')
+        GOTO 999
+      ENDIF
+      CALL BLIST(IW,'E+','YLV0')
+      IW(KYLV0+LMHROW) = 0
+      IW(KYLV0+LMHCOL) = LYLV0A
+C
+C----read  primary vertex from the pyer bank
+C
+      KPYER = IW(NPYER)
+      IF (KPYER.EQ.0) GOTO 18
+      NVERT=LROWS(KPYER)
+      IF(NVERT.EQ.0)GO TO 18
+      DO 15 IVERT=1,NVERT
+        IF (ITABL(KPYER,IVERT,JPYETY).NE.1) GOTO 15
+        VPRIM(1)=RTABL(KPYER,IVERT,JPYEVX)
+        VPRIM(2)=RTABL(KPYER,IVERT,JPYEVY)
+        VPRIM(3)=RTABL(KPYER,IVERT,JPYEVZ)
+        SIVPR(1,1)=RTABL(KPYER,IVERT,JPYEVM)
+        SIVPR(1,2)=RTABL(KPYER,IVERT,JPYEVM+1)
+        SIVPR(1,3)=RTABL(KPYER,IVERT,JPYEVM+3)
+        SIVPR(2,1)=RTABL(KPYER,IVERT,JPYEVM+1)
+        SIVPR(2,2)=RTABL(KPYER,IVERT,JPYEVM+2)
+        SIVPR(2,3)=RTABL(KPYER,IVERT,JPYEVM+4)
+        SIVPR(3,1)=RTABL(KPYER,IVERT,JPYEVM+3)
+        SIVPR(3,2)=RTABL(KPYER,IVERT,JPYEVM+4)
+        SIVPR(3,3)=RTABL(KPYER,IVERT,JPYEVM+5)
+        GOTO 19
+ 15   CONTINUE
+ 18   CONTINUE
+C
+C---if pyer is not present VP = (0,0,0)
+C
+      VPRIM(1)=0.
+      VPRIM(2)=0.
+      VPRIM(3)=0.
+      DO I=1,3
+       DO J=1,3
+          SIVPR(I,J) = 0.
+       ENDDO
+      ENDDO
+ 19   CONTINUE
+C
+C----read  YV0V output bank
+C
+      KYV0V = IW(NYV0V)
+      IF (KYV0V.EQ.0) GOTO 999
+      NV0 = LROWS(KYV0V)
+      KFXTR = IW(NFXTR)
+      KFRFT = IW(NFRFT)
+      IF (KFRFT.LE.0 .OR. KFXTR.EQ.0) THEN
+        CALL RERROR('FLNGV0',2,'Track banks missing')
+        GOTO 999
+      ENDIF
+      DO 250 IV0 = 1, NV0
+C
+C------V0 flag: 1=longV0, 0=shortV0
+C
+         V0FLAG = 0
+C----
+         IK1 = ITABL(KYV0V,IV0,JYV0K1)
+         IK2 = ITABL(KYV0V,IV0,JYV0K2)
+C
+C----V0 vertex
+C
+         XV = RTABL(KYV0V,IV0,JYV0VX)
+         YV = RTABL(KYV0V,IV0,JYV0VY)
+         ZV = RTABL(KYV0V,IV0,JYV0VZ)
+         RV =  SQRT(XV**2+YV**2)
+         ZZ = ABS(ZV)
+         LL = SQRT(RV**2+ZV**2)
+C
+C---select V0 outside VDET and inside TPC
+C
+         LONG = .TRUE.
+         IF (RV.GE.180.OR.ZZ.GE.220) LONG = .FALSE.
+         IF (ZZ.LE.10.AND.RV.LE.11) LONG = .FALSE.
+C
+C---fly direction vector
+C
+         VF(1) = XV - VPRIM(1)
+         VF(2) = YV - VPRIM(2)
+         VF(3) = ZV - VPRIM(3)
+         VFF = SQRT(VF(1)**2+VF(2)**2+VF(3)**2)
+C
+C----V0 momentum
+C
+         PV0(1) = RTABL(KYV0V,IV0,JYV0PX)
+         PV0(2) = RTABL(KYV0V,IV0,JYV0PY)
+         PV0(3) = RTABL(KYV0V,IV0,JYV0PZ)
+         PP = SQRT(PV0(1)**2+PV0(2)**2+PV0(3)**2)
+C
+C---- cosin of the angle between fly direction and momentum of V0
+C
+         CS = ( VF(1)*PV0(1) + VF(2)*PV0(2) +
+     &         VF(3)*PV0(3) )/PP/VFF
+         IF (CS.GT.1.0)  CS = 1.0
+         IF (CS.LT.-1.0) CS = -1.0
+C
+C---cut on CS > 0.997
+C
+         IF (CS.LT.0.997) GOTO 250
+C
+C---min distance between the helices
+C
+         CT = RTABL(KYV0V,IV0,JYV0DM)
+C
+C---cut on CT > 1.5
+C
+         IF (CT.GT.1.5)  GOTO 250
+C
+C---V0 mass constraint and errors matrix
+C
+         XX(1) = RTABL(KYV0V,IV0,JYV0X1)
+         XX(2) = RTABL(KYV0V,IV0,JYV0X2)
+         DO I = 1, 3
+           XXM(I) = RTABL(KYV0V,IV0,JYV0XM+I-1)
+         ENDDO
+C---daughters momenta and covariance matrix
+         DO I = 1, 3
+           P1(I) = RTABL(KYV0V,IV0,JYV0P1+I-1)
+         ENDDO
+         DO I = 1, 3
+           P2(I) = RTABL(KYV0V,IV0,JYV0P2+I-1)
+         ENDDO
+         DO I = 1, 21
+           EP(I) = RTABL(KYV0V,IV0,JYV0EP+I-1)
+         ENDDO
+C
+C---V0 masses with the 3 hypotheses
+C
+         DL = ABS(XMLA(IV0)-1.11563)
+         DA = ABS(XMAL(IV0)-1.11563)
+         DG = XMGA(IV0)
+         DK = ABS(XMK0(IV0)-0.497671)
+C
+C---cut in 3 sigma for each V0 mass
+C
+         DL = DL/0.009  ! mass(reco)-mass(true) / 3 sigma
+         DA = DA/0.009
+         DG = DG/0.066
+         DK = DK/0.024
+         IF  (DL.GT.1.AND.DA.GT.1.AND.
+     &        DG.GT.1.AND.DK.GT.1.)   GOTO 250
+C
+C---chi^2 increase of the 2 tracks constraining the V0 vertex
+C---to the primary vertex
+C
+         XCHI1 = YCHIV2(IK1,VPRIM,SIVPR,IER1)
+         XCHI2 = YCHIV2(IK2,VPRIM,SIVPR,IER2)
+         IF (IER1.NE.0.OR.IER2.NE.0) GOTO 250
+C
+C---cut on the chi^2 sum   chi(1)+chi(2)<30
+C
+         IF (XCHI1+XCHI2.LT.30) GOTO 250
+C
+C---d0 and z0 of the two tracks
+C
+         TPAR1(1)  = RTABL(KFRFT,IK1,JFRFIR)
+         TPAR1(2)  = RTABL(KFRFT,IK1,JFRFTL)
+         TPAR1(3)  = RTABL(KFRFT,IK1,JFRFP0)
+         TPAR1(4)  = RTABL(KFRFT,IK1,JFRFD0)
+         TPAR1(5)  = RTABL(KFRFT,IK1,JFRFZ0)
+C
+C  ---redefine the parameters to the primary vertex
+         CALL  FPMOVE(VPRIM,TPAR1)
+C
+         TPAR2(1)  = RTABL(KFRFT,IK2,JFRFIR)
+         TPAR2(2)  = RTABL(KFRFT,IK2,JFRFTL)
+         TPAR2(3)  = RTABL(KFRFT,IK2,JFRFP0)
+         TPAR2(4)  = RTABL(KFRFT,IK2,JFRFD0)
+         TPAR2(5)  = RTABL(KFRFT,IK2,JFRFZ0)
+C
+C  ---redefine the parameters to the primary vertex
+         CALL  FPMOVE(VPRIM,TPAR2)
+C
+C---   d0 and z0 of the 2 track  vs primary vertex
+C
+         V0D01 = TPAR1(4)
+         V0D02 = TPAR2(4)
+         V0Z01 = TPAR1(5)
+         V0Z02 = TPAR2(5)
+         V0D01 = ABS(V0D01)
+         V0D02 = ABS(V0D02)
+         V0Z01 = ABS(V0Z01)
+         V0Z02 = ABS(V0Z02)
+C
+C-----cut on d0 and z0 > 0.2 cm
+C
+         IF(V0Z01.LT.0.2.OR.V0D01.LT.0.2) GOTO 250
+         IF(V0Z02.LT.0.2.OR.V0D02.LT.0.2) GOTO 250
+C
+C----dE/dx of the tracks coming from the V0
+C
+         XCH1 = 1.
+         XCH2 = -1.
+         CALL FLV0DX(IK1,XCH1,BFIELD,CHI1)
+         CALL FLV0DX(IK2,XCH2,BFIELD,CHI2)
+C
+C----cut on dE/dx to be consistent with one of the 3 hypotheses
+C
+         IF( ( DG.LT.1.AND.(CHI1(2).GT.-2.5.OR.CHI1(2).GT.999).AND.
+     &       (CHI2(2).GT.-2.5.OR.CHI2(2).GT.999)).OR.
+     &     ( DL.LT.1.AND.(ABS(CHI1(1)).LT.3.OR.CHI1(1).GT.999).AND.
+     &     (ABS(CHI2(3)).LT.3.OR.CHI2(3).GT.999) ).OR.
+     &     ( DA.LT.1.AND.(ABS(CHI1(3)).LT.3.OR.CHI1(3).GT.999).AND.
+     &     (ABS(CHI2(1)).LT.3.OR.CHI2(1).GT.999) ).OR.
+     &     ( DK.LT.1.AND.(ABS(CHI1(3)).LT.3.OR.CHI1(3).GT.999).AND.
+     &     (ABS(CHI2(3)).LT.3.OR.CHI2(3).GT.999) ) )
+     &   V0FLAG = 1
+C
+C =====> long V0 found
+C
+          IF (V0FLAG.EQ.1) THEN
+            IF (LONG) THEN
+C----------------------------------------------------------------------
+C--------fill the FXTR bank: first word=1 for the long V0's------------
+C----------------------------------------------------------------------
+                IW( KROW(KFXTR,IK1) + JFXTV0 ) = V0FLAG
+                IW( KROW(KFXTR,IK2) + JFXTV0 ) = V0FLAG
+            ENDIF
+C----------------------------------------------------------------------
+C--------fill the YLV0 bank--------------------------------------------
+C----------------------------------------------------------------------
+            CALL AUBOS('YLV0',0,IW(KYLV0)+LYLV0A,KYLV0,IGARB)
+            IF (IGARB .EQ. 2) THEN
+                CALL RERROR('FLNGV0',3,'Unable to extend YLV0')
+                GOTO 999
+            ELSE IF (IGARB.EQ.1) THEN
+                KYV0V = IW(NYV0V)
+                KFRFT = IW(NFRFT)
+                KFXTR = IW(NFXTR)
+            ENDIF
+            IW(KYLV0+LMHROW) = IW(KYLV0+LMHROW)+1
+            CALL UCOPY(IW(KROW(KYV0V,IV0)+1),
+     &          IW(KROW(KYLV0,IW(KYLV0+LMHROW))+1),LYV0VA)
+          ENDIF
+C----------------------------------------------------------------------
+  250  CONTINUE
+C----------------------------------------------------------------------
+  999 CONTINUE
+
+C  Clear out this YV0V bank
+
+      CALL BDROP(IW,'YV0V')
+
+C  Kill YLV0 if no entries
+
+      CALL AUBPRS('YLV0')
+
+      RETURN
+      END
+#endif

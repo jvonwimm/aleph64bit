@@ -1,0 +1,319 @@
+head	1.3;
+access;
+symbols
+	bos3489-1:1.3.0.2
+	bos3589:1.3
+	bos3489:1.3
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	97.01.16.15.13.08;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.03.11.12.48.14;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.12;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.13;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@bos3489 : check the EPOUTS return code before the loop.
+@
+text
+@      SUBROUTINE BEPWR(JW,LUN,LIST)
+C
+C     WRITE SET OF BANKS USING EPIO PACKAGE AND DROP BANKS
+C
+      INTEGER JW(*)
+#include "boscom.h"
+#include "param.h"
+#include "mparam.h"
+      REAL RW(1000)
+      EQUIVALENCE (IW(1),RW(1))
+      CHARACTER*(*) LIST
+      CHARACTER*4 NAME
+*     WORK BANK AT INDEX IBC WITH ACTUAL NBC WORDS, MAXIMUM NBN WORDS
+C     ...
+      JW1=JW(1)
+      JW(1)=0
+      JW(2)=0
+      NEVW=0
+      IF(LEPIO.EQ.0) THEN
+         CALL EPINIT
+*        CALL EPSTAT
+         LEPIO=1
+*        IF(IW(6).NE.0) CALL EPIOT(IW(6))
+      END IF
+
+*     DEFAULT BLOCK LENGTH
+      NBLK16=NBLD16
+      IBF= NLINK('+BUF',LUN)
+      IOAC=0
+      IOMD=1
+      IOST=0
+      IF(IBF.EQ.0) GOTO 10
+*     stop, if wrong unit
+#include "unpackio.h"
+      IF(IOMD.NE.1.OR.IOST.EQ.1) THEN
+         IF(JW(LUP).GT.0) WRITE(JW(LUP),1001) LUN
+         CALL BABEND('BEPWR')
+         CALL BOSIO
+         CALL BOSDP(IW)
+      END IF
+      IF(IOST.EQ.2) GOTO 15
+*     BLOCK LENGTH FROM BUFFER
+      IF(IW(IBF+2).NE.0) NBLK16=IW(IBF+2)
+   10 NBLK=(16*NBLK16)/NBITWD
+      NBC=0
+      CALL WBANK(IW,IBC,NBLK,*201)
+      IBF= NBANK('+BUF',LUN,20+NBLK)
+      IF(IBF.EQ.0) GOTO 201
+      CALL EPSETW(LUN,1,NBLK16,IER)
+      DO 12 M=3,IW(IBF)
+   12 IW(IBF+M)=0
+      IOST=2
+#include "packio.h"
+      IW(IBF+2)=NBLK16
+
+*     DEFINE LENGTH OF WORK AREA FOR CONVERSION
+   15 IW(IBF+9)=0
+      NBLK16=IW(IBF+2)
+      NBN=((NBLK16-12)*16)/NBITWD
+      CALL BBCIN(DUMMY,0)
+C
+C     FOR LIST='0' WRITE BUFFER
+C
+      IF(LEN(LIST).EQ.1) THEN
+         IF(LIST.EQ.'0'.OR.LIST.EQ.'O') THEN
+            CALL EPEND(LUN,IW(IBF+21),IER)
+            IW(IBF+4)=IW(IBF+4)+1
+            IF(IER.NE.0) GOTO 202
+            IF(JW(LUP).NE.0.AND.JW(LUW).GT.0) THEN
+               WRITE(JW(LUP),1003) LUN
+               JW(LUW)=JW(LUW)-1
+            END IF
+            GOTO 100
+         END IF
+      END IF
+*     write always format banks
+C     IF(IW(IBF+9).NE.IEFMT) THEN
+      IF(IEFMT.LT.0) THEN
+         IF(JW(LUP).GT.0) WRITE(JW(LUP),1004)
+         CALL BABEND('BEPWR')
+      END IF
+      CALL BBEPF(JW,LUN,IBF,LIST)
+C     IW(IBF+9)=IEFMT
+C     END IF
+*     init loop on banks
+C
+      JW(LCH)=JW(LCH)+1
+      IC=0
+      ISTART=0
+      ICOUNT=0
+#include "listnn.h"
+      IF(NAMI.EQ.0) THEN
+         IF(ICOUNT.EQ.0) GOTO 100
+         GOTO 80
+      END IF
+      IF(JW1.EQ.1) THEN
+*
+*        RESET LINK BANKS
+         JND=JW(IDL)+NAMI-NSYST
+         IF(JW(JND).NE.0) JW(JW(JND))=0
+      END IF
+C
+C     IO-STATISTIC FOR THIS NAME
+C
+      IOA=NAMI-NSYST
+      IF(JW(IOS).EQ.0.OR.JW(JW(IOS)).LT.2*IOA) THEN
+         CALL WBANC(JW,JW(IOS),2*IOA+10,*201)
+      END IF
+      IF(JW(NAMI).NE.0) JW(JW(IOS)+2*IOA)=JW(JW(IOS)+2*IOA)+1
+C
+C     INIT LOOP FOR THIS NAME
+C
+      IND=NAMI+1
+C     WRITE(6,701) NAMI,JW(NAMI)
+  701 FORMAT(' NAMI JW(NAMI)',2I12)
+
+   20 IND=JW(IND-1)
+      IF(IND.EQ.0) GOTO 70
+C
+C     IF NOT CONTIGUOUS SPACE, WRITE PREVIOUS DATA
+C
+      IF(ICOUNT.NE.0.AND.ISTART+ICOUNT.NE.IND-3) GOTO 80
+
+   30 CONTINUE
+C     WRITE(6,707) IND,ISTART,ICOUNT
+  707 FORMAT(' AT 30 - IND ISTART ICOUNT',3I12)
+
+
+      NW=JW(IND)
+      IF(ISTART.EQ.0) ISTART=IND-3
+      ICOUNT=ICOUNT+NW+4
+      GOTO 20
+C
+C     END OF BANKS FOR THIS NAME
+C
+   70 IF(JW1.EQ.1) JW(NAMI)=0
+      GOTO 3
+C
+C     WRITE
+C
+   80 JSTART=ISTART
+      JCOUNT=ICOUNT
+   81 JCOPY =MIN0(JCOUNT,NBN-NBC)
+C     CALL BBUFM(JW,ISTART,ISTART+ICOUNT,6)
+C     WRITE(6,702) ISTART,ICOUNT,JSTART,JCOUNT,NBC,JCOPY,IBC
+  702 FORMAT(' ISTART ICOUNT JSTART JCOUNT NBC JCOPY IBC',7I12)
+
+      CALL UCOPY(JW(JSTART),IW(IBC+NBC+1),JCOPY)
+      JSTART=JSTART+JCOPY
+      JCOUNT=JCOUNT-JCOPY
+      NBC   =NBC+JCOPY
+
+*
+      IF(NBC.NE.NBN.AND.NAMI.NE.0) GOTO 90
+      IF(NAMI.EQ.0.AND.JCOUNT.EQ.0) THEN
+         IF(IC.GE.1) IC=3
+      ELSE
+         IF(IC.LE.1) IC=IC+1
+      END IF
+      IW(IBC)=NBC
+C     CALL WPRNT(IW,IBC)
+      CALL BBCIN(IW(IBC+1),NBC)
+C     CALL WPRNT(IW,IBC)
+
+C     CHANGE STATUS WORD 5 (=LOGICAL RECORD TYPE IDENTIFIER = LOGICAL
+C        RECORD HEADER WORD 2) TO IC
+C
+      CALL EPSETW(LUN,5,IC,IER)
+      IF(IER.NE.0) GOTO 202
+C
+C     3 = PACK DATA BEFORE WRITING, GIVEN AS 32 BIT RIGHT ADJUSTED
+C     NBC    = NR OF WORDS TO BE WRITTEN IN 32 BIT UNITS
+C     IW(IBC+1 ) = AREA CONTAINING DATA
+C     IW(IBF+21) = BUFFER PROVIDED
+C
+      CALL EPGETW(LUN,11,IBLOCK,IDUMER)
+C
+C =========================================================
+C FLR correction to know wheither physical record is full and written
+C     out before the present buffer is used
+C     the following test assume that
+C      - the header is written in 16bit words : status word(3)=16
+C      - logical record can be spanned        : status word(8)=1
+C
+      CALL EPGETW(LUN,14,NWFLR,IER)
+      CALL EPGETW(LUN,1,NTFLR,IER)
+      IF (NWFLR+4.GT.NTFLR) IBLOCK=IBLOCK+1
+C FLR end of correction  ==================================
+C
+      IF(IBLOCK.NE.IW(IBF+4)) THEN
+         IW(IBF+4)=IBLOCK
+         IW(IBF+5)=0
+      END IF
+      CALL EPOUTS(LUN,3,NBC   ,IW(IBC+1 ),IW(IBF+21),IER)
+      NBC=0
+      IW(IBF+5)=IW(IBF+5)+1
+      IF(IW(IBF+9).EQ.0) IW(IBF+9)=1000*(IW(IBF+4)+1)+IW(IBF+5)
+      IF(IER.NE.0) GOTO 202
+      IF(JCOUNT.NE.0) GOTO 81
+      NEVW=NEVW+ICOUNT
+
+*
+   90 IF(JW1.EQ.1) THEN
+*        DROP BANKS
+         JND=ISTART+3
+         JW(JND)=-ICOUNT
+         JW(NDN)=JW(NDN)+ICOUNT
+         JW(IGN)=MIN(JW(IGN),JND)
+      END IF
+      ISTART=0
+      ICOUNT=0
+
+C     WRITE(6,704) ISTART,ICOUNT,NAMI
+  704 FORMAT(' ISTART ICOUNT NAMI',3I12)
+
+      IF(NAMI.NE.0) GOTO 30
+      JW(1)=0
+      JW(2)=IW(IBF+9)
+      IF(NEVW.EQ.0) GOTO 100
+      IW(IBF+6)=IW(IBF+6)+1
+      IW(IBF+7)=MAX0(IW(IBF+7),NEVW)
+      RW(IBF+8)=RW(IBF+8)+4.0E-6*FLOAT(NEVW)
+C
+  100 CONTINUE
+C     WRITE(6,177) IW(IBF+9)
+C 177 FORMAT(' AT RETURN FROM BEPWR LRP=',I9)
+      RETURN
+  201 CALL BBSPC(IW,'BEPWR')
+      GOTO 100
+  202 IF(JW(LUP).GT.0) WRITE(JW(LUP),1002) IER
+      CALL BABEND('BEPWR')
+      GOTO 100
+ 1001 FORMAT('0BOS--BEPWR-  WRONG UNIT - STOP',
+     1       14X,'UNIT =',I3)
+ 1002 FORMAT('0BOS--BEPWR-  EPIO ERROR',I3,' - STOP')
+ 1003 FORMAT('0BOS--BEPWR-  BUFFER WRITTEN UNIT',I3)
+ 1004 FORMAT('0BOS--BEPWR-  ERROR IN BANK FORMAT DEFINITION - STOP')
+      END
+@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@d198 1
+a200 1
+      IF(IER.NE.0) GOTO 202
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK bepwr
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

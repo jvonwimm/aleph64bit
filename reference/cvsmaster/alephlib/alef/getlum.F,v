@@ -1,0 +1,237 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.2
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.08.29.09.51.15;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.40.39;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.40.40;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@add getle1, modify getlum
+@
+text
+@      SUBROUTINE GETLUM(IRUN,IFOUN,IRQFL,NZ,NB,RLUMI,BK,BT)
+C----------------------------------------------------------------------
+C! Gets the luminosity and # of Z0s and Bhabhas for a run
+C  Author  J.Boucrot  15-June-1990
+C  Modified 28-Sep-1992 for runs with SICAL
+C  Modified 19-May-1993 to get informations from Sical bank 'SLUM'
+C  Modified 26-Aug-1997 to get lumi from 'LUMI' if it's 0. in 'RLUM'
+CKEY ALEF LFIL LUMINOSITY
+C
+C Input   : IRUN    / INTE = run number
+C
+C Output  : IFOUN   / INTE = return code
+C                            0   no information for run IRUN
+C                            1   information from 'RLUM' bank
+C                            2   information from the RUN Header banks
+C                                JSUM and LUMI  ( LCAL)
+C                            3   information from the RUN Header banks
+C                                JSUM and SLUM  ( Sical )
+C            The following arguments are defined only if IFOUN.GT.0  :
+C           NZ      / INTE = number of Z0 --> Hadrons
+C           NB      / INTE = number of Bhabhas
+C           RLUMI   / REAL = Best estimate of Luminosity , in nb**-1
+C             The following arguments are defined only if IFOUN=1
+C           IRQFL   / INTE = Run_Quality flag for this run
+C                     Bit 0 set = 'PERF'    1 = 'MAYB'     2 = 'DUCK'
+C           BK      / REAL = Number of background Bhabha events
+C           BT      / REAL = Bhabha trigger efficiency
+C
+C Description:
+C  get the RLUM data base bank which contains the run IRUN
+C  if the bank does not exist get the information from the SOR banks
+C  JSUM and LUMI.
+C----------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "jsumjj.h"
+#include "lumijj.h"
+#include "rlumjj.h"
+#include "slumjj.h"
+      INTEGER ALGTRO
+      DATA EPSIL / 0.001 /
+C - runs with SiCAL > 16600
+      DATA NRSIC / 16600 /
+C - runs with LUMI from Sical only ( 1993 , 1994 and 1995 LEP I )
+      DATA NR93  / 20000 /
+C - High energy runs with LUMI from LCAL only :
+      DATA NLP2  / 40000 /
+#include "bmacro.h"
+C----------------------------------------------------------------------
+      IFOUN=0
+      NZ=0
+      NB=0
+      IRQFL=0
+      RLUMI=0.
+      JRLUM = ALGTRO ('RLUM',IRUN,JRLURN,JROWR)
+      IF (JRLUM.NE.0 .AND. JROWR.GT.0) THEN
+C     RLUM bank found : get the output arguments
+         JRLUM = IABS (JRLUM)
+         IFOUN=1
+         KRLUM=KROW(JRLUM,JROWR)
+         IRQFL=IW(KRLUM+JRLURQ)
+         NZ   = IW(KRLUM+JRLUNZ)
+         NB   = IW(KRLUM+JRLUNB)
+         RLUMI= RW(KRLUM+JRLULU)
+         BK   = RW(KRLUM+JRLUBK)
+         BT   = RW(KRLUM+JRLUBT)
+      ENDIF
+C  No 'RLUM' bank, or lumi=0. in RLUM
+C  Try to find run header banks 'JSUM' , 'LUMI' , 'SLUM ' :
+      IF (RLUMI.LT.EPSIL) THEN
+         JJSUM = NLINK('JSUM',IRUN)
+         IF (JJSUM.GT.0) THEN
+            NZ = ITABL (JJSUM,1,JJSUVZ)
+         ENDIF
+C For runs before NR93 , or after NLP2 : take bank 'LUMI'
+         IF (IRUN.LT.NR93.OR.IRUN.GT.NLP2) THEN
+            JLUMI=NLINK('LUMI',IRUN)
+            IF (JLUMI.EQ.0) GO TO 999
+C Take method # 5  for LEP I runs without SICAL
+C      method # 9  for LEP I runs with SICAL :
+C      method # 10 for LEP II runs
+            IMETH = 5
+            IF ( IRUN.GT.NRSIC) IMETH = 9
+            IF ( IRUN.GT.NLP2 ) IMETH = 10
+            NB = RTABL (JLUMI,IMETH,JLUMB2)
+            RLUMI = RTABL (JLUMI,IMETH,JLUMLU)
+            IFOUN=2
+C For runs after NR93 : take bank 'SLUM' , method 2 ,
+C if not available try  'LUMI' , method 10 :
+         ELSE
+            JSLUM=NLINK('SLUM',IRUN)
+            IF (JSLUM.GT.0) THEN
+               IMETH=2
+               NB = RTABL (JSLUM,IMETH,JSLUTI)
+               RLUMI = RTABL (JSLUM,IMETH,JSLULU)
+               IFOUN=3
+            ELSE
+               JLUMI=NLINK('LUMI',IRUN)
+               IF (JLUMI.EQ.0) GO TO 999
+               IMETH=10
+               NB = RTABL (JLUMI,IMETH,JLUMB2)
+               RLUMI = RTABL (JLUMI,IMETH,JLUMLU)
+               IFOUN=2
+            ENDIF
+         ENDIF
+      ENDIF
+C
+ 999  RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d7 1
+d41 1
+d67 4
+a70 2
+      ELSE
+C  No 'RLUM' bank . Try to find run header banks 'JSUM' , 'LUMI' , 'SLUM ' :
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

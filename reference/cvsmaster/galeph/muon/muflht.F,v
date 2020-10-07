@@ -1,0 +1,162 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.08.22.14.10.53;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.41;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.42;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@add #ifndef where it was missing and remove dummy routines
+@
+text
+@*DK muflht
+      SUBROUTINE MUFLHT (JPLAN,IS,NS)
+C
+C*****************************************************************************
+C
+C T.Wang -860108
+C
+C           - modified for final dbase
+C             by A. Antonelli, F. Bossi 1 July 89
+C
+C       Routine to fill a induced strip signal into BOS bank 'MUHT'
+C
+C       Input:
+C         JPLAN -- the tube plane where the signal is ( 1 or 2 );
+C         IS    -- the index of X- or Y- strip;
+C                1 -- X
+C                2 -- Y
+C         NS    -- the strip number in the current strip plane;
+C
+C       Output:
+C         Elements in BOS bank 'MUHT'
+C         RETURN 1 if not enough space to enlarge MUHT
+C
+C       Called by MUSGNL
+C       Calls ALBOS               in this .HLB
+C
+C*************************************************************************
+C
+#ifndef DOC
+      SAVE
+#include "muhtjj.h"
+#include "musgcn.h"
+#include "munamc.h"
+#include "bcs.h"
+#include "jobcom.h"
+#include "iocom.h"
+#include "trkcom.h"
+#include "bmacro.h"
+C
+      IF(IS.EQ.1) NSTCU = NXSTMU
+      IF(IS.EQ.2) NSTCU = NYSTMU
+      IF(NS.GT.NSTCU) RETURN
+      IF(NS.LE.0) RETURN
+C
+C       Get index of BOS bank 'MUHT'
+C
+      JMUHT = IW(NAMUHT)
+      IF (JMUHT.EQ.0) RETURN
+C
+      IF (LFRROW(JMUHT) .LE. 0) THEN
+         ND = IW(JMUHT) + IW(JMUHT)/2
+         CALL ALBOS ('MUHT',0,ND,JMUHT,IGARB)
+      ENDIF
+C
+      KMUHT = KNEXT(JMUHT)
+      IW(KMUHT + JMUHTN) = ITRKEL(1)
+C
+C       In BOS bank 'MUHT', index of strip plane from 1-4
+C         Strip # 1 -- X1
+C                 2 -- Y1
+C                 3 -- Y2
+C                 4 -- X2
+C
+      IW(KMUHT + JMUHSP) = (JPLAN-1)*(5-2*IS) + IS
+      IW(KMUHT + JMUHEL) = NUEMMU
+      IW(KMUHT + JMUHSA) = NS - 1
+C
+      IW(JMUHT + LMHROW) = LROWS(JMUHT) + 1
+C
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a39 4
+C       Look up the list of dead strips, decide if a hit will be
+C       written into the bank.
+C
+      IF( ICMUJO(2) .NE. 0 )CALL MUDSTP
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

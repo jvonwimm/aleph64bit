@@ -1,0 +1,198 @@
+head	1.2;
+access;
+symbols
+	dbase22:1.2
+	dbase21:1.2
+	dbase20:1.2
+	dbase19:1.1.1.1
+	dbase18:1.1.1.1
+	dbase17:1.1.1.1
+	dbase04:1.1.1.1
+	dbase03:1.1.1.1
+	dbase02:1.1.1.1
+	dbase01:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	98.12.03.08.19.00;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.02.12.10.06.04;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.02.12.10.06.04;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@dbase 20 increase filename length
+@
+text
+@      PROGRAM DAFCAR
+C----------------------------------------------------------------------
+C! Extract data card banks from a DAF
+C!
+C!   Author   :-    F.RANJARD                   27-Jun-1990
+C!
+C!   data cards:
+C!        * read the data base
+C!        FDBA   'DBASE:ADBSCONS.DAF | DAF'
+C!        * write the data card banks
+C!        FCAR   'DBS:MYCARD.CARD | CARD '
+C!        * get all banks with following names
+C!        ALLB 'bkn1'  'bkn2'....
+C!        * get couples bank,NR
+C!        GETB 'bkn1' nr1  'bkn2' nr2  .....
+C!        ENDQ
+C!
+C!
+C!   Libraries required: ALEPHLIB, BOS77, CERNLIB
+C!
+C!   Description
+C!   ===========
+C! open/read ADBSCONS.DAF on LUDBS=JUNIDB(0)
+C! open/write FCAR with LREC=72 on LUCAR=18
+C! get those banks mentionned on ALL and GETB data cards
+C! open/read BANKAL.FMT  on LUFMT=17 in order to get the bank formats
+C! write banks onto FCAR
+C?
+C!======================================================================
+#ifndef DOC
+      CHARACTER*4 NAME,CHAINT,NAMO
+      CHARACTER*80 FMT,TFIL
+      INTEGER ALFMT
+#include "lbos.h"
+#include "bmacro.h"
+C
+C ------------------------------------------------------------------
+C
+C - Initialize BOS
+       CALL BNAMES (NAMAX)
+       CALL BOS (IW,LBOS)
+       IW(5) = 7
+       IW(7) = 100000
+       LUFMT = 17
+C
+C - Read data card file
+       CALL GETENVF ('DAFCARCARDS',TFIL)
+       IF (TFIL.NE.' ') CALL AOPEN (IW(5),TFIL,'CARD','DISK',IER)
+       CALL BREADC
+C
+C - open ADBSCONS.DAF
+C
+       LUDBS = JUNIDB(0)
+       CALL AOPDBS ('  ',IER)
+       IF (IER.NE.0) THEN
+          CALL AWERRC (IW(6),'AOPDBS','ADBSCONS.DAF',IER)
+          CALL EXIT
+       ENDIF
+C
+C - open the FCAR file
+C
+       LUCAR = 18
+       LREC  = 72
+       LDUM = MALREC ('CARD',LREC)
+       CALL AGTFIL ('FCAR','WRIT',LUCAR,IER)
+       IF (IER.NE.0) THEN
+          CALL AWERRC (IW(6),'DAFCAR','FCAR file',IER)
+          CALL EXIT
+       ENDIF
+C
+C - loop over ALL banks
+C
+       CALL BLIST (IW,'T=','0')
+       JALLB = IW(NAMIND('ALLB'))
+       IF (JALLB.EQ.0) GOTO 100
+       NAMO = '    '
+       DO 90 I=1,IW(JALLB)
+          NAME = CHAINT(IW(JALLB+I))
+          IF (NAME.NE.NAMO) THEN
+             CALL BLIST(IW,'T+',NAME)
+             NAMO = NAME
+             IER = ALFMT (LUFMT,NAME,FMT)
+             IF (IER.NE.0) THEN
+                WRITE (IW(6),*) ' DAFCAR: this bank has no format ',
+     &                          ' I format is assumed ',NAME
+             ENDIF
+          ENDIF
+          LAST=0
+ 80       INR = NDANR (LUDBS,NAME,'GE',LAST)
+          IF (IW(2) .NE. 0) GOTO 90
+          IND = MDARD (IW,LUDBS,NAME,INR)
+          LAST = INR+1
+          GOTO 80
+ 90    CONTINUE
+ 100   CONTINUE
+C
+C - loop over GETB banks
+C
+       JGETB = IW(NAMIND('GETB'))
+       IF (JGETB.EQ.0) GOTO 200
+       NAMO = '    '
+       DO 190 I=1,IW(JGETB),2
+          NAME = CHAINT(IW(JGETB+I))
+          NR = IW(JGETB+I+1)
+          IF (NAME .NE. NAMO) THEN
+             NAMO = NAME
+             CALL BLIST(IW,'T+',NAME)
+             IER = ALFMT (LUFMT,NAME,FMT)
+             IF (IER.NE.0) THEN
+                WRITE (IW(6),*) ' DAFCAR: this bank has no format ',
+     &                          ' I format is assumed ',NAME
+             ENDIF
+          ENDIF
+          IND = MDARD (IW,LUDBS,NAME,NR)
+ 190   CONTINUE
+ 200   CONTINUE
+C
+C - write FCAR file
+C
+       CALL AUBLIS ('T')
+       CALL BOSFM
+       CALL BOSBK (IW)
+       CALL BWRITE (IW,LUCAR,'T')
+       CALL BWRITE (IW,LUCAR,'0')
+C
+C - close files
+C
+       CALL BOSTA
+       CALL BOSIO
+       CALL ACLOSE(0,IER)
+       STOP
+C
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d32 1
+a32 1
+      CHARACTER*60 FMT,TFIL
+@
+
+
+1.1.1.1
+log
+@1st release of dbase library
+@
+text
+@@

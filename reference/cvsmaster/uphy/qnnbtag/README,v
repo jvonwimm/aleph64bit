@@ -1,0 +1,215 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  uphy1-0:1.1.1.1 flr:1.1.1;
+locks    ; strict;
+comment  @# @;
+
+
+1.1
+date     96.08.16.13.38.25;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.08.16.13.38.26;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@+--------+--------+--------+--------+
+|QNNBTAG |TXTLIB  |HENRARD |01/08/93|
++--------+--------+--------+--------+
+ 
++--------+--------+--------+--------+
+|        |        |ABDELMOU|        |
+|QNNBTAG | INPUT  |HENRARD |01/05/93|
+|                 |PRORIOL |        |
++--------+--------+--------+--------+
+ 
+                   QNNBTAG INPUT : first version
+ 
+         In case of problems, please contact : ABDELMOU @@ FRCPN11
+                                            or HENRARD  @@ FRCPN11
+                                            or PRORIOL  @@ FRCPN11
+ 
+    This package allows to select bb(bar) events by using the shape of
+    the hadronic events. The discriminator is the output of a Neural
+    Network. The events are divided into two hemispheres with respect
+    to the Thrust axis and the Neural Network output is computed for
+    each hemisphere.
+    We have used a 4-layered feed forward Neural Network trained by
+    back propagation of the errors with 20, 20, 10 and 3 neurons in the
+    first, second, third and last layer. The software used to simulate
+    the Neural Net. is the MLP program from the library MODULAD
+    (author : J.Proriol). The 20 variables used as input of the Neural
+    Net. are described in the ALEPH note 91-85. They are built by using
+    ``good'' energy flow tracks (energy flow from P.Janot). ``Good''
+    energy flow tracks ITK are tracks with:
+    QP(ITK).GE.0.2
+    QP(ITK).LT.100.
+    ABS(QZ(ITK))/QP(ITK).LE.0.951
+For charged tracks only
+    KFRTNT(ITK).GT.4
+    ABS(QDB(ITK)).LT.2.0.AND.ABS(QZB(ITK)).LT.10.
+    PT = SQRT (QX(ITK)**2 + QY(ITK)**2)
+    PT.GT.0.25
+    The learning has been done by using 6000 b, 6000 c and 6000 uds
+    fully reconstructed Monte Carlo events.
+C
+    For more details, please read the ALEPH notes # 91-85 and 92-153.
+C
+    Description of the QNNBTAG routine :
+    -----------------------------------
+C
+    1) CALL QNNBTAG (IOPSEL , IOPVAR , PHB1 , PHB2, IERNNT)
+  * IERNNT: error flag. 0 means ok
+                        1 means that the event doesn't satisfy the cut
+    on the polar angle of the thrust axis (Theta_thrust > 30 degres) or
+    that there is a problem to compute one of the 20 variables
+    (not enough tracks or energy per hemisphere, etc ...)
+  * PHB1(2) : Neural Net. output normalized between 0. and 1. for
+    the Hemisphere 1 and 2. PHB1(2) is the probability that the
+    hemisphere is produced by a b-quark.
+  * IOPSEL: flag used to select the variables used as input.
+    Two options are available :
+                                - IOPSEL = 1 means that no Vdet
+    information is used to compute the variables (only variables based
+    on the global shape of the event are used). This option can be
+    used to analyse '90 data.
+                                - IOPSEL = 2 means that the Vdet
+    informations are now used. So, the less discriminant variable of
+    the option 1 is replaced by PROBHEMI which is the hemisphere
+    probability from the QIPBTAG package (from D.Brown).
+  * IOPVAR: flag used to print some histograms :
+    ID = 10001 --> 10020 : the 20 variables for qq(bar) events
+    ID = 10021 --> 10040 : the 20 variables for bb(bar) events
+    ID = 10041 --> 10060 : the 20 variables for non-b events
+    The histograms for b and non-b events are normalized to the same
+    area.
+    ID = 10061 --> 10064 : Neural Nett output(PHB1 or PHB2) for
+    b, c, uds and qq(bar) events.
+    ID = 10065 : efficiency versus purity by cutting on PHB1 or PHB2.
+    ID = 10070 : efficiency versus purity by cutting on PHB1 *  PHB2.
+                                - IOPVAR = 0 : no print
+                                           1 : print the histograms
+    NB : IHEMI(ITK) = 1 (2) if the energy flow track ITK belongs to
+                      the hemisphere PHB1 (PHB2) (see the CD COMQNN
+                      below).
+                    = 999   if the energy flow track ITK has been
+                      locked for this analysis.
+    2) CALL MLP_END
+    Neural Network terminaison (the call has to be done in QUTERM)
+    to print some statistics at the end of the Alpha job and to obtain
+    the histograms efficiency versus purity.
+C
+    3) Warning :
+                 a) the routine BTAG_PAR to initialize QIPBTAG is
+                    already done at the first call of QNNBTAG.
+                 b) in your Alpha exec, you have to load the files
+                    JETSXS and JTBSXS TEXT in order to use the
+                    Boosted Sphericity (from C.Bowdery) ... and the
+                    QNNBTAG TXTLIB.
+                 c) don't forget to add the CD COMQNN in your Alpha
+                    job (see below).
+C
+    How to use this code ? - Example of an Alpha job :
+    -------------------------------------------------
+C
+*CD COMQNN
+C --- Common for QNNTAGG -----
+      COMMON/WNNT3/XMINT(4),XMAXT(4),XTOTT(4),XREST(4),XB(101),XU(101),
+     >             PURB(101),EFFB(101),ERE(101),ERP(101)
+      COMMON/WNNT4/XMINT2(4),XMAXT2(4),XTOTT2(4),XREST2(4),XB2(101),
+     >        XU2(101),PURB2(101),EFFB2(101),ERE2(101),ERP2(101),TTT,
+     >        IHEMI(800),IHNUM
+C --- Common for QIPBTAG -----
+      COMMON / BTAGRAW /
+     >     BP,ERR_BP,SIZE_BP,ERR2_BP,IP,ERR_IP,CHI2_DOF,
+     >     JJET,JHEMI,TPAR,TERR,JETS,
+     >     NVDET,DMIN,S_DMIN,PHIP,DOTC,DOTS,JDIST,LDIST,S_LDIST,
+     >     PERP
+*CD JSPQNN
+C --- Common for JETSPH ----
+      COMMON/JSP1CO/IJSPH(20),RJSPH(20),IJSXS(20),RJSXS(20)
+C
+C---- Study of the event ---
+C
+      SUBROUTINE QUEVNT (QT,KT,QV,KV)
+C-----------------------------------------------------------------------
+*CA QCDE
+*CA COMQNN
+*CA JSPQNN
+      DIMENSION QT(KCQVEC,1),KT(KCQVEC,1),QV(KCQVRT,1),KV(KCQVEC,1)
+C---- Variables used to contain the btag output ----
+      INTEGER MAXTRK,MAXJET
+      PARAMETER(MAXTRK=200,MAXJET=20)
+      INTEGER IRET,NTRACK,NJET4
+      INTEGER TRKJET(MAXJET),FRF2TRK(MAXTRK)
+      REAL PROBTRK(MAXTRK),PROBJET(MAXJET),PROBHEMI(2),PROBEVT
+C---- Variables of the common btagraw ----
+      INTEGER NVDET(MAXTRK)
+      INTEGER JHEMI(MAXTRK),JJET(MAXTRK)
+      REAL    TPAR(5,MAXTRK),TERR(5,MAXTRK),JETS(3,MAXJET)
+      REAL    DMIN(MAXTRK),S_DMIN(MAXTRK)
+      REAL    IP(3),ERR_IP(3,3),CHI2_DOF
+      REAL    BP(3),ERR_BP(3),SIZE_BP(3),ERR2_BP(3),PHIP(MAXTRK)
+      REAL    DOTC(MAXTRK),DOTS(MAXTRK),JDIST(MAXTRK),LDIST(MAXTRK)
+      REAL    S_LDIST(MAXTRK),PERP(3,MAXTRK)
+C--
+*CA QMACRO
+C---------------------------------------------------------
+C call the Neural Net. with option 1 (no vdet information used)
+C and print all the histograms
+ 
+      CALL QNNBTAG (1 , 1 , PHB1 , PHB2, IERR)
+ 
+      IF (IERR.EQ.1) GOTO 999
+C  Now you can cut on PHB1 and/or PHB2 to select
+C  your bb(bar) events and do your analysis ....
+C
+  999 CONTINUE
+      END
+C
+      SUBROUTINE QUTERM
+C user termination
+C-----------------------------------------------------------------------
+*CA QCDE
+*CA COMQNN
+*CA JSPQNN
+*CA QMACRO
+C
+C  Neural Network     termination
+C
+      CALL MLP_END                                                      MLP03880
+      END
+C
+ 
++--------+--------+--------+--------+
+|        |        |ABDELMOU|        |
+|QNNBTAG | TXTLIB |HENRARD |01/05/93|
+|                 |PRORIOL |        |
++--------+--------+--------+--------+
+ 
+C                 QNNBTAG TXTLIB : first version
+ 
+ +++++++++++++++++++++++++++++++++++++++++++
+@
+
+
+1.1.1.1
+log
+@2nd try to import uphy
+@
+text
+@@

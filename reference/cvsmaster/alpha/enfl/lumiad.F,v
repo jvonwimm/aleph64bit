@@ -1,0 +1,245 @@
+head	1.2;
+access;
+symbols
+	alpha126_22:1.2
+	alpha126_21:1.2
+	alpha126_20:1.2
+	alpha126_19:1.2
+	alpha126_18:1.2
+	alpha126_17:1.2
+	alpha126_16:1.2
+	alpha126_15:1.2
+	alpha126_14:1.2
+	alpha126_13:1.2
+	alpha126_12:1.2
+	alpha126_11:1.2
+	alpha126_10:1.2
+	alpha126_09:1.2
+	alpha126_08:1.2
+	alpha126_07:1.2
+	alpha126_06:1.2
+	alpha126_05:1.2
+	alpha126_04:1.2
+	alpha126_03:1.2
+	alpha126_02:1.2
+	alpha126_1:1.2
+	alpha125_17:1.2
+	alpha125_16:1.2
+	alpha125_15:1.2
+	alpha125_14:1.2
+	alpha125_13:1.2
+	alpha125_12:1.2
+	alpha125_11:1.2
+	alpha125_10:1.2
+	alpha125_09:1.2
+	alpha125_08:1.2
+	alpha125_07:1.2
+	alpha125_06:1.2
+	alpha125_05:1.2
+	alpha125_04:1.2
+	alpha125_03:1.2
+	alpha125_02:1.2
+	alpha125_01:1.2
+	alpha124_19:1.2
+	alpha125:1.2
+	alpha124_18:1.2
+	alpha124_17:1.2
+	alpha124_16:1.2
+	alpha124_15:1.2
+	alpha124_14:1.2
+	alpha124_13:1.2
+	alpha124_12:1.2
+	alpha124_11:1.2
+	alpha124_10:1.2
+	alpha124_09:1.2
+	alpha124_08:1.2
+	alpha124_07:1.2
+	alpha124_7:1.2
+	alpha124_06:1.2
+	alpha124_05:1.2
+	alpha124_04:1.2
+	alpha124_03:1.2
+	alpha124_02:1.2
+	alpha124_01:1.2
+	alpha124:1.2
+	alpha123_12:1.2
+	alpha123_11:1.2
+	alpha123_10:1.2
+	alpha123_9:1.2
+	alpha123_8:1.2
+	alpha123_7:1.2
+	alpha123_6:1.2
+	alpha123_5:1.2
+	alpha123_4:1.2
+	alpha123_3:1.2
+	alpha123_2:1.2
+	alpha123:1.2
+	alpha122_48:1.2
+	alpha122_47:1.2
+	alpha122_46:1.2
+	alpha122_45:1.2
+	alpha122_44:1.2
+	alpha122_43:1.2
+	alpha122_42:1.2
+	alpha122_41:1.2
+	alpha122_40:1.2
+	alpha122_39:1.2
+	alpha122_38:1.2
+	alpha122_37:1.2
+	alpha122_36:1.2
+	alpha122_35:1.2
+	alpha122_34:1.2
+	alpha122_33:1.2
+	alpha122_32:1.2
+	alpha122_31:1.2
+	alpha122_30:1.2
+	alpha122_29:1.2
+	alpha122_28:1.2
+	alpha122_27:1.2
+	alpha122_26:1.2
+	alpha122_25:1.2
+	alpha122_24:1.2
+	alpha122_23:1.2
+	alpha122_22:1.2
+	alpha122_21:1.2
+	alpha122_20:1.2
+	alpha122_19:1.2
+	alpha122_18:1.2
+	alpha122_17:1.2
+	alpha122_16:1.2
+	alpha122_15:1.1.1.1
+	alpha122_14:1.1.1.1
+	alpha122_13:1.1.1.1
+	alpha122_12:1.1.1.1
+	alpha122_11:1.1.1.1
+	alpha122_10:1.1.1.1
+	alpha122_9:1.1.1.1
+	alpha122_8:1.1.1.1
+	alpha122_6:1.1.1.1
+	alpha122_5:1.1.1.1
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.11.12.13.57.37;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.03.14.12.42.30;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.42.31;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE LUMIAD(IECOBJ)
+C---------------------------------------------------------------------
+C!  Correct LCAL clusters for clusterization effect and e/pi ratio
+C
+C  Patrick Janot -- 26 April 1990
+C---------------------------------------------------------------------
+#ifndef DOC
+#include "parcut.h"
+#include "qcde.h"
+#include "qhac.h"
+#include "qmacro.h"
+C---------------------------------------------------------------------
+      corr = 1.
+C
+C  Correct for clusterization (IN LCAL only! 31/10/96)
+C
+      IF ( kpeckd(iecobj) .EQ. 192 ) THEN
+C
+        IF ( qpecer(iecobj) .GT. .001 )
+     .       corr = 1. + .10/sqrt(qpecer(iecobj))
+C
+C  Take into account a had-oc e/pi ratio for low angle hadrons.
+C
+        vec(4) = (      qpece1(iecobj) + qpece2(iecobj) ) +
+     .           ( 1. - qpece1(iecobj) - qpece2(iecobj) ) * epilca
+      ELSE
+        IF ( COS( qpecth(iecobj) ) .GT. 0. ) THEN
+          vec(4) = sicapi(1)
+        ELSE
+          vec(4) = sicapi(2)
+        ENDIF
+      ENDIF
+      IF ( idbg .GE. 11 ) WRITE (IW(6),*) 'e/pi factor : ',vec(4)
+      IF ( vec(4) .LE. 1. ) vec(4) = 1.
+      vec(4) = vec(4) * qpecec(iecobj) * corr
+C
+C  Correct pad-energy scale in Monte Carlo
+C
+C     IF ( krun .LT. 4000 .AND. kpeckd(iecobj) .EQ. 192 )
+C    .     vec(4) = vec(4) * 1.45
+C
+C  Correct for LCAL crack
+C
+      IF ( kpeckd(iecobj) .EQ. 192 ) THEN
+        phi = qpecph(iecobj) * 180./qqpi
+        the = qpecth(iecobj) * 180./qqpi
+        IF ( ABS(phi-90.) .LE. 2. .OR. ABS(phi-270.) .LE. 2. )
+     .  vec(4) = SQRT ( vec(4) * (vec(4) + 2.) )
+      ENDIF
+C
+C  And add the particle
+C
+      vec(3) = vec(4) * cos(qpecth(iecobj))
+      vec(2) = vec(4) * sin(qpecth(iecobj)) * sin(qpecph(iecobj))
+      vec(1) = vec(4) * sin(qpecth(iecobj)) * cos(qpecph(iecobj))
+C
+      IF ( kpeckd(iecobj) .EQ. 192 ) THEN
+        CALL addvec(vec,5,ktn(iecobj),0,1.)
+      ELSE
+        CALL addvec(vec,6,ktn(iecobj),0,1.)
+      ENDIF
+      CALL qltrk(iecobj)
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d13 5
+a17 1
+C  Correct for clusterization
+d19 2
+a20 3
+      corr = 1.
+      IF ( qpecer(iecobj) .GT. .001 )
+     .      corr = 1. + .10/sqrt(qpecer(iecobj))
+a23 1
+      IF ( kpeckd(iecobj) .EQ. 192 ) THEN
+@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

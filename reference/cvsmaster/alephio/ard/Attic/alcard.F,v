@@ -1,0 +1,66 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	95.01.16.12.22.58;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@ add alcard.F to ard module
+@
+
+
+1.1
+log
+@add alcard.F to ard
+@
+text
+@*DK alcard
+      SUBROUTINE ALCARD (CARD,NR,STRING)
+C --------------------------------------------------------------------
+CKEY ALREAD FILE ENVIRONMENT
+C! return the true filename from the ALEPH stage file
+C - F.Ranjard - 920513
+C - Input   : STRING   / A = character string to be put into a bank
+C             CARD     / A4= bank name
+C             NR       / I = bank number
+C
+C - Description : if STRING contains quotes only characters between
+C                 quotes are put into the bank created with CARD name.
+C                 if the bank already exists, it is dropped and booked
+C                 again
+C --------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+      COMMON /SLATE/ ND432,NE432,NF432,NG432,NUM432(2),DUM432(34)
+      CHARACTER*(*) STRING, CARD
+      CHARACTER     SUBR*8, SYSTEM*4, STR*80
+      DATA SUBR, SYSTEM /' ALCARD ','ANY'/
+C ---------------------------------------------------------------------
+C
+      J1 = INDEX(STRING,'''')
+      IF (J1.GT.0) THEN 
+         J2 = INDEX(STRING(J1+1:),'''') + J1 - 1
+      ELSE
+         J2 = INDEX(STRING,'!') + 1
+         IF (J2.EQ.1) J2 = LNBLNK(STRING)
+      ENDIF 
+      J1 = J1+1
+      STR = STRING(J1:J2)
+C       
+      JCARD = NDROP (CARD,NR)
+      NW = (LNBLNK(STR)+3)/4 
+      IF (NW.EQ.0) RETURN
+      JCARD = NBANK (CARD,NR,NW)
+      IF (JCARD.EQ.0) RETURN
+      CALL ALINST (STR(1:LNBLNK(STR)),IW(JCARD+1),NC)
+C
+      END
+#endif
+@

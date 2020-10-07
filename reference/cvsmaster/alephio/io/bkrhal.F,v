@@ -1,0 +1,154 @@
+head	1.2;
+access;
+symbols
+	alio83:1.2
+	alio82:1.2
+	alio81:1.2
+	alio80:1.2
+	alio74:1.1
+	alio73:1.1
+	alio72:1.1
+	alio71:1.1
+	alio70:1.1
+	alio68:1.1
+	alio69:1.1
+	alio67:1.1
+	alio66:1.1
+	alio65:1.1
+	alio64:1.1
+	alio63:1.1
+	alio62:1.1
+	alio61:1.1
+	alio60:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	99.12.03.14.19.40;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.04.23.10.00.31;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@alio80 - Y2K compliant
+@
+text
+@      SUBROUTINE BKRHAL(PRNAM,IPVER,ICVER,NATOU,IFAIL)
+C-----------------------------------------------------------------------
+C! Enlarges and fills the bank RHAH (  Run Header Analysis History )
+C! according to the input arguments
+CKEY BOOK RUN HEADER / INTERNAL
+C Author     J. Boucrot     25-Sep-1988   modified 02-Feb-1989
+C Auxiliary to BKRHAW                          from ALEPHLIB
+C NOT User-callable
+C Calls AUBOS,ALVERS,ADBVER                    from ALEPHLIB
+C Input arguments :
+C    PRNAM  : Name of the production program ( JULIA or ALPHA )
+C    IPVER  : Program version number
+C    ICVER  : Correction set version number
+C    NATOU  : Code for the output written by the calling program:
+C              2 = RAW           3 = POT           4 = DST
+C              5 = MiniDST       6 = MicroDST      7 = NanoDST
+C Output argument :  IFAIL = 0 if all OK ,  =1 if no room for RHAH
+C Modified: P. Comas  8-JUN-1994, Store computer type in last word of RHAH
+C                                 after a call to ALMACH from ALEPHLIB.
+C-----------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "bcs.h"
+#include "rhahjj.h"
+      COMMON /SLATE/ ISL(40)
+      COMMON / NAMRHA / NARHAH,NARHOH,NARUNH,NAAJOB,
+     +                  NAKJOB,NAKRUN
+        EXTERNAL NAMIND,INTCHA
+        CHARACTER*8 PRNAM,COMPU
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+C Check if RHAH already exists ; if not, create it ; if yes , enlarge it
+        IFAIL=1
+        JRHAH=IW(NARHAH)
+        IF (JRHAH.EQ.0) THEN
+           LENRH=LMHLEN+LRHAHA
+           NROWS=1
+        ELSE
+           NROWS=LROWS(JRHAH)+1
+           LENRH=LMHLEN+NROWS*LCOLS(JRHAH)
+        ENDIF
+        CALL AUBOS('RHAH',0,LENRH,JRHAH,IGARB)
+        IF (IGARB.EQ.2) GO TO 999
+        IW(JRHAH+LMHCOL)=LRHAHA
+        IW(JRHAH+LMHROW)=NROWS
+C
+C Fill the last row with the required entities  :
+C
+        KRHAH=KROW(JRHAH,NROWS)
+        IW(KRHAH+JRHAPN)=INTCHA(PRNAM(1:4))
+        IW(KRHAH+JRHAPN+1)=INTCHA(PRNAM(5:8))
+C Day , time , program version :
+        CALL DATIME(IDAY,ITIM)
+        IDAY = ISL(1)*10000+MOD(IDAY,10000)
+        IW(KRHAH+JRHAPD)=IDAY
+        IW(KRHAH+JRHAPH)=ITIM
+        IW(KRHAH+JRHAPV)=IPVER
+        IW(KRHAH+JRHACV)=ICVER
+C Computer type:
+        CALL ALMACH(COMPU)
+        IW(KRHAH+JRHANU)=INTCHA(COMPU(1:4))
+C Alephlib version , Database version and date :
+        ISAV=IW(6)
+        IW(6)=0
+        CALL ALVERS(ALVER)
+        CALL ADBVER(IDBVE,IDBDA)
+        IW(6)=ISAV
+C
+        IW(KRHAH+JRHAAV)=NINT(10.*ALVER)
+        IW(KRHAH+JRHADV)=IDBVE
+        IW(KRHAH+JRHADD)=IDBDA
+C Nature of input is taken from previous step , if any :
+        NATIN=0
+        IF (NROWS.GT.1)  NATIN=ITABL(JRHAH,NROWS-1,JRHANO)
+        IW(KRHAH+JRHANI)=NATIN
+        IW(KRHAH+JRHANO)=NATOU
+        IFAIL=0
+C
+ 999   RETURN
+       END
+#endif
+@
+
+
+1.1
+log
+@move alph, dbas, a part of alef and a part of c to alephio
+Modified Files:
+ 	version.h
+ Added Files:
+ 	adbrow.F adbrpn.F adbrun.F adbswp.F adbver.F agetdb.F agtfil.F
+	albos.F aldawr.F aldtyp.F aleveh.F alfind.F alfmt.F algtbk.F
+ 	algtdb.F algtlu.F algtro.F algtyp.F alinst.F alk7fil.F
+ 	alk7fru.F alk7op.F alk7tru.F alredb.F alrune.F alrunh.F
+ 	alrunr.F alseed.F alstho.F alstin.F alstri.F altabl.F alvsn.F
+ 	aopdbs.F aublis.F aubos.F aubprs.F bkcari.F bkinca.F bkrhab.F
+ 	bkrhal.F bkrhaw.F bktobk.F cafiht.F chahol.F dafrds.F gtdbas.F
+ 	gtstup.F igtfmt.F jhocha.F julrec.F junial.F junidb.F
+ 	kbytrec.F loctab.F nameru.F ubpack.F uclean.F uindxs.F usbos.F
+ 	usgtdb.F utcblk.F utccop.F utcofo.F utwocl.F utwoex.F
+Removed Files:
+	noibm.F
+@
+text
+@d25 1
+d54 1
+@
+

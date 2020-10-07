@@ -1,0 +1,59 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2004.01.12.10.29.08;	author jacotf;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@files written in new directory CASTOR
+@
+text
+@CREATE or REPLACE PACKAGE test_or_prod 
+IS
+   FUNCTION give_prodType RETURN VARCHAR2;
+
+END test_or_prod;
+/
+show errors
+
+
+CREATE or REPLACE PACKAGE BODY test_or_prod
+IS
+
+FUNCTION give_prodType
+/*
+|| Returns a flag : Prod or Test depending on the oracle database
+*/
+   RETURN VARCHAR2
+IS
+BEGIN
+
+   RETURN 'Test';
+
+END;
+
+END test_or_prod;
+/
+show errors
+
+
+
+
+
+
+
+
+
+@

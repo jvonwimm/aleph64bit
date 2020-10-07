@@ -1,0 +1,145 @@
+KCAR 0 / $TEXT
+POFF
+*     RUN #     RUN'S TITLE
+RUN    1       '4-FERM'
+*  use RANMAR generator for random numbers
+*  INSEED : first seed (range assigned per institute)
+*  LOSEED : second seed (incremented locally for new runs)
+*      INSEED          LOSEED (1-30000)
+RMAR     16             12345
+*     FIRST EVENT    LAST EVENT    TO BE GENERATED
+TRIG     1              2000
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG
+DEBU  6     /      1           5
+*  Keep some time at end of job  (IBM 168 seconds)
+TIME     5
+*FILO 'EEEE912 EPIO A'
+*  vertex smearing x     y     z
+SVRT          0.035    0.0012   1.04
+*
+* FLA_1, FLA_2 : first and second fermion pair flavours
+*    1 = electron    *    2 = nu_e
+*    3 = muon        *    4 = nu_mu
+*    5 = tau         *    6 = nu_tau
+*    7 = quark d     *    8 = quark u     *    9 = quark s
+*   10 = quark c     *   11 = quark b
+* XME    : electron mass (GeV/c2)
+* XM_1   : mass of the fermions of the 1st pair (GeV/c2)
+* XM_2   : mass of the fermions of the 2nd pair (GeV/c2)
+* MN_1   : minimum invariant mass for the 1st pair (GeV/c2)
+* MN_2   : minimum invariant mass for the 2nd pair (GeV/c2)
+* MX_1   : maximum invariant mass for the 1st pair (GeV/c2)
+* MX_2   : maximum invariant mass for the 2nd pair (GeV/c2)
+* PM_1   : minimum momentum of the 1st pair fermions (GeV/c)
+* PM_2   : minimum momentum of the 1st pair fermions (GeV/c)
+* TETMIN : central detector angle (degrees)
+*  ang(beam,fermion) > tetmin for all 4 outgoing fermions
+*  applies only to charged leptons. i.e. uneffective for neutrinos and jets.
+* ECMS   : centre-of-mass energy (GeV)     * MZ     : Z mass (GeV/c2)
+* GZ     : Z width (GeV)                   * SW2    : sin**2(Theta_W^eff)
+* ISR    : initial state radiation flag : 0 = off,  1=on
+* KGMAX  : E(gamma)/E_beam [MAX] for ISR.
+*  IT IS RECOMMENDED TO HAVE THIS VALUE <=0.8 TO PREVENT THE WEIGHTS
+*  FROM GETTING TOO LARGE
+* FSR    : final state radiation flag  :  0 = off,  1=on
+* NOFSR  : number of final state photons to generate in each event.
+*  MUST BE <= 4.  ONLY APPICABLE IF FSR FLAG = 1
+* IWEIGH : 0 = wt'd events; 1 = unwt'd events
+* WTMAX  : maximal weight relevant when weight = 1, to get unwt'd events
+*  from the rejection algorithm.  to guess the best value, make a trial
+*  run and multiply the max. weight listed in the final printout by ~2.
+* QCD    : QCD correction flag (for final states with quarks)
+*            0 = OFF,  1=ON
+*  if QCD = 1, the masses of the quarks and the minimum inv. mass of
+*  the quark pair are automatically set in the program. xm_1, xm_2
+* MN_1 and MN_2 are therefore irrelevant.
+* DEBUG  : Internal debug print level (0-lowest,1-normal or 2-intense)
+* NEVPRI : Number of events for which debug >= 0
+*
+*      FLA_1    FLA_2     XME      XM_1      XM_2     MN_1   MN_2
+GENE      3       7    0.000511  0.1057    0.010     0.000  0.000
+*       MX_1     MX_2   PM_1   PM_2  TETMIN  ECMS    MZ    GZ
+       200.0    200.0   0.00   0.00    0.0   91.2  91.189 2.497
+*       SW2     ISR    KGMAX   FSR    NFSR  IWEIGH WTMAX  QCD
+       0.2317    1      0.80    1      4       0   16.0    1
+*      DEBUG   NEVPRI
+         1       6
+**** GDIA : For experts only ****
+*
+* AUTOWT  : Autoweight flag for phase spase generation
+*            0 = OFF,  1=ON
+* AUTOWT = 1 to use the internal table of phase space weights.
+*   This table  should be suitable for most users' needs. The weights
+*   have been compiled for 20 < Ecms < 200 GeV.
+*
+*   Users with more specialized applications are encouraged to
+*   supply their own table as DATA statements at the beginning of
+*   the routine PROSET.
+*
+*   The following numbers refer to the many phase space generators.
+*   Their values are used ONLY if AUTOWT = 0.
+*   [Of special interest are
+*   [cv1z : radiation down to the Z resonance, useful only if Ecms>mZ
+*   [cv2z : two Z resonances, useful only if Ecms>1.5*mZ
+*   [RAMBO : should always be at least few percent of the sum of the
+*   [other weights
+*        ANN   : Weight for ANNihilation   phase space generation
+*        BREMF : Weight for BREMsstrahlung phase space generation
+*        BREMB : Weight for      "         phase space generation
+*        CV1   : Weight for ConVersion     phase space generation
+*        CV2   : Weight for      "         phase space generation
+*        CV1Z  : Weight for Z-ConVersion   phase space generation
+*        CV2Z  : Weight for      "         phase space generation
+*        MULTI : Weight for MULTIperiph.   phase space generation
+*        RAMBO : Weight for flat           phase space generation
+* DIAG allows one to turn off diagram groups, e.g.,
+*     = 'A' to calculate only annihilation diagrams
+*     = 'BC' to calculate only bremsstrahlung and conversion diagrams
+*     = 'ALL' or 'MCBA' to calculate all possible diagrams
+*   Also look to the weight matrix for understanding the behaviour
+*   of restricted diagram groups
+*
+*   AUTOWT   ANN  BREMF  BREMB  CV1   CV2   CV1Z  C2Z  MULTI  RAMBO
+GDIA   1    0.80  0.10   0.10   0.03  0.03  0.01  0.01  0.01   0.02
+*    DIAG
+    'MCBA'
+* Use of TAUOLA to decay the taus :in the future,activate interface
+* to TAUOLA using MSTJ(28)
+*-----------------------------------------------------------
+*  STANDARD MODIFICATION TO LUND PARAMETERS
+*-----------------------------------------------------------
+* Set c and b quark masses to recommended values
+PMA1 4 / 1.37
+PMA1 5 / 4.50
+* Set next quarks family away
+PMA1 7 / 550.
+PMA1 8 / 800.
+MDM1 174 / 0         ! Turn off decay of W into top-quark + b-quark
+MSTJ 24 / 2          !  use non discrete masses for resonnances
+MSTJ 11 / 3          !  use Peterson's fragm. functions for c and b quarks
+*   QCD FIT FROM G. RUDOLPH  (25/09/93)  17 VARIABLES
+*   mod to lund fragm. functions params
+PARJ 81 / .321          ! LAMBDA QCD was .311
+PARJ 82 / 1.65          ! M MIN.     was 1.90
+PARJ 21 / 0.361         ! SIGMA MT   was .347
+PARJ 41 / 0.5           ! a          was .5
+PARJ 42 / 1.01          ! B          was .77
+*     modified V/P/T production
+PARJ 11 /  0.55         ! FRACTION V/P FOR UD =VUD             WAS 0.5
+PARJ 12 /  0.60         ! FRACTION V/P FOR S  =VS              WAS 0.6
+PARJ 13 /  0.85         ! FRACTION V/P FOR C AND HEAVIER =VCB  WAS .75
+PARJ 17 /  0.18         ! FRACTION T/T+V FOR ALL FLAVORS       WAS 0.
+*  reject 60% of eta' produced by fragmentation ( keep 40%) new fit GR
+PARJ 26 / 0.40                                                 WAS 0.20
+*     modified Baryon , strange production etc...
+PARJ 1  /  0.105        ! FRACTION OF BARYON VS MESON PRODUCED WAS 0.100
+PARJ 2  /  0.301        ! FRACTION OF S/U                      WAS 0.300
+PARJ 3  /  0.43         ! FRACTION OF US/DU                    WAS 0.40
+PARJ 4  /  0.05         ! FRACTION OF (QQ)1 /( QQ)0            WAS 0.05
+PARJ 33 /  0.80         ! WMIN IN SYMETRIC LUND FRAGMENTATION  WAS 0.80
+*   Use Standard LUND values for  Epsilon_c
+*   Measured one for Epsilon_b
+*   ( Peterson's fragm. functions params )
+PARJ 54 / -0.040         ! EPSILON_C
+PARJ 55 / -0.006         ! Epsilon_b
+END$

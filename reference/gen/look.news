@@ -1,0 +1,31 @@
+   ALE:LOOK.OLB, _D.OLB, .EXE, .NEWS, ALOOK:*.F, ALOOK:*.H
+   with $ define LOOK $2$DKB200:[general_a.ale.look]
+
+   /aleph/gen/liblook.a, _dbx.a, /bin/alook, /src/alook
+
+   +++++++++++++++++ BECAREFUL ++++++++++++++++++++++++++
+   this is the 1st version maintained with CVS
+       On UNIX  
+   the source file is avalaible on :
+       $ALROOT/alook/look/*.F, $ALROOT/alook/inc/*.h
+   compiled with 
+       f77 $FCOPT [-g] -I$ALROOT/look/inc $ALROOT/look/*.*F
+
+       on ALWS:
+       $ define ALOOK $2$DKB200:[general_a.ale.alook]
+       $ fpp:== $AL1$USER3:[RANJARD]fpp_axp.exe
+       $ ufor:== "@AL1$USER3:[RANJARD.COM]ufor.com"
+   the source is avalaible on:
+       ALOOK:*.F and ALOOK:*.h
+   compiled with:
+       $ ufor ALOOK:xxx.F -IALOOK [\deb]
+
+   ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+C! last changes
+   -----------------------------------------------------------
+ ! 960418 - LOOK version 20 date 960418
+            use cpp preprocessor to compile 
+            The flag "#if defined(VAX)" has been replaced by 
+            "#if defined(DEC) || ! defined(UNIX)"  
+   ------------------------------------------------------------

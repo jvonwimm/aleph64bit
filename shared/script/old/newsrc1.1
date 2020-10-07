@@ -1,0 +1,179 @@
+#! /bin/csh
+#============================================================================
+#                             newsrc
+#                                                       F.Ranjard
+#============================================================================
+# procedure to get a new ALEPH library source file from CERNVM
+#
+#============================================================================
+# call alibftp to get new fortran file on the MASTER directory
+# create ${src_dir}, move fortran file to src_dir
+# run fnice and fsplit
+#============================================================================
+# P1 -> prog_name eg: alephlib
+# P2 -> cycle     eg: 154
+# P3 =  "new" or "old"    to get a new version from CERNVM
+#============================================================================
+# newsrc1.1
+# 940922 - use $ALEPH instead of /aleph
+# ==========================================================================
+#include "~/flr/bin/verbflr.h"
+#
+set exec_name = "newsrc1.1"
+set verbflr = ""
+set nar = $#argv
+if (${nar} != 0) then
+  if ($argv[${nar}] == "-v") then
+     echo "${exec_name}"
+     set verbflr = "-v" 
+     set echo on
+     set argv[${nar}] = ""
+  endif
+endif
+#
+#*******>
+set UNAME = `uname`
+#*******<
+unset noclobber
+set alib_dir = "${ALEPH}/alib"
+set cycle_new = ""
+set cycle_old = ""
+set mnemonic = ""
+set file_type = ""
+set prog_aleph = "OK"
+set flag = "OK"
+ 
+#===> first parameter
+if ($1 == "") then
+  echo -n "Enter Aleph program name [eg:alephlib <CR>=exit]-> "
+   set prog_name = $<
+   if (${prog_name} == "") goto exec_end
+else
+   set prog_name = $1
+endif
+#
+# =============================================================================
+#                  set idir, prog_dir and cycle number
+#
+set idir = `egrep ^" ${prog_name} " ${alib_dir}/pub/progl | awk '{print $2}'`
+set mnemonic = `egrep ^" ${prog_name} " ${alib_dir}/pub/progl | awk '{print $4}'`
+#
+set prog_dir = "/al/${OS}/${idir}"
+#
+if (${idir} == "") then
+   set prog_aleph = "NO"
+   set mnemonic = "${prog_name}"
+else
+   if (-e ${prog_dir}/alib.log) then
+      set cycle_old = `egrep ^" ${prog_name} " ${prog_dir}/alib.log | awk '{print $3}'`
+      set dmy_old = `egrep ^" ${prog_name} " ${prog_dir}/alib.log | awk '{print $4}'`
+      set tim_old = `egrep ^" ${prog_name} " ${prog_dir}/alib.log | awk '{print $5}'`
+   endif
+   if (${cycle_old} != "") then
+      @ cycle_new =  ${cycle_old} + 1
+      if (${mnemonic} == "bos") then
+         @ cycle_new = (((${cycle_old} / 100) + 1) * 100) + 89
+      endif
+   endif
+endif
+# ===============================================================================
+#
+#===> second parameter
+if ($2 == "") then
+   if (${cycle_new} == "") then
+      set string_cr = "<CR>=exit"
+   else
+      set string_cr = "<CR>=${cycle_new}"
+   endif
+   echo -n "Enter version number[${string_cr}]-> "
+   set cycle = $<
+   if (${cycle} == "") then
+      if (${cycle_new} == "") then
+         goto exec_end
+      else
+         set cycle = ${cycle_new}
+      endif
+   endif
+else
+   set cycle = $2
+endif
+# 
+# =====================================================================
+# 
+set file_name = ${mnemonic}${cycle}
+#
+set file_type = `egrep ^" ${prog_name} " ${prog_dir}/f77_options | awk '{print $2}'`
+if (${file_type} == "") then
+   set flag = "no file_type: look at f77_options" 
+   goto spy
+endif
+#
+# 
+# =====================================================================
+#                set src_dir and obj_dir
+# source reside on the MASTER machine
+# if it is a machine dependant program ( alephio or bos77 ) then
+#    if it is on SERVICE=CSF or SAGA or AFAL  then
+#        source files reside on ${prog_dir}
+#    endif    
+# endif
+
+set ref_dir = "/al/${MASTER}/${idir}"
+if ( ${prog_name} == "alephio" || ${prog_name} == "bos77") then
+   if (${SERVICE} == "CSF" || ${SERVICE} == "SAGA" || ${SERVICE} == "AFAL") then
+      set ref_dir = "${prog_dir}"
+   endif
+endif
+set src_dir = ${ref_dir}/src${file_name}
+#
+echo `date` "=== START ${exec_name} ${OS} ${prog_name} ${cycle} =======" >> ${ref_dir}/spy
+echo "${exec_name} ${user}  src=${src_dir} " >> ${ref_dir}/spy
+ 
+# ======================= check existence of src_dir  ==============
+# if src_dir exists then
+#    ask if you want to  get a new one from CERNVM
+#    or 
+#    STOP
+# endif
+ 
+if (-d ${src_dir}) then
+   echo "*** WARNING directory -> ${src_dir} already there. "
+   if ($3 == "") then
+      echo "    new -> to get a new version from CERNVM"
+      echo "    old -> STOP"
+      echo -n " [new/old <CR>=exit] -> "
+      set answer = $<
+   else
+      set answer = $3
+   endif 
+   if (${answer} == "old") then
+      set flag = " ${src_dir} already exist, keep it "
+      goto spy
+   endif
+   cd ${src_dir}
+   rm *
+   if ($status == "1") then
+     set init  = ( a b c d e f g h i j k l m n o p q r s t u v w x y z )
+     foreach in ( $init[*] )
+       rm ${in}*
+     end
+   endif   
+endif
+ 
+ 
+# ================================================================
+#                    fetch source from CERNVM
+alibfetch ${prog_name} ${cycle} ${ref_dir} ${verbflr}
+# ================= end of ftp on CERNVM ===================================
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> spy
+spy:
+#*******> spy
+echo `date` " END of ${exec_name} ${OS} ${user} ${prog_name} ${cycle} ${flag}" >> ${ref_dir}/spy
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> exec_end
+exec_end:
+ exit
+ 

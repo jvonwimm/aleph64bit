@@ -1,0 +1,830 @@
+head	1.8;
+access;
+symbols
+	jul313_3:1.8
+	jul313_2:1.8
+	jul313_1:1.8
+	jul313:1.8
+	jul312_1:1.7
+	jul312:1.7
+	jul311:1.7
+	jul310_1:1.6
+	jul310:1.6
+	jul309_1:1.6
+	jul309:1.6
+	jul308_6:1.6
+	jul308_5:1.6
+	jul308_4:1.6
+	jul308_3:1.6
+	jul308_2:1.6
+	jul308_1:1.6
+	jul308:1.6
+	jul307_4:1.6
+	jul307_3:1.6
+	jul307_2:1.6
+	jul307_1:1.6
+	jul307:1.6
+	jul306_3:1.6
+	jul306_2:1.6
+	jul306_1:1.6
+	jul306:1.6
+	jul305_4:1.6
+	jul305_3:1.6
+	jul305_2:1.6
+	jul305_1:1.6
+	jul305:1.6
+	jul304_3:1.6
+	jul304_2:1.6
+	jul304_1:1.6
+	jul304:1.6
+	jul303_7:1.6
+	jul303_6:1.6
+	jul303_5:1.6
+	jul303_4:1.6
+	jul303_3:1.6
+	jul303_2_mc1:1.6
+	jul303_2:1.6
+	jul303_1_mc1:1.6
+	jul303_1:1.6
+	jul303_v:1.6
+	jul303:1.6
+	jul302_6:1.5
+	jul302_5:1.5
+	jul302_4:1.5
+	jul302_3:1.5
+	jul302_2:1.5
+	jul302_1:1.5
+	jul302:1.6
+	jul285_1:1.5
+	jul285:1.5
+	jul284_1:1.5
+	jul284:1.4
+	jul283_1:1.3
+	jul283:1.3
+	jul282_1:1.3
+	jul282:1.3
+	jul281_3:1.3
+	jul281_2:1.3
+	jul281_1:1.3
+	jul281:1.3
+	jul280_1:1.3
+	jul280:1.3
+	jul279:1.2
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.8
+date	2000.05.03.07.56.53;	author cattanem;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	99.12.09.11.41.28;	author cattanem;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	97.05.07.06.51.03;	author cattanem;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.10.16.11.30.41;	author cattanem;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.10.09.14.59.27;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.03.12.15.31.14;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.11.29.17.18.41;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.19.13;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.19.14;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.8
+log
+@y2k format fix in rcpas0
+@
+text
+@      SUBROUTINE RCPAS0
+C----------------------------------------------------------------------
+C!  - Write TDPV bank in PASS0 summary file
+C!
+C!   Author   :- E. Lancon             25-FEB-1992
+C!   Modified  :- I. Tomalin           7-NOV-1995
+C!               Use TLAS bank correctly.
+C!   Modified  :- A. Bonissent         10-NOV-1995
+C!               For VDET95, avoid messing around with VHOT and TOHV.
+C!   Modified  :- I. Tomalin           26-JUN-1996
+C!               If using new VDET and requested by PVGG card,
+C!               PASS0 will take V_d from VDET/gamma-gamma.
+C!   Modified  :- M. Cattaneo           8-DEC-1999
+C!               Fix IDAT and format statement for y2k
+C!   Modified  :- M. Cattaneo           2-MAY-2000
+C!               Fix format statement for y2k
+C!
+C!   Description
+C!   ===========
+C!      Open The PASS0 summary file, defined by the PAS0 data card.
+C!      Check that TDPV exists on input.
+C!        Determine V_d using laser, Delta(t0) and VDET/gamma-gamma.
+C!        Find hot channels in VDET.
+C!        Write PASS0 conditions and results to JPAS bank.
+C!        If at high energy and requested by PVGG card then
+C!          Create TDPV using VDET/gamma-gamma events.
+C!        Else
+C!          Create TDPV using Delta(t0).
+C!        Endif
+C!        If too few events for above, then create TDPV from TLAS.
+C!        If laser shot too old, then just fill TDPV from reference run.
+C!      Write TDPV on PAS0 summary file.
+C!      If a new TPDV bank is created the previous one is dropped.
+C!
+C?
+C!======================================================================
+#ifndef DOC
+#include "bcs.h"
+#include "tpgpar.h"
+#include "jsumjj.h"
+#include "tdpvjj.h"
+#include "tlasjj.h"
+#include "tvvdjj.h"
+#include "rcurnt.h"
+#include "rlunit.h"
+#include "rpass0.h"
+#include "jpasjj.h"
+#include "rjulver.h"
+C +y2k
+      COMMON /SLATE/ ISL(40)
+C -y2k
+      PARAMETER( NECL =  30 )
+      DIMENSION IECLS(NECL)
+      EXTERNAL NDROP
+      INTEGER  NDROP
+      LOGICAL USEVGG, LASOK, DT0OK, VGGOK, UPDAT
+      EXTERNAL GTSTUP,VDYEAR
+      INTEGER  GTSTUP,VDYEAR
+C Min. number of VDET coords in each side required to trust V_d from TVVD.
+C Also min. clearance in sigma from edge of window boundary.
+      PARAMETER(MINOBS=50,CLRCUT=2.0)
+#include "bmacro.h"
+C----------------------------------------------------------------------
+C
+C?   Get Edir statistics
+C
+      CALL ALSUMGT (NECL,IECLS)
+C
+      CALL BDROP (IW,'JPAS')
+      CALL BLIST (IW,'T=','0')
+C
+C?   Get alephlib and data base version
+C?   And date and time
+C
+      CALL ALVERS (ALVER)
+      CALL ADBVER (IDBVE, IDBDA)
+C +y2k
+      CALL DATIME(JD,ITIM)
+      IDAY = ISL(1)*10000 + MOD(JD,10000)
+C -y2k
+C
+C?   Get PAS0 output file, open it with 72 characters
+C
+      LREC  = 72
+      LDUM = MALREC ('CARD',LREC)
+      CALL AGTFIL ('PAS0', 'WRIT', LPAS0L, IER)
+      IF (IER.NE.0) GOTO 998
+C
+C? Should TPC drift velocity be obtained from VDET & gamma/gamma events ?
+      IVSET = GTSTUP('VD',IRUNRC)
+      USEVGG = IW(NAMIND('PVGG')).GT.0.AND.IVSET.GE.8
+C
+      WRITE (LPAS0L,'(A)')
+     &  'PON     '
+      WRITE (LPAS0L,'(A,I6,A,I5,A)')
+     &  '*PASS0 --- Summary for Run ', IRUNRC, ' -', IECLS(16),
+     &  ' Z read '
+C +y2k
+      WRITE (LPAS0L,'(A,I9,A,I7)')
+     &  '*PASS0 Date ', IDAY, ' Time ', ITIM
+      WRITE (LPAS0L,'(A,F6.2,A,F6.2,A,I7,A,I8)')
+     &  '*PASS0 Julia ', RJVERS, ' Alephlib ', ALVER, ' Daf ',
+     &  IDBVE, ' from ', IDBDA
+C -y2k
+      WRITE (LPAS0L,'(A,I6,A,F7.2,A)')
+     &  '*PASS0 Cuts: Min. nb of evts :', NPEVMI,
+     &  ' - TLAS max. elapsed time : ', TMTLAS, ' h.'
+      WRITE (LPAS0L,'(A,L4)')
+     &  '*PASS0 Cuts: Request V_d from VDET/gamma-gamma ? ',USEVGG
+C
+C?   Get old V_d from reference run.
+      KTDPV = IW(NAMIND('TDPV'))
+      IF ( KTDPV.GT.0 ) THEN
+        NTDPV = IW(KTDPV-2)
+        VOLD = 0.5*(VIPAS0(3,1) + VIPAS0(3,2))
+      ELSE
+        WRITE (LPAS0L,'(A)') '*PASS0 ERROR: no TDPV found on input.'
+        CALL RERROR ('RCPAS0', -1, 'No TDPV found on input.')
+        GOTO 997
+      ENDIF
+C
+C?   Compute new TPC drift velocity from Delta(t0).
+C
+      DT0OK = .FALSE.
+      KJSUM = IW(NAMIND('JSUM'))
+      IF (KJSUM.GT.0) THEN
+        NEVT = ITABL (KJSUM,1,JJSUTN)
+      ELSE
+        WRITE (LPAS0L,'(A)') '*PASS0 t0 diff.: no JSUM bank found.'
+        NEVT = 0
+      ENDIF
+      IF ( NEVT.GT.0 ) THEN
+        T0    = RTABL(KJSUM,1,JJSUTS)/FLOAT(NEVT)
+        ST0   = SQRT(ABS(RTABL(KJSUM,1,JJSUTV)/FLOAT(NEVT) - T0**2))
+        ERR   = ST0/SQRT(FLOAT(NEVT))
+        VNEW  = VOLD + T0*VOLD*VOLD/220.
+        EVNEW = ERR*VOLD*VOLD/220.
+        WRITE (LPAS0L,'(A,F8.5,A,F8.5)')
+     &      '*PASS0 t0 diff.: V_d = ', VNEW, '+-', EVNEW
+        WRITE(LPAS0L,'(A,I5,A)')
+     &      '*PASS0 t0 diff.: 0.5*(TPC end-A - TPC end-B) for ',
+     &      NEVT,' events'
+        WRITE(LPAS0L,'(A,F10.5,A,F7.5,A,F7.5,A)')
+     &      '*PASS0 t0 diff.=', T0, ' +- ', ERR,
+     &      ' mus; rms= ', ST0, ' mus'
+      ELSE
+        T0    = -9999.
+        ST0   = -9999.
+        ERR   = -9999.
+        VNEW  = -9999.
+        EVNEW = -9999.
+      ENDIF
+      IF ( NEVT.GE.NPEVMI ) THEN
+        DT0OK = .TRUE.
+      ELSE
+        WRITE (LPAS0L,'(A)') '*PASS0 t0 diff.: Too few events.'
+      ENDIF
+C
+C?   Compute new TPC drift velocity from VDET/gamma-gamma.
+C
+      VGGOK = .FALSE.
+      IF (USEVGG) THEN
+        KTVVD = NLINK('TVVD',IRUNRC)
+        IF ( KTVVD.LE.0 ) THEN
+          WRITE (LPAS0L,'(A)') '*PASS0 TVVD: Too few VDET coords.'     
+        ELSE 
+          VNEWGG = RW(KTVVD + LMHLEN + JTVVVZ)
+          ERRVGG = RW(KTVVD + LMHLEN + JTVVER)
+          DELVGG = VNEWGG - VOLD
+          T0GG   = DELVGG*220./VOLD**2
+          NVCOGG = IW(KTVVD + LMHLEN + JTVVNU)
+          NEXPGG = IW(KTVVD + LMHLEN + JTVVEX)
+          CHI2GG = RW(KTVVD + LMHLEN + JTVVC2)
+          CLRGG  = RW(KTVVD + LMHLEN + JTVVCL)
+          WRITE (LPAS0L,'(A,F8.5,A,F8.5)')
+     &      '*PASS0 TVVD: V_d = ', VNEWGG, '+-', ERRVGG
+          WRITE (LPAS0L,'(A,I6,A1,I6,A,F6.1,A,F6.1)')
+     &      '*PASS0 TVVD: Obs./Exp. VDET coor ',NVCOGG,'/',NEXPGG,
+     &      ' CHI**2 ',CHI2GG,' Clearance ',CLRGG
+C?   Apply cuts to ensure that this drift velocity is reliable.
+          IF (NVCOGG.GT.MINOBS.AND.CLRGG.GT.CLRCUT) THEN
+            VGGOK = .TRUE. 
+          ELSE
+            WRITE (LPAS0L,'(A)') '*PASS0 TVVD: Too few VDET coords.'
+          ENDIF
+        ENDIF
+      ENDIF
+C
+C?   Compute new TPC drift velocity from TPC laser.
+C
+      LASOK = .FALSE.
+      KTLAS = IW(NAMIND('TLAS'))
+      IF (KTLAS.GT.0 .AND. ABS(RTABL(KTLAS,1,JTLANV)).GT.1.0E-3) THEN
+        VTLAS  = RTABL (KTLAS,1,JTLANV)
+        EVTLAS = RTABL (KTLAS,1,JTLANE)
+        ELAPS  = RTABL (KTLAS,1,JTLAET)
+        WRITE (LPAS0L,'(A,F8.5,A,F8.5)')
+     &    '*PASS0 Laser: V_d = ', VTLAS, '+-', EVTLAS
+        IF ( ELAPS.LT.TMTLAS ) THEN
+          LASOK = .TRUE.
+          WRITE (LPAS0L,'(A,F6.0,A)')
+     &      '*PASS0 Laser: Last measurement taken : ', ELAPS,
+     &      ' hours ago '
+        ELSE
+          WRITE (LPAS0L,'(A,F6.0,A)')
+     &      '*PASS0 Laser: TLAS too OLD : ', ELAPS, ' hours'
+        ENDIF
+      ELSE
+        VTLAS  = 9999.
+        EVTLAS = 9999.
+        ELAPS  = 9999.
+        WRITE(LPAS0L,'(A)') '*PASS0 Laser: No good TLAS found on input.'
+      ENDIF
+C
+C?   Get VHOT statistics
+C?   If VHOT is Empty (Not enough events drop it and restore previous one)
+C
+      KVHOT   = IW(NAMIND('VHOT'))
+      NHOTCU  = LROWS(KVHOT)
+      WRITE(LPAS0L,'(A,I6,A,I6)')
+     &  '*PASS0 VDET VHOT: No. of channels in this run = ', NHOTCU,
+     &  ' in ref. run = ', NHOTBF
+      IF (VDYEAR().LT.95) THEN
+        KTOHV = IW(NAMIND ('TOHV'))
+        NTOHV = IW(KTOHV-2)
+        IF ( NHOTCU.LE.0 ) THEN
+          CALL BDROP (IW,'VHOT')
+          CALL BSWAP (IW,'TOHV', 'VHOT')
+          WRITE(LPAS0L,'(A,I6)')
+     &      '*PASS0 VDET VHOT taken from reference run ',NTOHV
+        ENDIF
+      ENDIF
+C
+C?   Write PASS0 Summary bank
+C
+      CALL AUBOS ('JPAS', IRUNRC, LJPASA+LMHLEN, KJPAS, IGARB1)
+      IF ( IGARB1.EQ.2 ) THEN
+        WRITE (LPAS0L,'(A)')
+     &        '*PASS0 Unable to create JPAS '
+      ELSE
+        IW (KJPAS+LMHCOL) = LJPASA
+        IW (KJPAS+LMHROW) = 1
+        KS = KJPAS+LMHLEN
+        IW (KS+JJPAZO)   = IECLS(16)
+        IW (KS+JJPANU)   = NEVT
+        IW (KS+JJPANC)   = NPEVMI
+        RW (KS+JJPADT)   = T0
+        RW (KS+JJPADT+1) = ERR
+        RW (KS+JJPADT+2) = ST0
+        RW (KS+JJPAVT)   = VTLAS
+        RW (KS+JJPAVO)   = VOLD
+        RW (KS+JJPAVN)   = VNEW
+        RW (KS+JJPAVN+1) = EVNEW
+        RW (KS+JJPATC)   = TMTLAS
+        RW (KS+JJPAET)   = ELAPS
+        IW (KS+JJPADA)   = IDAY
+        IW (KS+JJPATI)   = ITIM
+        IW (KS+JJPANM)   = NPEVMA
+        IW (KS+JJPAHP)   = NHOTBF
+        IW (KS+JJPAHC)   = NHOTCU
+      ENDIF
+C
+C?  Decide which V_d measurement to use.
+C
+      UPDAT = .TRUE.
+      IF (USEVGG.AND.VGGOK) THEN
+        WRITE (LPAS0L,'(A)') '*PASS0 V_d taken from VDET/gamma-gamma.'
+        VNEW  = VNEWGG
+        EVNEW = ERRVGG
+        T0    = T0GG
+      ELSE IF (DT0OK) THEN
+        WRITE (LPAS0L,'(A)') '*PASS0 V_d taken from Delta(t0).'
+      ELSE IF (LASOK) THEN
+        WRITE (LPAS0L,'(A)') '*PASS0 V_d taken from TPC laser.'
+        VNEW  = VTLAS
+        EVNEW = EVTLAS
+        T0    = 0.0
+      ELSE
+        UPDAT = .FALSE.
+      ENDIF
+C
+C Check that change in V_d was not suspiciously large.
+C
+      IF (UPDAT) THEN
+        IF ( ABS(T0).GT.DT0CUT ) THEN
+          WRITE (LPAS0L,'(A)')
+     &      '*PASS0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+          WRITE (LPAS0L,'(A,F7.2,A)')
+     &      '*PASS0 !!!!! t0 diff. too large > ', DT0CUT,' musec !!!!!'
+          WRITE (LPAS0L,'(A)')
+     &      '*PASS0 !!!!!    SOMETHING IS WRONG                  !!!!!'
+          WRITE (LPAS0L,'(A)')
+     &      '*PASS0 !!!!! Drift velocity not updated             !!!!!'
+          WRITE (LPAS0L,'(A)')
+     &      '*PASS0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+          UPDAT = .FALSE. 
+        ENDIF
+      ENDIF
+C
+      IF (UPDAT) THEN
+        WRITE (LPAS0L,'(A,F8.5,A,F8.5,A,F8.5,A,F8.5)')
+     &    '*PASS0: Vold', VOLD, ' Vnew', VNEW, '+-', EVNEW,
+     &    ' Dv/v ', (VOLD-VNEW)/VOLD
+      ELSE 
+        WRITE (LPAS0L,'(A,I6)')
+     &    '*PASS0 TPC Drift Velocity taken from reference run ',NTDPV 
+      ENDIF
+C
+C?   create a new TDPV if there is enough events or
+C?   if the TPAS is not too old
+C?   Write a message if there is enough events to update the reference
+C?   Do not drop TDPV if input run number = output one!
+C
+      IF ( UPDAT ) THEN
+        CALL AUBOS ('TDPV', IRUNRC, 2*LTDPVA+LMHLEN, KTDPV, IGARB)
+        IF ( IGARB.EQ.2 ) THEN
+          WRITE (LPAS0L,'(A)')
+     &        '*PASS0 Unable to create TPDV '
+          WRITE (LPAS0L,'(A,I6)')
+     &        'TPC Drift Velocity taken from reference run : ', NTDPV
+        ELSE
+          IF ( NTDPV.NE.IRUNRC) IND = NDROP ('TDPV', NTDPV)
+          IW (KTDPV+LMHCOL) = LTDPVA
+          IW (KTDPV+LMHROW) = 2
+          KS = KTDPV+LMHLEN
+          RW (KS+JTDPDV)   = VIPAS0(1,1)
+          RW (KS+JTDPDV+1) = VIPAS0(2,1)
+          RW (KS+JTDPDV+2) = VNEW
+          RW (KS+JTDPEZ)   = EVNEW
+          KS = KS + LTDPVA
+          RW (KS+JTDPDV)   = VIPAS0(1,2)
+          RW (KS+JTDPDV+1) = VIPAS0(2,2)
+          RW (KS+JTDPDV+2) = VNEW
+          RW (KS+JTDPEZ)   = EVNEW
+          IF ( NEVT.GE.NPEVMI ) WRITE (LPAS0L,'(A)')
+     &        '*PASS0 ----> Reference Drift Velocity updated <---- '
+        ENDIF
+      ENDIF
+C
+C For VDET95, make sure that we do not mess around with VHOT and TOHV !
+C
+      IF (VDYEAR().EQ.95) PASLIS='JPASTDPV'
+C
+C?   Close the PAS0 file
+C
+      CALL BLIST(IW,'T+',PASLIS (1:LNBLNK(PASLIS)) )
+      CALL BWRITE (IW,LPAS0L,'T')
+      CALL BWRITE (IW,LPAS0L,'0')
+  997 CONTINUE
+      CALL ACLOSE (LPAS0L,IER)
+      IF ( IER.NE.0 )
+     &  CALL RERROR ('RCPAS0', -2, 'Unable to close PASS0 summary file')
+      GOTO 999
+C
+  998 CONTINUE
+      CALL RERROR ('RCPAS0', -3, 'Unable to open PASS0 summary file')
+C
+  999 RETURN
+      END
+#endif
+@
+
+
+1.7
+log
+@Julia 311, including y2k fixes
+@
+text
+@d15 2
+d101 1
+a101 1
+      WRITE (LPAS0L,'(A,F6.2,A,F6.2,A,I7,A,I7)')
+@
+
+
+1.6
+log
+@Mods to Pass0
+@
+text
+@d13 2
+d47 3
+d75 4
+a78 1
+      CALL DATIME(IDAY,ITIM)
+d96 2
+a97 1
+      WRITE (LPAS0L,'(A,I7,A,I7)')
+d99 1
+a99 1
+      WRITE (LPAS0L,'(A,F6.2,A,F6.2,A,I5,A,I7)')
+d102 1
+@
+
+
+1.5
+log
+@ALLEP1 is LOGICAL in RIPas0, RCPas0
+@
+text
+@d11 1
+a11 1
+C!               If running at high energy and requested by PVGG card,
+d50 2
+a51 3
+      EXTERNAL ALLEP1,VDYEAR
+      LOGICAL ALLEP1
+      INTEGER  VDYEAR
+d80 2
+a81 1
+      USEVGG = IW(NAMIND('PVGG')).GT.0.AND..NOT.ALLEP1(IRUNRC)
+@
+
+
+1.4
+log
+@Mods for JULIA 284
+@
+text
+@d51 2
+a52 1
+      INTEGER  ALLEP1,VDYEAR
+@
+
+
+1.3
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+ 	gambnk.F gapeco.F gasteer.F
+ 	hcalib.F hcalrd.F hcatow.F hcbhis.F hcfclu.F hchist.F hclcra.F
+ 	hcltst.F hclufi.F hcos.F hcsimm.F hdgdeb.F hdgfil.F hdgpot.F
+ 	hdgsum.F hdprec.F hdspre.F hflnoi.F hinijo.F hiniru.F hmener.F
+ 	hmfind.F hmroad.F hnoise.F hnoisy.F hpatco.F hphnoi.F hplink.F
+ 	hprana.F hpranp.F hprdig.F hpreda.F hprpot.F hprsum.F hprunc.F
+ 	hrcomp.F hrcpat.F hrdcal.F hroad.F hslink.F hslowc.F hspare.F
+ 	hsptre.F hstofi.F htrack.F htubfi.F htwcr.F
+ 	iasign.F iattma.F ibnkin.F icaswt.F icftoi.F iclimb.F icrcco.F
+ 	ideadw.F idigpr.F ienang.F ifind1.F ifind2.F ifitp.F iftrak.F
+ 	igetti.F igettp.F igicha.F iheler.F iinijo.F iiniru.F iintrk.F
+ 	imatch.F inigap.F insect.F intrak.F ipakdi.F ipdsti.F iphcor.F
+ 	ipreda.F iprsum.F ipstat.F irefin.F ireopd.F isave.F ishuff.F
+ 	ishufl.F islowc.F isrch.F itbook.F itccut.F itcopr.F itcrec.F
+ 	itcrep.F itctpc.F itctrk.F itcxng.F iterr.F itextn.F ithist.F
+ 	itidy1.F itidy2.F itlnk1.F itlnk2.F itpcan.F itrak.F itrecf.F
+ 	itreci.F itree.F itrkci.F itrkeq.F itrkzr.F itrmca.F
+@
+text
+@d6 3
+a8 3
+C!   Modified  :- I. Tomalin             7-NOV-1995
+C!               (Use TLAS bank correctly).
+C!   Modified  :- A. Bonissent           10-NOV-1995
+d10 3
+d17 13
+a29 6
+C!      If TDPV exists on Input
+C!           if there is enough events to determine new TDPV bank
+C!           or if TLAS is not too old
+C!             create new TPDV bank
+C!           write TDPV on PAS0 summary file
+C!      If a new TPDV bank is created the previous one is dropped
+d39 1
+d48 7
+a54 3
+      INTEGER NDROP
+      LOGICAL OLDVD, LTDPV
+      INTEGER VDYEAR
+d79 3
+d93 1
+a93 1
+     &  '*PASS0 Min. nb of evts :', NPEVMI,
+d95 2
+d98 1
+d100 6
+a105 7
+      IF ( KTDPV.LE.0 ) THEN
+        WRITE (LPAS0L,'(A)') '*PASS0 no TDPV found on Input '
+        GOTO 997
+      ENDIF
+      KJSUM = IW(NAMIND('JSUM'))
+      IF ( KJSUM.LE.0 ) THEN
+        WRITE (LPAS0L,'(A)') '*PASS0 no JSUM found '
+d109 1
+a109 4
+      WRITE (LPAS0L,'(A)')
+     &  '*PASS0 TDPV from ref. file has been used as init. Vz'
+C
+C?   Get TLAS information
+d111 4
+a114 7
+      OLDVD = .TRUE.
+      KTLAS = IW(NAMIND('TLAS'))
+      IF ( KTLAS.LE.0 .OR. ABS(RTABL(KTLAS,1,JTLANV)).LT.1.0E-3) THEN
+        VTLAS  = 9999.
+        EVTLAS = 9999.
+        ELAPS  = 9999.
+        WRITE (LPAS0L,'(A)') '*PASS0 no good TLAS found on Input '
+d116 2
+a117 12
+        VTLAS  = RTABL (KTLAS,1,JTLANV)
+        EVTLAS = RTABL (KTLAS,1,JTLANE)
+        ELAPS  = RTABL (KTLAS,1,JTLAET)
+        IF ( ELAPS.GE.TMTLAS ) THEN
+          WRITE (LPAS0L,'(A,F6.0,A)')
+     &      '*PASS0 TLAS too OLD : ', ELAPS, ' hours'
+        ELSE
+          OLDVD = .FALSE.
+          WRITE (LPAS0L,'(A,F6.0,A)')
+     &      '*PASS0 Last LASER measurement taken : ', ELAPS,
+     &      ' hours ago '
+        ENDIF
+a118 6
+C
+C?   Compute new drift velovity
+C
+      NTDPV = IW(KTDPV-2)
+      VOLD = 0.5*(VIPAS0(3,1) + VIPAS0(3,2))
+      NEVT = ITABL (KJSUM,1,JJSUTN)
+d121 2
+a122 2
+        ST0   = RTABL(KJSUM,1,JJSUTV)/FLOAT(NEVT)-T0**2
+        ERR   = SQRT( ABS(ST0)/FLOAT(NEVT) )
+d125 2
+d128 1
+a128 1
+     &      '*PASS0 T0 difference, 0.5*(TPC end-A - TPC end-B) for ',
+d131 1
+a131 1
+     &      '*PASS0 delta-T=', T0, ' +- ', ERR,
+d140 61
+a204 2
+      KTOHV = IW(NAMIND ('TOHV'))
+      NTOHV = IW(KTOHV-2)
+d208 11
+a218 7
+     &      '*PASS0 Number of VDET HOT chanels :', NHOTCU,
+     &      ' Previous run :', NHOTBF
+      IF ( NHOTCU.LE.0 ) THEN
+        CALL BDROP (IW,'VHOT')
+        CALL BSWAP (IW,'TOHV', 'VHOT')
+        WRITE(LPAS0L,'(A)')
+     &      '*PASS0 VHOT from previous Run taken '
+a220 6
+C?   write on output the run numbers of reference VHOT and TDPV
+C
+      WRITE (LPAS0L,'(A,I6,A,I6)')
+     &      '*PASS0 TPC Vz ref. from Run ' , NTDPV ,
+     &      ' VHOT from Run ', NTOHV
+C
+d250 1
+a250 1
+C?  Check number of events and determine new drift velocity
+d252 13
+a264 12
+      LTDPV = .FALSE.
+      IF ( ABS(T0).GT.DT0CUT ) THEN
+        WRITE (LPAS0L,'(A)')
+     &    '*PASS0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+        WRITE (LPAS0L,'(A,F7.2,A)')
+     &    '*PASS0 !!!!!! Delta-T0 Too large > ', DT0CUT, ' musec.'
+        WRITE (LPAS0L,'(A)')
+     &    '*PASS0 !!!!!!    SOMETHING IS WRONG                  !!!!!!'
+        WRITE (LPAS0L,'(A)')
+     &    '*PASS0 !!!!!! Drift velocity not updated             !!!!!!'
+        WRITE (LPAS0L,'(A)')
+     &    '*PASS0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+d266 18
+a283 20
+        IF ( NEVT.GE.NPEVMI ) THEN
+          WRITE (LPAS0L,'(A,F8.5,A,F8.5,A,F8.5,A,F8.5)')
+     &        '*PASS0 Vold', VOLD, ' Vnew', VNEW, '+-', EVNEW,
+     &        ' Dv/v ', (VOLD-VNEW)/VOLD
+          LTDPV = .TRUE.
+        ELSE
+          WRITE (LPAS0L,'(A)') '*PASS0 Too few events '
+          IF ( OLDVD ) THEN
+C-          TLAS Too old take the reference file
+            WRITE (LPAS0L,'(A,I6)')
+     &        '*PASS0 TPC Drift Velocity taken from reference run : ',
+     &        NTDPV
+          ELSE
+C-          use TLAS to create TDPV
+            WRITE (LPAS0L,'(A)')
+     &        '*PASS0 TPC Drift Velocity taken from LASER run '
+            VNEW  = VTLAS
+            EVNEW = EVTLAS
+            LTDPV = .TRUE.
+          ENDIF
+d287 9
+d301 1
+a301 1
+      IF ( LTDPV ) THEN
+d329 1
+a329 1
+      IF(VDYEAR().EQ.95)PASLIS='JPASTDPV'
+d339 1
+a339 1
+     &  CALL RERROR ('RCPAS0', -1, 'Unable to close PASS0 summary file')
+d343 1
+a343 1
+      CALL RERROR ('RCPAS0', -2, 'Unable to open PASS0 summary file')
+@
+
+
+1.2
+log
+@julia version 279
+@
+text
+@a0 1
+*DK rcpas0
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d7 4
+a32 1
+#include "vdnamc.h"
+d40 1
+d78 1
+a79 1
+C
+d90 3
+d97 5
+a101 6
+      IF ( KTLAS.LE.0 ) THEN
+        ELAPS = 9999.
+        VTLAS = 9999.
+        WRITE (LPAS0L,'(A)') '*PASS0 no TLAS found on Input '
+        WRITE (LPAS0L,'(A)')
+     &    '*PASS0 TDPV from ref. file has been used as init. Vz'
+d103 3
+a105 2
+        VTLAS = RTABL (KTLAS,1,JTLANV)
+        ELAPS = RTABL (KTLAS,1,JTLAET)
+d147 1
+a147 1
+      KVHOT   = IW(NAVHOT)
+d225 2
+a226 1
+            VNEW = VTLAS
+d262 4
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

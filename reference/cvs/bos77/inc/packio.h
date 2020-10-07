@@ -1,0 +1,1 @@
+      IW(IBF+1)=IOAC+8*(IOMD+8*IOST)

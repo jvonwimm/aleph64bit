@@ -1,0 +1,270 @@
+head	1.8;
+access;
+symbols
+	dbase22:1.8
+	dbase21:1.8
+	dbase20:1.8
+	dbase19:1.8
+	dbase18:1.8
+	dbase17:1.8
+	dbase04:1.7
+	dbase03:1.5
+	dbase02:1.1.1.1
+	dbase01:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.8
+date	97.04.14.19.03.00;	author flr;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	97.02.18.08.24.15;	author flr;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	97.02.17.14.05.36;	author flr;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	97.02.14.16.13.28;	author flr;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	97.02.14.16.11.21;	author flr;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.02.13.13.04.07;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.02.13.13.00.10;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.02.12.10.06.02;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.02.12.10.06.02;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.8
+log
+@dbase 17: update Makefile
+@
+text
+@# make a module of NAME which is given on the command line
+
+# gmake NAME=eptoda
+# gmake NAME=chkcrd
+# gmake NAME=cardaf
+# gmake NAME=epiofmt
+# gmake NAME=sbank
+# gmake NAME=hacpar
+# gmake NAME=creind
+
+##########################################################
+
+NAME    = 
+DBX     =
+
+####
+
+SRCDIR  = $(ALROOT)
+OBJDIR  = $(HOME)/$(OS)
+
+CFLAGS   = -c 
+FFLAGS   = $(FCOPT) -I$(ALROOT)/dbase/inc
+
+ifeq ($(NAME),sbank)
+   CFILES  = sbankc.c
+   FFILES  =
+else
+   FFILES  = $(NAME).F
+   CFILES  =
+endif 
+
+ifeq ($(DBX),_dbx)
+   CFLAGS += -g
+   FFLAGS += -g
+endif 
+
+####
+
+OFILES   := $(FFILES:.F=.o) $(CFILES:.c=.o)
+OBJFILES := $(addprefix $(OBJDIR)/,$(notdir $(OFILES)))
+
+#####
+
+LDFLAGS  = -Wl,-u,dafrds_
+
+CERNLIBS = `cernlib mathlib packlib shift`
+
+LIBS    = \
+		$(ALEPH)/dbase/libdbase$(DBX).a \
+		$(ALEPH)/gen/libalephlib$(DBX).a \
+		$(ALEPH)/gen/libbos77$(DBX).a \
+		$(CERNLIBS)
+####
+
+ifeq ($(NAME),sbank)
+  LIBS += -ltermcap
+  ifeq ($(OS),OSF1)
+     LDFLAGS += -nofor_main
+  endif
+endif
+
+####
+
+vpath %.F $(SRCDIR)/dbase/prog
+vpath %.c $(SRCDIR)/dbase/c
+vpath %.o $(OBJDIR)
+
+$(OBJDIR)/%.o : %.c
+	cc    $(CFLAGS)  $< -o $@@
+$(OBJDIR)/%.o : %.F
+	$(FC) $(FFLAGS)  $< -o $@@
+
+$(OBJDIR)/$(NAME): $(OBJFILES) 
+	$(FC) -o $@@  $(OBJFILES) $(LIBS) $(LDFLAGS)
+
+
+
+
+@
+
+
+1.7
+log
+@protect sbankc.c with #if defined (UNIX)
+@
+text
+@d49 1
+a49 1
+		$(ALROOT)/dbase/$(OS)/libdbase$(DBX).a \
+@
+
+
+1.6
+log
+@move *.c files to /c
+@
+text
+@d18 1
+a18 1
+SRCDIR  = $(ALROOT)/dbase/prog $(ALROOT)/dbase/c
+d64 2
+a65 2
+vpath %.F $(SRCDIR)
+vpath %.c $(SRCDIR)
+@
+
+
+1.5
+log
+@remove reference to sbk from Makefile
+@
+text
+@d18 1
+a18 1
+SRCDIR  = $(ALROOT)/dbase/prog
+@
+
+
+1.4
+log
+@move subroutine in subr andprograms in prog sbk becomes empty
+@
+text
+@d18 1
+a18 1
+SRCDIR  = $(ALROOT)/dbase/prog $(ALROOT)/dbase/sbk
+@
+
+
+1.3
+log
+@update comments in Makefile
+@
+text
+@d44 1
+a44 1
+LDFLAGS  = -Wl,-u,dafrds_,-m
+d49 1
+a49 1
+		$(ALEPH)/dbase/libdbase$(DBX).a \
+d52 1
+a52 2
+		$(CERNLIBS) \
+
+d74 3
+a76 1
+	$(FC) -o $@@  $(OBJFILES) $(LIBS) $(LDFLAGS) > $@@.map
+@
+
+
+1.2
+log
+@reference ALROOT instead of MYROOT in Makefile
+@
+text
+@d2 1
+d6 6
+a11 1
+# source file resides on /al/reference/dbase
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d6 1
+a6 1
+#
+d12 1
+a12 1
+SRCDIR  = $(MYROOT)/dbase/prog $(MYROOT)/dbase/sbk
+d15 2
+a16 2
+CFLAGS   = -c -g 
+FFLAGS   = $(FCOPT) -I$(MYROOT)/dbase/inc -g
+d26 5
+d34 1
+a34 1
+OBJFILES := $(addprefix $(OBJDIR)/,$(notdir $(OFILES)))#
+a38 2
+  ifeq ($(NAME),sbank)
+  endif
+d43 1
+a43 1
+		$(MYROOT)/dbase/$(OS)/libdbase$(DBX).a \
+@
+
+
+1.1.1.1
+log
+@1st release of dbase library
+@
+text
+@@

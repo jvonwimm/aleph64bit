@@ -1,0 +1,5 @@
+libp5lib.a: $(ROUTINES)
+	ar cr $(@) $(ROUTINES)
+	[ -x /usr/bin/ranlib ] && /usr/bin/ranlib $(@) || true
+	rm -f $(ROUTINES)
+	rm -f $(subst .o,.f,$(ROUTINES))

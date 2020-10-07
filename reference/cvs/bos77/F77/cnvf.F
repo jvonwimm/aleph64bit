@@ -1,0 +1,23 @@
+      SUBROUTINE CNVF(FLT,NT,STRUT)
+      EXTERNAL STRUT
+      CHARACTER STR*256,STP*12
+      COMMON/FMTSTR/STR
+      COMMON/STRSTR/JS,IAST,IBST
+      REAL FLT(*)
+*     ...
+      DO 36 L=1,NT
+      CALL PNVF(FLT(L),STP,JSP)
+   32 IF(JS.EQ.0) THEN
+         STR=' '
+         JS=IAST-1
+      ELSE IF(JS+JSP+2.LE.IBST) THEN
+         JS=JS+1
+      ELSE
+         CALL STRUT
+         GOTO 32
+      END IF
+      STR(JS+1:JS+JSP)=STP(1:JSP)
+      JS=JS+JSP
+   36 CONTINUE
+      RETURN
+      END

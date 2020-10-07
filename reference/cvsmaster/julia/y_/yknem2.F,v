@@ -1,0 +1,137 @@
+head	1.1;
+access;
+symbols
+	jul313_3:1.1
+	jul313_2:1.1
+	jul313_1:1.1
+	jul313:1.1
+	jul312_1:1.1
+	jul312:1.1
+	jul311:1.1
+	jul310_1:1.1
+	jul310:1.1
+	jul309_1:1.1
+	jul309:1.1
+	jul308_6:1.1
+	jul308_5:1.1
+	jul308_4:1.1
+	jul308_3:1.1
+	jul308_2:1.1
+	jul308_1:1.1
+	jul308:1.1
+	jul307_4:1.1
+	jul307_3:1.1
+	jul307_2:1.1
+	jul307_1:1.1
+	jul307:1.1
+	jul306_3:1.1
+	jul306_2:1.1
+	jul306_1:1.1
+	jul306:1.1
+	jul305_4:1.1
+	jul305_3:1.1
+	jul305_2:1.1
+	jul305_1:1.1
+	jul305:1.1
+	jul304_3:1.1
+	jul304_2:1.1
+	jul304_1:1.1
+	jul304:1.1
+	jul303_7:1.1
+	jul303_6:1.1
+	jul303_5:1.1
+	jul303_4:1.1
+	jul303_3:1.1
+	jul303_2_mc1:1.1
+	jul303_2:1.1
+	jul303_1_mc1:1.1
+	jul303_1:1.1
+	jul303_v:1.1
+	jul302:1.1
+	jul303:1.1
+	jul302_6:1.1
+	jul302_5:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	97.04.15.15.00.10;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Add kinks to JULIA
+@
+text
+@      Real Function YKNEM2(row, parentM, dauM)
+C-------------------------------------------------------------------
+C
+C!  Find the mass^2 of a kink's neutral daughter
+C
+C     Given a row in the YKNK bank, and a mass for the parent and charged
+C     daughter, compute the mass of the neutral and the uncertainty.
+C
+C     Author:  Paul Rensing     08/04/97
+C
+C     Inputs:   YKNK bank
+C               row         row of YKNK to use
+C               parentM     mass of particle which is decaying
+C               dauM        mass of charged decay product
+C     Returns:  YKNEM2      mass^2 of unobserved neutral decay product
+C
+C--------------------------------------------------------------------
+#ifndef DOC
+
+      implicit none
+
+      integer row
+      real parentM, dauM
+
+#include "bcs.h"
+
+#include "yknkjj.h"
+#include "bmacrod.h"
+
+      integer NAMIND
+      external NAMIND
+
+      integer NamYKNK
+      save NamYKNK
+      integer IndYKNK
+
+      double precision pp2, pd2, pn2, ep, ed, en
+
+      data NamYKNK/0/
+
+#include "bmacro.h"
+      
+      if (NamYKNK .eq. 0) NamYKNK = NAMIND('YKNK')
+
+      IndYKNK = IW(NamYKNK)
+      if (IndYKNK .le. 0) then
+         YKNEM2 = 1000.0
+         return
+      end if
+
+      pp2 = DBLE(RTABL(indYKNK, row, JYKNPK))**2
+      pd2 = DBLE(RTABL(indYKNK, row, JYKNPL))**2 +
+     $     DBLE(RTABL(indYKNK, row, JYKNPT))**2
+      pn2 = (DBLE(RTABL(indYKNK, row, JYKNPL)) -
+     $     DBLE(RTABL(indYKNK, row, JYKNPK)) )**2 +
+     $     DBLE(RTABL(indYKNK, row, JYKNPT))**2
+      ep = sqrt(pp2 + parentM**2)
+      ed = sqrt(pd2 + dauM**2)
+      en = ep - ed
+
+      YKNEM2 = en**2 - pn2
+      return
+      end
+#endif
+@

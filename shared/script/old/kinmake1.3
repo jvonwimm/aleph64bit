@@ -1,0 +1,353 @@
+#!/bin/csh
+#-----------------------------------------------------------------------
+# Script : kinmake
+# Devel. : Joel Closier
+# Date   : 15 Dec 1994
+# Goals  : Script to make a KINGAL exec 
+# Usage  : 
+# Modify :
+#         1.2 29/09/95 JC
+#         add option -ncr for hrwg09 on OSF1
+#-----------------------------------------------------------------------
+#if ($#argv < 1) then
+#   goto usage
+#endif
+#set echo on
+set VER="1.3"
+
+set USE=`id | cut -f2 -d"(" | cut -f1 -d")"`
+set DATE=`date`
+set LOGFILE="/aleph/log/kinmake.log"
+set NODE=`uname -n`
+set KINDIR="/aleph/kin"
+
+#  Setup variables ...
+set run = "n"
+set VERBOSE="y"
+set FILEOPT     = "$cwd/kinparam.opt"
+set FILEOUT = "$cwd/kinrun.out"
+
+set craddle = " "
+set datac = "$KINGALCARDS"
+set program = " "
+set debugf = "n"
+set machine = "saga"
+set cputim = "10000"
+set keepfl = "Kept"
+set indev = "none"
+set aver = "lib"
+set kine = ""
+set kinad = "n"
+set kinra = "n"
+set usobj = " "
+set kino = ".o"
+set kino_d = "_dbx.o"
+set generator = " "
+set batch = "y"
+
+#  test if you can write where you are
+if !(-w $cwd) then
+   echo "you can't write in the current directory $cwd"
+   exit 0
+endif
+
+#  test which model will be used
+switch ($#argv)
+        case 0: 
+                goto usage
+                breaksw
+        case 1:
+                if ("$argv[1]" == "-help") then
+		     goto usage
+		endif
+                breaksw       
+endsw
+
+
+#  Check options
+set MODE="UNIX"
+#   parse the options and put the right values
+set argv=`getopt xsvrghakdm:l:f:c:o:C:F:G: $*`
+if ($status != 0) goto usage
+
+while ($#argv > 0)
+        switch ($argv[1])
+                case -x:
+                        set echo on
+                        breaksw
+                case -v:
+                        set VERBOSE="n"
+                        breaksw
+                case -s:
+                        set batch="y"
+                        breaksw
+		case -F:
+			set FILEOPT = $argv[2]
+			goto FILE
+			breaksw
+		case -G:
+			set generator = $argv[2]
+			breaksw
+                case -h:
+                        goto usage
+                        breaksw
+		case -g:
+			set debugf = "y"
+			breaksw
+		case -m:
+			set machine = $argv[2]
+                        shift
+			breaksw
+		case -c:
+			set cputim = $argv[2]
+                        shift
+			breaksw
+		case -r:
+			set run = "y"
+			breaksw
+		case -a:
+			set kinra = "y"
+			breaksw
+		case -d:
+			set kinad = "y"
+			breaksw
+		case -o:
+			set usobj = "$usobj $argv[2]"
+			shift
+			breaksw
+		case -l:
+			set kine = "$kine $argv[2]"
+			shift 
+			breaksw
+		case -k:
+			set keepfl = "y"
+			breaksw
+		case -C:
+			set datac = $argv[2]
+                        shift
+			breaksw
+		case -f:
+			set craddle = "$craddle $argv[2]"
+			shift
+			breaksw
+                case --:
+                        breaksw
+                case *:
+                        set program = $argv[1]
+                        breaksw
+        endsw
+        shift
+end
+
+#######################################################################
+#      Create the makefile kingal.mk
+#######################################################################
+MAKEF:
+#set CERNLIB = `cernlib mathlib packlib shift`
+if ("$debugf" == "y" || "$debugf" == "Y") then
+   set debug_opt = "_dbx"
+else
+   set debug_opt = ""
+endif
+
+if (-x $program && "$ENVIRONMENT" == "INTERACTIVE") then
+   echo -n "This program already exist. Do you want to use it (y/n)? "
+   set bak=$<
+   if ($bak == "n" || $bak == "N") then
+     mv $program $program.BAK
+   else
+     goto RUN
+   endif
+endif
+set param = `egrep "kingal" /aleph/kin/f77${debug_opt}_options | awk '{print substr($0,15)}'`
+
+set use_obj = "/aleph/kin/kingal.o"
+if ($kinad == "y" || $kinad == "Y") set use_obj = "$use_obj /aleph/kin/lunmod.o"
+if ($kinra == "y" || $kinra == "Y") set use_obj = "$use_obj /aleph/kin/kinmar.o"
+set usobj = "$use_obj $usobj"
+
+### Create the file kingal.mk  ####
+cat >$cwd/$program.mk <<END-OF-MAKE
+NAME    = $program 
+CFILES  =  
+CFLAGS  = 
+FFILES  = $craddle
+FFLAGS = $param
+LDFLAGS = 
+CERNLIB = \`cernlib mathlib packlib shift\`
+
+LIBS    = \\
+END-OF-MAKE
+if ("$usobj" != " ") then
+cat >>$cwd/$program.mk <<END-OF-MAKE
+     		$usobj \\
+END-OF-MAKE
+endif
+cat >>$cwd/$program.mk <<END-OF-MAKE
+		$KINDIR/lib${generator}.a \\
+END-OF-MAKE
+if ("$kine" != " ") then
+cat >>$cwd/$program.mk <<END-OF-MAKE
+     		$kine \\
+END-OF-MAKE
+endif
+cat >>$cwd/$program.mk <<END-OF-MAKE
+		/aleph/kin/libkinextra.a \\
+		/aleph/lib/libalephlib.a \\
+		/aleph/lib/libbos77.a \\
+		\$(CERNLIB)
+
+
+# Rules...
+
+SRCFILES = \$(CFILES) \$(FFILES)
+OBJFILES = \$(CFILES:.c=.o) \$(FFILES:.f=.o)
+
+\$(NAME): \$(OBJFILES) 
+END-OF-MAKE
+endif
+if ("$generator" == "hrwg09" && "$OS" == "OSF1") then
+cat >>$cwd/$program.mk <<END-OF-MAKE
+	f77 -ncr -o \$@  \$(OBJFILES) \$(LIBS) \$(LDFLAGS)
+END-OF-MAKE
+else
+cat >>$cwd/$program.mk <<END-OF-MAKE
+	f77 -o \$@  \$(OBJFILES) \$(LIBS) \$(LDFLAGS)
+END-OF-MAKE
+endif
+echo ""
+echo "   **************************************************************"
+echo "   ***    Compilation  and creation of the makefile $program.mk  ***"
+echo "   **************************************************************"
+### Compile the job  #####
+make -f $cwd/$program.mk
+
+RUN:
+setenv KINGALCARDS $datac
+
+chmod +x $program
+if ($run == "y" || $run == "Y") then
+  echo ""
+  echo "   ********************"
+  echo "   ***  Execution   ***"
+  echo "   ********************"
+  echo "   * The output is saved in $FILEOUT "
+  echo " "
+  echo " Please wait the end of the execution ......"
+  ### Run the job  ####
+  $program > $FILEOUT
+  echo ""
+endif
+if ( "$ENVIRONMENT" == "INTERACTIVE" ) then
+  echo -n "Do you want to keep the executable $program (y/n)? : "
+  set rep=$<
+  if ($rep == "n" || $rep == "N") then
+     if (-x $program) rm $program
+  endif
+endif
+if (-r $cwd/test.def) rm $cwd/test.def
+echo "$DATE $USE $MODE $VER $NODE $generator" >> $LOGFILE
+exit 0
+
+#######################################################################
+#      Read the file for the option -F
+#######################################################################
+FILE:
+set MODE="FILE"
+
+##  test if the file FILEOPT exist   ##
+if !(-r $FILEOPT) then 
+   echo the file $FILEOPT does not exist
+   exit 0
+endif
+
+set craddle=`awk '{if ((NR == 1) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set datac=`awk '{if ((NR == 2) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set program=`awk '{if ((NR == 3) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set debugf=`awk '{if ((NR == 4) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set machine=`awk '{if ((NR == 5) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set cputim=`awk '{if ((NR == 6) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set keepfl=`awk '{if ((NR == 7) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set kine=`awk '{if ((NR == 8) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set usobj=`awk '{if ((NR == 9) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set kinad=`awk '{if ((NR == 10) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set kinra=`awk '{if ((NR == 11) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set generator=`awk '{if ((NR == 12) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set batch=`awk '{if ((NR == 13) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+
+if ($VERBOSE == "y") then
+  echo ""
+  echo "you run KINRUN with these options (stored in $FILEOPT):"
+  echo ""
+  echo "Generator used = $generator "
+  echo "Historian directives = $craddle "
+  echo "KINGAL data cards = $datac "
+  echo "Program name = $program "
+  echo "Debud mode = $debugf "
+  echo "CPU time limit = $cputim "
+  echo "Extra event generator library = $kine "
+  echo "list of extra .o files = $usobj "
+  echo "do you use modified LUND ? = $kinad "
+  echo "do you use RANMAR generator ? = $kinra "
+endif
+
+if ($run == "y" || $run == "Y") then 
+   goto MAKEF
+else 
+  if ($run != "y" || $run != "Y") then
+     echo -n " Do you want to create the binary and run it with these options (y/n)? : "
+     set run=$<
+     if ($run == "y" || $run == "Y") then
+       goto MAKEF
+     else
+      echo -n " Do you want to create the binary  with these options (y/n)? : "
+      set bin=$<
+      if ($bin == "y" || $bin == "Y") then
+         goto MAKEF
+      else 
+         exit 0
+     endif
+  endif
+endif
+
+
+#######################################################################
+#     Options available for KINMAKE
+#######################################################################
+usages:
+echo " Usage : -help"
+echo "       : [-f fortran_file] [-C card_file] [-k] [-h] [-o object_file]"
+echo "         [-l library] [-a] [-d] [-c time_limit] [-m machine] [-g]"
+echo "         [-G generator] [-s]"
+echo "       : -F filename "
+exit
+
+#######################################################################
+#     Description for the use of KINMAKE
+#######################################################################
+usage:
+echo " Usage : -help"
+echo "       : [-f fortran_file] [-C card_file] [-k] [-h] [-o object_file]"
+echo "         [-l library] [-e] [-j] [-c time_limit] [-m machine] [-g]"
+echo "         [-G generator] [-s]"
+echo "       : -F filename "
+echo " " 
+echo "Where: "
+echo "     -help                   get this help"
+echo "     -h                      get this help"
+echo "     -(f)<string>            expected fortran file  (my_fortran.f)"
+echo "     -(o)<string>            expected object file  (my_objfile.o)"
+echo "     -(C)ards<string>        expected card file  (my_cards.cards)"
+echo "     -(d)                    use modified LUND routines"
+echo "     -(a)                    use RANMAR generator routines"
+echo "     -(l)<string>            extra event generator"
+echo "     -debu(g)                the debug options are used to compile"
+echo "     -(m)achine<string>      machine where you submit your job"
+echo "     -(c)putim<string>       time limit for the job in batch"
+echo "     -(G)enerator<string>    generator used"
+echo "     -(s)ubmit               submit in batch"
+echo "     -(F)ile<string>         expected filename which contains kingal options"
+exit
+
+
+

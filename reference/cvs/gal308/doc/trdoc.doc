@@ -1,0 +1,25 @@
+*DK trdoc
+#if defined(DOC)
+.chapter LEVEL 2
+.section  INTRODUCTION
+
+  The input to the level 2 trigger is the TPC hit bank TTHT. This is fir
+transformed to give the level 2 hit bank X2HF containing the TPC trigger
+pad information which is passed through the level 2 simulation. The resu
+output are the banks X2MS containing the level 2 mask,and X2TF containing
+the angular bins in which a track has been found. The banks X2HF,X2MS and
+X2TF are then output to level 3.
+
+.section  GENERAL DESCRIPTION
+
+  The simulation passes the data with the optional addition of added noi
+through the look-up tables created for loading into the level 2 processor
+memories. Each input data point is placed into one of a number of angular
+cells each of which covers part of the TPC volume and points towards the
+interaction region. Data are passed to a second stage of processing from
+cells with sufficient entries to correspond to a track. The second stage
+performs a test on the internal consistency of the data to improve the
+efficiency of the system at rejecting noise and background tracks. Cells
+containing tracks are then used to set bits in the level 2 trigger mask.
+
+#endif

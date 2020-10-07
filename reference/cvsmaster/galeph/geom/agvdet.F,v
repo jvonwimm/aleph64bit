@@ -1,0 +1,263 @@
+head	1.6;
+access;
+symbols
+	gal309_3:1.6
+	gal309_2:1.6
+	gal309_1:1.6
+	gal309:1.6
+	gal308_2:1.6
+	gal308_1:1.6
+	gal308:1.6
+	gal307_2:1.6
+	gal307_1:1.6
+	gal307:1.6
+	gal306_3:1.6
+	gal306_2:1.6
+	gal306_1:1.6
+	gal306:1.6
+	gal305_3:1.5
+	gal305_2:1.5
+	gal305_1:1.5
+	gal305:1.5
+	gal304_11:1.5
+	gal304_10:1.4
+	gal304_9:1.4
+	gal304_8:1.4
+	gal304_7:1.4
+	gal304_6:1.4
+	gal304_5:1.4
+	gal304_4:1.3
+	gal304_3:1.3
+	gal304_2:1.3
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gta302:1.1
+	gal302_2:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.6
+date	97.12.18.10.03.14;	author flr;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.11.14.12.22.30;	author flr;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.05.29.14.41.03;	author flr;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.05.20.12.08.31;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.08.24.09.34.30;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.06.30.08.52.04;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.6
+log
+@gal306: mods in TPC and VDET geometry
+@
+text
+@*DK agvdet
+      SUBROUTINE AGVDET
+C ----------------------------------------------------------
+CKEY VDET GEOM
+C! build VDET geometry
+C - W.Manner - 901100
+C - Modified : A. Bonissent 940215 : use geom. package
+C  VDET91-95 is the same object built with AGVF92
+C  a new description of the wafers was introduced in 94.
+C  new VDET was introduced in 9510, it is built with AGVF95
+C - Modified : FLR 961113 - new description of the faces
+C  to avoid VFAC volumes which were overlapping each other.
+C  it is built with AGVF96 and ADBSCONS no. > 218
+C - Modified: S. Wasserbaech 971216 - use the same
+C  description for 1991-1995
+C - called by AGEOME
+C ---------------------------------------------------------
+#ifndef DOC
+#include "jobcom.h"
+#include "iocom.h"
+#include "agcons.h"
+#include "bcs.h"
+C
+C --------------------------------------------------------
+C - get setup code and build VDET from data base banks
+C
+      CALL AGGEAN ('VD',IVDST)
+C
+C - position faces depending on the setup code
+C
+      IF (IVDST .LT. 3) THEN
+C      VDET89-90 is not implemented 
+         CALL ALTELL ('AGVDET: VDET 89-90 is not implemented ',0,'STOP')
+      ELSEIF (IVDST .LT. 8) THEN
+C      VDET91-95 old VDET 
+         CALL AGVF92
+         IF(IAGSLV+2.GT.LSENV) GO TO 992
+         IAGSLV = IAGSLV + 1
+         IAGSEN(IAGSLV,1) = JHOCHA('VDWS')
+         IAGSEN(IAGSLV,2) = 4
+      ELSE
+         IF (IDAFJO .GT. 218) THEN
+C         VDET9611 new VDET description
+            CALL AGVF96
+         ELSE
+C         VDET9510 new VDET 
+            CALL AGVF95
+         ENDIF
+         IF(IAGSLV+2.GT.LSENV) GO TO 992
+         IAGSLV=IAGSLV+1
+         IAGSEN(IAGSLV,1)=JHOCHA('VWSS')
+         IAGSEN(IAGSLV,2)=    4
+      ENDIF
+C
+C    Store volume name and level in the geometry tree which define
+C    entrance in detector
+C
+      CALL AGDIMP('VDET',3,'VDET')
+      RETURN
+C
+C - error ---------------------------------------------------------
+C
+C   not enough space to SAVE sensitive module
+  992 CONTINUE
+      WRITE (LOUTIO,*) ' AGVDET : too many sensitive volumes, IAGSLV= '
+     &   ,  IAGSLV, ' LSENV= ',LSENV
+C
+      CALL ALTELL ('AGVDET: cannot build VDET geometry ',0,'STOP')
+C - end
+C
+      END
+#endif
+@
+
+
+1.5
+log
+@release of gal304.11
+@
+text
+@d14 2
+a15 1
+
+d31 1
+a31 1
+      IF (IVDST.LT.3) THEN
+d34 1
+a34 1
+      ELSEIF (IVDST.LE.7) THEN
+d38 3
+a40 9
+         IAGSLV=IAGSLV+1
+         IF(IVDST.LE.5) THEN
+C         VDET91-93 old geom. description
+            IAGSEN(IAGSLV,1)=JHOCHA('VDWA')
+         ELSE
+C         VDET94-95 old VDET with new description a la VDET9510
+            IAGSEN(IAGSLV,1)=JHOCHA('VDWS')
+         ENDIF
+         IAGSEN(IAGSLV,2)=    4
+@
+
+
+1.4
+log
+@agvdet used a wrong setup code for 9501
+@
+text
+@d4 2
+a7 1
+C! build VDET geometry
+d11 4
+a14 1
+CKEY VDET GEOM
+d18 1
+d47 7
+a53 2
+C      VDET9510 new VDET 
+         CALL AGVF95
+@
+
+
+1.3
+log
+@release galeph 304_2- call agvf92 for 91 geometry
+@
+text
+@d8 1
+a8 1
+C  a new description ofthe wafers was introduced in 94.
+d26 1
+d28 2
+a29 1
+      ELSEIF (IVDST.LE.6) THEN
+d33 3
+a35 2
+         IF(IVDST.LE.4) THEN
+          IAGSEN(IAGSLV,1)=JHOCHA('VDWA')
+d37 2
+a38 1
+          IAGSEN(IAGSLV,1)=JHOCHA('VDWS')
+d42 1
+@
+
+
+1.2
+log
+@introduce vdet94
+@
+text
+@d7 3
+d16 1
+d25 2
+a26 2
+      IF (IVDST.LE.3) THEN
+         CALL ALTELL ('AGVDET: VDET 89-91 is not implemented ',0,'STOP')
+a28 2
+         CALL GSORD('VDET',3)
+         CALL GSORD('VDBX',1)
+d31 1
+a31 1
+         IF(IVDST.EQ.4) THEN
+@
+
+
+1.1
+log
+@release galeph 302
+ Added Files:
+ euppar.F
+ agsatr.F agsatt.F agvdet.F agvf92.F agvf95.F
+@
+text
+@d29 5
+a33 1
+         IAGSEN(IAGSLV,1)=JHOCHA('VDWA')
+d39 1
+a39 1
+         IAGSEN(IAGSLV,1)=JHOCHA('VSWA')
+@

@@ -1,0 +1,143 @@
+      SUBROUTINE TREFIT
+C-----------------------------------------------------------------------
+C!Refit frft 2 tracks after monte carlo smearing
+CKEY TPC SMEARING
+C
+C  Author      : A. BONISSENT 050298
+C
+C----------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+      SAVE
+C
+#include "frftjj.h"
+#include "frtljj.h"
+#include "bcs.h"
+C
+      REAL HP(7),COV(28)
+      INTEGER NMATC(2)
+      INTEGER NFRTL,NFTCL,NFICL,NICCO,NTPCO
+      INTEGER KFRTL,KFRFT,KFTCL,KTPCO,KITCO,KFICL,JFRFT,JFRTL
+      INTEGER NTRK,I,JTK,NTPC,NITC,NDOF,IERR,IOPT,NMULT,IOITC,IOTPC
+      INTEGER NFVCL, KFVCL, NRFRT, ISWIM, IOVDT, NVDT, IRET
+      REAL FIELD, DUMMY, CHI2, ALFIEL, FILT_PROB
+      INTEGER NAMIND, NLINK
+      INTEGER ALGTDB,UFSWIM,UFTTRA
+      EXTERNAL ALFIEL,NAMIND,NLINK,ALGTDB,UFSWIM,UFTTRA
+      LOGICAL FIRST
+      DATA FIRST/.TRUE./
+#include "bmacrod.h"
+#include "bmacro.h"
+C
+C - 1st entry
+C
+      IF (FIRST) THEN
+        FIRST=.FALSE.
+        NFRTL = NAMIND('FRTL')
+        NFTCL = NAMIND('FTCL')
+        NFICL = NAMIND('FICL')
+        NFVCL = NAMIND('FVCL')
+        NICCO = NAMIND('ICCO')
+        NTPCO = NAMIND('TPCO')
+      ENDIF
+C
+C-- check if needed banks are there
+C
+      KFRTL = IW(NFRTL)
+      IF ( KFRTL.EQ.0) GOTO 998
+C
+      KFTCL = IW(NFTCL)
+      KTPCO = IW(NTPCO)
+      IF (KFTCL.EQ.0 .OR. KTPCO.EQ.0) GOTO 998
+C
+      KITCO = IW(NICCO)
+      KFICL = IW(NFICL)
+      IF (KITCO.EQ.0 .OR. KFICL.EQ.0) GOTO 998
+      KFVCL = IW(NFVCL)
+      IF (KFVCL.EQ.0) GOTO 998
+      DO NRFRT=0,2,2
+       KFRFT = NLINK('FRFT',NRFRT)
+C
+C-- SKIP event with no tracks
+C
+       IF (KFRFT.NE.0) THEN
+        NTRK  = LROWS(KFRFT)
+C
+C-- setup the KALMAN filter to calculate the error matrix AT THE ORIGIN
+C
+        IF(NRFRT.EQ.0)THEN
+          ISWIM = 0
+          IRET = UFSWIM(ISWIM)
+        ELSE      
+          ISWIM = 1
+          IRET = UFSWIM(ISWIM)
+        ENDIF
+C     remove coordinate filtering
+      FILT_PROB = 0.
+      CALL UFTFIL(FILT_PROB)
+C
+C
+C-- loop over tracks
+C
+        DO 500 JTK = 1,NTRK
+C
+C-- do track refit
+C
+          JFRFT = KROW (KFRFT,JTK)
+          KFRTL = IW(NFRTL)
+          JFRTL = KROW (KFRTL,JTK)
+C
+          IOITC = IW(JFRTL+JFRTII)
+          IOTPC = IW(JFRTL+JFRTIT)
+          IOVDT = IW(JFRTL+JFRTIV)
+          NTPC  = IW(JFRTL+JFRTNT)
+          NITC  = IW(JFRTL+JFRTNI)
+          NVDT  = IW(JFRTL+JFRTNV)
+C
+          NDOF = 2*(NTPC+NITC) -5
+          IF (NDOF.LT.1) GO TO 500
+C
+C-- call the KALMAN filter fitting routine. The CHI2 returned
+C         is very large (10**30) if the fit fails.
+C
+          IERR  = 0
+          IOPT  = 9
+          NMULT = 0
+          FIELD = ALFIEL(DUMMY)
+          IF(NRFRT.EQ.0)NVDT=0
+          IRET=UFTTRA(JTK,FIELD,RW(JFRFT+JFRFIR),
+     +                  RW(JFRFT+JFRFC2),
+     +                  NTPC,NITC,NVDT,
+     +                  IW(KFTCL+LMHLEN+IOTPC+1),
+     +                  IW(KFICL+LMHLEN+IOITC+1),
+     +                  IW(KFVCL+LMHLEN+IOVDT+1),
+     +                  HP,COV,CHI2,NDOF)
+          IF (CHI2.GT.1.0E10 .OR. IRET.NE.0) THEN
+            CALL RERROR('TREFIT',IRET,'Kalman error, track not smeared')
+            GO TO 500
+          ENDIF
+C
+C-- fill the VDET-FRFT bank (id=IVFRFT) with the new track parameters.
+C   If there is no VDET information for this track we keep the old
+C   TPC+ITC track parameters.
+C
+          DO 300 I=1,6
+            RW(JFRFT+JFRFIR-1+I) = HP(I)
+  300     CONTINUE
+  500   CONTINUE
+C        restore coordinate filtering
+        CALL UFTFIL(FILT_PROB)
+       ENDIF
+      ENDDO
+      GOTO 999
+C - some banks are missing
+  998 CONTINUE
+C
+  999 CONTINUE
+C
+C-- put the error matrix calculation back at the innermost coordinates
+C
+      IRET = UFSWIM(0)
+      RETURN
+      END
+#endif

@@ -1,0 +1,49 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  uphy1-0:1.1.1.1 flr:1.1.1;
+locks    ; strict;
+comment  @ * @;
+
+
+1.1
+date     96.08.16.13.38.14;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.08.16.13.38.15;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      integer MinITCHits
+      parameter(MinITCHits=4)              !  # ITC hits for trigger
+      real LambdaECAL,LambdaHCAL
+      parameter(LambdaECAL=0.65)           !  interaction length of ECAL
+      parameter(LambdaHCAL=7.)             !  interaction length of HCAL
+      real E_ECAL(37)                      !  Energy deposit in ECAL
+      integer T_HCAL(36)                   !  # plane hits in HCAL
+      integer ITCseg(48)                   !  ITC segments fired
+      real LimITCseg(2,48)                 !  phi limits of ITC segments
+      common / FTRIG / E_ECAL,T_HCAL,ITCseg,LimITCseg
+C
+@
+
+
+1.1.1.1
+log
+@2nd try to import uphy
+@
+text
+@@

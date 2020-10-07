@@ -1,0 +1,36 @@
+			Documentation for SFALPHA
+			=========================
+
+
+
+
+  This command file builds for you all the script you need to
+ run on SHIFT.  What you need to give is a list
+ of the filenames and options you want to use. This list is maintained
+ in a file, and you can give this filename when you call SFALPHA:
+
+  sfalpha  filename
+
+  This options file has the type .optb, and defaults to sfalpha.optb
+
+ The command file reads the options file if it exists ( if not, you will
+ create one from an interactive dialog),
+ and prompts you for validation. If you answer NO, then
+ it will prompt for each file and option, giving you the default value
+ between [ ]. If you answer <return>, then the default value is kept.
+ If you answer " "(space), then no file will be taken.
+  When you agree on the options, existence and consistency
+ of input files will be checked
+ with appropriate warnings if things are amiss.
+ The values will be saved in a new version of the .optb file.
+
+ If your session has passed the checks,
+ a NQS command file is written for you in this directory and
+ submited to SHIFT for processing.
+ A new, uniquely-named subdirectory will be created on SHIFT
+ for each job, so a new binary is always created.
+
+  At the end of the job on SHIFT,
+  histogram and NQS job files are sent back to this directory.
+
+

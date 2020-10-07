@@ -1,0 +1,284 @@
+      SUBROUTINE QFCOBJ
+CKEY FILL CAL /INTERNAL
+C----------------------------------------------------------------------
+C! Fill calorimeter objects
+C
+C! called from QFCALD
+C!                                                   H.Albrecht 27.2.89
+C!                                                   E. Blucher 04.4.89
+C  Rewritten to avoid ASSIGN statements              J. Boucrot 24.9.93
+C----------------------------------------------------------------------
+#ifndef DOC
+      SAVE INIT,IERR,IECAL,NECAL,IHCAL,NHCAL
+#include "pcrljj.h"
+#include "qcde.h"
+      DATA INIT /0/, IERR /0/
+C----------------------------------------------------------------------
+      JV1(I) = KOQVEC + NTK1 * KCQVEC + I
+      JD1(I) = JQDET + NTK1 * KCQDET + I
+      JD2(I) = JQDET + NTK2 * KCQDET + I
+C----------------------------------------------------------------------
+C
+      IF (INIT .EQ. 0) THEN
+        INIT = 1
+        IECAL = KPCOMP ('ECAL')
+        NECAL = KFPADR(IECAL)
+        IHCAL = KPCOMP ('HCAL')
+        NHCAL = KFPADR(IHCAL)
+      ENDIF
+C
+      JPCRL0 = IW(NAPCRL) + LMHLEN
+      LPCRL = IW(JPCRL0-1)
+      MPCRL = IW(JPCRL0)
+C
+      JPECO = IW(NAPECO) + LMHLEN
+      JPEC1 = NLINK('PECO',1)
+      IF (JPEC1.GT.0) JPECO = JPEC1 + LMHLEN
+      LPECO = IW(JPECO-1)
+      MPECO = IW(JPECO)
+      IF (JPECO .EQ. LMHLEN)  MPECO = 0
+C
+      JPEPT = IW(NAPEPT) + LMHLEN
+      LPEPT = IW(JPEPT-1)
+      MPEPT = IW(JPEPT)
+      IF (JPEPT .EQ. LMHLEN)  MPEPT = 0
+C
+      JPHCO = IW(NAPHCO) + LMHLEN
+      LPHCO = IW(JPHCO-1)
+      MPHCO = IW(JPHCO)
+      IF (JPHCO .EQ. LMHLEN)  MPHCO = 0
+C
+C       clear flags (0 = isolated) :
+C
+      MAX = 2 * (MPECO + MPHCO)
+      IF (MAX .GE. IW(KQWRK))  CALL QSBANK ('QWRK', MAX)
+      DO 10 N=1,MAX
+   10 IW(KQWRK+N) = 0
+      JEFOV = KQWRK
+      JEHOV = JEFOV + MPECO
+      JHFOV = JEHOV + MPECO
+      JHEOV = JHFOV + MPHCO
+C
+C       isolated CAL object ?
+C
+      JPCRL = JPCRL0
+      DO 20 NPCRL=1,MPCRL
+        IF (IW(JPCRL+JPCRPE) .NE. 0 .AND.
+     &      IW(JPCRL+JPCRPH) .NE. 0)  THEN
+          IW(JEHOV+IW(JPCRL+JPCRPE)) = 1
+          IW(JHEOV+IW(JPCRL+JPCRPH)) = 1
+        ENDIF
+        IF (IW(JPCRL+JPCRPF) .EQ. 0)  GO TO 20
+        IF (IW(JPCRL+JPCRPE) .NE. 0)  IW(JEFOV+IW(JPCRL+JPCRPE)) = 1
+        IF (IW(JPCRL+JPCRPH) .NE. 0)  IW(JHFOV+IW(JPCRL+JPCRPH)) = 1
+   20 JPCRL = JPCRL + LPCRL
+C
+C       number of objects in sections IS and AS :
+C
+      NFREE = 0
+      DO 30 NPECO = 1, MPECO
+        IF (IW(JEHOV+NPECO) .EQ. 0)  THEN
+          KLAST = KLAST + 1
+        ELSE
+          NFREE = NFREE + 1
+        ENDIF
+   30 CONTINUE
+C
+C      loci. Leave free space between AS and EH.
+C
+      KLAST = KLAST + MPHCO
+      KFAST = KLAST + 1
+      KFEHT = KFAST + NFREE
+      KLEHT = KLAST + NFREE
+C
+C       banks long enough ?
+C
+      IF (KNQLIN + MAX .GE. IW(KOQLIN))
+     &  CALL QSBANK ('QLIN',KNQLIN+MAX+500)
+C
+      MAX = KFIST + MAX
+      IF (MAX .GE. KLFRT)  CALL QSBANK ('QVEC', MAX + 200)
+      IF (MAX - KLUST .GE. IW(KOQDET))
+     &  CALL QSBANK ('QDET', MAX - KLUST + 50)
+C
+      JQDET = KOQDET - KLUST * KCQDET
+C
+C       ECAL
+C
+      IF (MPECO .EQ. 0)  GO TO 120
+      NPECO = 1
+C
+C         which section ?
+C
+  100 IF (IW(JEFOV+NPECO) .EQ. 0)  THEN
+        ICALFL = 1
+        IF (IW(JEHOV+NPECO) .EQ. 0)  THEN
+C             isolated ECAL object
+          KLIST = KLIST + 1
+          NTK1 = KLIST
+        ELSE
+C             ECAL / HCAL overlap, no charged track associated :
+          KLEHT = KLEHT + 1
+          NTK1 = KLEHT
+        ENDIF
+      ELSE
+        ICALFL = -1
+        IF (IW(JEHOV+NPECO) .EQ. 0)  THEN
+C             associated to a charged track but not to HCAL :
+          KFAST = KFAST - 1
+          NTK1 = KFAST
+        ELSE
+C             associated to a charged track and to HCAL :
+          KLEHT = KLEHT + 1
+          NTK1 = KLEHT
+        ENDIF
+      ENDIF
+C
+C         now, use IW(JEFOV+...) to store the track number :
+C
+      IW(JEFOV+NPECO) = NTK1
+C
+C         Get track parameters :
+C
+      CALL QFECAL (NPECO, EN, TH, PH, SIGEN, SIGTH, SIGPH)
+C
+C   fill QVEC :
+      CALL QFCOEQ(EN,TH,PH,SIGEN,SIGTH,SIGPH,NTK1,ICALFL)
+C
+C         set pointers :
+C
+  110 IW(JV1(JQVETN)) = NPECO
+      IW(JV1(JQVEPA)) = IECAL
+      IW(JV1(JQVENP)) = IW(KOQFPA+NECAL*KCQFPA+1)
+      IW(KOQFPA+NECAL*KCQFPA+1) = NTK1
+      IW(JD1(JQDEEC)) = JPECO
+      IW(JD1(JQDEHC)) = KQZER
+      IW(JD1(JQDEET)) = JPEPT
+      IW(JD1(JQDEFI)) = KQZER
+      IW(JD1(JQDENE)) = 1
+      IW(JD1(JQDEEL)) = KNQLIN
+      KNQLIN = KNQLIN + 1
+      IW(KOQLIN+KNQLIN) = NTK1
+      IW(JD1(JQDENH)) = 0
+      IW(JD1(JQDEEF)) = KQZER
+      IW(JD1(JQDEPC)) = KQZER
+      IW(JD1(JQDEEG)) = KQZER
+      IW(JD1(JQDEPG)) = KQZER
+C
+      IF (NPECO .EQ. MPECO)  GO TO 120
+      NPECO = NPECO + 1
+      JPECO = JPECO + LPECO
+      JPEPT = JPEPT + LPEPT
+      GO TO 100
+C
+C       HCAL : almost the same as above
+C
+  120 IF (MPHCO .EQ. 0)  GO TO 200
+      NPHCO = 1
+  130 IF (IW(JHFOV+NPHCO) .EQ. 0)  THEN
+        ICALFL = 2
+        IF (IW(JHEOV+NPHCO) .EQ. 0)  THEN
+          KLIST = KLIST + 1
+          NTK1 = KLIST
+        ELSE
+          KLEHT = KLEHT + 1
+          NTK1 = KLEHT
+        ENDIF
+      ELSE
+        ICALFL = -2
+        IF (IW(JHEOV+NPHCO) .EQ. 0)  THEN
+          KFAST = KFAST - 1
+          NTK1 = KFAST
+        ELSE
+          KLEHT = KLEHT + 1
+          NTK1 = KLEHT
+        ENDIF
+      ENDIF
+      IW(JHFOV+NPHCO) = NTK1
+      CALL QFHCAL (NPHCO, EN, TH, PH, SIGEN, SIGTH, SIGPH)
+C   fill QVEC :
+      CALL QFCOEQ(EN,TH,PH,SIGEN,SIGTH,SIGPH,NTK1,ICALFL)
+  140 IW(JV1(JQVETN)) = NPHCO
+      IW(JV1(JQVEPA)) = IHCAL
+      IW(JV1(JQVENP)) = IW(KOQFPA+NHCAL*KCQFPA+1)
+      IW(KOQFPA+NHCAL*KCQFPA+1) = NTK1
+      IW(JD1(JQDEEC)) = KQZER
+      IW(JD1(JQDEHC)) = JPHCO
+      IW(JD1(JQDEET)) = KQZER
+      IW(JD1(JQDEFI)) = KQZER
+      IW(JD1(JQDENE)) = 0
+      IW(JD1(JQDENH)) = 1
+      IW(JD1(JQDEHL)) = KNQLIN
+      IW(JD1(JQDEEF)) = KQZER
+      IW(JD1(JQDEPC)) = KQZER
+      IW(JD1(JQDEEG)) = KQZER
+      IW(JD1(JQDEEG)) = KQZER
+      KNQLIN = KNQLIN + 1
+      IW(KOQLIN+KNQLIN) = NTK1
+      IF (NPHCO .EQ. MPHCO)  GO TO 200
+      NPHCO = NPHCO + 1
+      JPHCO = JPHCO + LPHCO
+      GO TO 130
+C
+C       relations :
+C
+  200 IF (MPCRL .EQ. 0)  GO TO 300
+      JPCRL = JPCRL0
+      NPCRL = 1
+C
+  210 NTKE = IW(JPCRL+JPCRPE)
+      IF (NTKE .NE. 0)  NTKE = IW(JEFOV+NTKE)
+      NTKH = IW(JPCRL+JPCRPH)
+      IF (NTKH .NE. 0)  NTKH = IW(JHFOV+NTKH)
+      IF (KNCHT .EQ. 0)  GO TO 230
+      NTK1 = IW(JPCRL+JPCRPF)
+      IF (NTK1 .EQ. 0)  GO TO 230
+      NTK1 = NTK1 + KFCHT - 1
+C
+C         CHGD <-> ECAL
+C
+      IF (NTKE .EQ. 0)  GO TO 220
+      NTK2 = NTKE
+      IREL1 = JD1(JQDENE)
+      IREL2 = JD2(JQDENF)
+C   set the relations :
+      CALL QFCOER(NTK1,NTK2,IREL1,IREL2)
+C
+C         CHGD <-> HCAL
+C
+  220 IF (NTKH .EQ. 0)  GO TO 240
+      NTK2 = NTKH
+      IREL1 = JD1(JQDENH)
+      IREL2 = JD2(JQDENF)
+C   set the relations :
+      CALL QFCOER(NTK1,NTK2,IREL1,IREL2)
+C
+C         ECAL <-> HCAL
+C
+  230 IF (NTKH .EQ. 0 .OR. NTKE .EQ. 0)  GO TO 240
+      NTK1 = NTKE
+      NTK2 = NTKH
+      IREL1 = JD1(JQDENH)
+      IREL2 = JD2(JQDENE)
+C   set the relations :
+      CALL QFCOER(NTK1,NTK2,IREL1,IREL2)
+C
+  240 IF (NPCRL .EQ. MPCRL)  GO TO 300
+      NPCRL = NPCRL + 1
+      JPCRL = JPCRL + LPCRL
+      GO TO 210
+C
+C       loci :
+C
+  300 KNIST = KLIST - KFIST + 1
+      KNAST = KLAST - KFAST + 1
+      KNEHT = KLEHT - KFEHT + 1
+C
+      DO 310 N = KSEHT+1,KSMCT
+        KLOCUS(1,N) = KLOCUS(2,KSEHT) + 1
+  310 KLOCUS(2,N) = KLOCUS(2,KSEHT)
+      KFFRT = KLOCUS(2,KSEHT) + 1
+      KFFRD = KFFRT
+C
+  900 END
+#endif

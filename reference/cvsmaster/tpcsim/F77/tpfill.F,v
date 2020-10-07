@@ -1,0 +1,172 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	tpc300_1:1.1.1.1
+	tpc300:1.1.1.1
+	tpc218:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.09.14.30.02;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.09.14.30.03;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK tpfill
+      SUBROUTINE TPFILL(IRET)
+C
+C! Fast sim : Fill the arrays concerning Landau fluctuations and
+C! ExB effect from BOS_BANKs TIND,TWRD,TLAN,TEXB and TMSH
+C
+C  Called from : TSINIT
+C  Calls       : UCOPY, WBANK
+C
+C   Input:            none
+C
+C   Output:     /FASTER/   -- NITLAN, to get index of bank TLAN
+C                          -- NITIND, to get index of bank TIND
+C                          -- INTWRD, index of work bank TWRD
+C               PASSED:    -- IRET  , =1 in case of BOS problem
+C
+C  P. Janot  - 10 May 88
+C Modifications  :
+C      1.  P. Janot  01 sep 88 Replace named bank TWRD with the
+C                              corresponding work bank, since it
+C                              can be determined with TIND bank.
+C          Description of this bank:
+C
+C          TWRD :  IW(INTWRD+1)   : Number of word/word number (=1)
+C                  IW(INTWRD+2)   : Number of word numbers (=100)
+C                      ...
+C                  IW(INTWRD+2+N) : Word number in TLAN for N primary
+C                                   cluster case probabilities, 1<N<100.
+C
+C      2.  P. Janot  06 sep 88 Get TLAN, TIND, TEXB and TMSH from
+C                              ALEPH data base.
+C------------------------------------------------------------------
+#include "bcs.h"
+#include "tpcond.h"
+#include "faster.h"
+C
+      DIMENSION NIBANK(4)
+      CHARACTER*4 NABK(4)
+      DATA NABK/'TLAN','TIND','TMSH','TEXB'/
+      DATA LBASE/4/
+      IRET = 0
+#if defined(TLANFIL)
+C
+C  get TLAN and TIND banks from a file
+C
+      LUN = 99
+      CALL BUNIT(LUN,'EPIO',16020)
+      CALL BREAD (IW,LUN,'R',*998,*998)
+#endif
+C
+C  Get ExB and Landau tables from ALEPH data base
+C
+      DO 10 IABK=1,4
+        IND = MDARD(IW,LBASE,NABK(IABK),0)
+        IF(IND .LE. 0) THEN
+          WRITE(6,*) '+++ TPFILL +++ No ',NABK(IABK), 'bank in Dbase'
+          GOTO 998
+        ENDIF
+        NIBANK(IABK) = NAMIND(NABK(IABK))
+10    CONTINUE
+      NITLAN =    NIBANK(1)
+      NITIND =    NIBANK(2)
+      INTLAN = IW(NIBANK(1))
+      INTIND = IW(NIBANK(2))
+      INTMSH = IW(NIBANK(3))
+      INTEXB = IW(NIBANK(4))
+
+C
+C  Create work-bank TWRD,
+C
+      INTWRD = 0
+      CALL WBANK(IW,INTWRD,102,*997)
+C
+C  and fill it as specified above.
+C
+      IW(INTWRD+1) = 1
+      IW(INTWRD+2) = 100
+      DO 50 IIND  = 1,99
+        IINDEX = IW(INTIND+2+IIND)
+        IF(IINDEX.EQ.0) THEN
+          IW(INTWRD+2+IIND) = 0
+          GOTO 50
+        ENDIF
+        DO 51 JIND = IIND+1,100
+          JINDEX = IW(INTIND+2+JIND)
+          IF(JINDEX.EQ.0) GOTO 51
+          IW(INTWRD+2+IIND) = JINDEX - IINDEX
+          GOTO 50
+51      CONTINUE
+50    CONTINUE
+      IW(INTWRD+2+100) = IW(INTLAN+2)-IW(INTIND+2+100)+1
+C
+C  Assign values to XPROP and TTTT. Fill arrays XXXX(1001) and
+C  XSHFT(50) for ExB effect.
+C
+      IGAP = INTEXB + 2 +(ITRCON-1)*IW(INTEXB+1)
+      XPROP  = RW(IGAP+1)
+      TTTT   = RW(IGAP+2)
+      CALL UCOPY(RW(IGAP+3),XSHFT(1),50)
+C
+      DO 20 IX=1,1001
+        IGAP = INTMSH + 2 + (IX-1)*IW(INTMSH+1) + ITRCON
+        XXXX(IX) = RW(IGAP)
+20    CONTINUE
+C
+C  Drop TEXB and TMSH BANKs.
+C
+      CALL BDROP(IW,'TEXB')
+      CALL BDROP(IW,'TMSH')
+#if defined(TLANFIL)
+      CALL BLIST(IW,'R=','0')
+      CLOSE(LUN)
+#endif
+      RETURN
+C---------------------------------------------------------------------
+998   IRET = 1
+      WRITE(6,1001)
+1001  FORMAT(//10X,'       **** TPFILL Warning ****'/
+     &         10X,' Problems with the Landau Fluctuation file'/
+     &         10X,'           Stop execution'//)
+      RETURN
+997   IRET=1
+      WRITE(6,1002)
+      RETURN
+1002  FORMAT(//10X,'       **** TPFILL Warning ****'/
+     &         10X,'    Not enough space for creating TWRD'/
+     &         10X,'           Stop execution'//)
+      END
+@
+
+
+1.1.1.1
+log
+@import tpcsim 300
+@
+text
+@@

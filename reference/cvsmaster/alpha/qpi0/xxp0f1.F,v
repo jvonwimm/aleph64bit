@@ -1,0 +1,336 @@
+head	1.2;
+access;
+symbols
+	alpha126_22:1.2
+	alpha126_21:1.2
+	alpha126_20:1.2
+	alpha126_19:1.2
+	alpha126_18:1.2
+	alpha126_17:1.2
+	alpha126_16:1.2
+	alpha126_15:1.2
+	alpha126_14:1.2
+	alpha126_13:1.2
+	alpha126_12:1.2
+	alpha126_11:1.2
+	alpha126_10:1.2
+	alpha126_09:1.2
+	alpha126_08:1.2
+	alpha126_07:1.2
+	alpha126_06:1.2
+	alpha126_05:1.2
+	alpha126_04:1.2
+	alpha126_03:1.2
+	alpha126_02:1.2
+	alpha126_1:1.2
+	alpha125_17:1.1.1.1
+	alpha125_16:1.1.1.1
+	alpha125_15:1.1.1.1
+	alpha125_14:1.1.1.1
+	alpha125_13:1.1.1.1
+	alpha125_12:1.1.1.1
+	alpha125_11:1.1.1.1
+	alpha125_10:1.1.1.1
+	alpha125_09:1.1.1.1
+	alpha125_08:1.1.1.1
+	alpha125_07:1.1.1.1
+	alpha125_06:1.1.1.1
+	alpha125_05:1.1.1.1
+	alpha125_04:1.1.1.1
+	alpha125_03:1.1.1.1
+	alpha125_02:1.1.1.1
+	alpha125_01:1.1.1.1
+	alpha124_19:1.1.1.1
+	alpha125:1.1.1.1
+	alpha124_18:1.1.1.1
+	alpha124_17:1.1.1.1
+	alpha124_16:1.1.1.1
+	alpha124_15:1.1.1.1
+	alpha124_14:1.1.1.1
+	alpha124_13:1.1.1.1
+	alpha124_12:1.1.1.1
+	alpha124_11:1.1.1.1
+	alpha124_10:1.1.1.1
+	alpha124_09:1.1.1.1
+	alpha124_08:1.1.1.1
+	alpha124_07:1.1.1.1
+	alpha124_7:1.1.1.1
+	alpha124_06:1.1.1.1
+	alpha124_05:1.1.1.1
+	alpha124_04:1.1.1.1
+	alpha124_03:1.1.1.1
+	alpha124_02:1.1.1.1
+	alpha124_01:1.1.1.1
+	alpha124:1.1.1.1
+	alpha123_12:1.1.1.1
+	alpha123_11:1.1.1.1
+	alpha123_10:1.1.1.1
+	alpha123_9:1.1.1.1
+	alpha123_8:1.1.1.1
+	alpha123_7:1.1.1.1
+	alpha123_6:1.1.1.1
+	alpha123_5:1.1.1.1
+	alpha123_4:1.1.1.1
+	alpha123_3:1.1.1.1
+	alpha123_2:1.1.1.1
+	alpha123:1.1.1.1
+	alpha122_48:1.1.1.1
+	alpha122_47:1.1.1.1
+	alpha122_46:1.1.1.1
+	alpha122_45:1.1.1.1
+	alpha122_44:1.1.1.1
+	alpha122_43:1.1.1.1
+	alpha122_42:1.1.1.1
+	alpha122_41:1.1.1.1
+	alpha122_40:1.1.1.1
+	alpha122_39:1.1.1.1
+	alpha122_38:1.1.1.1
+	alpha122_37:1.1.1.1
+	alpha122_36:1.1.1.1
+	alpha122_35:1.1.1.1
+	alpha122_34:1.1.1.1
+	alpha122_33:1.1.1.1
+	alpha122_32:1.1.1.1
+	alpha122_31:1.1.1.1
+	alpha122_30:1.1.1.1
+	alpha122_29:1.1.1.1
+	alpha122_28:1.1.1.1
+	alpha122_27:1.1.1.1
+	alpha122_26:1.1.1.1
+	alpha122_25:1.1.1.1
+	alpha122_24:1.1.1.1
+	alpha122_23:1.1.1.1
+	alpha122_22:1.1.1.1
+	alpha122_21:1.1.1.1
+	alpha122_20:1.1.1.1
+	alpha122_19:1.1.1.1
+	alpha122_18:1.1.1.1
+	alpha122_17:1.1.1.1
+	alpha122_16:1.1.1.1
+	alpha122_15:1.1.1.1
+	alpha122_14:1.1.1.1
+	alpha122_13:1.1.1.1
+	alpha122_12:1.1.1.1
+	alpha122_11:1.1.1.1
+	alpha122_10:1.1.1.1
+	alpha122_9:1.1.1.1
+	alpha122_8:1.1.1.1
+	alpha122_6:1.1.1.1
+	alpha122_5:1.1.1.1
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	2000.11.21.08.47.04;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.03.14.12.42.46;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.42.47;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE XXP0F1(IRET, PGAM1,PGAM2,P0FIT,XMFIT,CHI2)
+CKEY  QPI0DO / INTERNAL
+C-----------------------------------------------------------------------
+C! Subroutine to constraint the p0 mass.
+C  Called from QPI0DO
+C
+C      Uses a Lagrange multipliers technique
+C  Author    G.Batignani 10 / Apr /1992
+C                        10 / Apr /1992      Modified error
+C  Modified  J.P.Lees    20 / May /1992      Modified arguments
+C            S. Jezequel 12 / Nov /2000      precision pbs on Linux 
+C
+C  Input  arguments :
+C            PGAM1         first photon 4 momentum
+C            PGAM2        second photon 4 momentum
+C      Remarks:   1.   the 4-momentum of IPI0 must be the sum of
+C                      the two 4-momenta of IG1 and IG2, in order
+C                      to have a significant fit.
+C                 2.   the invariant mass of IPI0 should lie in the
+C                      range 50 - 250 Mev.   If not, the energy of
+C                      the pi0  is redefined badly.
+C
+C  Output arguments :
+C
+C             IRET     return code :  -1 and -2 : the fit is failed and
+C                                     P0FIT and XMFIT are set to 0,
+C                                    from 1 to 5 : the fit has converged
+C                                    and the Pi0 new mass is within 0.2
+C                                    MeV around the nominal Pi0 mass and
+C                                   the fit has converged in IRET iter.,
+C                                    6  : the fit has not converged in
+C                                    less than 5 iteration and the
+C                                    fitted values are the ones calculat
+C                                    at the 5-th iteration.
+C             P0FIT(I)  fitted 4-momentum of Pi0 ( p,E) : it MUST be
+C                       dimensioned 4 in the calling routine.
+C             XMFIT     inveriant mass after the fit
+C
+C      Remarks : - so far the fit has always converged in 1,2 or 3
+C                 iterations, so the invariant mass is the nominal pi0
+C                 mass (  within 0.2 MeV ).   However, it is better
+C                 to check IRET > 0.
+C                - (repeated) : call this routine only if the pi0
+C                 invariant mass ( of IPI0 ) is in the range 50-200 MeV.
+C                - in first approximation this routine redefines the
+C                  pi0 energy (and not the direction) and improves the
+C                  energy resolution from (roughly) 26%/sqrt(E) to
+C                  6%  (constant with energy).
+C
+C-----------------------------------------------------------------------
+#ifndef DOC
+      REAL PGAM1(4),PGAM2(4),P0FIT(4)
+      DOUBLE PRECISION PPI0(4),DEGAM(2),PGFIT(4,2),DP0FIT(4)
+C..parameters: ECAL rough energy resolution RISE=0.18
+C..                       pi0 mass          XMP0=0.13497
+C.. precision on pi0 mass for convergence   XMCUT=0.0002
+C.. maximum number of iterations allowed    ITMAX=5
+      DATA RISE, XMP0, XMCUT, ITMAX / 0.18, 0.13497, 0.0002, 5 /
+C-----------------------------------------------------------------------
+C
+      ITER = 1
+      DO I=1,4
+       PPI0(I)=DBLE(PGAM1(I))+DBLE(PGAM2(I))
+      ENDDO
+      XMFIT = PPI0(4)**2-PPI0(1)**2-PPI0(2)**2-PPI0(3)**2
+      IF (XMFIT.GT.0.) THEN
+        XMFIT=SQRT(XMFIT)
+      ELSE
+        XMFIT=1.E-6
+      ENDIF
+      DO I=1,4
+       PGFIT(I,1)=PGAM1(I)
+       PGFIT(I,2)=PGAM2(I)
+      ENDDO
+      S1         = RISE*RISE*PGAM1(4) !Energy resolution gam1
+      S2         = RISE*RISE*PGAM2(4) !Energy resolution Gam2
+C
+C        LOOP
+C
+   30  CONTINUE
+      AH = (XMP0*XMP0)/(XMFIT*XMFIT)  - 1.
+      BH = S1*PGFIT(4,2)*PGFIT(4,2) + S2*PGFIT(4,1)*PGFIT(4,1)
+      CH = AH * PGFIT(4,1) * PGFIT(4,2) / BH
+      DEGAM(1) = CH * PGFIT(4,2) * S1
+      DEGAM(2) = CH * PGFIT(4,1) * S2
+C
+      IRET = 0
+      DO 90 JF = 1,2
+       FACT =  1. + DEGAM(JF) /PGFIT(4,JF)
+       IF (FACT.LE.0.) THEN
+         IRET = IRET - 1
+         FACT = 0.
+       ENDIF
+       DO 70 JH = 1,4
+        PGFIT(JH,JF) = DBLE(FACT) * PGFIT(JH,JF)
+  70   CONTINUE
+  90  CONTINUE
+C
+      DO 110 JH = 1,4
+       DP0FIT(JH) = PGFIT(JH,1) + PGFIT(JH,2)
+ 110  CONTINUE
+
+      XMFIT = DP0FIT(4)*DP0FIT(4) - DP0FIT(1)*DP0FIT(1) -
+     &        DP0FIT(2)*DP0FIT(2) - DP0FIT(3)*DP0FIT(3)
+      IF (XMFIT.LT.0.) XMFIT = 1.E-6
+      XMFIT = SQRT(XMFIT)
+C
+C  Check if the loop is finished :
+C
+      IF (IRET.LT.0) GO TO 300
+C
+      IF (ABS(XMFIT-XMP0).LT.XMCUT) THEN
+         IRET = ITER
+         GO TO 300
+      ENDIF
+C
+      IF (ITER.GE.ITMAX) THEN
+         IRET = ITMAX + 1
+         GO TO 300
+      ENDIF
+C
+      ITER = ITER + 1
+      GO TO 30
+ 300  CONTINUE
+C
+C.. COMPUTE chi2 after fit
+C
+      CHI2 = (PGAM1(4)-PGFIT(4,1))**2/S1+
+     +       (PGAM2(4)-PGFIT(4,2))**2/S2
+C Transfer double to single precision
+      DO I=1,4
+       P0FIT(I)=REAL(DP0FIT(I)) 
+      ENDDO
+C
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d11 1
+d52 2
+a53 2
+      DIMENSION PGAM1(4),PGAM2(4),PPI0(4)
+      DIMENSION P0FIT(4),DEGAM(2),PGFIT(4,2)
+d62 3
+a64 1
+      CALL VADD(PGAM1,PGAM2,PPI0,4)
+d71 4
+a74 2
+      CALL UCOPY(PGAM1,PGFIT(1,1),4) !Energie momentum gam1
+      CALL UCOPY(PGAM2,PGFIT(1,2),4) !                 gam2
+d89 2
+a90 2
+      FACT =  1. + DEGAM(JF) /PGFIT(4,JF)
+      IF (FACT.LE.0.) THEN
+d93 4
+a96 4
+         ENDIF
+      DO 70 JH = 1,4
+      PGFIT(JH,JF) = FACT * PGFIT(JH,JF)
+  70  CONTINUE
+d100 1
+a100 1
+      P0FIT(JH) = PGFIT(JH,1) + PGFIT(JH,2)
+d103 2
+a104 2
+      XMFIT = P0FIT(4)*P0FIT(4) - P0FIT(1)*P0FIT(1) -
+     &        P0FIT(2)*P0FIT(2) - P0FIT(3)*P0FIT(3)
+d130 4
+@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

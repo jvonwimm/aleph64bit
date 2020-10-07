@@ -1,0 +1,915 @@
+head	1.3;
+access;
+symbols
+	alpha126_22:1.3
+	alpha126_21:1.3
+	alpha126_20:1.3
+	alpha126_19:1.3
+	alpha126_18:1.3
+	alpha126_17:1.3
+	alpha126_16:1.3
+	alpha126_15:1.3
+	alpha126_14:1.3
+	alpha126_13:1.3
+	alpha126_12:1.3
+	alpha126_11:1.3
+	alpha126_10:1.3
+	alpha126_09:1.3
+	alpha126_08:1.3
+	alpha126_07:1.3
+	alpha126_06:1.3
+	alpha126_05:1.3
+	alpha126_04:1.3
+	alpha126_03:1.3
+	alpha126_02:1.3
+	alpha126_1:1.3
+	alpha125_17:1.3
+	alpha125_16:1.3
+	alpha125_15:1.3
+	alpha125_14:1.3
+	alpha125_13:1.3
+	alpha125_12:1.3
+	alpha125_11:1.3
+	alpha125_10:1.3
+	alpha125_09:1.3
+	alpha125_08:1.3
+	alpha125_07:1.3
+	alpha125_06:1.3
+	alpha125_05:1.3
+	alpha125_04:1.3
+	alpha125_03:1.3
+	alpha125_02:1.3
+	alpha125_01:1.3
+	alpha124_19:1.3
+	alpha125:1.3
+	alpha124_18:1.3
+	alpha124_17:1.3
+	alpha124_16:1.3
+	alpha124_15:1.3
+	alpha124_14:1.3
+	alpha124_13:1.3
+	alpha124_12:1.3
+	alpha124_11:1.3
+	alpha124_10:1.3
+	alpha124_09:1.3
+	alpha124_08:1.3
+	alpha124_07:1.3
+	alpha124_7:1.3
+	alpha124_06:1.3
+	alpha124_05:1.3
+	alpha124_04:1.3
+	alpha124_03:1.3
+	alpha124_02:1.3
+	alpha124_01:1.3
+	alpha124:1.3
+	alpha123_12:1.3
+	alpha123_11:1.3
+	alpha123_10:1.3
+	alpha123_9:1.3
+	alpha123_8:1.3
+	alpha123_7:1.3
+	alpha123_6:1.3
+	alpha123_5:1.3
+	alpha123_4:1.3
+	alpha123_3:1.3
+	alpha123_2:1.3
+	alpha123:1.3
+	alpha122_48:1.3
+	alpha122_47:1.3
+	alpha122_46:1.3
+	alpha122_45:1.3
+	alpha122_44:1.3
+	alpha122_43:1.3
+	alpha122_42:1.3
+	alpha122_41:1.3
+	alpha122_40:1.3
+	alpha122_39:1.3
+	alpha122_38:1.3
+	alpha122_37:1.3
+	alpha122_36:1.3
+	alpha122_35:1.3
+	alpha122_34:1.3
+	alpha122_33:1.3
+	alpha122_32:1.3
+	alpha122_31:1.3
+	alpha122_30:1.3
+	alpha122_29:1.3
+	alpha122_28:1.3
+	alpha122_27:1.3
+	alpha122_26:1.3
+	alpha122_25:1.3
+	alpha122_24:1.3
+	alpha122_23:1.3
+	alpha122_22:1.3
+	alpha122_21:1.3
+	alpha122_20:1.3
+	alpha122_19:1.3
+	alpha122_18:1.3
+	alpha122_17:1.3
+	alpha122_16:1.3
+	alpha122_15:1.3
+	alpha122_14:1.3
+	alpha122_13:1.3
+	alpha122_12:1.2
+	alpha122_11:1.2
+	alpha122_10:1.2
+	alpha122_9:1.2
+	alpha122_8:1.1.1.1
+	alpha122_6:1.1.1.1
+	alpha122_5:1.1.1.1
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	96.10.23.14.18.00;	author boucrot;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.08.12.15.15.28;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.03.14.12.42.30;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.42.31;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE MDSTRD(LUMOK,HVOK,RUNQUA,IER)
+C-------------------------------------------------------------------
+C! Transform micro_DSTs from ENFLW into sth usable in ALPHA
+C
+C  Patrick Janot -- 23 August 1990
+C-------------------------------------------------------------------
+#ifndef DOC
+      SAVE INIT,IERR,IEFLW,NEFLW,CUTSI,EPSIL,NRUSI,VERNFW
+      INTEGER IRFSI(5),IRLSI(5)
+      DATA IRFSI / 14647 , 16600 , 3*0 /
+      DATA IRLSI / 14831 , 20000 , 3*0 /
+      DATA NRUSI / 2 /
+      DATA INIT / 0 / , IERR / 0 / , CUTSI / 0.058 / , EPSIL / 1.E-08 /
+      CHARACTER*8 prognam
+      CHARACTER*4 CHAINT
+C
+#include "parcut.h"
+#include "parabank.h"
+C
+      LOGICAL first, lumok, hvok
+      LOGICAL xfilja, xfilep
+      CHARACTER*8 jnam
+      INTEGER runqua
+      DATA first/.TRUE./
+      DIMENSION knbtot(7)
+      DIMENSION ihyp(4), hyp(4)
+      COMMON / qvx / vtx(3),evtx(3)
+C
+#include "qcde.h"
+      DIMENSION QT(KCQVEC,1), KT(KCQVEC,1), QV(KCQVRT,1), KV(KCQVEC,1)
+#include "qhac.h"
+#include "qmacro.h"
+C-------------------------------------------------------------------
+      j1(j) = koqvec + isave * kcqvec + j
+      jr(i) = koqvec + itk * kcqvec + i
+      jqdet(i,n) = koqdet + (kffrd+i-1) * kcqdet + n
+C
+      IF ( first ) THEN
+C       ipart = mdard(iw, kucons, 'PART', 0)
+        CALL bkfmt('FWIN','6I,9F')
+        CALL bkfmt('FWEV','14I,4F')
+        CALL bkfmt('FWPA','2I,(F)')
+        CALL bkfmt('FWID','2I,(I)')
+        CALL bkfmt('FWCH','2I,(I)')
+        CALL bkfmt('FWD0','2I,(F)')
+        CALL bkfmt('FWDX','2I,(2I)')
+        CALL bkfmt('FWVX','2I,6F,I')
+        CALL bkfmt('FWFR','2I,(5F,I)')
+        CALL bkfmt('FWF2','2I,(2F,I)')
+        CALL bkfmt('EJET','2I,(4F)')
+        CALL bkfmt('PTHR','2I,(F)')
+        CALL bkfmt('NBIP','2I,(2I)')
+        CALL bkfmt('EVEH','(I)')
+        CALL bkfmt('EFOL','2I,(5F,6I)')
+        CALL bkfmt('PDLT','2I,(2I,2F,2I)')
+        ieflw = KPCOMP ('EFLW')
+        neflw = KFPADR(ieflw)
+        xfilef = .FALSE.
+        xfilch = .FALSE.
+        xfilco = .FALSE.
+        xfilv0 = .FALSE.
+        xfilje = .FALSE.
+        xfilja = .FALSE.
+        xfilep = .FALSE.
+        IF ( NLINK('EFLJ',0) .GT. 0 ) xfilja = .TRUE.
+        IF ( NLINK('EFLW',0) .GT. 0 ) xfilja = .TRUE.
+        IF ( NLINK('LEPT',0) .GT. 0 ) xfilep = .TRUE.
+        first = .FALSE.
+      ENDIF
+C
+C Check on real data runs of 1992 with SICAL in the setup :
+C Check also the presence of NOSC cards to kill Sical clusters anyway
+C
+      IRSIB = 0
+      DO 5 IRU = 1,NRUSI
+         IF (KRUN.GE.IRFSI(IRU).AND.KRUN.LE.IRLSI(IRU)) IRSIB = IRU
+ 5    CONTINUE
+      IF ( NLINK('NOSC',0) .GT. 0 ) irsib = 999
+C
+C  Run record - Fill the appropriate common
+C
+      ier = 0
+      ifwin = 0
+      nafwin = NAMIND('FWIN')
+      IF ( nafwin .GT. 0 ) ifwin = IW(nafwin)
+      IF ( ifwin .GT. 0 ) THEN
+        vernfw = FLOAT(iw(ifwin +  3))/100.
+        ntrack = iw(ifwin +  4)
+        mtrack = iw(ifwin +  5)
+        n0     = iw(ifwin +  6)
+        d0     = rw(ifwin +  7)
+        z0     = rw(ifwin +  8)
+        echmin = rw(ifwin +  9)
+        echmax = rw(ifwin + 10)
+        sigec  = rw(ifwin + 11)
+        sighc  = rw(ifwin + 12)
+        epilca = rw(ifwin + 13)
+        epiend = rw(ifwin + 14)
+        epibar = rw(ifwin + 15)
+        CALL bdrop(iw,'FWIN')
+C       WRITE (IW(6),1000) vernfw
+C       WRITE (IW(6),1001) ntrack, mtrack, echmin, echmax,
+C    .                n0, d0, z0
+C       WRITE (IW(6),1002) sigec,sighc,epilca,epiend,epibar
+C       ier = 1
+C       GOTO 999
+      ENDIF
+C
+C  Event record - Fill the appropriate commons
+C
+      ifwev = 0
+      nafwev = NAMIND('FWEV')
+      IF ( nafwev .GT. 0 ) ifwev = IW(nafwev)
+C
+      ieveh = 0
+      naeveh = NAMIND('EVEH')
+      IF ( naeveh .GT. 0 ) ieveh = IW(naeveh)
+C
+      ifwpa = 0
+      nafwpa = NAMIND('FWPA')
+      IF ( nafwpa .GT. 0 ) ifwpa = IW(nafwpa)
+C
+      ifwid = 0
+      nafwid = NAMIND('FWID')
+      IF ( nafwid .GT. 0 ) ifwid = IW(nafwid)
+C
+      ifwch = 0
+      nafwch = NAMIND('FWCH')
+      IF ( nafwch .GT. 0 ) ifwch = IW(nafwch)
+C
+      ifwd0 = 0
+      nafwd0 = NAMIND('FWD0')
+      IF ( nafwd0 .GT. 0 ) ifwd0 = IW(nafwd0)
+C
+      ifwdx = 0
+      nafwdx = NAMIND('FWDX')
+      IF ( nafwdx .GT. 0 ) ifwdx = IW(nafwdx)
+C
+      ifwvx = 0
+      nafwvx = NAMIND('FWVX')
+      IF ( nafwvx .GT. 0 ) ifwvx = IW(nafwvx)
+C
+      ifwfr = 0
+      nafwfr = NAMIND('FWFR')
+      IF ( nafwfr .GT. 0 ) ifwfr = IW(nafwfr)
+C
+      ifwf2 = 0
+      nafwf2 = NAMIND('FWF2')
+      IF ( nafwf2 .GT. 0 ) ifwf2 = IW(nafwf2)
+C
+      IF ( ifwev .LE. 0 .OR. ifwpa .LE. 0 ) THEN
+        ier = 2
+        WRITE (IW(6),*) 'Missing bank(s) in micro-DST'
+        GOTO 999
+      ENDIF
+C
+      lumok = .FALSE.
+      hvok  = .FALSE.
+      IF ( iw(ifwev +  5) .EQ. 1 ) lumok = .TRUE.
+      IF ( iw(ifwev +  6) .EQ. 1 ) hvok  = .TRUE.
+      runqua = iw(ifwev +  7)
+      qelep  = rw(ifwev + 15)
+      hadtot = rw(ifwev + 16)
+      hadkil = rw(ifwev + 17)
+      nphco = iw(ifwev+4)/1000
+      npeco = iw(ifwev+4) - nphco*1000
+C
+C Create EFOL
+C
+      IF ( xfilja ) THEN
+        nefolp = IW(ifwev+ 8)
+     .         + IW(ifwev+ 9)
+     .         + IW(ifwev+10)
+     .         + IW(ifwev+11)
+     .         + IW(ifwev+12)
+     .         + IW(ifwev+13)
+        iefol = NBANK ('EFOL', 3, lmhlen+lefola*nefolp)
+        nefol = 0
+      ENDIF
+C
+C  Initialize pseudo-particles
+C
+C - 4-moment total
+      ltot = kvnew(dummy)
+      ltot = kvsavc(ltot, ' ', kreco)
+C - Lumi
+      lum = kvnew(dummy)
+      lum = kvsavc(lum, ' ', kreco)
+C - Photons
+      lmg = kvnew(dummy)
+      lmg = kvsavc(lmg, ' ', kreco)
+C - Hadrons neutres
+      lmh = kvnew(dummy)
+      lmh = kvsavc(lmh, ' ', kreco)
+C - Particules chargees
+      lch = kvnew(dummy)
+      lch = kvsavc(lch, ' ', kreco)
+C - V0s
+      lv0 = kvnew(dummy)
+      lv0 = kvsavc(lv0, ' ', kreco)
+C - ECAL killed
+      lkg = kvnew(dummy)
+      lkg = kvsavc(lkg, ' ', kreco)
+C - HCAL killed
+      lkh = kvnew(dummy)
+      lkh = kvsavc(lkh, ' ', kreco)
+C - Dummy
+      inew = kvnew(dummy)
+      inew = kvsavc(inew, ' ', kreco)
+C
+C  Fill ENFLW particles -- Fill EFOL
+C
+      CALL vzero(idtflg(1),200)
+      CALL vzero(enechq(1),5)
+      CALL vzero(kfrtot(1),7)
+      CALL vzero(klstot(1),7)
+      kfrefw = 0
+      klsefw = 0
+      enetot = 0.
+      enetra = 0.
+      enelon = 0.
+      nchn = 0
+      kfwpa = 0
+      gdmult = 0.
+      chatot = 0.
+      chapo  = 0.
+      chane  = 0.
+      isave = 0
+      ngmlt = 0
+      DO 1 ikpar = 1 , 7
+        knbtot(ikpar)  = iw(ifwev +  7 + ikpar)
+        DO 2 jpart = 1 , knbtot(ikpar)
+          kfwpa = kfwpa + 1
+          vec(1) = RTABL(ifwpa, kfwpa, 1)
+          vec(2) = RTABL(ifwpa, kfwpa, 2)
+          vec(3) = RTABL(ifwpa, kfwpa, 3)
+          vec(4) = ABS(RTABL(ifwpa, kfwpa, 4))
+          qqq = 0.
+          kefo = 0
+C
+C Special patch to kill SICAL clusters from 1992 real data only :
+C and for all data if NOSC card is present
+C
+          IF ( irsib .NE. 0 ) THEN
+            IF ( ikpar .EQ. 6 ) GOTO 2
+            IF ( ikpar .EQ. 5 .AND. vernfw .LE. 2.075 ) THEN
+              pz = vec(3)
+              pt = SQRT ( vec(1)**2 + vec(2)**2 )
+              angn = PIBY2
+              IF ( ABS(pz) .GT. epsil ) angn = ABS(pt/pz)
+              IF ( angn .GT. cutsi ) GOTO 3
+              IF ( irsib.GT.1 .OR. (irsib.EQ.1.AND.pz.LT.0.)) GOTO 2
+            ENDIF
+          ENDIF
+    3     CONTINUE
+C
+          IF ( ikpar .LE. 2 ) THEN
+            qqq = SIGN ( 1. , rtabl( ifwpa, kfwpa, 4 ) )
+            vec(4) = SQRT(vec(1)**2+vec(2)**2+vec(3)**2+.1395675**2)
+            IF     ( ikpar .EQ. 1 ) THEN
+              contenu = ABS(RTABL(ifwpa,kfwpa,4))
+              kefo = contenu/200
+              kjul = contenu - kefo*200
+              jtyp = 0
+            ELSEIF ( ikpar .EQ. 2 ) THEN
+              contenu = ABS(RTABL(ifwpa,kfwpa,4))
+              kefo = contenu/40000
+              kjul = (contenu - kefo*40000)/200
+              jtyp = 3
+              kam(jpart) = kfrefw + contenu
+     .                            - kefo*40000 - kjul*200 - 1
+            ENDIF
+          ELSEIF ( ikpar .EQ. 3 ) THEN
+            IF ( vernfw .LE. 2.085 ) THEN
+              mpart = knbtot(ikpar)-jpart+1
+            ELSE
+              mpart = jpart
+            ENDIF
+            contenu = ABS(RTABL(ifwpa,kfwpa,4))
+            kefo    = contenu/20000
+            kjul = 0
+            jtyp = 4
+            kag(mpart)    = (contenu-kefo*20000)/100
+            nphoch(mpart) = (contenu-kefo*20000
+     .                              -kag(mpart)*100)/10
+            nphocr(mpart) = (contenu-kefo*20000
+     .                              -kag(mpart)*100-nphoch(mpart)*10)
+            vec(4) = SQRT(vec(1)**2+vec(2)**2+vec(3)**2)
+          ELSEIF ( ikpar .LE. 6 ) THEN
+            contenu = ABS(RTABL(ifwpa,kfwpa,4))
+            xmoment = SQRT(vec(1)**2+vec(2)**2+vec(3)**2)
+            kefo = contenu
+            kjul = 0
+            IF ( ikpar .EQ. 4 ) jtyp = 5
+            IF ( ikpar .EQ. 5 ) jtyp = 7
+            IF ( ikpar .EQ. 6 ) jtyp = 8
+            IF ( vernfw .LE. 2.085 ) THEN
+              vec(4) = contenu
+            ELSE
+              vec(4) = (contenu-kefo)*100.
+            ENDIF
+            vec(4) = AMAX1(vec(4),xmoment)
+          ELSE
+          ENDIF
+          CALL qvset4(inew, vec)
+C
+          IF ( ikpar .LE. 6 ) THEN
+C  Save the particle with name ENFW
+            isave = kvsavc(inew,'ENFW', kreco)
+C  Set the electric charge
+            RW(j1(jqvech)) = qqq
+C  Set the original FRF2 index for charged particles
+            IF ( ikpar .LE. 2 ) IW(j1(jqvetn)) = kjul
+C  Set first and last index
+            IF ( kfrefw .EQ. 0 ) kfrefw = isave
+            klsefw        = isave
+            IW(j1(jqveqd)) = jqdet(isave-kfrefw+1,0)
+C  Compute the total measured energy-momentum
+            CALL qvaddn(ltot, isave)
+C  Set bit masks
+            CALL vzero(IW(j1(jqvebm)) , klockm )
+            CALL qsbitm(isave)
+C  Fill EFOL
+            IF ( xfilja ) THEN
+              nefol = nefol + 1
+              jefol = iefol + lmhlen + lefola*(nefol-1)
+              RW(jefol + jefopx) = qx(isave)
+              RW(jefol + jefopy) = qy(isave)
+              RW(jefol + jefopz) = qz(isave)
+              RW(jefol + jefoew) = qe(isave)
+              RW(jefol + jefowe) = 1.
+              IW(jefol + jefoty) = jtyp
+              IW(jefol + jefole) = 0
+              IW(jefol + jefolt) = kjul
+              IW(jefol + jefolh) = 0
+              IW(jefol + jefolc) = 0
+              IW(jefol + jefolj) = kefo
+            ENDIF
+          ELSE
+            isave = kvsavc(inew, 'KILL', kreco)
+            CALL vzero(IW(j1(jqvebm)) , klockm )
+            CALL qsbitm(isave)
+          ENDIF
+C
+          IF ( kfrtot(ikpar) .EQ. 0 ) kfrtot(ikpar) = isave
+          klstot(ikpar) = isave
+          CALL qvaddn(lps(ikpar),isave)
+          IF ( ikpar .GT. 1 ) GOTO 2
+          gdmult = gdmult + 1.
+          IF ( qqq .GT. 0. ) chapo = chapo + 1.
+          IF ( qqq .LT. 0. ) chane = chane + 1.
+          chatot = chatot + qqq
+    2   CONTINUE
+    1 CONTINUE
+C -- Save ALPHA indices
+      IF ( kfrtot(1) .EQ. 0 ) THEN
+        kfrtot(1) = kfrefw
+        klstot(1) = kfrtot(1) - 1
+      ENDIF
+      DO ik = 2 , 7
+        IF ( kfrtot(ik) .EQ. 0 ) THEN
+          kfrtot(ik) = klstot(ik-1) + 1
+          klstot(ik) = klstot(ik-1)
+        ENDIF
+      ENDDO
+      IF ( xfilja ) THEN
+        IW (iefol + lmhcol) = lefola
+        IW (iefol + lmhlen) = nefol
+      ENDIF
+C -- Store particle Id local flag
+      CALL vzero(idtflg(1), 200)
+      nch = 0
+      IF ( ifwid .GT. 0 ) nch = iw(ifwid+2)
+      DO ich = 1 , nch
+        itk = iw(ifwid + 3 + (ich-1)*2)
+        idtflg(itk) = iw(ifwid + 4 + (ich-1)*2)
+      ENDDO
+C -- Store official particle Id
+      CALL vzero(muflg(1), 200)
+      CALL vzero(muwrd(1), 200)
+      CALL vzero(ehcal(1), 200)
+      CALL vzero(leflg(1), 200)
+      CALL vzero(elrtr(1), 200)
+      CALL vzero(elrlg(1), 200)
+      nch = 0
+      IF ( ifwch .GT. 0 ) nch = iw(ifwch+2)
+      DO ich = 1 , nch
+        itk = iw(ifwch + 3 + (ich-1)*3)/5000
+        leflg(itk) = (iw(ifwch +3+(ich-1)*3)-5000*itk)/500
+        muflg(itk) = iw(ifwch + 3+(ich-1)*3)-5000*itk-500*leflg(itk)
+        ih = iw(ifwch + 4+(ich-1)*3)/50000
+        ehcal(itk) = FLOAT(ih)/20.
+        muwrd(itk) = iw(ifwch + 4+(ich-1)*3)-50000*ih
+        i1 = iw(ifwch + 5+(ich-1)*3)/4000
+        i2 = iw(ifwch + 5+(ich-1)*3)-4000*i1
+        elrlg(itk) = FLOAT(i1)/100.-10.
+        elrtr(itk) = FLOAT(i2)/100.-10.
+      ENDDO
+C
+      CALL vzero(dzero(1),200)
+      nch = 0
+      IF ( ifwd0 .GT. 0 ) nch = iw(ifwd0+2)
+      DO ich = 1 , nch
+        dzero(ich) = rw(ifwd0 + 3 + (ich-1)*1)
+        iword1     = iw(ifwdx + 3 + (ich-1)*2)
+        iword2     = iw(ifwdx + 4 + (ich-1)*2)
+        ihyp(1)    = IAND(iword1,32767)
+        ihyp(2)    = IAND(ISHFT(iword1,-16),32767)
+        ihyp(3)    = IAND(iword2,32767)
+        ihyp(4)    = IAND(ISHFT(iword2,-16),32767)
+        IF ( IAND(iword1,32768) .EQ. 0 ) ihyp(1) = -ihyp(1)
+        IF ( IAND(iword2,32768) .EQ. 0 ) ihyp(3) = -ihyp(3)
+        IF ( IAND(ISHFT(iword1,-16),32768) .EQ. 0 )
+     .                                   ihyp(2) = -ihyp(2)
+        IF ( IAND(ISHFT(iword2,-16),32768) .EQ. 0 )
+     .                                   ihyp(4) = -ihyp(4)
+        DO i = 1, 4
+          hyp(i) = ihyp(i)/1000.
+          dedxhy(i,ich) = hyp(i)
+        ENDDO
+      ENDDO
+C -- Print out!
+      IF ( idbg .GE. 5 ) CALL enfwlist(kreco)
+C -- Other indices
+      v0mult = klstot(2) - kfrtot(2) + 1
+      kfcht = kfrtot(1)
+      klcht = klstot(1)
+      kncht = knbtot(1)
+      kfist = kfrtot(3)
+      klist = klstot(6)
+      knist = knbtot(3) + knbtot(4) + knbtot(5) + knbtot(6)
+      kfcot = kfist
+      klcot = klist
+      kncot = knist
+      kfv0t = kfrtot(2)
+      klv0t = klstot(2)
+      knv0t = knbtot(2)
+      kfeft = kfrtot(1)
+      kleft = klstot(6)
+      kneft = kncht + knv0t + knist
+      kfret = kfeft
+      klret = kleft
+      knret = kneft
+      ene12  = rw(ifwev + 18)
+C
+C---Build bank FRFT (if the relevant information is here)
+C
+      IF ( ifwfr .LE. 0 ) GOTO 400
+C
+      NFRFT = LROWS(ifwfr)
+      NFWF2 = LROWS(ifwf2)
+      LEN = LMHLEN + LFRFTA * NFRFT
+      CALL AUBOS('FRFT',NR,LEN, KFRFT,IGARB)
+      IF ( igarb.EQ.2) THEN
+        WRITE (IW(6),*) 'Not enough space to load FRFT bank ',
+     &       krun,kevt
+        GOTO 999
+      ENDIF
+      IW(KFRFT+LMHCOL) = LFRFTA
+      IW(KFRFT+LMHROW) = NFRFT
+C
+C++   Get the magnetic field - use ALEPHLIB routine.
+C++   The -ve sign corresponds to the definition of 1/R.
+C++   To obtain momenta, this is multiplied by speed of light.
+C
+      BFACT = - ALFIEL(DUMMY) * CLGHT / 100000.
+      IF(BFACT.EQ.0.) BFACT = - 15. * CLGHT / 100000.
+C
+C++   Fill FRFT bank.
+C
+      DO I=1,NFRFT
+C
+        itk = i + kfrtot(1) - 1
+        P = qp(itk)
+        THETA = acos(qct(itk))
+        PHI = qph(itk)
+        TANL = TAN( pi/2.-THETA )
+C
+        DO j=1,nfwf2
+          IF ( IW(ifwf2+(j-1)*3+5) .EQ. i ) THEN
+            tanl  = RW(ifwf2+(j-1)*3+3)
+            phi   = RW(ifwf2+(j-1)*3+4)
+            theta = pi/2. - ATAN(tanl)
+          ENDIF
+C
+        ENDDO
+C
+        secl  = 1. / SIN(theta)
+        rho   = bfact * secl / (qch(itk) * p)
+C
+        RW(KROW(KFRFT,I)+JFRFIR) = RHO
+        RW(KROW(KFRFT,I)+JFRFTL) = TANL
+        RW(KROW(KFRFT,I)+JFRFP0) = PHI
+        RW(KROW(KFRFT,I)+JFRFD0) = RTABL(ifwfr,I,1)
+        RW(KROW(KFRFT,I)+JFRFZ0) = RTABL(ifwfr,I,2)
+        RW(KROW(KFRFT,I)+JFRFEM+kmatix(4,4)) = RTABL(ifwfr,I,3)
+        RW(KROW(KFRFT,I)+JFRFEM+kmatix(4,5)) = RTABL(ifwfr,I,4)
+        RW(KROW(KFRFT,I)+JFRFEM+kmatix(5,4)) = RTABL(ifwfr,I,4)
+        RW(KROW(KFRFT,I)+JFRFEM+kmatix(5,5)) = RTABL(ifwfr,I,5)
+C
+C Dummy entries.
+C
+        RW(KROW(KFRFT,I)+JFRFC2) = 0.
+
+C
+C---store FRFT offset in QDET
+C
+        IW(kjqdet(itk)+jqdeaf) = kfrft+lmhlen+(i-1)*lfrfta
+C
+      ENDDO
+C
+C++   Create FRTL bank.
+C
+      NFRTL = LROWS(KFRFT)
+      LEN = LMHLEN + LFRTLA * NFRTL
+      CALL AUBOS('FRTL',0,LEN, KFRTL,IGARB)
+      IF ( igarb.EQ.2) THEN
+        WRITE (IW(6),*) 'Not enough space to load FRTL bank ',
+     &       krun,kevt
+        GOTO 999
+      ENDIF
+      IW(KFRTL+LMHCOL) = LFRTLA
+      IW(KFRTL+LMHROW) = NFRTL
+C
+C++   Fill FRTL bank if good QVSRCH from bit pattern in FWFR.
+C
+      DO I=1,NFRTL
+        ipatt =ITABL(ifwfr,I,6)
+        igood = ipatt/10000
+        ihtpc = (ipatt - igood*10000)/100
+        ihitc = (ipatt - igood*10000 - ihtpc*100)/10
+        ihvdt = (ipatt - igood*10000 - ihtpc*100 - ihitc*10)
+        IW(KROW(KFRTL,I)+JFRTNT) = ihtpc
+        IW(KROW(KFRTL,I)+JFRTNI) = ihitc
+        IW(KROW(KFRTL,I)+JFRTNV) = ihvdt
+C
+C--Dummy bad chi**2 if igood=0
+C
+        IF ( igood .EQ. 0 ) RW(KROW(KFRFT,I)+JFRFC2) = 1E6
+C
+C---store FRTL offset in QDET
+C
+        itk = i + kfrtot(1) - 1
+        IW(kjqdet(itk)+jqdeal) = kfrtl+lmhlen+(i-1)*lfrtla
+C
+      ENDDO
+C
+C---QVSRCH vertex
+C
+      IF ( ifwvx .GT. 0 ) THEN
+        vtx (1) = RTABL(ifwvx,1,1)
+        vtx (2) = RTABL(ifwvx,1,2)
+        vtx (3) = RTABL(ifwvx,1,3)
+        evtx(1) = RTABL(ifwvx,1,4)
+        evtx(2) = RTABL(ifwvx,1,5)
+        evtx(3) = RTABL(ifwvx,1,6)
+      ENDIF
+C
+ 400  CONTINUE
+C
+C Build section 'EF'
+C
+      IF ( xfilja ) THEN
+        kneft = nefol
+        kfeft = kffrt
+        kleft = kfeft + kneft - 1
+C
+        IF ( kleft .GE. klfrt )  CALL qsbank ('QVEC', kleft+200)
+        IF ( kffrd+kneft-1 .GE. IW(koqdet) )
+     &     CALL qsbank ('QDET', kffrd+kneft-1 + 100)
+C
+        itk = kfeft - 1
+        DO i = 1, kneft
+          itk  = itk + 1
+          itka = kfrefw + i - 1
+          IF ( itka .LE. klstot(1) ) THEN
+            jtyp = 0
+            IF ( idtflg(i) .EQ. 1 ) jtyp = 1
+            IF ( idtflg(i) .EQ. 3 ) jtyp = 2
+            jefol = iefol + lmhlen + lefola*(i-1)
+            IW(jefol + jefoty) = jtyp
+          ENDIF
+          CALL qvcopy(itk,itka)
+C---store EFOL offset in QDET
+          IW(kjqdet(itka)+jqdeef) = iefol+lmhlen+(i-1)*lefola
+          IW(kjqdet(itka)+jqdepd) = kqzer
+C---store EFOL objects as 'EFLW'
+          RW(jr(jqveem)) = -1.
+          RW(jr(jqvecf)) = -1.
+          IW(jr(jqvepa)) = ieflw
+          IW(jr(jqvenp)) = IW(koqfpa+neflw*kcqfpa+1)
+          IW(koqfpa+neflw*kcqfpa+1) = itk
+        ENDDO
+C---Update klocus pointers.
+        DO 20 n = kseft+1,ksmct
+          klocus(1,n) = klocus(2,kseft) + 1
+          klocus(2,n) = klocus(2,kseft)
+   20   CONTINUE
+        kffrt = klocus(2,kseft) + 1
+C
+C
+C Build section 'EJ'
+C
+        CALL qfjets
+C
+C The LEPTAG leptons.
+C
+        IF ( .NOT.xfilep ) GOTO 999
+        jpdlt = IW(napdlt)
+        IF (jpdlt .LE. 0) GOTO 999
+        IF (LROWS(jpdlt) .LE. 0) THEN
+          CALL bdrop(IW,'PLJT')
+          CALL bdrop(IW,'PDLT')
+          GOTO 999
+        ENDIF
+C---Loop on all charged tracks , find the JULIA track number :
+        DO 500 itka = kfrtot(1), klstot(2)
+          DO 501 ipdlt = 1, LROWS(jpdlt)
+            kpdlt = KROW(jpdlt,ipdlt)
+            IF ( IW(kpdlt+jpdlfr) .NE. ktn(itka) ) GOTO 501
+            IW(kjqdet(itka)+jqdepd) = kpdlt
+            GOTO 500
+ 501      CONTINUE
+ 500    CONTINUE
+C---Now compute the jets
+        CALL qjoptr('EJ',' ')
+        jnam = 'ENJETS  '
+        ycut = 0.0043 * (91.2/qelep)**2
+        CALL qjmmcl(njets,jnam,kreco,ycut,qelep)
+        IF ( njets .LT. 2 ) GOTO 999
+C---Build PLJT
+        njet = 0
+        idjet = KPDIR(jnam,kreco)
+        lsjet = idjet
+  520   IF (idjet.NE.0) THEN
+          njet = njet+1
+          idjet = KFOLLO(idjet)
+          GOTO 520
+        ENDIF
+        nleng = lpljta*njet +lmhlen
+        kpljt = NDROP('PLJT',0)
+        CALL aubos('PLJT',0,nleng,kpljt,igarb)
+        IF ( igarb.EQ.2) THEN
+          WRITE (IW(6),*) 'Not enough space to load PLJT bank ',
+     &           krun,kevt
+          GOTO 999
+        ENDIF
+        IW(kpljt+lmhrow) = njet
+        IW(kpljt+lmhcol) = lpljta
+        idjet = lsjet
+        ijet = 0
+  525   IF (idjet.NE.0) THEN
+          ijet = ijet+1
+          jpljt = KROW(kpljt,ijet)
+          RW(jpljt+jpljpx) = qx(idjet)
+          RW(jpljt+jpljpy) = qy(idjet)
+          RW(jpljt+jpljpz) = qz(idjet)
+          RW(jpljt+jpljpe) = qe(idjet)
+          IW(jpljt+jpljno) = 0
+          idjet = KFOLLO(idjet)
+          GOTO 525
+        ENDIF
+C---Fill user flag 12 of each energy flow object with the jet that
+C---the object belongs to. Any object not matched is flagged zero.
+        DO 570 itk = kfeft,kleft
+          idjet = KPDIR(jnam,kreco)
+  580     IF (idjet.NE.0) THEN
+            IF (XSAME(itk,idjet)) THEN
+              jpljt = KROW(kpljt,1-idjet+lsjet)
+              IW(jpljt+jpljno) = IW(jpljt+jpljno)+1
+              CALL qstfli(itk,12,idjet)
+              GOTO 570
+            ENDIF
+            idjet = KFOLLO(idjet)
+            GOTO 580
+          ENDIF
+  570   CONTINUE
+C---Build section LJET
+        CALL qfljet
+C
+      ENDIF
+C
+  999 RETURN
+C----------------------------------------------------------------
+ 1000 FORMAT(//1X,'+---------------------------------------------+'/
+     .       1X,'|     Welcome to the micro-DSTs from the      |'/
+     .       1X,'|            Energy flow package              |'/
+     .       1X,'|                                             |'/
+     .       1X,'|                   ENFLW                     |'/
+     .       1X,'|                                             |'/
+     .       1X,'|                Version ',F4.2,'                 |'/
+     .       1X,'|                                             |'/
+     .       1X,'|  P. Janot      LAL-ORSAY                    |'/
+     .       1X,'+---------------------------------------------+'//)
+ 1001 FORMAT(/' ENFLW dealt with events such that : '/,
+     .       '     * Number of charged tracks : '/
+     .       '          Minimum : ',I6/
+     .       '          Maximum : ',I6/
+     .       '     * Total charged energy : '/
+     .       '          Minimum : ',F8.1,' GeV'/
+     .       '          Maximum : ',F8.1,' GeV'/
+     .       '     * Good track definition : '/
+     .       '          TPC coords : >= ',I6/
+     .       '          |d0|       : <= ',F8.2,' cm'/
+     .       '          |z0|       : <= ',F8.2,' cm'//)
+ 1002 FORMAT('     * XI values to determine',
+     .       ' the neutral hadronic energy : '/
+     .       '          In ECAL    : ',F8.2,' GeV**(1/2)'/
+     .       '          In HCAL    : ',F8.2,' GeV**(1/2)'/
+     .       '     * e/pi ratios :'/
+     .       '          In LCAL    : ',F8.2/
+     .       '          In Endcaps : ',F8.2,' (scaling factor)'/
+     .       '          In Barrel  : ',F8.2,' (scaling factor)'//)
+      END
+#endif 
+@
+
+
+1.2
+log
+@release alpha122_9 with mods in enfl and qfn
+@
+text
+@d7 1
+d715 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a6 1
+#ifndef DOC
+d15 1
+d18 1
+d26 2
+d46 3
+a48 1
+        CALL bkfmt('FWKI','2I,(4F,I)')
+d138 11
+a148 3
+      ifwki = 0
+      nafwki = NAMIND('FWKI')
+      IF ( nafwki .GT. 0 ) ifwki = IW(nafwki)
+d445 115
+a713 1
+#endif
+@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

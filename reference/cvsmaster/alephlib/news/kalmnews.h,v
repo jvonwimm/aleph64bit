@@ -1,0 +1,263 @@
+head	1.10;
+access;
+symbols
+	aleph316_2:1.10
+	aleph316_1:1.10
+	aleph316:1.10
+	aleph315_7:1.9
+	aleph315_6:1.9
+	aleph315_5:1.9
+	aleph315_4:1.9
+	aleph315_3:1.9
+	aleph315_2:1.9
+	aleph315_1:1.9
+	aleph315:1.9
+	aleph314_2:1.9
+	aleph314_1:1.9
+	aleph314:1.9
+	aleph313_1:1.9
+	aleph313:1.8
+	aleph312_1:1.7
+	aleph312:1.7
+	aleph311_1:1.7
+	aleph311:1.7
+	aleph310_3:1.7
+	aleph310_2:1.7
+	aleph310_1:1.7
+	aleph310:1.7
+	aleph309_1:1.7
+	aleph309:1.7
+	aleph308_3:1.7
+	aleph308_2:1.7
+	aleph308_1:1.7
+	aleph308:1.7
+	aleph307_6:1.7
+	aleph307_5:1.7
+	aleph307_4:1.7
+	aleph307_2:1.7
+	aleph307_1:1.7
+	aleph307:1.7
+	aleph306:1.7
+	aleph305_4:1.6
+	aleph305_3:1.6
+	aleph305_2:1.6
+	aleph305_1:1.5
+	aleph305:1.4
+	aleph304_5:1.4
+	aleph304_4:1.4
+	aleph304_3:1.4
+	aleph304_2:1.4
+	aleph304_1:1.4
+	aleph304:1.4
+	aleph303_3:1.4
+	aleph303_2:1.4
+	aleph303_1_mc1:1.4
+	aleph303_1:1.4
+	aleph303:1.3
+	aleph302_9:1.2
+	aleph302_8:1.1
+	aleph302_7:1.1
+	aleph302_6:1.1
+	aleph302_5:1.1
+	aleph302_4:1.1
+	aleph302_3:1.1
+	aleph302_2:1.1
+	aleph302_1:1.1
+	aleph302:1.3;
+locks; strict;
+comment	@ * @;
+
+
+1.10
+date	2000.12.04.09.25.11;	author cattanem;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	99.11.15.17.01.26;	author cattanem;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	99.10.26.09.32.35;	author cattanem;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	97.11.05.17.08.43;	author cattanem;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	97.10.01.06.31.45;	author cattanem;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	97.09.15.07.58.50;	author cattanem;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	97.05.28.07.36.41;	author flr;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.05.05.09.50.07;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.04.25.06.23.21;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.03.06.11.59.30;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.10
+log
+@alephlib 316 second test
+@
+text
+@ ! ALEPHLIB 31.6
+    UBANGL : Bound angle by taking MOD, instead of DO loop!      (M.Cattaneo)
+    UFSTAT : Protect against crazy values of ALP                 (M.Cattaneo)
+
+ ! ALWPHLIB 31.3 correction file no.1
+    UFTKAL: Protect against overflow in REAL*8 to REAL*4 conversion, 
+            fix line longer than 72 characters                  (M.Cattaneo)
+
+ ! ALEPHLIB 31.3
+    UF2CRD,UF2TRK,UFDISC,UFJACO,UFLOSS,UFQPRC,UFTKAL,UFVDMS,UTPROC
+     Double precision fixes for Linux                           (D.Smith)
+
+ ! ALEPHLIB 30.6
+    UFG2GT,UFTKAL : fix variable type inconsistencies in function calls, 
+                    for Linux                            (A.Waananen)
+    UFTKAL : Disable removal of outliers if track has 4 or less remaining
+             3-D coordinates. Fail if numerical problem would reduce track
+             to exactly 3 hits.                               (D.Casper)
+      
+ ! ALEPHLIB 30.5 correction file 2
+    UFECAL : Remove CALL from function references, for Linux. (A.Waananen)
+
+  ! ALEPHLIB 30.5 correction file 1
+    UFGAIN - Protect against zero determinant
+    UFTKAL - Fit the track (using a zero gain matrix for this point) 
+             even if something went wrong in the determinant       (D.Casper)
+
+  ! ALEPHLIB 30.3 correction file 1
+    UFTKAL - protect against incorrect angular subtraction during smoothing;
+             add support for tracing the fit of a track by calling UFTRAC(.TRUE.)
+             immediately before fitting.                           (D.Casper)
+
+  ! ALEPHLIB 30.3
+    UFDISC - Set the energy loss to zero if it is more than 5% of
+             the track's starting energy                           (D.Casper)
+    UFLOSS - Set the energy loss to zero if it is more than 5% of
+             the track's starting energy                           (D.Casper)
+    UFVDMS - Protect against very high incidence angle tracks      (D.Casper)
+
+  ! ALEPHLIB 30.2 correction file 9
+    UFVDMS - fix overwrite of flag enabling energy loss in Kalman filter
+                                                                   (D.Casper)
+  ! ALEPHLIB 30.2
+    introduction of the new Kalman filter (D.Casper)
+    new routines:
+    UBANGL  UF2SCA  UFBEBL  UFCOVA  UFGAIN  UFLOSS  UFSCOV  UFSWMS  
+    UFTRAN  ULOAD   UF2ARC  UF2TRK  UFBERR  UFDISC  UFGETT  UFQPRC  
+    UFSTAT  UFSWMX  UFTTRA  UPCONS  UF2CRD  UF2USE  UFCHI2  UFECAL  
+    UFJACO  UFREIN  UFSWMC  UFTKAL  UFVDMS  UTPROC
+@
+
+
+1.9
+log
+@Fixes to UFTKAL
+@
+text
+@d1 4
+@
+
+
+1.8
+log
+@for Alephlib 313
+@
+text
+@d1 4
+@
+
+
+1.7
+log
+@Alephlib 306
+@
+text
+@d1 4
+@
+
+
+1.6
+log
+@modifs for Linux
+@
+text
+@d1 7
+@
+
+
+1.5
+log
+@modifs to /kalm
+@
+text
+@d1 3
+@
+
+
+1.4
+log
+@aleph303_1 corr in UFTKAL and VDTTRA
+@
+text
+@d1 5
+@
+
+
+1.3
+log
+@Kalman filter protections
+@
+text
+@d1 5
+@
+
+
+1.2
+log
+@Bug fixes for Alephlib 302.9
+@
+text
+@d1 7
+@
+
+
+1.1
+log
+@1st test version aleph302
+@
+text
+@d1 3
+a10 1
+      
+@

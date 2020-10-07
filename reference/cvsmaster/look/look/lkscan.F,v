@@ -1,0 +1,173 @@
+head	1.3;
+access;
+symbols
+	look25:1.3
+	look24:1.2
+	look23:1.2
+	look22:1.2
+	look21:1.2
+	look20:1.2
+	v15:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	98.11.06.13.39.26;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.04.18.09.07.07;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.09.15.50.29;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.09.15.50.30;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@look25 - continue scanning after bos error 5
+@
+text
+@      SUBROUTINE LKSCAN
+C ----------------------------------------------------
+C! scan a file
+C ----------------------------------------------------
+#ifndef DOC
+#include "lkfil.h"
+#include "lkevt.h"
+#include "bcs.h"
+#include "lkunpk.h"
+      SAVE
+      DATA NRUNR /0/
+C -------------------------------------------------
+      IF (NRUNR.EQ.0) NRUNR = NAMIND ('RUNR')
+      ICURR=-1
+      NEVT = 0
+      NUNC = 0
+      IER=0
+      IF (.NOT.SEQFIL) THEN
+        WRITE(LOUT,*) '[SEQUENTIAL FILE NOT OPENED]'
+        RETURN
+      ENDIF
+      CALL ABMODE ('BATC')
+C
+      IF (LINSEL.EQ.0) THEN
+         CALL BRWND(LINDAT)
+      ELSE
+C       rewind EDIR, drop current $PTS bank, skip FILM card
+        REWIND LINSEL
+        CALL BDROP (IW,'$PTS')
+    1   CALL BTERD (IW,LINSEL,'R',*1,*20)
+      ENDIF
+   20 CALL BDROP(IW,'C')
+      CALL BLIST(IW,'C=','0')
+      CALL ABSMAX (999999,999999)
+      CALL BDROP (IW,'SEVTSRUNNEVT')
+C
+   50 CALL BDROP(IW,'E')
+      CALL BDROP(IW,'R')
+      CALL BLIST(IW,'E=','0')
+      CALL BLIST(IW,'R=','0')
+      CALL BGARB(IW)
+      IER = 0
+      IF (LINSEL.EQ.0) THEN
+        CALL ABRREC ('E','NODE',IRET)
+        IRUNR=IW(NRUNR)
+        IF(IRUNR.NE.0) IRUN = IW(IRUNR+2)
+      ELSE
+         CALL AREDIR (IEVT,IRUN,IPTR,IRET)
+      ENDIF
+      IF(IRET.EQ.2) THEN
+        IF(IRUN.NE.ICURR)  THEN
+          IF (ICURR.NE.-1) THEN
+             WRITE(LOUT,*) ' End of run ',ICURR,' with ',NEVT,
+     +      ' event records and ',NUNC, ' unknown records'
+          ENDIF
+          WRITE(LOUT,*) ' Begin of run ',IRUN
+          ICURR = IRUN
+          NEVT = 0
+          NUNC = 0
+        ENDIF
+      ELSEIF(IRET.EQ.1) THEN
+        NEVT = NEVT + 1
+      ELSE IF (IRET.EQ.3) THEN
+        NUNC = NUNC + 1
+      ENDIF
+      CALL BLIST(IW,'R=','0')
+      IF (IRET.LT.4 .OR. IRET.EQ.17) GOTO 50
+C
+      IF(NUNC.NE.0.OR.NEVT.NE.0) THEN
+         WRITE(LOUT,*) ' End of run ',ICURR,' with ',NEVT,
+     +   ' event records and ',NUNC, ' unknown records'
+      ENDIF
+      IF (LINSEL.EQ.0) THEN
+        CALL BRWND(LINDAT)
+      ELSE
+C       rewind EDIR, drop current $PTS bank, skip FILM card
+        REWIND LINSEL
+        CALL BDROP (IW,'$PTS')
+    2   CALL BTERD (IW,LINSEL,'R',*2,*30)
+      ENDIF
+   30 CALL BDROP(IW,'E')
+      CALL BDROP(IW,'R')
+      CALL BDROP(IW,'C')
+      CALL BDROP(IW,'T')
+      CALL BLIST(IW,'E=','0')
+      CALL BLIST(IW,'R=','0')
+      CALL BLIST(IW,'C=','0')
+      CALL BLIST(IW,'T=','0')
+C
+      CALL ABMODE ('INTE')
+      END
+#endif
+@
+
+
+1.2
+log
+@change VAX to DEC.AND..NOT.UNIX ==> version 20
+
+ Modified Files:
+ 	lkevt.h lkfil.h lklast.h lkunpk.h version.h
+ Removed Files:
+	lookend.h
+@
+text
+@d67 1
+a67 1
+      IF (IRET.LT.4) GOTO 50
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK lkscan
+@
+
+
+1.1.1.1
+log
+@import look 15
+@
+text
+@@

@@ -1,0 +1,62 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  aleph212:1.1.1.1 ALEPH212:1.1.1;
+locks    ; strict;
+comment  @ * @;
+
+
+1.1
+date     96.02.07.11.40.14;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.02.07.11.40.15;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@C
+      COMMON /TPGEOW/ TWSTEP(LTSTYP),TWIRE1(LTSTYP),NTWIRE(LTSTYP),
+     &                TWIRMN(LTWIRE,LTSTYP),TWIRMX(LTWIRE,LTSTYP),
+     &                TWIRLE(LTWIRE,LTSTYP),ITLWIF(LTSTYP),
+     &                ITLWIL(LTSTYP),NTREG1(4,LTSTYP),TFRATH
+C
+#if defined(DOC)
+C----------------------------------------------------------------------
+C
+C   Wire readout geometry for TPC
+C   =============================
+C
+C   TWSTEP(is)  = sense wire spacing in each sector type
+C   TWIRE1(is)  = first wire position along sector axis (measured from
+C                 the center of curvature of the padrow)
+C   NTWIRE(is)  = no of sense wires in each sector type
+C   TWIRMN(iw,is) = Minimum wire extent for each wire in sector.
+C                   Distance from symmetry axis to beginning of wire.
+C   TWIRMX(iw,is) = Maximum wire extent for each wire in sector.
+C                   Distance from symmetry axis to end of wire.
+C   TWIRLE(iw,is) = Wire length
+C
+C-------------------------------------------------------------------
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

@@ -1,0 +1,82 @@
+From BLOCH@alws.cern.ch Fri Feb 13 15:58:32 2004
+Date: Fri, 13 Feb 2004 15:56:45 +0100
+From: BLOCH@alws.cern.ch
+To: BLOCH@alws.cern.ch
+
+KCAR 0 / $TEXT                                                                  
+POFF                                                                            
+*     TIME LEFT FOR END RUN                                                     
+TIME    3                                                                       
+*     RUN #               RUN'S TITLE                                           
+RUN    101      '                                     '                         
+*     FIRST EVENT    LAST EVENT    TO BE GENERATED                              
+TRIG     1               100                                                    
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG                                 
+DEBU  6     /      1           2                                                
+* Output file                                                                   
+*FILO 'SCWEEK:CH001.EPIO | EPIO'                                                
+* STORE histos on file                                                          
+*HSTO  'SCWEEK:CHI001.HIST  '                                                   
+*       sigma-x    sigma-y  sigma-z of the original vertex (in cm)              
+SVRT     0.018     0.0010    1.00                                               
+*    GENE CARD                                                                  
+*       EB    M_CHI  M_CHIP  ITYP  ISGN  IFL1  IFL2  KEYRAD                     
+GENE   45.6    10.    50.     1     -1    -1     0     1                        
+*    M_Z0    GAM_Z0   S2THEW  IPRT                                              
+     91.18    2.48     .232    1                                                
+*  EB      Beam energy                                                          
+*  M_CHI   Chi mass  ( lightest neutralino )                                    
+*  M_CHIP  Chip mass ( less to lightest neutralino )                            
+*  ITYP    Channel   ( 1 chi chip , 2 chip chip )                               
+*  ISGN    Relative sign between 1 and 2 masses ( +/- 1 )                       
+*  IFLx    Final state flavours for chip decay                                  
+*        0 : all flavours ( accodingly to branching ratios )                    
+*       -1 : all, neutrinos excluded ( accordingly to branchig ratios )         
+*       -2 : all quark flavours ( accordingly to branching ratios )             
+*       -3 : all lepton flavours ( accordingly to branching ratios )            
+*    501 to 505 : Quarks u,d,s,c,b                                              
+*      7 to  12 : Leptons e,nue,mu,numu,tau,nutau                               
+*          ( IFL2 is dumny if ITYP= 1 )                                         
+*  KEYRAD  Initial state radiative corrections                                  
+*           0 : off                                                             
+*           1 : on                                                              
+* Electroweak parameters :                                                      
+*  M_Z0        Z0 mass  in GeV                                                  
+*  GAM_Z0      Z0 width in GeV                                                  
+*  S2THEW      sin**2(theta_w)                                                  
+* Print flag                                                                    
+*  IPRT     1  Print out PART table/0 no printout                               
+*-----------------------------------------------------------                    
+*  standard modification to Lund parameters                                     
+*  they are used by default anyway in program, just recall them here            
+*---------------------------------------------------------------                
+*   set top mass                                                                
+PMAS 106 / 100.                                                                 
+*   set Higgs mass                                                              
+PMAS 4 / 100.                                                                   
+*   set Z0 mass                                                                 
+PMAS 2 / 91.18                                                                  
+*  use Peterson's fragm. functions for c and b quarks                           
+MST 4 / 3                                                                       
+*   QCD fit from G. Rudolph  (27/09/90)                                         
+*   mod to lund fragm. functions params                                         
+PARE 21 / .310          ! Lambda QCD                                            
+PARE 22 / 1.50          ! M min.                                                
+PAR 12 / 0.358          ! Sigma Mt                                              
+PAR 31 / 0.5            ! a                                                     
+PAR 32 / 0.84           ! b                                                     
+*   Use Standard LUND values for  Epsilon_c                                     
+*   Measured one for Epsilon_b                                                  
+*   ( Peterson's fragm. functions params )                                      
+PAR 44 / -0.020         ! Epsilon_c                                             
+PAR 45 / -0.006         ! Epsilon_b                                             
+*  use non discrete masses for resonnances                                      
+MST 8 / 1                                                                       
+*  include Aleph standard values for sin2theta, mz, gamz                        
+PARE 5 / .232                                                                   
+PARE 6 /  91.18                                                                 
+PARE 7 / 2.48                                                                   
+*  set next q family out of LEP1 range                                          
+PMAS 107 / 150.                                                                 
+PMAS 108 / 200.                                                                 
+ENDQ                                                                            

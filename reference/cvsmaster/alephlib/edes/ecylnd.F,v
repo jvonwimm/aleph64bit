@@ -1,0 +1,188 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.2
+	aleph304_5:1.2
+	aleph304_4:1.2
+	aleph304_3:1.2
+	aleph304_2:1.2
+	aleph304_1:1.2
+	aleph304:1.2
+	aleph303_3:1.2
+	aleph303_2:1.2
+	aleph303_1_mc1:1.2
+	aleph303_1:1.2
+	aleph303:1.2
+	aleph302_9:1.2
+	aleph302_8:1.2
+	aleph302_7:1.2
+	aleph302_6:1.2
+	aleph302_5:1.2
+	aleph302_4:1.2
+	aleph302_3:1.2
+	aleph302_2:1.2
+	aleph302_1:1.2
+	aleph302:1.2
+	aleph216:1.2
+	aleph215_3:1.2
+	aleph215_2:1.2
+	aleph215:1.2
+	aleph214:1.2
+	aleph213:1.2
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.04.30.12.34.08;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.41.06;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.41.07;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@replace #include "implicit.h" by "IMPLICIT NONE"
+Modified Files:
+	aire.F airsct.F avolum.F ealgmk.F ealign.F ealtmk.F ecplst.F
+@
+text
+@         SUBROUTINE ECYLND(RCYL,ZCYL,POINT,VECT,IMPACT)
+C--------------------------------------------------------------
+CKEY ECALDES NEUTRAL IMPACT CYLINDER / USER
+C     H.Videau      Creation 10/12/88
+C! Impact of a neutral on a cylinder.
+C  This routine computes the impact of a sliding vector on a cylinder
+C  de revolution around oz with radius RCYL and half-height ZCYL
+C   Input :
+C           RCYL radius                           REAL
+C           ZCYL half_height                      REAL
+C           POINT origine of the sliding vector   REAL(3)
+C           VECT  vector                          REAL(3)
+C   Output:
+C           IMPACT point of impact                REAL(3)
+C   Calls: none
+C   Called by USER ,EPERCE
+C---------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+      SAVE
+C   Input
+         REAL RCYL,ZCYL,VECT(3),POINT(3)
+C  Output
+         REAL IMPACT(3)
+C Locales
+         REAL L(4),A,B,C,DISCR,LMIN
+         INTEGER I
+C Execution
+C Impact dans les bouchons ,in the end caps
+      IF(VECT(3).EQ.0.) THEN
+         L(1)=999.
+         L(2)=999.
+                        ELSE
+         L(1)=(ZCYL-POINT(3))/VECT(3)
+         L(2)=(-ZCYL-POINT(3))/VECT(3)
+                        END IF
+C   Impact dans le cylindre , in the cylinder
+         A=VECT(1)**2+VECT(2)**2
+        IF(A.EQ.0.) THEN
+         L(3)=999.
+         L(4)=999.
+                     ELSE
+         B=POINT(1)*VECT(1)+POINT(2)*VECT(2)
+         C= POINT(1)**2+POINT(2)**2-RCYL**2
+         DISCR=B**2-A*C
+         IF(DISCR.GT.0.) THEN
+         DISCR=SQRT(DISCR)
+         L(3)=(-B+DISCR)/A
+         L(4)=(-B-DISCR)/A
+                         END IF
+                    END IF
+C choix du plus letit l positif , get smaller positive l
+         LMIN=990.
+         DO 1 I=1,4
+         IF(L(I).LT.0.) GO TO 1
+         IF(L(I).LT.LMIN) LMIN=L(I)
+ 1       CONTINUE
+         IMPACT(1)=POINT(1)+LMIN*VECT(1)
+         IMPACT(2)=POINT(2)+LMIN*VECT(2)
+         IMPACT(3)=POINT(3)+LMIN*VECT(3)
+         END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d19 1
+a19 1
+#include "implicit.h"
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

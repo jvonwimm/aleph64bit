@@ -1,0 +1,1157 @@
+#!/usr/local/bin/perl 
+require "complete.pl"; 
+require "ctime.pl";
+#######################################################################
+#######################################################################
+#                          <alcopy> 
+#                          --------   
+# 06/03/96                                                  F. Blin
+#######################################################################
+#######################################################################
+# with arguments : alcopy [-help] or [menu number]
+# infos in function HELP
+#######################################################################
+# 11/06/96 replaced procedure cp_als -> Mail send to alsoft
+# 18/12/96 added in menu 1
+#          str_grep first input tape on $ALBOOK/bkmbytes.cerntaps
+# 24/01/97 changed "/aleph" by $ALEPH
+# 11/04/97 changed /aleph/book by $ALBOOK
+# 24/04/97 changed sfsub by qsub
+# 08/08/97 added "\" for job before $ALEPH 
+# 11/11/97 added redwood
+#          suppressed sub. check_INOUT
+# 12/01/98 - checked also for menu 3 if input tape already on 
+#           $ALBOOK/bkmbytes.cerntaps if OK -> menu = 1
+#          - added Y1 in MC_label_list
+#          - changed MAX_files 99 to 999
+# 15/01/98 searched last file for input tapes in $ALBOOK/bkmbytes.cerntaps
+#          - added array last_file_bkmbytes 
+#          - added local variable str_n_return in sub ask_files
+#          - added sub check_bkmbytes [called by sub ask_files]
+# 22/01/98 checked where send job [on shift50 ->Invalid argument flag: -h.]
+#          - used qsub -h $machine only if variable HOST ne STAGE_HOST
+# 27/01/98 - added menu 4 with 3 parameters [only alcopy_admin]
+#            eg: alcopy Y10000 1-120 y19999
+#                          |     |       |- output tape
+#                          |     |- input files
+#                          |- input tape
+#          - removed -b and -L, only -F for input
+#          - removed -b and -L for output if redwood
+# 19/06/98 - addapted new format files on $ALBOOK/bkmbytes.cerntaps
+#######################################################################
+
+$host = $ENV{'HOST'};
+$host =~ tr/a-z/A-Z/;
+$stage_host = $ENV{'STAGE_HOST'};
+$stage_host =~ tr/a-z/A-Z/;
+$GR = "XU";
+$ALEPH = $ENV{'ALEPH'};
+$ALBOOK = $ENV{'ALBOOK'};
+# Check the user, get userid (uuu) and group id (GR)
+$user_loginid = getlogin;
+if (!&get_uuu_gr($user_loginid)){
+  print("\n *** You are not authorized to use this program. ***\n");
+  exit(1);
+}
+$user_uuu = $uuu;	
+$user_uuu =~ tr/a-z/A-Z/; 
+$user_loginid =~ tr/a-z/A-Z/;
+@alcopy_admin = ('CAMP','JACOTF','ALPROD','ALSOFT','CLOSIER','ISAXU','BOUCROT');
+$machine = "afal03";
+
+# To trap Ctrl-c
+$SIG{'INT'}= 'IGNORE';
+
+#$albook_production = "/u3/xu/fblxu/dir_alcopy/albook_productions";
+$albook_production = "${ALEPH}/script/albook_productions";
+$albook_bkmbytes = "$ALBOOK/bkmbytes.cerntaps";
+#where ???
+
+@MC_label_list   = ('AL','AM','AU','Y1');
+$MAX_files = 999;
+
+$MERGE_SPLIT = "";
+$input_copytape = "";
+
+#@alinput = ();
+@input = ();
+@input_tapes = ();
+@input_files = ();
+$input_label_type = "";
+$input_device = "";
+$in_tapes_number = 0;
+$MAX_input_L = 10;
+
+@output = ();
+@output_tapes = ();
+@output_files = ();
+$output_label_type = "";
+$output_device = "";
+$out_tapes_number = 0; 
+$fid_default = "ALDATA";
+
+$several_tapes = 0;
+
+    @scan_tapes_in = ();
+    @scan_files_in = ();
+    $scan_tapes_number_in = 0;
+    @scan_tapes_out = ();
+    @scan_files_out = ();
+    $scan_tapes_number_out = 0;
+
+$debug = 0;
+$menu = 0;
+
+$n_parametre = @ARGV;
+
+if(&match_admin($user_loginid) && $n_parametre == 3){
+    foreach $i (1..$n_parametre){
+	$arg = shift(@ARGV);
+        $arg =~ tr/a-z/A-Z/;
+        $arg_in = $arg if ($i == 1);
+	$arg_files = $arg if ($i == 2);
+	$arg_out = $arg if ($i == 3);
+    }
+#    print "$arg_in $arg_files $arg_out \n";
+    $menu = 4;
+}
+else {
+    if($n_parametre > 0){
+	$arg = shift(@ARGV);
+	$arg =~ tr/a-z/A-Z/;
+	$debug = 1 if ($arg eq "-DEBUG");
+	&HELP if ($arg eq "-HELP");
+	$menu = 1 if($arg eq "ALCOPY" || $arg eq "1");
+	$menu = 2 if($arg eq "ALBOOK" || $arg eq "2");
+	$menu = $arg if ($arg eq "3");
+    }
+}
+  print "\n*** In order to quit press -> q as answer to any question ***\n" if ($menu < 4);
+#  print "\n*** In order to get help press -> h as answer to any question ***\n";
+if ($menu == 0) {
+  while(1){
+     print "\n 1. <ALCOPY> Copyfile + on request inform SCANBOOK (only Aleph epio)";
+     print "\n 2. <ALBOOK> scan data for SCANBOOK (only Monte Carlo)";
+     print "\n 3. <ALCOPY> + <ALBOOK>";
+     print "\n Please, choose one of the options above (<CR> = 1): ";
+     $answ = <>;
+     $answ =~ s/^\s+//;
+     $answ =~ s/\s+$//;
+     $answ =~ tr/a-z/A-Z/;
+     exit(1) if ($answ =~ /^q\b/i );
+     $menu = 1 if ($answ == 1 || $answ eq "ALCOPY" || $answ eq "");
+     $menu = 2 if ($answ == 2 || $answ eq "ALBOOK");
+     $menu = 3 if ($answ == 3);
+     last if ($menu >0 && $menu < 4);
+  }
+}
+
+  @last_file_bkmbytes = ();
+  &ask_tapes_number("in") if ($menu <4);
+  &write_input_output($arg_in,in) if ($menu == 4);
+
+  $booking_info = "" if ($menu == 1);
+
+  if (!&check_files_scan("in")){
+     print "\n WARNING bad files for input ${input_tapes[$i]}\n";
+     exit(1);
+  }
+
+  if ($menu == 1 || $menu == 3 || $menu == 4) {
+     &ask_tapes_number("out") if ($menu < 4);
+     &write_input_output($arg_out,out) if ($menu == 4);
+     $MERGE_SPLIT = "MERGE"; 
+     $MERGE_SPLIT = "SPLIT" if($in_tapes_number == 1 && $out_tapes_number > 1);
+      if (!&check_files_scan("out")){
+        print "\n WARNING bad files for output ${output_tapes[$i]}\n";
+        exit(1);
+     }
+#     exit if (!&check_INOUT);
+  }
+#  print "last_file_bkmbytes @last_file_bkmbytes \n";
+#  print "nbre_last_file_bkmbytes=$#last_file_bkmbytes last valeur=$last_file_bkmbytes[$#last_file_bkmbyte]\n";
+
+  $JOB_name = "alcopy_${input_tapes[1]}" if ($menu == 1 || $menu == 4);
+  $JOB_name = "albook_${input_tapes[1]}" if ($menu == 2);
+  $JOB_name = "albkcopy_${input_tapes[1]}" if ($menu == 3);
+
+  &create_JOB;
+
+  &create_copytape_file if ($menu == 1 || $menu == 3 || $menu == 4);
+#  if ($last_file_bkmbytes[0] == 0 && $menu == 1) {
+  if ($menu == 1) {
+     &create_scan_files if (&yes_or_no("\n Record Information in the Bookkeeping Database (y/n) ? "));
+  }
+
+  &alcopy_exit if ($menu == 1);
+  if ($menu == 4){
+     &create_scan_files;
+     &end_JOB;
+     system("cat $JOB_name");
+     if (&yes_or_no("\n OK ro run on ${machine}(y/n) ? ")){
+#       print "machine=$machine host=$host stage_host=$stage_host \n";
+       system("bsub -R aleph < $JOB_name") if ($host ne $stage_host); 
+       system("bsub < $JOB_name") if ($host eq $stage_host); 
+       $job_sub = "YES";
+     }
+     &alcopy_spy;
+     exit;
+  }
+
+######> menu 2 or 3
+  &init_prod;
+  &albook_MC;
+  &create_MC_scan_files;
+  &alcopy_exit;
+
+#####################################################################
+#####################################################################
+sub albook_MC{
+
+ local($i) = 0;
+ $prod_number = 0;
+ $prod_comment = "";
+ @MCSCAN_comments= ();
+
+ while(){  
+   &ask_prod;
+   &ask_comments;
+   print "\n Informations for the Bookkeeping Database";
+   print "\n Monte Carlo production code =  $prod_number -> $prod_comment";
+   print "\n\n label file      comments";
+   for($i=1 ; $i<=$#scan_files_in ; $i++){
+       print "\n $scan_tapes_in[$i] $scan_files_in[$i]   $MCSCAN_comments[$i]";
+   }
+   last if (&yes_or_no("\n OK (y/n) ? "));
+ }
+ return 1;
+}
+###################################################################
+sub alcopy_exit {  
+ 
+     &end_JOB;
+##     print "\n Enter the machine where to submit [CR = ${machine}]: ";  
+##     $answ = <>;
+##     $answ =~ s/^\s+//;
+##     $answ =~ s/\s+$//;
+##     $answ =~ tr/A_Z/a-z/;
+##     exit(1) if ($answ =~ /^q\b/i );
+##     $machine = $answ if ($answ ne "");
+     system("cat $JOB_name");
+     $job_sub = "NO"; 
+     if (&yes_or_no("\n OK ro run on ${machine}(y/n) ? ")){
+#       print "machine=$machine host=$host stage_host=$stage_host \n";
+       system("bsub -R aleph < $JOB_name") if ($host ne $stage_host); 
+       system("bsub < $JOB_name") if ($host eq $stage_host); 
+       print "To see copytape executing use the command :\n";
+       print "        copytape -Q ";
+       $job_sub = "YES";
+     }
+     print "\n your last job -> $JOB_name \n";
+     &alcopy_spy;
+     exit;
+}
+###################################################################
+sub alcopy_spy {  
+
+    local($str,$str_more) = "";
+    $str = `date '+%y/%m/%d %H:%M:%S'`;
+    open(SPY_FILE,">> $ALEPH/log/alcopy.spy");
+    $str_more = "option=booking" if ($booking_info eq "YES");
+    $str_more = "$str_more input=$scan_tapes_in[1] q=$input_files[1]" if ($MERGE_SPLIT eq "SPLIT" || $MERGE_SPLIT eq "");
+    $str_more = "$str_more output=$scan_tapes_out[1] q=$output_files[1]" if ($MERGE_SPLIT eq "MERGE");
+    print SPY_FILE "$host $user_loginid menu=$menu $MERGE_SPLIT $str_more sfsub=${job_sub} $str";
+    close(SPY_FILE);
+    return;
+}
+#####################################################################
+sub ask_comments{
+
+ local($i) = 0;
+ local($answer) = "";
+ local($dq) = '"';
+
+ for($i=1 ; $i<=$#scan_files_in ; $i++){
+     while(){
+       print" \n Comment for tape $scan_tapes_in[$i] file $scan_files_in[$i]: ";
+       print "\n [<RETURN>=EXIT] : " if ($i == 1);
+       print "\n [<RETURN>=${MCSCAN_comments[$i-1]}] : " if ($i > 1);
+       $answer =<>;
+       $answer =~ s/^\s+//;
+       $answer =~ s/\s+$//;
+       exit if ($answer =~ /^q\b/i );
+       exit if ($answer eq "" && $i == 1);
+       if ($answer eq "" && $i > 1) {
+           $MCSCAN_comments[$i] = ${MCSCAN_comments[$i-1]};
+           last;
+       }
+       if (length($answer) > 20){
+           $MCSCAN_comments[$i] = "$dq$answer$dq";
+           last;
+       }
+       print "\n Please more 20 characters...";
+     }
+ }      
+ return;
+}
+#####################################################################
+sub ask_fid_name{
+
+    $fid = "";
+    local($answer) = "";
+
+  while(1){
+    print "\n Specify fid for output tape [<RETURN>=$fid_default] : ";
+    $answer =<>;
+    $answer =~ s/^\s+//;
+    $answer =~ s/\s+$//;
+    exit if ($answer =~ /^q\b/i );
+    if ($answer eq ""){
+       $fid = $fid_default;
+       last;
+    }
+    $fid = $answer;
+  }
+    print "\n fid=$fid" if ($debug);
+  return 1;
+}
+#####################################################################
+sub ask_files{
+
+    local($str_return) = "";
+    local($str_n_return) = 1;
+    $files = 0;
+    $default_files = "1";
+    
+    if ($_[1] eq "in"){
+	&check_bkmbytes($_[0]);
+#        $str_n_return = "1-$last_file_bkmbytes[$#last_file_bkmbytes]" if ($last_file_bkmbytes[$#last_file_bkmbytes] > 0);
+    }
+  $str_return = "copied" if ($_[1] eq "in" && $menu != 2);
+  $str_return = "created" if ($_[1] eq "out");
+  $str_return = "booked" if ($_[1] eq "in" && $menu == 2);
+  if ($_[2] == 1){
+     print "\n 11 [to write starting from file 11]" if ($_[1] eq "out");
+     if ($_[1] eq "in"){
+        print "\n 1-5          Files 1 to 5 inclusive.";   
+        print "\n 1-2, 4       A series of non-consecutive ranges of files" ;
+        print "\n last file on $albook_bkmbytes = $last_file_bkmbytes[$#last_file_bkmbytes]." if ($last_file_bkmbytes[$#last_file_bkmbytes] > 0);
+     }
+  }
+  while(1){
+     print "\n Specify the file sequence on the tape $_[0]";
+     print "\n to be $str_return [<RETURN> ${str_n_return}] : ";
+     $files = <>;
+     $files =~ s/^\s+//;
+     $files =~ s/\s+$//;
+     exit if ($files =~ /^q\b/i );
+     $files =~ s/- /-/ if ($_[1] eq "in");
+     $files =~ s/ -/-/ if ($_[1] eq "in");
+     $files =~ s/ ,/,/ if ($_[1] eq "in");
+     $files =~ s/, /,/ if ($_[1] eq "in");
+     $files = $str_n_return if($files eq "");
+     print "\n files=$files" if ($debug);
+     last if ($files eq "n" && $_[1] eq "out");
+     last if ($files=~ /^(\d+)$/ && $files>0 && $files<1000);
+###     if ($_[1] eq "in"){
+        if ($files=~ /^[123456789]/ && $files=~ /[-,]/ && $files=~ /[1234567890]$/){
+###            last if (&match_files($files) && $_[1] eq "in");
+            last if (&match_files($files));
+        }
+###     }
+###            print "\n Type only the first file " if ($_[1] eq "out"); 
+            print "\n Sorry <$files> bad file number \n";
+    }
+     return 1;
+}
+#####################################################################
+sub ask_label_type{
+
+  local($answer) = "";
+
+  while(1){  
+     print "\n Please type label_type for $_[0] <RETURN>=$_[1] [al,sl,nl]: ";
+     $answer = <>;
+     $answer =~ s/^\s+//;
+     $answer =~ s/\s+$//;
+     $answer =~ tr/A-Z/a-z/;
+     exit if ($answer =~ /^q\b/i );
+     return 1 if ($answer eq "" || $answer eq $_[1]);
+     if ($answer eq "al" || $answer eq "sl" || $answer eq "nl"){
+        $label_type = $answer; 
+        return 1;
+     }
+  }
+}
+#####################################################################
+sub ask_prod{
+
+  local($answer,$prod) = "";
+
+  while(1){
+     $answer = &Complete("\n Please enter the ALPHA code of the MC production type Ctrl-d for the list: ", @production_list_all);
+     $answer =~ s/^\s+//;
+     $answer =~ s/\s+$//;
+     exit if ($answer =~ /^q\b/i);
+     next if ($answer eq "");
+     if ($answer =~ /^(\d+)$/){
+        next if ($answer < 0 || $answer > $last_prod_number);
+        $answer = sprintf("%3d",$answer);
+        $prod = &match_prod($answer,*production_list);
+        next if ($prod == -1);
+        $prod_number = substr($prod,0,3);
+        $prod_comment = substr($prod,(index($prod,":")+1));
+        $prod_number =~ s/^\s+//;
+        $prod_number =~ s/\s+$//;
+        $prod_comment =~ s/\s+$//;
+        last if(&yes_or_no("\n $prod_number -> $prod_comment OK (y/n) ? "));
+        $prod_number = 0;
+        $prod_comment = "";
+     }
+   }
+   return 1;
+}
+#######################################################################
+sub ask_tapes_number{
+
+  local($i) = 0; 
+  local($in_out,$answer,$str,$str_ask) = "";
+  $in_out = ${_[0]};
+  $in_out = "${in_out}put";
+  $in_out =~  tr/a-z/A-Z/;
+$str = "Type $in_out tape number [e.g. AU0066]" if ($_[0] eq "out" && $in_tapes_number > 1);
+  $str = "Type $in_out tape(s) number [e.g. AU0010 or AM0010-AM0015]" if ($str eq "");
+
+ while(1){
+    $str_ask = "$str <RETURN>=EXIT" if ($i == 0);
+    $str_ask = "$str <RETURN>=no more" if ($i > 0);
+    print"\n $str_ask : \n ";    
+    $answer = <>;
+    $answer =~ s/^\s+//;
+    $answer =~ s/\s+$//;
+    $answer =~ s/ -/-/;
+    $answer =~ s/- /-/;
+    exit if ($answer =~ /^q\b/i || ($answer eq "" && $i == 0));
+    return 1 if($answer eq "" && $i > 0);
+    $answer =~ tr/a-z/A-Z/;
+    &write_input_output($answer,$_[0]);
+    $i = $in_tapes_number if ($_[0] eq "in");
+    $i = $out_tapes_number if ($_[0] eq "out");
+    return 1 if ($in_tapes_number > 1 && $_[0] eq "out" && $i ==1);
+ }
+}
+##########################################################################
+# function not used!... vsn = vid ...
+##########################################################################
+sub ask_vsn_vid{
+
+    local($vsn) = "";
+    while(1){
+       print "\n Type VSN name <RETURN>=$_[0] : \n ";    
+       $vsn = <>;
+       $vsn =~ s/^\s+//;
+       $vsn =~ s/\s+$//;
+       exit if ($vsn =~ /^q\b/i );
+       return 1 if($vsn eq "");
+       last if (length($vsn) eq 6); 
+       print "\n Bad tape number"; 
+       return 0 if ($menu == 4);
+    }
+    $tape_vsn = $vsn;
+    $tape_vsn =~ tr/a-z/A-Z/;
+    return 1;
+}
+#######################################################################
+sub check_bkmbytes{
+ 
+    local($str_grep) = "";
+    local($i_file) = 0;
+
+    $str_grep = `grep -i $_[0] $albook_bkmbytes | sort -k 1 | tail -1`;
+    $i_file = substr($str_grep,index($str_grep,$_[0])+7,3) if ($str_grep ne "");
+    push (@last_file_bkmbytes,$i_file);
+    if ($str_grep ne "" && $menu == 3 && $last_file_bkmbytes[$#last_file_bkmbytes] == 0){
+       $menu = 1;
+       print "Sorry only ALCOPY $_[0] already in the Bookkeeping Database \n";
+    }
+#    print "$_[0] i_file=$i_file str_grep=$str_grep last_file_bkmbytes = $last_file_bkmbytes[$#last_file_bkmbytes] \n";
+
+  return 1;
+}
+#######################################################################
+sub check_files_scan{
+
+    local ($i,$j,$IN_OUT_NUM) = 0;
+    local($all_files,$str,$str_j,$nf) = "";
+    local(@IN_OUT_TAPES,@IN_OUT_FILES) = ();
+
+    @IN_OUT_TAPES = @input_tapes;
+    @IN_OUT_FILES = @input_files;
+    $IN_OUT_NUM = $in_tapes_number;
+    @IN_OUT_TAPES = @output_tapes if ($_[0] eq "out");
+    @IN_OUT_FILES = @output_files if ($_[0] eq "out");
+    $IN_OUT_NUM = $out_tapes_number if ($_[0] eq "out");
+
+    for($i=1; $i<=$IN_OUT_NUM; $i++){
+        $all_files = ${IN_OUT_FILES[$i]};
+        $all_files =~ s/, /,/;
+        print "all_files=$all_files \n" if ($debug);
+        $l_m = index($all_files,"-");
+        $l_v = index($all_files,",");
+        if($l_m == -1 && $l_v == -1){
+           &fill_scan($_[0],${IN_OUT_TAPES[$i]},$all_files,$all_files);
+           next;
+        }
+        $str = "";
+        $nf = "";
+        for($j=0; $j<=length($all_files); $j++){
+          $str_j = substr($all_files,$j,1);
+          if ($str_j ne "," && $str_j ne "-") {
+             $str = "${str}${str_j}";
+             if ($j == length($all_files)){
+                &fill_scan($_[0],${IN_OUT_TAPES[$i]},$str,$str) if ($nf eq "");
+                &fill_scan($_[0],${IN_OUT_TAPES[$i]},$nf,$str) if ($nf ne "");
+             }
+             next;
+          }
+          if ($str_j eq ","){
+             &fill_scan($_[0],${IN_OUT_TAPES[$i]},$str,$str) if ($nf eq "");
+             &fill_scan($_[0],${IN_OUT_TAPES[$i]},$nf,$str) if ($nf ne "");
+             $str = "";
+             $nf = "";
+             next;
+          }
+          if ($str_j eq "-"){
+             $nf = $str;
+             $str = "";
+             next;
+          }     
+       }
+}
+    return 1;
+}
+##########################################################################
+sub check_INOUT{
+
+    local($flag,$n_full) = 0;
+    local($IN_tapes_number,$OUT_tapes_number,$IN_files) = 0; 
+    local($IN_device,$OUT_device) = ""; 
+
+    if ($MERGE_SPLIT eq "MERGE"){
+       $IN_tapes_number = $in_tapes_number;
+       $IN_device = $input_device;
+       $OUT_device = $output_device;
+       @IN_files = @input_files;
+    }
+    if ($MERGE_SPLIT eq "SPLIT"){
+       $IN_tapes_number = $out_tapes_number;
+       $IN_device = $output_device;
+       $OUT_device = $input_device;
+       @IN_files = @output_files;
+    }
+    $flag = 1 if (!&check_MAX($IN_tapes_number) && $IN_device ne "D");
+    if (($IN_device ne $OUT_device) && ($IN_files[1] eq $default_files)){
+	$flag = 1 if ($OUT_device ne "D" && $OUT_device ne "L");
+    }
+    else {
+        if ($IN_device eq $OUT_device && $IN_tapes_number > 1){
+           for($i=1; $i<=$IN_tapes_number; $i++){
+               $n_full++ if ($IN_files[$i] eq $default_files); 
+           }
+	   $flag = 1 if ($n_full > 1);
+        }
+    }
+    return 1 if ($flag == 0);
+    
+    print "\n WARNING too many input?..\n";
+    return 1 if (&yes_or_no("\n Anyhow continue!.. (y/n) ? "));
+    return 0;
+}
+##########################################################################
+sub check_INOUT_device{
+
+    local ($str) = "${_[2]}put";
+    print "$_[0] $_[1] $_[2] \n" if ($debug);
+
+    return 1 if ($_[0] eq $_[1]);
+    print "\n Sorry same device for all $str tapes!...";
+    return 0;
+
+}
+##########################################################################
+sub check_MAX{
+
+    local($max) = 0;
+    local($in_out_device) = "";
+    $in_out_device = $input_device if ($MERGE_SPLIT eq "MERGE");
+    $in_out_device = $output_device if ($MERGE_SPLIT eq "SPLIT");
+
+    $max = $MAX_files if ($in_out_device eq "C");
+    $max = $MAX_input_L if ($in_out_device eq "L");
+    return 1 if ($_[0] <= $max);
+    return 0;
+}
+##########################################################################
+sub check_range_tapes_number{
+
+    $number_first = 0;
+    $n_tapes = 1;
+    $current_label = "";
+    local($number_last) = 0;
+
+    $current_label = substr($_[0],0,2);
+    $number_first = sprintf("%4d",substr($_[0],2,4));
+    if (length($_[0]) == 13) {
+      $number_last = sprintf("%4d",substr($_[0],9,4));
+      $n_tapes = ($number_last - $number_first) + 1;
+      return 0 if (substr($_[0],7,2) ne $current_label || $n_tapes < 0 );
+      $several_tapes = 1;
+    }
+    return 1;
+}
+##########################################################################
+sub check_TAPE{
+
+    return 0 if (length($_[0]) != 6);
+    foreach $i (0..6) {
+        $str_search = substr($_[0],$i,1); 
+        return 0 if ($str_search=~ /^(\d)$/  && $i < 1);
+#        return 0 if ($str_search ne "A" && $i == 0);
+        return 0 if ($str_search=~ /^(\D)$/  && $i > 1);
+    }
+    return 1;
+}
+###################################################################
+sub create_scan_files {
+
+       local($n_files,$file_in,$file_out,$in_out_files,$sujet_name) = 0;
+       local($d_scan) = `date '+%D %H:%M:%S'`;
+       local($d_year) = `date '+%y'`;
+       local($duplication) = "";
+       $booking_info = "YES";
+       $d_year = substr($d_year,0,2);
+       local($name) = "BSYST${d_year}";
+       local($tape_in,$tape_out) = "";
+
+    if ($scan_files_in[1] eq "n" || $scan_files_out[1] eq "n"){
+       print "\n In the SCAN impossible used <n> for file";
+       print "\n Please restrict your choices!"; 
+       print "\n Check first file";
+       exit;
+    }
+    $duplication = "duplication" if ($menu == 4);
+    $d_scan =~ s/\s+$//;
+    $sujet_name = "${name}_${scan_tapes_out[1]}.${scan_files_out[1]}";
+    $file_name = "\$ALEPH/tmp/$sujet_name";
+    open (JOB, ">>$JOB_name");
+    print JOB "#=========== begin albook \n";
+    print JOB "if (-e $file_name) \\rm -f $file_name \n";
+    print JOB "cat <<END-OF-FILE >$file_name \n";
+    print JOB "$user_loginid $d_scan $duplication\n";
+
+    $tape_in = ${scan_tapes_in[1]};
+    $tape_out = ${scan_tapes_out[1]};
+    $file_in = ${scan_files_in[1]} - 1;
+    $file_out = ${scan_files_out[1]} - 1;
+    $in_out_files = $#scan_files_in;
+    $in_out_files = $#scan_files_out if ($MERGE_SPLIT eq "SPLIT");
+
+    $in_out_files =0 if ($menu == 4);
+    for ($n_files=1 ;$n_files<=$in_out_files; $n_files++){
+	$file_in++ if ($MERGE_SPLIT eq "SPLIT");
+        $file_in = ${scan_files_in[$n_files]} if ($MERGE_SPLIT eq "MERGE");
+        if ($file_in > $MAX_files && $MERGE_SPLIT eq "SPLIT"){
+	   print "WARNING input file no more $MAX_files\n";
+	   exit;
+	}
+        $tape_in = ${scan_tapes_in[$n_files]} if ($MERGE_SPLIT eq "MERGE");
+        print JOB "${tape_in}_${file_in}\n";
+
+        $file_out++ if ($MERGE_SPLIT eq "MERGE");
+        $file_out = ${scan_files_out[$n_files]} if ($MERGE_SPLIT eq "SPLIT");
+        if ($file_out > $MAX_files && $MERGE_SPLIT eq "MERGE"){
+           print "WARNING output file no more $MAX_files\n";
+           exit;
+        }
+        $tape_out = ${scan_tapes_out[$n_files]} if ($MERGE_SPLIT eq "SPLIT");
+        print JOB "${tape_out}_${file_out}\n";
+    }
+    print JOB "${tape_in}\n" if ($menu == 4);
+    print JOB "${tape_out}\n" if ($menu == 4);
+    print JOB "END-OF-FILE\n";
+    print JOB "Mail -s $sujet_name alsoft\@aloha.cern.ch < $file_name \n";
+    print JOB "if (\$status == 0) then \n";
+    print JOB "    \\rm $file_name\n";
+    print JOB "else \n";
+    print JOB "    echo WARNING: $file_name not transferred.\n"; 
+    print JOB "    mv $file_name ${file_name}.problem\n";
+    print JOB "endif \n";
+    print JOB "#=========== end albook \n";
+    close JOB;
+    return;
+}
+###################################################################
+sub create_copytape_file {
+
+       $input_copytape = "\$ALEPH/tmp/incp_${output_tapes[1]}_${output_files[1]}";
+        open(JOB, ">>$JOB_name");
+#        print JOB @alinput # not needed anymore now fixed in copytape 961119;
+        print JOB "#=========== begin copytape\n";
+        print JOB "if (-e $input_copytape) \\rm -f $input_copytape \n";
+	print JOB "cat <<END-OF-FILE >$input_copytape\n";
+        print JOB "* ALCOPY INPUT COPYTAPE\n";
+        print JOB "* ___________________ \n"; 
+        print JOB "$MERGE_SPLIT $#input_tapes $#output_tapes\n";
+        print JOB "INPUT\n";
+        print JOB "* GLOBAL INPUT OPTIONS \n";
+        print JOB "   -F F -s 590\n";
+#        print JOB "   -b 32040 -F F -L 32040\n";
+#        print JOB "   -d 38000\n" if ($input_device eq "C");
+#        print JOB "   -d 38KDC\n" if ($input_device eq "L");
+#        print JOB "   -d 8500\n" if ($input_device eq "E");
+#        print JOB "   -d 10GC\n" if ($input_device eq "D");
+#        print JOB "*TAPE(s) VSN    VID    LABEL FROM-TO\n"; 
+        print JOB "*TAPE(s) VID    FROM-TO\n"; 
+        print JOB @input;
+        print JOB "OUTPUT\n";
+        print JOB "* GLOBAL OUTPUT OPTIONS\n";
+        print JOB @output;
+        print JOB "END-OF-FILE\n";
+        print JOB "copytape <$input_copytape \n";
+        print JOB "if (\$status == 0) then \n";
+        print JOB "    \\rm $input_copytape\n";
+        print JOB "else \n";
+        print JOB "    echo WARNING:copytape-problem\n";
+        print JOB "    mv $input_copytape ${input_copytape}.problem\n";
+        print JOB "    goto END-OF-JOB\n";
+        print JOB "endif \n";
+        print JOB "#=========== end copytape\n";
+        close JOB;
+    return ;
+}
+###################################################################
+sub create_JOB {
+
+    local($user_JOB) = "";
+       if(!open(JOB, ">$JOB_name")){
+	   print "WARNING I couldn't create $JOB_name";
+           exit;
+       }
+       print JOB "#!/bin/csh\n";
+       print JOB "#BSUB -q acp #per process time limit in SHIFT-seconds\n";
+       print JOB "#BSUB -J $JOB_name \n";
+       print JOB "#BSUB -o $JOB_name.out \n";
+       print JOB "#BSUB -N \n";
+       $user_JOB = $user_loginid;
+       $user_JOB =~ tr/A-Z/a-z/;
+       print JOB "#BSUB -u $user_JOB\n";
+       print JOB "#\n";
+       print JOB "date\n";
+       print JOB "set echo = 1 \n";
+       print JOB "#\n";
+       close JOB;  
+       return ;
+   }
+###################################################################
+sub create_MC_scan_files {
+
+    local($n_files,$file,$MC_NUM) = 0;
+    local($d_year) = `date '+%y'`;
+    $d_year = substr($d_year,0,2);
+    local($name) = "BMC${d_year}";
+    local($file_name, $label_MCSCAN, $user_MCSCAN,$tape) = "";
+    local(@MC_TAPES,@MC_FILES) = ();
+
+    $user_MCSCAN = $user_loginid;
+    $user_MCSCAN =~ tr/A-Z/a-z/;
+    $label_MCSCAN = $output_label_type;
+    $label_MCSCAN = $input_label_type if ($menu == 2);
+    $label_MCSCAN =~ tr/a-z/A-Z/;
+    open(JOB, ">>$JOB_name");
+    print JOB "#=========== begin MCSCAN \n";
+
+    print "scan_tapes_in->${scan_tapes_in[1]} ${scan_tapes_in[2]}  @scan_tapes_in \n" if ($debug);
+    @MC_TAPES = @scan_tapes_in;
+    @MC_FILES = @scan_files_in;
+    $MC_NUM = $#scan_files_in;
+    @MC_TAPES = @scan_tapes_out if ($MERGE_SPLIT eq "MERGE");
+    @MC_FILES = @scan_files_out if ($MERGE_SPLIT eq "MERGE");
+    
+    $file = $MC_FILES[1] - 1;
+    $tape = $MC_TAPES[1];
+    print "begin for: tape= $tape file= $file\n" if ($debug);
+
+    for ($n_files=1 ;$n_files<=$MC_NUM; $n_files++){
+       $file_name = "\$ALEPH/tmp/${name}_${n_files}.${MC_TAPES[1]}";
+       print JOB "if (-e $file_name) \\rm -f $file_name \n";
+       print JOB "cat <<END-OF-FILE >$file_name \n";
+       print JOB "BOOK\n";
+#>>>>>TEST
+#       print JOB "BTST \n";
+#<<<<<TEST
+       print JOB "BUSR '$user_MCSCAN'\n";
+       print JOB "BNDC '$host'\n";
+       $BCOM = substr(${MCSCAN_comments[$n_files]},1,length(${MCSCAN_comments[$n_files]})-2);
+       print JOB "BCOM '$BCOM'\n";
+       $tape = $MC_TAPES[1];
+       $tape = $MC_TAPES[$n_files] if ($menu == 2);
+       $file++;
+       $file = $MC_FILES[$n_files] if ($menu == 2);
+       print JOB "FILI '$fid_default | EPIO | CART ${tape}.${file}.$label_MCSCAN -s 420'\n";
+       print JOB "BSPA $prod_number\n";
+       print JOB "ENDQ\n";
+       print JOB "END-OF-FILE\n";
+       print JOB "ln -s $file_name fort.7\n";
+       print JOB "\$ALEPH/bin/scanbookexe\n";
+       print JOB "if (\$status == 0) then \n";
+       print JOB "    \\rm $file_name\n";
+       print JOB "else \n";
+       print JOB "    echo WARNING:${tape}.${file}-problem->scanbookexe\n";
+       print JOB "    mv $file_name ${file_name}.problem\n";
+       print JOB "endif \n";
+    }
+    print JOB "#=========== end MCSCAN \n";
+    close JOB;
+    return ;
+}
+#######################################################################
+sub device_name {
+
+    $str_device = "";
+    $str_device = "Cartridge-3480" if ($_[0] eq "C");
+    $str_device = "Cartridge-3490" if ($_[0] eq "L");
+    $str_device = "DLT" if ($_[0] eq "D");
+    $str_device = "Redwood" if ($_[0] eq "R");
+    $str_device = "Exabyte" if ($_[0] eq "E");
+    $str_device = "NTP-3590" if ($_[0] eq "N");
+    return ;
+}
+#######################################################################
+sub end_JOB {
+
+    open (JOB, ">>$JOB_name");
+    print JOB "#=========== END-OF-JOB\n";
+    print JOB "END-OF-JOB:\n";
+    print JOB "exit\n";
+    close JOB;
+    return ;
+}
+#######################################################################
+sub fill_scan{
+
+    local($jj) = 0;
+
+    for ($jj=$_[2]; $jj<=$_[3]; $jj++){ 
+        if ($_[0] eq "in"){
+           ${scan_tapes_number_in}++;
+           ${scan_tapes_in[$scan_tapes_number_in]} = $_[1];
+           ${scan_files_in[$scan_tapes_number_in]} = $jj;
+           print "\n ${scan_tapes_in[$scan_tapes_number_in]}" if ($debug);
+           print "\n ${scan_files_in[$scan_tapes_number_in]}" if ($debug);
+        }
+        if ($_[0] eq "out"){
+           ${scan_tapes_number_out}++;
+           ${scan_tapes_out[$scan_tapes_number_out]} = $_[1];
+           ${scan_files_out[$scan_tapes_number_out]} = $jj;
+           print "\n ${scan_tapes_out[$scan_tapes_number_out]}" if ($debug);
+           print "\n ${scan_files_out[$scan_tapes_number_out]}" if ($debug);
+        }
+    }
+  
+    return;
+}
+###################################################################
+sub get_device_labeltype {
+
+    local($tape) = @_;
+    local(@tms_output) = ();
+    local($tms_status,$device,$t_vsn,$t_gr,$t_model,$t_dense,$t_all) = "";
+    $label = substr($tape,0,2);
+    if ($label eq "AA" || $label eq "AR"){
+       print "\n Sorry rawdata bad format on unix!..\n";
+       exit;
+    }
+
+    $current_device = "";
+    $label_type = "";
+
+    $line_tms = `sysreq TMS Q V $tape 2>&1`;
+    $tms_status = 1 if ($?);
+    if ($line_tms =~ /RC\(/  || $tms_status == 1){
+       print("\n *** TMS:$line_tms failed. ***\n");
+       return 0;
+    }
+    print "\n $line_tms \n" if ($debug);   
+    @tms_output  = split(/\s+/,$line_tms);
+    ($t_vsn,$t_gr,$t_model,$t_dense,$label_type,$t_all)=@tms_output;
+
+    $label_type =~ tr/A-Z/a-z/;
+    $device = "C" if ($t_model eq "3480");
+    $device = "L" if ($t_model eq "3490");
+    $device = "D" if ($t_model eq "DLT2");
+    $device = "R" if ($t_model eq "SD3M");
+    $device = "E" if ($t_model eq "8200");
+    $device = "N" if ($t_model eq "3590");
+    $current_device     = $device;
+    print "\n label=$label device=$current_device label_type=$label_type\n" if ($debug);
+    return 1;
+}
+###################################################################
+sub get_uuu_gr{
+  
+    $uuu = "";
+  local ($line,$logid,$user_gr,$str_grep) = "";
+  local ($uid,$i) = 0;
+  local (@account_info) = ();
+  local (@line_buffer) = ();
+
+  $logid = $_[0];
+  
+  ($name, $passwd, $uid, $gid)=getpwnam($logid);
+  $user_gr = getgrgid($gid);		
+  $user_gr =~ tr/a-z/A-Z/;
+  if ($user_gr ne $GR){ 
+    print "\n *** $logid is not from $GR  ***\n";
+    return 0;
+  }
+  if ($uid == 0){
+    print "\n *** $logid is not a known loginid ***\n";
+    return 0;
+  }
+
+  if(-r "/etc/account") {
+      $str_grep = "grep $logid /etc/account";
+  }
+  else {
+      $str_grep = "ypcat account | grep $logid";
+  }
+  print "\n str_grep=$str_grep" if($debug);
+  @line_buffer = `$str_grep`;
+  if($?){
+    print "\n *** ERR: $logid is not valid. ****\n";
+    return 0;
+  }
+  foreach $i (0 .. $#line_buffer){
+    $line = $line_buffer[$i];
+    chop($line);
+    @account_info = split(/:/, $line);
+    if($logid eq $account_info[0]){
+      $uuu = substr($account_info[1],0,3);
+      return 1;
+    }
+  }
+  print "\n *** ERR: $logid is not valid. ****\n";
+  return 0;
+}
+####################################################################
+sub HELP{
+  
+    print "\n     Data format must be EPIO [*]";
+    print "\n     data type :   C -> Cartridge [3480]"; 
+    print "\n                or L -> Cartridge [3490]"; 
+    print "\n                or D -> DLT";
+    print "\n                or R -> Redwood\n\n";
+    print "\n     3 menues are allowed :";
+    print "\n        1. <ALCOPY> ";
+    print "\n           Copyfile +[Y/N] Information in the Bookkeeping Database";
+    print "\n        2. <ALBOOK> ";
+    print "\n           Informations for the Bookkeeping Database Monte Carlo";
+    print "\n        3. <ALCOPY> + <ALBOOK>\n";
+
+    print "\n                 <<<ALCOPY>>>";
+    print "\n     Any kind of copy is allowed :";
+    print "\n                   C -> C ";
+    print "\n                   L -> L";
+    print "\n                   D -> D\n";
+    print "\n                  nC -> L";
+    print "\n                  nC -> D";
+    print "\n                  nL -> D\n";
+    print "\n              D [**] -> C or L";
+    print "\n             nD [**] -> D";         
+    print "\n              R [**] -> D\n";
+
+    print "\n                  <<<ALBOOK>>>";
+    print "\n     Monte Carlo dataset MUST be identified by a particle code";
+    print "\n     Enter file(s)[**] and MEANINGFUL comment [***] for each file\n";
+    print "\n #################################################################";
+    print "\n #    *   Impossible for Raw data -> label AA or AR              #"; 
+    print "\n #    **  a series of non consecutive ranges of files input      #"; 
+    print "\n #        e.g. 12-15,17                                          #";
+    print "\n #             1,5                                               #";
+    print "\n #    *** min 20 characters for each file                        #";
+    print "\n #################################################################\n";
+    exit;
+}
+###################################################################
+sub init_prod{
+
+    $last_prod_number = 0;
+    @production_list = ();
+    @production_list_all = ();
+    local(@line) = ();
+    if(!open(PRODUCTION, "$albook_production")){
+       print "\n *** ERR: cannot open $albook_production file ***\n";
+       return 0;
+    }
+    @prod_file = <PRODUCTION>;
+    close (PRODUCTION);
+    for ($i=0; $i<=$#prod_file; $i++){
+       $line = $prod_file[$i];
+       next if (substr($line,0,2) eq "/*");
+       $line =~ s/\s+$//;
+       push (@production_list_all, $line);
+       print "\n $line" if ($debug);
+       $ii= -15;
+       while($ii<=60){
+           $ii = $ii+15;
+	   $number = substr($line,$ii,3);
+           next if($number eq "");
+           $comment = substr($line,($ii+4),10);
+	   print "\n $number $comment" if ($debug);
+	   push(@production_list,"$number : $comment");
+           $last_prod_number = $number;
+       }
+    }
+    print "\n last_prod_number=$last_prod_number" if ($debug);
+    return 1;
+}
+#######################################################################
+sub match_files{
+  
+  local($str,$str_j) = "";
+  local($j,$str_last,$flag) = 0;
+
+        for($j=0; $j<=length($_[0]); $j++){
+          $str_j = substr($_[0],$j,1);
+          return 0 if ($str_j eq ".");
+          if ($str_j ne "," && $str_j ne "-") {
+             $str = "${str}${str_j}";
+             return 0 if ($str>$MAX_files);
+             next if ($flag == 1); 
+             return 0 if ($str_last > $str && $j == length($_[0]));
+             next;
+          }
+          if ($str_j eq "," || $str_j eq "-"){
+             return 0 if ($str_last > $str && $str_j eq "-");
+	     $flag = 0 if ($str_j eq "-");
+	     $flag = 1 if ($str_j eq ",");
+             $str_last = $str;
+             $str = "";
+             next;
+          }
+       }
+       return 1;
+}
+###################################################################
+sub match_MC_label{
+ 
+  foreach $i (0..$#MC_label_list){
+    return 1 if  ($MC_label_list[$i] eq $_[0]);
+  }
+  return 0;
+} 
+#######################################################################
+sub match_prod{
+  
+  local($elem) = $_[0];
+  local(*list)  = $_[1];
+  foreach $i (0..$#list){
+       return $list[$i] if ($list[$i]=~ /^$elem :/);
+  }
+  return -1;
+}
+###################################################################
+sub match_admin{
+
+  foreach $i (0..$#alcopy_admin){
+    return 1 if  ($alcopy_admin[$i] eq $_[0]);
+  }
+  return 0;
+} 
+#######################################################################
+sub write_input_output{
+
+    local($tape,$in_out) = "";
+    local($ij,$j) = 1;
+    ($tape,$in_out) = @_;
+    $tape_vsn = "";
+
+    &check_range_tapes_number($tape);
+    if ($menu != 1 && $menu != 4 && !&match_MC_label($current_label)){
+       print "\n Monte Carlo labels [@MC_label_list] for albook !!!!";
+       exit if (!&yes_or_no("\n Continue (y/n) ? "));
+    }
+    $ij = $n_tapes if ($several_tapes);
+    for($j=1 ; $j<=$ij; $j++){
+        $number = $number_first if ($j == 1);
+	if ($several_tapes){
+           $number = $number + 1 if ($j > 1);
+           $number = sprintf("%04d",$number);
+	   $tape = "$current_label$number";
+        }
+        if (!&check_TAPE($tape) || !&get_device_labeltype($tape)){
+           print "\n $tape -> Bad tape!!! \n";
+           return 0 if ($menu < 4);
+           exit if ($menu == 4);
+        }
+        $tape_vid = $tape;
+        $tape_vsn = $tape;
+#              &ask_label_type($tape,$label_type);
+#???           &ask_vsn_vid($tape);
+        &ask_files($tape,$in_out,$j)if ($menu < 4);
+        $files = 1 if ($menu == 4 && $in_out eq "out");
+        $files = $arg_files if ($menu == 4 && $in_out eq "in");
+	if ($in_out eq "in"){
+           $input_device = $current_device if ($in_tapes_number == 0);
+           $input_label_type = $label_type if ($in_tapes_number == 0);
+           return 0 if (!&check_INOUT_device($input_device,$current_device,$in_out));
+           $in_tapes_number++ ;
+	   $input_tapes[$in_tapes_number] = $tape;
+	   $input_files[$in_tapes_number] = $files;
+#           $alinput[$in_tapes_number] = " alstagein -v $tape_vsn -q $files -l $label_type \n" if($label_type ne "nl");
+#           $alinput[$in_tapes_number] = " alstagein -v $tape_vsn -q $files -l $label_type -b 32040 -F F -L 32040 \n" if($label_type eq "nl");
+#           print "\n alinput: $alinput[$in_tapes_number]";
+
+           $input[$in_tapes_number] = "  $in_tapes_number -V $tape_vid -q $files \n";
+
+           if ($input_device eq "D" || $input_device eq "R"){
+              $input[$in_tapes_number] = "  $in_tapes_number -V $tape_vid -q $files -s 590\n";
+	   }
+           print "\n input: $input[$in_tapes_number]" if ($debug);
+        }
+        if ($in_out eq "out"){
+           $output_device = $current_device if ($out_tapes_number == 0);
+           $output_label_type = $label_type if ($out_tapes_number == 0); 
+           return 0 if (!&check_INOUT_device($output_device,$current_device,$in_out));
+           &ask_fid_name if ($menu < 4);
+           $fid = $fid_default if ($menu == 4);
+           $out_tapes_number++ ;
+	   $output_tapes[$out_tapes_number] = $tape_vid;
+	   $output_files[$out_tapes_number] = $files;
+
+           $output[$out_tapes_number] = "  $out_tapes_number  -V $tape_vid -q $files -f $fid -b 32040 -F F -L 32040 \n" if ($output_device ne "R"); 
+           $output[$out_tapes_number] = "  $out_tapes_number  -V $tape_vid -q $files -f $fid -F F \n" if ($output_device eq "R"); 
+
+           print "\n output: $output[$out_tapes_number]" if ($debug);
+        }
+        $i++;
+     }
+	return 1; 
+}
+#######################################################################
+sub yes_or_no{
+  
+  local($prompt) = @_;
+  while(1){
+    print STDOUT $prompt;
+    local($answer) = scalar(<STDIN>);
+    $answer =~ s/^\s+//;
+    $answer =~ s/\s+$//;
+    $answer =~ tr/a-z/A-Z/;
+    exit if ($answer =~ /^q\b/i);
+    return 1 if ($answer eq "Y" || $answer eq "YES");
+    return 0 if ($answer eq "N" || $answer eq "NO");
+    print("\n\n *** You have to answer with (y)es or (n)o!  ***\n");
+  }
+}
+#######################################################################

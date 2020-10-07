@@ -1,0 +1,90 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.53.49;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.29;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.30;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      INTEGER FUNCTION IGTLEN(JW,LIST)
+C -------------------------------------------------------------
+C - F.Ranjard - 910801
+C! get the length of LIST
+C  returns the number of banks in the LIST list
+C - Input    : - JW      / I      = BOS array
+C                LIST    / CHAR*1 = one of the list C,E,R,S,T
+C - Output   : - IGTLEN  / I      = number of banks in th LIST
+C                                   -1 :the LIST-list does not exist
+C -------------------------------------------------------------
+#ifndef DOC
+      INTEGER JW(*)
+      CHARACTER LIST*1
+#include "param.h"
+C -----------------------------------------------------------------
+      IGTLEN = -1
+      IL = INDEX ('CERST',LIST)
+      IF (IL.EQ.0) GOTO 999
+      IL = ILT+IL
+      IF (JW(IL) .EQ. 0) GOTO 999
+      ID = JW(IL)
+      IGTLEN = JW(ID)
+ 999  RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK igtlen
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

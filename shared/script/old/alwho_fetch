@@ -1,0 +1,11 @@
+#! /bin/csh
+#==========================================================
+#                     alwho_fetch
+# 14/12/93                                     F.Blin
+#==========================================================
+set dir_src_alwho = "/aleph/src/alwho/"
+set file_fetch = "alephusr.list"
+set disk_vm = "PUBXU.197"
+#
+sfetch ${dir_src_alwho}${file_fetch} -t cernvm:${file_fetch} -u ${disk_vm}
+exit

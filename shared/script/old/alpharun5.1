@@ -1,0 +1,745 @@
+#!/bin/csh
+#
+########################################################
+#     ALPHARUN  for UNIX
+#   Joel Closier
+########################################################
+#Modification:
+# JC 8-09-93 : the makefile is saved as exec.mk instead of alpha.mk
+#   5.0        if $exec.opt or $exec.mk exist, they are saved with
+#              the extension .BAK
+#              The option -g is added to use the debug mode
+# JC 23-09-93 : add log file to know how often is use the
+#   5.1         script alpharun
+#######################################################
+#
+#set echo on
+set VER="5.1"
+echo "     ***********************************************"
+echo "     ***********      ALPHA JOB    $VER  ************"
+echo "     ***********************************************"
+echo ""
+
+set USE=`id | cut -f2 -d"(" | cut -f1 -d")"`
+set DATE=`date`
+
+#  initialisation of variables
+set enfl 	= n
+set jul  	= y
+set qip         = n
+set his         = n
+set alpver      = 115
+set fprog 	= " "
+set obj         = " " 
+set cprog 	= " "
+set exec  	= " "
+set alp   	= "$ALPHACARDS"
+set run         = "n"
+set run_exec    = "n"
+set FILEOPT     = "$cwd/alpha.opt"
+set debug       = "n"
+
+#  test which model will be used
+switch ($#argv)
+	case 0: 
+                goto VAX
+                breaksw
+	case 1:
+                if ($argv[1] == "-help") goto HELP
+                breaksw       
+endsw
+
+#  test if you can write where you are
+if !(-w $cwd) then
+   echo "you can't write in the current directory $cwd"
+   exit 0
+endif
+
+set MODE="UNIX"
+#   parse the options and put the right values
+set argv=`getopt xrgheqjf:c:v:o:C:F:s: $*`
+if ($status != 0) goto usage
+
+while ($#argv > 0)
+	switch ($argv[1])
+                case -x:
+                        set echo on
+                        breaksw
+                case -r:
+                        set run="y"
+                        breaksw
+                case -h:
+                        set his="y"
+                        breaksw
+                case -g:
+                        set debug="y"
+                        breaksw
+		case -e:
+			set enfl = "y"
+                        set jul = "y"
+			breaksw
+		case -j:
+			set jul = "y"
+			breaksw
+		case -q:
+			set qip = "y"
+			breaksw
+		case -f:
+			set fprog = "$fprog $argv[2]"
+			shift
+			breaksw
+		case -o:
+			set obj = "$obj $argv[2]"
+			shift
+			breaksw
+		case -c:
+			set cprog = "$cprog $argv[2]"
+			shift
+			breaksw
+		case -C:
+			set alp = $argv[2]
+			shift
+			breaksw
+                case -s:
+                        set FILEOPT = $argv[2]
+                        shift
+                        breaksw
+                case -v:
+                        set alpver = $argv[2]
+                        shift
+                        breaksw
+                case -F:
+                        set FILEOPT = $argv[2]
+                        goto FILE
+                        breaksw
+                case --:
+                        breaksw
+                case *:
+			set exec = $argv[1]
+                        breaksw
+		case -?:
+                        goto usage
+                        breaksw
+	endsw
+	shift
+end
+
+#   test if the name of the executable has been given
+if ($exec == "") then
+  echo There is no name for the executable
+  goto usage
+endif
+
+set FILEOPT     = "$cwd/$exec.opt"
+if (-r $FILEOPT) mv $FILEOPT $FILEOPT.BAK
+
+#   save the values in the file $exec.opt
+cat >$FILEOPT <<END-OF-CAT
+$exec
+$fprog
+$cprog
+$alp
+$enfl
+$jul
+$obj
+$qip
+$alpver
+$debug
+END-OF-CAT
+
+echo ""
+echo "you run ALPHARUN with these options (stored in $FILEOPT):"
+echo ""
+echo "alpha version   = $alpver"
+echo "historian used  = $his"
+echo "fortran file(s) = $fprog"
+echo "c       file(s) = $cprog"
+echo "obj     file    = $obj"
+echo "card    file    = $alp"
+echo "julia           = $jul"
+echo "enfl            = $enfl"
+echo "qiptag          = $qip"
+echo "Debug mode      = $debug"
+echo "exec    name    = $exec"
+echo ""
+
+goto MAKEF
+
+
+#######################################################################
+#      Create the makefile alpha.mk
+#######################################################################
+MAKEF:
+if ("$debug" == "y" || "$debug" == "Y") then
+   set debug_opt = "_dbx"
+else
+   set debug_opt = ""
+endif
+
+if (-x $exec && "$ENVIRONMENT" == "INTERACTIVE") then
+   echo -n "This exec already exist. Do you want to use it (y/n)? "
+   set bak=$<
+   if ($bak == "n" || $bak == "N") then
+     mv $exec $exec.BAK
+   else
+     goto RUN
+   endif
+endif
+
+set param = `egrep "alpha" /aleph/phy/f77${debug_opt}_options | awk '{print substr($0,15)}'`
+### Create the file alpha.mk  ####
+if (-r $cwd/$exec.mk) mv $cwd/$exec.mk $cwd/$exec.mk.BAK
+cat >$cwd/$exec.mk <<END-OF-MAKE
+NAME    = $exec 
+CFILES  = $cprog 
+CFLAGS  = -g
+FFILES  = $fprog
+FFLAGS = $param
+LDFLAGS = -G 3
+
+LIBS    = \\
+END-OF-MAKE
+if ("$obj" != "") then
+cat >>$cwd/$exec.mk <<END-OF-MAKE
+     		$obj \\
+END-OF-MAKE
+endif
+if ("$qip" == "y" || $qip == "Y") then
+cat >>$cwd/$exec.mk <<END-OF-MAKE
+     		/aleph/uphy/qipbtag.a \\
+     		/aleph/uphy/get_bp92.o \\
+     		/aleph/uphy/qfndip.o \\
+END-OF-MAKE
+endif
+cat >>$cwd/$exec.mk <<END-OF-MAKE
+		/aleph/phy/qmain.o \\
+		/aleph/phy/qusig.o \\
+END-OF-MAKE
+if ($his == "n" || $his == "N") then
+cat >>$cwd/$exec.mk <<END-OF-MAKE
+		/aleph/phy/alcor$alpver.o \\
+END-OF-MAKE
+endif
+if ($enfl == "y" || $enfl == "Y") then
+cat >>$cwd/$exec.mk <<END-OF-MAKE
+     		/aleph/phy/alenflw.o \\
+     		/aleph/jul/jmuid.o \\
+END-OF-MAKE
+ if ($alpver < 115 ) then
+cat >>$cwd/$exec.mk <<END-OF-MAKE
+     		/aleph/phy/libenflw$alpver.a \\
+END-OF-MAKE
+ endif
+endif
+cat >>$cwd/$exec.mk <<END-OF-MAKE
+		/aleph/phy/libalpha$alpver${debug_opt}.a \\
+		/aleph/lib/libmini.a \\
+END-OF-MAKE
+if ($jul == "y" || $jul == "Y") then
+cat >>$cwd/$exec.mk <<END-OF-MAKE
+     		/aleph/lib/libjulia.a \\
+END-OF-MAKE
+endif
+cat >>$cwd/$exec.mk <<END-OF-MAKE
+		/aleph/lib/libalephlib.a \\
+		/aleph/lib/libbos77.a \\
+		-L/cern/pro/lib \\
+		-lmathlib \\
+		-lpacklib \\
+		-lkernlib 
+
+
+# Rules...
+
+SRCFILES = \$(CFILES) \$(FFILES)
+OBJFILES = \$(CFILES:.c=.o) \$(FFILES:.f=.o)
+
+\$(NAME): \$(OBJFILES) 
+	f77 -o \$@  \$(OBJFILES) \$(LIBS) \$(LDFLAGS)
+END-OF-MAKE
+
+echo ""
+echo "   **************************************************************"
+echo "   ***    Compilation  and creation of the makefile $exec.mk  ***"
+echo "   **************************************************************"
+### Compile the job  #####
+make -f $cwd/$exec.mk
+
+RUN:
+setenv ALPHACARDS $alp
+
+chmod +x $exec
+if ($run == "y" || $run == "Y") then
+  echo ""
+  echo "   ********************"
+  echo "   ***  Execution   ***"
+  echo "   ********************"
+  ### Run the job  ####
+  $exec
+  echo ""
+endif
+if ($run_exec == "y" || $run_exec == "Y") then
+  echo -n "Do you want to keep the executable $exec (y/n)? : "
+  set rep=$<
+  if ($rep == "n" || $rep == "N") then
+     if (-x $exec) rm $exec
+  endif
+endif
+
+if (-r $cwd/test.def) rm $cwd/test.def
+echo "$DATE $USE $MODE $VER" >> /aleph/tmp/alpharun.log
+exit 0
+
+
+#######################################################################
+#      ALPHARUN as on VAX
+#######################################################################
+VAX:
+unset noclobber
+set run_exec = "y"
+
+set MODE="VAX"
+
+### If the file $exec.mk exists, I remove it  ####
+#if (-r $cwd/$exec.mk) then 
+#   rm -f $cwd/$exec.mk
+#endif
+
+
+if (-r $FILEOPT) then 
+   cp $FILEOPT $cwd/test.def
+   mv $FILEOPT $FILEOPT.BAK
+#   rm -f $FILEOPT
+else
+   echo "" >> $cwd/test.def
+   echo "" >> $cwd/test.def
+   echo "" >> $cwd/test.def
+   echo "$ALPHACARDS" >> $cwd/test.def
+   echo "n" >> $cwd/test.def
+   echo "n" >> $cwd/test.def
+   echo "" >> $cwd/test.def
+   echo "n" >> $cwd/test.def
+   echo "115" >> $cwd/test.def
+   echo "n" >> $cwd/test.def
+endif
+
+
+echo " With this job, you can run ALPHA with your own FORTRAN and/or C code,"
+echo " and your own CARDS."
+echo " You run this job with the current version of ALPHA and the current"
+echo " version of all the libraries."
+echo ""
+echo " CR : Carriage Return"
+echo " When you press the key RETURN, you select what is between the brackets"
+echo " (the default), else you type the name of your file."
+echo ""
+echo " If you do not want to specify an option, you must put one BLANK"
+echo ""
+echo ""
+
+
+
+set rep="n"
+###  Entry for the data    ###
+while ($rep != "y" && $rep != "Y") 
+  set exec=`awk '{if ((NR == 1) && ($1 != "\n")) printf "%s\n",$1 }' $cwd/test.def`
+  while ($exec == "")
+    echo "Enter the name for the executable  [CR = $exec]"
+    echo -n "(e.g. : /users/username/myexec)  : "
+    set buf=$<
+    if ($buf != "") set exec=$buf
+  end
+  echo ""
+
+  set alpver=`awk '{if ((NR == 9) && ($1 != "\n")) printf "%s\n",$1 }' $cwd/test.def`
+  echo "Enter the number for the version of alpha [CR = $alpver]"
+  echo -n "(e.g. : 114)  : "
+  set buf=$<
+  if ($buf != "") set alpver=$buf
+  echo ""
+
+  set his=n
+  echo "Historian used ? [CR = $his]"
+  echo -n "(e.g. : n)  : "
+  set buf=$<
+  if ($buf != "") set his=$buf
+  echo ""
+
+  set fprog=`awk '{if ((NR == 2) && ($1 != "\n")) printf "%s\n",$0 }' $cwd/test.def`
+  if ("$fprog" == "") then
+    set fprog=$exec.f
+  endif
+  set ok="n"
+  while ($ok == "n" || $ok == "N")
+    echo "Enter the name of the fortran file(s) [CR = $fprog, SPACE = nothing]"
+    echo -n "(e.g. : /users/username/myprog.f) : "
+    set buf=$<
+    if ("$buf" != "") then
+       set fprog=($buf)
+    endif
+    set i=1
+    if ($#fprog == 0) then 
+      set ok="y"
+    endif
+    while ($i <= $#fprog)
+      if !(-f $fprog[$i]) then
+          echo file does not exist
+          set ok="n"
+      else set ok="y"
+      endif
+      @ i++
+    end
+  end
+  echo ""
+  
+
+  set cprog=`awk '{if ((NR == 3) && ($1 != "\n")) printf "%s\n",$0 }' $cwd/test.def`
+  if ("$cprog" == "") then
+    set cprog=$exec.c
+  endif
+  set ok="n"
+  while ($ok == "n" || $ok == "N")
+    echo "Enter the name of the C file(s) [CR = $cprog, SPACE = nothing]"
+    echo -n "(e.g. : /users/username/myprog.c) : "
+    set buf=$<
+    if ("$buf" != "") then
+       set cprog=($buf)
+    endif
+    set i=1
+    if ($#cprog == 0) then
+       set ok="y"
+    endif
+    while ($i <= $#cprog)
+      if !(-f $cprog[$i]) then
+         echo file does not exist
+         set ok="n"
+      else set ok="y"
+      endif
+      @ i++
+    end
+  end
+  echo ""
+
+
+  set obj=`awk '{if ((NR == 7) && ($1 != "\n")) printf "%s\n",$0 }' $cwd/test.def`
+  if ("$obj" == "") then
+    set obj=$exec.o
+  endif
+  set ok="n"
+  while ($ok == "n" || $ok == "N")
+    echo "Enter the name of the obj file(s) [CR = $obj, SPACE = nothing]"
+    echo -n "(e.g. : /users/username/my_obj.o) : "
+    set buf=$<
+    if ("$buf" != "") then
+       set obj=($buf)
+    endif
+    set i=1
+    if ($#obj == 0) then
+       set ok="y"
+    endif
+    while ($i <= $#obj)
+      if !(-f $obj[$i]) then
+         echo file does not exist
+         set ok="n"
+      else set ok="y"
+      endif
+      @ i++
+    end
+  end
+  echo ""
+
+
+  set ok="n"
+  set enfl="n"
+  while ($ok == "n" || $ok == "N")
+    echo -n " ENFLW or QMUIDO with DST (Y or N) [CR = $enfl] : "
+    set buf=$<
+    if ($buf != "") then
+       set enfl=$buf
+    endif 
+    if ($enfl == "n" || $enfl == "N") then
+           echo ""
+           set jul="n"
+           while ($ok == "n" || $ok == "N")
+             echo -n " Link to JULIA (Y or N) [CR = $jul] : "
+             set buf=$<
+             if ($buf != "") then
+               set jul=$buf
+             endif
+             if ($jul == "y" || $jul == "Y") then
+                set ok = "y"
+             else
+               if ($jul == "n" || $jul == "N") then
+                 set ok = "y"
+               endif
+            endif
+          end  
+       set ok = "y"
+    else
+     if ($enfl == "y" || $enfl == "Y") then
+       set ok = "y"
+       set jul="y"
+     endif
+    endif
+  end  
+  echo ""
+
+  set ok="n"
+  set qip="n"
+  while ($ok == "n" || $ok == "N")
+    echo -n " QIPTAG stuff (Y or N) [CR = $qip] : "
+    set buf=$<
+    if ($buf != "") then
+       set qip=$buf
+    endif 
+    if ($enfl == "n" || $enfl == "N") then
+       set ok = "y"
+    else
+     if ($enfl == "y" || $enfl == "Y") then
+       set ok = "y"
+     endif
+    endif
+  end  
+  echo ""
+
+  set ALPHACARDS=`awk '{if ((NR == 4) && ($1 != "\n")) printf "%s\n",$1 }' $cwd/test.def`
+  if ($ALPHACARDS == "") then
+    set ALPHACARDS=$exec.cards
+  endif
+
+  echo ""
+  echo "       *****************************************"
+  echo "       ***  Cards in the current directory   ***"
+  echo "       *****************************************"
+  set files = `ls *.cards`
+  if ($status == 1) then
+    echo no cards found
+  else 
+    foreach i (${files})
+      echo $i
+    end
+  endif
+  echo ""
+  set ok="n"
+  while ($ok == "n" || $ok == "N")
+    echo -n " Enter the name of the alpha cards [CR = $ALPHACARDS]: "
+    set alp=$<
+    if ($alp !="") then
+     if !(-f $alp) then
+       echo file does not exist
+     else set ok="y"
+     endif
+    else 
+       set alp=$ALPHACARDS
+       set ok="y"
+    endif
+  end
+  echo ""
+
+  set debug=n
+  echo " Do you want to use the debug mode (y/n)? [CR = $debug]"
+  echo "(only your fortran and the alpha package will be in the debug mode)"
+  echo -n "(e.g. : n)  : "
+  set buf=$<
+  if ($buf != "") set debug=$buf
+  echo ""
+
+
+  echo ""
+  echo ""
+  echo "alpha version   = $alpver"
+  echo "historian used  = $his"
+  echo "fortran file(s) = $fprog"
+  echo "c       file(s) = $cprog"
+  echo "obj     file(s) = $obj"
+  echo "card    file    = $alp"
+  echo "julia           = $jul"
+  echo "enfl            = $enfl"
+  echo "qiptag          = $qip"
+  echo "Debug mode      = $debug"
+  echo "exec    name    = $exec"
+  echo ""
+  echo ""
+cat >$cwd/test.def <<END-OF-CAT
+$exec
+$fprog
+$cprog
+$alp
+$enfl
+$jul
+$obj
+$qip
+$alpver
+$debug
+END-OF-CAT
+  echo -n " Are these options correct (y/n)? : "
+  set rep=$<
+end
+
+set FILEOPT     = "$cwd/$exec.opt"
+
+echo ""
+set ok="n"
+while ($ok == "n" || $ok == "N")
+  echo "Save these options in [CR = $FILEOPT]"
+  echo -n "(e.g. : /users/username/my_alpha.opt) : "
+  set buf=$<
+  if ($buf != "") then
+     set FILEOPT=($buf)
+  endif
+  set ok="y"
+end
+echo ""
+
+cat >$FILEOPT <<END-OF-CAT
+$exec
+$fprog
+$cprog
+$alp
+$enfl
+$jul
+$obj
+$qip
+$alpver
+$debug
+END-OF-CAT
+
+echo -n " Do you want to create the binary and run it with these options (y/n)? : "
+set run=$<
+if ($run == "y" || $run == "Y") then
+  echo ""
+  echo "you run ALPHARUN with these options (stored in $FILEOPT):"
+  echo ""
+  echo "alpha version   = $alpver"
+  echo "historian used  = $his"
+  echo "fortran file(s) = $fprog"
+  echo "c       file(s) = $cprog"
+  echo "obj     file(s) = $obj"
+  echo "card    file    = $alp"
+  echo "julia           = $jul"
+  echo "enfl            = $enfl"
+  echo "qiptag          = $qip"
+  echo "Debug mode      = $debug"
+  echo "exec    name    = $exec"
+  echo ""
+
+  goto MAKEF
+else
+  echo -n " Do you want to create the binary  with these options (y/n)? : "
+  set bin=$<
+  if ($bin == "y" || $bin == "Y") then
+    goto MAKEF
+  else
+    exit 0
+  endif
+endif
+
+
+
+#######################################################################
+#      Read the file for the option -F
+#######################################################################
+FILE:
+set MODE="FILE"
+### test If the file alpha.opt exists  ####
+if !(-r $FILEOPT) then 
+   echo the file $FILEOPT does not exist
+   exit 0
+endif
+
+set exec=`awk '{if ((NR == 1) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set fprog=`awk '{if ((NR == 2) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set cprog=`awk '{if ((NR == 3) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set enfl=`awk '{if ((NR == 5) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set jul=`awk '{if ((NR == 6) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set obj=`awk '{if ((NR == 7) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set qip=`awk '{if ((NR == 8) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set alp=`awk '{if ((NR == 4) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set alpver=`awk '{if ((NR == 9) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+set debug=`awk '{if ((NR == 10) && ($1 != "\n")) printf "%s\n",$0 }' $FILEOPT`
+
+if ($enfl == "y" || $enfl == "Y") set jul = "y"
+
+echo ""
+echo "you run ALPHARUN with these options (stored in $FILEOPT):"
+echo ""
+echo "alpha version   = $alpver"
+echo "historian used  = $his"
+echo "fortran file(s) = $fprog"
+echo "c       file(s) = $cprog"
+echo "obj     file(s) = $obj"
+echo "card    file    = $alp"
+echo "julia           = $jul"
+echo "enfl            = $enfl"
+echo "qiptag          = $qip"
+echo "Debug mode      = $debug"
+echo "exec    name    = $exec"
+echo ""
+
+if ($run == "y" || $run == "Y") then 
+   goto MAKEF
+else 
+  if ($run != "y" || $run != "Y") then
+     echo -n " Do you want to create the binary and run it with these options (y/n)? : "
+     set run=$<
+     if ($run == "y" || $run == "Y") then
+       goto MAKEF
+     else
+      echo -n " Do you want to create the binary  with these options (y/n)? : "
+      set bin=$<
+      if ($bin == "y" || $bin == "Y") then
+         goto MAKEF
+      else exit 0
+     endif
+  endif
+endif
+
+
+
+
+
+
+#######################################################################
+#     Options available for ALPHARUN
+#######################################################################
+usage:
+echo " usage : -help "
+echo "       : [-f fortran_file] [-c c_file] [-C card_file] [-g] [-h] [-e] [-j]"
+echo "         [-q] [-v version] [-o obj_file] [-s file_opt] [-r] <exec_name> "
+echo "       : -F filename "
+exit
+
+
+#######################################################################
+#     Description for the use of ALPHRUN
+#######################################################################
+HELP:
+echo "Usage : -help "
+echo "      : [-f fortran_file] [-c c_file] [-C card_file] [-g] [-h] [-e] [-j]"
+echo "        [-q] [-v version] [-o obj_file] [-s file_opt] [-r] <exec_name> "
+echo "      : -F filename "
+echo " " 
+echo "Where: "
+echo "     -help                   get this help"
+echo "     -(f)<string>            expected fortran file  (my_fortran.f)"
+echo "     -(c)<string>            expected C file  (my_cfile.c)"
+echo "     -(o)<string>            expected object file  (my_objfile.o)"
+echo "     -(C)ards<string>        expected card file  (my_cards.cards)"
+echo "     -(h)istorian            historian used (standard correction from historian)"
+echo "     -debu(g)                the debug options are used to compile"
+echo "     -(e)nergy               energy flow is used"
+echo "     -(j)ulia                julia is used"
+echo "     -(v)<number>            version of alpha"
+echo "     -(q)iptag               qiptag stuff are used"
+echo "     -(s)ave<string>         expected name of the file to save the options"
+echo "     -(r)un                  runs the executable after creating it"
+echo "     <exec_name>             expected name for the executable"
+echo "     -(F)ile<string>         expected filename which contains alpha options"
+exit
+
+
+
+
+
+
+

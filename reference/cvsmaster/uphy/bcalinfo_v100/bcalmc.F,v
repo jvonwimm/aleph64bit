@@ -1,0 +1,511 @@
+head	1.3;
+access;
+symbols
+	bcalinfo_1:1.1.1.1
+	OSF1:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	97.12.11.10.22.55;	author icpark;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.12.01.16.33.29;	author icpark;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.11.26.14.15.17;	author icpark;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.11.26.14.15.17;	author icpark;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@adding bcalinfo.h file
+@
+text
+@            subroutine bcalmc(Ebeam,Npar,Ipar,P,Vtx,E,Th,Ph,Ierr)
+C
+C Author : G. Merino - 19970424
+C
+C  Description: Fast BCAL++ response simulation for MC events    
+C
+C  Inputs: Ebeam = Beam nominal Energy [REAL] (GeV)
+C          Npar  = Number of MC particles to be tracked [INTEGER]
+C          Ipar(2,Npar) = Particle code and charge: [INTEGER]
+C                         Ipar(1,Npar) -> (=0 gamma,=1 e,=2 mu,=3 had)
+C                         Ipar(1,Npar) -> (-1,0,1)
+C          P(4,Npar) = MC Particles 4-momenta in the interaction point [REAL] (GeV)
+C          VTX(3,Npar) = MC Particles origin vertex [REAL] (Centimeters) 
+C
+C  Outputs: E  = Energy measured in a certain BCAL++ module [REAL] (GeV)
+C           TH = Theta angle in the IP measured by BCAL++, assuming it was an e+(e-)[REAL] (rad)
+C           PH = Phi angle in the IP measured by BCAL++, assuming it was an e+(e-) [REAL] (rad)
+C           Ierr  = Error flag : 0=> No error ; 1=> Npar is too large (max 50) [INTEGER]
+C                                   
+C  Modifications:
+C
+C   19971205 G.Merino = Add the possibility of having several particles arriving
+C                       to the same module.    
+C
+      implicit none
+C
+      integer Nmx
+      parameter ( Nmx = 50 )  ! Max value for Npar 
+C
+      real Ebeam,P(4,Nmx),Vtx(3,Nmx)
+      real E,Ph,Th
+      real pipmeas(3),pmod,pout(3),psmea,thip,
+     .     xout(3),xsmea,x(2),ysmea
+      real pVec(3),vtxVec(3)
+      real EtotMeas,XtotMeas,YtotMeas
+      real pi
+      integer Npar,Ipar(2,Nmx),C(Nmx),Ierr
+      integer ich,ie,itag,iflag
+      integer imc,imod
+      integer IModule
+      logical first
+c
+      pi = acos(-1.)
+C
+C Initialise output values to zero
+C
+      Ierr = 0
+      E = 0.
+      Th = 0.
+      Ph = 0.
+      if (Npar.gt.Nmx) then
+         Ierr = 1
+         goto 999
+      endif
+C
+C Loop over the Npar MC particles
+C
+      EtotMeas = 0.
+      XtotMeas = 0.
+      YtotMeas = 0.
+      first = .true.
+      do imc = 1,Npar
+C
+C Safety cuts in 3-momenta module and Theta angle
+C
+C         P > 1 GeV & Theta > 1 mrad 
+C
+         pmod = P(4,imc)
+         thip = acos(abs(P(3,imc))/pmod)
+         pVec(1) = P(1,imc)
+         pVec(2) = P(2,imc)
+         pVec(3) = P(3,imc)
+         if (pmod.lt.1..or.thip.lt.0.001) goto 100
+C
+C Which module might be hitted?
+C
+         call module(pVec,imod)
+         if (first) then
+            IModule = imod
+            first = .false. 
+cc         else
+cc            if (imod.ne.IModule) print*,'bcalmc:Diff mod!!!!'
+         endif
+C     
+C Neutral Particles
+C
+         if (Ipar(2,imc).eq.0) then 
+            call neutral(pVec,xout,itag)
+            if (itag.eq.0) goto 100
+C
+C Consider the particle charge for the 4pole behaviour
+C 
+         elseif ((Ipar(2,imc).eq.-1.and.(imod.eq.1.or.imod.eq.2)).or.
+     .         (Ipar(2,imc).eq.1.and.(imod.eq.3.or.imod.eq.4))) then
+            ich = 1 
+         else 
+            ich = 0
+         endif
+C
+C Simulate the effect of the quadrupole
+C
+         vtxVec(1) = Vtx(1,imc)/100.
+         vtxVec(2) = Vtx(2,imc)/100.
+         vtxVec(3) = Vtx(3,imc)/100.           
+         call quad_sim(Ebeam,ich,vtxVec,pVec,pout,xout,itag)
+         if (itag.eq.0) goto 100
+c     
+C BCAL++ "Fast simulation" of 1 particle
+C              
+         call FastSim(Ipar(1,imc),pmod,xout(1),xout(2),
+     .                psmea,xsmea,ysmea)
+C
+C Add the Energy and Centroid of this particle to all the others
+C which also arrived to the module.   
+C
+         EtotMeas = EtotMeas + psmea
+         XtotMeas = Xtotmeas + psmea*xsmea
+         YtotMeas = Ytotmeas + psmea*Ysmea
+c
+ 100     continue
+      enddo
+c
+c Reconstruct the total centroid
+c
+      if (EtotMeas.gt.0.) then
+         XtotMeas = XtotMeas/EtotMEas
+         YtotMeas = YtotMeas/EtotMEas
+c     
+c Invert the 4pole trajectory to get the 3-momenta in the IP
+c
+         x(1) = XtotMeas
+         x(2) = YtotMeas
+         call quad_inv (Ebeam,EtotMeas,x,pipmeas,ie)   
+         if (ie.ne.0) then 
+            Ierr = 1
+            goto 999
+         endif            
+c     
+         E = EtotMeas
+         if (IModule.eq.1.or.IModule.eq.2) then
+            th = acos(pipmeas(3)/EtotMeas) 
+         else
+            th = pi - acos(pipmeas(3)/EtotMeas) 
+         endif
+         ph = atan2(pipmeas(2),pipmeas(1))
+         if (ph.lt.0) then
+            ph = 2.*pi + ph
+         endif
+c
+      endif
+c     
+ 999  continue
+      return
+      end
+
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+
+      SUBROUTINE SMEARING(E,X,Y,EF,XF,YF)
+C
+C Author : G. Merino - 19970424
+C
+C Description: Routine to simulate the detector smearing.
+C 
+C    INPUT:    E    MC TRUE ENERGY      (  GeV )      
+C              X    MC TRUE X POSITION  (Meters)   
+C              Y    MC TRUE Y POSITION  (Meters)
+C
+C    OUTPUT:   EF   SMEARED ENERGY     ( GeV  )  
+C              XF   SMEARED X POSITION (Meters)  
+C              YF   SMEARED Y POSITION (Meters)  
+C     
+      IMPLICIT NONE
+C
+      REAL GAUSS(3)
+      REAL SIGMA_E,SIGMA_PHI,SIGMA_R,E,X,Y,EF,XF,YF,
+     +     RTRUE,PHITRUE,RF,PHF
+C
+      COMMON /SMEAR/ SIGMA_E,SIGMA_R,SIGMA_PHI
+
+      RTRUE = SQRT(X**2+Y**2)
+      PHITRUE = ATAN2(Y,X)
+C
+      CALL RNORML(GAUSS,3)
+C
+C Energy smearing
+C
+       EF = E + (SIGMA_E*SQRT(E)*GAUSS(1))  
+C
+C Position smearing 
+C
+       RF = RTRUE + SIGMA_R/SQRT(E)*GAUSS(2)
+C
+       PHF = PHITRUE + (SIGMA_PHI)*3.141592/180/SQRT(E)*GAUSS(3)
+C
+       XF = RF*COS(PHF)
+       YF = RF*SIN(PHF)
+C
+       RETURN 
+       END
+
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+      subroutine FastSim(Icode,Etrue,Xtrue,Ytrue,Emeas,Xmeas,Ymeas)
+c
+c  Author : G. Merino - 19971206
+c
+c Description : BCAL++ Fast simulation 
+c
+c Inputs: Icode = MC Particle code [INTEGER]
+c                 (=0 gamma,=1 e,=2 mu,=3 had)
+c         Etrue = True energy of the particle arriving BCAL++ [REAL] (GeV)
+c         Xtrue = True X of the particle arriving BCAL++ [REAL] (Meters)
+c         Ytrue = True Y of the particle arriving BCAL++ [REAL] (Meters)
+c 
+c Outputs: Emeas = Measured Energy in BCAL++ [REAL] (GeV)
+c          Xmeas = Measured X in BCAL++ [REAL] (Metres)
+c          Ymeas = Measured Y in BCAL++ [REAL] (Metres)
+c
+      implicit none
+c
+      real Etrue,Xtrue,Ytrue,Emeas,Xmeas,Ymeas
+      integer Icode
+c
+      Emeas = 0.
+      Xmeas = 0.
+      Ymeas = 0.
+c
+c Naive approx: only e+,e- and gammas deposit their energy in BCAL++
+c
+      If (Icode.eq.0.or.Icode.eq.1) then
+       call smearing (Etrue,Xtrue,Ytrue,Emeas,Xmeas,Ymeas)
+      else
+       goto 999
+      endif
+c
+ 999  continue
+      return
+      end
+@
+
+
+1.2
+log
+@update
+@
+text
+@d1 1
+a1 2
+
+            SUBROUTINE BCALMC(EBEAM,P,VTX,C,E,TH,PH,IMOD,IERR)
+d7 12
+a18 12
+C  Inputs: EBEAM = Beam nominal Energy [REAL] (GeV)
+C          P(3) = Electron 3-momenta in the interaction point [REAL] (GeV)
+C          VTX(3) = Particle origin vertex [REAL] (Meters) 
+C          C = Particle charge [INTEGER]
+C
+C  Outputs: E = Electron energy measured by BCAL++ [REAL] (GeV)
+C           TH = Theta angle in the IP of the electron measured by BCAL++ [REAL] (rad)
+C           PH = Phi angle in the IP of the electron measured by BCAL++ [REAL] (rad)
+C           IMOD = BCAL++ Module hitted (1,2,3,4; 0=>No tag)  [INTEGER]   
+C           IERR = Error Flag : 0=> No error 
+C                               1=> Neutral particle (You cannot trust result)
+C                                   Particle charge opposite to "4pole design" (You cannot trust result)
+d20 1
+d22 2
+d25 1
+a25 5
+      IMPLICIT NONE
+C
+      REAL E,EBEAM,P(3),PH,PIPMEAS(3),PMOD,POUT(3),PSMEA,TH,
+     .     THIP,XOUT(3),XSMEA,X(3),YSMEA,TMP,VTX(3)
+      INTEGER C,ICH,IE,IERR,IMOD,ITAG,IFLAG
+d27 36
+a62 2
+      IERR = 0
+      IMOD = 0
+d64 1
+a64 1
+C Initial safety cuts in 3-momenta module and Theta angle
+d68 6
+a73 6
+      PMOD = SQRT(P(1)**2+P(2)**2+P(3)**2)
+      THIP = ACOS(ABS(P(3))/PMOD)
+      IF (PMOD.LT.1..OR.THIP.LT.0.001) THEN
+         IERR = 1
+         RETURN
+      ENDIF
+d77 8
+a84 2
+      CALL MODULE(P,IMOD)
+C
+d87 3
+a89 8
+      IF (C.EQ.0) THEN 
+         CALL NEUTRAL(P,XOUT,ITAG)
+         IF (ITAG.EQ.0) THEN
+            IMOD = 0
+            RETURN
+         ELSE
+            IERR = 1
+         ENDIF
+d93 6
+a98 7
+      ELSEIF ((C.EQ.-1.AND.(IMOD.EQ.1.OR.IMOD.EQ.2)).OR.
+     .         (C.EQ.1.AND.(IMOD.EQ.3.OR.IMOD.EQ.4))) THEN
+         ICH = 1
+      ELSE
+         ICH = 0
+         IERR = 1
+      ENDIF
+d102 7
+a108 7
+      CALL QUAD_SIM(EBEAM,ICH,VTX,P,POUT,XOUT,ITAG)
+      IF (ITAG.EQ.0) THEN
+         IMOD = 0
+         RETURN
+      ENDIF
+C     
+C BCAL++ "Fast simulation"
+d110 5
+a114 6
+      CALL SMEARING (PMOD,XOUT(1),XOUT(2),PSMEA,XSMEA,YSMEA)
+      X(1) = XSMEA
+      X(2) = YSMEA
+      X(3) = XOUT(3)
+C     
+C Invert the 4pole trajectory to get the 3-momenta in the IP
+d116 39
+a154 20
+      CALL QUAD_INV (EBEAM,PSMEA,X,PIPMEAS,IE)   
+      IF (IE.NE.0) THEN
+        IERR = 1
+        RETURN
+      ENDIF 
+C     
+      E = PSMEA
+      IF (P(3).GT.0.) THEN
+         TH = ACOS(PIPMEAS(3)/PSMEA) 
+      ELSE
+         TH = 3.141592 - ACOS(PIPMEAS(3)/PSMEA) 
+      ENDIF
+      PH = ATAN2(PIPMEAS(2),PIPMEAS(1))
+      IF (PH.LT.0) THEN
+         PH = 2.*3.141592 + PH
+      ENDIF
+C
+ 999  CONTINUE
+      RETURN
+      END
+d201 1
+a201 50
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+
+      SUBROUTINE MODULE(P,IMOD)
+C
+C Author : G. Merino - 19970424
+C
+C Description: Returns the # of BCAL++ module which will be hitted by the e- with
+C              3-momenta P(3) 
+C
+C Inputs:   P(3) = MC true 3-momenta of the incident particle (REAL)
+C   
+C Outputs:  IMOD = # of module hitted (1,2,3,4) (INTEGER)
+C
+C
+C
+C                          LEP center
+C
+C                            X ^
+C          __                  |                  __
+C         |__| #3              |                 |__| #1
+C                     e- --->  |  <--- e+
+C       -----------------------.---------------------------> Z
+C          __                                     __
+C         |__| #4                                |__| #2
+C                               
+C                             
+
+      IMPLICIT NONE
+C
+      REAL P(3)
+      INTEGER IMOD
+C
+      IF (P(3).GT.0.) THEN
+         IF (P(1).GT.0.) THEN
+            IMOD = 1
+         ELSE
+            IMOD = 2
+         ENDIF
+      ELSE
+         IF (P(1).GT.0.) THEN
+            IMOD = 3
+         ELSE
+            IMOD = 4
+         ENDIF
+      ENDIF
+C
+      RETURN
+      END
+
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+d203 36
+a238 38
+      SUBROUTINE NEUTRAL(P,XOUT,ITAG)
+C
+C Author : G. Merino - 19970424
+C
+C Description: Propagates neutral tracks to BCAL++ position
+C
+C Input: P(3) = Particle 3-momenta in the interaction point (REAL)
+C
+C Output: ITAG = (1 => tag ; 0 => not tag) (INTEGER)
+C
+      IMPLICIT NONE
+C
+      REAL D1,D2,D3,D4,RIN,RINBC,ROTBC,PHABC,QKSC
+      REAL TH,THMIN,THMAX,PMOD,PH,XOUT(3),P(3)
+      INTEGER ITAG
+C
+      COMMON/QUAD_PAR/QKSC,D1,D2,D3,D4,RIN
+      COMMON/BCAL/RINBC,ROTBC,PHABC     
+C
+      ITAG = 0
+C
+      PMOD = SQRT(P(1)**2+P(2)**2+P(3)**2)
+      TH = ACOS(ABS(P(3))/PMOD)
+      PH = ATAN2(ABS(P(2)),ABS(P(1)))
+C
+      THMIN = RINBC/(D1+D2+D3)
+      THMAX = RIN/(D1+D2+D4)
+C
+      IF (TH.LT.THMAX.AND.TH.GT.THMIN.AND.
+     .    PH*3.141592/180.LT.PHABC) THEN 
+         ITAG = 1 
+         XOUT(1) = (D1+D2+D3)*TH*COS(PH)
+         XOUT(2) = (D1+D2+D3)*TH*SIN(PH)
+         XOUT(3) = (D1+D2+D3)
+      ENDIF
+C
+      RETURN
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 3
+a6 1
+C  Purpose: Fast BCAL++ response simulation for MC events    
+d110 3
+a112 1
+C  ROUTINE TO SIMULATE THE DETECTOR SMEARING.
+d155 4
+a158 1
+C Purpose: Returns the # of BCAL++ module hitted 
+d204 3
+a206 1
+C Purpose: Propagates neutral tracks to BCAL++ position
+@
+
+
+1.1.1.1
+log
+@import 
+@
+text
+@@

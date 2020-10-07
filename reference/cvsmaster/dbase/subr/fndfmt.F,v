@@ -1,0 +1,227 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	dbase22:1.1.1.1
+	dbase21:1.1.1.1
+	dbase20:1.1.1.1
+	dbase19:1.1.1.1
+	dbase18:1.1.1.1
+	dbase17:1.1.1.1
+	dbase04:1.1.1.1
+	dbase03:1.1.1.1
+	dbase02:1.1.1.1
+	dbase01:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	97.02.12.10.06.06;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.02.12.10.06.06;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE FNDFMT (JNAME,NAME,DAFMTB,IER)
+C ---------------------------------------------------------------
+C! find the BOS format
+C - F.Ranjard - 900501
+C - Input : JNAME   / I  : bank index
+C           NAME    / A  : bank name
+C - Output: IER     / I  : return code
+C                          = 0 OK
+C                          = -1 format already in the list
+C                          = -2 number of columns does not fit DDL
+C                          = -3 LIST is too short
+C                          =  1 no format
+C           DAFMTB  / A  : BOS FORMAT
+C
+C - build the bank format using either .TAB, .COL
+C                                    or TAB2,COL2
+C                                    or TDOC
+C ----------------------------------------------------------------
+#ifndef DOC
+C - Column numbers in the .TAB table for
+C           Table ID, Table name
+#include "tab2jj.h"
+#include "tdocjj.h"
+C Careful : overflow not checked (m.r)
+      CHARACTER*36 DAFMTB
+      PARAMETER (MXLIST=2000)
+      CHARACTER*2000 LIST
+      CHARACTER*4 NAME,CHAINT
+C
+#include "bcs.h"
+      DATA IFI/0/
+#include "bmacro.h"
+C ----------------------------------------------------------------
+C
+      IF (IFI.EQ.0) THEN
+         IFI = 1
+         NATDOC = NAMIND('TDOC')
+         NATABL = NAMIND('.TAB')
+         NACOLU = NAMIND('.COL')
+         NATAB2 = NAMIND('TAB2')
+         NACOL2 = NAMIND('COL2')
+         NADROP = NAMIND('DROP')
+         NFMT = JTDONC-JTDOBF+1
+         LUNPR = IW(6)
+         LIST = ' '
+      ENDIF
+C
+C ----------------------------------------------------------------------
+C
+      IER = 0
+      DAFMTB = ' '
+C
+C     skip format finding if already done once
+      LE = LENOCC(LIST)
+      IF (LE.GT.0) THEN
+         DO 204 MM=1,LE,4
+            IF (NAME.EQ.LIST(MM:MM+3)) GOTO 205
+ 204     CONTINUE
+      ENDIF
+C
+C     try to get the format from TDOC
+      JTDOC = IW(NATDOC)
+      IF (JTDOC.NE.0) THEN
+        LC = LCOLS(JTDOC)
+        LR = LROWS(JTDOC)
+        IROW = LOCTAB (IW(JTDOC+LMHLEN+1),LC,LR,JTDONA,IW(JNAME-3))
+        IF (IROW.LE.0) GOTO 214
+        KTDOC = KROW(JTDOC,IROW)
+        CALL ALSTIN (IW(KTDOC+JTDOBF),NFMT,DAFMTB)
+        IF (INDEX(DAFMTB,'A').EQ.0 .AND. INDEX(DAFMTB,'F').EQ.0
+     &       .AND.INDEX(DAFMTB,'B').EQ.0) DAFMTB = 'I'
+        GOTO 203
+      ENDIF
+C
+C     build a format for TAB2, COL2, empty banks (format from LBF)
+C     and other banks
+ 214  CONTINUE
+      IF (NAME.EQ.'TAB2') THEN
+         IROW = -1
+         CALL BGARB (IW)
+         JNAME = IW(NATAB2)
+         DAFMTB = '2I,(I,4A)'
+      ELSEIF (NAME.EQ.'COL2') THEN
+         IROW = -1
+         CALL BGARB (IW)
+         JNAME = IW(NACOL2)
+         DAFMTB = '2I,(I,7A,I)'
+      ELSEIF (NAME.EQ.'.TAB') THEN
+         IROW = -1
+         DAFMTB = '2I,(I,4A)'
+         CALL BGARB (IW)
+         JNAME = IW(NATABL)
+      ELSEIF (NAME.EQ.'.COL') THEN
+         IROW = -1
+         DAFMTB = '2I,(I,7A,I)'
+         CALL BGARB (IW)
+         JNAME = IW(NACOLU)
+      ELSEIF (NAME.EQ.'.CHK') THEN
+         IROW = -1
+         DAFMTB = 'I'
+      ELSEIF (NAME.EQ.'.DIR') THEN
+         IROW = -1
+         DAFMTB = '2I,(A)'
+      ELSEIF (NAME.EQ.'TSTC') THEN
+         IROW = -1
+         DAFMTB = '2I,(A)'
+      ELSEIF (NAME.EQ.'TDOC') THEN
+         IROW = -1
+         DAFMTB = '2I,(A)'
+      ELSEIF (NAME.EQ.'TNOG') THEN
+         IROW = -1
+         DAFMTB = '2I,(A)'
+      ELSEIF (NAME.EQ.'TNOJ') THEN
+         IROW = -1
+         DAFMTB = '2I,(A)'
+      ELSEIF (NAME.EQ.'TPRO') THEN
+         IROW = -1
+         DAFMTB = '2I,(A)'
+      ELSEIF (NAME.EQ.'CPRO') THEN
+         IROW = -1
+         DAFMTB = '2I,5A,I,2A'
+      ELSEIF (NAME.EQ.'CADB') THEN
+         IROW = -1
+         DAFMTB = '2I,5A,I,2A'
+      ELSEIF (LROWS(JNAME).EQ.0) THEN
+         IROW = -1
+         DAFMTB = '2I'
+      ELSE
+C       try to get the DDL information
+         IDDL = IW(NATABL)
+         IDDC = IW(NACOLU)
+         DO 2001 N=1,2
+           DO 201 IROW =1,LROWS(IDDL)
+            IF (NAME.EQ.CHAINT(ITABL(IDDL,IROW,JTABN2))) GOTO 202
+ 201       CONTINUE
+           IDDL = IW(NATAB2)
+           IDDC = IW(NACOL2)
+ 2001    CONTINUE
+C        bank has no DDL
+         IROW = 0
+         WRITE (LUNPR,*) ' FNDFMT ***** WARNING *****',
+     &                     ' this bank has no format',
+     &                   ' INTEGER format will be assumed ',NAME
+         IER = 1
+         DAFMTB = 'I'
+         GOTO 203
+ 202     CONTINUE
+C        bank has a DDL, get the format
+         JNAID = ITABL(IDDL,IROW,JTABID)
+         CALL UTAFMT(NAME,JNAID,IDDC,NCOLB,IFLAG,DAFMTB)
+         IF (NCOLB.NE.IW(JNAME+LMHCOL)) THEN
+            WRITE(LUNPR,*) ' FNDFMT **** WARNING ************* ',
+     &      ' does not fit ddl ', NAME,IW(JNAME+LMHCOL),NCOLB
+            IER = -2
+         ENDIF
+      ENDIF
+C
+C - a format has been found , call BKFMT
+C
+ 203  LF = LENOCC(DAFMTB)
+      CALL BKFMT (NAME,DAFMTB(1:LF))
+      WRITE (LUNPR,*) IROW,DAFMTB(1:LF+1),NAME,(IW(JNAME+MM),MM=0,2)
+      LE = LENOCC (LIST)
+      IF (LE+4.GE.MXLIST) THEN
+         WRITE(LUNPR,*) ' FNDFMT : too many banks: LIST too short ',
+     &     LE,MXLIST
+         IER = -3
+      ELSE
+         LIST(LE+1:LE+4) = NAME
+      ENDIF
+      RETURN
+C
+C - format has already been found
+C
+ 205  IER = -1
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@1st release of dbase library
+@
+text
+@@

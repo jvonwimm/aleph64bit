@@ -1,0 +1,84 @@
+head	1.2;
+access;
+symbols
+	look25:1.2
+	look24:1.2
+	look23:1.2
+	look22:1.2
+	look21:1.2
+	look20:1.2
+	v15:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.04.18.09.05.51;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.09.15.50.23;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.09.15.50.24;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@change VAX to DEC.AND..NOT.UNIX ==> version 20
+
+ Modified Files:
+ 	lkevt.h lkfil.h lklast.h lkunpk.h version.h
+ Removed Files:
+	lookend.h
+@
+text
+@      SUBROUTINE LKGTUNP(COMAND)
+C -------------------------------------------------------------
+C -------------------------------------------------------------
+#ifndef DOC
+      CHARACTER*80 COMAND,TEMP
+#include "lkfil.h"
+C -------------------------------------------------------------
+      TEMP=' '
+      CALL LKCOMPA(COMAND,'ULIST',TEMP)
+      IF (TEMP.EQ.' ') THEN
+          WRITE(LOUT,*) ' Give unpacking list [ AL ]'
+          READ(5,1010) TEMP
+          IF (TEMP.EQ.' ') TEMP='AL '
+      ENDIF
+      CALL LKSTUNP (TEMP)
+ 1010 FORMAT(A4)
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK lkgtunp
+@
+
+
+1.1.1.1
+log
+@import look 15
+@
+text
+@@

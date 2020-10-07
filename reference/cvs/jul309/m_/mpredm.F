@@ -1,0 +1,379 @@
+         SUBROUTINE MPREDM
+C----------------------------------------------------------------
+C! Steering routine for MUON hit data
+C! decoding with new data base (MonteCarlo data only)
+C!
+C! P.Campana    891128
+C!
+C! Input:  MUDG raw data bank
+C! Output: MHIT ALEPH coord. hits bank
+C!
+C?
+C!======================================================================
+#ifndef DOC
+C
+#include "rparac.h"
+#include "bcs.h"
+#include "rflags.h"
+#include "rlunit.h"
+#include "mghpar.h"
+#include "mhitjj.h"
+#include "mujosu.h"
+#include "mgnpar.h"
+#include "mgdeca.h"
+#include "mgeeca.h"
+#include "mgdmda.h"
+#include "mgemda.h"
+#include "mgdbar.h"
+#include "mgebar.h"
+#include "mdebug.h"
+C
+         INTEGER IPAN(9,NHITMG),IEL(12)
+         REAL SLTCO(4),ALECO(3)
+         PARAMETER(NCLUMX=500)
+         CHARACTER*4 CHAINT,CHAR
+         DATA IMES1,IMES2,IMES3/3*0/
+#include "bmacro.h"
+C
+      IMPRIN=0
+      IF (FDEBRF) IMPRIN = JDBDRF(JULMU)
+         IHIST=JHISRF(JULMU)
+C Takes data from MUDG
+         JMUDG=NLINK('MUDG',0)
+         IF(JMUDG.EQ.0) RETURN
+         NCL=IW(JMUDG+2)
+         NNMUDI=NNMUDI+1
+         NCLTOT=NCLTOT+NCL
+C! NCLMAX defined in MINIJO
+         IF(NCL.GT.NCLMAX) NCLMAX=NCL
+         IF(NCL.GT.NCLUMX) THEN
+               NCL=NCLUMX
+               CALL RERROR('MPREDM',0,'Max # of clusters reached')
+         ENDIF
+         NMHIT=0
+C drop existing mu-banks if we are reading a POT (G. Capon 4-dec-1990)
+         CALL BDROP(IW,'MHITMTHRMCAD')
+C Creates MHIT bank
+         LNHIT =  2+ NHITMG*LMHITG
+         CALL AUBOS('MHIT',0,LNHIT,JMHIT,IGARB)
+         IF (IGARB.EQ.1) THEN
+            JMUDG=NLINK('MUDG',0)
+         ENDIF
+         IF (IGARB.EQ.2) THEN
+            CALL RERROR('MPREDM',1,'Error creating MHIT bank')
+            RETURN
+         ENDIF
+         KMHIT=JMHIT+2
+C ==========
+         IF(IMPRIN.GT.2) THEN
+         NAMI=NAMIND('IMPA')
+         JIMPA=IW(NAMI)
+         ND=IW(JIMPA+2)
+         CHAR=CHAINT(IW(JIMPA+(ND-1)*8+3))
+         IF(CHAR.EQ.'MUON') THEN
+            XI=RTABL(JIMPA,ND,2)
+            YI=RTABL(JIMPA,ND,3)
+            ZI=RTABL(JIMPA,ND,4)
+            WRITE(LDEBRL,*) 'IMPA COOR. ', XI,YI,ZI
+            AI=RTABL(JIMPA,ND,5)
+            BI=RTABL(JIMPA,ND,6)
+            CI=RTABL(JIMPA,ND,7)
+            RI=SQRT(XI**2+YI**2+ZI**2)
+            TI=ATAN2(SQRT(XI**2+YI**2),ZI)
+            IF(TI.LT.0.) TI=3.14159+TI
+            TF=ATAN2(YI,XI)
+            IF(TF.LT.0.) TF=2.*3.14159+TF
+            WRITE(LDEBRL,*) 'IMPA POLA. ', RI,TI,TF
+         ENDIF
+         ENDIF
+C =========
+C Loop on clusters
+         DO 20 J=1,NCL
+C
+         DO 2002 KI=1,9
+ 2002    IPAN(KI,J)=0
+C
+         JSL=0
+         JSUBC=0
+         ICLOK=0
+         IWORD=ITABL(JMUDG,J,1)
+         JSTRP=IBITS(IWORD, 0,8)
+         JCLUS=IBITS(IWORD, 8,8)
+         JPSEU=IBITS(IWORD,16,8)
+         JASTR=IBITS(IWORD,24,8)
+         IF (JCLUS.EQ.0) THEN
+            CALL RERROR('MPREDM',3,'cluster width = 0')
+            GO TO 20
+         ENDIF
+         JPSEU=JPSEU+1
+         JBUS=JPSEU
+C
+C Look at subc. & type.
+C Loop on barrel slots
+         DO 101 I=1,NRSLBA
+         IF(MBNAST(I).EQ.JASTR) THEN
+             JTYAS=MBTAST(I)
+             JSUBC=1
+             GOTO 200
+         ENDIF
+ 101     CONTINUE
+C Loop on endcap slots
+         DO 102 I=1,NRSLEC
+         IF(MENAST(I).EQ.JASTR) THEN
+              JTYAS=METAST(I)
+              JTYBU=METYBU(JTYAS,JPSEU)
+              JSL=I
+              IF(JTYBU.GE.5) JSL=JSL+4
+              JSUBC=2
+              GOTO 200
+         ENDIF
+ 102     CONTINUE
+C Loop on middle angle slots
+         DO 103 I=1,NRSLMA
+         IF(JASTR.EQ.MANAST(I)) THEN
+             JSUBC=3
+             JTYAS=MATAST(I)
+             JTYBU=MATYBU(JTYAS,JPSEU)
+             JSL=MAOFBU(JTYAS,JPSEU)+MAOAST(I)
+             GOTO 200
+         ENDIF
+ 103     CONTINUE
+C Check on subc.
+ 200     IF(JSUBC.EQ.0) THEN
+             IMES1=IMES1+1
+             IF(IMES1.LE.10.AND.IMPRIN.GT.1)
+     +       WRITE(LDEBRL,*) ' Unidentified Astros # ',JASTR,
+     +       ' in cluster #' ,J
+             CALL RERROR('MPREDM',4,'unidentified astros')
+             GOTO 20
+         ENDIF
+         IF(JSUBC-2) 201,202,203
+C Barrel
+C From type & pseudolayer to slot
+ 201     IF(JTYAS.LE.2) THEN
+             JTYBU=MBTYBU(JTYAS,JPSEU)
+             JSL=I
+             IF(JTYBU.GE.5) JSL=JSL+NRSLBA/2
+             IF(JTYAS.EQ.2) THEN
+C special case of 9M,11M
+                 IF((JPSEU.GE.1.AND.JPSEU.LE.4).OR.
+     +              (JPSEU.GE.13.AND.JPSEU.LE.16)) JSL=JSL+1
+C special case of 9B,11B
+                 IF((JPSEU.GE.9.AND.JPSEU.LE.12).OR.
+     +              (JPSEU.GE.21.AND.JPSEU.LE.24)) JSL=JSL+2
+             ENDIF
+         ENDIF
+         IF(JTYAS.EQ.3) THEN
+             JTYBU=MBTYBU(JTYAS,JPSEU)
+             JSL=MBSLPN(1,JPSEU)
+         ENDIF
+         JPOLD=JPSEU
+         IF(JTYAS.EQ.4) THEN
+             IF(JPSEU.LE.4) THEN
+                JPSEU=JPSEU*2
+                IF(JSTRP.LE.MBUPBU(JTYAS,JPSEU-1)) JPSEU=JPSEU-1
+             ELSE
+                JPSEU=JPSEU+2
+             ENDIF
+             JTYBU=MBTYBU(JTYAS,JPSEU)
+             JSL=MBSLPN(2,JPSEU)
+         ENDIF
+C Check on the slot #
+         IF(JSL.LE.0.OR.JSL.GT.NRSLBA) THEN
+             IMES2=IMES2+1
+             IF(IMES2.LE.10.AND.IMPRIN.GT.1)
+     +       WRITE(LDEBRL,*) ' Unidentified slot # ',JSL,
+     +        ' in cluster # ',J
+             CALL RERROR('MPREDM',5,'unidentified slot')
+             GOTO 20
+         ENDIF
+         GOTO 300
+C End Cap
+ 202     CONTINUE
+C Check on the slot #
+         IF(JSL.LE.0.OR.JSL.GT.NRSLEC) THEN
+             IMES2=IMES2+1
+             IF(IMES2.LE.10.AND.IMPRIN.GT.1)
+     +       WRITE(LDEBRL,*) ' Unidentified slot # ',JSL,
+     +        ' in cluster # ',J
+             CALL RERROR('MPREDM',5,'unidentified slot')
+             GOTO 20
+         ENDIF
+         GOTO 300
+C Middle angle
+ 203     CONTINUE
+         IF(JSL.LE.0.OR.JSL.GT.NRSLMA) THEN
+             IMES2=IMES2+1
+             IF(IMES2.LE.10.AND.IMPRIN.GT.1)
+     +       WRITE(LDEBRL,*) ' Unidentified slot # ',JSL,
+     +        ' in cluster # ',J
+             CALL RERROR('MPREDM',2,'unindentified slot')
+             GOTO 20
+         ENDIF
+C Fill vectors
+ 300     ICLOK=1
+C ================
+         IF(IMPRIN.GT.2) THEN
+         IVW=2
+         IPL=2
+         IF(JTYBU.EQ.1.OR.JTYBU.EQ.2.OR.JTYBU.EQ.5.OR.JTYBU.EQ.6)IPL=1
+         IF(JTYBU.EQ.1.OR.JTYBU.EQ.3.OR.JTYBU.EQ.5.OR.JTYBU.EQ.7)IVW=1
+         WRITE(LDEBRL,1099)J,JASTR,JBUS,JSTRP,JCLUS,JSL,JPSEU,JTYBU,IVW,
+     +   IPL
+ 1099    FORMAT(1H ,I3,' A',I3,' B',I3,' S',I5,' CL',I5,5X,' sl',
+     +          I3,' ps',I3,' ty',I3,' view x-y',I3,' plane',I3)
+         ENDIF
+C ================
+         IPAN(1,J)=JSUBC
+C                                     ! subc.
+         IPAN(2,J)=JSL
+C                                     ! slot
+         IPAN(3,J)=2
+C                                     ! plane
+         IF(JTYBU.EQ.1.OR.JTYBU.EQ.2.OR.JTYBU.EQ.5.OR.JTYBU.EQ.6)
+     +                                                  IPAN(3,J)=1
+         IPAN(4,J)=2
+C                                     ! view (x=1)
+         IF(JTYBU.EQ.1.OR.JTYBU.EQ.3.OR.JTYBU.EQ.5.OR.JTYBU.EQ.7)
+     +                                                  IPAN(4,J)=1
+         IPAN(5,J)=JPSEU
+C                                     ! pseudolay in bus banks
+         IPAN(6,J)=JSTRP
+C                                     ! strip address
+         IPAN(7,J)=JCLUS
+C                                     ! clust. width
+         IPAN(8,J)=JTYAS
+C                                     ! astros type
+C Remove external muon chamber layer (from JULIA MUEX data card)
+         JMUEX=NLINK('MUEX',0)
+         IF(JMUEX.GT.0.AND.JTYBU.GE.5) ICLOK=0
+C
+         IPAN(9,J)=ICLOK
+C                                     ! cluster status
+         CALL HFILL(8198+IPAN(4,J),FLOAT(JCLUS),0.,1.)
+C
+ 20      CONTINUE
+C Association & decoding of clusters
+C (status ok; same subc,slot,plane; orthogonal views)
+         DO 30 I=1,NCL-1
+         DO 30 J=I+1,NCL
+         IF(IPAN(9,I)*IPAN(9,J).EQ.0) GOTO 30
+         DO 31 L=1,3
+ 31      IF(IPAN(L,I).NE.IPAN(L,J)) GOTO 30
+         IF(IPAN(4,I).EQ.IPAN(4,J)) GOTO 30
+C
+         IEL(1) =IPAN(1,J)
+C                                    ! subc
+         IEL(2) =IPAN(2,J)
+C                                    ! slot
+         IF(IPAN(4,I).EQ.1) THEN
+              IX=I
+              IY=J
+         ELSE
+              IX=J
+              IY=I
+         ENDIF
+C                                    ! planes X & Y
+         IEL(11)=IPAN(3,IX)
+         IEL(12)=IPAN(3,IY)
+C
+         IEL(3)=IPAN(8,IX)
+C                                    ! x astr. type
+         IEL(4)=IPAN(8,IY)
+C                                    ! y
+         IEL(5)=IPAN(6,IX)
+C                                    ! x strip add.
+         IEL(6)=IPAN(6,IY)
+C                                    ! y
+         IEL(7)=IPAN(7,IX)
+C                                    ! x cl. wid.
+         IEL(8)=IPAN(7,IY)
+C                                    ! y
+         IEL(9)=IPAN(5,IX)
+C                                    ! x pseud.
+         IEL(10)=IPAN(5,IY)
+C                                    ! y
+C Transformation to slot coordinates
+         CALL MUSLCM(IEL,SLTCO,IOK)
+C Correction for the non existing y strips of 9 11 A  ext.
+         IF(IEL(1).EQ.1.AND.(SLTCO(2).LT.80.OR.SLTCO(2).GT.155).AND.
+     +     (IEL(2).EQ.27.OR.IEL(2).EQ.31)) IOK=0
+C Correction for the non existing y strips of 9 11 B  ext.
+         IF(IEL(1).EQ.1.AND.(SLTCO(2).LT.30.OR.SLTCO(2).GT.105).AND.
+     +     (IEL(2).EQ.29.OR.IEL(2).EQ.33)) IOK=0
+C
+         IF(IOK.NE.1.AND.IMPRIN.GE.1) THEN
+            IMES3=IMES3+1
+            IF(IMES3.LE.10)
+     +      WRITE(LDEBRL,*) '+ Hit assoc. flag =',IOK,' in clust.',IX,IY
+            GOTO 30
+         ENDIF
+         IF(IOK.NE.1) GOTO 30
+C Transformation to ALEPH coordinates
+         CALL MUALCM(IEL,SLTCO,ALECO)
+         NMHIT=NMHIT+1
+C =============
+          IF(IMPRIN.GT.2) THEN
+         WRITE(LDEBRL,4567) I,J,SLTCO,ALECO
+ 4567    FORMAT(1H ,2I3,' slco ',2F7.2,2F5.1,' alco',3F9.4)
+          ENDIF
+C =============
+C Fill MHIT bank
+C Set subc # to ALEPH convention (EC=1,MA=2,BA=3)
+         NSUBC=IEL(1)-1
+         IF(NSUBC.EQ.0) NSUBC=3
+C
+         IW(KMHIT+JMHISC)=NSUBC
+C                                            ! subc
+         IW(KMHIT+JMHISN)=IEL(2)
+C                                            ! slot
+         IW(KMHIT+JMHILN)=IEL(11)
+C                                            ! plane
+         RW(KMHIT+JMHIXL)=SLTCO(1)
+C                                            ! x slot
+         RW(KMHIT+JMHIYL)=SLTCO(2)
+C                                            ! y slot
+         RW(KMHIT+JMHIRH)=ALECO(1)
+C                                            ! rho ALEPH r.s.
+         RW(KMHIT+JMHITH)=ALECO(2)
+C                                            ! theta
+         RW(KMHIT+JMHIPH)=ALECO(3)
+C                                            ! phi
+         KMHIT=KMHIT+LMHITG
+C Fill histos
+         IF(IHIST.GT.0) THEN
+            CALL HFILL(8001,ALECO(2),0.,1.)
+            CALL HFILL(8002,ALECO(3),0.,1.)
+C Slot hist.: 1-16 EC, 21-58 MA, 61-94 BA
+            SLOTN=FLOAT(IEL(2))
+            IF(NSUBC.EQ.3) SLOTN=SLOTN+60.
+            IF(NSUBC.EQ.2) SLOTN=SLOTN+20.
+            CALL HFILL(8003,SLOTN,0.,1.)
+         ENDIF
+         IF(NMHIT.GT.NHITMG) THEN
+            CALL RERROR('MPREDM',2,'Max # of muon hits reached')
+            GOTO 40
+         ENDIF
+C End loop
+ 30      CONTINUE
+C
+ 40      IF(IHIST.GT.0) CALL HFILL(8004,FLOAT(NMHIT),0.,1.)
+         IF(IMPRIN.GT.0) WRITE(LDEBRL,*) NMHIT,' muon hits in the event'
+C Adjust MHIT bank length
+         IF(NMHIT.EQ.0) THEN
+             IND=NDROP('MHIT',0)
+         ELSE
+             IW(JMHIT+1)=LMHITG
+             IW(JMHIT+2)=NMHIT
+             LNHIT=2+NMHIT*LMHITG
+             CALL AUBOS('MHIT',0,LNHIT,JMHIT,IGARB)
+             IF(IMPRIN.GE.3) IND=NPRNT('MHIT',0)
+         ENDIF
+C
+C? Compare with mtc data
+C
+         IF(NMHIT.GT.0.AND.JHISRF(JULMU).GE.2) CALL MUCOMP
+C
+         RETURN
+         END
+#endif

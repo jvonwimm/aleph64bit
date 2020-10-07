@@ -1,0 +1,99 @@
+#!/bin/csh
+# ======================> runeptoda procedure =====================
+#
+# F.Blin 12/01/93 add new parameter for DAFB value
+# F.Ranjard 28/01/93 get parameters from dbase_run
+#                    remove fort.7 at the end
+# runeptoda1.1                                   FLR
+# 28/09/93 - increase default size of data base to 420 blocks
+# runeptoda1.2                                   FLR
+# 14/10/93 - set echo on when last argument is "-v"
+# runeptoda1.3                                   FLR
+# 28/09/93 - increase default size of data base to 440 blocks
+# runeptoda1.4                                   FLR
+# 04/10/94 - keep the 1st argument : adbs version number
+#            get other from /al/reference/dbase/eptoda.cards
+# runeptoda1.5                                   JC
+# 28/11/95 - use $ALEPH_ROOT instead of /al
+# runeptoda1.6
+# 03/07/97 - build data cards in each $ALEPH/dbase directory
+# runeptoda1.7                                   F.Loverre
+# 27/01/2004 - Must define the variable SERVICE (lxplus)
+# ===================================================================
+#
+set exec_name = "runeptoda1.7"
+set nar = $#argv
+if (nar != 0) then
+  if ($argv[${nar}] == "-v") then
+     echo "${exec_name}" 
+     set echo on
+     set argv[${nar}] = ""
+  endif
+endif
+#*******>
+# BIN is the path of eptoda ======
+set BIN = "${ALEPH}/bin"
+# ================================
+
+# SERVICE is the current machine ======
+set SERVICE = "lxplus"
+# ================================
+
+set VERSION = $1
+set dafb_rec = $2
+set dafb_dir = $3
+set dbase_name = "adbs${VERSION}"
+set dbase_dir = "${ALEPH}/dbase"
+set ref_dir = "${REFERENCE}/dbase"
+
+# =========== build data cards file
+#
+if (-e ${dbase_dir}/eptoda.cards) rm -f ${dbase_dir}/eptoda.cards
+#
+cat >${dbase_dir}/eptoda.cards <<EOF
+FEPI '${ref_dir}/adbs${VERSION}.epio | EPIO'
+FDAF '${dbase_dir}/adbs${VERSION}.daf | DAF'
+DAFB ${dafb_rec} ${dafb_dir}
+NDOT
+ENDQ
+EOF
+#
+#
+# ===================
+#
+cd ${dbase_dir}
+setenv EPTODACARDS ${dbase_dir}/eptoda.cards
+#
+if (-e ${dbase_name}.daf) then
+   echo " rename existing ${dbase_name}.daf as ${dbase_name}.dafold" 
+   mv -f ${dbase_name}.daf ${dbase_name}.dafold 
+endif
+#
+if (-e eptoda.out) rm -f eptoda.out
+ 
+#
+${BIN}/eptoda.exe > eptoda.out
+#
+# ========================================
+# check existence of .daf,  remove temporary files
+#
+if !(-f ${dbase_name}.daf) then 
+   echo " *** FATAL -> file ${dbase_name}.daf is not here, restore previous one if any"
+   if (-e ${dbase_name}.dafold) mv -f ${dbase_name}.dafold ${dbase_name}.daf
+   goto error_end
+else
+   echo " remove ${dbase_name}.dafold if there"
+   if (-e ${dbase_name}.dafold) rm -f ${dbase_name}.dafold
+endif   
+# ==========================================> normal exit
+#
+echo " ${SERVICE} runeptoda  normal exit"
+set dmyh = `date '+%d-%h-19%y %T'`
+echo " ${SERVICE} runeptoda ${user} ${dmyh} ${VERSION}" >> ${dbase_dir}/spy 
+exit
+#=============================================> abnormal exit
+error_end:
+echo " ${SERVICE} runeptoda abnormal exit"
+echo " "  
+exit(0)
+ 

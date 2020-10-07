@@ -1,0 +1,160 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.29.16.16.16;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.01.56;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.57;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ agbeam.F agchck.F agcoil.F agecal.F agecpm.F ageome.F aggean.F
+ aghcal.F agitch.F aglcal.F agmate.F agmedi.F agmuch.F agquad.F
+ agscal.F agsmba.F agtpch.F
+ Removed Files:
+ guinti.F
+ aggatt.F aggord.F
+@
+text
+@*DK agscal
+      SUBROUTINE AGSCAL
+C ----------------------------------------------------------
+C - B.Bloch-Devaux and J.P.Schuller 910930
+C! build SCAL geometry
+CKEY SCAL GEOM
+C - called by AGEOME
+C - calls     AGGEAN,AGSI92,AGDIMP              from this Lib
+C - calls     ALTELL                            from ALEPHLib
+C ---------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "iocom.h"
+#include "agcons.h"
+      EXTERNAL JHOCHA
+C --------------------------------------------------------
+C - get setup code and build SCAL from data base banks
+C
+      CALL AGGEAN ('SI',ISIST)
+C
+      IF (ISIST.LT.1) THEN
+         CALL ALTELL ('AGSCAL: SCAL<92 is not implemented ',0,'STOP')
+      ELSEIF (ISIST.GE.1) THEN
+C
+C     Define sensitive volume flag as defined if SET 'SCAL' is selected
+C
+         IF(IAGSLV+1.GT.LSENV) GO TO 992
+         IAGSLV=IAGSLV+1
+         IAGSEN(IAGSLV,1)=JHOCHA('SSIL')
+C     store number (1-NMOD) of SMOD which is level 8
+         IAGSEN(IAGSLV,2)=    8
+         CALL AGSI92
+      ENDIF
+C
+C    Store volume name and level in the geometry tree which define
+C    entrance in detector
+C
+      CALL AGDIMP('SACT',7,'SCAL')
+      GOTO 999
+C - error
+C
+C   not enough space to SAVE sensitive module
+  992 CONTINUE
+      WRITE (LOUTIO,*) ' AGSCAL : too many sensitive volumes, IAGSLV= '
+     &   ,  IAGSLV, ' LSENV= ',LSENV
+      GOTO 991
+C
+ 991  CALL ALTELL ('AGSCAL: cannot build SCAL geometry ',0,'STOP')
+C - end
+C
+  999 CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d8 1
+a8 1
+C - calls     AGGEAN,AGSI92,AGDIMP,AGGORD       from this Lib
+a32 2
+C     Look for ordering bank  and order volumes
+         CALL AGGORD ('SI',ISIST)
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

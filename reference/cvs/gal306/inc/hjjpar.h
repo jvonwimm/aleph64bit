@@ -1,0 +1,12 @@
+*CD hjjpar
+#include "htdijj.h"
+#include "hthtjj.h"
+#include "hwhtjj.h"
+#include "hwdijj.h"
+#include "httrjj.h"
+#include "hwtrjj.h"
+#include "hctgjj.h"
+#include "hsbajj.h"
+#include "hsecjj.h"
+#include "htrejj.h"
+#include "hcosjj.h"

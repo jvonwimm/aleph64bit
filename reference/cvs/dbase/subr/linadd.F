@@ -1,0 +1,69 @@
+      SUBROUTINE LINADD
+C ----------------------------------------------------------------
+C! read DOC:SBANK.ADR file
+C ----------------------------------------------------------------
+#ifndef DOC
+#include "sbkpar.h"
+#include "fildat.h"
+#if defined(UNIX)
+#include "sbkloc.h"
+#endif
+      CHARACTER*4 BANK
+C ----------------------------------------------------------------
+#if defined(UNIX)
+      OPEN (UNIT=LINP,FILE=ALDOCC(:ILDOCC)//'/sbank.adr',STATUS='OLD')
+#else
+      OPEN (UNIT=LINP,FILE='DOC:SBANK.ADR',STATUS='OLD',READONLY)
+#endif
+      READ (UNIT=LINP,FMT='(I5)') IARCNT
+      IF (IARCNT.GT.NBNK) THEN
+         WRITE (LOUT,'(2A,I5)') ' LINADD too many banks increase '
+     &                       , 'NBNK in SBKPAR to ',IARCNT
+         IARCNT = NBNK
+      ENDIF
+      IADARR(0)=IARCNT
+      DO 10 I=1,IARCNT
+C
+C     read one bank name
+        READ (UNIT=LINP,FMT='(3I5,2A)') IADARR(I),NUMBKD(I),NUMREF(I),
+     :                                  NAMARR(I),COMLIN(I)
+C
+C        if too many entries limit to NENTR entries
+C        then skip the extra entries
+        IF (NUMBKD(I).GT.NENTR) THEN
+           WRITE (LOUT,'(2A,I5)')' LINADD too many entries increase '
+     &                         ,' NENTR in SBKPAR to ',NUMBKD(I)
+           NMAX = NUMBKD(I)
+           NUMBKD(I) = NENTR
+        ELSE
+           NMAX = 0
+        ENDIF
+        DO 20 J=1,NUMBKD(I)
+   20   READ (UNIT=LINP,FMT='(A)') BKDLIN(I,J)
+        IF (NMAX.GT.0) THEN
+           DO 21 J=1,NMAX-NENTR
+   21      READ (UNIT=LINP,FMT='(A)') INPLIN
+        ENDIF
+C
+C        if too many references limit to NENTR references
+C        then skip the extra references
+        IF (NUMREF(I).GT.NENTR) THEN
+           WRITE (LOUT,'(2A,I5)')' LINADD too many references increase '
+     &                         ,' NENTR in SBKPAR to ',NUMREF(I)
+           NMAX = NUMREF(I)
+           NUMREF(I) = NENTR
+        ELSE
+           NMAX = 0
+        ENDIF
+        DO 30 J=1,NUMREF(I)
+   30   READ (UNIT=LINP,FMT='(A)') REFLIN(I,J)
+        IF (NMAX.GT.0) THEN
+           DO 31 J=1,NMAX-NENTR
+   31      READ (UNIT=LINP,FMT='(A)') INPLIN
+        ENDIF
+C
+   10 CONTINUE
+      CLOSE (LINP)
+      RETURN
+      END
+#endif

@@ -1,0 +1,107 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	tpc300_1:1.1.1.1
+	tpc300:1.1.1.1
+	tpc218:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.09.14.29.56;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.09.14.29.57;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK tgcbos
+      SUBROUTINE TGCBOS
+C--------------------------------------------------------------------
+C! Define BOS bank names, default lengths, extensions and formats
+C  Called from: TGINIT
+C  M. Mermikides 4/12/86   (Derived from previous BLOCK DATA)
+C
+C  D. Cowen 24/6/88  -- This routine was copied from TSCBOS and
+C                       modified for use within GALEPH.
+C--------------------------------------------------------------------
+#include "bcs.h"
+#include "tpcbos.h"
+#include "tpcond.h"
+C
+      MAXNCH(1) = 200
+      MAXNCH(2) = 1800
+      MAXNCH(3) = 44
+      NDEFCH = 150
+      NEXTCH = 100
+      NTSGHT = 0
+C
+C Clear pointers to WORK banks initially
+C
+      INDREF(1) = 0
+      INDREF(2) = 0
+      INDREF(3) = 0
+      INDSIG = 0
+      IDCLUS = 0
+      ITSHAP = 0
+      ITDSHP = 0
+      ITPNOI = 0
+      ITSNOI = 0
+      ITPULS = 0
+      ITMADC = 0
+      INDBRT = 0
+      INDHL = 0
+      INDDI = 0
+C
+C /DIGBNK/ Default sizes and increments
+C
+      NDIDEF(1) = 500
+      NDIDEF(2) = 3000
+      NDIDEF(3) = 300
+      NDIEXT(1) = 200
+      NDIEXT(2) = 1000
+      NDIEXT(3) = 100
+C
+C /TPBNAM/ Bank names (Trigger pads are provisional)
+C
+      DIGNAM(1) = 'TWIR'
+      DIGNAM(2) = 'TWDI'
+      DIGNAM(3) = 'TPAD'
+      DIGNAM(4) = 'TPDI'
+      DIGNAM(5) = 'TTRI'
+      DIGNAM(6) = 'TTDI'
+      DO 10 I = 1,6
+         CALL BKFMT(DIGNAM(I),'B32')
+   10 CONTINUE
+C  TPTE name index  /TPNAMI/
+      NATPTE = NAMIND('TPTE')
+C
+      RETURN
+      END
+@
+
+
+1.1.1.1
+log
+@import tpcsim 300
+@
+text
+@@

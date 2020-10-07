@@ -1,0 +1,206 @@
+head	1.2;
+access;
+symbols
+	V0060:1.2
+	V0059:1.2
+	V0058:1.2
+	V0057:1.2
+	V0056:1.2
+	V0055:1.2
+	V0054:1.2
+	V0053:1.2
+	V0052:1.2
+	V0051:1.2
+	V0050:1.2
+	V0049:1.2
+	V0048:1.2
+	V0047:1.2
+	V0046:1.2
+	V0045:1.2
+	V0044:1.2
+	V0043:1.2
+	V0042:1.2
+	V0041:1.2
+	V0040:1.2
+	V0039:1.2
+	V0038:1.2
+	V0037:1.2
+	V0036:1.2
+	V0035:1.2
+	V0034:1.2
+	V0033:1.2
+	V0032:1.2
+	V0031:1.2
+	V0030:1.2
+	V0029:1.2
+	V0028:1.2
+	V0027:1.2
+	V0026:1.2
+	V0025:1.2
+	V0024:1.2
+	V0023:1.2
+	V0022:1.1.1.1
+	V0021:1.1.1.1
+	V0020:1.1.1.1
+	V0019:1.1.1.1
+	V0018:1.1.1.1
+	V0017:1.1.1.1
+	V0016:1.1.1.1
+	V0015:1.1.1.1
+	V0014:1.1.1.1
+	V0013:1.1.1.1
+	V0000:1.1.1.1
+	V0001:1.1.1.1
+	v1:1.1.1.1
+	jacotf:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	2000.03.22.19.53.27;	author jacotf;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2000.03.01.10.27.36;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	2000.03.01.10.27.36;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@table OTHERMENUS was changed
+@
+text
+@DROP TABLE OTHERMENUS;
+
+CREATE TABLE OTHERMENUS (
+                    Menu            VARCHAR2(20) ,
+                    UserOption      VARCHAR2(80) ,
+                    Default_flag    VARCHAR2(2)  ,
+                    TypeData        VARCHAR2(10) ,
+                    PageNumb        NUMBER(2)    ,
+                    Action          VARCHAR2(60) );
+
+INSERT into OTHERMENUS values 
+ ( 'TypeofData', 'RAW'  , ' ' , 'Real DATA', 1 , 'RawData');
+
+INSERT into OTHERMENUS values 
+ ( 'TypeofData', 'POT'  , ' ' , 'Real DATA', 1 , ' ');
+
+INSERT into OTHERMENUS values 
+ ( 'TypeofData', 'DST'  , ' ' , 'Real DATA', 1 , ' ');
+
+INSERT into OTHERMENUS values 
+ ( 'TypeofData', 'MINI' , '*' , 'Real DATA', 1 , ' ');
+
+INSERT into OTHERMENUS values 
+ ( 'TypeofData', 'POT'  , ' ' , 'MC DATA', 1 , ' ');
+
+INSERT into OTHERMENUS values 
+ ( 'TypeofData', 'MINI' , '*' , 'MC DATA', 1 , ' ');
+
+
+
+INSERT into OTHERMENUS values 
+ ( 'WhatyouWant' , 'List of Real Data cartridges and creation of FILI cards' , '*' ,
+   'Real DATA', 1 , ' ');
+
+INSERT into OTHERMENUS values 
+ ( 'WhatyouWant' , 'Info. on RUNS (nb of events, lumi, running conditions)'  , ' ' , 
+   'Real DATA', 1 , 'RunsInfo');
+
+INSERT into OTHERMENUS values 
+ ( 'WhatyouWant', 'All available informations on a Run or cartridge' , ' ' , 
+   'Real DATA' , 1 , 'RunorCart');
+
+INSERT into OTHERMENUS values 
+ ( 'WhatyouWant', 'List of POT files on Disks (impatient stream), creation of FILI cards' , ' ' , 
+   'Real DATA' , 1 , 'Impatient');
+
+INSERT into OTHERMENUS values 
+ ( 'WhatyouWant', 'List of RAW/POT Selected Data for alignment and calibration'   , ' ' , 
+   'Real DATA' , 1 , 'Calib');
+
+INSERT into OTHERMENUS values 
+ ( 'WhatyouWant', 'Global statistics on cartridges available for all processings' , ' ' , 
+   'Real DATA' , 1 , 'Globalstat');
+
+
+
+INSERT into OTHERMENUS values 
+ ( 'WhatyouWant', 'Simple list'   , ' ' , 'All DATA' , 2 , ' ');
+
+INSERT into OTHERMENUS values 
+ ( 'WhatyouWant', 'Normal output' , '*' , 'All DATA' , 2 , ' ');
+
+INSERT into OTHERMENUS values 
+ ( 'WhatyouWant', 'Very detailed output' , ' ' , 'All DATA' , 2 , ' ');
+
+INSERT into OTHERMENUS values 
+ ( 'WhatyouWant', 'Special for survey of homelabs copies from Cern' , ' ' , 
+   'All DATA' , 2 , ' ');
+
+
+
+INSERT into OTHERMENUS values 
+ ( 'RunQuality', 'PERF or MAYB' , '*' , 'Real DATA' , 2 , ' ');
+INSERT into OTHERMENUS values 
+ ( 'RunQuality', 'All runs'     , ' ' , 'Real DATA' , 2 , ' ');
+INSERT into OTHERMENUS values 
+ ( 'RunQuality', 'Only PERF'    , ' ' , 'Real DATA' , 2 , ' ');
+INSERT into OTHERMENUS values 
+ ( 'RunQuality', 'Phys. Groups' , ' ' , 'Real DATA' , 2 , ' ');
+INSERT into OTHERMENUS values 
+ ( 'RunQuality', 'WW Physics'   , ' ' , 'Real DATA' , 2 , ' ');
+
+
+
+INSERT into OTHERMENUS values 
+ ( 'Statistics' , 'By Users'    , '*' , ' ', 10, 'US'); 
+INSERT into OTHERMENUS values 
+ ( 'Statistics' , 'By IP Addr.' , ' ' , ' ', 10, 'IP'); 
+INSERT into OTHERMENUS values 
+ ( 'Statistics' , 'By Browser'  , ' ' , ' ', 10, 'NAV'); 
+INSERT into OTHERMENUS values 
+ ( 'Statistics' , 'By O.S.'     , ' ' , ' ', 10, 'OS'); 
+INSERT into OTHERMENUS values 
+ ( 'Statistics' , 'By Hardware' , ' ' , ' ', 10, 'HARD');
+ 
+
+
+
+
+
+
+
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d80 2
+@
+
+
+1.1.1.1
+log
+@ import jscanbook
+@
+text
+@@

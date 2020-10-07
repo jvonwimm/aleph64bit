@@ -1,0 +1,97 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.46.55;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.07;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.08;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE BBNOT(JW,SUBPGM)
+C
+C     PRINT ERROR 'ARRAY NOT INITIALIZED'
+C
+      INTEGER JW(*)
+      CHARACTER*(*) SUBPGM
+#include "boscom.h"
+#include "param.h"
+#include "mparam.h"
+      CHARACTER*5 TARR(40)
+      DATA TARR          /'ADARG','RETCD','     ','CUNIT','PUNIT',
+     1                     'PRETC','PBNKS','PDAMS','ARNM1','ARNM2',
+     2                     'ARNUM','ARLEN','ARADD','INAMA','IGAPA',
+     3                     'IWRKA','NDELN','NDELW','IDELN','IDELW',
+     4                     'I+LNK','ILSTC','ILSTE','ILSTR','ILSTS',
+     5                     'ILSTT','ILSTU','     ','IIOST','CHECK',
+     6                     'SRET1','SRET2','SRET3','SRET4','SRET5',
+     7                     'SRET6','SRET7','SRET8','NGACN','NGACW'/
+C     ...
+      IF(JW(LUP).NE.0) THEN
+         WRITE(JW(LUP),1001) SUBPGM
+         WRITE(JW(LUP),1002) TARR
+         WRITE(JW(LUP),1003)
+         CALL BBUFM(JW,1,100,JW(LUP))
+      END IF
+      CALL BABEND('BBNOT')
+  100 RETURN
+ 1001 FORMAT('0BOS++',A5,'+  ARRAY NOT INITIALIZED - STOP'/
+     1       14X,'FIRST 100 WORDS OF ARRAY ARE PRINTED BELOW'/)
+ 1002 FORMAT(13X,10(7X,A5))
+ 1003 FORMAT(20X,'HISTOGRAM OF FREE WORDS IN 10 PERCENT BINS')
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK bbnot
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

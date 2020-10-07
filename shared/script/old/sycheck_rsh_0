@@ -1,0 +1,34 @@
+#!/bin/csh
+###############################################################################
+#                          sycheck_rsh
+# 19/06/96                                                         F.Blin
+###############################################################################
+# to check QUEUES on shift9, shift50 and saga..
+ set string_4 = `echo ${HOST} | awk '{print substr($0,1,4)}'`
+
+ if (${string_4} == "shif" || ${string_4} == "saga") then
+    if (-e ${home}/qstat_${HOST}} ) rm -f ${home}/qstat_${HOST}
+    qstat -b | grep -v "-" | grep -v "=" | grep -v "QUEUE" |  grep -v "AVAILBL" > ${home}/qstat_${HOST}
+ endif 
+
+ if (${HOST} == "shift9") exit
+
+# echo "${HOST} /aleph/script/sycheck_rsh" >> /aleph/log/check_sycheck_rsh
+ if (${HOST} == "afal10") then
+    if (-e ${home}/error_saga01.rsh) rm -f ${home}/error_saga01.rsh
+    if (-e ${home}/error_shift9.rsh) rm -f ${home}/error_shift9.rsh
+    if (-e ${home}/error_shift50.rsh) rm -f ${home}/error_shift50.rsh
+    if (-e ${home}/error_csf.rsh) rm -f ${home}/error_csf.rsh
+    qtell -c qstat -b -h saga01 > ${home}/error_saga01.rsh
+    qtell -c qstat -b -h shift9 > ${home}/error_shift9.rsh
+    qtell -c qstat -b -h shift50 > ${home}/error_shift50.rsh
+    qtell -c qstat -b -h csf > ${home}/error_csf.rsh
+ endif
+ 
+ if (-e ${home}/df_${HOST}) rm -f ${home}/df_${HOST}
+ df -k /usr > ${home}/df_${HOST}
+
+ if (-e ${home}/ps_${HOST}} ) rm -f ${home}/ps_${HOST}
+ ps axw > ${home}/ps_${HOST} 
+
+ exit

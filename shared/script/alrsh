@@ -1,0 +1,46 @@
+#!/bin/csh 
+#=======================================================
+#                       alrsh
+# 25/11/96                                    F.Blin 
+#=======================================================
+# call lrsh [old alrsh]
+#=======================================================
+#set echo on
+
+#set hostfile = /al/reference/log/aleph_hosts
+set hostfile = $REFERENCE/log/aleph_hosts
+set cluster = "`echo $1 | tr 'A-Z' 'a-z'`"
+if ("$cluster" == "aloha") set cluster = 'afal'
+if ( $#argv != 0 ) echo `date` `whoami` `uname -n` 4.0 $1 >> $ALEPH/log/alrsh.log
+
+if ( $1 == "-a" || $cluster == "afal") then
+   set hosts = "`grep ^afal $hostfile`"
+   set par = ('' '' '' '' '' '' '' '' '' '' '')
+   set i = 1   
+   set j = 1
+   while ($i < $#hosts) 
+      set par[$j] = `echo $hosts[${i}] | awk '{print substr($0,1,length($0)-1)}'`
+      @ j++
+      @ i = $i + 10 
+   end
+   @ i = $i - 1
+   if ($#hosts == $i) set par[$j] = `echo $hosts[$i] | awk '{print substr($0,1,length($0)-1)}'`
+   if ($1 == "-a") then
+      set par[$j] = "saga"
+      @ j++
+      set par[$j] = "shift"
+   endif
+   foreach par ( $par[*] )
+     lrsh $par $2 $3 $4 
+   end
+   exit
+endif
+if ($1 == "aleph" || $1 == "ALEPH") then
+   lrsh afal01 -h shift50 -h shift9 $2 $3 $4 
+   exit
+endif
+
+
+lrsh $argv
+
+exit

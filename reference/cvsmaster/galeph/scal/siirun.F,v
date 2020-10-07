@@ -1,0 +1,150 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.07.14.02.47;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.48;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK siirun
+      SUBROUTINE SIIRUN
+C.----------------------------------------------------------------
+C  B.Bloch-Devaux  October 91
+C! SCAL run initialisation
+C     - Called by ASIMOD
+C     - Calls     SIRDAF,SIDFGO                      from this HLB
+C                 ALTELL, GTSTUP                     from ALEPHLIB
+C.----------------------------------------------------------------
+#ifndef DOC
+#include "iocom.h"
+#include "jobcom.h"
+#include "bcs.h"
+#include "sinamc.h"
+#include "sistat.h"
+#include "siparm.h"
+      INTEGER GTSTUP,AGETDB
+      EXTERNAL GTSTUP,AGETDB
+C ----------------------------------------------------------------
+      ISITP = GTSTUP ('SI',1)
+C
+C Define formats and name-indices of SI BOS banks
+C
+C---BANKS created by GALEPH or on line
+      NASIHT = NAMIND('SIHT')
+      CALL BKFMT('SIHT','I')
+      NASIDI = NAMIND('SIDI')
+      CALL BKFMT('SIDI','I')
+      NASIX2 = NAMIND('SIX2')
+      CALL BKFMT('SIX2','I')
+      NASIXA = NAMIND('SIXA')
+      CALL BKFMT('SIXA','I')
+      NASIFO = NAMIND('SIFO')
+      CALL BKFMT('SIFO','I')
+      NASIHI = NAMIND('SIHI')
+      CALL BKFMT('SIHI','I')
+C
+C Initialize Statistics for SCAL
+C
+      DO 10 I = 1,NSIST
+         NSICOU(I) = 0
+         ESICOU(I) = 0.
+ 10   CONTINUE
+C
+C No need for SICAL Geometry if not there
+      IF ( ISITP.LE.0) GO TO 900
+C---BANKS taken from data base
+      JND = AGETDB('SZTHSFTHSRCO',ISITP)
+      IF (JND.EQ.0) WRITE(IW(6),990)
+C
+C get Zero suppression scheme
+C
+      CALL SIZINI
+C
+C Define Readout Geometry for SCAL
+C
+      CALL SIRDAF (LRDBIO,IRUNJO,IERR)
+      IF (IERR .NE. 0) THEN
+         CALL ALTELL ('SIIRUN: missing data base bank(s)',0,'STOP')
+      ENDIF
+      IF (IPRIJO(9).GT.0) CALL SIPRGO
+C
+C Fill some geometry quantities
+C
+      CALL SIDFGO
+C
+C set parametrization flag defined by ICSIJO(2)
+C
+      SIPARF = ICSIJO(2).EQ.1
+C
+ 900  CONTINUE
+ 990  FORMAT(////,'  Warning No SICAL SRCO found for this run  ',
+     $          /,'  Defaults will be applied')
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

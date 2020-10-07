@@ -1,0 +1,115 @@
+head	1.1;
+access;
+symbols
+	alpha126_22:1.1
+	alpha122_22:1.1
+	alpha126_21:1.1
+	alpha126_20:1.1
+	alpha126_19:1.1
+	alpha126_18:1.1
+	alpha126_17:1.1
+	alpha126_16:1.1
+	alpha126_15:1.1
+	alpha126_14:1.1
+	alpha126_13:1.1
+	alpha126_12:1.1
+	alpha126_11:1.1
+	alpha126_10:1.1
+	alpha126_09:1.1
+	alpha126_08:1.1
+	alpha126_07:1.1
+	alpha126_06:1.1
+	alpha126_05:1.1
+	alpha126_04:1.1
+	alpha126_03:1.1
+	alpha126_02:1.1
+	alpha126_1:1.1
+	alpha125_17:1.1
+	alpha125_16:1.1
+	alpha125_15:1.1
+	alpha125_14:1.1
+	alpha125_13:1.1
+	alpha125_12:1.1
+	alpha125_11:1.1
+	alpha125_10:1.1
+	alpha125_09:1.1
+	alpha125_08:1.1
+	alpha125_07:1.1
+	alpha125_06:1.1
+	alpha125_05:1.1
+	alpha125_04:1.1
+	alpha125_03:1.1
+	alpha125_02:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	2000.02.01.09.04.42;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE QWRFSEVT(SEVTF)
+CKEY FILL /INTERNAL
+C-----------------------------------------------------------------------
+C! Write SEVT cards file from lists of events selected by the user.
+C
+C     Author: J. Boucrot      27-Jan-2000
+C
+C     Input  : QWSE banks
+C
+C     Called by the user in QUTERM
+C-----------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+      PARAMETER ( LUNOU = 93 )
+      CHARACTER*(*) SEVTF
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+C First check that at least one 'QWSE' bank exists:
+      IF (IW(NAMIND('QWSE')).EQ.0) GO TO 999
+C Compress these banks:
+      CALL AUBPRS('QWSE')
+      LLF=LNBLNK(SEVTF)
+C Open the output file for writing:
+      CALL AOPENW(LUNOU,SEVTF(1:LLF),'CARDS','DISK',IERO)
+      IF (IERO.GT.0) THEN
+         WRITE (IW(6),1234) SEVTF(1:LLF)       
+         GO TO 999
+      ENDIF
+C
+C Implicit loop on all 'QWSE' banks:
+C
+      JQWSE=NAMIND('QWSE')+1
+ 10   JQWSE=IW(JQWSE-1)  
+      IF (JQWSE.EQ.0) GO TO 500
+C Write the SEVT cards corresponding to this bank:
+      NURUN=IW(JQWSE-2)
+      CALL QWRQWSE(LUNOU,NURUN,IERS)      
+      IF (IERS.GT.0) THEN
+         WRITE (IW(6),1235) NURUN       
+         GO TO 999
+      ENDIF
+      GO TO 10
+C
+C all cards written: close output file 
+C 
+ 500  CALL ACLOSE(LUNOU,IERB)
+C
+ 999  RETURN
+ 1234 FORMAT (/' _QWRFSEVT Error when opening file : ',(A)) 
+ 1235 FORMAT (/' _QWRFSEVT Error when writing SEVT for run :',i9)
+C
+      END
+#endif
+@

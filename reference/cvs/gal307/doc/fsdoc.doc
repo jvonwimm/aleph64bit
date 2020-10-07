@@ -1,0 +1,131 @@
+*DK fsdoc
+#if defined(DOC)
+.chapter FAST
+.section Introduction
+
+   FAST is a private fast tracking package which completely replaces
+the GEANT3 tracking and hit generation scheme.  It has been inspired
+by the approach developed by the Wisconsin group (J. Hilgart,
+M. Mermikides) for LEP 200 studies and intended to be used in conjunction
+with the SIMDST package in high statistics physics applications, which
+would be prohibitively slow under the standard GEANT3 scheme.
+
+.section Geometry
+
+   The standard GALEPH/GEANT geometry description is used in the
+tracking detectors, where the geometrical quantities are derived from
+the data base in the conventional way. A geometry description of the
+ECAL and HCAL is derived from constants initialized privately via
+calls to RSDTBA and FSIRUN (q.v.).
+For the purposes of tracking, we consider for now three volumes
+which are treated as uniform media: 1) A cylinder defined by the limits
+of the active TPC volume where we simulate the response of the tracking
+detectors (VD,IT,TP)  2) A volume delimited by the first and last
+sensitive planes of the ECAL barrel and endcap modules  3) A cylinder
+defined by the limits of the active HCAL volume. The forward
+region covered by the luminosity calorimeter and tracking device(SA)
+are not impemented yet.
+
+.section Tracking
+
+   Starting from the initial GEANT kinematics tree we define for each
+particle a potential path length to the boundary of the TPC fiducial
+cylinder, treating the trajectories of charged particles as continuous
+helices (ie ignoring multiple scattering and energy loss. Errors on the
+hit positions due to these processes can be accounted for afterwards)
+Decays in flight are fully impelemented using the standard particle
+data table and GEANT tools and the secondary vertices and tracks are
+appended to the kinematics structure.  It is intended to implement
+gamma conversions in the next version.  To save time we follow
+particles trapped within the fiducial volume though one full revolution
+only.
+
+   For each charged particle we generate hits in the central tracking
+detectors, using a fast private intersection routine and taking account
+of geometrical losses. The hits are stored in the standard BOS banks
+'VDHT', 'ITHT', 'TPHT'. We can optionally store the track elements 'TPTE'
+(Note that there is only one track element per particle in this scheme,
+the length corresponding to the distance to the fiducial boundary, the
+decay point, or one full revolution, whichever is smaller).
+
+   For particles which escape the TPC fiducial cylinder, we compute the
+coordinates at the impact with the first sensitive layer of the ECAL
+surface and generate a random path length to the first interaction
+point (in the ECAL or HCAL) for hadrons. 'Electromagnetic' particles
+are showered 0.5 cm beyond their entrance to the ECAL. We also compute
+the ECAL exit point of the
+particle or shower. This information is used by the SIMDST package for
+shower parametrisation, dE/dX loss, and ultimately, formation of
+ AL objects.
+
+.section GALEPH/SIMDST INTERFACE
+
+    The FAST code is impemented by defining the HISTORIAN flags
+ FAST and RDST.
+
+.section FAST Steering
+
+   Initialisation:
+
+    ASIPAC ---> FSIRUN       Initialisation
+
+   Tracking:
+
+    ASPEVE ---> ASFAST       Steering routine for fast tracking
+
+                ---> GFKINE  Extract particle parameters
+
+                ---> GFPART  Extract particle properties
+
+                ---> FSSTEP  Compute step length to boundary
+
+                     ---> AUHCYL  Helix intersection
+
+                     ---> AULCYL  Line intersection
+
+                ---> GHELX3  Compute step length to decay
+
+                ---> GDECAY  Perform decay
+
+                ---> GSVERT  Store decay vertex if in fid. vol.
+
+                ---> GSKINE  Store sec. kin. if in fid. volume
+
+                ---> FSTPTE  Save track element in 'TPTE' bank
+                             if required (RUNC 'TPC' 0 1 1 1 0 0...)
+                ---> FSTRPA  Extract helix parameters for hit routines
+
+                ---> FSVHIT  Store hits in VD
+
+                ---> FSIHIT  Store hits in ITC
+
+                ---> FSTHIT  Store hits in TPC
+
+                ---> FSEHIT  Store impact, exit and shower vertex in ECAL
+
+                     ---> RSINEV  Event initialization for SIMDST
+
+                     ---> FSELGA  Treat 'electromagnetic' particles in
+                                  ECAL
+
+                     ---> FSHADZ Treat hadronic particles in ECAL and HCAL
+
+                          ---> FSECAL Get pathlength through ECAL
+
+                          ---> FSHCAL Get pathlength through HCAL
+
+                     ---> FSMUON Treat muons in ECAL and HCAL
+
+                ---> ASWKIN  Fill BOS 'VERT' and 'KINE' banks
+
+                ---> FSHSRT  Compress and sort hit banks
+
+
+   RUN CARDS
+
+      To implement the fast tracking scheme with SIMDST the input data
+   must contain contain:
+
+            PROC  'KINE' 'TRAC'  'HITS' 'RDST'
+
+#endif

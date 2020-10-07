@@ -1,0 +1,63 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  uphy1-0:1.1.1.1 flr:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.08.16.13.38.15;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.08.16.13.38.16;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      SUBROUTINE GAUSSE(IPA,ENE)
+C------------------------------------------------------------------
+C------------------------------------------------------------------
+#include "lundcom.h"
+#include "resolu.h"
+      DATA EPS /.000001/
+C
+      ENE= 0.
+C
+      POL= PLU(IPA,14)
+      IF(POL.GT.90.) POL= 180.-POL
+      AZI= PLU(IPA,16)
+      EELE=p7lu(IPA,4)
+      IF(EELE.LT.EPS) GOTO 999
+C -- Gaussian fluctuation
+      CALL RANNOR(ALEA,DUMDUM)
+C -- Resolution depends on POL and AZI
+      RESOL=1.+FLUCHE*FLUFAC(POL,AZI)*ALEA/SQRT(EELE)
+     .        +FLUCON*DUMDUM/EELE
+      IF(RESOL.LT.EPS) RESOL=0.
+      ENE= RESOL*EELE
+C
+999   CONTINUE
+      RETURN
+      END
+@
+
+
+1.1.1.1
+log
+@2nd try to import uphy
+@
+text
+@@

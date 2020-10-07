@@ -1,0 +1,213 @@
+C  This file contains platform dependent text and must be specially prepared
+C  for each platform.
+
+C  Text with a letter in the first column is not stored, and only there for
+C  information. It may be omitted.Blank lines are ignored as well.
+
+C  Letters 2,3 serve as index for the text from letter 5 onwards, which is
+C  stored and may be either printed (even several lines) or used in the
+C  program (1 line).
+
+123456789 123456789 123456789 123456789 123456789 123456789 123456789
+cIn ....................... text ...........................................
+
+ AA DALI
+ PF VMS     ! Serves as flag for VMS in the program.
+UPF UNIX
+UPF ULTRIX
+OPF OSF
+HPF HP
+SPF SGI     ! Silicon Graphics
+LPF LINUX   ! Linux
+
+ WR    ! carriage control character for "WRITE(6" statements
+UWR 0  ! Ultrix
+OWR
+HWR L
+SWR L
+
+ HD                                                       
+ HD           ********************************************
+ HD         ****  DISPLAY  of  A L E P H  INTERACTIONS  ****
+ HD           ***************   D A L I  *****************
+ HD             ****************************************
+ HD                                                      
+
+ BR BOOK:RUNCARTS.LIST
+UBR $ALBOOK/runcarts.list
+
+CAE AL$EDIR:
+CAE $ALEDIR/
+
+C   see DALIJ.FOR: SUBROUTINE DJ_CHANGE_NAME, DJGTFN
+ L1 A
+ EP AL$DATA:
+UEP $ALDATA/
+ ED AL$EDIR:
+UED /aleph/edir/
+ SL 0 no change of EDIR to small letters
+USL S    change of EDIR to small letters
+    
+
+ ST Film names for your area must start with [.
+UST Film names for your area must start with ./
+
+ S1 =================================================
+ S1 The EPIO-file is not available. Stage the file.
+ S1 You may do this via LOOK in another window. 
+ S1 Example for run 98765:
+ S1
+ S1 LOOK
+ S1 LOOK> OPEN/DST 98765 (or /MINI,/NANO,/POT )
+ S1
+ S1 Read the file again when finished.              
+ S1 If the EPIO file is on your area add [] before 
+ S1 the film name in the EDIR file.
+ S1 ===============================================
+
+US1 =================================================
+US1 The EPIO-file is not available. Stage the file.
+US1 You may do this via LOOK in another window. 
+US1 Example for edir
+US1
+US1 alook
+US1 LOOK> OPEN/EDIR <CR>
+US1 /aleph/edir/<filename>.edir
+US1
+US1 Read the file again when finished.              
+US1 ===============================================
+
+ AL C-list stored in DALPHA.CARDS . With the command
+ AL @ALDATA$EXE:DALPHA or SUBMIT ALDATA$EXE:DALPHA 
+ AL the output file  DALPHA.EPIO  is created in your
+ AL directory. See Help file.
+
+UAL A file DALPHA.CARDS is created in your area.
+UAL You may remove this, since you have come to a
+UAL VMS-specific section not yet ported to UNIX.
+
+ PS ================================================
+ PS  
+ PS Do not use the normal set of colors for your
+ PS PostScript file. Read the menu!!!
+ PS  
+ PS ================================================
+
+ BP PHY:BEAM.POSITION
+UBP /aleph/phy/beam.position
+
+ RO
+
+ LL If you had problems, call H.Drevermann.
+
+ KW GA EL NU MU PI KK K0 KL KS PR NE LA SI XI OM
+ KW TA DD D0 DS WW Z0 A1 JP KR=K* DR=D* PH GL
+ KW UQ DQ SQ CQ BQ TQ    BB B0 BS BC QQ   - = to
+ KW 1J 2J 3J 4J NJ  err. EVd EIt ETp EEc EHc EJu EMc
+ KW neutral, charged decay ND CD no tracks NT  AS SY
+
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccc until here cccc
+ fi  1 10 File handling
+ fi  2 11      GB<CR> = go to last processor (at start = Introduction)
+ fi  3  9 list of filenames : \<CR> ; \id<CR> select file id (=identifier) 
+ fi  4 11      GT<CR> go to top level,       QU<CR> = quit from DALI
+ fi  5  8 Type: .D#, .M#, or .P# to get DST, MINI or POT of run #   or   
+ fi  6  8 Type filename <CR>;     <CR> = Open file and read first event
+
+ fe  1 10 EDIR File handling
+ fe  2 11 GB<CR> = go back to start
+ fe  3  8 If your EDIR file contains more than 15000 event records with di
+ fe  4  8 fferent runs, select one run by typing the run number + <CR> . 
+ fe  6  8 <CR> = Open EDIR file and read first event
+
+ pi  1 10 Pick and move.     Set pointer to selected object.
+ pi  2 11 Type T to print track parameters. Type D to draw object number.
+ pi  3  8 Move pointer to hit/track AND click LEFT button. Click MIDDLE but
+ pi  4  8 ton to set pointer to the same hit/track in the selected window.
+ pi  5 11 Click RIGHT mouse button to pick hits only.
+ pi  6  9 More options: get pick processor.              Type <cr> to stop.
+
+ pp  1 10 Pick,move,draw   Move pointer.  Use mouse buttons or type:
+ pp  2 11 H = toggle hits / hits+tracks.   L = set label
+ pp  4 11                            I = increment label by 1 and draw
+ pp  3 11                     K W G O Y R M C B color to draw. E = erase
+ pp  5  8 Buttons: Left = pick, Middle = move, right = pick hit
+ pp  6  9                                        Type <cr> to stop.
+
+ rb  1 10 rubber band:
+ rb  2 11    Click left mouse button to toggle between rubber band types.
+ rb  3  8 1: Move pointer to point 1,
+ rb  4 11         click middle mouse button to toggle between corners.
+ rb  5  8 2: Click middle mouse button to draw band, move to point 2.
+ rb  6  9 3: Type <cr> to stop.
+
+ zb  1 10 General linear transformation = 3 point rubberband:
+ zb  2  8 1: Move pointer to point 1 push left button,
+ zb  3  8 2: Keep left button down and move to point 2.
+ zb  4  8 3: Release left button and move to point 3.
+ zb  5 11    Keep middle button down for rectangle.
+ zb  6  9 4: Type <cr> to stop.
+
+ qq  1 10 Stick pointer:
+ qq  2  8 Move pointer.
+ qq  3 11 Click left button to change corner.
+ qq  4 11 Click middle button to set corner to any position.
+ qq  5 11 Click right button to get display coordinates on terminal.
+ qq  6  9 Type <cr> to stop.
+                                         
+
+
+ 3m  1 10 Moving 3D marker
+ 3m  2 11 The cross shows the position of a virtual 3D pointer.
+ 3m  3  8 Move pointer to any window with a picture: active window
+ 3m  4  8 Click left mouse button and modify 3D pointer position
+ 3m  5  8 Click left mouse button again to select other active window.
+ 3m  6  9 Type <cr> to return.
+
+ 2m  1 10 Separating line between +rho and -rho is displayed on:
+ 2m  2 10 Y/X, phi/rho, phi/Z and the V-plot
+ 2m  3 10 The X on the Y/X projection shows the side of +rho.
+ 2m  5  8 Move pointer to the best position of the separating line.
+ 2m  6  9 Type <cr> to return.
+
+ 3m  1 10 Moving 3D marker 
+ 3m  2 11 The cross shows the position of a virtual 3D pointer.
+ 3m  3  8 Move pointer to any window with a picture: active window
+ 3m  4  8 Click left mouse button and modify 3D pointer position
+ 3m  5  8 Click left mouse button again to select other active window.
+ 3m  6  9 Type <cr> to return.
+
+ pl  1 10 Draw poly line:
+ pl  2 11 Use arrow keys for fine tuning.
+ pl  3  8 1: Move pointer to point one of poly line and click left button.
+ pl  5  8 2: Move pointer to next points and click left button there.
+ pl  6  9 Type <cr> to stop.
+
+ pa  1 10 Draw poly area
+ pa  2 11 Use arrow keys for fine tuning.
+ pa  3  8 1: Move pointer to point one of poly area and click left button.
+ pa  5  8 2: Move pointer to next points and click left button there.
+ pa  6  9 Type <cr> to stop.
+
+ mc  1 10 Insert text
+ mc  4 11 Use arrow keys for fine tuning.
+ mc  5  8 Move text
+ mc  6  9 Type <cr> to stop.
+
+ sw  1 10 Move window:
+ sw  3 11                                     Click left button to move:
+ sw  4 11 left lower corner, right upper corner, total window.
+ sw  5  8 Move pointer
+ sw  6  9 Type <cr> to stop.
+
+ cc  1 10 Modify selected color (see terminal and color bar).      Type:
+ cc  2  8 "+" plus 0.01, "U" plus 0.05, "-" minus 0.01, "D" minus 0.05 .
+ cc  3  8 "R","G","B","Y","C","M","W" change respective component ('s)
+ cc  4 11 e.g. Y change red and green component
+ cc  5  8 "1" set component to 1, "0" set component to 0.
+ cc  6  9 Type <cr> to stop.
+
+ lk  5 10 Type 4 letter bank name without <CR>.
+ lk  6  9 Type <cr> to return.
+
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccc until here cccc

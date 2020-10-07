@@ -1,0 +1,84 @@
+head	1.1;
+access;
+symbols
+	aleph316_2:1.1
+	aleph316_1:1.1
+	aleph316:1.1
+	aleph315_7:1.1
+	aleph315_6:1.1
+	aleph315_5:1.1
+	aleph315_4:1.1
+	aleph315_3:1.1
+	aleph315_2:1.1
+	aleph315_1:1.1
+	aleph315:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	2000.03.20.11.16.40;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Alephlib 315
+@
+text
+@      SUBROUTINE SIFSUM(ICLU,EFRA,NPAD)
+C------------------------------------------------------------
+C!  - For cluster # ICLU in bank SCLS returns the Cluster energy per
+C!    plane and the number of pads
+C  B. Bloch -Devaux  February 93
+C      moved to Alephlib, March 2K
+C  Structure : SUBROUTINE
+C           External references:NAMIND
+C           Comdecks references:BCS,BMACRO,SPDAJJ,SCLSJJ
+C  Input : ICLU cluster number in SCLS bank
+C  Output : EFRA(12) cluster energy in the 12 planes
+C           NPAD(1)  number of pads in cluster ( ALL)
+C           NPAD(2)  number of dead pads in cluster
+C  Banks  : input  - SCLS,SPDA
+C
+C?
+C!======================================================================
+#ifndef DOC
+#include "bcs.h"
+#include "spdajj.h"
+      DIMENSION EFRA(12) , NPAD(2)
+      INTEGER NAMIND
+      EXTERNAL NAMIND
+      DATA NASPDA /0/
+#include "bmacro.h"
+C -------------------------------------------------------------------
+C
+      if (NASPDA.le.0) NASPDA = NAMIND('SPDA')
+C
+      CALL VZERO(EFRA,12)
+      CALL VZERO(NPAD,2)
+      JSPDA = IW(NASPDA)
+      IF (JSPDA.LE.0) GO TO 999
+      NSPDA = LROWS(JSPDA)
+      IF (NSPDA.LE.0) GO TO 999
+C   Look at SPDA data
+      DO 10 II= 1, NSPDA
+        IC = ITABL(JSPDA,II,JSPDSC)
+        IF ( IC.NE.ICLU) GO TO 10
+        ID = ITABL(JSPDA,II,JSPDSM)
+        IA = ITABL(JSPDA,II,JSPDAD)
+        RE = RTABL(JSPDA,II,JSPDEN)
+        CALL SIDCOZ(IA,MODU,IST,IPH,IRD)
+        EFRA(IST) = EFRA(IST) + RE
+        NPAD(1)   = NPAD(1)   + 1
+        IF ( ID.GT.0) NPAD(2)   = NPAD(2)   + 1
+   10 CONTINUE
+  999 RETURN
+      END
+#endif
+@

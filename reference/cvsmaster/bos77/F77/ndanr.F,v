@@ -1,0 +1,249 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.55.34;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.34;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.35;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      FUNCTION NDANR(LUN,NAME,CT,NR)
+*
+*     NNR = NDANR(LUN,NAME,LG,NR)
+*                 CHECK BANK NUMBERS ON DATA SET
+*     LG = 'LE'   RETURN NUMBER NNR FOR BANK OF GIVEN NAME, WHICH
+*                 IS LESS OR EQUAL TO NUMBER NR IN ARGUMENT
+*     LG = 'EQ'   RETURN NUMBER NR
+*     LG = 'GE'   RETURN NUMBER NNR FOR BANK OF GIVEN NAME, WHICH
+*                 IS GREATER OR EQUAL TO NUMBER NR IN ARGUMENT
+*     0 IS RETURNED, IF NO BANK NR CAN BE FOUND
+*     THIS IS OF COURSE AMBIGUOUS, IF THE RETURNED EXISTING NUMBER IS 0
+*
+
+#include "dacom.h"
+      COMMON/BCS/IW(1000)
+      CHARACTER*4 NAME
+      CHARACTER*2 CT,CTI(3)
+      DATA CTI/'LE','EQ','GE'/
+*     ...
+      NDANR=0
+      IW1=IW(1)
+      IW(1)=0
+      IW(2)=0
+      DO 2 I=1,3
+      IF(CT.EQ.CTI(I)) GOTO 4
+    2 CONTINUE
+      GOTO 100
+    4 NEX=I-2
+      IUB=NLINK('+BUF',LUN)
+      IF(IUB.EQ.0) GOTO 100
+      LUNDA=LUN
+      NWRDA=IW(IUB+11)
+      NADA=INTCHA(NAME)
+      NRDA=NR
+      NDDA=0
+
+      NS=NAMIND(NAME)*100+LUN
+      IF(IW1.EQ.0) THEN
+      INS=NLINK('+DIS',NS)
+      IF(INS.NE.0) GOTO 40
+      ELSE
+         INS=NDROP('+DIS',NS)
+      END IF
+
+*     PREPARE TABLE FROM DIRECTORY RECORD
+
+   10 CALL WBANK(IW,INW,200,*100)
+      NIW=0
+      NI =0
+      JRLO=0
+      JRHI=0
+
+*     HASH INDEX FOR DIRECT ACCESS
+
+      NHDA=MOD(IABS(NADA),IW(IUB+15))
+      IF(NRDA.GE.0) THEN
+         NHDA=NHDA+NRDA/100
+         NNLO=(NRDA/100)*100
+      ELSE
+         NHDA=NHDA-(-NRDA-1)/100
+         IF(NHDA.LT.0) NHDA=NHDA+(IW(IUB+15)*(1-NHDA/IW(IUB+15)))
+         NNLO=-(-NRDA-1)/100*100 -1
+      END IF
+      IF(NEX.LT.0) NNLO=NNLO-100
+      NHDA=MOD(NHDA,IW(IUB+15))
+      NNHI=NNLO+199
+
+      DO 30 J=1,IW(IUB+15)
+      IF(NEX.GE.0) IREC=NHDA+J-1
+      IF(NEX.LT.0) IREC=NHDA-J+1+IW(IUB+15)
+      IREC=MOD(IREC,IW(IUB+15))
+      IREC=IW(IUB+12)-IREC
+C     WRITE(6,174) J,IREC
+  174 FORMAT(' J IREC',2I5)
+   15 CALL DAFRD(IREC,0)
+      NTOT=IW(IDR)
+      IF(J.LE.2) THEN
+         DO 20 I=8,NTOT,5
+         IF(NADA.NE.IW(IDR+I-3)) GOTO 20
+         NRCU=IW(IDR+I-2)
+         IF(NRCU.LT.NNLO.OR.NRCU.GT.NNHI) GOTO 20
+         NI=NI+1
+         NIR(NI)=NRCU
+   20    CONTINUE
+      END IF
+      DO 25 I=8,NTOT,5
+      IF(NADA.NE.IW(IDR+I-3)) GOTO 25
+      NRCU=IW(IDR+I-2)
+      IF(JRLO.NE.0.AND.NRCU.LT.NRLO) GOTO 25
+      IF(JRHI.NE.0.AND.NRCU.GT.NRHI) GOTO 25
+      NIW=NIW+1
+      IW(INW+NIW)=NRCU
+      IF(NIW.EQ.200) CALL DARED
+   25 CONTINUE
+      IREC=IW(IDR+3)
+      IF(IREC.NE.0) GOTO 15
+      IF(J.EQ.2) THEN
+         IF(NEX.EQ.0) GOTO 26
+         IF(NI.EQ.0) GOTO 30
+         CALL SORTAI(NIR,1,NI,1)
+         I=INLIST(NR,NIR,NI)
+         IF(NEX.GT.0) THEN
+            IF(NI-IABS(I).LT.1+100/IW(IUB+15)) GOTO 30
+         ELSE IF(NEX.LT.0) THEN
+            IF(IABS(I).LT.1+100/IW(IUB+15)) GOTO 30
+         END IF
+   26    NRLO=NNLO
+         NRHI=NNHI
+         JRLO=1
+         JRHI=1
+         CALL WBANK(IW,INW,NI,*100)
+         DO 28 I=1,NI
+   28    IW(INW+I)=NIR(I)
+         NIW=NI
+         GOTO 31
+      END IF
+   30 CONTINUE
+   31 CALL DARED
+      CALL WBANK(IW,INW,NIW,*100)
+C     CALL WPRNT(IW,INW)
+C     WRITE(6,101) (NIR(I),I=1,NI)
+  101 FORMAT(1X,10I10)
+
+*     STORE IN NAMED BANK
+
+      INS=NBANK('+DIS',NS,NIW+4)
+      IF(INS.EQ.0) GOTO 100
+      IF(JRLO.EQ.0) THEN
+         IW(INS+1)=0
+         IW(INS+3)=0
+      ELSE
+         IW(INS+1)=1
+         IW(INS+3)=NRLO
+      END IF
+      IF(JRHI.EQ.0) THEN
+         IW(INS+2)=0
+         IW(INS+4)=0
+      ELSE
+         IW(INS+2)=1
+         IW(INS+4)=NRHI
+      END IF
+      DO 35 I=1,NIW
+   35 IW(INS+4+I)=IW(INW+I)
+C     CALL WPRNT(IW,INS)
+
+*     USE NAMED BANK TO GET NEXT BANK NUMBER
+
+   40 IF(IW(INS+1).NE.0) THEN
+         LILO=IW(INS+3)
+         IF(NEX.LT.0) LILO=IW(INS+5)
+         IF(NR.LT.LILO) GOTO 50
+      END IF
+      IF(IW(INS+2).NE.0) THEN
+         LIHI=IW(INS+4)
+         IF(NEX.GT.0) LIHI=IW(INS+IW(INS))
+         IF(NR.GT.LIHI) GOTO 50
+      END IF
+      NIW=IW(INS)-4
+      I=INLIST(NR,IW(INS+5),NIW)
+      IF(I.GT.0) THEN
+         NDANR=NR
+      ELSE
+         I=-I
+         IF(NEX.GT.0) THEN
+            IF(I.GT.NIW) GOTO 60
+            NDANR=IW(INS+4+I)
+         ELSE IF(NEX.EQ.0) THEN
+            GOTO 60
+         ELSE IF(NEX.LT.0) THEN
+            IF(I.EQ.1) GOTO 60
+            NDANR=IW(INS+3+I)
+         END IF
+      END IF
+      GOTO 100
+
+*     DROP NAMED BANK PREPARE NEW BANK
+
+   50 INS=NDROP('+DIS',NS)
+      GOTO 10
+   60 NDANR=0
+      IW(2)=7
+
+  100 RETURN
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK ndanr
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

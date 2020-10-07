@@ -1,0 +1,43 @@
+      SUBROUTINE ADDVE1(vec, ipartk)
+C----------------------------------------------------------------
+C!  Store particles in class KRECO
+C   ipartk --  1 : charged particles
+C              2 : V0s
+C              3 : photons
+C              4 : neutral hadrons
+C              5 : lumi
+C              6 : killed ECAL clusters (E >  5 GeV)
+C              7 : killed HCAL clusters (E > 10 GeV)
+C
+C  Patrick Janot -- 19 Apr 1990
+C
+C  Modif -- 01 oct 1990. store temporary particles in kreco
+C  Modif -- 21 mar 1991 ( G.Ganis ) adapted to FSIM
+C  Modif -- 29 aug 1995 ( P.Janot ) Store particle in class KRECO
+C----------------------------------------------------------------
+#include "parcut.h"
+#include "qcde.h"
+      DIMENSION QT(KCQVEC,1), KT(KCQVEC,1), QV(KCQVRT,1), KV(KCQVEC,1)
+#include "qhac.h"
+#include "qmacro.h"
+      IF ( vec(4) .LE. 0. ) RETURN
+C -- Prevents from negative mass squared
+      xmomen = sqrt(vec(1)**2 + vec(2)**2 + vec(3)**2)
+      IF ( xmomen .GT. vec(4) ) THEN
+        vec(1) = vec(1) * vec(4) / xmomen
+        vec(2) = vec(2) * vec(4) / xmomen
+        vec(3) = vec(3) * vec(4) / xmomen
+        vec(4) = vec(4) + 0.005
+      ENDIF
+      CALL qvset4(lkg, vec)
+      IF ( ipartk .LE. 5 ) THEN
+        factor = qelep/(2.*qe(lkg))
+        IF ( factor .LT. 1. ) CALL qvscal(lkg,factor)
+        CALL qvaddn(ltot       ,lkg)
+      ENDIF
+      CALL qvaddn(lps(ipartk),lkg)
+      isave = kvsavc(lkg, prnam(ipartk),kreco)
+      lkh = lkh + 1
+C
+      RETURN
+      END

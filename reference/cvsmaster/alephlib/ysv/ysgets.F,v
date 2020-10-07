@@ -1,0 +1,241 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.2
+	aleph304_5:1.1
+	aleph304_4:1.1
+	aleph304_3:1.1
+	aleph304_2:1.1
+	aleph304_1:1.1
+	aleph304:1.1
+	aleph303_3:1.1
+	aleph303_2:1.1
+	aleph303_1_mc1:1.1
+	aleph303_1:1.1
+	aleph302:1.1
+	aleph303:1.1
+	aleph302_9:1.1
+	aleph302_8:1.1
+	aleph302_7:1.1
+	aleph302_6:1.1
+	aleph302_5:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.08.20.07.13.11;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.04.04.07.58.47;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@Alephlib 305
+@
+text
+@        REAL FUNCTION YSGETS(IYSVX,ITKIN,IOBJ)
+C-----------------------------------------------------------------------------
+C!   Calculate the position of YSVX vertex along track ITK in cm (+ or -)
+C
+C   Input:  IYSVX   BOS index of vertex in YSVX bank
+C           ITKIN   row number in YSTL, YSCL, or YS0l
+C           IOBJ    = 1, 2, 3 for helices, circles, and V0's, respectively
+C
+C       Author:  D.Casper  08-07-96
+C
+C-----------------------------------------------------------------------------
+#ifndef DOC
+C
+        PARAMETER (R_ITC = 12.80)
+        PARAMETER (R_TPC = 28.50)
+        dimension vx(3),PTK(3)
+#include "yscljj.h"
+#include "ystljj.h"
+#include "ys0ljj.h"
+#include "ysvxjj.h"
+#include "bcs.h"
+C
+        DATA NYSTL/0/
+        SAVE NYSTL, NYS0L, NYSCL
+C
+#include "bmacro.h"
+C
+        IF (NYSTL.EQ.0) THEN
+            NYSTL = NAMIND('YSTL')
+            NYS0L = NAMIND('YS0L')
+            NYSCL = NAMIND('YSCL')
+        ENDIF
+        ITK = IABS(ITKIN)
+        YSGETS = -999.
+        VX(1) = RW(IYSVX+JYSVVX)
+        VX(2) = RW(IYSVX+JYSVVY)
+        VX(3) = RW(IYSVX+JYSVVZ)
+        SIGZ2 = RW(IYSVX+JYSVVM+5)
+        RVX = SQRT(VX(1)**2 + VX(2)**2)
+        ZVX = VX(3)
+C
+C+  Charged track or V0?
+C
+        IF (IOBJ.LE.2) THEN
+            IF (IOBJ.EQ.1) THEN
+                KYSTL = IW(NYSTL)
+                IFRFT = ITABL(KYSTL,ITK,JYSTTN)
+                IF (RVX.LE.R_ITC) THEN
+                    OMEGA = RTABL(KYSTL,ITK,JYSTH0)
+                ELSE IF (RVX.LE.R_TPC) THEN
+                    OMEGA = RTABL(KYSTL,ITK,JYSTH1)
+                ELSE
+                    OMEGA = RTABL(KYSTL,ITK,JYSTH2)
+                ENDIF
+            ELSE
+                KYSCL = IW(NYSCL)
+                IFRFT = ITABL(KYSCL,ITK,JYSCTN)
+                OMEGA = RTABL(KYSCL,ITK,JYSCH0)
+            ENDIF
+            IF (ABS(OMEGA).LE.1.E-10) RETURN
+C            IF (RVX.LE.R_ITC) THEN
+C                JHELIX = JYSTH0
+C            ELSE IF (RVX.LE.R_TPC) THEN
+C                JHELIX = JYSTH1
+C            ELSE
+C                JHELIX = JYSTH2
+C            ENDIF
+C
+C+  Get appropriate track parameters
+C
+C            OMEGA = RW(IYSTL+JHELIX)
+C            D0 = RW(IYSTL+JHELIX+3)
+C            TANL = RW(IYSTL+JHELIX+1)
+C            Z0 = RW(IYSTL+JHELIX+4)
+C            IF (ABS(1.-OMEGA*D0).LE.1.E-10) YSGETS = -999.
+C            ARG = (RVX**2-D0**2)/(1.-OMEGA*D0)
+C            IF (ARG.LT.0) RETURN
+C            ARG = (OMEGA/2.)*SQRT(ARG)
+C            IF (ABS(ARG).GT.1.) RETURN
+C            YSGETS = SIGN((2./OMEGA)*ASIN(ARG),(ZVX-Z0)/TANL)
+            CALL YHELIX(IFRFT,VX,SIGZ2,PSI,PTK,IER)
+            IF (IER.NE.0) RETURN
+            YSGETS = PSI/ABS(OMEGA)
+        ELSE
+            KYS0L = IW(NYS0L)
+            IYS0L = KROW(KYS0L,ABS(ITK))
+            D0 = RW(IYS0L+JYS0H0+3)
+            PHI0 = RW(IYS0L+JYS0H0+2)
+            IF (ABS(D0).GT.RVX) RETURN
+            YSGETS = SQRT(RVX**2-D0**2)
+            CP = COS(PHI0)
+            SP = SIN(PHI0)
+            IF (-VX(1)*SP+VX(2)*CP .GE. 0.) THEN
+                IF (VX(1)*CP+VX(2)*SP.GE.0.)THEN
+                    IF (D0.GT.0.) YSGETS = -YSGETS
+                ELSE
+                    IF (D0.LE.0.) YSGETS = -YSGETS
+                ENDIF
+            ELSE
+                IF (VX(1)*CP+VX(2)*SP.GE.0.) THEN
+                    IF (D0.LT.0.) YSGETS = -YSGETS
+                ELSE
+                    IF (D0.GT.0.) YSGETS = -YSGETS
+                ENDIF
+            ENDIF    
+        ENDIF
+        RETURN
+        END
+#endif
+@
+
+
+1.1
+log
+@aleph302 corr.file no.5 add ysv package
+@
+text
+@d1 1
+a1 1
+        REAL FUNCTION YSGETS(VX,ITK)
+d3 5
+a7 1
+C!   Calculate the position of VX along track ITK in cm (+ or -)
+d16 1
+a16 1
+        dimension vx(*)
+d20 1
+d33 1
+d35 4
+d44 11
+a54 7
+        IF (ITK.GT.0) THEN
+            KYSTL = IW(NYSTL)
+            IYSTL = KROW(KYSTL,ITK)
+            IF (RVX.LE.R_ITC) THEN
+                JHELIX = JYSTH0
+            ELSE IF (RVX.LE.R_TPC) THEN
+                JHELIX = JYSTH1
+d56 3
+a58 1
+                JHELIX = JYSTH2
+d60 8
+d71 13
+a83 10
+            OMEGA = RW(IYSTL+JHELIX)
+            D0 = RW(IYSTL+JHELIX+3)
+            TANL = RW(IYSTL+JHELIX+1)
+            Z0 = RW(IYSTL+JHELIX+4)
+            IF (ABS(1.-OMEGA*D0).LE.1.E-10) YSGETS = -999.
+            ARG = (RVX**2-D0**2)/(1.-OMEGA*D0)
+            IF (ARG.LT.0) RETURN
+            ARG = (OMEGA/2.)*SQRT(ARG)
+            IF (ABS(ARG).GT.1.) RETURN
+            YSGETS = SIGN((2./OMEGA)*ASIN(ARG),(ZVX-Z0)/TANL)
+@

@@ -1,0 +1,440 @@
+head	1.3;
+access;
+symbols
+	jul313_3:1.3
+	jul313_2:1.3
+	jul313_1:1.3
+	jul313:1.3
+	jul312_1:1.3
+	jul312:1.3
+	jul311:1.3
+	jul310_1:1.3
+	jul310:1.3
+	jul309_1:1.3
+	jul309:1.3
+	jul308_6:1.3
+	jul308_5:1.3
+	jul308_4:1.3
+	jul308_3:1.3
+	jul308_2:1.3
+	jul308_1:1.3
+	jul308:1.3
+	jul307_4:1.3
+	jul307_3:1.3
+	jul307_2:1.3
+	jul307_1:1.3
+	jul307:1.3
+	jul306_3:1.3
+	jul306_2:1.3
+	jul306_1:1.3
+	jul306:1.3
+	jul305_4:1.3
+	jul305_3:1.3
+	jul305_2:1.3
+	jul305_1:1.3
+	jul305:1.3
+	jul304_3:1.3
+	jul304_2:1.3
+	jul304_1:1.3
+	jul304:1.2
+	jul303_7:1.2
+	jul303_6:1.2
+	jul303_5:1.2
+	jul303_4:1.2
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2
+	jul280_1:1.2
+	jul280:1.2
+	jul279:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	97.10.01.07.09.30;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.03.12.15.33.23;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.19.21;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.19.22;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@Fixes for Linux
+@
+text
+@      INTEGER FUNCTION RTLSUM(LROCEX, IW)
+C-----------------------------------------------------------------------
+C! summarize RTLO banks in RTLS on error
+C --
+C -- inputs:
+C --   LROCEX (integer)
+C --     bit mask telling which readout controllers should be there
+C --     usually PARAMETER (LROCEX = 8159), i.e. 1FDFhex
+C --   IW(*)
+C --     BOS array
+C
+C -- output:
+C --   bos bank RTLS in case of inconsistent RTLO banks
+C --   RTLO banks are dropped except RTLO # 0
+C --
+C -- description:
+C -- check consistency of RTLO banks in raw data:
+C --  o  are all of them there that are expected (parameter LROCEX)?
+C --        the ROCs expected are specified using bits in LROCEX
+C --        (bits 0..13):
+C --        main EB, LVL1trigger, LV2trigger, VDET, ITC, TPC, ECAL, HCAL
+C --        SATR, LCAL, BCAL, TPCA, TPCB
+C --        in addition .GE. 17 pad TPPs per TPC endcap are required
+C --        (note that the TPC main EB generally should NOT be there)
+C --  o  do all contain the same trigger mask and event number?
+C --
+C --
+C -- everything fine:
+C --   drop all RTLO but main EB RTLO (with bank number 0)
+C -- else
+C --   build RTLS bank, bank number 0 and drop all RTLO banks but RTLO #
+C --
+C -- bank format for RTLS:
+C -- ..............................................................
+C --   1      i  Number of Colums = 60
+C --   2      i  Number of rows = 2
+C -- ..............................................................
+C --    1  EM  i  trigger number main EB
+C --    2  E1  i     "      "    level 1 trigger
+C --    3  E2  i     "      "    level 2 trigger
+C --    4  EV  i     "      "    VDET
+C --    5  EI  i     "      "    ITC
+C --    6  ET  i     "      "    TPC main EB
+C --    7  EE  i     "      "    ECAL
+C --    8  EH  i     "      "    HCAL
+C --    9  ES  i     "      "    SATR
+C --   10  EL  i     "      "    LCAL
+C --   11  EC  i     "      "    BCAL
+C --   12  EA  i     "      "    TPC side A
+C --   13  EB  i     "      "    TPC side B
+C -- 14-49     i     "      "    pad TPP of TPC sector # 1..36
+C -- 50-60     i  reserved
+C -- ..............................................................
+C --   next row: ditto with trigger mask
+C -- ..............................................................
+C --
+C?
+C!======================================================================
+#ifndef DOC
+      IMPLICIT NONE
+      INTEGER LROCEX, IW(*)
+
+      INTEGER  NAMIND, NBANK, NDROP, NSWAP
+      EXTERNAL NAMIND, NBANK, NDROP, NSWAP
+      EXTERNAL BLIST, BDROP, UCOPY2, VZERO
+      INTEGER IRET
+
+      INTEGER IP, IP0
+
+      INTEGER I, IROC
+      INTEGER IEV, ITR, TA, TB, LROC, IRTLO, NARTLO
+      LOGICAL OK
+
+      INTEGER NEB, NROC, NROC0
+C -- MAIN EB + 10 EBS + 2 TPP SIDE EB 36 TPPS + 11 RESERVED
+      PARAMETER (NEB = 13,
+     1           NROC = NEB+36+11,
+     1           NROC0 = NROC-1
+     1           )
+      INTEGER RTLSLE
+      PARAMETER (RTLSLE = NROC*2+2)
+      INTEGER RTLOLE
+      PARAMETER (RTLOLE = 12)
+      INTEGER TRNUMO
+      PARAMETER (TRNUMO = 3)
+      INTEGER TRMSKO
+      PARAMETER (TRMSKO = 4)
+      INTEGER FBADDR(0:NROC0)
+      DATA FBADDR/  0, 1285, 773, 1031, 1029, 1539, 1287, 1027,
+     1  1035,  1289,  1033,  24592,  24584,
+     1  8980,17172,25364,25361,17169, 8977,
+     1  8982, 8981,17174,17173,25366,25365,
+     1  25363,25362,17171,17170, 8979, 8978,
+     1  33556,41748,49940,49937,41745,33553,
+     1  33558,33557,41750,41749,49942,49941,
+     1  49939,49938,41747,41746,33555,33554,
+     1  11*-1
+     1/
+      IEV = 0
+      ITR = 0
+      TA = 0
+      TB = 0
+      LROC = 0
+      OK = .TRUE.
+
+      NARTLO = NAMIND('RTLO')
+      IF (NARTLO .LE. 0) THEN
+C -- NEVER HEARD ABOUT RTLO... THERE IS NOTHING WE CAN DO
+        RTLSUM = 1
+        RETURN
+      END IF
+      IP = IW(NARTLO)
+C     DO WHILE(IP .GT. 0)
+   10 CONTINUE
+      IF (IP .LE. 0) GOTO 11
+      IF (IEV .EQ. 0) IEV = IW(IP+TRNUMO)
+      IF (ITR .EQ. 0) ITR = IW(IP+4)
+      IF (IW(IP+TRNUMO) .NE. IEV .OR.
+     1      IW(IP+TRMSKO) .NE. ITR) THEN
+C -- INCONSISTENT EVENT NUMBER OR TRIGGER MASK
+        OK = .FALSE.
+        GOTO 1
+      END IF
+
+C -- SEARCH IN FASTBUS ADDRESS ARRAY FOR THIS BANK NUMBER
+      IROC = 99999999
+      DO 20 I = 0, NROC0
+        IF(FBADDR(I) .EQ. IW(IP-2)) THEN
+          IROC = I
+          GOTO 21
+        END IF
+   20 CONTINUE
+   21 CONTINUE
+      IF (IW(IP-2) .EQ. 0) THEN
+C -- THIS IS THE MAIN INTERFACE RTLO
+        IRTLO = IP
+      END IF
+C -- COUNT RTLO'S FROM TPPS, SET BITS FOR EBS
+      IF (IROC .LE. NEB-1) THEN
+        LROC = IBSET(LROC, IROC)
+      ELSE IF (IROC .LE. NEB+18-1) THEN
+        TA = TA+1
+      ELSE IF (IROC .LE. NEB+36-1) THEN
+        TB = TB+1
+      ELSE
+C -- UNKNOWN RTLO BANK NUMBER - FUNNY, BUT NOT ALARMING... COULD BE A WI
+
+      END IF
+      IP = IW(IP-1)
+C     END DO
+      GOTO 10
+   11 CONTINUE
+    1 CONTINUE
+
+C - CHECK IF EVERYTHING HAS BEEN FOUND
+      OK =  OK .AND.
+     1      TA .GE. 17 .AND.
+     1      TB .GE. 17 .AND.
+     1      IAND(LROC,LROCEX) .EQ. LROCEX
+
+      IF (OK) THEN
+C
+C -----------------------------------------------------------------
+C -- EVERYTHING IS FINE,
+C -- DO NOT WRITE RTLS, DROP ALL RTLO BUT THE MAIN EB ONE
+C -----------------------------------------------------------------
+C
+        IRET = NSWAP('RTLO',0,'RTL9',0)
+        CALL BDROP(IW,'RTLO')
+        IRET = NSWAP('RTL9',0,'RTLO',0)
+C
+C        CALL BLIST(IW, 'E-', 'RTLS')
+C        CALL BDROP(IW, 'RTLO')
+C        IP = NBANK('RTLO', 0, RTLOLE)
+C        CALL UCOPY2(IW(IRTLO+1), IW(IP+1), RTLOLE)
+C        CALL BLIST(IW, 'E+', 'RTLO')
+        RTLSUM = 1
+      ELSE
+C
+C -----------------------------------------------------------------
+C -- SOMETHING WENT WRONG
+C -- CREATE AND FILL RTLS BANK, DROP ALL RTLO BUT RTLO #0
+C -----------------------------------------------------------------
+C
+        IP0 = NBANK('RTLS', 0, RTLSLE)
+        IF (IP0 .LE. 0) THEN
+C -- COULD NOT CREATE SUMMARY BANK RTLS
+          RTLSUM = 0
+          RETURN
+        END IF
+        CALL VZERO(IW(IP0+1), RTLSLE)
+        CALL BLIST(IW, 'E+', 'RTLS')
+C -- FILL SUMMARY BANK
+        IW(IP0+1) = NROC
+        IW(IP0+2) = 2
+        IP0 = IP0+2
+C -- GET TRIGGER NUMBER AND MASK FROM RTLO AND PUT IT INTO RTLS
+        IP = IW(NARTLO)
+
+C       DO WHILE(IP .GT. 0)
+  100   CONTINUE
+        IF (.NOT.(IP .GT. 0)) GOTO 101
+C -- SEARCH IN FASTBUS ADDRESS ARRAYS FOR THIS BANK NUMBER
+        IROC = 99999999
+        DO 110 I = 0, NROC0
+          IF(FBADDR(I) .EQ. IW(IP-2)) THEN
+            IROC = I
+            GOTO 111
+          END IF
+  110   CONTINUE
+  111   CONTINUE
+
+        IF (IROC .LE. NROC0) THEN
+          IW(IP0+IROC+1) = IW(IP+TRNUMO)
+          IW(IP0+NROC+IROC+1) = IW(IP+TRMSKO)
+C -- DROP ALL BUT THE MAIN RTLO
+          IF (IROC .NE. 0) THEN
+            I = NDROP('RTLO', FBADDR(IROC))
+          END IF
+        ELSE
+C -- UNKNOWN RTLO, FUNNY, DO NOT DROP BANK (E.G. IT COULD BE A WIRE TPP)
+
+        END IF
+        IP = IW(IP-1)
+C       END DO
+        GOTO 100
+  101   CONTINUE
+        RTLSUM = 0
+      END IF
+
+      RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+ 	e1bpei.F e2bpei.F e3bpei.F e4bary.F e4cosz.F e4dead.F e4deij.F
+ 	e4fdij.F e4fide.F e4find.F e4fnec.F e4frac.F e4gtbr.F e4gtpl.F
+ 	e4gtso.F e4gtst.F e4gttw.F e4indi.F e4lea1.F e4ovrl.F e4pal.F
+ 	e4r1r2.F e4r2r3.F e4r3r4.F e4radc.F e4res2.F e4res3.F e4tstl.F
+ 	e4xyz0.F eautop.F ebegid.F eboxki.F ecalig.F ecblda.F ecboba.F
+	ecbook.F eccaob.F ecchkb.F ecclco.F ecclus.F ecdamp.F ecdebg.F
+ 	ecdete.F ecdigi.F ecener.F eceras.F ecfclu.F ecfils.F ecfmip.F
+ 	ecfobj.F ecgflw.F ecgmix.F echarg.F echcgl.F echedc.F echiba.F
+ 	echist.F echtag.F ecinit.F ecinrv.F eclamp.F eclana.F ecleib.F
+ 	eclgeo.F eclope.F eclorl.F eclost.F ecltag.F ecltrk.F ecltyp.F
+ 	ecluar.F ecmesp.F ecmod.F ecmopl.F ecncob.F ecobnk.F ecoent.F
+ 	ecoidp.F ecos.F ecpasr.F ecplm.F ecprin.F ecprlo.F ecrcob.F
+ 	ecre4d.F ecreib.F ecrmip.F ecrndx.F ecrpei.F ecrtr.F ecrunq.F
+ 	ecscmd.F ecst.F ecsupp.F ecsw1093.F ecsw94.F ectemp.F ecthre.F
+ 	ectopo.F ectpc.F ectrap.F ectrea.F ecxmod.F edisal.F edlist.F
+ 	efaxe.F efbook.F eferrr.F eficlp.F eficv.F efiecp.F efieib.F
+ 	efijob.F efix.F efixi94.F eflcst.F efolmk.F efpard.F eftiel.F
+ 	egacst.F egaest.F egetds.F egfcst.F egttks.F ehcflo.F ehlix.F
+ 	ehreg.F eidedx.F eident.F eieffl.F einhlx.F einijo.F einirl.F
+ 	einiru.F einitk.F einsrl.F eipard.F eithr.F eknewb.F eknewe.F
+ 	elecid.F elongi.F emfill.F emskei.F emskev.F emskf.F emski.F
+ 	emskji.F emskmu.F enfmsk.F enighb.F enoise.F enprox.F enstat.F
+ 	epadcl.F epatrn.F epcalo.F epchg.F epneu.F epreda.F eproba.F
+ 	eprsto.F eprsum.F eprtpc.F ereset.F eroad.F escdef.F escoun.F
+ 	esfil.F eslas.F eslct.F eslctf.F eslowc.F estag.F esveto.F
+ 	eswpst.F etdifp.F ethres.F etrdev.F ewdifp.F ewircl.F ex3ijk.F
+ 	fawian.F ffield.F fidhea.F fidrot.F finiru.F fitall.F fitwri.F
+ 	fkink.F fkkpar.F floweh.F flowfi.F flowtr.F fmuid.F fpiden.F
+ 	frefit.F ftpcer.F ftrack.F
+ 	gambnk.F gapeco.F gasteer.F
+ 	hcalib.F hcalrd.F hcatow.F hcbhis.F hcfclu.F hchist.F hclcra.F
+ 	hcltst.F hclufi.F hcos.F hcsimm.F hdgdeb.F hdgfil.F hdgpot.F
+ 	hdgsum.F hdprec.F hdspre.F hflnoi.F hinijo.F hiniru.F hmener.F
+ 	hmfind.F hmroad.F hnoise.F hnoisy.F hpatco.F hphnoi.F hplink.F
+ 	hprana.F hpranp.F hprdig.F hpreda.F hprpot.F hprsum.F hprunc.F
+ 	hrcomp.F hrcpat.F hrdcal.F hroad.F hslink.F hslowc.F hspare.F
+ 	hsptre.F hstofi.F htrack.F htubfi.F htwcr.F
+ 	iasign.F iattma.F ibnkin.F icaswt.F icftoi.F iclimb.F icrcco.F
+ 	ideadw.F idigpr.F ienang.F ifind1.F ifind2.F ifitp.F iftrak.F
+ 	igetti.F igettp.F igicha.F iheler.F iinijo.F iiniru.F iintrk.F
+ 	imatch.F inigap.F insect.F intrak.F ipakdi.F ipdsti.F iphcor.F
+ 	ipreda.F iprsum.F ipstat.F irefin.F ireopd.F isave.F ishuff.F
+ 	ishufl.F islowc.F isrch.F itbook.F itccut.F itcopr.F itcrec.F
+ 	itcrep.F itctpc.F itctrk.F itcxng.F iterr.F itextn.F ithist.F
+ 	itidy1.F itidy2.F itlnk1.F itlnk2.F itpcan.F itrak.F itrecf.F
+ 	itreci.F itree.F itrkci.F itrkeq.F itrkzr.F itrmca.F
+@
+text
+@d63 2
+a64 2
+      INTEGER NAMIND, NBANK, NDROP
+      EXTERNAL NAMIND, NBANK, MDROP
+d66 1
+a66 1
+      EXTERNAL NSWAP, NDROP
+d168 1
+a168 1
+        CALL NSWAP('RTLO',0,'RTL9',0)
+d170 1
+a170 1
+        CALL NSWAP('RTL9',0,'RTLO',0)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK rtlsum
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

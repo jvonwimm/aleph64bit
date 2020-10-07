@@ -1,0 +1,129 @@
+
+ 30/04/2004    /afs/cern.ch/aleph/Linux/dbase/README_database
+
+       Aleph database (adbscons.daf)
+       ----------------------------
+ - Description
+   -----------
+   There are many versions (xxx) of the aleph database.
+   For each xxx version there are 3 important files:
+    - /afs/cern.ch/aleph/Linux/dbase/adbsxxx.daf      (the direct access file)
+    - /afs/cern.ch/aleph/reference/dbase/adbsxxx.epio (the epio file)
+    - /afs/cern.ch/aleph/reference/dbase/adbsxxx.news (the list of modifications 
+                                                       introduced in this xxx version) 
+
+   For the last released version XXX the link /afs/cern.ch/aleph/Linux/dbase/adbscons.daf
+   points to: /afs/cern.ch/aleph/Linux/dbase/adbsXXX.daf
+
+   NB: The database adbs8990.daf was used to analyze the 1989/1990 data and  
+       its last update was done on 01/10/1998.      
+
+ - Archives
+   --------
+   For space problems, only few versions of the database are kept.
+    - Some  adbsxxx.daf files appear in the directory: /afs/cern.ch/aleph/Linux/dbase/
+    - Some adbsxxx.epio files appear in the directory: /afs/cern.ch/aleph/reference/dbase/
+   but all the .epio files have been archived in the pubarch system by the user jacotf on lxplus.
+
+   To permit the access to the archived epio files a permission has been given to
+   the account aleph on lxplus by the user jacotf on lxplus:
+     > /afs/cern.ch/user/s/silvan/public/pubarch.owner setaccess -user
+       aleph "/afs/cern.ch/user/j/jacotf/epio/*"
+   NB: > /afs/cern.ch/user/s/silvan/public/pubarch.owner was necessary
+       because the updated version of pubarch was not already released.
+       It will be replaced in the future by: > pubarch
+
+ - If one wants to use a database version which is not the latest released one:
+        /afs/cern.ch/aleph/Linux/dbase/adbscons.daf
+   ---------------------------------------------------------------------------
+    1) The daf file (adbsxxx.daf) is in the directory: /afs/cern.ch/aleph/Linux/dbase/
+       Just use it.
+
+    2) The .daf file (adbsxxx.daf) is NOT in the directory: 
+       /afs/cern.ch/aleph/Linux/dbase/
+
+       In this case the daf file must be recreated from the epio file.
+            ------------------------
+          -   Login as aleph@lxplus
+            ------------------------ 
+          - > cd /afs/cern.ch/aleph/reference/dbase/     
+
+          1) Get the epio file adbsxxx.epio
+             ------------------------------
+              a) The corresponding epio file (adbsxxx.epio) is there.
+
+              b) The corresponding epio file (adbsxxx.epio) is NOT there and
+                 must be retrieved from the pubarch archive system
+                    - Look at the list of all archived epio files:
+                     > /afs/cern.ch/user/s/silvan/public/pubarch.owner query 
+                       "/afs/cern.ch/user/j/jacotf/epio/*"
+                    - Retrieve the needed epio file
+                      > /afs/cern.ch/user/s/silvan/public/pubarch.owner retrieve 
+                        /afs/cern.ch/user/j/jacotf/epio/adbsxxx 
+                        /afs/cern.ch/aleph/reference/dbase/adbsxxx.epio
+                        NB: The full path of the adbsxxx.epio must be given 
+  
+                 NB: > /afs/cern.ch/user/s/silvan/public/pubarch.owner will be replaced by
+                 -------------------------------------------------------------------------   
+                     > pubarch 
+                 --------------
+                       as soon as the last updated version of pubarch will be released.
+                 **** If there is a problem during the retrieve you can contact H.Renshall (IT) ****
+
+          2) Create the daf file from the epio file
+             --------------------------------------
+              - The database version is >= 222
+                ------------------------------
+                The .epio files have been written with a block size = 32040
+                                                         ------------------
+                  1) > cd /afs/cern.ch/aleph/Linux/dbase
+
+                       The script file dbase_run [/afs/cern.ch/aleph/shared/script/dbase_run]
+                       will execute the script: $/afs/cern.ch/aleph/shared/script/runeptoda
+                       The script $/afs/cern.ch/aleph/shared/script/runeptoda will:         
+                          - write a file: /afs/cern.ch/aleph/Linux/dbase/eptoda.cards 
+                          - execute the program /afs/cern.ch/aleph/Linux/bin/eptoda.exe which
+                               - reads the cards file: /afs/cern.ch/aleph/Linux/dbase/eptoda.cards 
+                               - reads the epio file: /afs/cern.ch/aleph/reference/dbase/adbsxxx.epio
+                                 and writes the adbsxxx.daf + an output file eptoda.out
+
+                   2) Execute the script dbase_run
+                      ex:   > dbase_run    311             3200 [default]      20 [default]
+                                       vers.number      Total nb of blocks  Nb of header blocks
+                    The file /afs/cern.ch/aleph/Linux/dbase/eptoda.cards will be written
+                    according to the given parameters:
+                    FEPI '/afs/cern.ch/aleph/reference/dbase/adbs311.epio | EPIO' (maximum 72 characters)
+                    FDAF '/afs/cern.ch/aleph/Linux/dbase/adbs311.daf | DAF'
+                    DAFB 3200 20
+                    NDOT
+                    ENDQ
+             
+              - The database version is < 222
+                ------------------------------
+                The .epio files have been written with a block size = 3600
+                                                         -----------------
+                  1) - > cd /afs/cern.ch/user/a/aleph
+                     - > mkdir tempwork (if not already exists)
+                     - > cd tempwork
+                     - > cp /afs/cern.ch/aleph/reference/dbase/adbsxxx.epio .
+                     - > cp /afs/cern.ch/aleph/Linux/dbase/eptoda.cards .
+                     - Modify the card FEPI in the eptoda.cards         
+                         > emacs eptoda.cards
+                            FEPI 'adbsxxx.epio | EPIO | DISK LRECL 3600' (maximum 72 characters)
+                     - Create the .daf
+                         > setenv EPTODACARDS eptoda.cards
+                         > /afs/cern.ch/aleph/Linux/bin/eptoda.exe > eptoda.out
+                           NB: the daf will be written in the directory /afs/cern.ch/aleph/Linux/dbase/
+
+          3) Check the output and the daf file
+              - Check carefully the eptoda.out file
+              - Check the .daf written (adbsxxx.daf)
+                > alook
+                    [By default the adbscons.daf is opened]
+                  LOOK> open/daf
+                  _File: adbsxxx.daf
+                  LOOK> drop adbs (the default is the adbs bank of adbscons.daf) 
+                  LOOK> read/daf adbs
+                  LOOK> l/bos adbs 0
+                  This is a quick check, but one can check other banks if necessary.
+

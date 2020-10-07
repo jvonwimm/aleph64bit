@@ -1,0 +1,200 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	aleph316_2:1.1.1.1
+	aleph316_1:1.1.1.1
+	aleph316:1.1.1.1
+	aleph315_7:1.1.1.1
+	aleph315_6:1.1.1.1
+	aleph315_5:1.1.1.1
+	aleph315_4:1.1.1.1
+	aleph315_3:1.1.1.1
+	aleph315_2:1.1.1.1
+	aleph315_1:1.1.1.1
+	aleph315:1.1.1.1
+	aleph314_2:1.1.1.1
+	aleph314_1:1.1.1.1
+	aleph314:1.1.1.1
+	aleph313_1:1.1.1.1
+	aleph313:1.1.1.1
+	aleph312_1:1.1.1.1
+	aleph312:1.1.1.1
+	aleph311_1:1.1.1.1
+	aleph311:1.1.1.1
+	aleph310_3:1.1.1.1
+	aleph310_2:1.1.1.1
+	aleph310_1:1.1.1.1
+	aleph310:1.1.1.1
+	aleph309_1:1.1.1.1
+	aleph309:1.1.1.1
+	aleph308_3:1.1.1.1
+	aleph308_2:1.1.1.1
+	aleph308_1:1.1.1.1
+	aleph308:1.1.1.1
+	aleph307_6:1.1.1.1
+	aleph307_5:1.1.1.1
+	aleph307_4:1.1.1.1
+	aleph307_2:1.1.1.1
+	aleph307_1:1.1.1.1
+	aleph307:1.1.1.1
+	aleph306:1.1.1.1
+	aleph305_4:1.1.1.1
+	aleph305_3:1.1.1.1
+	aleph305_2:1.1.1.1
+	aleph305_1:1.1.1.1
+	aleph305:1.1.1.1
+	aleph304_5:1.1.1.1
+	aleph304_4:1.1.1.1
+	aleph304_3:1.1.1.1
+	aleph304_2:1.1.1.1
+	aleph304_1:1.1.1.1
+	aleph304:1.1.1.1
+	aleph303_3:1.1.1.1
+	aleph303_2:1.1.1.1
+	aleph303_1_mc1:1.1.1.1
+	aleph303_1:1.1.1.1
+	aleph303:1.1.1.1
+	aleph302_9:1.1.1.1
+	aleph302_8:1.1.1.1
+	aleph302_7:1.1.1.1
+	aleph302_6:1.1.1.1
+	aleph302_5:1.1.1.1
+	aleph302_4:1.1.1.1
+	aleph302_3:1.1.1.1
+	aleph302_2:1.1.1.1
+	aleph302_1:1.1.1.1
+	aleph302:1.1.1.1
+	aleph216:1.1.1.1
+	aleph215_3:1.1.1.1
+	aleph215_2:1.1.1.1
+	aleph215:1.1.1.1
+	aleph214:1.1.1.1
+	aleph213:1.1.1.1
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.02.07.11.44.22;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.44.23;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      INTEGER FUNCTION VINIVG()
+C ----------------------------------------------------------------------
+CKEY VDETDES INDEX / USER
+C! initialize VDET geography package, unconnected channels, face/module
+C
+C  VZGEOG.FOR
+C       extensions to VDET geometry package        21 Sept. 1995
+C                                                   J. Rothberg
+C                               modified  6 Oct. 1995  for VEXCH
+C ---------------------------------------------------------------------
+C - Joe Rothberg, August 20 1995
+C ---------------------------------------------------------------------
+#ifndef DOC
+C     IMPLICIT NONE
+C ---------------------------------------------------------------------
+#include "vduefc.h"
+#include "vglobl.h"
+#include "vsltco.h"
+#include "bcs.h"
+C ---------------------------------------------------------------------
+      INTEGER NAMI, NAMIND, GTSTUP
+      INTEGER i, nrows, irow
+C
+      INTEGER KVUEC, KVXCH, KVUBE, KVFMC
+      INTEGER version
+      CHARACTER*4 CHAINT
+#include "bmacrod.h"
+C --------------------------------------------------------------
+#include "bmacro.h"
+C ---------------------------------------------------------------------
+       VINIVG = VDERR
+C
+C Bank VUEC, disconnected channels
+       nami = NAMIND('VUEC')
+       KVUEC = IW(nami)
+       IF(KVUEC .EQ. 0)THEN
+         GOTO 999
+       ENDIF
+C
+       vuech(1)  = ITABL(kvuec,1,1)
+       vuech(2)  = ITABL(kvuec,1,2)
+C
+C Bank VXCH, extra readout channels
+       nami = NAMIND('VXCH')
+       KVXCH = IW(nami)
+       IF(KVXCH .EQ. 0)THEN
+         GOTO 999
+       ENDIF
+C
+       vexch(1)  = ITABL(kvxch,1,1)
+       vexch(2)  = ITABL(kvxch,1,2)
+C --------------------------------------
+C Flag to ignore bonding maps
+C    VIGBM=1 ignore bonding map
+       VIGBM = 0
+       nami = NAMIND('VUBE')
+       KVUBE = IW(nami)
+C
+       IF(KVUBE .EQ. 0)THEN
+       ELSE
+          VIGBM  = ITABL(KVUBE,1,1)
+       ENDIF
+C notify that bond map is not being used
+       IF (VIGBM.EQ.1 .AND. IW(6).GT.0) THEN
+         WRITE(IW(6),*)' VINIVG: bond map ignored'
+       ENDIF
+C
+C ----------------------------------------------------------
+C Bank VFMC, face module content
+       nami = NAMIND('VFMC')
+       KVFMC = IW(nami)
+       IF(KVFMC .EQ. 0)THEN
+         GOTO 999
+       ENDIF
+C
+       nrows = LROWS(kvfmc)
+       DO i = 1, nrows
+        facec(i)  = CHAINT(ITABL(kvfmc,i,1))
+        facen(i)  = ITABL(kvfmc,i,2)
+        modneg(i) = ITABL(kvfmc,i,3)
+        modpos(i) = ITABL(kvfmc,i,4)
+      ENDDO
+C
+      VINIVG = VDOK
+
+C error return
+ 999  CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

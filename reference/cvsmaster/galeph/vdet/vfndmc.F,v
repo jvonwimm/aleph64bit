@@ -1,0 +1,118 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	94.12.07.14.02.59;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.03.00;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK vfndmc
+      SUBROUTINE VFNDMC(IMOD,MAXC,NROS,MUXL,IPICH)
+C----------------------------------------------------------------------
+C! Get max number of R/O cahnnels, r/o pich and mux length
+CKEY VDET DBASE
+C!
+C!  Author         A. Bonissent 15-Jan-1994
+C!
+C! Input : IMOD module number
+C! Output : MAXC  Number of r/o channels
+C!          NROS  Number of r/o strips
+C!          MUXL  Multiplexing length
+C!          IPICH Readout pitch
+C-----------------------------------------------------------------------
+#ifndef DOC
+      DIMENSION MAXC(*),MUXL(*),IPICH(*),NROS(2)
+      INTEGER VNRWAF,VROSTM,VNSTCM
+C
+C Get  max number of readout channels in one module,
+C and readout frequency ipich
+C
+      IBID = VROSTM(1,NROS1,RPICH,IPICH(1))
+      IBID = VROSTM(2,NROS2,RPICH,IPICH(2))
+      NROS(1)=NROS1
+      NROS(2)=NROS2
+      DO IV=1,2
+         MAXC(IV)=VNSTCM(IV)
+         MUXL(IV)=MAXC(IV)
+      ENDDO
+C      IF(VNRWAF().EQ.2)THEN
+CC VDET 93
+C         MAXC(1) = 2*NROS1
+C         MUXL(1) = 10000
+C      ENDIF
+C      IF(VNRWAF().EQ.3)THEN
+CC VDET 95
+C         MAXC(1) = 3*NROS1/2
+C         MUXL(1) = 1000
+C      ENDIF
+C      MUXL(2) = 10000
+      RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

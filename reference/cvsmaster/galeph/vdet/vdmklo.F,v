@@ -1,0 +1,344 @@
+head	1.3;
+access;
+symbols
+	gal309_3:1.3
+	gal309_2:1.3
+	gal309_1:1.3
+	gal309:1.3
+	gal308_2:1.3
+	gal308_1:1.3
+	gal308:1.3
+	gal307_2:1.3
+	gal307_1:1.3
+	gal307:1.3
+	gal306_3:1.3
+	gal306_2:1.3
+	gal306_1:1.3
+	gal306:1.3
+	gal305_3:1.3
+	gal305_2:1.3
+	gal305_1:1.3
+	gal305:1.3
+	gal304_11:1.3
+	gal304_10:1.3
+	gal304_9:1.3
+	gal304_8:1.3
+	gal304_7:1.3
+	gal304_6:1.3
+	gal304_5:1.3
+	gal304_4:1.3
+	gal304_3:1.3
+	gal304_2:1.3
+	gal304_1:1.3
+	gal304:1.3
+	gal303_3:1.3
+	gal303_2:1.3
+	gal303_1:1.3
+	v-303:1.3
+	gta302:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	95.08.24.09.37.53;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.06.29.16.05.19;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.55;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.56;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@galeph 303/gustep: call vdhite (G.Taylor), add a modified version of geaant/gdray
+introduce vdet94
+@
+text
+@*DK vdmklo
+      SUBROUTINE VDMKLO
+C!----------------------------------------------------------------------
+C! Compute local coordinates produced by a hit
+CKEY VDET DIGITIZE
+C!
+C!
+C!  Author         Manoj Thulasidas 15-Dec-1993
+C!
+C!  Description
+C!  ===========
+C!  VDet MaKe LOCal hits will perform a global to local to transformatio
+C!  of the hit positions (using the GEOM package routing VDGTOL), create
+C!  the local info bank and sorts it so that all the hit modules and waf
+C!  are in a sequence.
+C!
+C!
+C! Input :  VDSS bank, Global hits bank, indexed by geant track #
+C!
+C! Output : VDLH bank, Local hits bank.
+C!
+C-----------------------------------------------------------------------
+C
+#ifndef DOC
+#include "vdlhjj.h"
+#include "vdssjj.h"
+#include "bcs.h"
+C
+      INTEGER VDGTOL
+C-- The maximum number of tracks allowed
+      INTEGER MAXTRK
+      INTEGER NAMIND, NAVDLH, KVDLH, IGARB, KVDST, IVDST, ITR,
+     $   ILAY, IPHI, NENT, IENT, I, NVDST, IMOD(2), IWAF(2), IER,
+     $   INDNXT, INDF
+      REAL XIN(3), XOUT(3), EREL(2), ALIN(3,2), ALOU(3,2), VDIST,
+     $   DIST1, DIST2
+      EXTERNAL VDIST
+C
+      DATA NAVDSS, NAVDLH /2*0/
+#include "bmacro.h"
+C
+      IF (NAVDSS.EQ.0) THEN
+         NAVDSS = NAMIND('VDSS')
+         NAVDLH = NAMIND('VDLH')
+      ENDIF
+C
+C-- first drop the VDLH (local hits) bank
+      CALL BDROP(IW,'VDLH')
+C
+C-- find the VDSS bank.
+      KVDSS = IW(NAVDSS)
+      IF (KVDSS.EQ.0) RETURN
+C
+C-- lenght of VDSS
+      NVDSS = LROWS(KVDSS)
+C
+C-- no point in proceeding if the VDSS bank is empty.
+      IF (NVDSS.LE.0) RETURN
+C
+C--  create the VDLH bank
+C--  assume that the length is going to be VDSS size
+      MAXTRK = NVDSS
+      IF (IW(NAVDLH).EQ.0) THEN
+        CALL ALBOS('VDLH', 0, MAXTRK*LVDLHA+LMHLEN, KVDLH, IGARB)
+        IF(IGARB.EQ.1) KVDSS = IW(NAVDSS)
+        IW(KVDLH+LMHROW) = 0
+        IW(KVDLH+LMHCOL) = LVDLHA
+      ENDIF
+      KVDLH = IW(NAVDLH)
+
+      DO 80 IVDSS = 1, NVDSS
+C--  Transport hit bank into readable local variables.
+        ITR = ITABL(KVDSS, IVDSS, JVDSTN)
+        ILAY = ITABL(KVDSS, IVDSS, JVDSLN)
+        IPHI = ITABL(KVDSS, IVDSS, JVDSPN)
+        XIN(1) = RTABL(KVDSS, IVDSS, JVDSXE)
+        XIN(2) = RTABL(KVDSS, IVDSS, JVDSYE)
+        XIN(3) = RTABL(KVDSS, IVDSS, JVDSZE)
+        XOUT(1) = RTABL(KVDSS, IVDSS, JVDSXL)
+        XOUT(2) = RTABL(KVDSS, IVDSS, JVDSYL)
+        XOUT(3) = RTABL(KVDSS, IVDSS, JVDSZL)
+        EREL(1) = RTABL(KVDSS, IVDSS, JVDSER)
+C--  do the global to local trans (see comments in the beginning)
+C--    VDGTOL(GIN, GOUT, ILAY, IPHI, NENT, IMOD, IWAF, ALIN, ALOU)
+C--  where,
+C--   inputs:  GIN(3), GOUT(3) are two 3 vectors,
+C--             entry and exit points of a track (global coords)
+C--           IPHI, ILAY - specifies the face.
+C--   outputs: NENT = 1 or 2, number of entries for the track
+C--             (track can go through the boundary between two wafers)
+C--            ALIN(3,2), ALOU(3,2) are two 3 vectors,
+C--             entries and exits in local coords
+C--            IMOD(2) is the module numbers, -24 to 24
+C--            IWAF(2) is the wafer numbers, 1 to 3, 1 closest to XY pla
+C--            IER  = 0  successful completion
+C--                 = 1  track doesnt exit (GIN=GOUT in VDSS language)
+C--                 = 2  ??
+C--  protect against zero lenght tracks.
+        IF (VDIST(XIN,XOUT,3).LE.1.0E-15) GOTO 80
+        IER =  VDGTOL
+     $     (XIN,XOUT,ILAY,IPHI,NENT,IMOD,IWAF,ALIN,ALOU)
+C--  an error occurred, but
+C--  the error is usually inocuous.
+C-- The silly return code from VDGTOL is 1 for OK !
+        IF (IER.NE.1) GOTO 80
+C--  if there is not exactly one entry point
+        IF(NENT.EQ.1) THEN
+          INDNXT = KNEXT(KVDLH)
+          DO 82 I = 1, 3
+            RW(INDNXT+JVDLXI+I-1) = ALIN(I,1)
+            RW(INDNXT+JVDLXO+I-1) = ALOU(I,1)
+ 82       CONTINUE
+          IW(INDNXT+JVDLMO) = IMOD(1)
+          IW(INDNXT+JVDLWA) = IWAF(1)
+          IW(INDNXT+JVDLCO) = 1000*IMOD(1) + ISIGN(IWAF(1),IMOD(1))
+          RW(INDNXT+JVDLER) = EREL(1)
+          IW(INDNXT+JVDLTR) = ITR
+          IW(INDNXT+JVDLHT) = ITABL(KVDSS, IVDSS, JVDSRN)
+          IW(KVDLH+LMHROW) = IW(KVDLH+LMHROW) + 1
+        ELSE
+C--  there is a bug somewhere...
+          CALL ALTELL('VDMKLO: Error in NENT', 0, 'RETURN')
+        ENDIF
+ 80   CONTINUE
+C
+C--  compress the VDLH bank
+      CALL AUBPRS('VDLH')
+C
+C--  sort the bank on the encoded WAFER address:  IW(KVDLH+JVDLCO)
+C--  we are going to sort IW into itself, starting from the index of the
+C--  row, first element, ending in the index of the last row, last eleme
+C--  we treat it as a matrix, number of rows = LROWS, and columns = LCOL
+      INDF = KROW(KVDLH,1) + 1
+      CALL SORTIQ(IW(INDF),LCOLS(KVDLH),LROWS(KVDLH),JVDLCO)
+      RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@release galeph 302
+@
+text
+@d12 3
+a14 3
+C!  VDet MaKe LOCal hits will perform a global to local to transformation
+C!  of the hit positions (using the GEOM package routing VDGTOL), creates
+C!  the local info bank and sorts it so that all the hit modules and wafers
+d18 1
+a18 1
+C! Input :  VDHT bank, Global hits bank, indexed by geant track #
+d26 1
+a26 1
+#include "vdhtjj.h"
+d32 2
+a33 2
+      INTEGER NAMIND, NAVDLH, KVDLH, IGARB, KVDHT, IVDHT, ITR,
+     $   ILAY, IPHI, NENT, IENT, I, NVDHT, IMOD(2), IWAF(2), IER,
+d38 2
+a39 1
+      DATA NAVDHT /0/
+d42 5
+d50 3
+a52 4
+C-- find the VDHT bank.
+      IF (NAVDHT.EQ.0) NAVDHT = NAMIND('VDHT')
+      KVDHT = IW(NAVDHT)
+      IF (KVDHT.EQ.0) GOTO 99
+d54 2
+a55 2
+C-- lenght of VDHT
+      NVDHT = LROWS(KVDHT)
+d57 2
+a58 2
+C-- no point in proceeding if the VDHT bank is empty.
+      IF (NVDHT.LE.0) GOTO 99
+d61 2
+a62 3
+C--  assume that the length is going to be twice VDHT size
+      MAXTRK = 2*NVDHT
+      NAVDLH = NAMIND('VDLH')
+d65 1
+d71 1
+a71 1
+      DO 80 IVDHT = 1, NVDHT
+d73 10
+a82 10
+        ITR = ITABL(KVDHT, IVDHT, JVDHTN)
+        ILAY = ITABL(KVDHT, IVDHT, JVDHLN)
+        IPHI = ITABL(KVDHT, IVDHT, JVDHPN)
+        XIN(1) = RTABL(KVDHT, IVDHT, JVDHXE)
+        XIN(2) = RTABL(KVDHT, IVDHT, JVDHYE)
+        XIN(3) = RTABL(KVDHT, IVDHT, JVDHZE)
+        XOUT(1) = RTABL(KVDHT, IVDHT, JVDHXL)
+        XOUT(2) = RTABL(KVDHT, IVDHT, JVDHYL)
+        XOUT(3) = RTABL(KVDHT, IVDHT, JVDHZL)
+        EREL(1) = RTABL(KVDHT, IVDHT, JVDHER)
+d94 1
+a94 1
+C--            IWAF(2) is the wafer numbers, 1 to 3, 1 closest to XY plane.
+d96 1
+a96 1
+C--                 = 1  track doesnt exit (GIN=GOUT in VDHT language)
+d106 2
+a107 14
+C--  if there are two entry points (track goes through two wafers)
+C--  one has to divide the energy in proportion to the track lengths.
+        IF (NENT.EQ.2) THEN
+          DIST1 = VDIST(ALIN(1,1), ALOU(1,1), 3)
+          DIST2 = VDIST(ALIN(1,2), ALOU(1,2), 3)
+C--  error if either of the dists = 0
+          IF (DIST1*DIST2 .LE. 0.0) THEN
+            CALL ALTELL('VDMKLO: Error in track lengths', 7, 'RETURN')
+            GOTO 80
+          ENDIF
+          EREL(1) = EREL(1)*(DIST1/(DIST1+DIST2))
+          EREL(2) = EREL(1)*DIST2/DIST1
+        ENDIF
+        DO 81 IENT = 1, NENT
+d110 2
+a111 2
+            RW(INDNXT+JVDLXI+I-1) = ALIN(I,IENT)
+            RW(INDNXT+JVDLXO+I-1) = ALOU(I,IENT)
+d113 4
+a116 5
+          IW(INDNXT+JVDLMO) = IMOD(IENT)
+          IW(INDNXT+JVDLWA) = IWAF(IENT)
+          IW(INDNXT+JVDLCO) = 1000*IMOD(IENT) +
+     $       ISIGN(IWAF(IENT),IMOD(IENT))
+          RW(INDNXT+JVDLER) = EREL(IENT)
+d118 1
+a118 1
+          IW(INDNXT+JVDLHT) = IVDHT
+d120 4
+a123 1
+ 81     CONTINUE
+d130 3
+a132 4
+C--  we are going to sort IW into itself, starting from the index of the first
+
+C--  row, first element, ending in the index of the last row, last element
+C--  we treat it as a matrix, number of rows = LROWS, and columns = LCOLS
+d135 1
+a135 1
+ 99   RETURN
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d41 2
+a55 1
+      CALL BDROP(IW,'VDLH')
+d136 1
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

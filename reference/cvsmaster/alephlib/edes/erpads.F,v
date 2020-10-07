@@ -1,0 +1,183 @@
+head	1.2;
+access;
+symbols
+	aleph316_2:1.2
+	aleph316_1:1.2
+	aleph316:1.2
+	aleph315_7:1.2
+	aleph315_6:1.2
+	aleph315_5:1.2
+	aleph315_4:1.2
+	aleph315_3:1.2
+	aleph315_2:1.2
+	aleph315_1:1.2
+	aleph315:1.2
+	aleph314_2:1.2
+	aleph314_1:1.2
+	aleph314:1.2
+	aleph313_1:1.2
+	aleph313:1.2
+	aleph312_1:1.2
+	aleph312:1.2
+	aleph311_1:1.2
+	aleph311:1.2
+	aleph310_3:1.2
+	aleph310_2:1.2
+	aleph310_1:1.2
+	aleph310:1.2
+	aleph309_1:1.2
+	aleph309:1.2
+	aleph308_3:1.2
+	aleph308_2:1.2
+	aleph308_1:1.2
+	aleph308:1.2
+	aleph307_6:1.2
+	aleph307_5:1.2
+	aleph307_4:1.2
+	aleph307_2:1.2
+	aleph307_1:1.2
+	aleph307:1.2
+	aleph306:1.2
+	aleph305_4:1.2
+	aleph305_3:1.2
+	aleph305_2:1.2
+	aleph305_1:1.2
+	aleph305:1.2
+	aleph304_5:1.2
+	aleph304_4:1.2
+	aleph304_3:1.2
+	aleph304_2:1.2
+	aleph304_1:1.2
+	aleph304:1.2
+	aleph303_3:1.2
+	aleph303_2:1.2
+	aleph303_1_mc1:1.2
+	aleph303_1:1.2
+	aleph303:1.2
+	aleph302_9:1.2
+	aleph302_8:1.2
+	aleph302_7:1.2
+	aleph302_6:1.2
+	aleph302_5:1.2
+	aleph302_4:1.2
+	aleph302_3:1.2
+	aleph302_2:1.2
+	aleph302_1:1.2
+	aleph302:1.2
+	aleph216:1.2
+	aleph215_3:1.2
+	aleph215_2:1.2
+	aleph215:1.2
+	aleph214:1.2
+	aleph213:1.2
+	aleph212:1.1.1.1
+	ALEPH212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.04.30.12.36.03;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.07.11.41.19;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.02.07.11.41.20;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@replace #include "implicit.h" by "IMPLICIT NONE"
+Modified Files:
+	aire.F airsct.F avolum.F ealgmk.F ealign.F ealtmk.F ecplst.F
+@
+text
+@        REAL FUNCTION ERPADS(RW,CL,PL)
+C-----------------------------------------------------------------------
+C     H.Videau      Creation 01/06/89
+CKEY ECALDES PAD AREA / USER
+C! Computes the area of the pad
+C  It takes into account the limits of the sensitive zone of the module
+C  as well as the pathological barrel pads.
+C   Input :
+C           RW  row number      INTEGER
+C           CL  column number   INTEGER
+C           PL  plane number    INTEGER
+C   Calls: AIRSCT,ESRPL,EMDTOW,EPLST
+C   Called by USER
+C----------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+      SAVE
+#include "ecccom.h"
+C  Input variables
+        INTEGER RW,CL,PL
+C External
+        REAL AIRSCT
+C Locales
+        INTEGER I,ST,SC,MD,RG
+        INTEGER NPL
+        REAL PLA(4,14),A,SECTION(4),PLST
+C Execution
+          ST=EPLNES(PL)
+          PLST=(PL-ESTKFR(ST)+.5)/(ESTKLS(ST)-ESTKFR(ST)+1)+FLOAT(ST)
+        CALL ESRPL('ALEPH',RW,CL,ST,NPL,PLA)
+        CALL EMDTOW(RW,CL,SC,MD,RG)
+          IF(SC.EQ.2.AND.(RW.GT.EPLNPS(PL).OR.RW.LT.EPLNPI(PL))) THEN
+            ERPADS=0.
+            GO TO 999
+          END IF
+        CALL EPLST('ALEPH',SC,MD,PLST,SECTION)
+        DO 1 I=1,ECALNP
+        NPL=NPL+1
+        PLA(1,NPL)=-EALILP(1,I,MD,SC)
+        PLA(2,NPL)=-EALILP(2,I,MD,SC)
+        PLA(3,NPL)=-EALILP(3,I,MD,SC)
+        PLA(4,NPL)=-EALILP(4,I,MD,SC)
+ 1      CONTINUE
+        ERPADS=AIRSCT(NPL,PLA,SECTION)
+          IF(SC.EQ.2.AND.RW.EQ.EPLNPS(PL)) THEN
+            CALL ESRPL('ALEPH',RW+1,CL,ST,NPL,PLA)
+            NPL=NPL+ECALNP
+            ERPADS=ERPADS+AIRSCT(NPL,PLA,SECTION)
+          END IF
+          IF(SC.EQ.2.AND.RW.EQ.EPLNPI(PL)) THEN
+            CALL ESRPL('ALEPH',RW-1,CL,ST,NPL,PLA)
+            NPL=NPL+ECALNP
+            ERPADS=ERPADS+AIRSCT(NPL,PLA,SECTION)
+          END IF
+ 999    CONTINUE
+        END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d16 1
+a16 1
+#include "implicit.h"
+@
+
+
+1.1.1.1
+log
+@import aleph212 from alws
+@
+text
+@@

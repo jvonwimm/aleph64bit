@@ -1,0 +1,196 @@
+head	1.6;
+access;
+symbols
+	alio83:1.6
+	alio82:1.6
+	alio81:1.6
+	alio80:1.5
+	alio74:1.5
+	alio73:1.5
+	alio72:1.5
+	alio71:1.5
+	alio70:1.5
+	alio68:1.5
+	alio69:1.5
+	alio67:1.4
+	alio66:1.4
+	alio65:1.4
+	alio64:1.4
+	alio63:1.4
+	alio62:1.4
+	alio61:1.4
+	alio60:1.4
+	alephio53:1.3
+	v4:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.6
+date	2000.08.18.13.54.27;	author flr;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	97.01.16.13.55.55;	author flr;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.05.03.14.45.24;	author flr;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.03.13.15.01.42;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.01.18.13.51.17;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.52.32;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.52.33;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.6
+log
+@v8.1 - increase # of segments in alk7com and fix precision priblem found by J.B.Hansen
+@
+text
+@      SUBROUTINE SXSDR(IARRAY, NW)
+C------------------------------------------------------------------
+C! convert from DEC VAX floating format to DEC RISC format
+CKEY IO DECS CONVERT
+C - Author - LatB
+C - Input  : - IARRAY / I = array of DEC VAX floating format numbers
+C            - NW     / I = length of IARRAY
+C - Output : - IARRAY / I = array of DEC RISC floating format numbers
+C -------------------------------------------------------------------
+#ifndef DOC
+#if defined(ALEPH_DEC) && defined(UNIX) || defined(ALEPH_LINUX)
+      INTEGER NW
+      INTEGER IARRAY(*)
+
+      INTEGER LW,LW0
+      INTEGER*1 B(4),B0(4)
+      EQUIVALENCE (LW,B),(LW0,B0)
+
+      INTEGER I
+C --------------------------------------------------------
+      IF (NW .LE. 0) RETURN
+      DO I = 1, NW
+         LW = IARRAY(I)
+         IF (ISHFT(B(2),1) .NE. 0) THEN
+            B0(1) = B(3)
+            B0(2) = B(4)
+            B0(3) = B(1)
+            B0(4) = B(2)-1
+            IARRAY(I) = LW0
+         ELSEIF (LW .NE. 0) THEN
+            IARRAY(I) = 0
+         END IF
+      END DO
+#endif
+      END
+#endif
+@
+
+
+1.5
+log
+@alephio68 introduce ALEPH_LINUX flag
+@
+text
+@d24 1
+a24 1
+         IF (LW .NE. 0) THEN
+d30 2
+@
+
+
+1.4
+log
+@replace flag ${VENDOR} with ALEPH_${VENDOR}
+Modified Files:
+  ard/	ainqui.F algtenv.F aopen.F aopenw.F aoperd.F aoptap.F astage.F
+ 	awrtap.F
+  pres/	cmpbu3.c cmpbu4.c cmpbu5.c dmpbl3.c dmpbl4.c dmpbl5.c dmpcop.c
+ 	extzv.c insv.c
+  epio/ epinit.F
+  inc/ 	cmphost.h ctolow.h gtchunit.h gtftyp.h
+  io/ 	almach.F openda.F opendb.F opensq.F sdrsx.F sibsdr.F sxsdr.F
+@
+text
+@d11 1
+a11 1
+#if defined(ALEPH_DEC) && defined(UNIX)
+@
+
+
+1.3
+log
+@import alephio 52 from historian. Modify aclose.F to NOT call brwnd twice
+for the same file. update version.h to 5.3
+@
+text
+@d11 1
+a11 1
+#if defined(DEC) && defined(UNIX)
+@
+
+
+1.2
+log
+@ Modified Files:
+	acdarg.F afilin.F afilou.F ainqui.F amount.F aoptap.F astage.F
+	awrtap.F
+ Modified Files:
+	cmphost.h ctolow.h gtchdecl.h version.h
+ Removed Files:
+	albitw.h
+ Modified Files:
+ 	altell.F babend.F jalrec.F noibm.F opensq.F sdrsx.F sibsdr.F
+	sxsdr.F
+@
+text
+@a0 1
+*DK sxsdr
+d11 1
+a11 1
+#if defined(DEC)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d5 1
+a5 1
+CKEY IO DEC CONVERT
+@
+
+
+1.1.1.1
+log
+@import alephio 4
+@
+text
+@@

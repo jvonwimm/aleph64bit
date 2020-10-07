@@ -1,0 +1,186 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	V0060:1.1.1.1
+	V0059:1.1.1.1
+	V0058:1.1.1.1
+	V0057:1.1.1.1
+	V0056:1.1.1.1
+	V0055:1.1.1.1
+	V0054:1.1.1.1
+	V0053:1.1.1.1
+	V0052:1.1.1.1
+	V0051:1.1.1.1
+	V0050:1.1.1.1
+	V0049:1.1.1.1
+	V0048:1.1.1.1
+	V0047:1.1.1.1
+	V0046:1.1.1.1
+	V0045:1.1.1.1
+	V0044:1.1.1.1
+	V0043:1.1.1.1
+	V0042:1.1.1.1
+	V0041:1.1.1.1
+	V0040:1.1.1.1
+	V0039:1.1.1.1
+	V0038:1.1.1.1
+	V0037:1.1.1.1
+	V0036:1.1.1.1
+	V0035:1.1.1.1
+	V0034:1.1.1.1
+	V0033:1.1.1.1
+	V0032:1.1.1.1
+	V0031:1.1.1.1
+	V0030:1.1.1.1
+	V0029:1.1.1.1
+	V0028:1.1.1.1
+	V0027:1.1.1.1
+	V0026:1.1.1.1
+	V0025:1.1.1.1
+	V0024:1.1.1.1
+	V0023:1.1.1.1
+	V0022:1.1.1.1
+	V0021:1.1.1.1
+	V0020:1.1.1.1
+	V0019:1.1.1.1
+	V0018:1.1.1.1
+	V0017:1.1.1.1
+	V0016:1.1.1.1
+	V0015:1.1.1.1
+	V0014:1.1.1.1
+	V0013:1.1.1.1
+	V0000:1.1.1.1
+	V0001:1.1.1.1
+	v1:1.1.1.1
+	jacotf:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2000.03.01.10.29.17;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	2000.03.01.10.29.17;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@import java.awt.*;               // ScrollPane, PopupMenu, MenuShortcut, etc..
+import java.awt.event.ActionListener;
+import java.util.Vector;
+import java.awt.event.ActionEvent;
+
+public class buttonsMenu extends Panel 
+                   implements ActionListener, fillable {
+
+  String menuName;
+  Panel mainPanel = new Panel();
+  Panel lastP = new Panel();
+  Color bg, fg;
+  ActionListener defaultListener;
+  Vector allButtons = new Vector();
+  boolean spacing = true;
+  buttonsMenu(String m,Color ffg, Color bbg) {
+    super();
+    setFont(scanbook.myFont);
+    defaultListener = this;
+    menuName = m;
+    bg = bbg;
+    fg = ffg;
+    setLayout(new GridLayout(1,1));
+    add(mainPanel);
+    mainPanel.setBackground(bg);
+    mainPanel.setLayout(new GridLayout(1,0));
+    mainPanel.add(lastP);
+    lastP.setBackground(bg);
+  }
+  public String getSelection(){
+    return null;
+  }
+  public void setSpacing(boolean s){
+    spacing = s;
+    if(!spacing)mainPanel.remove(lastP);
+  }
+  public void setListener(ActionListener al){
+    defaultListener = al;
+  }
+  public Insets getInsets(){
+    return new Insets(10,10,10,10);
+  }
+  public void actionPerformed(ActionEvent e) {
+    String lbl = ((Button)e.getSource()).getLabel();
+    scanbook.callbacks(menuName,lbl);
+  }
+  void setEnabled(String lbl, boolean state){
+    for(int i = 1;i<allButtons.size();i++){
+      Button b = (Button)allButtons.elementAt(i);
+      if(b.getLabel().equals(lbl)){
+        b.setEnabled(state);
+      }
+    }
+  }
+  public void removeAll(){}
+  public String getMenuName(){
+    return menuName;
+  }
+  public void addItem(String lbl){
+    addItem(lbl,false,true);
+  }
+  public void addItem(String lbl, boolean select, boolean enabled){
+    Button b = new Button(lbl);
+    b.setBackground(fg);
+    mainPanel.remove(lastP);
+    if(spacing)mainPanel.add(new Panel());
+    mainPanel.add(b);
+    if(spacing)mainPanel.add(lastP);
+    b.addActionListener(defaultListener);
+    allButtons.addElement(b);
+  }    
+  public void highlightButton(String label){
+    Component children[] = mainPanel.getComponents();
+    for(int ic=0; ic< children.length; ic++){
+        Object o = children[ic];
+	if(o instanceof Button){
+	  String s = ((Button)o).getLabel();
+          if(s.equals(label)){
+	      ((Button)o).setBackground(fg.darker());
+	  }else{
+	      ((Button)o).setBackground(fg);
+	  }
+	}
+    } 
+  }
+}
+
+
+
+
+
+
+
+
+
+@
+
+
+1.1.1.1
+log
+@ import jscanbook
+@
+text
+@@

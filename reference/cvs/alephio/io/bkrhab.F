@@ -1,0 +1,124 @@
+      SUBROUTINE BKRHAB(JRHAH)
+C-----------------------------------------------------------------------
+C! Books and fills the RHAH bank for MC or OnLine steps
+CKEY BOOK RUN HEADER / INTERNAL
+C Author     J. Boucrot     25-Sep-1988    Modified  02-Feb-1989
+C Auxiliary to BKRHAW                           from ALEPHLIB
+C NOT User-callable
+C Calls AUBOS,ALGTYP                            from ALEPHLIB
+C Output argument : bank index JRHAH if all is OK
+C                  = 0 if no space to book the bank
+C Input banks needed  :  RUNH  ; AJOB,KJOB ( for Monte-Carlo data)
+C ----------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+#include "bcs.h"
+#include "rhahjj.h"
+#include "ajobjj.h"
+#include "runhjj.h"
+#include "kjobjj.h"
+#include "krunjj.h"
+      EXTERNAL NAMIND,INTCHA
+      COMMON / NAMRHA / NARHAH,NARHOH,NARUNH,NAAJOB,
+     +                  NAKJOB,NAKRUN
+      PARAMETER (IKIN = 1 ,IRAW = 2 ,IPOT = 3 ,IDST = 4 ,IMINI = 5 )
+      PARAMETER ( ISEL = 10  ,  IMCRL = 1001 )
+      CHARACTER*8 PRNAM
+      INTEGER ALGTYP
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+        JRHAH=IW(NARHAH)
+        IF (JRHAH.NE.0) GO TO 999
+        NROWS=1
+C Check which kind of input is currently being read
+C Monte-Carlo data . They may come either from a KINGAL file , or not .
+C
+        JKJOB=IW(NAKJOB)
+        NKING=0
+        IF (JKJOB.NE.0) THEN
+           JKRUN=IW(NAKRUN)
+           NVKIN=ITABL(JKRUN,1,JKRUGI)
+           IF (NVKIN.NE.0) NKING=1
+           NROWS=2
+        ENDIF
+ 20     LENRH=LMHLEN+NROWS*LRHAHA
+C
+C Book bank 'RHAH' with 1 row ( if real data , or no KINGAL step)
+C or with 2 rows ( if Monte-Carlo with KINGAL step)
+C
+        JRHAH=0
+        CALL AUBOS('RHAH',0,LENRH,JRHAH,IGARB)
+        IF (IGARB.EQ.2) GO TO 999
+        IF (IGARB.EQ.1) JKJOB=IW(NAKJOB)
+        IW(JRHAH+LMHCOL)=LRHAHA
+        IW(JRHAH+LMHROW)=NROWS
+C
+C Kingal step
+C
+        IF(JKJOB.NE.0) THEN
+           KRHAH=KROW(JRHAH,1)
+           PRNAM='KINGAL  '
+           IW(KRHAH+JRHAPN)=INTCHA(PRNAM(1:4))
+           IW(KRHAH+JRHAPN+1)=INTCHA(PRNAM(5:8))
+           IW(KRHAH+JRHANO)=NKING
+           IW(KRHAH+JRHAPV)=NVKIN
+           KKJOB=KROW(JKJOB,1)
+           CALL UCOPY(IW(KKJOB+JKJOJD),IW(KRHAH+JRHAPD),2)
+           CALL UCOPY(IW(KKJOB+JKJOAV),IW(KRHAH+JRHAAV),3)
+        ENDIF
+C
+C Galeph step
+C
+        JAJOB=IW(NAAJOB)
+        IF (JAJOB.NE.0) THEN
+           KRHAH=KROW(JRHAH,NROWS)
+           PRNAM='GALEPH  '
+           IW(KRHAH+JRHAPN)=INTCHA(PRNAM(1:4))
+           IW(KRHAH+JRHAPN+1)=INTCHA(PRNAM(5:8))
+           KAJOB=KROW(JAJOB,1)
+           CALL UCOPY (IW(KAJOB+JAJOJD),IW(KRHAH+JRHAPD),4)
+           IW(KRHAH+JRHADV)=IW(KAJOB+JAJODV)
+           IW(KRHAH+JRHADD)=IW(KAJOB+JAJODD)
+           INDAT=0
+           IF (NROWS.EQ.2.AND.NKING.NE.0) INDAT=IKIN
+           IW(KRHAH+JRHANI)=INDAT
+           IOUTD=IRAW
+           IGTS=ALGTYP(IGEAN,ISIMD,IFAST,ITPCS)
+           IF (IGTS.GT.0.AND.ISIMD.GT.0) IOUTD=IDST
+           IW(KRHAH+JRHANO)=IOUTD
+C Correction version # ( may not be available in old Galeph files)
+           ICVER=0
+           LRJO=LCOLS(JAJOB)
+           IF (LRJO.LT.JAJOCV) GO TO 55
+           ICVER=IW(KAJOB+JAJOCV)
+ 55        IW(KRHAH+JRHACV)=ICVER
+           GO TO 999
+        ENDIF
+C
+C Real data in input
+C
+        IF (JAJOB.EQ.0.AND.JKJOB.EQ.0) THEN
+           JRUNH=IW(NARUNH)
+C Use 'RUNR' if 'RUNH' absent :
+           IF (JRUNH.EQ.0) THEN
+              IEXPN=IW(JRUNH+JRUNEN)
+           ELSE
+              JRUNR=IW(NAMIND('RUNR'))
+              IF (JRUNR.EQ.0) GO TO 999
+              IEXPN=IW(JRUNR+1)
+           ENDIF
+           IF (IEXPN.EQ.IMCRL) GO TO 999
+           KRHAH=KROW(JRHAH,1)
+           PRNAM='ON LINE '
+           IW(KRHAH+JRHAPN)=INTCHA(PRNAM(1:4))
+           IW(KRHAH+JRHAPN+1)=INTCHA(PRNAM(5:8))
+           IF (JRUNH.GT.0) THEN
+              IW(KRHAH+JRHAPD)=IW(JRUNH+JRUNSD)
+              IW(KRHAH+JRHAPH)=IW(JRUNH+JRUNST)
+           ENDIF
+           IW(KRHAH+JRHANO)=IRAW
+        ENDIF
+C
+ 999   RETURN
+       END
+#endif

@@ -1,0 +1,57 @@
+      SUBROUTINE MINCHK(MODE,LRUN,SUMRY)
+C
+CKEY MDST /INTERNAL
+C-----------------------------------------------------------------------
+C! Write run information in file.
+C
+C     Author: Stephen Haywood      08-May-90
+C
+C     Input  : MODE   = -1 for initialisation of job
+C                     = +1 for run termination
+C                     = +2 for run termination and job termination
+C              LRUN   = last run number
+C              SUMRY  = summary array
+C-----------------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+      INTEGER MODE, LRUN
+      REAL SUMRY(*)
+#include "bcs.h"
+      CHARACTER*13 FLNAM
+      LOGICAL PRESNT
+      INTEGER IDATE,ITIME,NEV,IUNIT,IOS
+      DATA IUNIT / 70 /
+C ----------------------------------------------------------------------
+C
+C++   Initialisation.
+C
+      IF (MODE.EQ.-1) THEN
+         FLNAM = 'EVMINI.OUTPUT'
+         INQUIRE(FILE=FLNAM,EXIST=PRESNT,IOSTAT=IOS)
+         IF (PRESNT) THEN
+           OPEN (UNIT=IUNIT,FILE=FLNAM,STATUS='old')
+         ELSE
+           OPEN(unit=IUNIT,FILE=FLNAM,STATUS='new')
+         ENDIF
+
+      ELSE
+C
+         IF (LRUN.LE.0) RETURN
+C
+C++   Make entry in file.
+C
+         CALL DATIME(IDATE,ITIME)
+         NEV = NINT(SUMRY(1))
+         WRITE(IUNIT,'(I7,A,I8,I5,I19)') LRUN,'  7 Mini',
+     &                                   IDATE,ITIME,NEV
+C
+C++   Termination.
+C
+         IF (MODE.EQ.+2) CLOSE (unit=IUNIT)
+      ENDIF
+C
+      RETURN
+      END
+#endif
+
+

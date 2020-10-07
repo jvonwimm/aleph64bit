@@ -1,0 +1,73 @@
+      SUBROUTINE ECRPEI
+C-------------------------------------------------------
+C!  CREATE AND FILL PEID BK
+C!
+C!  AUTHOR   : D. PALLIN
+C!  MODIFIED :
+C!
+C?
+C!======================================================================
+#ifndef DOC
+#include "bcs.h"
+#include "ecnamc.h"
+#include "eidtjj.h"
+#include "peidjj.h"
+#include "rlunit.h"
+      LOGICAL FIRST
+      DATA FIRST /.TRUE./
+#include "bmacro.h"
+      KEIDT=IW(NAEIDT)
+      NEID=IW(KEIDT+LMHROW)
+C< CREATE PEID BK
+      CALL AUBOS('PEID',0,NEID*LPEIDA+LMHLEN,KPEID,IGARB)
+      KEIDT=IW(NAEIDT)
+      IF(IGARB.EQ.2)GOTO 998
+      CALL BLIST(IW,'T+','PEID')
+      IW(KPEID+LMHCOL)=LPEIDA
+      IW(KPEID+LMHROW)=NEID
+      DO 1 NN=1,NEID
+      IW(KROW(KPEID,NN)+JPEIIF)=IW(KROW(KEIDT,NN)+JEIDIF)
+      RR1=RW(KROW(KEIDT,NN)+JEIDR1)
+      CALL E1BPEI(RR1,IBN)
+      IW(KROW(KPEID,NN)+JPEIR1)=IBN
+      RR2=RW(KROW(KEIDT,NN)+JEIDR2)
+      CALL E1BPEI(RR2,IBN)
+      IW(KROW(KPEID,NN)+JPEIR2)=IBN
+      RR3=RW(KROW(KEIDT,NN)+JEIDR3)
+      CALL E1BPEI(RR3,IBN)
+      IW(KROW(KPEID,NN)+JPEIR3)=IBN
+      RR4=RW(KROW(KEIDT,NN)+JEIDR4)
+      CALL E1BPEI(RR4,IBN)
+      IW(KROW(KPEID,NN)+JPEIR4)=IBN
+      RR6=RW(KROW(KEIDT,NN)+JEIDR6)
+      CALL E1BPEI(RR6,IBN)
+      IW(KROW(KPEID,NN)+JPEIR6)=IBN
+      RR7=RW(KROW(KEIDT,NN)+JEIDR7)
+      CALL E1BPEI(RR7,IBN)
+      IW(KROW(KPEID,NN)+JPEIR7)=IBN
+      ECC=RW(KROW(KEIDT,NN)+JEIDEC)
+      CALL E2BPEI(ECC,IBN)
+      IW(KROW(KPEID,NN)+JPEIEC)=IBN
+      ETT=RW(KROW(KEIDT,NN)+JEIDE1)
+     &+RW(KROW(KEIDT,NN)+JEIDE2)
+     &+RW(KROW(KEIDT,NN)+JEIDE3)
+      CALL E2BPEI(ETT,IBN)
+      IW(KROW(KPEID,NN)+JPEIET)=IBN
+      IF (ETT.EQ.0.)THEN
+         IBN1=0
+         IBN2=0
+      ELSE
+         EP1=RW(KROW(KEIDT,NN)+JEIDE1)/ETT
+         CALL E3BPEI(EP1,IBN1)
+         EP2=RW(KROW(KEIDT,NN)+JEIDE2)/ETT
+         CALL E3BPEI(EP2,IBN2)
+      ENDIF
+      IW(KROW(KPEID,NN)+JPEIP1)=IBN1
+      IW(KROW(KPEID,NN)+JPEIP2)=IBN2
+      IW(KROW(KPEID,NN)+JPEIPF)=IW(KROW(KEIDT,NN)+JEIDFR)
+ 1    CONTINUE
+      RETURN
+ 998  CALL RERROR('ECRPEI',1,' exit')
+      RETURN
+      END
+#endif

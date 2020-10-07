@@ -1,0 +1,137 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.08.22.14.10.37;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.02.13;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.02.14;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@add #ifndef where it was missing and remove dummy routines
+@
+text
+@*DK grndm
+      SUBROUTINE GRNDM(RNDMV,LRNDV)
+C-----------------------------------------------------------------------
+C - Author : F.RANJARD - 890608
+C! GEANT user routine to get random numbers
+C act as a server of 100 numbers from one RANECU call
+CKEY GUSER RNDM RANECU / INTERNAL
+C - Structure : subprogram
+C               User Entry Name :GRNDM
+C               External references :RANECU
+C               Comdecks references : ARNDMC
+C - Input  : LRNDV  = number of output random numbers
+C - Output : RNDMV  = vector of random numbers in the range [0.,1.]
+C
+C-----------------------------------------------------------------------
+#ifndef DOC
+      SAVE
+      REAL RNDMV(*)
+#include "arndmc.h"
+C
+      IF(NRVEC+LRNDV.GT.LRVEC) THEN
+#include "ranecu.h"
+         NRVEC=0
+      ENDIF
+C
+      IF (LRNDV.EQ.1) THEN
+         RNDMV(1) = RVEC(NRVEC+1)
+      ELSEIF (LRNDV.EQ.5) THEN
+         RNDMV(1) = RVEC(NRVEC+1)
+         RNDMV(2) = RVEC(NRVEC+2)
+         RNDMV(3) = RVEC(NRVEC+3)
+         RNDMV(4) = RVEC(NRVEC+4)
+         RNDMV(5) = RVEC(NRVEC+5)
+      ELSEIF (LRNDV.EQ.2) THEN
+         RNDMV(1) = RVEC(NRVEC+1)
+         RNDMV(2) = RVEC(NRVEC+2)
+      ELSEIF (LRNDV.EQ.3) THEN
+         RNDMV(1) = RVEC(NRVEC+1)
+         RNDMV(2) = RVEC(NRVEC+2)
+         RNDMV(3) = RVEC(NRVEC+3)
+      ELSE
+         DO 1 I=1,LRNDV
+            RNDMV(I)=RVEC(NRVEC+I)
+ 1       CONTINUE
+      ENDIF
+      NRVEC = NRVEC +LRNDV
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d16 1
+d49 1
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

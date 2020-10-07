@@ -1,0 +1,236 @@
+head	1.3;
+access;
+symbols
+	alpha126_22:1.3
+	alpha122_22:1.3
+	alpha126_21:1.3
+	alpha126_20:1.2
+	alpha126_19:1.2
+	alpha126_18:1.2
+	alpha126_17:1.2
+	alpha126_16:1.2
+	alpha126_15:1.2
+	alpha126_14:1.2
+	alpha126_13:1.2
+	alpha126_12:1.2
+	alpha126_11:1.2
+	alpha126_10:1.2
+	alpha126_09:1.2
+	alpha126_08:1.2
+	alpha126_07:1.2
+	alpha126_06:1.2
+	alpha126_05:1.2
+	alpha126_04:1.2
+	alpha126_03:1.2
+	alpha126_02:1.2
+	alpha126_1:1.2
+	alpha125_17:1.2
+	alpha125_16:1.2
+	alpha125_15:1.2
+	alpha125_14:1.2
+	alpha125_13:1.2
+	alpha125_12:1.2
+	alpha125_11:1.2
+	alpha125_10:1.2
+	alpha125_09:1.2
+	alpha125_08:1.2
+	alpha125_07:1.2
+	alpha125_06:1.2
+	alpha125_05:1.2
+	alpha125_04:1.2
+	alpha125_03:1.2
+	alpha125_02:1.2
+	alpha125_01:1.2
+	alpha124_19:1.2
+	alpha125:1.2
+	alpha124_18:1.2
+	alpha124_17:1.2
+	alpha124_16:1.2
+	alpha124_15:1.2
+	alpha124_14:1.2
+	alpha124_13:1.2
+	alpha124_12:1.2
+	alpha124_11:1.2
+	alpha124_10:1.2
+	alpha124_09:1.2
+	alpha124_08:1.2
+	alpha124_07:1.2
+	alpha124_7:1.2
+	alpha124_06:1.2
+	alpha124_05:1.2
+	alpha124_04:1.2
+	alpha124_03:1.2
+	alpha124_02:1.2
+	alpha124_01:1.2
+	alpha124:1.2
+	alpha123_12:1.2
+	alpha123_11:1.2
+	alpha123_10:1.2
+	alpha123_9:1.2
+	alpha123_8:1.2
+	alpha123_7:1.2
+	alpha123_6:1.2
+	alpha123_5:1.2
+	alpha123_4:1.2
+	alpha123_3:1.2
+	alpha123_2:1.2
+	alpha123:1.2
+	alpha122_48:1.2
+	alpha122_47:1.2
+	alpha122_46:1.2
+	alpha122_45:1.2
+	alpha122_44:1.2
+	alpha122_43:1.2
+	alpha122_42:1.2
+	alpha122_41:1.2
+	alpha122_40:1.2
+	alpha122_39:1.2
+	alpha122_38:1.2
+	alpha122_37:1.2
+	alpha122_36:1.2
+	alpha122_35:1.2
+	alpha122_34:1.2
+	alpha122_33:1.2
+	alpha122_32:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	2003.03.12.13.17.55;	author alphy;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.08.05.08.44.31;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.06.24.11.11.03;	author boucrot;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@*** empty log message ***
+@
+text
+@      INTEGER FUNCTION KNMCSI(ITK)
+C***********************************************************************
+C Find number of SICAL EF objects that go with input MC track.
+C Author: Paul Bright-Thomas
+C Mods:   03/03/97 PBT Created.
+C         04/03/97 PBT Required to only deal with SICAL clusters
+C      07/03/97 PBT Crude angular matching used, no real match info exists
+C***********************************************************************
+#ifndef DOC
+#include "qdecl.h"
+#include "qcde.h"
+#include "qhac.h"
+#include "mcef.h"
+      INTEGER ITK
+      INTEGER II,JJ,KK,NUM,ITMC,NMCUSE
+      INTEGER KFVER,NFVER,IVEND,JVEND,IMMX
+      INTEGER ITFK,ITMFK,ITEF,ITPH,ITFKPH
+     +       ,ITEFPE,ITEFPC,ITEFPT,ITEFPH,ITEFTY
+      CHARACTER*4 VNNAM,CHAINT
+      REAL    AMCSI,CTMCSI,CTMX
+      INTEGER IEFMC,DUMMY
+#include "qmacro.h"
+C***********************************************************************
+      KNMCSI = 0
+C-- Were we given an MC track number ?
+      IF( ITK.LT.KFMCT .OR. ITK.GT.KLMCT ) GOTO 999
+C-- Does input vertex track meet the criteria for a match ?
+      IF( KSTABC(ITK).LT.0 ) GOTO 999
+C-- Put in some clumsy angular matching
+C-- Match if:
+C--           stable and not a gamma
+C--           end vertex in ECAL or HCAL
+C--           within 100 mrad of the input track
+C--
+C-- Link the vertex bank
+      KFVER  = 0
+      NAFVER = NAMIND('FVER')
+      IF( NAFVER.GT.0 ) KFVER = IW(NAFVER)
+      IF( KFVER.GT.0 )  NFVER = LROWS(KFVER)
+      IF( KFVER.EQ.0 ) GOTO 999
+C-- Test enters SICAL
+      IVEND = KENDV(ITK)
+      IF( IVEND.LE.0 ) GOTO 999
+      JVEND = KVN(IVEND)
+      VNNAM  = CHAINT(ITABL(KFVER,JVEND,JFVEVN))
+      IF( VNNAM(1:1).NE.'S' ) GOTO 999
+C-- Test angular match over all SICAL EFLW objects.
+      CTMX = 0.
+      IEMX = 0
+      DO 500 ITEF = KFEFT,KLEFT
+C-- Must have a Sical component.
+        IF( KEFOTY(ITEF).NE.8 ) GOTO 500
+C-- Test angle with ITEF
+        CTMCSI = QCOSA(ITK,ITEF)
+        IF( CTMCSI.GT.CTMX ) THEN
+          CTMX = CTMCSI
+          IEMX = ITEF
+        ENDIF
+        IF( CTMCSI.LT.CTAMH  ) GOTO 500
+C-- Bingo ... we have match; Check for repetition in matching to this input
+        NEFUSE = 0
+        DO 580 KK = 1,MIN(NMCEF(NMCIN),MXMTCH)
+          IF( ITMCEF(NMCIN,KK).EQ.ITEF ) NEFUSE = NEFUSE + 1
+ 580    END DO
+        IF( NEFUSE.GT.0 ) GOTO 500
+C-- Increment count of matched EF objects,
+        KNMCSI       = KNMCSI + 1
+        NMCEF(NMCIN) = NMCEF(NMCIN) + 1
+C-- Save ALPHA number of matching MC track
+        ITMCEF(NMCIN,NMCEF(NMCIN)) = ITEF
+C-- Save matching angle  ...
+        AMCSI = -ACOS(MIN(CTMCSI,0.999999))
+        SMCEF(NMCIN,NMCEF(NMCIN))  = AMCSI
+C-- PBT debug
+        IF( FCDEBU ) WRITE(6,1012) ITK,NEFIN,NEFMC(NEFIN),KNMCSI
+     +    ,ITMC,AMCSI,QE(ITMC),QE(ITK),KEFOTY(ITK),CQTPN(ITMC)
+ 1012   FORMAT(' KNMCSI I: ',5(1X,I3),1X,F6.3,2(1X,F6.2),1X,I2,1x,A6)
+C
+ 500  END DO
+C
+      IF( FCDEBU .AND. KNMCSI.EQ.0 .AND. NEFUSE.EQ.0 ) THEN
+        WRITE(6,1013) ITK,IEMX,CTMX
+ 1013   FORMAT(' KNMCSI W: No angular match made - closest was '
+     +   ,2(I3,1X),F8.4)
+      ENDIF
+C
+ 999  RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@d7 1
+a7 1
+C         07/03/97 PBT Crude angular matching used, no real match info exists
+@
+
+
+1.1
+log
+@*** empty log message ***
+@
+text
+@d16 2
+a17 2
+      INTEGER NAFVER,KFVER,NFVER,IVEND,JVEND,IMMX
+      INTEGER ITFK,ITMFK,ITEF,ITMC,ITPH,ITFKPH
+@

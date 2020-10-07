@@ -1,0 +1,95 @@
+KCAR 0 / $TEXT                                                                  
+POFF                                                                            
+*     RUN #             RUN'S TITLE                                             
+RUN    101      'Korb02, xxx GEV, RUN xxx, RMAR xxxx  xxxxx'                    
+*     FIRST EVENT    LAST EVENT    TO BE GENERATED                              
+TRIG     1            3000                                                      
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG                                 
+DEBU  6     /      1           3                                                
+* requested time left at the end of job (in sec)                                
+TIME 20                                                                         
+*    to save event file (EPIO format)                                           
+*FILO 'SCWEEK:KORB01.EPIO  | EPIO '
+*    to save histograms                                                         
+*HSTO 'SCWEEK:KORB01.HIST '
+*       sigma-x    sigma-y  sigma-z of the original vertex (in cm)              
+SVRT     0.0180   0.0010   1.00                                                 
+*...  Monte carlo parameters :                                                  
+* KORb01 CARDS : masses and energies are in GeV.                                
+* 1. GKOB CARD.                                                                 
+* AMZ    : Z0 mass (in GeV);                                                    
+* AMTOP  : top mass (in GeV);                                                   
+* AMH    : higgs mass (in GeV);                                                 
+* AMNUTA : neutrino tau mass (in GeV);                                          
+* AMNEUT : neutrino mass (in GeV) used in the nu-nubar option (ITFIN=3);        
+*                    assumed unique (= AMNUTA by default)                       
+*         or mass of quark to be generated (in quark mode ITFIN>3)              
+* SINW2  : sin**2(theta_w);                                                     
+* GAMM   : Z0 width (in GeV);                                                   
+* KEYGSW : degree of radiative corrections (from 0 to 4);                       
+*         = 0, no Z0, no vac. pol., only photon exchange,                       
+*         = 1, photon and Z0, no vacuum polarization,Born approximation         
+* KEYRAD   The type of the QED bremsstrahlung                                   
+*          bremsstrahlung on (= 1), off (= 0);    0 IS MANDATORY!!!!!           
+*         =  0, no QED bremsstrahlung,                                          
+*         =  1, with QED order alpha bremsstrahlung initial-final interf.       
+*             single bremsstrahlung                                             
+* ITRANS :  TRANSVERSE SPIN CORRECTION SWITCH    ON = 1 , OFF = 0               
+* ITFIN  : final state produced,                                                
+*          = 1 for taus,                                                        
+*          = 2 for muons,                                                       
+*          = 501 for u-ubar production,                                         
+*          = 502 for d-dbar production,                                         
+*          = 503 for s-sbar production,                                         
+*          = 504 for c-cbar production,                                         
+*          = 505 for b-bbar production,                                         
+*          = 506 for t-tbar production;                                         
+* Warning : the mass terms are neglected in the matrix elements, but not        
+*           in the phase space; so, the results of the calculations have        
+*           to be taken with great care for b-bbar final state (and are         
+*           practically useless for t-tbar final state) except for some         
+*           specific studies of kinematics!                                     
+* NNEUT  : DUMMY                                                                
+* XK0    : soft/ hard photon limit (single bremms.),                            
+*          for KEYRAD = 0, this parameter is dummy,                             
+*          for KEYRAD = 1, the recommended value is 1.E-02,                     
+*          otherwise, it is used only for the final state brems. and the        
+*          recommended value is 1.E-03;                                         
+* VVMIN  : minimum V-variable (dimensionless), defines also the minimum         
+*          photon energy (in beam energy units), the recommended value          
+*          1.E-05 to 1.E-06;                                                    
+* VVMAX  : same definition for the maximum V-variable;                          
+*          maximum v, (v=1-s'/s, sqrt(s')=final pair mass)                      
+*     AMZ  AMTOP  AMH  AMNUTA AMNEUT  SINW2  GAMM  KEYGSW  KEYRAD ITRANS        
+GKOB  91.18 100.   100.  0.001  0.01  0.2293  2.484    0     0      1           
+*    ITFIN  NNEUT  XK0    VVMIN  VVMAX                                          
+        1     3   0.01   0.00001   1.                                           
+* 2. GBEA CARD.                                                                 
+* ENE    : beam energy (in GeV);                                                
+* KFB    : defines which beam is along +Z ( = 7 e- , = -7 e+ );                 
+* E1     : longitudinal polarization of the beam which is along +Z;             
+* E2     : longitudinal polarization of the beam which is along -Z;             
+*      ENE     KFB    E1-x    E1-y   E1-z    E2-x    E2-y    E2-z               
+GBEA   45.625   7      0.      0.     0.      0.      0.      0.                
+* 3. GTAU CARD.                                                                 
+* JAK1   : tau1 decay mode (= tau- if KFB = 7, = tau+ if KFB = -7);             
+* JAK2   : tau2 decay mode (= tau+ if KFB = 7, = tau- if KFB = -7);             
+*          JAK1 and JAK2 possible values:  1 = e- mode ,2 = mu-mode,            
+*          3 = pi-mode ,  4 = rho-mode ,    5 = A1-mode ,6 = K-mode             
+*          7 = K*-mode ,  8 = 3pi-pi0 mode, 9 = 3pi0pi-mode,                    
+*         10 = 5pi mode, 11 = 6pi mode                                          
+*          0 = all modes (according to branching ratios)                        
+*         -1 = no decay                                                         
+* ISPIN  : taus polarization on (= 1), off (= 0);                               
+*              spin effects in decay switched OFF/ON                            
+* ITDKRC : = 0 without radiative correction in tau decay,                       
+*          = 1 with       "          "           "      ;                       
+* XK0DEC : soft-hard photon separation cut in tau decay                         
+*          (in unit of tau energy) must be larger than  5.E-04;                 
+* GV     : GV coupling tau-W;                                                   
+* GA     : GA coupling tau-W;                                                   
+*      JAK1   JAK2   ISPIN   ITDKRC    XK0DEC    GV      GA                     
+GTAU     0      0      1       0        0.001    1.      -1.                    
+* 4. RANMAR INIT CARD.                                                          
+RMAR   92     12345                                                             
+ENDQ                                                                            

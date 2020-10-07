@@ -1,0 +1,203 @@
+head	1.3;
+access;
+symbols
+	alio83:1.3
+	alio82:1.3
+	alio81:1.3
+	alio80:1.3
+	alio74:1.3
+	alio73:1.3
+	alio72:1.3
+	alio71:1.3
+	alio70:1.3
+	alio68:1.3
+	alio69:1.3
+	alio67:1.3
+	alio66:1.3
+	alio65:1.3
+	alio64:1.3
+	alio63:1.3
+	alio62:1.3
+	alio61:1.3
+	alio60:1.3
+	alephio53:1.2
+	v4:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	96.05.03.14.46.49;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.01.18.13.52.19;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.52.40;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.52.41;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@replace flag ${VENDOR} with ALEPH_${VENDOR}
+Modified Files:
+  ard/	ainqui.F algtenv.F aopen.F aopenw.F aoperd.F aoptap.F astage.F
+ 	awrtap.F
+  c/	cmpbu3.c cmpbu4.c cmpbu5.c dmpbl3.c dmpbl4.c dmpbl5.c dmpcop.c
+ 	extzv.c insv.c
+  epio/ epinit.F
+  inc/ 	cmphost.h ctolow.h gtchunit.h gtftyp.h
+  io/ 	almach.F openda.F opendb.F opensq.F sdrsx.F sibsdr.F sxsdr.F
+  news/	news.h
+  pres/	cfrvax.F cmpban.F cotest.F dmpban.F dmpchr.F
+@
+text
+@      SUBROUTINE CFRVAX(IARRAY,NWORDS)
+C
+CKEY PRESS DMPBAN DECOMPRESS /USER
+C!
+C! Author:  T. Wildish. October 1989
+C! Purpose: Convert vax real format to UNIX real format.
+C!
+C! Uses a cray version of SVXSX from
+C! IBM, followed by CFRIBM to convert to UNIX. Messy, but it works.
+C! This should only be considered as a stopgap solution until the
+C! problem can be fixed at source!
+C!
+C             This is a subroutine to convert from VAX floating
+C             point format (32 Bits) to IBM floating point format
+C             (32 bits).
+C
+C             IARRAY   an area of storage 32*NWORDS bits long in which
+C                      are stored NWORDS 32 bits VAX floating point
+C                      numbers.
+C                      On output it will contain NWORDS 32 bits IBM
+C                      floating point numbers
+C
+C             NWORDS   number of floating point numbers to convert
+C
+#ifndef DOC
+#if defined(APOLLO)
+      DIMENSION IARRAY(*)
+      LOGICAL BTEST
+      DATA KMASK /16#FFFFFFFF/
+#else
+#if defined(ALEPH_HP) || defined(RS6K) || defined(ALEPH_SGI)
+      DIMENSION IARRAY(*)
+      LOGICAL BTEST
+      DATA KMASK /Z'FFFFFFFF'/
+#endif
+#endif
+#if defined(APOLLO) || defined(ALEPH_HP) || defined(RS6K) || defined(ALEPH_SGI)
+      IF(NWORDS.LE.0) GO TO 999
+      DO 1 J=1,NWORDS
+C
+C             Check for exact 0
+C
+         IF(IARRAY(J).EQ.0) GO TO 1
+C
+C             Get exponent
+C
+         IEXPO = ISHFT(IARRAY(J),17)
+         IEXPO = IAND(IEXPO,KMASK)
+         IEXPO = ISHFT(IEXPO,-24)
+         IEXPO = IAND(IEXPO,KMASK)
+C                VAX EXP + VAX BIAS + IBM BIAS
+C        IEXPO = IEXPO   -    128   +   260
+         IEXPO = IEXPO + 132
+         IEX16 = IEXPO/4
+         ILEFT = 4 - MOD(IEXPO,4)
+         IF(ILEFT.EQ.4) THEN
+            ILEFT = 0
+            IEX16 = IEX16 - 1
+         END IF
+         IDUMMY = ISHFT(IARRAY(J),25)
+         IDUMMY = IAND(IDUMMY,KMASK)
+         IDUMMY = ISHFT(IDUMMY,-9)
+         IDUMMY = IAND(IDUMMY,KMASK)
+         IDUMMY = IBSET(IDUMMY,23)
+         IDUMY1 = IAND(IARRAY(J),KMASK)
+         IDUMY1 = ISHFT(IDUMY1,-16)
+         IDUMY1 = IAND(IDUMY1,KMASK)
+         IDUMMY = IOR(IDUMMY,IDUMY1)
+         IDUMMY = IAND(IDUMMY,KMASK)
+         IDUMMY = IDUMMY + 2**(ILEFT-1)
+         IDUMMY = ISHFT(IDUMMY,-ILEFT)
+         IDUMMY = IAND(IDUMMY,KMASK)
+         IDUMY1 = ISHFT(IEX16,24)
+         IDUMY1 = IAND(IDUMY1,KMASK)
+         IDUMMY = IOR(IDUMMY,IDUMY1)
+         IDUMMY = IAND(IDUMMY,KMASK)
+         IF(BTEST(IARRAY(J),15)) IDUMMY = IBSET(IDUMMY,31)
+         IARRAY(J) = IDUMMY
+   1  CONTINUE
+#endif
+      CALL CFRIBM(IARRAY,NWORDS,3)
+ 999  END
+#endif
+@
+
+
+1.2
+log
+@ Modified Files:
+	acdarg.F afilin.F afilou.F ainqui.F amount.F aoptap.F astage.F
+	awrtap.F
+ Modified Files:
+	cmphost.h ctolow.h gtchdecl.h version.h
+ Removed Files:
+	albitw.h
+ Modified Files:
+ 	altell.F babend.F jalrec.F noibm.F opensq.F sdrsx.F sibsdr.F
+	sxsdr.F
+ Modified Files:
+	ardnews.h news.h
+ Modified Files:
+	cfrvax.F cmpban.F cmpdro.F cmpin2.F cmpini.F cmplis.F cmpsum.F
+	cmptoi.F cotest.F detest.F dmpban.F dmpchr.F dmpfmt.F udmper.F
+@
+text
+@d31 1
+a31 1
+#if defined(HP) || defined(RS6K) || defined(SGI)
+d37 1
+a37 1
+#if defined(APOLLO) || defined(HP) || defined(RS6K) || defined(SGI)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK cfrvax
+d37 1
+a37 1
+#if defined(UNIX) &&  ! defined(DEC)
+@
+
+
+1.1.1.1
+log
+@import alephio 4
+@
+text
+@@

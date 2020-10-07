@@ -1,0 +1,159 @@
+#!/bin/csh 
+set echo 
+# Uli Schafer 15-2-94
+# arguments: 1) directory tree to be cleaned 2) guaranteed life time
+#            3) percentage
+# example: /aleph/script/clean_scr /aleph/scweek 30 85   
+#       This command forces cleanup of scweek to 85%
+#          with 30 days retention since last usage guaranteed.
+#          Mail is send to $mailpath if (maxperc+100)/2 not reached.
+# This script can be inserted in a crontab and be executed
+# e.g. every 5 minutes. 
+# modified by J. Closier/hag (24/03/97): to run on OSF1 and IRIX5
+#  output of  df -k has one column more on IRIX5
+# A log_file is written in /aleph/log/clean_${poold}.log
+#===============
+# 25/03/97 f.blin .added variable host = [afal ,saga or shift]
+#                 .added ASSIGN_PERC
+# 06/06/97 f.blin added variable host in the mail sujet
+ set host = `uname -n | awk '{ print substr($0,0,4)}'`
+ if ($host == "shif") then
+    set host_6 = `uname -n | awk '{ print substr($0,0,6)}'`
+    if ("$host_6" == "shift5") set host = "saga"
+    if ("$host_6" == "shift9") set host = "shift"
+ endif
+ set ALEPH=/afs/cern.ch/aleph/OSF1
+ set mailpath="lbrarda,closier"
+# set echo 
+# set verbose
+#  If no arguments are given then some defaults are taken for the guaranteed
+#  days of retention since last usage, and the % to be left on the disk.
+#  All scratch disks  scwork , scweek  are then cleaned up.
+#  The default values are defined hereafter.
+ if ( $#argv == 0) then
+   $0 /aleph/scwork   4 60    >>&! $ALEPH/log/clean_scwork_${host}.log
+   $0 /aleph/scweek   9 70    >>&! $ALEPH/log/clean_scweek_${host}.log
+#   removed on 970529  R.Hag
+#   if (${host} == "shift") then
+#      $0 $ALEPH/scmonth 35 90    >>&! $ALEPH/log/clean_scmonth_${host}.log
+#   endif
+   exit
+ endif
+#  the log is put into e.g. /aleph/log/clean_scwork_${host}.log
+#
+#  echo start `date` `uname -n` `whoami` $2 $3
+cd /aleph/scwork
+find . -name '*.epio' -size +400000 -exec rm -f {} \;
+cd /aleph/scweek
+find . -name '*.epio' -size +400000 -exec rm -f {} \;
+ if ( $#argv != 3 ) then
+    echo Supply 3 parameters, please
+    exit
+ endif
+ cd $1
+ set life_time=$2
+ @ clmin = $life_time - 1
+ set maxperc=$3
+ alias echofile 'echo "$file"'
+# so as not to clean permanently, clean a bit more than requested free space
+ set free_add=1
+ set poold=$1
+ set poold=$poold:t
+ set log_file=$ALEPH/log/clean_${poold}_${host}.log
+# echo "Usage limit:   " $maxperc \% 
+
+ set str_return = "PERC_END_1"
+ goto ASSIGN_PERC
+
+PERC_END_1:
+ echo Start `date` `pwd` $perc"%"  >>! $log_file
+ if ( $perc <= $maxperc ) goto my_exit
+#
+ @ maxperc = $maxperc - $free_add
+ set cltime=$clmin
+#
+# check for oldest file on disk, use steps of 100 & 10 days
+seek100:
+ set files=`find . ! -type d -mtime +$cltime -atime +$cltime  -print | wc -l` 
+ @ cltime = $cltime + 100
+ if ( $files >= 1 ) goto seek100
+ @ cltime = $cltime - 200
+#
+seek10:
+ set files=`find . ! -type d -mtime +$cltime -atime +$cltime  -print | wc -l` 
+ @ cltime = $cltime + 10
+ if ( $files >= 1 ) goto seek10
+ @ cltime = $cltime - 9
+#
+# clean disk up to required free space. use steps of 1 day
+seek1:
+ @ cltime = $cltime - 1
+# echo ------- $cltime
+ set files=""
+seek2:
+# echo $cltime
+ if ( $cltime < $clmin ) then
+   echo Cleanup not possible, no more candidate file
+   if ( ( $perc + $perc ) >= ( $maxperc + 100 ) ) then
+      set dates=`date '+no space %Y%m%d '`
+#      set dates=`date '+%%%Y%m%d no space'`
+      grep "$dates" $log_file >/dev/null || ( echo $dates >>$log_file ;  \
+      /usr/bin/echo ${maxperc}\% required, ${perc}\% used, $life_time days \\n\
+      No more candidate file to remove on `pwd` "( $poold )"          \
+      | Mail -s "$host, $poold ${perc}% clean problem" ${mailpath} )
+      echo mail to  ${mailpath}":" ${maxperc}% requested, ${perc}% reached on $poold
+   endif 
+   goto my_exit
+ endif
+ set lastfiles="$files"
+ 
+ set files0="`find . ! -type d -mtime +$cltime -atime +$cltime -print | head`"
+# echo $files0
+ set files="$files0"
+ if ( "$files0" == "" ) goto seek1
+ if ( "$files" == "$lastfiles" ) then
+#   echo files could not be deleted $files
+   goto seek1
+ endif
+
+ set str_return = "PERC_END_2"
+ goto ASSIGN_PERC
+
+PERC_END_2:
+ if ( $perc <= $maxperc ) goto my_exit
+# echo To be deleted: $files
+start:
+ if ("$files0" != "") then
+   set file="$files0[1]"
+   shift files0
+   set file="`echofile | cut -c 3-`"
+   set own=`ls -l "$file" | awk '{ print $3" "$5}'`   # and size
+   set cdate=`ls -l "$file" | awk '{ print $6" "$7" "$8 }'`
+   set udate=`ls -lu "$file" | awk '{ print $6" "$7" "$8 }'`
+  \rm -f "$file"
+echo "rm -f $file"
+   echo `date '+%Y-%m-%d %H:%M:%S'` $file $udate $cdate $own >>! $log_file
+#   echo `date '+%Y-%m-%d %H:%M:%S'` $file $udate $cdate $own 
+   if (-e "$file") then
+     echo Could not delete "$file"  >>! $log_file
+#     echo Could not delete "$file" 
+   endif
+
+ set str_return = "PERC_END_LAST"
+ goto ASSIGN_PERC
+
+PERC_END_LAST:
+   if ( $perc <= $maxperc ) goto my_exit
+   goto start
+ endif
+ goto seek2
+
+my_exit: 
+ echo "Stop " `date` `uname -n` `whoami` $1 $2 $3 $perc% reached >>! $log_file
+ exit
+
+ASSIGN_PERC:
+ if (${host} == "saga" || ${host} == "afal") set perc=`df . | tail -1 | awk '{ print $5 }' |tr -d "%"`
+ if (${host} == "shift") set perc=`df . | tail -1 | awk '{ print $6 }' |tr -d "%"`
+# echo "Present usage:  "$perc \%
+ goto ${str_return} 

@@ -1,0 +1,101 @@
+ST =-             ! start
+   GT:DD:HT:JU^:-
+   GT:YZ:NZ:TO:M2:C6:GT:RZ:SR:C5:GT:XY:HA:CS:GT:PU:S?:GT:IN:M$:
+                  ! GT:YZ:NZ:TO:M2:C6:GT:RZ:SR:C5:GT:XY:HA:CS:GT:)FI
+                  ! GT:YZ:NZ:TO:M2:C6:GT:RZ:SR:C5:GT:XY:HA):CS
+RS =-             ! Restore start
+   GG:R0:GG:EC:NZ:AB:LC:LA:C6:GG:RZ:SR:TO=M1:C5:GG:XY:HA:CS:
+E1 =W*:           ! FIND: select window bu CURSOR
+E2 =C*:           ! Insert: copy to window selected by CURSOR
+E4 =G*:           ! Select: Get window selected by CURSOR
+E3 =GG:CL:        ! Remove: Clear selected window (W1,W2,...,WS,WW)
+E5 =G0:DO:        ! Prev: redisplay last window = Undo
+E6 =GG:DN:        ! Next: Read next event and display all again.
+F7 =GG:SW:TD:GG:DW:GB: ! Toggle between large and small DALI window
+F16=GG:RN:DO:     ! Read next event and redraw selected window only.
+KP1=-            ! Set CAL symbols to number of energy
+   GG:XY:CS:{
+   G1:C1:G2:C2:GS:CS:}
+KP2=-            ! Set CAL symbols to square of energy
+   GG:(SY:EC:SQ:HC:SQ:GB:SK=OF:DO)
+KP3=-            ! Set ECAL symbols to Lego-tower of energy
+   GG:(SY:EC:LE:LW=2:HI=2:GB:SK=11:DO)
+KP7=-            ! HCAL tubes in 3 Y'/Z projections on W1,W3,W5
+   GT:(YZ:TO=H2:NZ:F1:C1:F2:C3:F3:C5:)
+PF1=-            ! Standard LCAL pictures
+   GG:(W1:EC:NZ:FR=0:TO=55:F1:T3:SK=11:EA:T3:DO:EB:C3:-
+   GG:DD:CE=.05:GG:RZ:CC=OF:ZO:NS:FR=-55:TO:55:AS=.175:TE=90:FI=270:CD:-
+   GT:HF:NZ:LC:CR:GT:)
+PF2=-            ! Standard XY + RZ picture + Lcal XY
+   (GT:DD:HT:JU:-
+   GT:EC:NZ:AB:LC:LA:C6:GT:RZ:TO=M1:C5:GT:XY:HA:CS:GT:)
+
+PSBS=-            ! good set to make COLOR postscript files
+   (GG:CD:DA:B1=8:B2=8:LL:LL:8:L1=1:L2=1:LH=8:LE=8:LT=8:LI=8:LV=8:LS=8:-
+   FR:FH:GG:CC:TR:FR:EC:FR:GG:SU:L2:T2:DW:GG:TX:RA:GG:PS:XC:T) :
+FTZZ=-     ! XY-projection  on W1 ,FR-p. on W3 ,RZ-p. on W2 , TF-p. on W4
+   FB:GG:DD:HI:GG:XY:ZQ:DS=OF:CC:TO=T3:NS:C1:-
+   GG:FR:C2:GG:RZ:C3:GG:TF:LA:TP:C4:T :
+FTZT=-     ! XY-projection  on W1 ,FR-p. on W3 ,RZ-p. on W2 , TF-p. on W4
+   (FB:GG:DD:HT:GG:XY:ZQ:DS=OF:CC:TO=T3:NS:C1:-
+   GG:FR:C2:GG:RZ:C3:GG:TF:LA:TP:C4:T) :
+FTXX=-
+   DO:
+CFAC=-       ! set all colors to constant colors
+   TR:CN:VD:CN:VC:CN:IT:CN:TP:CN:DO:T :
+CFAN=-       ! set all colors to track number
+   TR:PC:VD:PC:VC:PC:IT:PC:TP:PC:DO:T :
+APEP=-       ! main alpha picture on WB:WU
+   (GG:WB:EF:WU:TU:CU:T) :
+APJP=-       ! main alpha JET picture on WB:WU
+   (GG:WB:EF:WU:TU:CU:PP):(WT:EL:EC:JD:IC:CC:CF:GU:DO:T) :
+ALCA=-       ! Color tracks by selected JETS
+   IC:CC:AF:DW:
+ALCJ=-       ! Color tracks of selected JETS only
+   IC:CC:JF:DW:
+ALA2=(SE=-   ! add all combinations of lines -1 to -2
+   -1,2:AV:SC):DO:
+ALA3=(SE=-   ! add all combinations of lines -1 to -3
+   -1,2:AV:-1,3:AV:-
+   -2,3:AV:-
+   -4:CY:-5:YE:-6:RD:SC:)DO:
+ALA4=(SE=-   ! add all combinations of lines -1 to -4
+   -1,2:AV:-3,4:AV:-
+   -1,3:AV:-2,4:AV:-
+   -1,4:AV:-2,3:AV:-
+   -5:CY:-6:YE:-7:GN:-8:BR:-9:RD:-10:MA:SC:)DO:
+ALA5=(SE=-   ! add all combinations of lines -1 to -5
+   -1,2:AV:-3,4:AV:-3,5:AV:-4:5:AV:-
+   -1,3:AV:-2,4:AV:-2,5:AV:-
+   -1,4:AV:-2,3:AV:-
+   -1,5:AV:-
+   -6:WH:-7:YE:-8:GN:-9:BR:-10:RD:-
+   -11:MA:-12:CY:-13:BL:-15:RD:-16:YE:SC:)DO:
+ALLF=-       ! disply FRFT list
+   GG:DL:CR:GB:DO:
+ALDC=-      ! set default color
+   GG:TC:CO:DF:DO:GB:
+VXDK=-      ! draw kink tracks in read and others grey
+   SK:YE:CO=BL:DW:LK:LT:
+VXY0=-      ! switch off neutral tracks from YLV0 bank
+   GG:DD:YF:DO:GB:
+VXY1=-      ! switch on  neutral tracks from YLV0 bank
+   GG:DD:YO:DO:GB:
+DDY0=-      ! switch off vertices from YLV0 bank
+   GG:VX:LK:OF:DO:GB:
+DDY1=-      ! switch on  vertices tracks from YLV0 bank
+   GG:VX:LK:ON:DO:GB:
+FTKK=DO
+BTH8=PL=1:-  ! hit recognition color test
+   W1=7777777:P2=7777777:HR:PL=0:-
+   W3:P1=2763541:P2=5265265:HR:-
+   W5:P1=2666566:P2=6666566:HR:
+BTHL=PL=1:-  ! hit recognition color test
+   WL=7777777:P2=7777777:HR:PL=0:-
+   WM:P1=2763541:P2=5265265:HR:-
+   WR:P1=2666566:P2=6666566:HR:
+BTH6=PL=1:-  ! hit recognition color test
+   W1:P1=7777770:P2=7777770:HR:PL=0:-
+   W3:P1=2763540:P2=5265260:HR:-
+   W5:P1=2666560:P2=6666560:HR:
+

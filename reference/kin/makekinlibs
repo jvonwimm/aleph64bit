@@ -1,0 +1,91 @@
+#! /bin/tcsh
+kinscript "aria02_origine.f aria02.f" NULL
+kinscript "aria04_origine.f aria04.f" NULL ardata.o ardata04.o
+kinscript aria64_origine.f NULL ardata.o ardata64.o
+kinscript "bhab01_origine.f bhab01.f" NULL
+kinscript "bhab02_origine.f bhab02.f" NULL
+kinscript "bhal01_origine.f bhal01.f" NULL
+kinscript "bhlu02_origine.f bhlu02.f" NULL
+kinscript "bhlu04_origine.f bhlu04.f" NULL
+kinscript "bhwi01_origine.f bhwi01.f" NULL
+kinscript "bhwi04_origine.f bhwi04.f" NULL
+kinscript "brem03_origine.f brem03.f" NULL
+kinscript "cosm01_origine.f cosm01.f" NULL
+kinscript "dfgt01_origine.f dfgt01.f" NULL
+kinscript "digz01_origine.f digz01.f" NULL
+kinscript dizet_2_origine.f NULL
+kinscript dizet605_kk2_origine.f NULL
+kinscript dizet605_kk3_origine.f NULL 
+kinscript dizet605_kk4_origine.f NULL
+kinscript dizet605_origine.f NULL
+kinscript dizet_w_origine.f NULL
+kinscript dizet621_kk_origine.f dizet621_inc
+kinscript "dymu02_origine.f dymu02.f" NULL
+kinscript "eegg01_origine.f eegg01.f" NULL
+kinscript "elw201_origine.f elw201.f" NULL
+kinscript "esta01_origine.f esta01.f" NULL
+kinscript "exca01_origine.f exca01.f" NULL
+kinscript "fgam01_origine.f fgam01.f" NULL
+kinscript gbook_k_origine.f NULL
+kinscript "gggb01_origine.f gggb01.f" NULL
+kinscript "ggmj01_origine.f ggmj01.f" NULL
+kinscript gr4f02.f gr4f02_inc
+kinscript grace200_origine.f NULL
+kinscript "hrwg09_origine.f hrwg09.f" NULL hwudat.o hwudat09.o
+kinscript "hrwg10_origine.f hrwg10.f" NULL hwudat.o hwudat10.o
+kinscript "hrwg12_origine.f hrwg12.f" NULL hwudat.o hwudat12.o
+kinscript hvfl05.f NULL
+kinscript hzha03.f NULL
+kinscript jetset73_origine.f NULL ludata.o ludata73.o
+kinscript jetset74_origine.f NULL ludata.o ludata74.o
+kinscript kinextra.f NULL
+kinscript "kk2f01_origine.f kk2f01.f" kk2f_inc
+kinscript "kk2f02_origine.f kk2f02.f" kk2f02_inc
+kinscript "kk2f03_origine.f kk2f03.f" kk2f03_inc
+kinscript "kk2f19_origine.f kk2f19.f" kk2f19_inc
+kinscript "korb01_origine.f korb01.f" NULL 
+kinscript "korb02_origine.f korb02.f" NULL
+kinscript "korl07_origine.f korl07.f" NULL
+kinscript "korl08_origine.f korl08.f" NULL
+kinscript "korl09_origine.f korl09.f" NULL
+kinscript korl17.f NULL
+kinscript "krlw01_origine.f krlw01.f" NULL
+kinscript "krlw02_origine.f krlw02.f" NULL
+kinscript "krlw03_origine.f krlw03.f" krlw03_inc
+kinscript "lpww02_origine.f lpww02.f" NULL
+kinscript lund04.f NULL
+kinscript "mgam01_origine.f mgam01.f" NULL
+kinscript "mssm01_origine.f mssm01.f" NULL
+kinscript "mssm02_origine.f mssm02.f" NULL
+kinscript "nngg03_origine.f nngg03.f" NULL
+kinscript "nngp01_origine.f nngp01.f" NULL
+kinscript "phoj01_origine.f phoj01.f" NULL
+kinscript "phot02_origine.f phot02.f" NULL
+kinscript photos203_origine.f NULL
+kinscript photos2_origine.f NULL
+kinscript photos_kk_origine.f NULL
+kinscript photos_w3_origine.f NULL
+kinscript photos_quad_w3_origine.f NULL
+kinscript pyth02_origine.f NULL
+kinscript pyth03_origine.f NULL
+kinscript pyth04_origine.f NULL pydata.o pydata04.o
+kinscript pyth05.f NULL
+kinscript pythia61_origine.f NULL pydata.o pydata61.o
+kinscript tauola26_kk2_origine.f NULL
+kinscript tauola26_origine.f NULL
+kinscript tauola2_origine.f NULL
+kinscript tauolakw_origine.f NULL
+kinscript tauolakw_quad_origine.f NULL
+kinscript tauola_origine.f NULL
+kinscript "ubab01_origine.f ubab01.f" NULL
+kinscript "ubab02_origine.f ubab02.f" NULL ubpini.o ubpini02.o
+kinscript znnb01.f NULL
+cd $ALEPH_ROOT/Linux/kin
+/bin/cp -fp $ALEPH_ROOT/reference/kin/kxp6.f .
+/bin/cp -fp $ALEPH_ROOT/reference/kin/kingal.f .
+/bin/cp -fp $ALEPH_ROOT/reference/kin/kinmar.f .
+/bin/cp -fp $ALEPH_ROOT/reference/kin/lutaud.f .
+/bin/cp -fp $ALEPH_ROOT/reference/kin/lutaud_new.f .
+${FC} ${FCOPT} kxp6.f kingal.f kinmar.f lutaud.f lutaud_new.f
+rm -f kxp6.f kingal.f kinmar.f lutaud.f lutaud_new.f
+cd -

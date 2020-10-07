@@ -1,0 +1,119 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  v300:1.1.1.1 flr:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     94.12.07.14.20.38;  author aljul;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     94.12.07.14.20.39;  author aljul;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK vtrlas
+      LOGICAL FUNCTION VTRLAS (DUM)
+C----------------------------------------------------------------------
+C!  - .TRUE. If VDET Laser Trigger
+C!
+C!   Author   :- E. Lancon             30-JUN-1993
+C!
+C?
+C!======================================================================
+#ifndef DOC
+#include "rcurnt.h"
+#include "bcs.h"
+#include "xtbnjj.h"
+      CHARACTER*4 MNM1,MNM2,CHAINT
+      INTEGER AGETDB
+      EXTERNAL AGETDB
+      INTEGER ALTRIG
+      LOGICAL BTEST
+      EXTERNAL ALTRIG
+      LOGICAL FIRST
+      SAVE FIRST
+      DATA FIRST / .TRUE. /
+C
+#include "bmacro.h"
+C---------------------------------------------------------------
+      IF( FIRST ) THEN
+        FIRST = .FALSE.
+        NAXTBN = NAMIND('XTBN')
+      ENDIF
+C
+C?      Get Trigger Bit Pattern
+C
+      IF( ALTRIG(JLVL1,JLVL2,JLVL3) .GT.0 )THEN
+      ELSE
+        GOTO 888
+      ENDIF
+C
+C?   fetch XTBN from data base, if it does not exist in the run header
+C
+      KXTBN  = IW(NAXTBN)
+      IF (KXTBN .EQ. 0) THEN
+        IDUMM = AGETDB('XTBN',IRUNRC)
+        KXTBN = IW(NAXTBN)
+      ENDIF
+      IF(KXTBN.NE.0)THEN
+        NBIT=LROWS(KXTBN)
+        DO 1 I=1,NBIT
+C
+C      is this trigger bit enabled?
+C      exclude bit # 31
+C
+          IDEF=ITABL(KXTBN,I,JXTBTN)
+          INUM=ITABL(KXTBN,I,JXTBTB)
+C
+C       For some of the early runs XTBN was corrupted
+C
+          IF(INUM.LT.0.OR.INUM.GT.31) THEN
+            KXTBN=0
+            GOTO 888
+          ENDIF
+C
+C      get mnemonic
+C
+          IF(IDEF.NE.0)THEN
+            MNM1=CHAINT(ITABL(KXTBN,I,JXTBBM))
+            MNM2=CHAINT(ITABL(KXTBN,I,JXTBBM+1))
+            IF( MNM1(1:4).EQ.'VDET' .AND. MNM2(1:4).EQ.'_LSR' ) THEN
+              VTRLAS = BTEST(JLVL3,INUM)
+              GOTO 999
+            ENDIF
+          ENDIF
+    1   CONTINUE
+        GOTO 888
+      ENDIF
+C
+  888 CONTINUE
+      VTRLAS = .FALSE.
+C
+  999 RETURN
+      END
+#endif
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

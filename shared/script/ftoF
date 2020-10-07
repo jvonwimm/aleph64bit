@@ -1,0 +1,16 @@
+#! /bin/csh
+#============================================================================
+#                             ftoF
+# 29/04/97                                                      F.Blin
+#============================================================================
+# procedure to shift file(s).f to file(s).F into current directory
+# 05/06/97   FORTRAN.f  files changed to  fortran.F
+#============================================================================
+#set echo on
+   set files = `ls *.f`
+   foreach file ( $files[*] ) 
+     set tmp = `echo ${file} | awk '{print substr($0,1,length($0)-1)}' | tr "[A-Z]" "[a-z]"`
+#     echo " ${file} -> ${tmp}F"
+     mv -f ${file} ${tmp}F
+   end
+exit

@@ -1,0 +1,179 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	gal309_3:1.1.1.1
+	gal309_2:1.1.1.1
+	gal309_1:1.1.1.1
+	gal309:1.1.1.1
+	gal308_2:1.1.1.1
+	gal308_1:1.1.1.1
+	gal308:1.1.1.1
+	gal307_2:1.1.1.1
+	gal307_1:1.1.1.1
+	gal307:1.1.1.1
+	gal306_3:1.1.1.1
+	gal306_2:1.1.1.1
+	gal306_1:1.1.1.1
+	gal306:1.1.1.1
+	gal305_3:1.1.1.1
+	gal305_2:1.1.1.1
+	gal305_1:1.1.1.1
+	gal305:1.1.1.1
+	gal304_11:1.1.1.1
+	gal304_10:1.1.1.1
+	gal304_9:1.1.1.1
+	gal304_8:1.1.1.1
+	gal304_7:1.1.1.1
+	gal304_6:1.1.1.1
+	gal304_5:1.1.1.1
+	gal304_4:1.1.1.1
+	gal304_3:1.1.1.1
+	gal304_2:1.1.1.1
+	gal304_1:1.1.1.1
+	gal304:1.1.1.1
+	gal303_3:1.1.1.1
+	gal303_2:1.1.1.1
+	gal303_1:1.1.1.1
+	v-303:1.1.1.1
+	gal302_2:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	94.12.07.14.03.08;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.03.09;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@*DK sidoc
+#if defined(DOC)
+.chapter SICAL
+                                       B.Bloch-Devaux October 91
+.section           GEOMETRY DESCRIPTION
+
+    Module         :  SCAL has 2 modules numbered as
+                      1 for side A ( z>0 )
+                      2 for side B ( z<0 )
+
+    Layer (plane)  : each module has 12 layers (planes)
+                     they are read out by groups of 3 ( triplets)
+                     thus there are 4 triplets.
+                     The lowest plane (Triplet) number is the closest
+                     to the interaction point.
+
+    Phi bin        : each layer is divided into 32 phi bins.( each bin
+                     is 11.25 degrees wide).
+                     In a triplet of planes , the phi division starts at
+                     respectively +3.75 , 0. , -3.75 degrees.
+
+
+    Radial bin     : each phi bin is divided into 16 radial bins
+
+    The address of a pad is coded in the following way:
+
+    15 14 13 12 11 10  9  8  7  6  5  4  3  2  1  0   Bit
+   -------------------------------------------------
+   |XX|O3|O2|O1|Nm|Ph|Ph|Ph|Ph|Ph|Rd|Rd|Rd|Rd|Tt|Tt|  IAD
+   -------------------------------------------------
+
+    Bit 15       : not used
+    Bit 12-13-14 : overflow in plane 1, 2, 3 of triplet
+    Bit 11       : Module number ( 0 = A side , 1 = B side)
+    Bit 6 to 10  : Phi bin ( numbered from 0 to 31)
+    Bit 2 to  5  : Radial bin ( numbered from 0 to 15)
+    Bit 0 to  1  : Triplet number (numbered from 0 to 3)
+
+ A geometry package called SCALDES is included in the Alephlib.
+ It accesses the DATA BASE to get the geometrical constants ,
+ including alignment.Then any subroutine can be called to get
+ the correspondance between any address and subcomponents / space
+ position.( two coordinates systems are provided : Cartesian x,y,z
+ and Cylindrical Rho,theta,phi)
+ ---------------------------------------------------------------------
+.section initialisation
+    SIIRUN : called by ASIMOD to initialise run
+                initialise nameindices and formats
+                initialise SICAL statistics
+                loads necessary constants from Data base
+                SIZINI  initialise zero suppression scheme
+                SIRDAF  read data base (ALEPHLIB)
+                SIDFGO  fill geometry commons
+                SIPRGO  print out geometry constants if requested
+                set parametrization flag
+
+.section tracking
+    SIHIT  : called by GUSTEP during tracking
+             create and fill SIHI bank (E-list)
+             depending on option then
+                 SISHOW  parametrize energy deposition
+                 SITRAK  handle full energy deposition
+    SIASIG : called by ASASIG at the end of tracking
+             create and fill hit bank SIHT (T-list)
+    SISHOW : called by SIHIT  to parametrize electron showers
+             and deposit energy in pads.
+             define parametrisation parameters in SIDFPA, SIDFRT
+             generate longitudunal profile by SILONG
+             generate transverse profile by SITRA3 ( SITRAN)
+    SITRAK : called by SIHIT  to deposit energy in pads (full tracking)
+
+.section create digitisings
+    SIDIGI : called by ASDIGI to control SICAL digitising
+             depending on option then
+                 SINOIS  add noise to signals
+                 SIZSUP  apply zero suppression
+                 SISIDI  create digitizing bank SIDI
+                 SITRIG  create trigger signals
+
+.section create trigger signals
+    SITRIG : create trigger signals in SIFO from info in SIHT
+
+.section end of run
+    SIWSUM : called by ASCJOB to write out run summary for SICAL
+
+.section RUN conditions
+    data card RUNC 'SICA' I1  I2 .......
+    BECAREFUL all parameters must be given on the RUNC card : no default
+    I1 controls printout level when in debug (0 no debug, 1 = short
+       debug , 2 = full debug )
+       default is 0.
+    I2 controls parametrisation of electrons ( 1= parametrisation on)
+       default is 0 for now .
+    I3 controls addition of noise to analog signals
+       default is 0 for now .
+       0 = nothing added
+       1 = cross-talk only
+       2 = uncorrelated noise only
+       3 = both
+    I4 controls the transverse radial distribution of showers
+       default is 0 for now .
+       0 = triple gaussian distribution  including cross-talk
+       1 = double gaussian distribution
+#endif
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

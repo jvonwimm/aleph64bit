@@ -1,0 +1,253 @@
+#! /bin/csh
+#============================================================================
+#                             src2cvs
+#                                                       F.Ranjard
+#============================================================================
+# procedure to create *.F from historian source files
+#
+#============================================================================
+# $MYROOT is an environment variable set by the user.
+# $MYROOT/prog_name directory must exist.
+# $MYROOT/prog_name must contain a file called fort.1 which is the historian
+# source file to be translated to cvs.
+# src2cvs will create the following directories:
+# $MYROOT/inc            to contain all hac parameters, bcs, bmacro 
+#                        which are stored in $ALINC,
+# $MYROOT/prog_name/inc  to contain all private common blocks moved
+#                        to include files. It will also contain alpha common
+#                        blocks if they were in the historian source file.
+#                        the ALPHA include files should be removed from this
+#                        directory.
+# $MYROOT/prog_name/F77  to contain all subroutines and functions as *.F files
+# $MYROOT/prog_name/news to contain all *CD ending with NEWS moved to nnnews.h
+# $MYROOT/prog_name/garbage to be removed at the end.
+# $MYROOT/prog_name/$OS  to receive *.o files during compilation.
+# 
+#============================================================================
+# P1 -> prog_name eg: galeph
+# P2 -> compile  to skip translation and just compile
+#       " "      (=blank) to translate to cvs and compile
+#       nocomp   to translate to cvs and not compile 
+# P3 -> dbx      compile only in debug mode
+# last arg -> -v  for verbose
+#============================================================================
+# src2cvs1.0
+# 941128 - 1st version
+# src2cvs1.1
+# 941129 - let hist2cvs create set directories
+#============================================================================
+#
+set exec_name = "src2cvs1.1"
+set nar = $#argv
+if (nar != 0) then
+  if ($argv[${nar}] == "-v") then
+     set echo on
+     set argv[${nar}] = ""
+  endif
+endif
+#
+set aver = `grep alphaver ${ALEPH}/phy/alpha.version | awk -F= '{print $2}'`
+#
+#*******>
+if ($1 == "-h") then
+   echo ""
+   echo "usage:"
+   echo " src2cvs <prog_name> [<opt>]"
+   echo ""
+   echo " the user must set an environment variable called MYROOT"
+   echo " such that MYROOT/prog_name is a directory which contains"
+   echo " one file called fort.1 which is the Historian source file"
+   echo " to convert"
+   echo " src2cvs will create several sub-directories:"
+   echo " MYROOT/prog_name/inc to contain all *CD as *.h"
+   echo " MYROOT/prog_name/F77 to contain all *DK as *.F"
+   echo " MYROOT/prog_name/news to contain *CD ending by news as *news.h"
+   echo " MYROOT/inc/ to contain hac parameters, bcs, bmacro, alcons"
+   echo " MYROOT/prog_name/garbage to contain anything else"
+   echo "" 
+   echo " MYROOT/inc should be removed by the user, all include files "
+   echo " it contains are stored in ALINC"
+   echo " MYROOT/prog_name/garbage could be removed after check"
+   echo " if ALPHA *CD were present in the Historian source file, the"
+   echo " corresponding q*.h files should be removed from MYROOT/prog_name/inc"
+   echo " all ALPHA include files are avalaible from ALROOT/alpha${aver}/inc"
+   echo ""
+   echo " if opt is given ,it must be: nocomp or compile"
+   echo " if opt is NOT given then src2cvs will translate fort.1 to a set of"
+   echo " F77/*.F files and inc/*.h files and then compile an make a library"
+   echo " w/o debug in MYROOT/${OS}."
+   echo " if opt = nocomp then translation will be done but no compilation"
+   echo " if opt = compile then no translation but compilation"
+   echo ""
+   echo "an example:"
+   echo " > setenv MYROOT /afs/cern.ch/user/f/flr/src"
+   echo " > mkdir jnucle"
+   echo " > cd jnucle"
+   echo " > ... get alws::uphy:jnucle.input onto fort.1"
+   echo " > src2cvs jnucle nocomp  :translate, no compilation"
+   echo ""
+   echo " > src2cvs jnucle compile :compile what has been translated"
+   echo ""  
+   exit(1)
+endif 
+#*******<
+#unset noclobber
+#
+# list of default directories which must exist under the program directory
+# inc will contain the program include files
+# news will contain *CD news, and all *CD setnews
+# garbage will contain *CD setend
+# $OS used to compile *.F
+# these directories are removed at the end if empty
+set dir_def = 'inc news garbage F77'
+#
+# MYBIN points to the module hist2cvs which translates historian source to
+# cpp source.
+set MYBIN  = "${ALEPH}/bin"
+#
+# ALEPH_INC points to common to ALEPH progams include files
+set ALEPH_INC = "${ALINC}"
+#
+set flag = "OK"
+ 
+#===> first parameter
+if ($1 == "") then
+  echo -n "Enter program name [eg:myprog <CR>=exit]-> "
+   set prog_name = $<
+   if (${prog_name} == "") goto exec_end
+else
+   set prog_name = $1
+endif
+#
+# =========================================================================
+
+set prog_dir = "${MYROOT}/${prog_name}"
+# if prog_dir does not exists then EXIT
+if !(-d ${prog_dir}) then
+   echo "${prog_dir} does not exist, cannot be updated: EXIT" >> ${MYROOT}/spy
+   set flag = "ERROR"
+   goto spy
+endif
+cd ${prog_dir}
+
+# ============================================================================
+#
+echo `date` "=== START ${exec_name} ${HOST} ${prog_name} ===" >> ${prog_dir}/spy
+#
+# ===============================================================================
+#
+#  ---> run hist2cvs to translate historian source to cvs directories and files <--
+# 
+#if second parameter= "compile" then skip hist2cvs
+#
+if ($2 != "compile") then
+# create default directories if they don't exist
+  foreach dir ( $dir_def[*] )
+    if !(-d ${dir}) then
+       mkdir ${dir}
+    endif
+  end
+#
+if (${OS} == "HPUX9") then
+   if !( -e ftn01) mv fort.1 ftn01
+endif
+#
+# run hist2cvs to get a cvs version from historian source  
+  ${MYBIN}/hist2cvs
+  if ($status != 0) set flag = "NOT OK"
+  echo `date` " ${prog_name} cvs version  is ${flag} " >> ${prog_dir}/spy
+endif
+#
+# if 2nd parameter= "nocomp" then skip compilation
+#
+if ($2 == "nocomp") then
+   goto spy
+endif
+   
+#  ---> compile all *.F and *.c just created < ---------------------
+#
+set prog_inc = "${MYROOT}/${prog_name}/inc"
+if !(-d ${prog_inc}) then
+  set FC_OPT = "${FC} ${FCOPT} -I${ALROOT}/alpha${aver}/inc"
+  set CC_OPT = "cc ${CCOPT}"
+else
+  set FC_OPT = "${FC} ${FCOPT} -I${ALROOT}/alpha${aver}/inc -I${prog_inc}"
+  set CC_OPT = "cc ${CCOPT} -I${prog_inc}"
+endif
+#
+if !(-d ${OS}) then
+   mkdir ${OS}
+endif
+cd ${OS}
+rm *.o
+  
+### compile c routines if any
+
+set flagc = " "
+ls ../*/*.c
+if ( $status == 0 ) then
+   ${CC_OPT} ../*/*.c
+   if ($status == 1) then
+      set flag = "C NOT OK"
+      goto spy
+   endif
+   set flagc = "C OK" 
+endif  
+#
+
+#### compile *.F routines if any
+set flagf = " "
+ls ../*/*.F
+if ($status == 1) then
+   set flagf = "no *.F"
+   goto cend
+endif
+
+if ($3 == "dbx") goto cdbx
+
+${FC_OPT} ../*/*.F
+if ($status == 1) then
+  set flag = "F NOT OK"
+  goto spy
+else
+  set flagf = "F OK"
+  ar rls lib${prog_name}.a *.o
+endif
+#
+cdbx:
+${FC_OPT} -g ../*/*.F
+if ($status == 1) then
+  set flag = "F_dbx NOT OK"
+  goto spy
+else
+  set flagf = "F_dbx OK"
+  ar rls lib${prog_name}_dbx.a *.o
+endif
+
+# ===============================================================
+
+cend:
+
+set flag = "${flagf} ${flagc}"
+rm *.o
+ls
+cd ..
+rmdir ${dir_def}
+# ================================================================
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> spy
+spy:
+
+cd ${prog_dir}
+echo `date` "${exec_name} ${user} ${prog_name} ${flag}" >> ${prog_dir}/spy
+ 
+ 
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> exec_end
+exec_end:
+ exit
+ 
+
+
+
+

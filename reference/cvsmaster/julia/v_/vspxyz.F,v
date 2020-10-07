@@ -1,0 +1,276 @@
+head	1.4;
+access;
+symbols
+	jul313_3:1.4
+	jul313_2:1.4
+	jul313_1:1.4
+	jul313:1.4
+	jul312_1:1.4
+	jul312:1.4
+	jul311:1.4
+	jul310_1:1.4
+	jul310:1.4
+	jul309_1:1.3
+	jul309:1.3
+	jul308_6:1.3
+	jul308_5:1.3
+	jul308_4:1.3
+	jul308_3:1.3
+	jul308_2:1.3
+	jul308_1:1.3
+	jul308:1.3
+	jul307_4:1.2
+	jul307_3:1.2
+	jul307_2:1.2
+	jul307_1:1.2
+	jul307:1.2
+	jul306_3:1.2
+	jul306_2:1.2
+	jul306_1:1.2
+	jul306:1.2
+	jul305_4:1.2
+	jul305_3:1.2
+	jul305_2:1.2
+	jul305_1:1.2
+	jul305:1.2
+	jul304_3:1.2
+	jul304_2:1.2
+	jul304_1:1.2
+	jul304:1.1
+	jul303_7:1.1
+	jul303_6:1.1
+	jul303_5:1.1
+	jul303_4:1.1
+	jul303_3:1.1
+	jul303_2_mc1:1.1
+	jul303_2:1.1
+	jul303_1_mc1:1.1
+	jul303_1:1.1
+	jul303_v:1.1
+	jul303:1.1
+	jul302_6:1.1
+	jul302_5:1.1
+	jul302_4:1.1
+	jul302_3:1.1
+	jul302_2:1.1
+	jul302_1:1.1
+	jul302:1.1
+	jul285_1:1.1
+	jul285:1.1
+	jul284_1:1.1
+	jul284:1.1
+	jul283_1:1.1
+	jul283:1.1
+	jul282_1:1.1
+	jul282:1.1
+	jul281_3:1.1
+	jul281_2:1.1
+	jul281_1:1.1
+	jul281:1.1
+	jul280_1:1.1
+	jul280:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.4
+date	99.10.11.09.36.50;	author cattanem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.09.03.16.35.48;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.10.01.07.09.41;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.05.06.15.54.33;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@for julia 310
+@
+text
+@      INTEGER FUNCTION VSPXYZ(EPOS,IVIEW,ILAY,IFAC,IWFF,NROM,
+     &                        VUW,XYZ)
+C----------------------------------------------------
+C!
+C!  - Transform strip position into XYZ glob. coordinates
+C!
+C!   Author   :- A. Bonissent March 1995.
+C!             - updated 11/5/95 Bugfix for wrong NRXYZ
+C!  This Input is the decimal strip number, layer, face view and
+C!  wafer number. Returns NRXYZ and global position
+C!
+C!  Correct coordinate for additional bonding problems (VRECOR)
+C!                              July 1998
+C!  Correct the correction above, do that it applies only to real data
+C!                              May 1999
+C!  
+C!  Inputs;
+C!               EPOS = decimal strip number
+C!               IVIEW= view
+C!               ILAY = layer
+C!               IFAC = face
+C!               IWFF = wafer in face
+C!               NROM = encoded resdout module number
+C!
+C!  Outputs;
+C!               VUW  = local coordinate
+C!               XYZ  = global coordinate
+C?
+C!======================================================================
+#ifndef DOC
+      IMPLICIT NONE
+#include "vrecon.h"
+C ----------------------
+      INTEGER  VDRSPS, VDPSLC, VABCVU, VNSCRM, VDYEAR
+      INTEGER  VNRDIR
+      INTEGER  VJWFFW, VRECOR
+      EXTERNAL VJWFFW,VDYEAR,VNRDIR,VNSCRM,VDRSPS,VDPSLC,VABCVU,VRECOR
+C
+      INTEGER IVIEW,ILAY,IFAC,IWFF,NROMD,NRXYZ,JWAF,IWAF,IPHI
+      REAL    EPOS, VUW(3), XYZ(3)
+      INTEGER IRC
+      REAL    PSTRP, SPOS, ABC(3)
+      INTEGER NROM,MAXST,IND
+      REAL    PPITCH
+      INTEGER IRET
+      REAL    DSPLC
+C ------------------------------------------------------
+      NROMD=NROM
+         IRET = VJWFFW(ILAY,IFAC,IWFF,JWAF)
+         CALL VZERO(ABC,3)
+         IF(VDYEAR().NE.95.AND.VNRDIR(IVIEW).EQ.-1)THEN
+           SPOS = VNSCRM(IVIEW) - EPOS + 1.0
+         ELSE
+           SPOS = EPOS
+         ENDIF
+         IRC = VDRSPS( SPOS, IVIEW, PSTRP )
+         IF ( IRC .NE. 1 ) THEN
+           VSPXYZ = IRC
+           RETURN
+         ENDIF
+         IRC =  VDPSLC( PSTRP, IVIEW, ABC(IVIEW) )
+         IF ( IRC .NE. 1 ) THEN
+           VSPXYZ = IRC
+           RETURN
+         ENDIF
+C         
+C -------------------------- May 1999 ------------------
+C
+         IF(.NOT.MCEVNT)THEN
+C
+C -------------------------- July 1998 ------------------
+C     call  VRECOR  to correct coordinate
+
+           IRET = VRECOR(IVIEW,ILAY,IFAC,IWFF,SPOS,DSPLC)
+           IF ( IRET .EQ. 1 ) THEN
+              ABC(IVIEW) = ABC(IVIEW) + DSPLC         
+           ENDIF
+         ENDIF
+C        
+C -------------------------------------------------------
+C
+         VSPXYZ = VABCVU( ABC, JWAF, VUW )
+         CALL VGWFXY( NROMD, VUW, XYZ )
+      RETURN
+      END
+C
+#endif
+@
+
+
+1.3
+log
+@Modif to vspxyz
+@
+text
+@d2 1
+a2 1
+     >                        VUW,XYZ)
+d14 2
+d32 1
+d40 1
+a40 1
+      REAL EPOS, VUW(3), XYZ(3)
+d42 1
+a42 1
+      REAL PSTRP, SPOS, ABC(3)
+d44 1
+a44 1
+      REAL PPITCH
+d46 1
+a46 1
+      REAL DSPLC
+d56 2
+a57 2
+         IRC = VDRSPS(SPOS,IVIEW,PSTRP)
+         IF (IRC.NE.1) THEN
+d61 2
+a62 2
+         IRC =  VDPSLC(PSTRP,IVIEW,ABC(IVIEW))
+         IF (IRC.NE.1) THEN
+d66 5
+d72 6
+a77 4
+C call  VRECOR  to correct coordinate
+         IRET = VRECOR(IVIEW,ILAY,IFAC,IWFF,SPOS,DSPLC)
+         IF(IRET .EQ. 1) THEN
+            ABC(IVIEW) = ABC(IVIEW) + DSPLC         
+d79 1
+d81 3
+a83 2
+         VSPXYZ = VABCVU(ABC,JWAF,VUW)
+         CALL VGWFXY(NROMD,VUW,XYZ)
+d86 1
+a86 1
+C #######################################
+@
+
+
+1.2
+log
+@Fixes for Linux
+@
+text
+@d12 3
+d29 2
+d33 2
+a34 2
+      INTEGER  VJWFFW
+      EXTERNAL VJWFFW,VDYEAR,VNRDIR,VNSCRM,VDRSPS,VDPSLC,VABCVU
+d43 2
+a44 1
+
+d63 7
+d74 1
+@
+
+
+1.1
+log
+@re-installed jul280 from the historian source because some routines were missing.
+@
+text
+@d26 4
+a29 2
+      INTEGER VDRSPS, VDPSLC, VABCVU, VNSCRM, VDYEAR, VPHSTM
+      INTEGER VNRDIR
+d37 1
+d40 1
+a40 1
+         CALL VJWFFW(ILAY,IFAC,IWFF,JWAF)
+@

@@ -1,0 +1,23 @@
+#!/bin/csh
+# script to run Dali on Unix platforms
+# Bjorn S. Nilsson, 27-Jan-1994 and 27-Feb-1995.
+#
+
+set daliv=`basename $0`
+##echo "daliversion: ${daliv}"
+
+if (-f ${ALEPH}/dali/${daliv}/dali.welcome) then
+  cat ${ALEPH}/dali/${daliv}/dali.welcome
+endif
+
+set dalenv=`printenv DAL`
+if ("${dalenv}" == "") then
+   setenv DAL ${ALEPH}/dali/${daliv}
+   echo "DALI files read from ${DAL}"
+else
+   echo "Your DALI environment is ${dalenv}"
+endif
+
+${ALEPH}/dali/${daliv}/daliexe
+
+exit 0

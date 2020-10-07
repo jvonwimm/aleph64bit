@@ -1,0 +1,96 @@
+head	1.1;
+access;
+symbols
+	alio83:1.1
+	alio82:1.1
+	alio81:1.1
+	alio80:1.1
+	alio74:1.1
+	alio73:1.1
+	alio72:1.1
+	alio71:1.1
+	alio70:1.1
+	alio68:1.1
+	alio69:1.1
+	alio67:1.1
+	alio66:1.1
+	alio65:1.1
+	alio64:1.1
+	alio63:1.1
+	alio62:1.1
+	alio61:1.1
+	alio60:1.1;
+locks; strict;
+comment	@c @;
+
+
+1.1
+date	96.04.23.09.59.25;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@move alph, dbas, a part of alef and a part of c to alephio
+Modified Files:
+ 	version.h
+ Added Files:
+ 	adbrow.F adbrpn.F adbrun.F adbswp.F adbver.F agetdb.F agtfil.F
+	albos.F aldawr.F aldtyp.F aleveh.F alfind.F alfmt.F algtbk.F
+ 	algtdb.F algtlu.F algtro.F algtyp.F alinst.F alk7fil.F
+ 	alk7fru.F alk7op.F alk7tru.F alredb.F alrune.F alrunh.F
+ 	alrunr.F alseed.F alstho.F alstin.F alstri.F altabl.F alvsn.F
+ 	aopdbs.F aublis.F aubos.F aubprs.F bkcari.F bkinca.F bkrhab.F
+ 	bkrhal.F bkrhaw.F bktobk.F cafiht.F chahol.F dafrds.F gtdbas.F
+ 	gtstup.F igtfmt.F jhocha.F julrec.F junial.F junidb.F
+ 	kbytrec.F loctab.F nameru.F ubpack.F uclean.F uindxs.F usbos.F
+ 	usgtdb.F utcblk.F utccop.F utcofo.F utwocl.F utwoex.F
+Removed Files:
+	noibm.F
+@
+text
+@      INTEGER FUNCTION  ALGTLU (LUVER,LULMD)
+C -------------------------------------------------------------------
+CKEY ALEF LUND VERSION KLUN KINGAL / USER
+C - B.Bloch-Devaux 900926
+C! Finds the JETSET version number used for generated events
+C   Returns  ALGTLU = 1  if the file WAS  generated using JETSET
+C                   = 0        #     WAS NOT            #
+C - Output :  LUVER   = JETSET version number ( 703 FOR 7.3 VERSION )
+C             LULMD   = JETSET date of last modification
+C                          (900918 is 18 September 1990)
+C Input banks : KLUN ,  KRUN
+C ----------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "klunjj.h"
+#include "krunjj.h"
+C   Generators below this ID never used JETSET!
+      PARAMETER (IGEN = 3002)
+#include "bmacro.h"
+C ----------------------------------------------------------------------
+        LUVER =0
+        LULMD =0
+        ALGTLU=0
+C  Get Run header bank
+        JKRUN=NLINK('KRUN',0)
+        IF (JKRUN.EQ.0) GO TO 999
+        ILUND =ITABL(JKRUN,1,JKRUGI)
+        IF (ILUND.GT.IGEN) GO TO 999
+        ALGTLU=1
+        LUVER =603
+        LULMD =870210
+        JKLUN=NLINK('KLUN',0)
+        IF (JKLUN.EQ.0) GO TO 999
+        LUVER =ITABL(JKLUN,1,JKLUVN)
+        LULMD =ITABL(JKLUN,1,JKLULM)
+C
+ 999    RETURN
+        END
+#endif
+@

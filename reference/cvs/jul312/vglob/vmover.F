@@ -1,0 +1,159 @@
+      SUBROUTINE VMOVER(View, LAYer, ERRMAT, IROWS)
+C-------------------------------------------------------------
+C!Compress VDET overlap hits into an effective hit
+CKEY VDET TRACK
+C
+C  Author      : D. Brown 30-10-94
+C
+C   This routine finds the VMTC bank indicated by ILAY and
+C   searches the list of matched hits for hits in different
+C   wafers.  If any are found, all possible combinations of
+C   hits in the different layers are cross-checked against each other
+C   to see if they are consistant with being an overlap hit.
+C   If they are consistant, the compound hit is then entered as
+C   a new row in VMTC, and the single hits which comprise them
+C   are modified so that their missing companion is a NULL hit
+C   instead of a missing hit.
+C
+C  INPUTS:
+C    Layer       = VDET layer number (1 or 2)
+C    ERRMAT(8,8) = Error matrix of a track in each of the intersected
+C                  wafers, with full correlations.  This should include
+C                  the intrinsic hit errors as well
+C    IROWS(2)    = Row pointers in ERRMAT to the 2 wafers being considered
+C                  as possibly having overlap hits
+C  OUTPUTS:
+C            VMTC bank is (possibly) modified
+C
+C-------------------------------------------------------------
+#ifndef DOC
+      IMPLICIT NONE
+C
+C  IO variables
+C
+      INTEGER View, Layer, IROWS(2)
+      REAL ERRMAT(8,8)
+C
+C  Global includes
+C
+#include "bcs.h"
+#include "vglbcm.h"
+C
+#include "vmtcjj.h"
+C
+C  Function calls
+C
+      INTEGER NLINK,NBANK
+      EXTERNAL NLINK,NBANK
+C
+C  Local variables
+C
+      INTEGER indVMTC,INDEX
+      INTEGER I, J, nrows, k
+      INTEGER IHIT
+      INTEGER ICOR,JCOR
+      INTEGER IERR
+      integer iwafer, jwafer
+      integer jlay,jzed,jphi,jview
+      integer ilay,ized,iphi
+      REAL OERR(2,2),RVEC(2),EVEC(2),CHISQ
+      REAL*8 ERR(2,2)
+C
+#include "bmacrod.h"
+#include "bmacro.h"
+C
+C  Find the bank
+C
+      indVMTC = NLINK('VMTC',Layer)
+      IF (indVMTC .LE. 0) THEN
+        CALL RERROR('VMOVER', -1,' Cant find VMTC bank')
+        GOTO 999
+      END IF
+C
+C  Extract the relevant sub-matrix
+C
+      DO I = 1, 2
+        DO J = 1, 2
+          OERR(J,I) = ERRMAT(IROWS(J),IROWS(I))
+        END DO
+      END DO
+C
+C  Try all combinations of hits, calculating the chisquared for each
+C
+      nrows = LROWS(indVMTC)
+      DO I = 1, nrows-1
+         RVEC(1) = RTABL(indVMTC,I,JVMTHR)
+         EVEC(1) = RTABL(indVMTC,I,JVMTHE)
+         call vhupck(iTABL(indVMTC,I,JVMTHW), iwafer, ihit)
+         CALL vadewa(iwafer,ilay,ized,iphi,jview)
+         DO J = I+1, nrows
+            call vhupck(iTABL(indVMTC,J,JVMTHW), Jwafer, ihit)
+            CALL vadewa(jwafer,jlay,jzed,jphi,jview)
+            if (jlay .eq. ilay .and. abs(ized-jzed).le.1
+     $           .and. jphi.ne.iphi) then
+               RVEC(2) = RTABL(indVMTC,J,JVMTHR)
+               EVEC(2) = RTABL(indVMTC,J,JVMTHE)
+C
+C  Add the hit error to the diagonal of the matrix
+C
+               DO ICOR = 1, 2
+                  DO JCOR = 1, 2
+                     IF (ICOR .EQ. JCOR) THEN
+                        ERR(JCOR,ICOR) = OERR(JCOR,ICOR)+EVEC(JCOR)**2
+                     else
+                        ERR(JCOR,ICOR) = OERR(JCOR,ICOR)
+                     END IF
+                  END DO
+               END DO
+C
+C  Invert the sub-matrix
+C
+               CALL DSINV(2,ERR,2,IERR)
+               IF (IERR.NE.0) GOTO 888
+C
+C  Compute the chisquared
+C
+               CHISQ = 0.0
+               DO ICOR = 1, 2
+                  DO JCOR = 1, 2
+                     CHISQ = CHISQ +
+     $                    RVEC(JCOR)*RVEC(ICOR)*ERR(JCOR,ICOR)
+                  END DO
+               END DO
+C
+               IF (CHISQ .LT. NSIGRD**2) THEN
+C
+C  This combination looks reasonable; create an effective hit
+C
+                  IF (LFRROW(indVMTC) .LT. 1) THEN
+                     indVMTC = NBank('VMTC',Layer,
+     $                    IW(indVMTC)+50*LCOLS(indVMTC))
+                     if (indVMTC .le. 0) then
+                        call RERROR('VMOVER', -3, ' Out of memory')
+                        goto 999
+                     end if
+                  END IF
+C
+                  INDEX = KNEXT(indVMTC)
+                  IW(Index+JVMTHW)   = ITABL(indVMTC,I,JVMTHW)
+                  IW(Index+JVMTHW+1) = ITABL(indVMTC,J,JVMTHW)
+                  RW(Index+JVMTHR)   = RTABL(indVMTC,I,JVMTHR)
+                  RW(Index+JVMTHR+1) = RTABL(indVMTC,J,JVMTHR)
+                  RW(Index+JVMTHE)   = RTABL(indVMTC,I,JVMTHE)
+                  RW(Index+JVMTHE+1) = RTABL(indVMTC,J,JVMTHE)
+                  RW(Index+JVMTPH)   = RTABL(indVMTC,I,JVMTPH)
+                  RW(Index+JVMTPH+1) = RTABL(indVMTC,J,JVMTPH)
+C
+                  IW(indVMTC+LMHROW) = IW(indVMTC+LMHROW) + 1
+               END IF
+            end if
+ 888        continue
+         END DO
+      END DO
+C
+C  Done
+C
+ 999  CONTINUE
+      RETURN
+      END
+#endif

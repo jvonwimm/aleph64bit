@@ -1,0 +1,256 @@
+      SUBROUTINE MUIRUN
+C ----------------------------------------------------
+C - F.Ranjard - 860624
+C             modified for DAF and new bank layout
+C             by F.Bossi,D.Kuhn,R.Xu 87-09-05
+C           - modified for final dbase
+C             by A. Antonelli, F. Bossi 1 July 89
+C
+C - Initialize MUON BOS banks and MUON common blocks
+C - Called from   ASIPAC                      from this .HLB
+C - Calls         NAMIND, BKFMT               from BOS77 lib
+C -----------------------------------------------
+      PARAMETER (LOFFMC = 1000)
+      PARAMETER (LHIS=20, LPRI=20, LTIM=6, LPRO=6, LRND=3)
+      PARAMETER (LBIN=20, LST1=LBIN+3, LST2=3)
+      PARAMETER (LSET=15, LTCUT=5, LKINP=20)
+      PARAMETER (LDET=9,  LGEO=LDET+4, LBGE=LGEO+5)
+      PARAMETER (LCVD=10, LCIT=10, LCTP=10, LCEC=15, LCHC=10, LCMU=10)
+      PARAMETER (LCLC=10, LCSA=10, LCSI=10)
+      COMMON /JOBCOM/   JDATJO,JTIMJO,VERSJO
+     &                 ,NEVTJO,NRNDJO(LRND),FDEBJO,FDISJO
+     &                 ,FBEGJO(LDET),TIMEJO(LTIM),NSTAJO(LST1,LST2)
+     &                 ,IDB1JO,IDB2JO,IDB3JO,IDS1JO,IDS2JO
+     &                 ,MBINJO(LST2),MHISJO,FHISJO(LHIS)
+     &                 ,IRNDJO(LRND,LPRO)
+     &                 ,IPRIJO(LPRI),MSETJO,IRUNJO,IEXPJO,AVERJO
+     3                 ,MPROJO,IPROJO(LPRO),MGETJO,MSAVJO,TIMLJO,IDATJO
+     5                 ,TCUTJO(LTCUT),IBREJO,NKINJO,BKINJO(LKINP),IPACJO
+     6                 ,IDETJO(LDET),IGEOJO(LGEO),LVELJO(LGEO)
+     7                 ,ICVDJO(LCVD),ICITJO(LCIT),ICTPJO(LCTP)
+     8                 ,ICECJO(LCEC),ICHCJO(LCHC),ICLCJO(LCLC)
+     9                 ,ICSAJO(LCSA),ICMUJO(LCMU),ICSIJO(LCSI)
+     &                 ,FGALJO,FPARJO,FXXXJO,FWRDJO,FXTKJO,FXSHJO,CUTFJO
+     &                 ,IDAFJO,IDCHJO,TVERJO
+      LOGICAL FDEBJO,FDISJO,FHISJO,FBEGJO,FGALJO,FPARJO,FXXXJO,FWRDJO
+     &       ,FXTKJO,FXSHJO
+      COMMON /JOBKAR/   TITLJO,TSETJO(LSET),TPROJO(LPRO)
+     1                 ,TKINJO,TGEOJO(LBGE),TRUNJO
+      CHARACTER TRUNJO*60
+      CHARACTER*4 TKINJO,TPROJO,TSETJO,TITLJO*40
+      CHARACTER*2 TGEOJO
+C
+      PARAMETER (LERR=20)
+      COMMON /JOBERR/   ITELJO,KERRJO,NERRJO(LERR)
+      COMMON /JOBCAR/   TACTJO
+      CHARACTER*6 TACTJO
+C
+      PARAMETER (LFIL=6)
+      COMMON /IOCOM/   LGETIO,LSAVIO,LGRAIO,LRDBIO,LINPIO,LOUTIO
+      DIMENSION LUNIIO(LFIL)
+      EQUIVALENCE (LUNIIO(1),LGETIO)
+      COMMON /IOKAR/   TFILIO(LFIL),TFORIO(LFIL)
+      CHARACTER TFILIO*60, TFORIO*4
+C
+      INTEGER LMHLEN, LMHCOL, LMHROW
+      PARAMETER (LMHLEN=2, LMHCOL=1, LMHROW=2)
+C
+      COMMON /BCS/   IW(1000)
+      INTEGER IW
+      REAL RW(1000)
+      EQUIVALENCE (RW(1),IW(1))
+C
+      PARAMETER (NHTIN = 40 , INCHT = 10 , NAVTD = 4)
+      COMMON/MUNAMC/ NAMUHT,NAMUDI,NAMUDT,NAMUTD,NAMUDG
+     +             , NAMUOG,NAMBAG,NAMBSG,NAMBTG,NAMBBG
+     +             , NAMECG,NAMEBG,NAMETG,NAMESG
+     +             , NAMMAG,NAMMBG,NAMMTG,NAMMSG
+     &             , JDMUST,JDMTHT
+C
+C! The general constants to create MU signals
+      COMMON/MUGNCN/WDEIMU,WDTBMU,OFTBMU,WDATMU,HTATMU,HFHTMU,
+     *              SGLSMU,PSCRMU,PTSPMU,DSSPMU,
+     *              PTXSMU,PTYSMU,SNSXMU(4),SNSYMU(4)
+C! The parameters needed by the geometry routine AGMUCH
+      PARAMETER (NMBIN = 12, NMBOU = 12 )
+      PARAMETER (NMMIN = 10, NMMOU =  9, NMMA = NMMIN+NMMOU, IMMBT =  9)
+      PARAMETER (NMCIN = 4, NMCOU = 4, NMCA = NMCIN+NMCOU)
+      PARAMETER (NMMBI = NMMA+NMMIN, NMCBI = NMCA+NMCIN)
+      COMMON /MUG1PR/   MMADPR(12,4)
+C
+      COMMON /MUSTAT/   NEVMUH,NTMCLU,NMXCLU
+C
+      PARAMETER(JMUOID=1,JMUOVR=2,JMUONS=4,JMUOWI=5,JMUOHE=6,JMUOTU=7,
+     +          JMUOAC=8,JMUOSP=9,JMUODI=10,JMUODE=11,JMUOXS=12,
+     +          JMUOYS=13,JMUOSE=14,JMUOET=15,JMUOEX=16,JMUOEY=17,
+     +          JMUOX1=18,JMUOX2=19,JMUOX3=20,JMUOX4=21,JMUOY1=22,
+     +          JMUOY2=23,JMUOY3=24,JMUOY4=25,LMUOGA=25)
+      PARAMETER(JMBAID=1,JMBAVR=2,JMBASU=4,JMBANB=5,JMBATH=6,JMBALE=7,
+     +          JMBAR1=8,JMBAR2=9,JMBAPD=10,JMBAY1=11,JMBAY2=12,
+     +          LMBAGA=12)
+      PARAMETER(JMBSID=1,JMBSVR=2,JMBSNO=4,JMBSVO=5,JMBSZC=6,JMBSRC=7,
+     +          JMBSDE=8,JMBST1=9,JMBST2=10,JMBSTA=11,JMBSNA=12,
+     +          JMBSK1=13,JMBSK2=14,LMBSGA=14)
+      PARAMETER(JMBTID=1,JMBTVR=2,JMBTNA=4,JMBTZB=5,JMBTRB=6,JMBTY1=7,
+     +          JMBTY2=8,JMBTNX=9,JMBTZT=10,JMBTRT=11,JMBTW1=12,
+     +          LMBTGA=12)
+      PARAMETER(JMBBID=1,JMBBVR=2,JMBBB1=4,JMBBL1=5,JMBBU1=6,JMBBB2=7,
+     +          JMBBL2=8,JMBBU2=9,JMBBB3=10,JMBBL3=11,JMBBU3=12,
+     +          JMBBB4=13,JMBBL4=14,JMBBU4=15,JMBBP3=16,JMBBP4=17,
+     +          LMBBGA=17)
+      PARAMETER(JMECID=1,JMECVR=2,JMECSU=4,JMECNS=5,JMECZI=6,JMECZE=7,
+     +          JMECPD=8,JMECTH=9,JMECDZ=10,JMECXO=11,LMECGA=11)
+      PARAMETER(JMEBID=1,JMEBVR=2,JMEBB1=4,JMEBL1=5,JMEBU1=6,JMEBB2=7,
+     +          JMEBL2=8,JMEBU2=9,JMEBB3=10,JMEBL3=11,JMEBU3=12,
+     +          JMEBB4=13,JMEBL4=14,JMEBU4=15,LMEBGA=15)
+      PARAMETER(JMETID=1,JMETVR=2,JMETNA=4,JMETXB=5,JMETYB=6,JMETX1=7,
+     +          JMETX2=8,JMETYS=9,JMETPI=10,JMETNX=11,JMETNY=12,
+     +          JMETNP=13,JMETN2=14,JMETN1=15,JMETLE=16,LMETGA=40)
+      PARAMETER(JMESID=1,JMESVR=2,JMESNO=4,JMESXC=5,JMESYC=6,JMESZC=7,
+     +          JMESTA=8,JMESNA=9,JMESK1=10,JMESK2=11,LMESGA=11)
+      PARAMETER(JMMAID=1,JMMAVR=2,JMMASU=4,JMMANS=5,JMMAZ0=6,JMMAPD=7,
+     +          JMMATH=8,JMMAPI=9,JMMADS=10,JMMAZ1=11,JMMATB=12,
+     +          LMMAGA=12)
+      PARAMETER(JMMBID=1,JMMBVR=2,JMMBNO=4,JMMBB1=5,JMMBO1=6,JMMBB2=7,
+     +          JMMBO2=8,JMMBB3=9,JMMBO3=10,JMMBB4=11,JMMBO4=12,
+     +          JMMBB5=13,JMMBO5=14,JMMBL1=15,JMMBU1=16,JMMBL2=17,
+     +          JMMBU2=18,JMMBL3=19,JMMBU3=20,JMMBL4=21,JMMBU4=22,
+     +          JMMBL5=23,JMMBU5=24,JMMBL6=25,JMMBU6=26,JMMBL7=27,
+     +          JMMBU7=28,JMMBL8=29,JMMBU8=30,JMMBL9=31,JMMBU9=32,
+     +          JMMBL0=33,JMMBU0=34,LMMBGA=34)
+      PARAMETER(JMMTID=1,JMMTVR=2,JMMTNA=4,JMMTZB=5,JMMTRB=6,JMMTZT=7,
+     +          JMMTRT=8,JMMTNX=9,LMMTGA=9)
+      PARAMETER(JMMSID=1,JMMSVR=2,JMMSNO=4,JMMSL1=5,JMMSL2=6,JMMSR1=7,
+     +          JMMSR2=8,JMMSTL=9,JMMSRL=10,JMMSNY=11,JMMSX1=12,
+     +          JMMSX2=13,JMMSDZ=14,JMMSZC=15,JMMSRC=16,JMMSDE=17,
+     +          JMMSNA=18,JMMSTA=19,JMMSOS=20,JMMSVO=21,JMMSK1=22,
+     +          JMMSK2=23,LMMSGA=23)
+        INTEGER  ALGTDB
+        EXTERNAL ALGTDB
+      CHARACTER*52 LIST
+      DATA LIST /'MUOGMBAGMBBGMBSGMBTGMECGMEBGMETGMESGMMAGMMBGMMTGMMSG'/
+C - # of words/row in bank with index ID
+      LCOLS(ID) = IW(ID+1)
+C - # of rows in bank with index ID
+      LROWS(ID) = IW(ID+2)
+C - index of next row in the bank with index ID
+      KNEXT(ID) = ID + LMHLEN + IW(ID+1)*IW(ID+2)
+C - index of row # NRBOS in the bank with index ID
+      KROW(ID,NRBOS) = ID + LMHLEN + IW(ID+1)*(NRBOS-1)
+C - # of free words in the bank with index ID
+      LFRWRD(ID) = ID + IW(ID) - KNEXT(ID)
+C - # of free rows in the bank with index ID
+      LFRROW(ID) = LFRWRD(ID) / LCOLS(ID)
+C - Lth integer element of the NRBOSth row of the bank with index ID
+      ITABL(ID,NRBOS,L) = IW(ID+LMHLEN+(NRBOS-1)*IW(ID+1)+L)
+C - Lth real element of the NRBOSth row of the bank with index ID
+      RTABL(ID,NRBOS,L) = RW(ID+LMHLEN+(NRBOS-1)*IW(ID+1)+L)
+C
+C ------------------------------------------------------
+      IF (IDETJO(8).GT.0) THEN
+      NAMUDG = NAMIND ('MUDG')
+      NAMUHT = NAMIND ('MUHT')
+      NAMUDT = NAMIND ('MUDT')
+      NAMUTD = NAMIND ('MUTD')
+C
+C - set bank format
+C
+      CALL BKFMT ('MUTD','I')
+      CALL BKFMT ('MUHT','I')
+      CALL BKFMT ('MUDG','I')
+      CALL BKFMT ('MUDT','I')
+      ENDIF
+      JDMUST = 0
+      JDMTHT = 0
+C - set flag for NEW geometry
+      ICMUJO(5) = 1
+C
+C       For the genaral muon detector information, fill the common block
+C       only once.
+C
+        IRET = ALGTDB (LRDBIO,LIST,IRUNJO)
+        IF (IRET.EQ.0) CALL ALTELL ('MUON data base banks missing',0,
+     &    'STOP')
+C
+        NAMUOG = NAMIND('MUOG')
+        NAMBAG = NAMIND('MBAG')
+        NAMBBG = NAMIND('MBBG')
+        NAMBSG = NAMIND('MBSG')
+        NAMBTG = NAMIND('MBTG')
+c
+        NAMECG = NAMIND('MECG')
+        NAMEBG = NAMIND('MEBG')
+        NAMETG = NAMIND('METG')
+        NAMESG = NAMIND('MESG')
+C
+        NAMMAG = NAMIND('MMAG')
+        NAMMBG = NAMIND('MMBG')
+        NAMMTG = NAMIND('MMTG')
+        NAMMSG = NAMIND('MMSG')
+C
+C!     INDICES OF MUON-BANKS FOR USE WITHIN ROUTINES
+      JMBAG = IW(NAMBAG)
+      JMUOG = IW(NAMUOG)
+      JMBBG = IW(NAMBBG)
+      JMBSG = IW(NAMBSG)
+      JMBTG = IW(NAMBTG)
+C
+      JMECG = IW(NAMECG)
+      JMEBG = IW(NAMEBG)
+      JMETG = IW(NAMETG)
+      JMESG = IW(NAMESG)
+C
+      JMMAG = IW(NAMMAG)
+      JMMBG = IW(NAMMBG)
+      JMMTG = IW(NAMMTG)
+      JMMSG = IW(NAMMSG)
+C
+        WDEIMU = RTABL(JMUOG,1,JMUOWI)
+        WDTBMU = RTABL(JMUOG,1,JMUOTU)
+        OFTBMU = 0.5*RTABL(JMUOG,1,JMUOSP)
+        WDATMU = RTABL(JMUOG,1,JMUOAC)
+        HTATMU = RTABL(JMUOG,1,JMUOAC)
+        HFHTMU = 0.5 * HTATMU
+        SGLSMU = RTABL(JMUOG,1,JMUOSE)
+        PSCRMU = RTABL(JMUOG,1,JMUOET)
+        DSSPMU = RTABL(JMUOG,1,JMUODI)
+        PTSPMU = RTABL(JMUOG,1,JMUODE) + DSSPMU
+        PTXSMU = RTABL(JMUOG,1,JMUOXS)
+        SNSXMU(1) = RTABL(JMUOG,1,JMUOX1)
+        SNSXMU(2) = RTABL(JMUOG,1,JMUOX2)
+        SNSXMU(3) = RTABL(JMUOG,1,JMUOX3)
+        SNSXMU(4) = RTABL(JMUOG,1,JMUOX4)
+        PTYSMU = RTABL(JMUOG,1,JMUOYS)
+        SNSYMU(1) = RTABL(JMUOG,1,JMUOY1)
+        SNSYMU(2) = RTABL(JMUOG,1,JMUOY2)
+        SNSYMU(3) = RTABL(JMUOG,1,JMUOY3)
+        SNSYMU(4) = RTABL(JMUOG,1,JMUOY4)
+C
+C - set the matrix to find address of a module in
+C   geometric BOS bank by means of the slot#, the volume#
+C   and the 3rd level volume name
+C
+ 888  CONTINUE
+      CALL VZERO(MMADPR(1,1),48)
+        MMMNSL = ITABL(JMMAG,1,JMMANS)
+        DO 10   IADD=1,MMMNSL
+        ISLT = ITABL(JMMSG,IADD,JMMSVO)
+      IF( IADD .LE. NMMIN )THEN
+         ISET = 1
+      ELSE IF( IADD .LE. NMMA )THEN
+         ISET = 2
+      ELSE IF( IADD .LE. NMMBI )THEN
+         ISET = 3
+      ELSE
+         ISET = 4
+      ENDIF
+      MMADPR(ISLT,ISET) = IADD
+   10 CONTINUE
+C
+C       Initialize statistics for MUON
+C
+      NEVMUH = 0
+      NTMCLU = 0
+      NMXCLU = 0
+C
+      END

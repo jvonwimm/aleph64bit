@@ -1,0 +1,193 @@
+      SUBROUTINE GETLE2(ELEP,IFLAG)
+C----------------------------------------------------------------------
+C! Get the "instantaneous" exact LEP energy for LEP 2 runs
+CKEY ALEF LEP ENERGY
+C                                                  J.Boucrot  26.3.97
+C Modified: M.Cattaneo 23-NOV-1999 - Protect against incomplete RNF2 bank
+C Modified: J. Boucrot 05-APR-2000 - patch for some Z0 runs of year 2000 
+C Modified: J. Boucrot 07-Feb-2001 - mods for pathological miniramps
+C                                    of Year 2000 data 
+C Modified: J. Boucrot 09-Sep-2003 - bug fix for very rare cases 
+C                                    in 2000 pathological miniramps
+C Output arguments :
+C  ELEP  = LEP c.m.s. energy, in Gev
+C  IFLAG = 1 if ELEP found from official time-slice LEP information
+C        = 2 if ELEP found from average run energy
+C        = 3 in all other cases (then ELEP is taken from bank 'LFIL')
+C----------------------------------------------------------------------
+#ifndef DOC
+#include "bcs.h"
+#include "evehjj.h"
+#include "rlepjj.h"
+#include "rnr2jj.h"
+#include "rnl2jj.h"
+#include "rnf2jj.h"
+      PARAMETER ( M1 = 1000000 , M2 = 10000 , NR2KM = 52500 )
+      PARAMETER ( EMIN2 = 80. , EMAX2 = 250.)
+      LOGICAL TEST
+C NRMIN is the first LEP 2 run for which the above banks contain infos
+      DATA NRMIN / 41400 /
+C EMIN is the LEP energy under which there is no time slice information
+      DATA EMIN / 100. /
+C inline function:
+      TEST(IA,IB,IC) = IA.GE.IB.AND.IA.LT.IC
+#include "bmacro.h"
+C-----------------------------------------------------------------------
+      ELEP=0.
+      IFLAG=0
+      LDBAS=JUNIDB(0)
+C Get run and event number:
+      CALL ABRUEV(KRUN,KEVT)
+C Only LEP2 runs of 1996 and after are considered :
+      IF (KRUN.LT.NRMIN) GO TO 800
+C Get time and date of event:
+      JEVEH=IW(NAMIND('EVEH'))
+      IF (JEVEH.EQ.0) GO TO 800
+      KEVETI=IW(JEVEH+JEVETI)
+      KEVEDA=IW(JEVEH+JEVEDA)
+C Get year IYEAR and time ITIEV (HHMMSS) of the present event:
+      ITIEV=KEVETI/100
+      IYEAD=KEVEDA/10000
+      IF (IYEAD.GE.96) IYEAR=1900+IYEAD
+      IF (IYEAD.LT.10) IYEAR=2000+IYEAD
+      IDTEV=ITIEV+M1*MOD(KEVEDA,M2)
+C
+C - Get the bank of LEP2 run-averaged energies: 'RNR2', NR=IYEAR
+C
+      JRNR2=MDARD(IW,LDBAS,'RNR2',IYEAR) 
+      IF (JRNR2.EQ.0) GO TO 800
+C Find the run-averaged energy for the present run:
+      J=LOCTAB(IW(JRNR2+LMHLEN+1),LCOLS(JRNR2),LROWS(JRNR2),JRNRRN,KRUN)
+      IF (J.LE.0) GO TO 800
+      RELEP = RTABL(JRNR2,J,JRNREN)
+      K=0
+      IFILL=0
+      IF (RELEP.LT.EMIN) GO TO 700
+C
+C - Get the fill number for this event from the 'RLEP' run header bank:
+C
+      JRLEP=IW(NAMIND('RLEP'))
+      IF (JRLEP.EQ.0) GO TO 700
+      IFILL=ITABL(JRLEP,1,JRLELF)
+      IF (IFILL.LE.0) GO TO 700
+C
+C - Get the bank describing the fills : 'RNF2' , NR = IYEAR
+C
+      JRNF2=MDARD(IW,LDBAS,'RNF2',IYEAR)
+      IF (JRNF2.EQ.0) GO TO 700
+C Find fill IFILL in this bank:
+      K=LOCTAB(IW(JRNF2+LMHLEN+1),LCOLS(JRNF2),LROWS(JRNF2),
+     +         JRNFFN,IFILL)
+      IF (K.LE.0) GO TO 700
+C Find if the current event is within the time slice of the fill:
+      IDFDS=ITABL(JRNF2,K,JRNFDS)
+      ITFTS=ITABL(JRNF2,K,JRNFTS)
+      IDDST=ITFTS+M1*MOD(IDFDS,M2)
+      IDFDE=ITABL(JRNF2,K,JRNFDE)
+      ITFTE=ITABL(JRNF2,K,JRNFTE)
+      IDDEN=ITFTE+M1*MOD(IDFDE,M2)
+      IF (.NOT.TEST(IDTEV,IDDST,IDDEN))  GO TO 700
+C
+C - Get the bank of LEP2 time-sliced energies: 'RNL2' , NR = IYEAR
+C
+      JRNL2=MDARD(IW,LDBAS,'RNL2',IYEAR)
+      IF (JRNL2.EQ.0) GO TO 700
+C Loop on the time slices corresponding to fill IFILL:
+      IRLMI=ITABL(JRNF2,K,JRNFFS)
+      IRLMX=ITABL(JRNF2,K,JRNFLS)
+      DO 100 IRNL2=IRLMI,IRLMX-1
+         IDLST=ITABL(JRNL2,IRNL2,JRNLDA)
+         ITLST=ITABL(JRNL2,IRNL2,JRNLTI)
+         IDDST=ITLST+M1*MOD(IDLST,M2)
+         IDLEN=ITABL(JRNL2,IRNL2+1,JRNLDA)
+         ITLEN=ITABL(JRNL2,IRNL2+1,JRNLTI)
+         IDDEN=ITLEN+M1*MOD(IDLEN,M2)
+         IF (TEST(IDTEV,IDDST,IDDEN)) THEN
+C Get the "instantaneous" LEP energy for this event:
+            ELEP=RTABL(JRNL2,IRNL2,JRNLEN)
+C If this energy is meaningful, keep it:
+            IF (TEST(ELEP,EMIN2,EMAX2)) THEN
+               IFLAG=1
+               GO TO 999
+C If not, try to keep the last previous meaningful chunk value
+C  (Year 2000 only)
+            ELSE
+               IF (KRUN.LT.NR2KM.OR.IRNL2.EQ.IRLMI) GO TO 100 
+               EGOOD=-1. 
+               IDESC=IRNL2-1
+               DO 20 IK=IDESC,1,-1
+                  IF (IK.LT.IRLMI) GO TO 30
+                  IDLSK=ITABL(JRNL2,IK,JRNLDA)
+                  ITLSK=ITABL(JRNL2,IK,JRNLTI)
+                  IDDSK=ITLSK+M1*MOD(IDLSK,M2)
+                  IF (IDDSK.GT.IDTEV) GO TO 20 
+                  ENEW=RTABL(JRNL2,IK,JRNLEN)
+                  IF (TEST(ENEW,EMIN2,EMAX2)) THEN
+                     EGOOD=ENEW
+                     GO TO 30
+                  ENDIF 
+ 20            CONTINUE     
+ 30            CONTINUE
+               IF (TEST(EGOOD,EMIN2,EMAX2)) THEN
+                  ELEP=EGOOD
+                  IFLAG=1
+                  GO TO 999
+               ENDIF
+            ENDIF 
+         ENDIF
+ 100  CONTINUE
+C
+C No time-slice information found for this event:
+C take the run-averaged one:
+C
+ 700  IFLAG=2
+      ELEP=RELEP
+C 
+C unless (for year 2000 only) the event was taken just before
+C the first time chunk of the fill, or just after the last one 
+C
+      IF (KRUN.GT.NR2KM.AND.IFILL.GT.0.AND.K.GT.0) THEN
+         JRNL2=MDARD(IW,LDBAS,'RNL2',IYEAR)
+         IF (JRNL2.EQ.0) GO TO 750
+C try if event before LEP "start-of-fill" time:
+         IRLMI=ITABL(JRNF2,K,JRNFFS)
+         IDLST=ITABL(JRNL2,IRLMI,JRNLDA)
+         ITLST=ITABL(JRNL2,IRLMI,JRNLTI)
+         IDDST=ITLST+M1*MOD(IDLST,M2)
+         IF (IDTEV.LT.IDDST) THEN  
+            ELEP=RTABL(JRNL2,IRLMI,JRNLEN)
+            IFLAG=1
+            GO TO 999
+         ENDIF
+C try if event after LEP "end-of-fill" time:
+         IRLMX=ITABL(JRNF2,K,JRNFLS)
+         IDLEN=ITABL(JRNL2,IRLMX,JRNLDA)
+         ITLEN=ITABL(JRNL2,IRLMX,JRNLTI)
+         IDDEN=ITLEN+M1*MOD(IDLEN,M2)
+         IF (IDTEV.GT.IDDEN) THEN  
+            ELEP=RTABL(JRNL2,IRLMX,JRNLEN)
+            IFLAG=1
+            GO TO 999
+         ENDIF           
+      ENDIF
+ 750  CONTINUE
+C
+      GO TO 999
+C
+C Neither time-slice nor run-averaged information for this event:
+C take the fill-averaged one from bank 'LFIL':
+C Exception : runs of year 2000 where thr value must be taken from RLEP
+C
+ 800  IFLAG=3
+      ELEP=ALEFIL(KRUN,JLFIL,IRO)
+      IF (KRUN.GE.NR2KM) THEN
+         JRLEP=IW(NAMIND('RLEP'))
+         IF (JRLEP.LE.0) GO TO 999
+         ELEP=0.002*FLOAT(ITABL(JRLEP,1,JRLELE))
+         IF (KRUN.GE.53091.OR.KRUN.LE.53097) ELEP=91.25
+      ENDIF
+C
+ 999  continue
+      RETURN
+      END
+#endif

@@ -1,0 +1,69 @@
+#!/bin/csh
+#-----------------------------------------------------------------------
+# Script : notes 
+# Devel. : J. Closier
+# Date   : 25/01/95
+# Goals  : Put the ALEPH preprints on WWW
+# Usage  : preprints
+# Modify :
+#-----------------------------------------------------------------------
+set MACHINE="afal00"
+set LOCATION="/www3/aleph_general/reports"
+set DIR=""
+set FILENAME=""
+set ok="n"
+
+# Are you on the right machine ????
+set machine=`uname -n`
+if ($machine != $MACHINE) then
+  echo "you are not on the right machine to use this script ..."
+  echo "Don't forget to login first on $MACHINE"
+  exit 0
+endif 
+
+
+#  Enter the name of the directory 
+while ($ok == "n")
+  echo "What is the name of the Paper ?"
+  echo -n "(e.g.: 95-200-ppe_cp_violation) :"
+  set DIR=$<
+  if (-d $LOCATION/$DIR) then
+     echo "This directory already exist "
+     echo -n " Do you want to use it (y/n) ? "
+     set yesno=$<
+     if ($yesno == "y" || $yesno == "Y") set ok="y"
+  else
+     set ok="y"
+     mkdir $LOCATION/$DIR
+     chmod g+w $LOCATION/$DIR
+  endif
+  echo ""
+end
+
+#enter files
+#set echo
+setenv NORETRY yes
+set ok="y"
+set remotedir=""
+while ($ok == "y")
+  echo "In which directory can we find the file(s) [CR = $remotedir] ? :"
+  echo -n '(e.g. : al2$user2:[closier]) :'
+  set rep=$<
+  if ("$rep" != "") set remotedir="$rep"
+  echo ""
+  echo "What is the name of the file ? :"
+  echo -n '(e.g. : mytex.ps) :'
+  set rep=$<
+  set filename=`echo $rep | tr "[A-Z]" "[a-z]"`
+  echo ""
+  echo "Please wait.. transfer in progress "
+  sfetch $LOCATION/$DIR/$filename -t al1f05:"$remotedir$rep" -u closier
+  echo ""
+  echo -n "Is there some other file to transfer (y/n) ?"
+  set yesno=$<
+  if ($yesno == "n" || $yesno == "N") set ok="n"
+end
+ls $LOCATION/$DIR
+echo "$DIR has been created in $LOCATION" | /usr/bin/binmail webmaster@aloha
+exit 0
+

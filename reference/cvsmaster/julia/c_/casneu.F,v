@@ -1,0 +1,212 @@
+head	1.2;
+access;
+symbols
+	jul313_3:1.2
+	jul313_2:1.2
+	jul313_1:1.2
+	jul313:1.2
+	jul312_1:1.2
+	jul312:1.2
+	jul311:1.2
+	jul310_1:1.2
+	jul310:1.2
+	jul309_1:1.2
+	jul309:1.2
+	jul308_6:1.2
+	jul308_5:1.2
+	jul308_4:1.2
+	jul308_3:1.2
+	jul308_2:1.2
+	jul308_1:1.2
+	jul308:1.2
+	jul307_4:1.2
+	jul307_3:1.2
+	jul307_2:1.2
+	jul307_1:1.2
+	jul307:1.2
+	jul306_3:1.2
+	jul306_2:1.2
+	jul306_1:1.2
+	jul306:1.2
+	jul305_4:1.2
+	jul305_3:1.2
+	jul305_2:1.2
+	jul305_1:1.2
+	jul305:1.2
+	jul304_3:1.2
+	jul304_2:1.2
+	jul304_1:1.2
+	jul304:1.2
+	jul303_7:1.2
+	jul303_6:1.2
+	jul303_5:1.2
+	jul303_4:1.2
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2
+	jul280_1:1.2
+	jul280:1.2
+	jul279:1.1.1.1
+	v300:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.12.14.38.46;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.17.22;	author aljul;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.17.23;	author aljul;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import jul280 from historian
+Modified Files:
+	aamain.F aboldr.F ajmmcl.F almmcl.F altime.F aulpol.F
+ Modified Files:
+	bccrun.F bcpack.F binijo.F biniru.F bmsum.F bpreda.F bprsum.F
+	bslowc.F
+	cabook.F calrec.F calrel.F calrep.F calsup.F cashet.F casmp.F
+	casneu.F casnmp.F cclorl.F cctrmi.F ccutpe.F cdang.F cdths.F
+ 	cegclu.F cencch.F cencne.F cesclu.F cexcob.F cexhis.F cfpass.F
+ 	cfpmip.F cfpnmp.F cgrunc.F chclu.F chgclu.F chsclu.F cinijo.F
+ 	cinirl.F cinpar.F cinsrl.F cisgam.F cishit.F cludis.F cmoni.F
+ 	cnighb.F coslst.F cpadwr.F cparad.F cpotcr.F cpoteh.F cpotlc.F
+ 	cptcom.F crcalo.F crchrl.F crcjob.F crcpar.F crhclu.F cthclu.F
+ 	ctkchg.F ctrmip.F ctrpar.F ctrtoc.F cvrify.F
+@
+text
+@      SUBROUTINE CASNEU
+C***********************************************************************
+C!assoc. neutral ec and                                                *
+C!                                                                     *
+C!  AUTHOR   : A. BONISSENT  880315                                    *
+C!                                                                     *
+C!                                                                     *
+C!  BANKS :                                                            *
+C!    INPUT   : ECOB,HCLU                                              *
+C!    OUTPUT  : NONE                                                   *
+C!    CREATED : NONE                                                   *
+C!                                                                     *
+C!                                                                     *
+C?
+C!======================================================================
+#ifndef DOC
+#include "bcs.h"
+#include "ecnamc.h"
+#include "hclujj.h"
+#include "ecobjj.h"
+#include "ehypjj.h"
+      DIMENSION V1(4)
+#include "bmacro.h"
+      KECOB=IW(NAECOB)
+      KHCLU=NLINK('HCLU',0)
+      NHCLU=LROWS(KHCLU)
+      KEHYP = NLINK('EHYP',0)
+C
+C?  Loop on Ecobs
+C
+      NECOB=LROWS(KECOB)
+      DO 10 IEC=1,NECOB
+C
+C   See if ecob is neutral
+C
+      IF(ITABL(KECOB,IEC,JECOET).NE.0)GO TO 10
+C
+C   See if ecob is gamma
+C
+      CALL CISGAM(IEC,IFGAM)
+      IF(IFGAM.NE.0)GO TO 10
+C
+C?  Fill momentum of assumed incident track
+C
+      SUM=0.
+      IHYP = ITABL(KECOB,IEC,JECOEH)
+      THYP = RTABL(KEHYP,IHYP,JEHYTH)
+      PHYP = RTABL(KEHYP,IHYP,JEHYPH)
+      V1(1) = SIN(THYP)*COS(PHYP)
+      V1(2) = SIN(THYP)*SIN(PHYP)
+      V1(3) = COS(THYP)
+      V1(4)=1.
+C
+C?  Loop on Hcal clusters
+C
+      DO 110 IHCLU=1,NHCLU
+C
+C
+C?  Make distance between ecob and hclu
+C
+         CALL CLUDIS(V1,IEC,IHCLU,DIST)
+         IF(DIST.GE.0.)THEN
+C
+C?   get energy of hcal cluster
+C
+            EHCLU=RTABL(KHCLU,IHCLU,JHCLEC)
+            PT=EHCLU*SIN(DIST)
+            CALL CCUTPE(DIST,PT,EHCLU,IASSO)
+            ITR=0
+            IF (IASSO.EQ.1) CALL CINSRL(ITR,IHCLU,PT,IEC)
+         ENDIF
+  110    CONTINUE
+   10 CONTINUE
+      RETURN
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK casneu
+@
+
+
+1.1.1.1
+log
+@import julia 300
+@
+text
+@@

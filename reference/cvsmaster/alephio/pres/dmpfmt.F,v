@@ -1,0 +1,152 @@
+head	1.2;
+access;
+symbols
+	alio83:1.2
+	alio82:1.2
+	alio81:1.2
+	alio80:1.2
+	alio74:1.2
+	alio73:1.2
+	alio72:1.2
+	alio71:1.2
+	alio70:1.2
+	alio68:1.2
+	alio69:1.2
+	alio67:1.2
+	alio66:1.2
+	alio65:1.2
+	alio64:1.2
+	alio63:1.2
+	alio62:1.2
+	alio61:1.2
+	alio60:1.2
+	alephio53:1.2
+	v4:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.01.18.13.52.50;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.52.44;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.52.45;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@ Modified Files:
+	acdarg.F afilin.F afilou.F ainqui.F amount.F aoptap.F astage.F
+	awrtap.F
+ Modified Files:
+	cmphost.h ctolow.h gtchdecl.h version.h
+ Removed Files:
+	albitw.h
+ Modified Files:
+ 	altell.F babend.F jalrec.F noibm.F opensq.F sdrsx.F sibsdr.F
+	sxsdr.F
+ Modified Files:
+	ardnews.h news.h
+ Modified Files:
+	cfrvax.F cmpban.F cmpdro.F cmpin2.F cmpini.F cmplis.F cmpsum.F
+	cmptoi.F cotest.F detest.F dmpban.F dmpchr.F dmpfmt.F udmper.F
+@
+text
+@      SUBROUTINE DMPFMT (NCOL,AFI,FMT)
+C ---------------------------------------------------------
+C - M.Rumpf - 880400          F.Ranjard - 900323
+CKEY PRESS FORMAT / USER
+C! build a BOS bank format
+C
+C - Input    : NCOL    / I   = number of columns
+C              AFI     / A   = character string : one letter (A,F,I)
+C                              per column
+C
+C - Output   : FMT     / A   = BOS format
+C
+C ------------------------------------------------------------
+#ifndef DOC
+      SAVE
+      CHARACTER*(*) AFI,FMT
+      CHARACTER*512 STRING
+      CHARACTER BLANK,CHOLD,CHS
+      CHARACTER*3 HEAD
+      CHARACTER*4 IPROV,IWFMT
+      DATA HEAD /'2I,'/
+      DATA BLANK /' '/
+C -------------------------------------------------------------
+C
+      IF (INDEX(AFI,'F').EQ.0 .AND. INDEX(AFI,'A').EQ.0) THEN
+         FMT = 'I'
+         RETURN
+      ENDIF
+C
+      CHOLD = BLANK
+      FMT = BLANK
+      N = 1
+      NSAME = 1
+      STRING = AFI
+      STRING(NCOL+1:NCOL+1) = BLANK
+      DO 10 I=1,NCOL+1
+         IF (NSAME.GT.9999) GOTO 996
+         IF (STRING(I:I).NE.CHOLD) THEN
+            IF (NSAME.GT.1) THEN
+               NN=1
+               IF (NSAME.GT.9) NN=2
+               IF (NSAME.GT.99) NN=3
+               IF (NSAME.GT.999) NN=4
+               WRITE (CHS,'(I1)') NN
+               IWFMT = '(I'//CHS//')'
+               WRITE(IPROV,IWFMT) NSAME
+               FMT = FMT(:N-2)//','//IPROV(:NN)//CHOLD
+               N=N+NN
+               NSAME=1
+            ENDIF
+            FMT = FMT(:N)//','//STRING(I:I)
+            N = N+2
+         ELSE
+            NSAME = NSAME+1
+         ENDIF
+         CHOLD = STRING(I:I)
+ 10   CONTINUE
+C
+      STRING = FMT(3:N-2)
+      FMT = HEAD//'('//STRING(1:N-4)//')'
+C
+ 996  CONTINUE
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK dmpfmt
+@
+
+
+1.1.1.1
+log
+@import alephio 4
+@
+text
+@@

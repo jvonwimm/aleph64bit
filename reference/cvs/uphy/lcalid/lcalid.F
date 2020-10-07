@@ -1,0 +1,459 @@
+      SUBROUTINE LCALID(ICLU,ITYP,IFLAG)
+C----------------------------------------------------------------------
+C!  - Returns identification of Lcal cluster
+C!
+C!    Author   :- P.H. Hansen          25-Aug-1999
+C!
+C!    Input:      - iclu = cluster number in bank
+C!                  ityp = 1 bank is PECO,
+C!                         2 bank is LUPA
+C!                        10 bank is PECO - Debug print
+C!                        11 bank is LUPA - Debug print
+C!    Output:
+C!                - iflag quality flag 0 = OK,
+C!                                     1= shower starts in Sical
+C!                                     2= leakage through back
+C!                                     3= leakage through cracks
+C!                                     4= shower near dowels
+C!                                     5= MIP punch through
+C!                                     6= electronic noise
+C!                                     7= off mom. beam particle
+C!                                     8= spark
+C!                                    -1= not a lcal cluster
+C!                                    -2= not enough info
+C?     Usage:
+C?     This routine can be called from ALPHA when reading MINI or
+C?     POT. It is applicable to all LEPII data.
+C?
+C?     In loops over Energyflow objects, itk, the input variable
+C?     iclu can be obtained from iclu=KEFOLE(itk).
+C?
+C?     iflag = 0  means that none of the conditions below are present
+C?
+C?             1  means that the particle has scraped sical
+C?                material and started a shower here. Typically 30%
+C?                of the energy escapes detection.
+C?
+C?             2  means most of the energy is in the last compartment.
+C?                The Eflow algorithm weighs this compartment
+C?                by 1.5, correcting hereby for longitudinal leakage.
+C?
+C?             3  means there are signals in the Lcrack scintillators
+C?                near this cluster. Typically 40% of the energy is
+C?                lost. Also for clusters near the cracks, the Eflow
+C?                algorithm partly corrects for the lost energy.
+C?
+C?             4  means the cluster is located near a dowel. Typically
+C?                30% of the energy is lost.
+C?
+C?             5  means that the cluster has low energy with an evenly
+C?                distributed longitudinal profile. The corresponding
+C?                particle may or may not be caught by Hcal.
+C?
+C?             6  means that one of the compartments contains more than
+C?                twice as much pad energy as wire energy, and
+C?                that the difference exceeds 300 MeV. For E>1.5 GeV
+C?                the flag is also set if all the pad energy is in
+C?                a particular compartment and the difference exceeds
+C?                300 MeV.
+C?                (Note, that the Eflow algorithm filters and corrects
+C?                 for noise. However, for clusters below 2 GeV, it is
+C?                 better to use the PECO clusters with this filter).
+C?
+C?             7  Off momentum beam particles are concentrated in a small
+C?                volume of 3-momentum space. Furthermore, for E>54 GeV,
+C?                information is avalable on the direction of the cluster.
+C?                If it points away from z=0 by one sigma, the flag
+C?                is set. At lower energies this is replaced by a cut in
+C?                azimuthal angles around the peaks observed in the single
+C?                arm triggers.
+C?                Note that such particles are very rare indeed.
+C?                If the overall event has kinematics compatible with 
+C?                gamma-gamma or Z return, there are infinitely many
+C?                more electrons and photons from the interaction than
+C?                there are off-momentum beam particles piling up,
+C?                and this flag should not be taken seriously.
+C?                 
+C?             8  Sparks are characterised by a long vertical column
+C?                of pads lightning up and one wire plane saturating.
+C?
+C?     Executive summary:
+C?     Clusters with iflag >= 7 can be dismissed - BUT if the general
+C?     event kinematics is consistent with gamma-gamma or Z return,
+C?     then iflag=7 will certainly be wrong. Beam particles in Lcal
+C?     are exceedingly rare.
+C?     Clusters with 1 <= iflag <= 6 should be dismissed only if
+C?     a precise energy measurement of this particular cluster
+C?     is important.
+C?     In case of iflag=2, 3 and 6, a correction is already applied
+C?     in the energyflow, but iflag=6 is a more efficient noise
+C?     filter than the one applied in the energyflow.
+C?     For iflag=1, 2 and 4 some of the lost energy may in fact be
+C?     picked up by Sical or Hcal.
+C?
+C!======================================================================
+#ifndef DOC
+      IMPLICIT NONE
+      save
+#include "qdecl.h"
+#include "qcde.h"
+#include "lupajj.h"
+#include "plpdjj.h"
+      logical first,fdebu
+      integer NAMIND, NALCRA
+      integer iflag, ityp, itp, iclu, kpeco, npec, kplpd, nplp
+      integer klcra, klupa, modu, mod1, iaddr, ipl, i, modsc, icl
+      real the, tha, thb, phi, ph1, ene, ec, e, ewmx, ewt, en1
+      real ecr1, ecr2, phideg, th1, st1,st2,st3, ra, rd, xd, yd
+      real es(3),ew(3),st(3)
+      real Unitew, ThetLo, ThetHi, ESpark, RSpark, Xbmin , Tbmax
+      real Pbmin1, Pbmax1, Pbmin2, Pbmax2, Fnoise, Rnoise, Dnoise
+      real EmiMip, EmaMip, EstMip, R1LMip, R1HMip, R2LMip, R2HMip
+      real R3LMip, R3HMip, TmSica, R1Sica, CraCut, TmiDow, DphDow
+      real EmiLup, EmiSto, Xbmax, Rdmax
+      PARAMETER ( Unitew = 0.001 )
+      PARAMETER ( Thetlo = 0.043, ThetHi = 0.180 )
+      PARAMETER ( ESpark = 7.   , RSpark = 0.8   )
+      PARAMETER ( Xbmin  = 0.30 , Xbmax  = 0.75 , Tbmax  = 0.067)
+      PARAMETER ( Pbmin1 = 120. , Pbmax1 = 165.  )
+      PARAMETER ( Pbmin2 = 195. , Pbmax2 = 260.  )
+      PARAMETER ( Fnoise = .3   , Rnoise = 2.   , Dnoise = 0.3)
+      PARAMETER ( EmiMip = 0.1  , EmaMip = 2.5  , EstMip =0.08)
+      PARAMETER ( R1LMip = 0.1  , R1HMip = 0.3   )
+      PARAMETER ( R2LMip = 0.3  , R2HMip = 0.6   )
+      PARAMETER ( R3LMip = 0.3  , R3HMip = 0.6   )
+      PARAMETER ( TmSica = 0.062, R1Sica = 0.4   )
+      PARAMETER ( CraCut = 100. , TmiDow = 0.135 , DphDow=12.0)
+      PARAMETER ( EmiLup = 1.   , EmiSto = 1.5   , Rdmax = -.120)
+      data first / .true./
+#include "qmacro.h"
+C----------------------------------------------------------------------
+      if ( first) then
+         NAPLPD = NAMIND('PLPD')
+         NAPECO = NAMIND('PECO')
+         NALUPA = NAMIND('LUPA')
+         NALCRA = NAMIND('LCRA')
+         first = .false.
+      endif
+C
+      iflag=0
+      fdebu=.false.
+      itp = ityp
+      if(ityp.gt.10) then
+        fdebu=.true.
+        itp = ityp-10
+      endif
+      en1=0.
+      if (itp.eq.1) then
+C
+C PECO bank requested
+        kpeco = iw(NAPECO)
+        kplpd = iw(NAPLPD)
+C
+C Any information?
+        if (kpeco.le.0)                              goto 101
+        npec  = lrows(kpeco)
+C
+C Is iclu an Lcal cluster?
+        if (iclu.gt.npec.or.iclu.le.0)               goto 102
+        the = rtabl(kpeco,iclu,jpecth)
+        tha = min(the,QQPI-the)
+        if(tha.lt.ThetLo.or.tha.gt.ThetHi)           goto 102
+C
+C Gather information on cluster iclu
+        phi = rtabl(kpeco,iclu,jpecph)
+        ene = rtabl(kpeco,iclu,jpecec)
+        st(1) = rtabl(kpeco,iclu,jpece1)
+        st(2) = rtabl(kpeco,iclu,jpece2)
+        st(3) = 1.-st(1)-st(2)
+        modu=1
+        if(cos(the).gt.0) modu=3
+        if(cos(phi).gt.0.) modu=modu+1
+C
+C sum up the storey energy in each storey
+        es(1)=0.
+        es(2)=0.
+        es(3)=0.
+        do 30 i=npec,1,-1
+          th1 = rtabl(kpeco,i,jpecth)
+          if(abs(th1-the).gt.QQPI/2.) goto 30
+          ph1 = rtabl(kpeco,i,jpecph)
+          if(cos(ph1)*cos(phi).lt.0.) goto 30
+          thb = min(th1,QQPI-th1)
+          if(thb.lt.ThetLo) goto 30
+          if(thb.gt.ThetHi) goto 31
+          ec=rtabl(kpeco,i,jpecec)
+          st1=rtabl(kpeco,i,jpece1)
+          st2=rtabl(kpeco,i,jpece2)
+          st3=1.-st1-st2
+          if(st1.lt.0.99) es(1)=es(1)+st1*ec
+          if(st2.lt.0.99) es(2)=es(2)+st2*ec
+          if(st3.lt.0.99) es(3)=es(3)+st3*ec
+   30   continue
+   31   continue
+C
+C sum up the wire energy in each storey
+        ewt=0.
+        if (kplpd.le.0) then
+          call ucopy(es,ew,3)
+          ewmx=0.
+          goto 41
+        else
+          call vzero(ew,3)
+          ewmx=0.
+        endif
+        nplp = lrows(kplpd)
+        do 40 i=1,nplp
+          iaddr = itabl(kplpd,i,jplpad)
+          mod1 = iaddr/64 + 1
+          if(mod1.ne.modu) goto 40
+          ipl = iaddr - 64*(modu-1)
+          if(ipl.eq.39) goto 40
+          e = float(itabl(kplpd,i,jplpen))*unitew
+          if(e.gt.ewmx) ewmx=e
+          if(ipl.le.9) then
+            ew(1)=ew(1)+e
+          elseif(ipl.le.29) then
+            ew(2)=ew(2)+e
+          else
+            ew(3)=ew(3)+e
+          endif
+   40   continue
+        ewt=ew(1)+ew(2)+ew(3)
+   41   continue
+      elseif (itp.eq.2) then
+C
+C LUPA bank requested
+C
+C Any info?
+        if (iw(NALUPA).le.0)                          goto 101
+        klupa = iw(NALUPA)
+C
+C bad iclu?
+        if(iclu.le.0.or.iclu.ge.3)                    goto 102
+C
+C Collect LUPA information
+        if(iclu.eq.1) then
+          ene = rtabl(klupa,1,jlupec)
+          en1 = rtabl(klupa,1,jlupec+1)
+        else
+          ene = rtabl(klupa,1,jlupec+1)
+          en1 = rtabl(klupa,1,jlupec)
+        endif
+        if(ene.lt.EmiLup)                             goto 102
+        the = rtabl(klupa,1,jluptc+iclu-1)/1000.
+        if (the.lt.0.) the = the+QQPI
+        tha = min(the,QQPI-the)
+        phi = rtabl(klupa,1,jluppc+iclu-1)*QQPI/180.
+        if (phi.lt.0.) phi = phi + 2.*QQPI
+        modu=1
+        if(cos(the).gt.0) modu=3
+        if(cos(phi).gt.0.) modu=modu+1
+        ewt = rtabl(klupa,1,jlupew+iclu-1)
+        ewmx=0.
+        st(1) = rtabl(klupa,1,jlupe1+iclu-1)
+        st(2) = rtabl(klupa,1,jlupe2+iclu-1)
+        st(3) = 1.-st(1)-st(2)
+        do i=1,3
+          es(i)=ene*st(i)
+          ew(i)=ewt*st(i)
+        enddo
+        ewt = max(ewt,EmiMip)
+      endif
+C
+      phideg = phi*180./QQPI
+C
+C Is this cluster a spark?
+      if ( (itp.eq.1 .and. ewmx.gt.ESpark .and.
+     &      ewt.gt.ESpark .and. ewmx/ewt.gt.RSpark) .or.
+     &      ene*st(1) .gt. QELEP .or.
+     &      ene*st(2) .gt. QELEP .or.
+     &      ene*st(3) .gt. QELEP) then
+        iflag = 8
+CDEBUG
+        if(fdebu) then
+          write(6,'(/,2x,a,i6,a,i4,a)')
+     &      '*** LCALID:   Cluster',iclu,
+     &      '  in module',modu,'  is a spark'
+          write(6,'(2x,a,2f6.1,a,3e11.3)') 'Ew_tot and Ew_max:',
+     &     ewt,ewmx,'  Storey energies:',es
+        endif
+CDEBUG
+        goto 999
+      endif
+C
+C Is this cluster a beam particle?
+      if( 2.*ene/QELEP.gt.Xbmin .and. 2.*ene/QELEP.lt.Xbmax .and.
+     &    tha.lt.Tbmax .and. 2.*en1/QELEP.lt.Xbmin) then
+C
+C Check if there is a LUPA entry
+        if(klupa.ne.0) then
+          icl=0
+          if(abs(rtabl(klupa,1,jlupec)-ene).lt.0.5) icl=1
+          if(abs(rtabl(klupa,1,jlupec+1)-ene).lt.0.5) icl=2
+          if(icl.ne.0) then
+            xd=rtabl(klupa,1,36+icl-1)      
+            yd=rtabl(klupa,1,38+icl-1)
+            ra=max(tan(tha)*270.,10.)
+            rd=(xd*cos(phi)+yd*sin(phi))/ra
+            if(rd.gt.Rdmax) iflag = 7
+          endif
+        elseif
+     &    (  (phideg.gt.Pbmin1.and.phideg.lt.Pbmax1) .or.
+     &      (phideg.gt.Pbmin2.and.phideg.lt.Pbmax2) )  then
+          iflag = 7
+        endif
+CDEBUG
+        if(fdebu) then
+          write(6,'(/,2x,a,i6,a,i4,a)')
+     &      '*** LCALID:   Cluster',iclu,
+     &      '  in module',modu,' is a beam particle'
+          write(6,'(2x,a,f6.1,f6.3,f6.1,f7.3)')
+     &     'Energy Theta Phi Rd:',
+     &     ene,tha,phideg,rd
+        endif
+CDEBUG
+        goto 999
+      endif
+C
+C Is this cluster due to noise or is there some noise superimposed?
+      do i=1,3
+        if(itp.eq.1 .and. st(i).gt.Fnoise .and. st(i).lt.0.99 .and.
+     &     es(i).gt.Rnoise*ew(i) .and. es(i)-ew(i).gt.Dnoise) then
+           iflag = 6
+CDEBUG
+           if(fdebu) then
+             write(6,'(/,2x,a,i6,a,i4,a,i3)')
+     &         '*** LCALID:   Cluster',iclu,' in module',modu,
+     &         ' has noise in storey',i
+             write(6,'(2x,a,3f5.1,4x,3f5.1)') 'E_stor and E_wir:',
+     &       es(i),ew(i)
+           endif
+CDEBUG
+           goto 999
+        endif
+        if(itp.eq.1 .and. st(i)*ene.gt.EmiSto .and.
+     &     st(i).gt.0.99 .and. st(i)*ene-ew(i).gt.Dnoise) then
+           iflag = 6
+CDEBUG
+           if(fdebu) then
+             write(6,'(/,2x,a,i6,a,i4,a,i3)')
+     &         '*** LCALID:   Cluster',iclu,'  in module',modu,
+     &         ' has noise in storey',i
+             write(6,'(2x,a,f7.2,4x,3f5.2)')
+     &       'energy and storey fractions:',
+     &        ene,st
+           endif
+CDEBUG
+           goto 999
+        endif
+      enddo
+C
+C Is this cluster a MIP punching through?
+      if(itp.eq.1 .and. ewt.gt.EmiMip .and. ewt.lt.EmaMip  .and.
+     &   ew(1).gt.0.04 .and. ew(2).gt.0.08 .and. ew(3).gt.0.08) then
+        if(ew(3)/ewt.gt.R3LMip .and. ew(3)/ewt.lt.R3HMip .and.
+     &     ew(2)/ewt.gt.R2LMip .and. ew(2)/ewt.lt.R2HMip .and.
+     &     ew(1)/ewt.gt.R1LMip .and. ew(1)/ewt.lt.R1HMip) then
+           iflag = 5
+CDEBUG
+           if(fdebu) then
+             write(6,'(/,2x,a,i6,a,i4,a)')
+     &         '*** LCALID:   Cluster',iclu,'  in module',modu,
+     &         ' is a penetrating MIP'
+             write(6,'(2x,a,4f6.2)') 'E_wir:',
+     &         ew,ewt
+           endif
+CDEBUG
+           goto 999
+        endif
+      endif
+C
+C Are there signs of energy escaping detection?
+C a) Sical was scraped and a shower started
+      if(tha.lt.TmSica.and.st(1).gt.R1Sica) then
+        iflag = 1
+CDEBUG
+        if(fdebu) then
+          write(6,'(/,2x,a,i6,a,i4,a)')
+     &      '*** LCALID:   Cluster',iclu,'  in module',modu,
+     &      ' has scraped Sical'
+          write(6,'(2x,a,f6.1,f6.3,a,3f5.2)') 'Energy and Theta:',
+     &       ene,tha,' Storey fractions:',st
+        endif
+CDEBUG
+        goto 999
+      endif
+C
+C b) Most of the energy in storey 3
+      if(st(3).gt.0.5.and.st(3).lt.0.99) then
+        iflag = 2
+CDEBUG
+        if(fdebu) then
+          write(6,'(/,2x,a,i6,a,i4,a)')
+     &      '*** LCALID:   Cluster',iclu,'  in module',modu,
+     &      ' has leakage through back'
+          write(6,'(2x,a,f6.2,f6.3,a,3f5.2)') 'Energy and Theta:',
+     &       ene,tha,' Storey fractions:',st
+        endif
+CDEBUG
+        goto 999
+      endif
+C
+C c) Signal in vertical crack detector closest to cluster
+      klcra = iw(NALCRA)
+      if (klcra.gt.0) then
+        if(modu.le.2) then
+          if(sin(phi).gt.0.) then
+            modsc = 1
+          else
+            modsc = 2
+          endif
+        else
+          if(sin(phi).gt.0.) then
+            modsc = 4
+          else
+            modsc = 3
+          endif
+        endif
+        ecr1 = float(itabl(klcra,modsc,1))
+        ecr2 = float(itabl(klcra,modsc,2))
+        if(max(ecr1,ecr2).gt.CraCut) then
+          iflag = 3
+CDEBUG
+          if(fdebu) then
+            write(6,'(/,2x,a,i6,a,i4,a,i3)')
+     &       '*** LCALID:   Cluster',iclu,'  in module',modu,
+     &       ' passed through crack',modsc
+            write(6,'(2x,a,2f6.3,a,2f8.1)') 'phi and Theta:',
+     &         phi,tha,'  Scintillators:',ecr1,ecr2
+          endif
+CDEBUG
+          goto 999
+        endif
+      endif
+C
+C c) cluster near dowels
+      if (tha.gt.TmiDow .and.
+     &   ( (phideg.gt.90.-DphDow .and. phideg.lt.90.+DphDow) .or.
+     &     (phideg.gt.270.-DphDow .and. phideg.lt.270.+DphDow) ) ) then
+       iflag = 4
+CDEBUG
+        if(fdebu) then
+          write(6,'(/,2x,a,i6,a,i4,a)')
+     &      '*** LCALID:   Cluster',iclu,' in module',modu,
+     &      ' passes near dowel'
+          write(6,'(2x,a,2f8.1,f6.3)') 'Ene, Phi and Theta:',
+     &       ene,phideg,tha
+        endif
+CDEBUG
+       goto 999
+      endif
+C
+ 999  return
+ 101  iflag = -1
+      return
+ 102  iflag = -2
+      return
+      END
+#endif

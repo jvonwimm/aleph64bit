@@ -1,0 +1,66 @@
+head	1.1;
+branch	1.1.1;
+access;
+symbols
+	dbase22:1.1.1.1
+	dbase21:1.1.1.1
+	dbase20:1.1.1.1
+	dbase19:1.1.1.1
+	dbase18:1.1.1.1
+	dbase17:1.1.1.1
+	dbase04:1.1.1.1
+	dbase03:1.1.1.1
+	dbase02:1.1.1.1
+	dbase01:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	97.02.12.10.05.57;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.02.12.10.05.57;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@      CLOSE(LUN)
+C - KRECL is the block length in bytes
+      KRECL = KBYTREC ('DAF','DISK')
+C - LWRDS is the block length in words
+      LWRDS = KRECL/NBYTW
+C - MRECL is the block length in the unit required by the machine
+#if defined(ALEPH_DEC) || defined(ALEPH_SGI)
+      MRECL = LWRDS
+#else
+      MRECL = KRECL
+#endif
+      OPEN(LUN,STATUS='OLD',NAME=TFIL,ACCESS='DIRECT',
+     +     RECL=MRECL,IOSTAT=IST,ERR=98)
+      
+
+
+@
+
+
+1.1.1.1
+log
+@1st release of dbase library
+@
+text
+@@

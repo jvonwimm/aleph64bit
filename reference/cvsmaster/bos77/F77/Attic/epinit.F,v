@@ -1,0 +1,142 @@
+head	1.4;
+access;
+symbols
+	bos3489-1:1.3.0.2
+	bos3489:1.3
+	bos3389:1.3
+	bos3289:1.3
+	bos3189:1.3
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.4
+date	97.01.29.15.49.08;	author flr;	state dead;
+branches;
+next	1.3;
+
+1.3
+date	96.05.03.14.55.06;	author flr;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.03.11.12.52.58;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.43;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.44;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.4
+log
+@release bos3589: new epio routines
+@
+text
+@#if defined(ALEPH_DEC) &&  ! defined(UNIX)
+      SUBROUTINE EPINIT
+C ------------------------------------------------------------
+C epio 1.68 version from cernlib 92b
+C -------------------------------------------------------------
+C. INITIALIZES EP FORMAT READ AND WRITE PACKAGE
+      COMMON/EPCOMM/NMUNIT,NWUNIT,NCONT,ISTART,LASTUT,LREF,LIST(350)
+      EQUIVALENCE (NOUTUT,LIST(8))
+      COMMON/EPVAXN/EPVXUN(10)
+      CHARACTER*255 EPVXUN
+C--- NO. OF BITS / MACHINE WORD , LOGICAL OUTPUT UNIT (PRINTER DEF)
+      DATA NBIT/32/,NOUT/6/
+C ++++++++++++++++++ FLR additions to RETURN after the 1st call +++++
+      SAVE IFI
+      DATA IFI /0/
+      IF (IFI.EQ.1) RETURN
+      IFI = 1
+C +++++++++++++++++ end of FLR additions ++++++++++++++++++++++++++++++
+C--- Monitor package usage.
+      CALL UMLOG('EPIO','*')
+C--- MAX. NO. OF UNITS SUPPORTED SIMULTANEOUSLY
+      NMUNIT=10
+C--- NO. OF CONTROL WORDS / UNIT
+      NWUNIT=33
+C--- NO. OF OVERALL CONTROL WORDS
+      NCONT=8
+C--- ZERO LAST USER UNIT AND LAST INTERNAL UNIT
+      LASTUT=0
+      LREF=0
+C--- SET DEFAULTS FOR OVERALL CONTROL WORDS
+      LIST(1)=0
+      LIST(2)=100
+      LIST(3)=0
+      LIST(4)=NBIT
+      LIST(5)=180
+      LIST(6)=12
+      LIST(7)=9
+      LIST(8)=NOUT
+*
+*---- BLANK DEFAULT FILE NAMES
+*
+      DO 10  I=1,NMUNIT
+  10  EPVXUN(I)=' '
+      RETURN
+      END
+#endif
+@
+
+
+1.3
+log
+@replace ${VENDOR} by ALEPH_${VENDOR}
+Modified Files:
+  F77/ 	blo32w.F cfribm.F ctoibm.F epblin.F epdacr.F epdefu.F ephead.F
+ 	epinit.F epopen.F
+@
+text
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@d1 1
+a1 1
+#if defined(DEC) &&  ! defined(UNIX)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK epinit
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

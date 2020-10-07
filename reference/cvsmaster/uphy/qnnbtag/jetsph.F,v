@@ -1,0 +1,161 @@
+head     1.1;
+branch   1.1.1;
+access   ;
+symbols  uphy1-0:1.1.1.1 flr:1.1.1;
+locks    ; strict;
+comment  @c @;
+
+
+1.1
+date     96.08.16.13.38.22;  author flr;  state Exp;
+branches 1.1.1.1;
+next     ;
+
+1.1.1.1
+date     96.08.16.13.38.23;  author flr;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@C-----------------------------------------------------------------------
+      SUBROUTINE JETSPH( ICLASS, BETA1, BETA2,
+     &                    SJ1, SJ2, SPRODJ, ERR       )
+C-----------------------------------------------------------------------
+C!  -
+C!
+C!   Author   :- Chris Bowdery                     3-SEP-1990
+C!
+C!   Mod (CKB):  Calls JTBSXS now                 24-JAN-1991
+C!   Mod (CKB):  Calls GCOLST collect statistics  25-JAN-1991
+C!
+C!   Inputs:     ICLASS = KRECO or KMONTE (see ALPHA manual)
+C!        -      YCUT   = Jet algorithm Y-CUT
+C!               BETA1  = beta for boost for highest energy jet
+C!               BETA2  = beta for boost for 2nd highest energy jet
+C!
+C!   Outputs:    SJ1    = boosted sphericity for highest energy jet
+C!               SJ2    = boosted sphericity for 2nd highest energy jet
+C!               SPRODJ = product of SJ1 and SJ2
+C!               ERR    = .TRUE. if error occurred, .FALSE. otherwise
+C!        -
+C!
+C!   Libraries required: ALPHA
+C!
+C!   Description
+C!   ===========
+C!
+C!   Performs a jet search using the JADE algorithm with given YCUT.
+C!   Selects the two highest energy jets, boosts each along the jet axis
+C!   by the given BETA1 and BETA2 and computes the sphericity of each je
+C!   SPRODJ is the product of the boosted jet sphericities.
+C!
+C!   Needs a CALL QJOPTR( .. ) to select input option before this routin
+C?
+C!======================================================================
+#include "qcde.h"
+      CHARACTER  CNAM1*13
+      PARAMETER  (CNAM1   = 'FOUNDJETS')
+#include "comnnt.h"
+      LOGICAL    ERR
+
+      INTEGER    NJETS, ICLASS, J1, J2
+      REAL       E1, E2, BETA1, BETA2
+      REAL       SJ1, SJ2, SPRODJ
+
+
+C                             Ask for EVIS calculation if EVIS=0.0
+C----------------------------------------------------------------------
+C                             ALPHA includes (IBM form)
+
+#include "qmacro.h"
+C - - - - - - - - - -   C O D E  - - - - - - - - - - - - - - - - - - - -
+
+      CALL GCOLST( 1, 'JETSPH_I', 0.0 )
+
+C                            Find the jets with MMCL algorithm (JADE)
+C
+C
+       NN = 0
+       DO 60 I = IG , ID
+       IF (XLOCK(I)) GOTO 60
+       NN = NN + 1
+ 60    CONTINUE
+cja   CALL QJMMCL( NJETS, CNAM1, ICLASS, YCUT, EVIS )
+      CALL QGJMMC (NJETS, CNAM1, ICLASS, YCUT, EVIS,SCHEME,VERSN)
+      E1 = 0.0
+      E2 = 0.0
+      J1 = 0
+      J2 = 0
+
+C                            Extract particles associated with each jet
+
+      IF( NJETS .GT. 0 ) THEN
+
+        DO  210  J = 1, NJETS
+
+C                            Get the ALPHA number for the jet
+
+          IF( J .EQ. 1 ) THEN
+            JJ = KPDIR( CNAM1, ICLASS )
+          ELSE
+            JJ = KFOLLO( JJ )
+          ENDIF
+
+C                            Is this the highest energy jet?
+C                            Or the second highest?
+C                            J1 = jet number of highest energy (E1) jet
+C                            Similarly for J2 and E2.
+
+          IF( QE(JJ) .GT. E1 ) THEN
+            E2 = E1
+            J2 = J1
+            E1 = QE(JJ)
+            J1 = J
+          ELSEIF( QE(JJ) .GT. E2 ) THEN
+            E2 = QE(JJ)
+            J2 = J
+          ENDIF
+
+
+*          WRITE(6,*) 'Jet no. = ', J
+*          WRITE(6,*) QX(JJ), QY(JJ), QZ(JJ), QE(JJ)
+*          WRITE(6,*) 'J1,J2,E1,E2 = ',J1,J2,E1,E2
+
+  210   CONTINUE
+
+C                            Compute boosted jet sphericities and produc
+
+        IF( NJETS .GE. 1 ) THEN
+          CALL JTBSXS( ICLASS,J1,J1,BETA1,BETA1, SJ1, SJ2, SPRODJ, ERR )
+        ELSE
+          CALL GCOLST( 2, 'JETSPH_I', 0.0 )
+          ERR = .TRUE.
+        ENDIF
+      ELSE
+        CALL GCOLST( 3, 'JETSPH_I', 0.0 )
+        ERR = .TRUE.
+      ENDIF
+
+      RETURN
+      END
+
+*AF
+@
+
+
+1.1.1.1
+log
+@2nd try to import uphy
+@
+text
+@@

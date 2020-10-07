@@ -1,0 +1,64 @@
+KCAR 0 / $TEXT                                                          
+POFF                                                                    
+*   RUN #                     RUN'S TITLE                               
+RUN  101         'NU NUB Gamma Gamma Generator - NNGG03'                
+*     FIRST EVENT   LAST EVENT TO BE GENERATED                          
+TRIG       1           1000                                             
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG                         
+DEBU    6   /      1            10                                      
+* requested time left at the end of job (in sec)                        
+TIME 10                                                                 
+*    to save event file (EPIO format)                                   
+*FILO 'SCWEEK:NNGG03.EPIO | EPIO '                                      
+*    to save histograms                                                 
+*HSTO 'SCWEEK:NNGG03.HIST | NATIVE '                                    
+*...  Monte carlo parameters :                                          
+* CMEIN  total c.m.s. energy (GeV);                                     
+* NFIN   number of neutrino families;                                   
+* EDCIN  soft/hard photon energy limit (GeV);                           
+*   Degree of longitudinal polarisation of the initial state :          
+* DPPIN = 1. If (e+) is left handed                                     
+*        (Spin in opposite direction to real motion-trimomentum),       
+* DPMIN = 1. If (e-) is right handed                                    
+*        (Spin in same direction to real motion-trimomemtum);           
+* WCUT   maximal weight value (should be greater than 1.4);             
+* FI1 and FI2 to choose  the rate of each process :                     
+* FI1 = 1.  & FI2 = 0.   (nu nu_bar gamma)  only,                       
+* FI1 = 0.  & FI2 = 1.   (nu nu_bar gamma gamma) only,                  
+* FI1 = 1.  & FI2 = 1.   both processes                                 
+*                              with respect to each total X-section;    
+* NT     maximal number of trials;                                      
+* NP     number of points to initialize the generator ( > 100);         
+*..NHWE   = BOOK WEIGHT HISTOGRAMS ? (=0 NO);                           
+*..NHEV   = BOOK EVENT HISTOGRAMS ? (=0 NO);                            
+*     CMEIN  NFIN   EDCIN   DPPIN    DPMIN                              
+GENE   92.2    3     .020    0.00     0.00                              
+*      WCUT   FI1    FI2     NT        NP   NHWE   NHEV                 
+       1.4     1.     1.  1000000     100    0      1                   
+*... Standard Model parameters :                                        
+* XMZ     Z mass   (Gev);                                               
+* XMT     Top mass (Gev);                                               
+* XMH     Higgs mass (Gev);                                             
+* XHEAVY  Heavy lepton mass (Gev);                                      
+* ALFQCD  Alpha_strong;                                                 
+*       XMZ    XMT   XMH   XHEAVY   ALFQCD                              
+GSMP    91.182 100.  100.   100.     .12                                
+*... Energy and angle acceptance :                                      
+* EDLIN  minimum photon energy (signal) (GeV);                          
+* ACDIN  minimum detection angle for the signal photon (Degrees);       
+* ACMIN  minimum detection angle for the photon which is not the        
+*        signal one (Degrees);                                          
+* XDHIN  maximum photon energy (signal) - WARNING in Beam unit;         
+* XMHIN  maximum photon energy which is not the signal one              
+*                                     - WARNING in Beam unit;           
+*      EDLIN   ACDIN    ACMIN   XDHIN  XMHIN                            
+GACP    .5      15.       0.      1.     1.                             
+*  use RANMAR generator for random numbers                              
+*                   (see KINLIB DOC for informations)                   
+*  INSEED : first seed (range assigned per institute)                   
+*  LOSEED : second seed (incremented locally for new runs)              
+*      INSEED          LOSEED (1-30000)                                 
+RMAR    89                 1                                            
+*       sigma-x   sigma-y  sigma-z  (cm)                                
+SVRT     0.018    0.0010    1.00                                        
+ENDQ                                                                    

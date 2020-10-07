@@ -1,0 +1,197 @@
+head	1.2;
+access;
+symbols
+	gal309_3:1.2
+	gal309_2:1.2
+	gal309_1:1.2
+	gal309:1.2
+	gal308_2:1.2
+	gal308_1:1.2
+	gal308:1.2
+	gal307_2:1.2
+	gal307_1:1.2
+	gal307:1.2
+	gal306_3:1.2
+	gal306_2:1.2
+	gal306_1:1.2
+	gal306:1.2
+	gal305_3:1.2
+	gal305_2:1.2
+	gal305_1:1.2
+	gal305:1.2
+	gal304_11:1.2
+	gal304_10:1.2
+	gal304_9:1.2
+	gal304_8:1.2
+	gal304_7:1.2
+	gal304_6:1.2
+	gal304_5:1.2
+	gal304_4:1.2
+	gal304_3:1.2
+	gal304_2:1.2
+	gal304_1:1.2
+	gal304:1.2
+	gal303_3:1.2
+	gal303_2:1.2
+	gal303_1:1.2
+	v-303:1.2
+	gal302_2:1.2
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	95.06.29.16.14.25;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.14.01.40;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.14.01.41;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@release galeph 302
+ Modified files:
+ gadoc.doc itdoc.doc
+ adinit.F adrz.F adview.F adxy.F gaxeph.F
+ ecasig.F ecbook.F ecdigi.F echit.F ecirun.F ecista.F ecnami.F
+ ectrig.F ecwsum.F edfilh.F edinip.F edtadj.F edtain.F edtcor.F
+ edtcut.F edtdig.F edtono.F edtrgi.F edtzsu.F edwbru.F edwdgt.F
+ ehbari.F ehcutg.F eprimi.F
+ galeph.F qnext.F
+ Removed Files:
+ guinti.F
+@
+text
+@*DK galeph
+      PROGRAM GALEPH
+C ----------------------------------------------------------------------
+C! MonteCarlo main routine
+C. - F.RANJARD - 850222
+#include "version.h"
+C ---------------------------------------------------------------------
+#ifndef DOC
+#if defined(INTER)
+      PARAMETER (LGB = 920000, LHB = 50000)
+#else
+      PARAMETER (LGB = 700000, LHB = 20000)
+#endif
+      COMMON /PAWC/   HB(LHB)
+      COMMON /GCBANK/   GB(LGB)
+C
+C
+C ----------------------------------------------------------------------
+#if defined(INTER)
+      CALL GPAW (LGB,LHB)
+#else
+C - call TIMEST to initialize job time limit , MANDATORY on VAX when
+C   running interactively, dummy routine on other machines and in BATCH
+      CALL TIMEST (9999999.)
+C
+C - Initialize blank common for HBOOK and /GCBANK/ for GEANT3
+C
+      CALL GZEBRA (LGB)
+      CALL HLIMIT (-LHB)
+C
+C - GALEPH initialization
+C
+      CALL ASIGAL
+C
+C - Process the run : loop over events
+C   Then close the run and the job if time limit or last event
+C   or end of run or end of file
+C
+      CALL QNEXTE
+C
+#endif
+      STOP
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d10 1
+a10 3
+      PARAMETER ( LGB = 720000  , LHB = 50000   , LKU = 30000)
+      EXTERNAL GULAST
+      COMMON / CWK / IWK
+a16 3
+      PARAMETER(LIW=1000000, LNAMES=500)
+      COMMON /BCS/   IW(LIW)
+      CHARACTER*80 FNAME
+d19 3
+a29 1
+#if defined(INTER)
+d31 1
+a31 1
+C           Initialize Command Processor (KUIP)
+d33 1
+a33 39
+      CALL KUINIT(LKU)
+      CALL KUEXIT(GULAST)
+C
+C           Initialize Graphics (HIGZ with GKS-GRAL and HPLOT)
+C
+      CALL IGINIT(0)
+      IOP = 3
+      CALL KUOPEN(IOP,'GEANT.METAFILE','UNKNOWN',ISTAT)
+      IWK=8601
+      CALL KUPROI(' Workstation type <CR>=8601   ',IWK)
+      CALL HPLINT(IWK)
+      CALL HERMES(6)
+      CALL IGSA(0)
+#endif
+C
+C - Initialize ALEPH memory manager
+C
+      CALL BNAMES (LNAMES)
+      CALL BOS (IW,LIW)
+      IW(5) = 7
+      IW(8) = 100000
+C
+C - initialize RANECU
+C
+      CALL RECUST
+C
+C - job initialization : initialize variables and then
+C   read STEERING data cards to set necessary flags to run the job
+C   according to flags defined previously get the
+C   right constants from tape or data base or data cards.
+C - Interface to GEANT3 : fill GEANT3 common blocks
+C - Build the geometry in the GEANT3 framework
+C - Initialize various packages which could be used during the run
+C   such as :GD3, LUND, GHEISHA, ect....
+C
+      FNAME = ' '
+      CALL GETENVF ('GALEPHCARDS',FNAME)
+      IF (FNAME.NE.' ') CALL AOPEN (IW(5),FNAME,'CARD','DISK',IER)
+      CALL ASIJOB
+d41 1
+@
+
+
+1.1.1.1
+log
+@import galeph 300
+@
+text
+@@

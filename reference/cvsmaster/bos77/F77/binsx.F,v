@@ -1,0 +1,108 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.48.30;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.13;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.14;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE BINSX(X,NDIM,NB,A,B)
+C
+C     DETERMINE REGION A...B (ROUNDED VALUES) FOR A HISTOGRAM OF
+C     THE VALUES X(1)...X(NDIM) IN NB BINS
+C
+      REAL X(NDIM),BINS(10)
+      DATA BINS    /0.1,0.15,0.2,0.25,0.4,0.5,0.6,0.8,1.0,1.5/
+C
+C     MEDIAN
+C
+      NM=NDIM/2
+      IF(NM+NM.NE.NDIM) THEN
+         XMED=X(NTHX(X,NDIM,NM))
+      ELSE
+         XMED=0.5*(X(NTHX(X,NDIM,NM))+X(NTHX(X,NDIM,NM+1)))
+      END IF
+C
+C     LOWER AND UPPER LIMITS
+C
+      NT=MAX(1,NDIM/10)
+      XA=AMAX1(X(NTHX(X,NDIM,   1)),2.0*X(NTHX(X,NDIM,NT       ))-XMED)
+      XB=AMIN1(X(NTHX(X,NDIM,NDIM)),2.0*X(NTHX(X,NDIM,NDIM+1-NT))-XMED)
+C
+C     ROUND LIMITS
+C
+      BIN=(XB-XA)/FLOAT(NB)
+      IF(BIN.LE.0.0) BIN=1.0E-4
+      NEX=INT(ALOG10(BIN)+100.0)-99
+      FEX=10.0**NEX
+      BIN=BIN/FEX
+      DO 10 I=1,9
+      IF(BINS(I).GE.BIN) GOTO 20
+   10 CONTINUE
+      I=9
+   20 BIN=BINS(I)*FEX
+      A=10.0*BIN*AINT(XA/(10.0*BIN))
+      IF(A.GT.XA) A=A-10.0*BIN
+      B=A+FLOAT(NB)*BIN
+      IF(B.GE.XB.OR.I.EQ.10) GOTO 100
+      I=I+1
+      GOTO 20
+  100 RETURN
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK binsx
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

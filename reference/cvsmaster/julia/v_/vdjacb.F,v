@@ -1,0 +1,166 @@
+head	1.3;
+access;
+symbols
+	jul313_3:1.3
+	jul313_2:1.3
+	jul313_1:1.3
+	jul313:1.3
+	jul312_1:1.3
+	jul312:1.3
+	jul311:1.3
+	jul310_1:1.3
+	jul310:1.3
+	jul309_1:1.3
+	jul309:1.3
+	jul308_6:1.3
+	jul308_5:1.3
+	jul308_4:1.3
+	jul308_3:1.3
+	jul308_2:1.3
+	jul308_1:1.3
+	jul308:1.3
+	jul307_4:1.3
+	jul307_3:1.3
+	jul307_2:1.3
+	jul307_1:1.3
+	jul307:1.3
+	jul306_3:1.3
+	jul306_2:1.3
+	jul306_1:1.3
+	jul306:1.3
+	jul305_4:1.3
+	jul305_3:1.3
+	jul305_2:1.3
+	jul305_1:1.3
+	jul305:1.3
+	jul304_3:1.3
+	jul304_2:1.3
+	jul304_1:1.3
+	jul304:1.3
+	jul303_7:1.3
+	jul303_6:1.2
+	jul303_5:1.2
+	jul303_4:1.2
+	jul303_3:1.2
+	jul303_2_mc1:1.2
+	jul303_2:1.2
+	jul303_1_mc1:1.2
+	jul303_1:1.2
+	jul303_v:1.2
+	jul303:1.2
+	jul302_6:1.2
+	jul302_5:1.2
+	jul302_4:1.2
+	jul302_3:1.2
+	jul302_2:1.2
+	jul302_1:1.2
+	jul302:1.2
+	jul285_1:1.2
+	jul285:1.2
+	jul284_1:1.2
+	jul284:1.2
+	jul283_1:1.2
+	jul283:1.2
+	jul282_1:1.2
+	jul282:1.2
+	jul281_3:1.2
+	jul281_2:1.2
+	jul281_1:1.2
+	jul281:1.2;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	97.07.17.13.17.10;	author cattanem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.06.03.12.05.34;	author cattanem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.06.03.10.28.56;	author cattanem;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@Bug fix in VDJACB
+@
+text
+@      SUBROUTINE VDJACB(IV,VUW,TNG,JACOB)
+C----------------------------------------------------------------------
+C!  VDJACB calculates the jacobian of local coordinate (W or U)
+C!  with respect to the alignment parameters
+C!
+C - Author         Manoj Thulasidas  10-Apr-96
+CKEY V_DECK VDET
+C!
+C   Fix the missing JACOB(3) bug (in IV=2)
+C      Manoj Thulasidas 16-July-1997
+C!  Description
+C!  ===========
+C  Input :
+C           IV    - the view
+C           VUW   - the local coordinate
+C           TNG   - the cotangent of the angle that the track makes
+C                   with the wafer, projected to the view
+C
+C  Output : JACOB(6) - the jacobian
+C
+C ----------------------------------------------------------------------
+#ifndef DOC
+      INTEGER IV
+      REAL VUW(3), TNG, JACOB(6)
+      REAL V,U,W
+      V = VUW(1)
+      U = VUW(2)
+      W = VUW(3)
+C-- the jacobian of the displacements
+      IF (IV.EQ.1) THEN
+        JACOB(1) = TNG
+        JACOB(2) = 0.0
+        JACOB(3) = -1.0
+        JACOB(4) = -U
+        JACOB(5) = TNG*W
+        JACOB(6) = -(TNG*U)
+      ELSEIF (IV.EQ.2) THEN
+        JACOB(1) = TNG
+        JACOB(2) = -1.0
+        JACOB(3) = 0.0
+        JACOB(4) = W
+        JACOB(5) = TNG*W
+        JACOB(6) = -(TNG*U)
+      ENDIF
+      RETURN
+      END
+#endif
+@
+
+
+1.2
+log
+@fix missing carriage returns at end of file
+@
+text
+@d9 2
+d40 1
+@
+
+
+1.1
+log
+@Mods for julia 281 release. See news for details
+@
+text
+@d44 1
+a44 1
+#endif@

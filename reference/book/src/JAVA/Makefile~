@@ -1,0 +1,33 @@
+#
+#  Need to execute from $ALBOOK/src/JAVA
+#  as albook
+#
+include ../UTILITIES/version.h
+
+scanbook.jar: scanbook.class
+	/afs/cern.ch/aleph/reference/book/src/TOOLS/signtool/signtool \
+        -d/afs/cern.ch/user/a/albook/.netscape -k "Scanbook's Aleph ID"\
+        -e ".class" -Z scanbook.jar .
+
+
+scanbook.class: jscanbook/java/scanbook.java
+	cd jscanbook/java; \
+	cp ../../../UTILITIES/scanbook_version.java . ; \
+        javac -classpath .:$(ALBOOK)/src/CLASSES/capsapi_classes.zip \
+        -d ../../   scanbook.java
+
+jscanbook/java/scanbook.java:
+	cvs checkout $(VERSION) jscanbook/java;
+	touch jscanbook/java/*.java
+
+sign: scanbook.jar
+
+
+install: sign
+	cp ./scanbook.jar $(ALBOOK)
+	mv jscanbook/java/*.java .;
+
+clean:
+	rm -f scanbook.jar
+	rm -f *.class  
+	rm -rf jscanbook

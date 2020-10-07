@@ -1,0 +1,89 @@
+head	1.2;
+access;
+symbols
+	dbase02:1.1.1.1
+	dbase01:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	97.02.14.16.11.30;	author flr;	state dead;
+branches;
+next	1.1;
+
+1.1
+date	97.02.12.10.06.08;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.02.12.10.06.08;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@move subroutine in subr andprograms in prog sbk becomes empty
+@
+text
+@      SUBROUTINE GTBOOK(STRING)
+C ----------------------------------------------------------------
+C ----------------------------------------------------------------
+#ifndef DOC
+#include "paging.h"
+#include "sbkpar.h"
+#include "fildat.h"
+      CHARACTER*4 BANK,STRING
+C ---------------------------------------------------------------------
+      NB=0
+      I=0
+   10 I=I+1
+      IF (I.LT.IADARR(0).AND.NAMARR(I).NE.STRING) GOTO 10
+      IF (NAMARR(I).NE.STRING.OR.NUMBKD(I).LT.1) GOTO 99
+      WRITE(LOUT,210)STRING
+      CALL PAGE
+      WRITE(LOUT,211)
+      CALL PAGE
+      WRITE(LOUT,212)
+      CALL PAGE
+  210 FORMAT(' Bank ',A,' is booked in:')
+  211 FORMAT(' ========================')
+  212 FORMAT(' Program   Deck    Card     Banknumber')
+      DO 220 NB=1,NUMBKD(I)
+        WRITE(LOUT,214) BKDLIN(I,NB)
+  214   FORMAT(' ',A)
+  220 CALL PAGE
+      NB=NUMBKD(I)
+   99 IF(NB.EQ.0)THEN
+        WRITE(LOUT,215)
+        CALL PAGE
+  215   FORMAT(' bank is never booked!')
+      ENDIF
+      CLOSE (LINP2)
+      END
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@@
+
+
+1.1.1.1
+log
+@1st release of dbase library
+@
+text
+@@

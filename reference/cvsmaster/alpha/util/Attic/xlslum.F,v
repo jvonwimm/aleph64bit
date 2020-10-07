@@ -1,0 +1,216 @@
+head	1.3;
+access;
+symbols
+	alpha122_41:1.2
+	alpha122_40:1.2
+	alpha122_39:1.2
+	alpha122_38:1.2
+	alpha122_37:1.2
+	alpha122_36:1.2
+	alpha122_35:1.2
+	alpha122_34:1.2
+	alpha122_33:1.2
+	alpha122_32:1.2
+	alpha122_31:1.2
+	alpha122_30:1.2
+	alpha122_29:1.2
+	alpha122_28:1.2
+	alpha122_27:1.2
+	alpha122_26:1.2
+	alpha122_25:1.2
+	alpha122_24:1.1.1.1
+	alpha122_23:1.1.1.1
+	alpha122_22:1.1.1.1
+	alpha122_21:1.1.1.1
+	alpha122_20:1.1.1.1
+	alpha122_19:1.1.1.1
+	alpha122_18:1.1.1.1
+	alpha122_17:1.1.1.1
+	alpha122_16:1.1.1.1
+	alpha122_15:1.1.1.1
+	alpha122_14:1.1.1.1
+	alpha122_13:1.1.1.1
+	alpha122_12:1.1.1.1
+	alpha122_11:1.1.1.1
+	alpha122_10:1.1.1.1
+	alpha122_9:1.1.1.1
+	alpha122_8:1.1.1.1
+	alpha122_6:1.1.1.1
+	alpha122_5:1.1.1.1
+	alpha122:1.1.1.1
+	alpha212:1.1.1.1
+	ALPHA212:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.3
+date	98.01.19.09.01.07;	author boucrot;	state dead;
+branches;
+next	1.2;
+
+1.2
+date	97.03.06.12.45.22;	author boucrot;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.03.14.12.42.24;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.03.14.12.42.25;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@*** empty log message ***
+@
+text
+@      SUBROUTINE XLSLUM(XLUM, SLUM, LLUM)
+CKEY XLUMOK TRIG /INTERNAL
+C----------------------------------------------------------------------
+C! Checks HV status, enabled triggers, and t0 synchronization
+C! Called from LLUMOK,SLUMOK,XLUMOK
+C!    Author:     H. Meinhard       26-Apr-1993
+C!
+C!    Input:      - trigger banks, REVH bank, LOLE bank
+C!    Output:     - XLUM    /L      both LCAL and SICAL okay
+C!                - SLUM    /L      SICAL okay
+C!                - LLUM    /L      LCAL okay
+C!
+C!    Description
+C!    ===========
+C!    Merges former XLUMOK (based on LCAL) and SLUMOK flags. Based on
+C!    programs by John Harton, Jim Wear, Brigitte Bloch.
+C!    Purpose: Checks whether this event is viable on the basis of the
+C!    minimal criteria set by general analyses. It checks to see if the
+C!    ECAL, LCAL/SICAL, TPC (tracking), ITC, HCAL HV bits are set and
+C!    whether the Hadronic Z, LCAL/SICAL luminosity, and single charged
+C!    EM triggers are enabled.
+C!    For MC data:   XLUM always .TRUE.
+C!                   SLUM .TRUE. if Sical simulated
+C!                   LLUM always .TRUE.
+C!    For real data: before run 16'500:
+C!                   LLUM .TRUE. if all required HV except SiCAL on, all
+C!                        required triggers except SICAL enabled
+C!                   SLUM .FALSE.
+C!                   XLUM = LLUM
+C!    For real data: after run 16'500:
+C!                   LLUM .TRUE. if all required HV except SiCAL on, all
+C!                        required triggers except SICAL enabled, t0
+C!                        synchronization okay
+C!                   SLUM .TRUE. if all required HV except LCAL on, all
+C!                        required triggers except LCAL enabled, t0
+C!                        synchronization okay
+C!                   XLUM = SLUM .AND. LLUM
+C----------------------------------------------------------------------
+#ifndef DOC
+      SAVE LRUN, LEVT, XL, SL, LL, ISITP, XTGQOK, XTGLOK, XTGSOK
+#include "qcdesh.h"
+      PARAMETER(NHVBIT=24)
+      PARAMETER (JEEA=1,JEEB=2,JEBR=3,JLCAL=4,JTEX=5,JITC=6,JSATR=7,
+     &  JHEA=8,JHEB=9,JHBR=10,JSCAL=11,JBCAL=12,JVDET=13,JTGA=14,
+     &  JTGC=15,JTTR=16,JSP1=17,JSP2=18,JSP3=19,JSP4=20,JSP5=21,
+     &  JSP6=22,JSP7=23,JBEAM=24)
+      INTEGER GTSTUP
+      LOGICAL XTGLOK,XHVOK,XHV(NHVBIT),XHVE,XHVL,XHVTR,XHVH,XHVTG
+      LOGICAL XLUM,SLUM,LLUM,XL,SL,LL,XHVS,XT0,XT0SYN,XTLOK,XTGSOK
+      LOGICAL XTGQOK,SL1,LL1,XL133
+      EXTERNAL XT0SYN,GTSTUP
+      DATA LRUN /-9999/, LEVT/-9999/
+C----------------------------------------------------------------------
+C do all that only if XLSLUM has not yet been called for current event
+      IF (KRUN .NE. LRUN .OR. KEVT .NE. LEVT) THEN
+C initialize the logicals
+        XL = .FALSE.
+        SL = .FALSE.
+        LL = .FALSE.
+        SL1 = .FALSE.
+        LL1 = .FALSE.
+C get SICAL setup code
+        IF (KRUN .NE. LRUN) ISITP = GTSTUP('SI',KRUN)
+C Monte Carlo data?
+        IF (KRUN .LT. 2000) THEN
+          LL = .TRUE.
+          SL = ISITP .GT. 0
+          SL1 = SL
+          LL1 = LL
+        ELSE
+C real data
+C Get enabled triggers
+          CALL XPTENB(KRUN,XTGQOK,XTGLOK,XTGSOK)
+C Get and combine HV information
+          CALL QHVSTA(XHV)
+          XHVTR = XHV(JTTR).AND.XHV(JITC)
+          XHVE  = XHV(JEEA).AND.XHV(JEEB).AND.XHV(JEBR)
+          XHVH  = XHV(JHEA).AND.XHV(JHEB).AND.XHV(JHBR)
+          XHVTG = XHV(JTGA).AND.XHV(JTGC)
+          XHVOK = XHVE.AND.XHVTR.AND.XHVH.AND.XHVTG
+          XHVL  = XHV(JLCAL)
+          XHVS  = XHV(JSCAL)
+C get t0 synchronization information
+          XT0   = XT0SYN(1.0)
+C combine to LLUMOK and SLUMOK flag
+          LL    = XTGQOK .AND. XTGLOK .AND. XHVOK .AND. XHVL .AND. XT0
+          SL    = XTGQOK .AND. XTGSOK .AND. XHVOK .AND. XHVS .AND. XT0
+          LL1   = LL
+          SL1   = SL
+C Starting with 1993, don't require LCAL triggers enabled for XLUMOK
+          IF (KRUN .GT. 20000)
+     +      LL1 = XTGQOK .AND. XHVOK .AND. XHVL .AND. XT0
+C For LEP 1.5 running, check if not hidden TPC laser events:
+          IF (KRUN.GT.40000.AND.KRUN.LT.40550) THEN
+             CALL QRE133(XL133)
+             IF (.NOT.XL133) LL1=.FALSE.
+          ENDIF
+        END IF
+C combine LCAL and SICAL information
+        XL = LL1 .AND. (SL1 .OR. ISITP .EQ. 0)
+C save run and event number
+        LRUN = KRUN
+        LEVT = KEVT
+      END IF
+C set the output variables
+      XLUM = XL
+      SLUM = SL
+      LLUM = LL
+      END
+#endif
+@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d50 1
+a50 1
+      LOGICAL XTGQOK,SL1,LL1
+d93 5
+@
+
+
+1.1.1.1
+log
+@import alpha122 from alws
+@
+text
+@@

@@ -1,0 +1,75 @@
+      SUBROUTINE ECLUAR(IER)
+C******************************************************************
+C!  CREATE ECLU AND FILL IARRAY(6144) WITH HIT TOWERS
+C!  (PART OF THE PREVIOUS ECCLUS ROUTINE)
+C!
+C!  AUTHOR  :  J.P. ALBANESE
+C!  MODIFIED:  C. BENCHOUK 890529
+C!
+C!  BANKS:
+C!    INPUT  : ESDA
+C!    OUTPUT : ECLU
+C!    CREATED: ECLU
+C?
+C!======================================================================
+#ifndef DOC
+#include "bcs.h"
+#include "rlunit.h"
+#include "eclcom.h"
+#include "ecnamc.h"
+#include "esdajj.h"
+#include "eclujj.h"
+      EXTERNAL NDROP
+C
+C?--- HERE ACCESS ESDA BOS BANK
+C?
+C?- FETCH ENCODED ADDRESS AND INDIRECT POINTER
+      KESDA = IW(NAESDA)
+      NMNT  = IW(KESDA+LMHROW)
+C? RESET CLUSTER NUMBER AND NEXT STOREY POINTER TO ZERO TO INSURE MODULA
+      INDST = KESDA + LMHLEN
+      DO 30 I=1,NMNT
+      IW(INDST + JESDEC) = 0
+      IW(INDST + JESDES) = 0
+      INDST = INDST + LESDAA
+ 30   CONTINUE
+C? CREATE ECLU BANK WITH MAXIMUM NUMBER OF CLUSTERS
+      CALL AUBOS('ECLU',0,LMHLEN+2*NMNT*LECLUA/3,KECLU,IGARB)
+      IF (IGARB.EQ.2) GOTO 998
+      KESDA = IW(NAESDA)
+      IW(KECLU+LMHCOL) = LECLUA
+C? CREATE WORK BANK WITH MAXIMUM SIZE (12*NUMBER OF TOWERS)
+C? TO STORE STOREY ENCODED ADDRESS
+       KEWLOC=0
+      CALL WBANK(IW,KEWLOC,4*NMNT,*998)
+      ND = 1
+C? HERE FILL UP ARRAYS AND BANK
+      INDST = KESDA  + LMHLEN
+      INDCS = INDST
+      DO 10 IMNT=1,NMNT,3
+         IADD  = IW(INDCS + JESDIO)
+C? COMPUTE STACK NUMBER
+         IA    = (IADD-1) / 73728
+C? COMPUTE INDEX INSIDE STACK
+         IR    =  IADD - 73728*IA
+C? COMPUTE BANANA NUMBER
+         IMT2  = (IR-1) / 6144
+C? COMPUTE INDEX INSIDE BANANA
+         IMT1  =  IR - 6144*IMT2
+         IF (IARRAY(IMT1) .EQ. 0) THEN
+           IARRAY(IMT1) = ND
+           ND  = ND + 12
+         ENDIF
+         IW(KEWLOC+IARRAY(IMT1)+IMT2) = IMNT
+         INDCS = INDCS + LESDAA*3
+   10 CONTINUE
+      RETURN
+C? ERROR IN CASE OF MEMORY FULL
+ 998  IER = 1
+      KECLU = NDROP('ECLU',0)
+      KECLU = NDROP('ESDA',0)
+      CALL RERROR(
+     1  ' ECLUAR',1,' BOS memory full.ECAL not any more processed')
+      RETURN
+      END
+#endif

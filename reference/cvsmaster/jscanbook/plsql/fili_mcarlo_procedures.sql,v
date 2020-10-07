@@ -1,0 +1,449 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2004.01.15.10.53.48;	author jacotf;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Procedures used by Brigitte Bloch
+@
+text
+@SET ARRAYSIZE 1;
+set scan off
+CREATE or REPLACE PACKAGE fili_mcarlo_procedures 
+IS
+
+   TYPE Char_Tab IS
+      TABLE of VARCHAR2(100) NOT NULL
+      INDEX BY BINARY_INTEGER;
+
+   TYPE prod_values IS
+      RECORD (
+          KinKeyWord     VARCHAR2(100),
+          Run            INTEGER      ,
+          DatType        VARCHAR2(10) ,
+          Tape           VARCHAR2(100),
+          File           VARCHAR2(10)
+      );
+
+   TYPE mcprod_table IS
+      TABLE of prod_values
+      INDEX BY BINARY_INTEGER;
+
+   TYPE tapes_values IS
+      RECORD (
+          KinKeyWord     VARCHAR2(100),
+          Nmin           INTEGER      
+      );
+
+   TYPE mctapes_table IS
+      TABLE of tapes_values
+      INDEX BY BINARY_INTEGER;
+
+
+   PROCEDURE welcome;
+
+   PROCEDURE write_fili (kinkey_in IN VARCHAR2);
+  
+END fili_mcarlo_procedures;
+/
+show errors
+
+
+CREATE or REPLACE PACKAGE BODY fili_mcarlo_procedures 
+/*
+|| !!!! If one wants to debug a procedure !!!!
+|| Before you can use dbms_output do:
+||    set serveroutput on; 
+|| The default buffer size can be too small - Increase the size of the STUPID buffer doing:
+||    DBMS_OUTPUT.ENABLE (1000000);
+||
+|| To increase the linesize for the output (default=80 characters) do:
+||    set linesize 132;
+||
+*/
+IS
+
+PROCEDURE print_datime
+/*
+|| Print Date and Time
+*/
+IS
+   date_time VARCHAR2(60);
+   date      VARCHAR2(50);
+   time      VARCHAR2(50);
+
+BEGIN
+   date_time := SYSDATE;
+   htp.p(date_time);
+
+END print_datime;
+
+
+PROCEDURE header 
+   (title in VARCHAR2)
+/*
+|| To display a generic header
+*/
+IS
+BEGIN
+   htp.htmlopen;
+   htp.headopen;
+   htp.title(title);
+   htp.headclose;
+   htp.bodyopen;
+
+END header;
+
+
+PROCEDURE footer 
+/*
+|| To display a generic footer
+*/
+IS
+BEGIN
+   htp.bodyclose;
+   htp.line;
+
+   htp.print('Creation date : ');
+   print_datime;
+   htp.address('Francoise Loverre');
+   htp.htmlclose;
+END footer;
+
+
+PROCEDURE write_datime
+/*
+|| Print the date on output
+*/
+IS
+   date VARCHAR2(50);
+   time VARCHAR2(50);
+   date_time VARCHAR2(60);
+   my_string VARCHAR2(100);
+
+BEGIN
+ 
+   date := to_char(SYSDATE,'FMDay DD-MONTH-YYYY');
+   time := to_char(SYSDATE,'HH24:MI');
+   date_time := date || ' at ' || time;
+   
+   my_string := '* MINI fili cards generated on ' || date_time || ' *';
+   htp.p(my_string);
+   htp.nl;
+   htp.p('* ');
+   htp.nl;
+ 
+END write_datime; 
+
+
+FUNCTION give_default
+   (Param_select IN VARCHAR2)
+/*
+|| Find in table MENUDEFAULTS the default value
+|| for the given parameter
+*/
+   RETURN VARCHAR2 
+IS
+   Param_default MENUDEFAULTS.ParamValue%TYPE;
+BEGIN 
+   SELECT ParamValue 
+   INTO Param_default
+   FROM MENUDEFAULTS
+   WHERE ParamName like Param_select;
+
+RETURN Param_default;
+
+END;
+
+
+FUNCTION give_Cart_label
+    (tape_id IN VARCHAR2)
+/*
+|| From a tape ID give the tape label
+*/
+   RETURN VARCHAR2
+IS
+   cart_label VARCHAR2(10);
+BEGIN
+   SELECT TapeLabel
+   INTO cart_label
+   FROM CARTDES
+   WHERE TapeId like tape_id
+   ;
+
+   cart_label := '.' || cart_label;
+ 
+RETURN cart_label;
+
+END;   
+
+
+FUNCTION give_tape
+   (tape_id in VARCHAR2,
+    tape_numb in INTEGER,
+    file_numb in INTEGER)
+/*
+|| Give the complete Tape name and File.
+*/ 
+   RETURN VARCHAR2 
+IS
+   tape_number VARCHAR2(10);
+   nzeros INTEGER;
+   tape_name_file VARCHAR2(20);
+
+BEGIN
+   tape_number := to_char(tape_numb);
+   nzeros := 4 - LENGTH(tape_number); 
+   FOR i IN 1 .. nzeros          
+   LOOP
+      tape_number := '0' || tape_number;
+   END LOOP;
+
+   tape_name_file := tape_id || tape_number || '_' || to_char(file_numb);
+
+   RETURN tape_name_file;
+
+END; 
+
+
+PROCEDURE write_fili
+   (kinkey_in IN VARCHAR2)
+/*
+|| 
+|| MonteCarlo Data
+|| For a given KingalKeyWord write the FILI cards for mini tapes
+*/
+IS
+   flag VARCHAR2(10) := ' ';
+
+   fili_name    VARCHAR2(4)  := 'FILI';
+   edir_ft      VARCHAR2(6)  := '.edir';
+   bos_type     VARCHAR2(4)  := 'EDIR';
+   before_type  VARCHAR2(10);
+   fili_line    VARCHAR2(500);
+   comment_line VARCHAR2(500);
+
+   cart_name    VARCHAR2(17) := 'ALDATA|EPIO|CART ';
+   cart_label   VARCHAR2(10);
+   tape_file    VARCHAR2(20);
+   TapeNameFile VARCHAR2(20);
+   size_file    VARCHAR2(10);
+   exclam       VARCHAR2(10);
+   
+   nrec INTEGER;
+   nblanks INTEGER;
+   my_string    VARCHAR2(100);
+
+   aledir_dir MENUDEFAULTS.ParamValue%TYPE:= give_default('ALEDIR'); 
+
+BEGIN
+DECLARE
+
+   CURSOR mc_cur IS
+      SELECT msets.TapeId, msets.TapeNumb, msets.FileNumb, msets.Details, 
+             msets.ExistEdir, msets.SizeMbytes, msets.Nevents
+      FROM MCSETS msets
+      WHERE KingalKeyWord = kinkey_in
+        AND msets.Datatype = 'MINI' 
+      ORDER by msets.TapeId, msets.TapeNumb, msets.FileNumb
+      ;
+      mc_rec mc_cur%ROWTYPE;
+
+BEGIN
+   htp.br;
+   my_string := 'Mcarlo tapes for KingalKeyWord = ' || kinkey_in;
+   htp.centerOpen;
+   htp.header(1,my_string);
+   htp.centerClose;
+   htp.line;
+
+/* Date of FILI cards creation */
+   write_datime;
+
+/* 
+|| Write the FILI cards.
+|| The format depends of the existence of the edir file
+*/
+   
+   nrec := 0;
+   FOR a_rec IN mc_cur
+   LOOP
+      nrec := nrec + 1;
+      TapeNameFile := give_tape(a_rec.TapeId,a_rec.TapeNumb,a_rec.FileNumb); 
+
+      IF a_rec.ExistEdir = 'T'
+      THEN
+         before_type := '| ';
+         tape_file := LOWER(TapeNamefile);
+
+         nblanks := 11 - LENGTH(tape_file);
+
+         FOR jk IN 1 .. nblanks
+         LOOP
+            before_type := ' ' || before_type;
+         END LOOP;
+
+         fili_line := fili_name || ' ''' || aledir_dir || 
+                      tape_file || edir_ft || before_type || bos_type || 
+                      '''  ! ' || a_rec.Details || '#' || to_char(a_rec.Nevents);
+      ELSE
+         tape_file := TapeNamefile;
+         tape_file := REPLACE(tape_file,'_','.');
+
+         size_file := '-s ' || to_char(a_rec.SizeMbytes);
+         nblanks := 11 - LENGTH(TapeNameFile);
+         FOR jk IN 1 .. nblanks
+         LOOP
+            size_file := ' ' || size_file;
+         END LOOP;
+
+         cart_label := give_Cart_label(a_rec.TapeId);
+
+         exclam := '  ! ';
+         IF a_rec.SizeMbytes < 100
+         THEN
+            exclam := ' ' || exclam;
+         END IF;
+
+         fili_line := fili_name || ' ''' || cart_name ||
+                      tape_file || cart_label || size_file ||
+                      '''' || exclam || a_rec.Details || '#' || to_char(a_rec.Nevents);
+      END IF;
+      htp.p(SUBSTR(fili_line,1,LENGTH(fili_line)));
+      htp.nl;
+
+   END LOOP;
+
+END;
+END write_fili;
+
+
+PROCEDURE list_mcdata_tapes
+/*
+|| 
+|| MonteCarlo Data
+|| Procedure to print the list mcarlo production tapes 
+*/
+IS
+   nrec         INTEGER;
+   current_tape INTEGER;
+   all_tapes    mctapes_table;
+   my_string    VARCHAR2(200);
+   my_kinkey    MCKEYSTAT.KingalKeyWord%TYPE;
+
+BEGIN
+DECLARE
+   CURSOR kinkey_cur 
+   IS
+      SELECT mcp.KingalKey kinkey, mck.KingalKeyWord kinkeyw, mck.NumbMini nbmin
+      FROM MCprod mcp, MCKEYSTAT mck
+      WHERE mck.KingalKeyWord = mcp.KingalKey 
+      ORDER BY kinkey
+      ;      
+      kinkey_rec kinkey_cur%ROWTYPE;
+
+BEGIN
+   nrec := 0;
+
+   OPEN kinkey_cur;
+   LOOP
+      FETCH kinkey_cur INTO kinkey_rec;
+      EXIT WHEN kinkey_cur%NOTFOUND;
+      nrec := nrec + 1;
+      all_tapes(nrec).KinKeyWord  := kinkey_rec.kinkey;
+      all_tapes(nrec).Nmin := kinkey_rec.nbmin;
+   END LOOP;
+   CLOSE kinkey_cur;
+
+/*
+|| Print now
+*/
+--   htp.tableOpen(' ','CENTER',' ',' ','BORDER=2');
+   htp.tableOpen(' ','',' ',' ','BORDER=2');
+
+   htp.tableRowOpen;
+   htp.tableHeader('KinGalKeyWord','CENTER');
+   htp.tableHeader('&nbsp;&nbsp;&nbsp;NbMin&nbsp;&nbsp;&nbsp;','CENTER'); 
+   htp.tableRowClose;
+
+   current_tape := all_tapes.FIRST;
+   LOOP
+      EXIT when current_tape is NULL;
+
+      htp.tableRowOpen;
+      htp.tableData(all_tapes(current_tape).KinKeyWord);
+
+      IF all_tapes(current_tape).Nmin = 0
+      THEN
+         htp.tableData(all_tapes(current_tape).Nmin,'CENTER');
+      ELSE
+         my_kinkey := all_tapes(current_tape).KinKeyWord;
+         my_string := '<A HREF=fili_mcarlo_procedures.write_fili?kinkey_in=' || my_kinkey ||'>' || all_tapes(current_tape).Nmin || '</A>';
+         htp.tableData(my_string,'CENTER');
+      END IF;
+
+      htp.tableRowClose;
+
+      current_tape := all_tapes.NEXT(current_tape);
+
+   END LOOP;    
+
+   htp.tableClose;
+
+END;
+END list_mcdata_tapes;
+
+
+PROCEDURE welcome
+IS
+   my_string VARCHAR2(200);
+BEGIN
+   header('Check Mcarlo production');
+   htp.br;
+
+   htp.centerOpen;
+   htp.tableOpen(' ','CENTER',' ',' ','BORDER=0 CELLPADDING=5 CELLSPACING=0');
+   my_string := '<IMG src=http://alephwww.cern.ch/ICONS/aleph3.xbm>';
+   htp.tableData(my_string,'CENTER',' ',' ',' ',' ','BGCOLOR="yellow"');
+   my_string := '<FONT SIZE=+3>List of Montecarlo production tapes</FONT>';
+   htp.tableData(my_string,'CENTER',' ',' ',' ',' ','BGCOLOR="yellow"');
+   my_string := '<IMG src=http://alephwww.cern.ch/ICONS/aleph3.xbm>';
+   htp.tableData(my_string,'CENTER',' ',' ',' ',' ','BGCOLOR="yellow"');
+   htp.tableClose;
+
+   htp.br;
+   htp.line;
+   htp.centerClose;
+
+   list_mcdata_tapes;
+
+--   htp.centerClose;
+   footer;
+
+END welcome;
+
+END fili_mcarlo_procedures;
+/
+show errors
+
+
+
+
+
+
+
+
+@

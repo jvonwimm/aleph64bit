@@ -1,0 +1,73 @@
+#!/usr/local/bin/perl
+###########################################################
+#                        alfree
+# 26/03/96                                        F.Blin                   
+###########################################################
+# 02/07/96 new routine TMS_RUN
+# 25/11/97 added redwoods
+# 19/03/98 suppressed libs -> AB_POTTAP','AC_CERN','AM_MCTAP','AX_CERN'
+# 06/12/99 Add entry for R0*  
+###########################################################
+#
+$ALEPH = $ENV{'ALEPH'};
+$file_free = "$ALEPH/log/alfree.log";
+@pool_list = ('AR_RAWDLT','AS_POTDLT','AT_CERN','AU_MCDLT','Y1_XU25C','Y1_XU25P','Y1_XU25M');
+@group_list = ('XU_9840P','XU_9840M','XU_9840C');
+$str = `date '+%y%m%d %H:%M'`;
+$str =~ s/\s+$//;
+$str = "****$str free";
+
+open(FREE,">> $file_free");
+print FREE "$str \n";
+close(FREE);
+
+foreach $i (0..$#pool_list){
+   $pool_search = $pool_list[$i];
+   $current_label = substr($pool_search,0,2);
+   &TMS_RUN("STK_ACS0",$pool_search) if (substr($current_label,0,1) eq "Y");
+   &TMS_RUN("${current_label}_VAULT",$pool_search) if (substr($current_label,0,1) ne "Y" && substr($current_label,0,1) ne "R");
+   &TMS_RUN("${current_label}_NEW",$pool_search) if (${current_label} eq "AU");
+}
+
+foreach $i (0..$#group_list){
+   $pool_search = $group_list[$i];
+   $current_label = substr($pool_search,0,2);
+   &TMS_RUN_GROUP($pool_search,"${current_label}",);
+}
+#&TMS_RUN("TL820_1","AS_POTDL");
+
+exit;
+
+##############################################################################
+sub TMS_RUN {
+    ($LIBRARY_NAME,$OWNER_NAME) = @_;
+
+   $n_free = `sysreq tms q CONTENT LIBRARY ${LIBRARY_NAME} OWNER ${OWNER_NAME} SLOTS 0 | wc -l`;
+   $n_free = $n_free - 2;
+   $n_free = 0 if ($n_free < 1);
+   $str = "${LIBRARY_NAME} ${OWNER_NAME} -> $n_free";
+   print "${str} \n";
+
+   open(FREE,">> $file_free");
+   print FREE "$str \n";
+   close(FREE);
+
+   return;
+}
+
+##############################################################################
+sub TMS_RUN_GROUP {
+    ($LIBRARY_NAME,$OWNER_NAME) = @_;
+
+   $n_free = `sysreq tms q PROT ${LIBRARY_NAME} ACC ${OWNER_NAME} SUBJECTS | wc -l`;
+   $n_free = 0 if ($n_free < 1);
+   $str = "${LIBRARY_NAME} ${OWNER_NAME} -> $n_free";
+   print "${str} \n";
+
+   open(FREE,">> $file_free");
+   print FREE "$str \n";
+   close(FREE);
+
+   return;
+}
+

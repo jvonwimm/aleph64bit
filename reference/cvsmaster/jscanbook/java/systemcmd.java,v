@@ -1,0 +1,123 @@
+head	1.1;
+access;
+symbols
+	V0060:1.1
+	V0059:1.1
+	V0058:1.1
+	V0057:1.1
+	V0056:1.1
+	V0055:1.1
+	V0054:1.1
+	V0053:1.1
+	V0052:1.1
+	V0051:1.1
+	V0050:1.1
+	V0049:1.1
+	V0048:1.1
+	V0047:1.1
+	V0046:1.1
+	V0045:1.1
+	V0044:1.1
+	V0043:1.1
+	V0042:1.1
+	V0041:1.1
+	V0040:1.1
+	V0039:1.1
+	V0038:1.1
+	V0037:1.1
+	V0036:1.1
+	V0035:1.1
+	V0034:1.1
+	V0033:1.1
+	V0032:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	2000.06.15.14.33.58;	author bonissen;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Open Brigitte's web page on request
+@
+text
+@import java.io.*;
+import java.lang.String;
+import java.util.Vector;
+import netscape.security.PrivilegeManager;
+import java.security.*;
+
+public class systemcmd {  
+      static Vector output = new Vector();
+public static void execute(String command, boolean waitOutput){
+      Runtime r = Runtime.getRuntime();    
+      String thisLine;
+      //      System.out.println("command = "+command);
+      scanbook.dbg.out("command = "+command+"****");
+      try{
+        if(scanbook.netscaperun){
+          try{
+            PrivilegeManager.enablePrivilege("UniversalExecAccess");
+          }
+          catch (Exception exc) {
+            System.err.println(exc);
+            return;
+          }
+        }
+        Process p = r.exec(command);
+	if(waitOutput){
+          DataOutputStream ostr = new DataOutputStream(p.getOutputStream());
+          p.waitFor();
+          output.removeAllElements();
+          BufferedReader theRdr = new BufferedReader (
+               new InputStreamReader(p.getInputStream()));
+          while ((thisLine = theRdr.readLine()) != null) {
+	    //   System.out.println(thisLine);
+            scanbook.dbg.out(thisLine);
+            output.addElement(thisLine);
+          }
+          theRdr = new BufferedReader (
+               new InputStreamReader(p.getErrorStream()));
+          while ((thisLine = theRdr.readLine()) != null) {
+	    //   System.out.println(thisLine);
+            scanbook.dbg.out(thisLine);
+            output.addElement(thisLine);
+          }
+    	}
+        scanbook.dbg.out(" *** Done ");
+      }
+      catch (Exception exc) {
+        System.err.println(exc);
+      }
+}
+public static void printResult(){
+    int n = output.size();
+    for(int i=0; i<n; i++){
+       System.out.println((String)output.elementAt(i));
+    }       
+}
+public static boolean inOutput(String s){
+    int n = output.size();
+    for(int i=0; i<n; i++){
+	if(((String)output.elementAt(i)).indexOf(s) != -1){
+          return true;
+	}
+    }       
+    return false;
+}
+}
+
+    
+
+
+
+
+@

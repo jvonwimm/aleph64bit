@@ -1,0 +1,104 @@
+head	1.2;
+access;
+symbols
+	bos3489-1:1.2.0.2
+	bos3589:1.2
+	bos3489:1.2
+	bos3389:1.2
+	bos3289:1.2
+	bos3189:1.2
+	bos3089:1.2
+	v3089:1.1.1.1
+	flr:1.1.1;
+locks; strict;
+comment	@c @;
+
+
+1.2
+date	96.03.11.12.48.44;	author flr;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.07.13.58.15;	author flr;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	94.12.07.13.58.16;	author flr;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@import new version made for cvs on alws.
+add eprwnd.F to test the descriptor before calling CFREW. Should be included
+into the EPIO next release.
+ Added Files:
+ 	eprwnd.F
+@
+text
+@      SUBROUTINE BKTOP(JW,NAME,NR,P,MP,NP,MC,NC)
+*
+*     COPY DATA FROM BANK 'NAME',NR TO TWODIM. ARRAY P
+*
+*     NO COPY WITH NC=0, IF
+*        BANK NOT FOUND
+*        CONTRADICTION IN BANK LENGTH AND FIRST WORD
+*        LENGTH = 1 + FIRST WORD * INTEGER
+*
+      INTEGER JW(1000),P(MP,NP)
+      CHARACTER*4 NAME
+      MC=0
+      NC=0
+      IND=MLINK(JW,NAME,NR)
+      IF(IND.EQ.0) GOTO 100
+      MC=JW(IND+1)
+      IF(MC.EQ.0) THEN
+         NC=0
+      ELSE
+         NC=(JW(IND)-1)/MC
+      END IF
+      IF(NC*MC+1.NE.JW(IND)) NC=0
+      IF(NC.EQ.0) GOTO 100
+      IF(MC.EQ.MP) THEN
+         CALL UCOPY(JW(IND+2),P,MC*NC)
+      ELSE
+         IOF=IND+1
+         DO 30 J=1,NC
+         DO 10 I=1,MIN(MC,MP)
+   10    P(I,J)=JW(IOF+I)
+         IOF=IOF+MC
+         IF(MC.LT.MP) THEN
+            DO 20 I=MC+1,MP
+   20       P(I,J)=0
+         END IF
+   30    CONTINUE
+      END IF
+  100 RETURN
+      END
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a0 1
+*DK bktop
+@
+
+
+1.1.1.1
+log
+@import bos77 3089
+@
+text
+@@

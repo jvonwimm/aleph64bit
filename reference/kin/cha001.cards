@@ -1,0 +1,108 @@
+From BLOCH@alws.cern.ch Fri Feb 13 15:59:38 2004
+Date: Fri, 13 Feb 2004 15:56:00 +0100
+From: BLOCH@alws.cern.ch
+To: BLOCH@alws.cern.ch
+
+KCAR 0 / $TEXT                                                                  
+POFF                                                                            
+*     RUN #               RUN'S TITLE                                           
+RUN   1025      '  Testing code                       '                         
+*     TIME LEFT FOR END RUN                                                     
+TIME    10                                                                      
+*    RANMAR INIT CARD.                                                          
+RMAR     35  25                                                                 
+* output file                                                                   
+*FILO 'SCWEEK:CHA001.EPIO | EPIO'                                               
+* STORE histos on file                                                          
+*HSTO  'SCWEEK:CHA001.HIST  '                                                   
+*     FIRST EVENT    LAST EVENT    TO BE GENERATED                              
+TRIG     1           20                                                         
+*    UNIT # / FIRST EVENT   LAST EVENT TO DEBUG                                 
+DEBU  6     /      1         1                                                  
+*       sigma-x    sigma-y  sigma-z of the original vertex (in cm)              
+SVRT     0.018     0.0010    1.00                                               
+*    GENE CARD                                                                  
+* ecm= center of mass energy ( 2*ebeam )                                        
+* Decay channel  ( x= 1,2 )                                                     
+* ldx1= ldx2= 0   ALL     ( according to branching ratios )                     
+* ldx1= ldx2= 11  LEPTONS ( according to branching ratios )                     
+* ldx1= ldx2= 14  HADRONS ( according to branching ratios )                     
+* Leptonic channels                                                             
+* ldx1= ldx2= 1   ELE NUEL                                                      
+* ldx1= ldx2= 2   MUO NUMU                                                      
+* ldx1= ldx2= 3   TAU NUTA                                                      
+* Hadronic channels                                                             
+* ldx1= 4  UP        ldx2= 4  DOWN                                              
+* ldx1= 5  CHARM     ldx2= 5  STRANGE                                           
+* ldx1= 6  TOP       ldx2= 6  BOTTOM                                            
+* Initial state radiation                                                       
+* Keyrad= 0  OFF,  Keyrad= 1  ON                                                
+* Electroweak parameters                                                        
+* Z0 mass, Z0 width and sfermion width ( gamsf ) in GeV                         
+* printout flag IPRT=1 : printout of PART bank/0= no printout                   
+*     ecm   ld11 ld12 ld21 ld22 keyrad  mZ0  gamZ0  sinw2  iprt                 
+GENE  91.2   14   14   11   11    1    91.18  2.484 .232     0                  
+**************************************************************                  
+* Parameters of MSM : M,mu Z0 mass units, m0,mh10 GeV                           
+*      v2/v1   M      mu     m0    mh10                                         
+*GMSM    2.0   .01    -1.8    -1.   -1.                                         
+**************************************************************                  
+* If you want to enter by hand masses&couplings                                 
+*** Gaugino-higgsino's masses                                                   
+*     Charginos         Neutralinos                                             
+*     CH+1  CH+2   CH01   CH02    CH03    CH04                                  
+GEN1  150.  35.    12.0    50.    200.    250.                                  
+*** Scalar fermions masses                                                      
+*    SNEU   SLER   SLEL  SQUR    SQUL    SQDR   SQDL                            
+       65.   80.    80.    80.     70.     80.    80.                           
+*** Higgs masses                                                                
+*    mh10   mh20   mh30(ps)   mh+                                               
+      50.   100.    75.       100.                                              
+***  Field contents                                                             
+***        sW+    sH+           sW+    sH+                                      
+*  CH+1:   U11    U12    CH+2:  U21    U22                                      
+           .14    .99          -.99    .14                                      
+***      photino  zino  hino1  hino2                                            
+*  CH01:   N11    N12    N13    N14                                             
+           .9     .436   .0     .0                                              
+*  CH02:   N21    N22    N23    N24                                             
+          -.436    .9    .0     .0                                              
+*  CH03:   N31    N32    N33    N34                                             
+           .0     .0     1.     .0                                              
+*  CH04:   N41    N42    N43    N44                                             
+           .0     0.     .0     1.                                              
+*       v2/v1                                                                   
+          2.                                                                    
+*-----------------------------------------------------------                    
+*  standard modification to Lund parameters                                     
+*---------------------------------------------------------------                
+*   set top mass                                                                
+PMAS 106 / 100.                                                                 
+*   set Higgs mass                                                              
+PMAS 4 / 100.                                                                   
+*   set Z0 mass                                                                 
+PMAS 2 / 91.18                                                                  
+*  use Peterson's fragm. functions for c and b quarks                           
+MST 4 / 3                                                                       
+*   QCD fit from G. Rudolph  (22/02/91)                                         
+*   mod to lund fragm. functions params                                         
+PARE 21 / .318          ! Lambda QCD                                            
+PARE 22 / 1.43          ! M min.                                                
+PAR 12 / 0.360          ! Sigma Mt                                              
+PAR 31 / 0.5            ! a                                                     
+PAR 32 / 0.92           ! b                                                     
+*   Use Standard LUND values for  Epsilon_c                                     
+*   Measured one for Epsilon_b                                                  
+*   ( Peterson's fragm. functions params )                                      
+PAR 44 / -0.040         ! Epsilon_c                                             
+PAR 45 / -0.006         ! Epsilon_b                                             
+*  use non discrete masses for resonnances                                      
+MST 8 / 1                                                                       
+*  include Aleph standard values for sin2theta, mz, gamz                        
+PARE 5 / .232                                                                   
+PARE 6 /  91.182                                                                
+PARE 7 / 2.484                                                                  
+*  set next q family out of LEP1 range                                          
+PMAS 107 / 150.                                                                 
+PMAS 108 / 200.                                                                 
+ENDQ                                                                            
