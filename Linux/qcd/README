@@ -1,0 +1,14 @@
+# Example ALPHA job from QCD group. 
+# http://aleph.web.cern.ch/aleph/aleph_general/analysis/QCD/evsh/qcd_analysis_example/qcd_codes.htm
+
+# FIXES:
+# bug found in SUBROUTINE Calc_Inclusives (qcd_analysis.F) which caused problems in gfortran (Ecm variable was being overwritten in memory!):
+C jvw bug   Real      eigval,THRUST,Ecm
+      Real      eigval(3),THRUST,Ecm
+
+# NOTES:
+========
+# comparison between 32-bit standard ALEPH software and 64-bit gfortran
+# can be seen for 1994 data in file: comparison.pdf.
+# Some tiny/insignificant differences can be observed.
+
