@@ -12,6 +12,7 @@ C                is used and the Rz correction is not done in
 C                TALINI but in TZCSVD from the old TRZS bank.  
 C                Thus TALINI should be backward compatible to     
 C                old setup.  
+C  J.von Wimmersperg 8-Oct-2020  replace .XOR. with .NEQV. for gfortran
 C----------------------------------------------------------------------
 #ifndef DOC
       SAVE
@@ -75,7 +76,7 @@ C
 C - Check for consistency of banks
 C
       IF (.NOT.((KTNLO.GT.0 .AND. KTNCO.GT.0 
-     &    .AND. KTNOS.GT.0 .AND. KTBDR.GT.0) .XOR.
+     &    .AND. KTNOS.GT.0 .AND. KTBDR.GT.0) .NEQV.
      &    (KTSLO.GT.0 .AND. KTSCO.GT.0 .AND. KTPOS.GT.0)))
      &    CALL ALTELL('TALINI - Incompatible banks. Contact expert',
      &      -1,'END')
