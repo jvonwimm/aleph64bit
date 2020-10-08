@@ -47,6 +47,7 @@ make --always-make -f miniprod.mk
 
 # DALI
 cd $ALEPH_ROOT/reference/dali/f2
+make clean
 make
 rm -f *.o
 mv -f dali_f2.Linux $ALEPH/dali/f2/

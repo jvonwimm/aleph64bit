@@ -53,7 +53,7 @@ LDFLAGS		= $(LDUNDEF)
 
 
 ENFLWL	= ${ALEPH}/phy/alenflw.o
-MINIL	= ${ALEPH}/phy/libmini.a
+#MINIL	= ${ALEPH}/phy/libmini.a
 JUL	= ${ALEPH}/jul/libjulia.a
 PHYL	= ${ALEPH}/phy/libalpha.a
 LOOKL	= ${ALEPH}/gen/liblook.a
