@@ -4735,7 +4735,7 @@ CBB               VHEP(ico,itkv) = 10.*RW(KVER+ico)
                   VHEP(ico,itkv) = 10.*xsec(ico,nvx)
             enddo
 CBB              VHEP(4,itkv) = (RW(KVER+4)*10**12)/CLGHT
-                 VHEP(4,itkv) = (xsec(4,nvx)*10**12)/CLGHT
+                 VHEP(4,itkv) = (xsec(4,nvx)*10.D0**12)/CLGHT
          enddo
          GO TO 1
       ENDIF
